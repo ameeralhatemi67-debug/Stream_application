@@ -7,3 +7,5 @@
   4. visual check 
   5. send approval 
 - add admin dashboard visuals (graphs and filters)
+- work on having the application work on phone. 
+- work on the text massaging between the viewer and streamer/org. 
