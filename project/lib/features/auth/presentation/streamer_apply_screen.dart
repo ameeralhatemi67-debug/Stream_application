@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/services/translation/auto_translation_service.dart';
 import '../../admin/models/broadcaster_application_model.dart';
 import 'steps/apply_step_1_identity.dart';
 import 'steps/apply_step_2_media.dart';
@@ -201,32 +202,43 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       final provider = context.read<AppProvider>();
       final email = provider.currentUserEmail ?? 'applicant@streamer.app';
 
+      // 🧠 Execute Automated Bidirectional Translation & Transliteration
+      final effectiveName = _isOrganization && _orgNameController.text.trim().isNotEmpty
+          ? _orgNameController.text.trim()
+          : _nameController.text.trim();
+
+      final effectiveAffiliation = _affiliationController.text.trim().isNotEmpty
+          ? _affiliationController.text.trim()
+          : (_isOrganization ? _orgNameController.text.trim() : '');
+
+      final bilingual = await AutoTranslationService.translateAndTransliterate(
+        ApplicantProfileInput(
+          name: effectiveName,
+          bio: _bioController.text.trim(),
+          institution: effectiveAffiliation,
+          venueName: _venueController.text.trim(),
+          isOrganization: _isOrganization,
+        ),
+      );
+
       final app = BroadcasterApplicationModel(
         id: 'app_${DateTime.now().millisecondsSinceEpoch}',
         accountType: _isOrganization
             ? ApplicationAccountType.organizationVenue
             : ApplicationAccountType.individualScholar,
-        applicantNameEn: _nameController.text.trim(),
-        applicantNameAr: _nameController.text.trim(),
+        applicantNameEn: bilingual.nameEn,
+        applicantNameAr: bilingual.nameAr,
         email: email,
         phone: _phoneController.text.replaceAll(RegExp(r'\s+'), ''),
-        academicTitleEn: _isOrganization ? 'Organization Representative' : 'Academic Broadcaster',
-        academicTitleAr: _isOrganization ? 'ممثل الجهة الأكاديمية' : 'مقدم برامج تعليمية',
-        institutionEn: _affiliationController.text.trim().isNotEmpty
-            ? _affiliationController.text.trim()
-            : (_isOrganization ? _orgNameController.text.trim() : 'Independent Scholar'),
-        institutionAr: _affiliationController.text.trim().isNotEmpty
-            ? _affiliationController.text.trim()
-            : (_isOrganization ? _orgNameController.text.trim() : 'باحث مستقل'),
+        academicTitleEn: bilingual.academicTitleEn,
+        academicTitleAr: bilingual.academicTitleAr,
+        institutionEn: bilingual.institutionEn,
+        institutionAr: bilingual.institutionAr,
         categoryId: _selectedCategories.first,
         tags: _selectedTags,
         organizationType: _isOrganization ? 'Educational Academy' : null,
-        venueNameEn: _venueController.text.trim().isNotEmpty
-            ? _venueController.text.trim()
-            : (_isOrganization ? '${_orgNameController.text} HQ' : 'Al Khobar Educational Center'),
-        venueNameAr: _venueController.text.trim().isNotEmpty
-            ? _venueController.text.trim()
-            : (_isOrganization ? '${_orgNameController.text} المركز الرئيسي' : 'مركز الخبر التعليمي'),
+        venueNameEn: bilingual.venueNameEn,
+        venueNameAr: bilingual.venueNameAr,
         latitude: _selectedCoordinates.latitude,
         longitude: _selectedCoordinates.longitude,
         seatingCapacity: _isOrganization ? 300 : 120,
@@ -236,8 +248,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         youtubeHandle: _youtubeController.text.trim().startsWith('@')
             ? _youtubeController.text.trim()
             : '@${_youtubeController.text.trim().split('/').last}',
-        bioEn: _bioController.text.trim(),
-        bioAr: _bioController.text.trim(),
+        bioEn: bilingual.bioEn,
+        bioAr: bilingual.bioAr,
         avatarUrl: _avatarPath ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
         bannerUrl: _bannerPath ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
         status: ApplicationStatus.pending,
