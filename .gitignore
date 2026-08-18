@@ -1,0 +1,16 @@
+﻿# Flutter build & runtime artifacts
+project/build/
+project/.dart_tool/
+project/.pub-cache/
+project/.pub/
+project/.flutter-plugins-dependencies
+project/android/app/debug/
+project/android/app/profile/
+project/android/app/release/
+project/ios/Flutter/.last_build_id
+
+# System & OS artifacts
+.DS_Store
+Thumbs.db
+*.log
+*.tmp

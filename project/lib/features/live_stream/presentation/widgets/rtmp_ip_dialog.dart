@@ -1,0 +1,671 @@
+import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:provider/provider.dart';
+import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:top_snackbar_flutter/custom_snack_bar.dart';
+import '../../../../core/providers/app_provider.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../profile/models/streamer_models.dart';
+
+enum BroadcastTargetType { localRtmp, youtubeLive }
+
+/// Pitch Director & Live Studio Settings Dialog.
+/// Allows switching Amir Al-Hatemi's live stream between Local OBS RTMP and YouTube Live.
+class RtmpIpSettingsDialog extends StatefulWidget {
+  const RtmpIpSettingsDialog({super.key});
+
+  static Future<void> show(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      barrierDismissible: true,
+      builder: (dialogContext) => const RtmpIpSettingsDialog(),
+    );
+  }
+
+  @override
+  State<RtmpIpSettingsDialog> createState() => _RtmpIpSettingsDialogState();
+}
+
+class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
+  BroadcastTargetType _selectedTarget = BroadcastTargetType.youtubeLive;
+  late TextEditingController _ipController;
+  late TextEditingController _youtubeUrlController;
+
+  final List<String> _presetIps = [
+    '127.0.0.1',
+    '192.168.1.100',
+    '192.168.0.105',
+    '10.0.0.5',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+    _ipController = TextEditingController(text: appProvider.rtmpLaptopIp);
+    _youtubeUrlController = TextEditingController(
+      text: appProvider.customYouTubeLiveUrl.isNotEmpty
+          ? appProvider.customYouTubeLiveUrl
+          : appProvider.customYouTubeVideoId,
+    );
+    _ipController.addListener(_onFieldChanged);
+    _youtubeUrlController.addListener(_onFieldChanged);
+  }
+
+  void _onFieldChanged() {
+    setState(() {});
+  }
+
+  @override
+  void dispose() {
+    _ipController.removeListener(_onFieldChanged);
+    _youtubeUrlController.removeListener(_onFieldChanged);
+    _ipController.dispose();
+    _youtubeUrlController.dispose();
+    super.dispose();
+  }
+
+  void _saveSettings() {
+    final appProvider = Provider.of<AppProvider>(context, listen: false);
+
+    if (_selectedTarget == BroadcastTargetType.localRtmp) {
+      final rawIp = _ipController.text.trim();
+      if (rawIp.isNotEmpty) {
+        appProvider.updateRtmpLaptopIp(rawIp);
+      }
+      Navigator.of(context).pop();
+
+      showTopSnackBar(
+        Overlay.of(context),
+        CustomSnackBar.success(
+          message: 'Local RTMP Target set to rtmp://${appProvider.rtmpLaptopIp}/live/demo',
+          backgroundColor: AppTheme.accentGreen,
+        ),
+      );
+    } else {
+      final rawYoutube = _youtubeUrlController.text.trim();
+      if (rawYoutube.isNotEmpty) {
+        appProvider.setCustomStreamerYouTubeUrl(rawYoutube);
+      }
+      Navigator.of(context).pop();
+
+      final videoId = AppProvider.extractYouTubeId(rawYoutube);
+      showTopSnackBar(
+        Overlay.of(context),
+        CustomSnackBar.success(
+          message: 'YouTube Live Target set to Video ID: $videoId',
+          backgroundColor: AppTheme.accentRed,
+        ),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final appProvider = Provider.of<AppProvider>(context);
+    final amir = appProvider.getStreamerById('prof_alghamdi_01');
+    final isLive = amir?.isCurrentlyLive ?? false;
+
+    return Dialog(
+      backgroundColor: AppTheme.darkSurface3,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        side: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Row
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentRed.withValues(alpha: 0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.cell_tower_rounded,
+                      color: AppTheme.accentRed,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: AppTheme.spaceMd),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Flexible(
+                              child: Text(
+                                'live_studio.director_title'.tr(),
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.accentRed,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: const Text(
+                                'STUDIO',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          'live_studio.director_subtitle'.tr(),
+                          style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11.5),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: AppTheme.spaceMd),
+              const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+              const SizedBox(height: AppTheme.spaceMd),
+
+              // 🔴 Amir Al-Hatemi Live Status & Go-Live Control Banner
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                decoration: BoxDecoration(
+                  color: isLive
+                      ? AppTheme.accentRed.withValues(alpha: 0.15)
+                      : AppTheme.darkSurface1,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  border: Border.all(
+                    color: isLive ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+                    width: 1.5,
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            isLive ? '🔴 AMIR AL-HATEMI IS LIVE' : '⚪ BROADCAST OFFLINE',
+                            style: TextStyle(
+                              color: isLive ? AppTheme.accentRed : AppTheme.textMutedDark,
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            isLive
+                                ? 'Live notification broadcasted to followers'
+                                : 'Click to go live on discovery feed and map',
+                            style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spaceSm),
+                    ElevatedButton.icon(
+                      onPressed: () {
+                        appProvider.toggleBroadcasterGoLive(context);
+                      },
+                      icon: Icon(
+                        isLive ? Icons.stop_circle_rounded : Icons.sensors_rounded,
+                        size: 16,
+                      ),
+                      label: Text(
+                        isLive ? 'End Stream' : 'Go Live',
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isLive ? Colors.red.shade800 : AppTheme.accentRed,
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppTheme.spaceMd),
+
+              // Target Selector Tabs: OBS RTMP vs YouTube Live
+              Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface1,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _selectedTarget = BroadcastTargetType.youtubeLive),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _selectedTarget == BroadcastTargetType.youtubeLive
+                                ? AppTheme.accentRed
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.play_circle_fill_rounded,
+                                size: 16,
+                                color: _selectedTarget == BroadcastTargetType.youtubeLive
+                                    ? Colors.white
+                                    : AppTheme.textSecondaryDark,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'YouTube Live',
+                                style: TextStyle(
+                                  color: _selectedTarget == BroadcastTargetType.youtubeLive
+                                      ? Colors.white
+                                      : AppTheme.textSecondaryDark,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => setState(() => _selectedTarget = BroadcastTargetType.localRtmp),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          decoration: BoxDecoration(
+                            color: _selectedTarget == BroadcastTargetType.localRtmp
+                                ? AppTheme.accentBlue
+                                : Colors.transparent,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.laptop_chromebook_rounded,
+                                size: 16,
+                                color: _selectedTarget == BroadcastTargetType.localRtmp
+                                    ? Colors.white
+                                    : AppTheme.textSecondaryDark,
+                              ),
+                              const SizedBox(width: 6),
+                              Text(
+                                'Local OBS RTMP',
+                                style: TextStyle(
+                                  color: _selectedTarget == BroadcastTargetType.localRtmp
+                                      ? Colors.white
+                                      : AppTheme.textSecondaryDark,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              const SizedBox(height: AppTheme.spaceMd),
+
+              // 🔴 Section 1: YouTube Live Stream Settings
+              if (_selectedTarget == BroadcastTargetType.youtubeLive) ...[
+                const Text(
+                  'YouTube Live URL or Video ID',
+                  style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                TextField(
+                  controller: _youtubeUrlController,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: 'https://youtube.com/watch?v=... or Video ID',
+                    hintStyle: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11.5),
+                    prefixIcon: const Icon(Icons.link_rounded, color: AppTheme.accentRed, size: 18),
+                    filled: true,
+                    fillColor: AppTheme.darkSurface1,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+
+                // Auto-Detect button — scoped to Amir Al-Hatemi's own
+                // YouTube channel only, so it always finds *his* current
+                // live broadcast instead of relying on a manually pasted
+                // link (which fails silently for channel/live URLs).
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: appProvider.isDetectingAmirLiveVideo
+                        ? null
+                        : () async {
+                            final found =
+                                await appProvider.autoDetectAmirLiveVideo();
+                            if (!context.mounted) return;
+                            if (found) {
+                              _youtubeUrlController.text =
+                                  appProvider.customYouTubeLiveUrl;
+                              showTopSnackBar(
+                                Overlay.of(context),
+                                CustomSnackBar.success(
+                                  message:
+                                      'Found Amir\'s live video: ${appProvider.customYouTubeVideoId}',
+                                  backgroundColor: AppTheme.accentGreen,
+                                ),
+                              );
+                            } else {
+                              showTopSnackBar(
+                                Overlay.of(context),
+                                CustomSnackBar.error(
+                                  message: appProvider.amirAutoDetectError ??
+                                      'Could not detect a live video.',
+                                ),
+                              );
+                            }
+                          },
+                    icon: appProvider.isDetectingAmirLiveVideo
+                        ? const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppTheme.accentRed,
+                            ),
+                          )
+                        : const Icon(Icons.sensors_rounded, size: 16, color: AppTheme.accentRed),
+                    label: Text(
+                      appProvider.isDetectingAmirLiveVideo
+                          ? 'Detecting...'
+                          : "Auto-Detect Amir's Live Video",
+                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.accentRed,
+                      side: const BorderSide(color: AppTheme.accentRed),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+
+                // Broadcast Format Selector (Video vs Audio-Only)
+                Row(
+                  children: [
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => appProvider.setBroadcastType(BroadcastType.liveVideo),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: appProvider.customBroadcastType == BroadcastType.liveVideo
+                                ? AppTheme.accentRed.withValues(alpha: 0.2)
+                                : AppTheme.darkSurface1,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                            border: Border.all(
+                              color: appProvider.customBroadcastType == BroadcastType.liveVideo
+                                  ? AppTheme.accentRed
+                                  : AppTheme.darkBorderSubtle,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.videocam_rounded,
+                                size: 15,
+                                color: appProvider.customBroadcastType == BroadcastType.liveVideo
+                                    ? AppTheme.accentRed
+                                    : AppTheme.textMutedDark,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                'Video Stream',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: appProvider.customBroadcastType == BroadcastType.liveVideo
+                                      ? Colors.white
+                                      : AppTheme.textSecondaryDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: InkWell(
+                        onTap: () => appProvider.setBroadcastType(BroadcastType.liveAudio),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+                          decoration: BoxDecoration(
+                            color: appProvider.customBroadcastType == BroadcastType.liveAudio
+                                ? const Color(0xFF3F3F46)
+                                : AppTheme.darkSurface1,
+                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                            border: Border.all(
+                              color: appProvider.customBroadcastType == BroadcastType.liveAudio
+                                  ? const Color(0xFFA1A1AA)
+                                  : AppTheme.darkBorderSubtle,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.mic_rounded,
+                                size: 15,
+                                color: appProvider.customBroadcastType == BroadcastType.liveAudio
+                                    ? const Color(0xFFE4E4E7)
+                                    : AppTheme.textMutedDark,
+                              ),
+                              const SizedBox(width: 5),
+                              Text(
+                                'Audio-Only',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  color: appProvider.customBroadcastType == BroadcastType.liveAudio
+                                      ? Colors.white
+                                      : AppTheme.textSecondaryDark,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: AppTheme.spaceSm),
+
+                // Helper instructions for YouTube Studio
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spaceSm),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface1,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: AppTheme.darkBorderSubtle),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '💡 Where to find in YouTube Studio:',
+                        style: TextStyle(color: Colors.amberAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        '1. In YouTube Studio, click "Go Live".\n2. Copy the Share / Watch Link (or Video ID) and paste above.\n3. Copy the "Stream Key" and paste into OBS Studio.',
+                        style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 10.5, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              // 🔵 Section 2: Local OBS RTMP Settings
+              if (_selectedTarget == BroadcastTargetType.localRtmp) ...[
+                const Text(
+                  'Laptop Local IP Address',
+                  style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                TextField(
+                  controller: _ipController,
+                  keyboardType: TextInputType.url,
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'monospace'),
+                  decoration: InputDecoration(
+                    hintText: 'e.g. 192.168.1.100',
+                    hintStyle: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11.5),
+                    prefixIcon: const Icon(Icons.laptop_rounded, color: AppTheme.accentBlue, size: 18),
+                    filled: true,
+                    fillColor: AppTheme.darkSurface1,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+
+                // IP Presets
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: _presetIps.map((ip) {
+                    final isSelected = _ipController.text.trim() == ip;
+                    return ChoiceChip(
+                      label: Text(ip),
+                      selected: isSelected,
+                      selectedColor: AppTheme.accentBlue.withValues(alpha: 0.3),
+                      backgroundColor: AppTheme.darkSurface1,
+                      side: BorderSide(
+                        color: isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
+                      ),
+                      labelStyle: TextStyle(
+                        color: isSelected ? AppTheme.accentBlue : AppTheme.textSecondaryDark,
+                        fontSize: 10.5,
+                        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      ),
+                      onSelected: (selected) {
+                        if (selected) {
+                          _ipController.text = ip;
+                        }
+                      },
+                    );
+                  }).toList(),
+                ),
+
+                const SizedBox(height: AppTheme.spaceSm),
+
+                // OBS Target URL Preview
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spaceSm),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkBgBase,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.link_rounded, color: AppTheme.accentBlue, size: 16),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          'rtmp://${_ipController.text.trim().isEmpty ? "..." : _ipController.text.trim()}/live/demo',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 11,
+                            fontFamily: 'monospace',
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.copy_rounded, size: 14, color: AppTheme.textMutedDark),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          Clipboard.setData(ClipboardData(
+                            text: 'rtmp://${_ipController.text.trim()}/live/demo',
+                          ));
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('RTMP URL copied to clipboard')),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // Action Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondaryDark)),
+                  ),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  ElevatedButton(
+                    onPressed: _saveSettings,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.accentRed,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
+                    ),
+                    child: const Text('Save & Apply', style: TextStyle(fontWeight: FontWeight.bold)),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
