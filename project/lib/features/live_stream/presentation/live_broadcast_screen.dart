@@ -306,6 +306,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               viewerCount: viewerCount,
               speakers: streamer.affiliatedSpeakers,
               allVods: MockVodArchivePool.sampleVods,
+              onStageTap: () {
+                if (!_isPlaying) {
+                  setState(() {
+                    _isPlaying = true;
+                    _streamState = StreamState.live;
+                  });
+                }
+              },
             ),
 
           // 2b. Multi-Speaker Floating Video Overlay
