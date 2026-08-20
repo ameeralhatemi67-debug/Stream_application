@@ -473,6 +473,6 @@ final List<StreamerModel> mockStreamers = [
       'تلاوات التهجد والتراويح اليومية'
     ],
     youtubeHandle: 'AlQuran4KOfficial',
-    youtubeVideoId: '_y45JcS3MlQ',
+    youtubeVideoId: 'kY31f13b-hU',
   ),
 ];

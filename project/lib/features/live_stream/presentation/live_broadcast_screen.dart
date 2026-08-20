@@ -272,30 +272,27 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       child: Stack(
         alignment: Alignment.center,
         children: [
-          // 1. The Video/Audio Player Engine (Always mounted to play audio continuously)
-          Opacity(
-            opacity: isAudioLive ? 0.0 : 1.0,
-            child: AbstractVideoPlayer.fromSource(
-              key: ValueKey(
-                  '${_sourceType.name}_${appProvider.rtmpLaptopIp}_${appProvider.streamReloadCount}'),
-              sourceType: _sourceType,
-              streamUrl: _getStreamUrl(appProvider),
-              autoPlay: _isPlaying,
-              onStateChanged: (state) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && _streamState != state) {
-                    setState(() => _streamState = state);
-                  }
-                });
-              },
-              onError: (_) {
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  if (mounted && _streamState != StreamState.fallbackError) {
-                    setState(() => _streamState = StreamState.fallbackError);
-                  }
-                });
-              },
-            ),
+          // 1. The Video/Audio Player Engine (Always mounted so Android WebView never suspends audio)
+          AbstractVideoPlayer.fromSource(
+            key: ValueKey(
+                '${_sourceType.name}_${appProvider.rtmpLaptopIp}_${appProvider.streamReloadCount}'),
+            sourceType: _sourceType,
+            streamUrl: _getStreamUrl(appProvider),
+            autoPlay: _isPlaying,
+            onStateChanged: (state) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _streamState != state) {
+                  setState(() => _streamState = state);
+                }
+              });
+            },
+            onError: (_) {
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (mounted && _streamState != StreamState.fallbackError) {
+                  setState(() => _streamState = StreamState.fallbackError);
+                }
+              });
+            },
           ),
 
           // 2. Audio-Only Presenter Stage Overlay with Kinetic Pulse Dynamics
