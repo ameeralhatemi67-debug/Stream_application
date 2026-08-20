@@ -10,9 +10,9 @@ import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
 import '../models/streamer_models.dart';
 import '../models/vod_models.dart';
 import 'widgets/vod_grid_tile.dart';
-import 'widgets/vod_player_modal_sheet.dart';
 import 'widgets/org_branches_modal_sheet.dart';
 import 'widgets/join_org_modal_sheet.dart';
+import 'widgets/playlist_viewer_modal_sheet.dart';
 
 class BroadcasterProfileScreen extends StatefulWidget {
   final String streamerId;
@@ -1217,112 +1217,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     StreamerModel streamer,
     String lang,
   ) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) {
-        return Container(
-          height: MediaQuery.of(ctx).size.height * 0.75,
-          decoration: const BoxDecoration(
-            color: AppTheme.darkBgBase,
-            borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
-            border: Border(
-                top: BorderSide(color: AppTheme.darkBorderSubtle, width: 1.5)),
-          ),
-          child: Column(
-            children: [
-              Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.textSecondaryDark.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        playlist.getLocalizedTitle(lang),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded,
-                          color: AppTheme.textSecondaryDark),
-                      onPressed: () => Navigator.pop(ctx),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(color: AppTheme.darkBorderSubtle),
-              Expanded(
-                child: ListView.separated(
-                  padding: const EdgeInsets.all(16),
-                  itemCount: playlist.videos.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 10),
-                  itemBuilder: (c, i) {
-                    final video = playlist.videos[i];
-                    return ListTile(
-                      tileColor: AppTheme.darkSurface1,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        side:
-                            const BorderSide(color: AppTheme.darkBorderSubtle),
-                      ),
-                      leading: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: Image(
-                          image: video.thumbnailUrl.startsWith('assets/')
-                              ? AssetImage(video.thumbnailUrl) as ImageProvider
-                              : NetworkImage(video.thumbnailUrl),
-                          width: 50,
-                          height: 35,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      title: Text(
-                        video.getLocalizedTitle(lang),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      subtitle: Text(
-                        video.formattedDuration,
-                        style: const TextStyle(
-                            color: AppTheme.textSecondaryDark, fontSize: 11),
-                      ),
-                      onTap: () {
-                        Navigator.pop(ctx);
-                        VodPlayerModalSheet.show(
-                          context,
-                          vod: video,
-                          streamer: streamer,
-                        );
-                      },
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
-        );
-      },
+    PlaylistViewerModalSheet.show(
+      context,
+      playlist: playlist,
+      streamer: streamer,
+      langCode: lang,
     );
   }
 }

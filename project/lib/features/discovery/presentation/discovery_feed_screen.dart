@@ -207,8 +207,11 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                     height: 46,
                     decoration: BoxDecoration(
                       color: AppTheme.darkSurface1,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppTheme.darkBorderSubtle),
+                      borderRadius: BorderRadius.circular(14.0),
+                      border: Border.all(
+                        color: AppTheme.darkBorderSubtle,
+                        width: 1.2,
+                      ),
                     ),
                     child: TextField(
                       controller: _searchController,
@@ -245,7 +248,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 Material(
                   color: AppTheme.darkSurface1,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    borderRadius: BorderRadius.circular(14.0),
                     side: BorderSide(
                       color: appProvider.selectedTagFilter != 'all'
                           ? AppTheme.accentRed

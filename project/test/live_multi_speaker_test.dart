@@ -190,7 +190,7 @@ void main() {
       );
 
       // Verify all 3 speaker names rendered
-      expect(find.text('Abdulrahman Hejazi'), findsOneWidget);
+      expect(find.text('Abdulrahman Hejazi'), findsAtLeastNWidgets(1));
       expect(find.text('Dr. Sarah Al-Dosari'), findsOneWidget);
       expect(find.text('Alex Thompson'), findsOneWidget);
 

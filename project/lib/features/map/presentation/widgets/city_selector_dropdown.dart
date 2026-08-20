@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/map_models.dart';
@@ -19,10 +19,10 @@ class CitySelectorDropdown extends StatelessWidget {
 
     return PopupMenuButton<MapRegionModel>(
       onSelected: onCitySelected,
-      color: AppTheme.darkSurface3,
+      color: AppTheme.darkSurface1,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        side: const BorderSide(color: AppTheme.accentRed, width: 1.2),
+        side: const BorderSide(color: AppTheme.darkBorderSubtle, width: 1.0),
       ),
       offset: const Offset(0, 44),
       itemBuilder: (context) {
@@ -35,7 +35,7 @@ class CitySelectorDropdown extends StatelessWidget {
                 Icon(
                   Icons.location_on_rounded,
                   size: 18,
-                  color: isCurrent ? AppTheme.accentRed : AppTheme.textMutedDark,
+                  color: isCurrent ? AppTheme.accentBlue : AppTheme.textMutedDark,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -44,7 +44,7 @@ class CitySelectorDropdown extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                      color: isCurrent ? AppTheme.accentRed : AppTheme.textPrimaryDark,
+                      color: isCurrent ? AppTheme.accentBlue : AppTheme.textPrimaryDark,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -54,7 +54,7 @@ class CitySelectorDropdown extends StatelessWidget {
                   const Icon(
                     Icons.check_rounded,
                     size: 16,
-                    color: AppTheme.accentRed,
+                    color: AppTheme.accentBlue,
                   ),
               ],
             ),
@@ -65,14 +65,17 @@ class CitySelectorDropdown extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface3.withValues(alpha: 0.95),
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.accentRed.withValues(alpha: 0.6), width: 1.2),
-          boxShadow: [
+          color: AppTheme.darkSurface1.withValues(alpha: 0.80),
+          borderRadius: BorderRadius.circular(14.0),
+          border: Border.all(
+            color: AppTheme.darkBorderSubtle,
+            width: 1.2,
+          ),
+          boxShadow: const [
             BoxShadow(
-              color: AppTheme.accentRed.withValues(alpha: 0.15),
+              color: Colors.black38,
               blurRadius: 10,
-              offset: const Offset(0, 3),
+              offset: Offset(0, 3),
             ),
           ],
         ),
@@ -86,7 +89,7 @@ class CitySelectorDropdown extends StatelessWidget {
                   const Icon(
                     Icons.location_on_rounded,
                     size: 16,
-                    color: AppTheme.accentRed,
+                    color: AppTheme.accentBlue,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
@@ -105,9 +108,9 @@ class CitySelectorDropdown extends StatelessWidget {
               ),
             ),
             const Icon(
-              Icons.keyboard_arrow_down_rounded,
-              size: 18,
-              color: AppTheme.accentRed,
+              Icons.arrow_drop_down_rounded,
+              color: AppTheme.textMutedDark,
+              size: 20,
             ),
           ],
         ),

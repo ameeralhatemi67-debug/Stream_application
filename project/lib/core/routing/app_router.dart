@@ -16,6 +16,7 @@ import '../../features/profile/presentation/broadcaster_profile_screen.dart';
 import '../../features/profile/presentation/settings_screen.dart';
 import '../../features/live_stream/presentation/live_broadcast_screen.dart';
 import '../../features/admin/presentation/admin_hub_screen.dart';
+import '../../features/splash/presentation/app_splash_screen.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -29,7 +30,7 @@ class AppRouter {
 
   static final GoRouter router = GoRouter(
     navigatorKey: _rootNavigatorKey,
-    initialLocation: '/welcome',
+    initialLocation: '/splash',
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Column(
@@ -51,6 +52,12 @@ class AppRouter {
       ),
     ),
     routes: [
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/splash',
+        name: 'splash',
+        builder: (context, state) => const AppSplashScreen(),
+      ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/welcome',

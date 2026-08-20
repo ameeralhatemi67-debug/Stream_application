@@ -1,9 +1,27 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
+
+class SearchResultItem {
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final bool isLive;
+  final LatLng coordinates;
+  final double zoomLevel;
+
+  SearchResultItem({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    this.isLive = false,
+    required this.coordinates,
+    required this.zoomLevel,
+  });
+}
 
 class TopSpatialSearchBar extends StatefulWidget {
   final Function(LatLng coordinates, double zoom, String label)
@@ -95,14 +113,17 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
         Container(
           height: 46,
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface3.withValues(alpha: 0.95),
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            border: Border.all(color: AppTheme.accentRed.withValues(alpha: 0.6), width: 1.2),
-            boxShadow: [
+            color: AppTheme.darkSurface1.withValues(alpha: 0.80),
+            borderRadius: BorderRadius.circular(14.0),
+            border: Border.all(
+              color: AppTheme.darkBorderSubtle,
+              width: 1.2,
+            ),
+            boxShadow: const [
               BoxShadow(
-                color: AppTheme.accentRed.withValues(alpha: 0.15),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
+                color: Colors.black38,
+                blurRadius: 10,
+                offset: Offset(0, 3),
               ),
             ],
           ),
@@ -110,16 +131,28 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
             controller: _searchController,
             focusNode: _focusNode,
             onChanged: _onQueryChanged,
-            style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontSize: 13,
+            ),
             decoration: InputDecoration(
               hintText: 'map.search_placeholder'.tr(),
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark, fontSize: 12),
-              prefixIcon: const Icon(Icons.search_rounded,
-                  color: AppTheme.accentRed, size: 20),
+              hintStyle: const TextStyle(
+                color: AppTheme.textMutedDark,
+                fontSize: 12,
+              ),
+              prefixIcon: const Icon(
+                Icons.search_rounded,
+                color: AppTheme.accentBlue,
+                size: 20,
+              ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: const Icon(Icons.cancel_rounded,
-                          size: 18, color: AppTheme.textMutedDark),
+                      icon: const Icon(
+                        Icons.cancel_rounded,
+                        size: 18,
+                        color: AppTheme.textMutedDark,
+                      ),
                       onPressed: () {
                         _searchController.clear();
                         _onQueryChanged('');
@@ -140,9 +173,9 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
             margin: const EdgeInsets.only(top: 8),
             constraints: const BoxConstraints(maxHeight: 240),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface3.withValues(alpha: 0.98),
+              color: AppTheme.darkSurface1.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.accentRed.withValues(alpha: 0.4)),
+              border: Border.all(color: AppTheme.darkBorderSubtle),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black54,
@@ -189,21 +222,41 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                   subtitle: Text(
                     result.subtitle,
                     style: const TextStyle(
-                      color: AppTheme.textMutedDark,
+                      color: AppTheme.textSecondaryDark,
                       fontSize: 11,
                     ),
                   ),
+                  trailing: result.isLive
+                      ? Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentRed,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: const Text(
+                            'LIVE',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        )
+                      : null,
                   onTap: () {
                     widget.onSearchResultSelected(
                       result.coordinates,
                       result.zoomLevel,
                       result.title,
                     );
-                    _focusNode.unfocus();
+                    _searchController.text = result.title;
                     setState(() {
                       _isSearching = false;
-                      _searchController.text = result.title;
                     });
+                    _focusNode.unfocus();
                   },
                 );
               },
@@ -212,22 +265,4 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
       ],
     );
   }
-}
-
-class SearchResultItem {
-  final String title;
-  final String subtitle;
-  final IconData icon;
-  final bool isLive;
-  final LatLng coordinates;
-  final double zoomLevel;
-
-  SearchResultItem({
-    required this.title,
-    required this.subtitle,
-    required this.icon,
-    this.isLive = false,
-    required this.coordinates,
-    required this.zoomLevel,
-  });
 }
