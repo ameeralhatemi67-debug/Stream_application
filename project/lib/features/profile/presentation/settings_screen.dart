@@ -159,6 +159,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget build(BuildContext context) {
     final appProvider = context.watch<AppProvider>();
     final currentLocale = context.locale.languageCode;
+    final isAr = currentLocale == 'ar';
     final isStreamer = appProvider.isStreamerModeEnabled;
 
     return Scaffold(
@@ -218,6 +219,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: AppTheme.spaceSm),
           _buildLanguageSelectorCard(context, currentLocale),
+          const SizedBox(height: AppTheme.spaceLg),
+
+          // Section 3.5: Notification Preferences & Anti-Spam Throttling
+          _buildSectionHeader(
+            context,
+            title: isAr ? 'إعدادات الإشعارات والتنبيهات' : 'Notification Preferences',
+            icon: Icons.notifications_active_rounded,
+            iconColor: AppTheme.accentBlue,
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+          _buildNotificationPreferencesCard(context, appProvider),
           const SizedBox(height: AppTheme.spaceLg),
 
           // Section 4: Streaming Quality
@@ -1618,6 +1630,205 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             onPressed: () => Navigator.pop(ctx),
             child: const Text('Close'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotificationPreferencesCard(BuildContext context, AppProvider provider) {
+    final isAr = context.locale.languageCode == 'ar';
+    final prefs = provider.notificationPreferences;
+    final mutedIds = prefs.mutedEntityIds;
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.darkBorderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // ⏱️ 10-Minute Rolling Rate Limiter Slider
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                isAr ? 'الحد الأقصى للتنبيهات (كل 10 دقائق)' : '10-Minute Alert Limit',
+                style: const TextStyle(
+                  color: AppTheme.textPrimaryDark,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13.5,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentBlue.withValues(alpha: 0.18),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                  border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.5)),
+                ),
+                child: Text(
+                  isAr ? '${prefs.maxPer10Min} إشعارات' : '${prefs.maxPer10Min} alerts',
+                  style: const TextStyle(
+                    color: AppTheme.accentBlue,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isAr
+                ? 'يمنع التكرار والإزعاج بدمج التنبيهات الزائدة في ملخص ذكي.'
+                : 'Prevents notification fatigue by bundling excess alerts into a smart digest.',
+            style: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11),
+          ),
+          const SizedBox(height: 8),
+          Slider(
+            value: prefs.maxPer10Min.toDouble(),
+            min: 1,
+            max: 10,
+            divisions: 9,
+            activeColor: AppTheme.accentBlue,
+            inactiveColor: AppTheme.darkBorderSubtle,
+            label: '${prefs.maxPer10Min}',
+            onChanged: (val) {
+              provider.setNotificationRateLimit(val.round());
+            },
+          ),
+          const Divider(color: AppTheme.darkBorderSubtle, height: 24),
+
+          // 🔔 Granular Notification Category Toggles
+          Text(
+            isAr ? 'أقسام التنبيهات المفعّلة' : 'Active Notification Categories',
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontWeight: FontWeight.bold,
+              fontSize: 13,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+
+          _buildNotifSwitch(
+            title: isAr ? '🔴 بثوث الفيديو المباشرة' : '🔴 Live Video Broadcasts',
+            value: prefs.liveVideoEnabled,
+            onChanged: (val) {
+              provider.updateNotificationPreferences(
+                prefs.copyWith(liveVideoEnabled: val),
+              );
+            },
+          ),
+          _buildNotifSwitch(
+            title: isAr ? '🎙️ المساحات الصوتية المباشرة' : '🎙️ Live Audio Stages',
+            value: prefs.liveAudioEnabled,
+            onChanged: (val) {
+              provider.updateNotificationPreferences(
+                prefs.copyWith(liveAudioEnabled: val),
+              );
+            },
+          ),
+          _buildNotifSwitch(
+            title: isAr ? '🌟 مكافأة إتمام ساعة مشاهدة' : '🌟 1-Hour Watch Milestone Rewards',
+            value: prefs.watchMilestonesEnabled,
+            onChanged: (val) {
+              provider.updateNotificationPreferences(
+                prefs.copyWith(watchMilestonesEnabled: val),
+              );
+            },
+          ),
+          _buildNotifSwitch(
+            title: isAr ? '🏛️ دعوات المنظمات والمشاركات' : '🏛️ Org Invites & Guest Roles',
+            value: prefs.orgInvitesEnabled,
+            onChanged: (val) {
+              provider.updateNotificationPreferences(
+                prefs.copyWith(orgInvitesEnabled: val),
+              );
+            },
+          ),
+          _buildNotifSwitch(
+            title: isAr ? '📩 الرسائل والتوجيهات الإدارية' : '📩 Administrative Governance Notes',
+            value: prefs.adminNotesEnabled,
+            onChanged: (val) {
+              provider.updateNotificationPreferences(
+                prefs.copyWith(adminNotesEnabled: val),
+              );
+            },
+          ),
+          _buildNotifSwitch(
+            title: isAr ? '🎬 المحاضرات والفيديوهات الجديدة' : '🎬 New VODs & Lectures',
+            value: prefs.vodsEnabled,
+            onChanged: (val) {
+              provider.updateNotificationPreferences(
+                prefs.copyWith(vodsEnabled: val),
+              );
+            },
+          ),
+
+          // 🔕 Muted Streamers / Organizations List
+          if (mutedIds.isNotEmpty) ...[
+            const Divider(color: AppTheme.darkBorderSubtle, height: 24),
+            Text(
+              isAr ? 'القنوات المكتومة (${mutedIds.length})' : 'Muted Channels (${mutedIds.length})',
+              style: const TextStyle(
+                color: AppTheme.textPrimaryDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: mutedIds.map((id) {
+                final streamer = provider.getStreamerById(id);
+                final name = streamer != null
+                    ? streamer.getLocalizedName(isAr ? 'ar' : 'en')
+                    : id;
+                return Chip(
+                  backgroundColor: AppTheme.darkSurface2,
+                  label: Text(
+                    name,
+                    style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+                  ),
+                  deleteIcon: const Icon(Icons.close_rounded, size: 14, color: AppTheme.accentRed),
+                  onDeleted: () {
+                    provider.toggleMuteEntity(id);
+                  },
+                );
+              }).toList(),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildNotifSwitch({
+    required String title,
+    required bool value,
+    required ValueChanged<bool> onChanged,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+            ),
+          ),
+          Switch(
+            value: value,
+            activeThumbColor: AppTheme.accentBlue,
+            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            onChanged: onChanged,
           ),
         ],
       ),

@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import '../theme/app_theme.dart';
+import '../widgets/interactive_toast_overlay.dart';
+import '../services/notifications/notification_models.dart';
+import '../services/notifications/watch_session_tracker.dart';
 import '../services/youtube_api_service.dart';
 import '../services/google_auth_service.dart';
 import '../services/admin_database_service.dart';
@@ -111,7 +113,12 @@ class AppProvider extends ChangeNotifier {
     'stream_live_prof_alotaibi_03': 0,
   };
 
-  // Notifications (Rule: max 8 items, auto-deleted after 6 hours)
+  // Enhanced Notifications & Anti-Spam Throttling Preferences
+  final List<AppNotificationModel> _enhancedNotifications = [];
+  NotificationPreferencesModel _notificationPreferences =
+      const NotificationPreferencesModel();
+
+  // Legacy Notifications (For backward compatibility)
   final List<AppNotificationItem> _notifications = [];
 
   AppProvider([AdminDatabaseService? adminDbService])
@@ -313,6 +320,14 @@ class AppProvider extends ChangeNotifier {
   // Q&A & Notifications Getters
   List<LectureQuestionModel> get questions => List.unmodifiable(_questions);
 
+  NotificationPreferencesModel get notificationPreferences =>
+      _notificationPreferences;
+
+  List<AppNotificationModel> get enhancedNotifications {
+    _cleanupOldNotifications();
+    return List.unmodifiable(_enhancedNotifications);
+  }
+
   List<AppNotificationItem> get notifications {
     _cleanupOldNotifications();
     return List.unmodifiable(_notifications);
@@ -320,18 +335,146 @@ class AppProvider extends ChangeNotifier {
 
   int get unreadNotificationsCount {
     _cleanupOldNotifications();
-    return _notifications.where((n) => !n.isRead).length;
+    return _enhancedNotifications.where((n) => !n.isRead).length +
+        _notifications.where((n) => !n.isRead).length;
   }
 
   void _cleanupOldNotifications() {
     final now = DateTime.now();
     _notifications.removeWhere((n) => now.difference(n.timestamp).inHours >= 6);
+    _enhancedNotifications
+        .removeWhere((n) => now.difference(n.timestamp).inHours >= 12);
+  }
+
+  void updateNotificationPreferences(NotificationPreferencesModel preferences) {
+    _notificationPreferences = preferences;
+    notifyListeners();
+  }
+
+  void setNotificationRateLimit(int maxPer10Min) {
+    _notificationPreferences =
+        _notificationPreferences.copyWith(maxPer10Min: maxPer10Min);
+    notifyListeners();
+  }
+
+  void toggleMuteEntity(String entityId) {
+    final currentMuted = Set<String>.from(_notificationPreferences.mutedEntityIds);
+    if (currentMuted.contains(entityId)) {
+      currentMuted.remove(entityId);
+    } else {
+      currentMuted.add(entityId);
+    }
+    _notificationPreferences =
+        _notificationPreferences.copyWith(mutedEntityIds: currentMuted);
+    notifyListeners();
+  }
+
+  bool isEntityMuted(String entityId) =>
+      _notificationPreferences.isEntityMuted(entityId);
+
+  void markNotificationAsRead(String id) {
+    final enhIdx = _enhancedNotifications.indexWhere((n) => n.id == id);
+    if (enhIdx != -1) {
+      _enhancedNotifications[enhIdx] =
+          _enhancedNotifications[enhIdx].copyWith(isRead: true);
+    }
+    final legIdx = _notifications.indexWhere((n) => n.id == id);
+    if (legIdx != -1) {
+      _notifications[legIdx].isRead = true;
+    }
+    notifyListeners();
+  }
+
+  void markAllNotificationsAsRead() {
+    for (int i = 0; i < _enhancedNotifications.length; i++) {
+      _enhancedNotifications[i] =
+          _enhancedNotifications[i].copyWith(isRead: true);
+    }
+    for (var n in _notifications) {
+      n.isRead = true;
+    }
+    notifyListeners();
+  }
+
+  void deleteNotification(String id) {
+    _enhancedNotifications.removeWhere((n) => n.id == id);
+    _notifications.removeWhere((n) => n.id == id);
+    notifyListeners();
+  }
+
+  /// Dispatches an enhanced notification with 10-minute rate-limiting,
+  /// quiet hours checks, and interactive toast overlay display.
+  bool addEnhancedNotification(AppNotificationModel item,
+      {BuildContext? context}) {
+    _cleanupOldNotifications();
+
+    // 1. Mute check
+    if (item.streamerId.isNotEmpty && isEntityMuted(item.streamerId)) {
+      return false;
+    }
+
+    // 2. Category / Type toggle check
+    if (!_notificationPreferences.isTypeEnabled(item.type)) {
+      return false;
+    }
+
+    // 3. 10-Minute Rolling Rate Limiter
+    final now = DateTime.now();
+    final recentNotificationsCount = _enhancedNotifications
+        .where((n) => now.difference(n.timestamp).inMinutes <= 10)
+        .length;
+
+    if (recentNotificationsCount >= _notificationPreferences.maxPer10Min) {
+      // Throttle notification when rate limit is exceeded
+      return false;
+    }
+
+    // FIFO retention for up to 30 notifications in history
+    while (_enhancedNotifications.length >= 30) {
+      _enhancedNotifications.removeAt(0);
+    }
+    _enhancedNotifications.insert(0, item);
+
+    // Sync legacy representation
+    addNotification(
+      AppNotificationItem(
+        id: item.id,
+        streamerId: item.streamerId,
+        titleEn: item.titleEn,
+        titleAr: item.titleAr,
+        bodyEn: item.bodyEn,
+        bodyAr: item.bodyAr,
+        timestamp: item.timestamp,
+        streamId: item.streamId,
+        isLiveAlert: item.isLiveAlert,
+      ),
+    );
+
+    // Display interactive dismissible overlay if context is provided
+    if (context != null && context.mounted) {
+      final isAr = EasyLocalization.of(context)?.currentLocale?.languageCode == 'ar';
+      InteractiveToastOverlay.show(
+        context,
+        title: item.getLocalizedTitle(isAr ? 'ar' : 'en'),
+        message: item.getLocalizedBody(isAr ? 'ar' : 'en'),
+        icon: item.isLiveAlert
+            ? Icons.sensors_rounded
+            : (item.type == NotificationType.watchMilestoneOneHour
+                ? Icons.workspace_premium_rounded
+                : Icons.notifications_active_rounded),
+        accentColor: item.isLiveAlert ? AppTheme.accentRed : AppTheme.accentBlue,
+        actionLabel: item.streamId != null ? (isAr ? 'مشاهدة' : 'Watch') : null,
+      );
+    }
+
+    notifyListeners();
+    return true;
   }
 
   void addNotification(AppNotificationItem item) {
     _cleanupOldNotifications();
-    while (_notifications.length >= 8) {
-      _notifications.removeAt(0); // FIFO: remove oldest if 9th arrives
+    while (_notifications.length >= 15) {
+      _notifications.removeAt(0);
     }
     _notifications.add(item);
     notifyListeners();
@@ -1009,18 +1152,33 @@ class AppProvider extends ChangeNotifier {
       // Start polling real viewer count from YouTube
       _startLiveViewerPolling();
       final isAudio = _customBroadcastType == BroadcastType.liveAudio;
-      addNotification(
-        AppNotificationItem(
-          id: 'notif_${DateTime.now().millisecondsSinceEpoch}',
+      final streamerNameEn = orgId != null ? 'Dalilk 4 IELTS' : 'Amir Al-Hatemi';
+      final streamerNameAr = orgId != null ? 'دليل الآيلتس' : 'أمير الحاتمي';
+
+      addEnhancedNotification(
+        AppNotificationModel(
+          id: 'notif_live_${DateTime.now().millisecondsSinceEpoch}',
+          type: isAudio
+              ? NotificationType.streamerLiveAudio
+              : NotificationType.streamerLiveVideo,
           streamerId: targetStreamerId,
-          titleEn: isAudio ? '🎙️ Audio Live Stream Started' : '🔴 Live Broadcast Started',
-          titleAr: isAudio ? '🎙️ بدأ البث الصوتي المباشر' : '🔴 بدأ البث المباشر',
-          bodyEn: '${orgId != null ? 'Dalilk 4 IELTS' : 'Amir Al-Hatemi'} is ${isAudio ? 'streaming live audio' : 'live now'}: $_customLiveTitle',
-          bodyAr: '${orgId != null ? 'دليل الآيلتس' : 'أمير الحاتمي'} مباشر الآن (${isAudio ? 'صوتي' : 'مرئي'}): $_customLiveTitle',
+          streamerName: streamerNameEn,
+          titleEn: isAudio
+              ? '🎙️ Live Audio Stage Started'
+              : '🔴 Live Broadcast Started',
+          titleAr: isAudio
+              ? '🎙️ مساحة صوتية مباشرة'
+              : '🔴 بدأ البث المباشر الآن',
+          bodyEn: isAudio
+              ? 'Live Audio Stage with $streamerNameEn: "$_customLiveTitle" .. Join in!'
+              : '🔴 $streamerNameEn is live now: "$_customLiveTitle" .. Join and interact!',
+          bodyAr: isAudio
+              ? '🎙️ مساحة صوتية مباشرة مع $streamerNameAr: «$_customLiveTitle».. استمع وشارك برأيك'
+              : '🔴 $streamerNameAr بدأ بثاً مباشراً الآن: «$_customLiveTitle».. حيّاك شاركنا وتفاعل!',
           timestamp: DateTime.now(),
           streamId: 'stream_live_992',
-          isLiveAlert: true,
         ),
+        context: context,
       );
 
       if (orgId != null) {
@@ -1043,11 +1201,30 @@ class AppProvider extends ChangeNotifier {
           ),
         );
       }
-
-      if (context != null && context.mounted) {
-        triggerSimulatedNotification(context);
-      }
     } else {
+      // 🌟 Check and push 1-Hour Watch Milestone Notification if user watched >= 60 min
+      WatchSessionTracker.onStreamEnded(
+        'stream_live_992',
+        onMilestoneReached: (spkId, spkName, duration) {
+          addEnhancedNotification(
+            AppNotificationModel(
+              id: 'notif_milestone_${DateTime.now().millisecondsSinceEpoch}',
+              type: NotificationType.watchMilestoneOneHour,
+              streamerId: spkId.isNotEmpty ? spkId : targetStreamerId,
+              streamerName: spkName,
+              titleEn: '🌟 Thank you for watching!',
+              titleAr: '🌟 شكراً لوقتك الثمين!',
+              bodyEn:
+                  'We loved having you for over an hour in $spkName\'s broadcast. We hope it was valuable and inspiring!',
+              bodyAr:
+                  'سعدنا بحضورك ومتابعتك لأكثر من ساعة في بث $spkName. نتمنى لك دوام الفائدة والتوفيق!',
+              timestamp: DateTime.now(),
+            ),
+            context: context,
+          );
+        },
+      );
+
       if (orgId != null) {
         await recordOrgAuditAction(
           OrgAuditLogEntry(
@@ -1060,6 +1237,21 @@ class AppProvider extends ChangeNotifier {
             descriptionEn: 'Ended live broadcast session.',
             descriptionAr: 'تم إنهاء جلسة البث المباشر.',
           ),
+        );
+
+        addEnhancedNotification(
+          AppNotificationModel(
+            id: 'notif_org_end_${DateTime.now().millisecondsSinceEpoch}',
+            type: NotificationType.orgStreamerLiveStatus,
+            streamerId: orgId,
+            streamerName: 'Dalilk 4 IELTS',
+            titleEn: '📡 Stream Session Concluded',
+            titleAr: '📡 انتهت جلسة البث المباشر',
+            bodyEn: 'Faculty member concluded their live session at Dalilk Auditorium.',
+            bodyAr: 'أنهى عضو الكادر جلسته التدريبية المباشرة في مدرج دليلك.',
+            timestamp: DateTime.now(),
+          ),
+          context: context != null && context.mounted ? context : null,
         );
       }
       // Stop polling if no live streamers remain (Quran 24/7 excluded
@@ -1335,63 +1527,20 @@ class AppProvider extends ChangeNotifier {
   }
 
   void triggerSimulatedNotification(BuildContext context) {
-    showTopSnackBar(
-      Overlay.of(context),
-      Material(
-        color: Colors.transparent,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: AppTheme.darkSurface2,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.accentRed, width: 1.5),
-            boxShadow: const [
-              BoxShadow(
-                color: Colors.black54,
-                blurRadius: 16,
-                offset: Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 10,
-                height: 10,
-                decoration: const BoxDecoration(
-                  color: AppTheme.accentRed,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'notifications.live_alert_title'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    Text(
-                      'notifications.live_alert_body'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
+    addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_sim_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.streamerLiveVideo,
+        streamerId: 'prof_alghamdi_01',
+        streamerName: 'Amir Al-Hatemi',
+        titleEn: '🔴 Live Broadcast Started',
+        titleAr: '🔴 بدأ البث المباشر الآن',
+        bodyEn: '🔴 Amir Al-Hatemi is live now: "$customLiveTitle" .. Join in!',
+        bodyAr: '🔴 أمير الحاتمي بدأ بثاً مباشراً الآن: «$customLiveTitle».. حيّاك شاركنا وتفاعل!',
+        timestamp: DateTime.now(),
+        streamId: 'stream_live_992',
       ),
-      displayDuration: const Duration(seconds: 4),
+      context: context,
     );
   }
 
@@ -1402,6 +1551,7 @@ class AppProvider extends ChangeNotifier {
   Future<bool> approveBroadcasterApplication(
     String applicationId, {
     String? adminNotes,
+    BuildContext? context,
   }) async {
     final idx = _applications.indexWhere((a) => a.id == applicationId);
     if (idx == -1) return false;
@@ -1459,18 +1609,22 @@ class AppProvider extends ChangeNotifier {
       _streamers.add(newStreamer);
     }
 
-    addNotification(
-      AppNotificationItem(
+    addEnhancedNotification(
+      AppNotificationModel(
         id: 'notif_verified_${app.id}',
+        type: NotificationType.streamerApplicationApproved,
         streamerId: newStreamer.streamerId,
-        titleEn: 'New Broadcaster Approved!',
-        titleAr: 'تم اعتماد مذيع جديد بنجاح!',
+        streamerName: app.applicantNameEn,
+        titleEn: '🎉 Broadcaster Application Approved!',
+        titleAr: '🎉 أهلاً بك في نخبة المذيعين!',
         bodyEn:
-            '${app.applicantNameEn} has been verified and added to the spatial map.',
+            'Congratulations ${app.applicantNameEn}! Your broadcaster application has been approved and verified on the map.',
         bodyAr:
-            'تم توثيق ${app.applicantNameAr} وإضافته إلى الخريطة التفاعلية.',
+            'تهانينا ${app.applicantNameAr}! تم اعتماد طلبك بنجاح. أصبحت قناتك وموقعك موثقين على الخريطة التفاعلية.',
         timestamp: DateTime.now(),
+        actionUrl: '/profile/${newStreamer.streamerId}',
       ),
+      context: context != null && context.mounted ? context : null,
     );
 
     notifyListeners();
@@ -1480,10 +1634,12 @@ class AppProvider extends ChangeNotifier {
   Future<bool> rejectBroadcasterApplication(
     String applicationId, {
     required String reason,
+    BuildContext? context,
   }) async {
     final idx = _applications.indexWhere((a) => a.id == applicationId);
     if (idx == -1) return false;
 
+    final app = _applications[idx];
     _adminDbService ??= await AdminDatabaseService.create();
     final reviewer = (isAdminUser && _googleUserName != null)
         ? '$_googleUserName (Super Admin)'
@@ -1497,6 +1653,24 @@ class AppProvider extends ChangeNotifier {
 
     if (updated != null) {
       _applications = List.from(await _adminDbService!.loadApplications());
+
+      addEnhancedNotification(
+        AppNotificationModel(
+          id: 'notif_rejected_${applicationId}_${DateTime.now().millisecondsSinceEpoch}',
+          type: NotificationType.streamerApplicationRejected,
+          streamerId: applicationId,
+          streamerName: app.applicantNameEn,
+          titleEn: '📋 Broadcaster Application Status Update',
+          titleAr: '📋 تحديث بخصوص طلب التوثيق الأكاديمي',
+          bodyEn:
+              'Thank you for applying. We could not approve the application at this time: "$reason". You are welcome to re-apply anytime!',
+          bodyAr:
+              'نشكر اهتمامك بالانضمام لمنصتنا. بعد المراجعة الدقيقة، تعذر قبول الطلب حالياً للملاحظات التالية: «$reason». يسعدنا تقديمك مجدداً بعد التعديل!',
+          timestamp: DateTime.now(),
+        ),
+        context: context != null && context.mounted ? context : null,
+      );
+
       notifyListeners();
       return true;
     }
@@ -1792,5 +1966,201 @@ class AppProvider extends ChangeNotifier {
       ),
     );
     notifyListeners();
+  }
+
+  // =========================================================================
+  // 🔔 14 Humanized Notification Event Dispatchers (Saudi Arabic & English)
+  // =========================================================================
+
+  /// Trigger 6: Org Invite to Join Live as Guest Speaker
+  bool notifyOrgGuestInvite({
+    required String orgNameEn,
+    required String orgNameAr,
+    required String streamTitle,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_guest_inv_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.orgLiveGuestInvite,
+        streamerName: orgNameEn,
+        titleEn: '🎤 Live Guest Speaker Invitation',
+        titleAr: '🎤 دعوة للمشاركة كمتحدث ضيف',
+        bodyEn:
+            '$orgNameEn invited you as a guest speaker on their live broadcast: "$streamTitle". Tap to join the stage!',
+        bodyAr:
+            'تدعوك $orgNameAr للمشاركة كمتحدث ضيف في البث المباشر: «$streamTitle». اضغط للانضمام للمسرح والتفاعل!',
+        timestamp: DateTime.now(),
+        streamId: 'stream_live_992',
+      ),
+      context: context,
+    );
+  }
+
+  /// Trigger 7: Org Invites Streamer to Join Roster
+  bool notifyOrgAffiliationInvite({
+    required String orgNameEn,
+    required String orgNameAr,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_aff_inv_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.orgAffiliationInvite,
+        streamerName: orgNameEn,
+        titleEn: '🏛️ Faculty Affiliation Invitation',
+        titleAr: '🏛️ دعوة انضمام للكادر التعليمي',
+        bodyEn:
+            '$orgNameEn sent you an official invitation to join their accredited faculty roster.',
+        bodyAr:
+            'وجّهت لك $orgNameAr دعوة رسمية للانضمام إلى كادرها التعليمي ومدرجاتها المعتمدة.',
+        timestamp: DateTime.now(),
+        actionUrl: '/settings',
+      ),
+      context: context,
+    );
+  }
+
+  /// Trigger 8: Streamer Removed from Org Roster
+  bool notifyStreamerRemovedFromOrg({
+    required String orgNameEn,
+    required String orgNameAr,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_aff_rem_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.streamerRemovedFromOrg,
+        streamerName: orgNameEn,
+        titleEn: 'ℹ️ Organization Affiliation Updated',
+        titleAr: 'ℹ️ تحديث الارتباط الأكاديمي',
+        bodyEn:
+            'Your affiliation with $orgNameEn has concluded. Your independent channel and verified profile remain fully active.',
+        bodyAr:
+            'نفيدك بتحديث كادر $orgNameAr وانتهاء الارتباط مع مدرجات الجهة. حسابك ومحتواك مستقل ومستمر بالكامل.',
+        timestamp: DateTime.now(),
+      ),
+      context: context,
+    );
+  }
+
+  /// Trigger 9: Admin Note to Streamer
+  bool notifyAdminNoteToStreamer({
+    required String noteEn,
+    required String noteAr,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_adm_str_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.adminNoteToStreamer,
+        titleEn: '📩 Administrative Note from Streamer Team',
+        titleAr: '📩 رسالة إدارية من فريق المنصة',
+        bodyEn: 'Administrative guidance regarding your channel: "$noteEn"',
+        bodyAr: 'توجيه إداري بخصوص قناتك وبثوثك: «$noteAr»',
+        timestamp: DateTime.now(),
+      ),
+      context: context,
+    );
+  }
+
+  /// Trigger 10: Admin Card Edit Request to Streamer
+  bool notifyAdminCardEditRequestStreamer({
+    required String fieldsEn,
+    required String fieldsAr,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_adm_card_str_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.adminCardEditRequestStreamer,
+        titleEn: '✏️ Profile Card Update Requested',
+        titleAr: '✏️ مطلوب مراجعة بيانات البطاقة التعريفية',
+        bodyEn:
+            'Please update your profile details ($fieldsEn) to match verification standards.',
+        bodyAr:
+            'يرجى تحديث بعض بيانات بطاقتك ($fieldsAr) لتتوافق مع معايير التوثيق الأكاديمي المعتمدة.',
+        timestamp: DateTime.now(),
+        actionUrl: '/settings',
+      ),
+      context: context,
+    );
+  }
+
+  /// Trigger 11: Admin Note to Organization
+  bool notifyAdminNoteToOrg({
+    required String orgNameEn,
+    required String orgNameAr,
+    required String noteEn,
+    required String noteAr,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_adm_org_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.adminNoteToOrg,
+        streamerName: orgNameEn,
+        titleEn: '📩 Administrative Message for $orgNameEn',
+        titleAr: '📩 رسالة إدارية موجهة لـ $orgNameAr',
+        bodyEn: 'Message from platform administration: "$noteEn"',
+        bodyAr: 'رسالة إدارية موجهة لإدارة المنظمة: «$noteAr»',
+        timestamp: DateTime.now(),
+      ),
+      context: context,
+    );
+  }
+
+  /// Trigger 12: Admin Card Edit Request to Organization
+  bool notifyAdminCardEditRequestOrg({
+    required String orgNameEn,
+    required String orgNameAr,
+    required String branchNameEn,
+    required String branchNameAr,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_adm_card_org_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.adminCardEditRequestOrg,
+        streamerName: orgNameEn,
+        titleEn: '✏️ Campus Branch Details Review',
+        titleAr: '✏️ إشعار تنظيمي لتحديث بيانات المدرج',
+        bodyEn:
+            'Please review and update location specifications for branch "$branchNameEn".',
+        bodyAr:
+            'مطلوب مراجعة وتحديث بيانات فرع أو مدرج «$branchNameAr» المعتمد لدى $orgNameAr.',
+        timestamp: DateTime.now(),
+        actionUrl: '/settings',
+      ),
+      context: context,
+    );
+  }
+
+  /// Trigger 14: Followed Streamer New VOD Upload
+  bool notifyNewVodUpload({
+    required String streamerId,
+    required String streamerNameEn,
+    required String streamerNameAr,
+    required String vodTitleEn,
+    required String vodTitleAr,
+    required String videoId,
+    BuildContext? context,
+  }) {
+    return addEnhancedNotification(
+      AppNotificationModel(
+        id: 'notif_vod_${DateTime.now().millisecondsSinceEpoch}',
+        type: NotificationType.newVodUpload,
+        streamerId: streamerId,
+        streamerName: streamerNameEn,
+        titleEn: '🎬 New Lecture Added by $streamerNameEn',
+        titleAr: '🎬 محاضرة جديدة أضافها $streamerNameAr',
+        bodyEn: 'New lecture: "$vodTitleEn" is now available to watch!',
+        bodyAr: 'فيديو ومحاضرة جديدة: «$vodTitleAr».. شاهدها الآن واستفد!',
+        timestamp: DateTime.now(),
+        actionUrl: '/profile/$streamerId',
+        metadata: {'video_id': videoId},
+      ),
+      context: context,
+    );
   }
 }

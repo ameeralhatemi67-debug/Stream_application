@@ -6,6 +6,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
+import '../../notifications/presentation/notification_center_sheet.dart';
 import 'widgets/streamer_grid_card.dart';
 import 'widgets/tags_filter_bottom_sheet.dart';
 
@@ -33,126 +34,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   }
 
   void _showNotificationsSheet(BuildContext context) {
-    final provider = context.read<AppProvider>();
-    provider.markAllNotificationsRead();
-
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.darkSurface1,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-      ),
-      builder: (context) {
-        final notifications = provider.notifications;
-        final isAr = context.locale.languageCode == 'ar';
-
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spaceLg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'feed.notifications_sheet_title'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const Divider(color: AppTheme.darkBorderSubtle),
-                if (notifications.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32),
-                    child: Center(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.notifications_off_outlined,
-                              color: AppTheme.textMutedDark, size: 36),
-                          const SizedBox(height: 12),
-                          Text(
-                            'feed.no_followed_live'.tr(),
-                            style: const TextStyle(
-                                color: AppTheme.textMutedDark, fontSize: 13),
-                            textAlign: TextAlign.center,
-                          ),
-                        ],
-                      ),
-                    ),
-                  )
-                else
-                  Flexible(
-                    child: ListView.separated(
-                      shrinkWrap: true,
-                      itemCount: notifications.length,
-                      separatorBuilder: (_, __) => const Divider(
-                          color: AppTheme.darkBorderSubtle, height: 1),
-                      itemBuilder: (context, idx) {
-                        final notif = notifications[idx];
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          leading: Container(
-                            width: 36,
-                            height: 36,
-                            decoration: BoxDecoration(
-                              color: notif.isLiveAlert
-                                  ? AppTheme.accentRed.withValues(alpha: 0.15)
-                                  : AppTheme.accentBlue.withValues(alpha: 0.15),
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusSm),
-                            ),
-                            child: Icon(
-                              notif.isLiveAlert
-                                  ? Icons.videocam_rounded
-                                  : Icons.info_outline_rounded,
-                              color: notif.isLiveAlert
-                                  ? AppTheme.accentRed
-                                  : AppTheme.accentBlue,
-                              size: 20,
-                            ),
-                          ),
-                          title: Text(
-                            isAr ? notif.titleAr : notif.titleEn,
-                            style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Text(
-                            isAr ? notif.bodyAr : notif.bodyEn,
-                            style: const TextStyle(
-                                color: AppTheme.textSecondaryDark,
-                                fontSize: 12),
-                          ),
-                          onTap: () {
-                            Navigator.pop(context);
-                            if (notif.streamId != null) {
-                              context.push('/live/${notif.streamId}');
-                            }
-                          },
-                        );
-                      },
-                    ),
-                  ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    NotificationCenterSheet.show(context);
   }
 
   void _showBookmarksSheet(BuildContext context) {

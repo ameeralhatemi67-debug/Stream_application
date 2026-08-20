@@ -2,10 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
-import 'package:top_snackbar_flutter/top_snack_bar.dart';
-import 'package:top_snackbar_flutter/custom_snack_bar.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/interactive_toast_overlay.dart';
 import '../../../profile/models/streamer_models.dart';
 
 enum BroadcastTargetType { localRtmp, youtubeLive }
@@ -76,12 +75,12 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
       }
       Navigator.of(context).pop();
 
-      showTopSnackBar(
-        Overlay.of(context),
-        CustomSnackBar.success(
-          message: 'Local RTMP Target set to rtmp://${appProvider.rtmpLaptopIp}/live/demo',
-          backgroundColor: AppTheme.accentGreen,
-        ),
+      InteractiveToastOverlay.show(
+        context,
+        title: 'Local RTMP Target Updated',
+        message: 'rtmp://${appProvider.rtmpLaptopIp}/live/demo',
+        icon: Icons.cell_tower_rounded,
+        accentColor: AppTheme.accentGreen,
       );
     } else {
       final rawYoutube = _youtubeUrlController.text.trim();
@@ -91,12 +90,12 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
       Navigator.of(context).pop();
 
       final videoId = AppProvider.extractYouTubeId(rawYoutube);
-      showTopSnackBar(
-        Overlay.of(context),
-        CustomSnackBar.success(
-          message: 'YouTube Live Target set to Video ID: $videoId',
-          backgroundColor: AppTheme.accentRed,
-        ),
+      InteractiveToastOverlay.show(
+        context,
+        title: 'YouTube Live Target Updated',
+        message: 'Active Video ID: $videoId',
+        icon: Icons.videocam_rounded,
+        accentColor: AppTheme.accentRed,
       );
     }
   }
@@ -379,21 +378,21 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
                             if (found) {
                               _youtubeUrlController.text =
                                   appProvider.customYouTubeLiveUrl;
-                              showTopSnackBar(
-                                Overlay.of(context),
-                                CustomSnackBar.success(
-                                  message:
-                                      'Found Amir\'s live video: ${appProvider.customYouTubeVideoId}',
-                                  backgroundColor: AppTheme.accentGreen,
-                                ),
+                              InteractiveToastOverlay.show(
+                                context,
+                                title: 'Live Broadcast Detected',
+                                message: 'Active Video ID: ${appProvider.customYouTubeVideoId}',
+                                icon: Icons.sensors_rounded,
+                                accentColor: AppTheme.accentGreen,
                               );
                             } else {
-                              showTopSnackBar(
-                                Overlay.of(context),
-                                CustomSnackBar.error(
-                                  message: appProvider.amirAutoDetectError ??
-                                      'Could not detect a live video.',
-                                ),
+                              InteractiveToastOverlay.show(
+                                context,
+                                title: 'Broadcast Detection Failed',
+                                message: appProvider.amirAutoDetectError ??
+                                    'Could not detect an active live video on YouTube.',
+                                icon: Icons.error_outline_rounded,
+                                accentColor: AppTheme.accentRed,
                               );
                             }
                           },
