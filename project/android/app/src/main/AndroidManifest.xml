@@ -1,14 +1,19 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- CAMERA permission removed (Publishing Readiness Audit, Phase 2/7): the app only ever
+         calls image_picker with ImageSource.gallery, never ImageSource.camera — an unused
+         declared permission is flagged by both Play Console and Apple's privacy review, and
+         needlessly worries privacy-conscious users. Re-add only if/when a real "take photo"
+         option is built (see doc/Audit/02_Permissions_Audit.md). -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
     <application
         android:label="streamer_app"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:usesCleartextTraffic="false">
         <activity
             android:name=".MainActivity"
             android:exported="true"
