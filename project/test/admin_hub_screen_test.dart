@@ -17,36 +17,30 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
     });
 
-    test('TC-ADMIN-01: Multi-Account Super Admin Authorization Check', () async {
+    test('TC-ADMIN-01: Admin Authorization Reflects Backend Role, Not Email',
+        () async {
       // Default: Not logged in as streamer -> isAdminUser is false
       expect(provider.isAdminUser, isFalse);
 
-      // 1. Authorized Admin 1: polkgvd2@gmail.com
-      await provider.loginWithGoogle(
-        email: 'polkgvd2@gmail.com',
+      // Admin status now comes from the user_roles table (via the
+      // is_admin_tier() RPC), not a hardcoded email allowlist -- there's no
+      // real Supabase backend in this widget test, so debugSetSignedInForTests
+      // simulates what AppProvider's auth listener would have set from a
+      // live session + RPC round trip. See VULN-RBAC-03.
+      provider.debugSetSignedInForTests(
+        email: 'someone@example.com',
         name: 'Admin User 1',
+        isAdmin: true,
       );
       expect(provider.isLoggedInStreamer, isTrue);
       expect(provider.isAdminUser, isTrue);
 
-      // 2. Authorized Admin 2: ameeralhatemi67@gmail.com
-      await provider.loginWithGoogle(
-        email: 'ameeralhatemi67@gmail.com',
-        name: 'Admin User 2',
-      );
-      expect(provider.isAdminUser, isTrue);
-
-      // 3. Authorized Admin 3: amir.alhatemi@gmail.com
-      await provider.loginWithGoogle(
-        email: 'amir.alhatemi@gmail.com',
-        name: 'Amir Al-Hatemi (Super Admin)',
-      );
-      expect(provider.isAdminUser, isTrue);
-
-      // 4. Non-Admin Broadcaster: random.scholar@university.edu
-      await provider.loginWithGoogle(
+      // A signed-in user without the admin role is not an admin, regardless
+      // of which email they used to sign in.
+      provider.debugSetSignedInForTests(
         email: 'random.scholar@university.edu',
         name: 'Regular Scholar',
+        isAdmin: false,
       );
       expect(provider.isLoggedInStreamer, isTrue);
       expect(provider.isAdminUser, isFalse);
@@ -54,7 +48,10 @@ void main() {
 
     test('TC-ADMIN-02: Verification Queue Approval & Live Streamer Instantiation',
         () async {
-      await provider.loginWithGoogle(email: 'polkgvd2@gmail.com');
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isAdmin: true,
+      );
 
       final initialStreamers = provider.streamers.length;
       final pendingCount = provider.pendingApplicationsCount;
@@ -82,7 +79,11 @@ void main() {
     });
 
     test('TC-ADMIN-03: Rejection with Admin Feedback Note Retention', () async {
-      await provider.loginWithGoogle(email: 'ameeralhatemi67@gmail.com');
+      provider.debugSetSignedInForTests(
+        email: 'ameeralhatemi67@gmail.com',
+        name: 'Amir Al-Hatemi',
+        isAdmin: true,
+      );
 
       final testApp = BroadcasterApplicationModel(
         id: 'app_admin_reject_01',
@@ -131,7 +132,10 @@ void main() {
     });
 
     test('TC-ADMIN-04: Dynamic Terms & Conditions Real-Time Save', () async {
-      await provider.loginWithGoogle(email: 'polkgvd2@gmail.com');
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isAdmin: true,
+      );
 
       final updatedTerms = TermsAndConditionsModel(
         version: 'v2.1.0-governance',
@@ -154,7 +158,10 @@ void main() {
     });
 
     test('TC-ADMIN-05: Viewer Analytics & Telemetry State Updates', () async {
-      await provider.loginWithGoogle(email: 'ameeralhatemi67@gmail.com');
+      provider.debugSetSignedInForTests(
+        email: 'ameeralhatemi67@gmail.com',
+        isAdmin: true,
+      );
 
       final newAnalytics = ViewerAnalyticsModel(
         totalGuestSessions: 2500,

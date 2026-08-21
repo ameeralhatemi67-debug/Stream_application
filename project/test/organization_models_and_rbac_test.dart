@@ -141,7 +141,13 @@ void main() {
       expect(venues.length, equals(3));
       expect(speakers.length, equals(3));
 
-      // Test RBAC for super admin (always allowed)
+      // Test RBAC for super admin (always allowed) -- admin status now comes
+      // from the currently-signed-in session's backend role, not a hardcoded
+      // email string, so simulate that session via debugSetSignedInForTests.
+      provider.debugSetSignedInForTests(
+        email: 'amir.alhatemi@gmail.com',
+        isAdmin: true,
+      );
       expect(
         provider.canUserBroadcastForOrg(
             'org_dalilk_04', 'amir.alhatemi@gmail.com'),

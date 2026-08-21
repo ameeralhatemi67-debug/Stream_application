@@ -1,12 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../theme/app_theme.dart';
 import '../widgets/interactive_toast_overlay.dart';
 import '../services/notifications/notification_models.dart';
 import '../services/notifications/watch_session_tracker.dart';
 import '../services/youtube_api_service.dart';
-import '../services/google_auth_service.dart';
+import '../services/supabase_auth_service.dart';
 import '../services/admin_database_service.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
@@ -29,7 +30,7 @@ class AppProvider extends ChangeNotifier {
       List.from(LectureQuestionModel.sampleQuestions);
   UserProfileModel _userProfile = UserProfileModel.defaultProfile;
   final YouTubeApiService _youTubeService = YouTubeApiService();
-  final GoogleAuthService _googleAuthService = GoogleAuthService();
+  final SupabaseAuthService _authService = SupabaseAuthService();
   AdminDatabaseService? _adminDbService;
 
   // Admin Hub, Verification & Governance State
@@ -38,11 +39,6 @@ class AppProvider extends ChangeNotifier {
   TermsAndConditionsModel _termsAndConditions =
       TermsAndConditionsModel.createDefault();
   ViewerAnalyticsModel _viewerAnalytics = ViewerAnalyticsModel.createDefault();
-  static const Set<String> _superAdminEmails = {
-    'polkgvd2@gmail.com',
-    'ameeralhatemi67@gmail.com',
-    'amir.alhatemi@gmail.com',
-  };
 
   // Onboarding & Authentication State
   bool _hasCompletedOnboarding = false;
@@ -53,6 +49,10 @@ class AppProvider extends ChangeNotifier {
   String? _googleUserEmail;
   String? _googleUserName;
   String? _googleUserAvatar;
+  // Admin status now comes from the user_roles table (via the is_admin_tier()
+  // RPC) instead of a hardcoded email allowlist -- see _refreshAdminRoleFromBackend.
+  bool _isAdminFromRoles = false;
+  StreamSubscription<AuthState>? _authStateSub;
 
   // Org $\leftrightarrow$ Streamer Affiliation State
   List<OrgAffiliationRequestModel> _affiliationRequests = [];
@@ -124,9 +124,135 @@ class AppProvider extends ChangeNotifier {
   AppProvider([AdminDatabaseService? adminDbService])
       : _adminDbService = adminDbService {
     _initAdminDatabase();
+    _initAuthListener();
     // NOTE: Live viewer polling is NOT started in the constructor to keep
     // widget tests clean (no pending timer assertions). The real app starts
     // it via AppProvider.ensureLivePollingActive() from main.dart / app root.
+  }
+
+  /// Picks up any session Supabase already restored on cold start, then
+  /// listens for further auth changes (sign-in completing after the OAuth
+  /// redirect, token refresh, sign-out). Swallows the "Supabase not
+  /// initialized" assertion so widget/unit tests that construct AppProvider
+  /// without calling Supabase.initialize() keep working unaffected.
+  void _initAuthListener() {
+    try {
+      final existingSession = _authService.currentSession;
+      if (existingSession != null) {
+        _applySessionUser(existingSession.user, isFreshSignIn: true);
+      }
+      _authStateSub = _authService.onAuthStateChange.listen((data) {
+        final session = data.session;
+        if (session == null) {
+          _clearAuthState();
+          return;
+        }
+        final isFreshSignIn = data.event == AuthChangeEvent.signedIn ||
+            data.event == AuthChangeEvent.initialSession;
+        _applySessionUser(session.user, isFreshSignIn: isFreshSignIn);
+      });
+    } catch (e) {
+      debugPrint('Supabase auth listener not attached (Supabase not initialized?): $e');
+    }
+  }
+
+  /// Populates auth/display state from a live Supabase session. On a fresh
+  /// sign-in, also provisions the profiles row (if missing) and refreshes
+  /// admin status from user_roles via the is_admin_tier() RPC.
+  Future<void> _applySessionUser(User user, {required bool isFreshSignIn}) async {
+    _hasCompletedOnboarding = true;
+    _isLoggedInStreamer = true;
+    _isGuestViewer = false;
+    _isStreamerModeEnabled = true;
+    _googleUserEmail = user.email;
+
+    final meta = user.userMetadata ?? const <String, dynamic>{};
+    _googleUserName =
+        (meta['full_name'] ?? meta['name'])?.toString() ?? user.email;
+    _googleUserAvatar = (meta['avatar_url'] ?? meta['picture'])?.toString();
+
+    _userProfile = _userProfile.copyWith(
+      nameEn: _googleUserName,
+      nameAr: _googleUserName,
+      avatarUrl: _googleUserAvatar,
+    );
+
+    notifyListeners();
+
+    if (isFreshSignIn) {
+      await _ensureProfileRow(user);
+      await _refreshAdminRoleFromBackend();
+      notifyListeners();
+    }
+  }
+
+  /// Creates this user's profiles row on their very first sign-in. Existing
+  /// users already have one (RLS lets them read/insert only their own row).
+  Future<void> _ensureProfileRow(User user) async {
+    try {
+      final client = Supabase.instance.client;
+      final existing = await client
+          .from('profiles')
+          .select('id')
+          .eq('id', user.id)
+          .maybeSingle();
+      if (existing == null) {
+        final meta = user.userMetadata ?? const <String, dynamic>{};
+        final displayName = (meta['full_name'] ?? meta['name'])?.toString();
+        await client.from('profiles').insert({
+          'id': user.id,
+          'email': user.email,
+          'display_name_en': displayName,
+          'display_name_ar': displayName,
+          'avatar_url': (meta['avatar_url'] ?? meta['picture'])?.toString(),
+        });
+        await registerGoogleUser();
+      }
+    } catch (e) {
+      debugPrint('Profile provisioning failed: $e');
+    }
+  }
+
+  /// Source of truth for admin status: the user_roles table, via the
+  /// is_admin_tier() SECURITY DEFINER RPC (see supabase/migrations). Replaces
+  /// the hardcoded _superAdminEmails allowlist removed in this refactor.
+  Future<void> _refreshAdminRoleFromBackend() async {
+    try {
+      final result = await Supabase.instance.client.rpc('is_admin_tier');
+      _isAdminFromRoles = result == true;
+    } catch (e) {
+      debugPrint('Admin role check failed: $e');
+      _isAdminFromRoles = false;
+    }
+  }
+
+  void _clearAuthState() {
+    _isLoggedInStreamer = false;
+    _isStreamerModeEnabled = false;
+    _googleUserEmail = null;
+    _googleUserName = null;
+    _googleUserAvatar = null;
+    _isAdminFromRoles = false;
+    notifyListeners();
+  }
+
+  /// Test-only: simulates a signed-in session without a real Supabase round
+  /// trip. Production code paths never call this -- real auth state comes
+  /// exclusively from _applySessionUser/_refreshAdminRoleFromBackend above.
+  @visibleForTesting
+  void debugSetSignedInForTests({
+    required String email,
+    String? name,
+    bool isAdmin = false,
+  }) {
+    _hasCompletedOnboarding = true;
+    _isLoggedInStreamer = true;
+    _isGuestViewer = false;
+    _isStreamerModeEnabled = true;
+    _googleUserEmail = email;
+    _googleUserName = name ?? email;
+    _isAdminFromRoles = isAdmin;
+    notifyListeners();
   }
 
   Future<void> _initAdminDatabase() async {
@@ -196,14 +322,12 @@ class AppProvider extends ChangeNotifier {
   @override
   void dispose() {
     _stopLiveViewerPolling();
+    _authStateSub?.cancel();
     super.dispose();
   }
 
   // Admin & Governance Getters
-  bool get isAdminUser =>
-      _isLoggedInStreamer &&
-      _googleUserEmail != null &&
-      _superAdminEmails.contains(_googleUserEmail!.trim().toLowerCase());
+  bool get isAdminUser => _isLoggedInStreamer && _isAdminFromRoles;
 
   List<BroadcasterApplicationModel> get applications =>
       List.unmodifiable(_applications);
@@ -666,34 +790,12 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> loginWithGoogle({
-    String? email,
-    String? name,
-    String? avatar,
-    bool isNewSignUp = false,
-  }) async {
-    final result = await _googleAuthService.signIn();
-    _hasCompletedOnboarding = true;
-    _isLoggedInStreamer = true;
-    _isGuestViewer = false;
-    _isStreamerModeEnabled = true;
-    _googleUserEmail = email ?? result.email ?? 'amir.alhatemi@gmail.com';
-    _googleUserName = name ?? result.displayName ?? 'Amir Al-Hatemi';
-    _googleUserAvatar =
-        avatar ?? result.photoUrl ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
-
-    _userProfile = _userProfile.copyWith(
-      nameEn: _googleUserName,
-      nameAr: _googleUserName,
-      avatarUrl: _googleUserAvatar,
-    );
-
-    if (isNewSignUp) {
-      await registerGoogleUser();
-    }
-
-    notifyListeners();
-  }
+  /// Launches the Google OAuth web flow. Returns once the browser opens --
+  /// a failed/cancelled sign-in surfaces as a thrown exception (never a
+  /// fabricated session). Actual auth state is populated by the
+  /// onAuthStateChange listener (see _initAuthListener) once the OAuth
+  /// redirect completes.
+  Future<void> loginWithGoogle() => _authService.signInWithGoogle();
 
   /// Submits a multi-step Broadcaster / Organization verification application
   Future<void> submitBroadcasterApplication(
@@ -961,7 +1063,11 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
-    await _googleAuthService.signOut();
+    try {
+      await _authService.signOut();
+    } catch (e) {
+      debugPrint('Supabase sign-out failed (Supabase not initialized?): $e');
+    }
     _hasCompletedOnboarding = false;
     _isLoggedInStreamer = false;
     _isGuestViewer = false;
@@ -984,14 +1090,12 @@ class AppProvider extends ChangeNotifier {
 
   // Toggle Streamer / Viewer Mode
   void setRoleMode(bool isStreamer) {
+    // Enabling Streamer Mode requires an already-authenticated session --
+    // role changes go through the real backend now, not a local toggle that
+    // auto-assigns an identity. See doc/Audit/01_Security_Data_Protection_Audit.md
+    // VULN-AUTH-02.
+    if (isStreamer && !_isLoggedInStreamer) return;
     _isStreamerModeEnabled = isStreamer;
-    if (isStreamer && !_isLoggedInStreamer) {
-      // Automatically associate with Google account when entering streamer mode
-      _isLoggedInStreamer = true;
-      _googleUserEmail = 'amir.alhatemi@gmail.com';
-      _googleUserName = 'Amir Al-Hatemi';
-      _googleUserAvatar = 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
-    }
     notifyListeners();
   }
 
@@ -1783,7 +1887,9 @@ class AppProvider extends ChangeNotifier {
     final emailLower = userEmail.trim().toLowerCase();
 
     // Super Admin can broadcast for any org
-    if (_superAdminEmails.contains(emailLower)) return true;
+    if (emailLower == _googleUserEmail?.trim().toLowerCase() && isAdminUser) {
+      return true;
+    }
 
     final streamer = getStreamerById(orgId);
     if (streamer == null || !streamer.isOrganization) return false;

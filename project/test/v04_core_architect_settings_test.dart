@@ -201,8 +201,9 @@ void main() {
       expect(provider.isLoggedInStreamer, isFalse);
       expect(provider.isStreamerModeEnabled, isFalse);
 
-      // Login as Streamer with Google
-      await provider.loginWithGoogle(
+      // Login as Streamer with Google (simulated -- no real Supabase backend
+      // in this widget test; see debugSetSignedInForTests's doc comment)
+      provider.debugSetSignedInForTests(
         email: 'amir.alhatemi@gmail.com',
         name: 'Amir Al-Hatemi',
       );
