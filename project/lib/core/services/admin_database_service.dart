@@ -1,14 +1,28 @@
 import 'dart:convert';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/admin/models/broadcaster_application_model.dart';
 import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
+import '../../features/organization/models/org_broadcaster_permissions.dart';
+
+final RegExp _uuidPattern = RegExp(
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+);
+bool _looksLikeUuid(String? value) => value != null && _uuidPattern.hasMatch(value);
 
 /// Core Database & Persistence Service for Admin Moderation, Broadcaster Applications,
 /// Dynamic Platform Governance, Viewer Analytics, and Organization Audit Logs.
+///
+/// Reads/writes Supabase when it's initialized (the real app); falls back to
+/// the original SharedPreferences/in-memory implementation otherwise (widget
+/// tests, which never call Supabase.initialize(), and as a resilience net if
+/// a Supabase call fails at runtime -- e.g. no network, or an org/streamer id
+/// that doesn't correspond to a real backend row yet). Every public method
+/// signature is unchanged from the SharedPreferences-only version.
 class AdminDatabaseService {
   static const String _kApplicationsKey = 'streamer_admin_applications_v1';
   static const String _kTermsKey = 'streamer_admin_terms_v1';
@@ -17,15 +31,27 @@ class AdminDatabaseService {
   static const String _kAffiliationRequestsKey = 'streamer_org_affiliations_v1';
 
   final SharedPreferences? _prefs;
+  final bool _useSupabase;
   List<BroadcasterApplicationModel> _cachedApplications = [];
   List<OrgAuditLogEntry> _cachedAuditLogs = [];
   List<OrgAffiliationRequestModel> _cachedAffiliationRequests = [];
   TermsAndConditionsModel? _cachedTerms;
   ViewerAnalyticsModel? _cachedAnalytics;
 
-  AdminDatabaseService([this._prefs]);
+  AdminDatabaseService([this._prefs]) : _useSupabase = _supabaseReady();
 
-  /// Factory constructor to initialize with SharedPreferences
+  static bool _supabaseReady() {
+    try {
+      return Supabase.instance.isInitialized;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  SupabaseClient get _client => Supabase.instance.client;
+
+  /// Factory constructor to initialize with SharedPreferences (used as the
+  /// fallback store when Supabase isn't available).
   static Future<AdminDatabaseService> create() async {
     try {
       WidgetsFlutterBinding.ensureInitialized();
@@ -53,6 +79,27 @@ class AdminDatabaseService {
   // ==========================================
 
   Future<List<BroadcasterApplicationModel>> loadApplications() async {
+    if (_useSupabase) {
+      try {
+        final rows = await _client
+            .from('broadcaster_applications')
+            .select()
+            .order('submitted_at', ascending: false);
+        final reviewerNames = await _resolveDisplayNames(
+          rows.map((r) => r['reviewed_by'] as String?),
+        );
+        _cachedApplications = rows
+            .map((r) => _applicationFromRow(r, reviewerNames))
+            .toList();
+        return List.unmodifiable(_cachedApplications);
+      } catch (e) {
+        debugPrint('Supabase loadApplications failed, falling back: $e');
+      }
+    }
+    return _loadApplicationsFallback();
+  }
+
+  Future<List<BroadcasterApplicationModel>> _loadApplicationsFallback() async {
     if (_cachedApplications.isNotEmpty) {
       return List.unmodifiable(_cachedApplications);
     }
@@ -78,6 +125,30 @@ class AdminDatabaseService {
   }
 
   Future<void> submitApplication(BroadcasterApplicationModel application) async {
+    if (_useSupabase) {
+      try {
+        final applicantId = _client.auth.currentUser?.id;
+        if (applicantId == null) {
+          throw Exception('Cannot submit an application while signed out.');
+        }
+        await _client.from('broadcaster_applications').upsert({
+          'id': application.id,
+          'applicant_profile_id': applicantId,
+          ..._applicationToRow(application),
+        });
+        final existingIdx =
+            _cachedApplications.indexWhere((a) => a.id == application.id);
+        if (existingIdx != -1) {
+          _cachedApplications[existingIdx] = application;
+        } else {
+          _cachedApplications.insert(0, application);
+        }
+        return;
+      } catch (e) {
+        debugPrint('Supabase submitApplication failed, falling back: $e');
+      }
+    }
+
     final existingIdx =
         _cachedApplications.indexWhere((a) => a.id == application.id);
     if (existingIdx != -1) {
@@ -94,6 +165,32 @@ class AdminDatabaseService {
     String? reviewNotes,
     String? reviewedBy,
   }) async {
+    if (_useSupabase) {
+      try {
+        final reviewerId = _client.auth.currentUser?.id;
+        final row = await _client
+            .from('broadcaster_applications')
+            .update({
+              'status': newStatus.name,
+              'admin_review_notes': reviewNotes,
+              'reviewed_by': reviewerId,
+              'reviewed_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', id)
+            .select()
+            .single();
+        final reviewerNames = await _resolveDisplayNames([row['reviewed_by'] as String?]);
+        final updated = _applicationFromRow(row, reviewerNames);
+        final idx = _cachedApplications.indexWhere((a) => a.id == id);
+        if (idx != -1) {
+          _cachedApplications[idx] = updated;
+        }
+        return updated;
+      } catch (e) {
+        debugPrint('Supabase updateApplicationStatus failed, falling back: $e');
+      }
+    }
+
     final idx = _cachedApplications.indexWhere((a) => a.id == id);
     if (idx == -1) return null;
 
@@ -111,6 +208,16 @@ class AdminDatabaseService {
   }
 
   Future<bool> deleteApplication(String id) async {
+    if (_useSupabase) {
+      try {
+        await _client.from('broadcaster_applications').delete().eq('id', id);
+        _cachedApplications.removeWhere((a) => a.id == id);
+        return true;
+      } catch (e) {
+        debugPrint('Supabase deleteApplication failed, falling back: $e');
+      }
+    }
+
     final idx = _cachedApplications.indexWhere((a) => a.id == id);
     if (idx == -1) return false;
 
@@ -130,11 +237,125 @@ class AdminDatabaseService {
     }
   }
 
+  Map<String, dynamic> _applicationToRow(BroadcasterApplicationModel a) => {
+        'account_type': a.accountType.name,
+        'applicant_name_en': a.applicantNameEn,
+        'applicant_name_ar': a.applicantNameAr,
+        'email': a.email,
+        'phone': a.phone,
+        'academic_title_en': a.academicTitleEn,
+        'academic_title_ar': a.academicTitleAr,
+        'institution_en': a.institutionEn,
+        'institution_ar': a.institutionAr,
+        'category_id': a.categoryId,
+        'tags': a.tags,
+        'organization_type': a.organizationType,
+        'venue_name_en': a.venueNameEn,
+        'venue_name_ar': a.venueNameAr,
+        'latitude': a.latitude,
+        'longitude': a.longitude,
+        'seating_capacity': a.seatingCapacity,
+        'official_website_url': a.officialWebsiteUrl,
+        'youtube_channel_url': a.youtubeChannelUrl,
+        'youtube_handle': a.youtubeHandle,
+        'bio_en': a.bioEn,
+        'bio_ar': a.bioAr,
+        'avatar_url': a.avatarUrl,
+        'banner_url': a.bannerUrl,
+        'status': a.status.name,
+        'admin_review_notes': a.adminReviewNotes,
+        'submitted_at': a.submittedAt.toIso8601String(),
+      };
+
+  BroadcasterApplicationModel _applicationFromRow(
+    Map<String, dynamic> row,
+    Map<String, String> reviewerNames,
+  ) {
+    return BroadcasterApplicationModel(
+      id: row['id'] as String,
+      accountType:
+          ApplicationAccountType.values.byName(row['account_type'] as String),
+      applicantNameEn: row['applicant_name_en'] as String? ?? '',
+      applicantNameAr: row['applicant_name_ar'] as String? ?? '',
+      email: row['email'] as String? ?? '',
+      phone: row['phone'] as String? ?? '',
+      academicTitleEn: row['academic_title_en'] as String?,
+      academicTitleAr: row['academic_title_ar'] as String?,
+      institutionEn: row['institution_en'] as String?,
+      institutionAr: row['institution_ar'] as String?,
+      categoryId: row['category_id'] as String? ?? 'computer_science',
+      tags: List<String>.from(row['tags'] as List? ?? const []),
+      organizationType: row['organization_type'] as String?,
+      venueNameEn: row['venue_name_en'] as String? ?? '',
+      venueNameAr: row['venue_name_ar'] as String? ?? '',
+      latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
+      seatingCapacity: (row['seating_capacity'] as num?)?.toInt() ?? 0,
+      officialWebsiteUrl: row['official_website_url'] as String?,
+      youtubeChannelUrl: row['youtube_channel_url'] as String? ?? '',
+      youtubeHandle: row['youtube_handle'] as String? ?? '',
+      bioEn: row['bio_en'] as String? ?? '',
+      bioAr: row['bio_ar'] as String? ?? '',
+      avatarUrl: row['avatar_url'] as String? ?? '',
+      bannerUrl: row['banner_url'] as String? ?? '',
+      status: ApplicationStatus.values.byName(row['status'] as String),
+      adminReviewNotes: row['admin_review_notes'] as String?,
+      reviewedBy: reviewerNames[row['reviewed_by'] as String?],
+      submittedAt: DateTime.parse(row['submitted_at'] as String),
+      reviewedAt: row['reviewed_at'] != null
+          ? DateTime.parse(row['reviewed_at'] as String)
+          : null,
+    );
+  }
+
+  /// Batch-resolves profile ids to a display string ("Name" or the email if
+  /// no display name is set), used for reviewed_by (a uuid FK server-side,
+  /// but a display string in BroadcasterApplicationModel).
+  Future<Map<String, String>> _resolveDisplayNames(Iterable<String?> ids) async {
+    final uniqueIds = ids.whereType<String>().toSet();
+    if (uniqueIds.isEmpty) return {};
+    try {
+      final rows = await _client
+          .from('profiles')
+          .select('id, display_name_en, email')
+          .inFilter('id', uniqueIds.toList());
+      return {
+        for (final r in (rows as List))
+          (r as Map<String, dynamic>)['id'] as String:
+              ((r['display_name_en'] as String?)?.trim().isNotEmpty ?? false)
+                  ? r['display_name_en'] as String
+                  : (r['email'] as String? ?? 'Admin'),
+      };
+    } catch (e) {
+      debugPrint('Failed to resolve reviewer display names: $e');
+      return {};
+    }
+  }
+
   // ==========================================
   // Organization Audit Trail Logging
   // ==========================================
 
   Future<List<OrgAuditLogEntry>> loadAuditLogs([String? organizationId]) async {
+    if (_useSupabase) {
+      try {
+        var query = _client.from('audit_logs').select();
+        if (_looksLikeUuid(organizationId)) {
+          query = query.eq('organization_id', organizationId as Object);
+        }
+        final rows = await query.order('created_at', ascending: false);
+        _cachedAuditLogs =
+            (rows as List).map((r) => _auditLogFromRow(r as Map<String, dynamic>)).toList();
+        return List.unmodifiable(_cachedAuditLogs);
+      } catch (e) {
+        debugPrint('Supabase loadAuditLogs failed, falling back: $e');
+      }
+    }
+    return _loadAuditLogsFallback(organizationId);
+  }
+
+  Future<List<OrgAuditLogEntry>> _loadAuditLogsFallback(
+      [String? organizationId]) async {
     if (_cachedAuditLogs.isEmpty) {
       final rawJson = _prefs?.getString(_kAuditLogsKey);
       if (rawJson != null && rawJson.isNotEmpty) {
@@ -163,7 +384,26 @@ class AdminDatabaseService {
     return List.unmodifiable(_cachedAuditLogs);
   }
 
+  /// Writes via the log_audit_event() RPC (audit_logs has no direct INSERT
+  /// policy -- see supabase/migrations' RLS -- writes are system-derived only,
+  /// with the actor's identity taken server-side from auth.uid()).
   Future<void> recordAuditLog(OrgAuditLogEntry entry) async {
+    if (_useSupabase) {
+      try {
+        await _client.rpc('log_audit_event', params: {
+          'p_organization_id':
+              _looksLikeUuid(entry.organizationId) ? entry.organizationId : null,
+          'p_action': entry.action.name,
+          'p_description_en': entry.descriptionEn,
+          'p_description_ar': entry.descriptionAr,
+          'p_metadata': entry.metadata,
+        });
+        _cachedAuditLogs.insert(0, entry);
+        return;
+      } catch (e) {
+        debugPrint('Supabase recordAuditLog failed, falling back: $e');
+      }
+    }
     _cachedAuditLogs.insert(0, entry);
     await _saveAuditLogsToPrefs();
   }
@@ -179,11 +419,50 @@ class AdminDatabaseService {
     }
   }
 
+  OrgAuditLogEntry _auditLogFromRow(Map<String, dynamic> row) {
+    return OrgAuditLogEntry(
+      logId: row['id'] as String,
+      organizationId: row['organization_id'] as String? ?? '',
+      timestamp: DateTime.parse(row['created_at'] as String),
+      actorEmail: row['actor_email'] as String? ?? 'unknown',
+      actorName: row['actor_name'] as String? ?? 'Unknown',
+      action: OrgAuditAction.values.firstWhere(
+        (e) => e.name == row['action'] as String,
+        orElse: () => OrgAuditAction.updateOrganizationProfile,
+      ),
+      descriptionEn: row['description_en'] as String? ?? '',
+      descriptionAr: row['description_ar'] as String? ?? '',
+      metadata: (row['metadata'] as Map<String, dynamic>?) ?? const {},
+    );
+  }
+
   // ==========================================
   // Terms & Conditions Governance Repository
   // ==========================================
 
   Future<TermsAndConditionsModel> loadTerms() async {
+    if (_useSupabase) {
+      try {
+        final row = await _client
+            .from('terms_and_conditions')
+            .select()
+            .eq('is_active', true)
+            .maybeSingle();
+        if (row != null) {
+          _cachedTerms = _termsFromRow(row);
+          return _cachedTerms!;
+        }
+        final defaults = TermsAndConditionsModel.createDefault();
+        await saveTerms(defaults);
+        return defaults;
+      } catch (e) {
+        debugPrint('Supabase loadTerms failed, falling back: $e');
+      }
+    }
+    return _loadTermsFallback();
+  }
+
+  Future<TermsAndConditionsModel> _loadTermsFallback() async {
     if (_cachedTerms != null) return _cachedTerms!;
 
     final rawJson = _prefs?.getString(_kTermsKey);
@@ -198,12 +477,35 @@ class AdminDatabaseService {
     }
 
     _cachedTerms = TermsAndConditionsModel.createDefault();
-    await saveTerms(_cachedTerms!);
+    await _saveTermsToPrefs(_cachedTerms!);
     return _cachedTerms!;
   }
 
   Future<void> saveTerms(TermsAndConditionsModel terms) async {
+    if (_useSupabase) {
+      try {
+        // Only one row may have is_active = true (enforced by a partial
+        // unique index) -- deactivate any other active version first.
+        await _client
+            .from('terms_and_conditions')
+            .update({'is_active': false})
+            .eq('is_active', true)
+            .neq('version', terms.version);
+        await _client.from('terms_and_conditions').upsert({
+          ..._termsToRow(terms),
+          'is_active': true,
+        });
+        _cachedTerms = terms;
+        return;
+      } catch (e) {
+        debugPrint('Supabase saveTerms failed, falling back: $e');
+      }
+    }
     _cachedTerms = terms;
+    await _saveTermsToPrefs(terms);
+  }
+
+  Future<void> _saveTermsToPrefs(TermsAndConditionsModel terms) async {
     final prefs = _prefs;
     if (prefs == null) return;
     try {
@@ -213,11 +515,57 @@ class AdminDatabaseService {
     }
   }
 
+  Map<String, dynamic> _termsToRow(TermsAndConditionsModel t) => {
+        'version': t.version,
+        'last_updated': t.lastUpdated.toIso8601String(),
+        'terms_of_service_en': t.termsOfServiceEn,
+        'terms_of_service_ar': t.termsOfServiceAr,
+        'broadcaster_guidelines_en': t.broadcasterGuidelinesEn,
+        'broadcaster_guidelines_ar': t.broadcasterGuidelinesAr,
+        'privacy_policy_en': t.privacyPolicyEn,
+        'privacy_policy_ar': t.privacyPolicyAr,
+      };
+
+  TermsAndConditionsModel _termsFromRow(Map<String, dynamic> row) {
+    return TermsAndConditionsModel(
+      version: row['version'] as String,
+      lastUpdated: DateTime.parse(row['last_updated'] as String),
+      termsOfServiceEn: row['terms_of_service_en'] as String? ?? '',
+      termsOfServiceAr: row['terms_of_service_ar'] as String? ?? '',
+      broadcasterGuidelinesEn: row['broadcaster_guidelines_en'] as String? ?? '',
+      broadcasterGuidelinesAr: row['broadcaster_guidelines_ar'] as String? ?? '',
+      privacyPolicyEn: row['privacy_policy_en'] as String? ?? '',
+      privacyPolicyAr: row['privacy_policy_ar'] as String? ?? '',
+    );
+  }
+
   // ==========================================
-  // Viewers Analytics Repository
+  // Viewers Analytics Repository (platform_analytics, singleton row)
   // ==========================================
 
   Future<ViewerAnalyticsModel> loadAnalytics() async {
+    if (_useSupabase) {
+      try {
+        final row = await _client
+            .from('platform_analytics')
+            .select()
+            .eq('id', true)
+            .maybeSingle();
+        if (row != null) {
+          _cachedAnalytics = _analyticsFromRow(row);
+          return _cachedAnalytics!;
+        }
+        final defaults = ViewerAnalyticsModel.createDefault();
+        await saveAnalytics(defaults);
+        return defaults;
+      } catch (e) {
+        debugPrint('Supabase loadAnalytics failed, falling back: $e');
+      }
+    }
+    return _loadAnalyticsFallback();
+  }
+
+  Future<ViewerAnalyticsModel> _loadAnalyticsFallback() async {
     if (_cachedAnalytics != null) return _cachedAnalytics!;
 
     final rawJson = _prefs?.getString(_kAnalyticsKey);
@@ -232,12 +580,28 @@ class AdminDatabaseService {
     }
 
     _cachedAnalytics = ViewerAnalyticsModel.createDefault();
-    await saveAnalytics(_cachedAnalytics!);
+    await _saveAnalyticsToPrefs(_cachedAnalytics!);
     return _cachedAnalytics!;
   }
 
   Future<void> saveAnalytics(ViewerAnalyticsModel analytics) async {
+    if (_useSupabase) {
+      try {
+        await _client.from('platform_analytics').upsert({
+          'id': true,
+          ..._analyticsToRow(analytics),
+        });
+        _cachedAnalytics = analytics;
+        return;
+      } catch (e) {
+        debugPrint('Supabase saveAnalytics failed, falling back: $e');
+      }
+    }
     _cachedAnalytics = analytics;
+    await _saveAnalyticsToPrefs(analytics);
+  }
+
+  Future<void> _saveAnalyticsToPrefs(ViewerAnalyticsModel analytics) async {
     final prefs = _prefs;
     if (prefs == null) return;
     try {
@@ -247,11 +611,60 @@ class AdminDatabaseService {
     }
   }
 
+  Map<String, dynamic> _analyticsToRow(ViewerAnalyticsModel a) => {
+        'total_guest_sessions': a.totalGuestSessions,
+        'total_registered_google_users': a.totalRegisteredGoogleUsers,
+        'total_lecture_bookmarks': a.totalLectureBookmarks,
+        'total_auditorium_rsvps': a.totalAuditoriumRsvps,
+        'total_broadcast_hours': a.totalBroadcastHours,
+        'active_viewers_live': a.activeViewersLive,
+        'last_refreshed': a.lastRefreshed.toIso8601String(),
+      };
+
+  ViewerAnalyticsModel _analyticsFromRow(Map<String, dynamic> row) {
+    return ViewerAnalyticsModel(
+      totalGuestSessions: (row['total_guest_sessions'] as num?)?.toInt() ?? 0,
+      totalRegisteredGoogleUsers:
+          (row['total_registered_google_users'] as num?)?.toInt() ?? 0,
+      totalLectureBookmarks:
+          (row['total_lecture_bookmarks'] as num?)?.toInt() ?? 0,
+      totalAuditoriumRsvps: (row['total_auditorium_rsvps'] as num?)?.toInt() ?? 0,
+      totalBroadcastHours:
+          (row['total_broadcast_hours'] as num?)?.toDouble() ?? 0,
+      activeViewersLive: (row['active_viewers_live'] as num?)?.toInt() ?? 0,
+      lastRefreshed: DateTime.parse(row['last_refreshed'] as String),
+    );
+  }
+
   // ==========================================
   // Org $\leftrightarrow$ Streamer Affiliation Requests Repository
   // ==========================================
 
   Future<List<OrgAffiliationRequestModel>> loadAffiliationRequests({
+    String? orgId,
+    String? streamerId,
+  }) async {
+    if (_useSupabase) {
+      try {
+        var query = _client.from('affiliation_requests').select();
+        if (_looksLikeUuid(orgId)) {
+          query = query.eq('organization_id', orgId as Object);
+        }
+        if (_looksLikeUuid(streamerId)) {
+          query = query.eq('streamer_profile_id', streamerId as Object);
+        }
+        final rows = await query.order('created_at', ascending: false);
+        _cachedAffiliationRequests =
+            await _affiliationsFromRows((rows as List).cast<Map<String, dynamic>>());
+        return List.unmodifiable(_cachedAffiliationRequests);
+      } catch (e) {
+        debugPrint('Supabase loadAffiliationRequests failed, falling back: $e');
+      }
+    }
+    return _loadAffiliationRequestsFallback(orgId: orgId, streamerId: streamerId);
+  }
+
+  Future<List<OrgAffiliationRequestModel>> _loadAffiliationRequestsFallback({
     String? orgId,
     String? streamerId,
   }) async {
@@ -292,6 +705,32 @@ class AdminDatabaseService {
 
   Future<void> submitAffiliationRequest(
       OrgAffiliationRequestModel request) async {
+    if (_useSupabase) {
+      try {
+        await _client.from('affiliation_requests').upsert({
+          'id': request.id,
+          'organization_id': request.orgId,
+          'streamer_profile_id': request.streamerId,
+          'direction': request.direction.name,
+          'status': request.status.name,
+          'proposed_role_en': request.proposedRoleEn,
+          'proposed_role_ar': request.proposedRoleAr,
+          'note': request.note,
+          'permissions': request.permissions.toJson(),
+          'created_at': request.createdAt.toIso8601String(),
+          'resolved_at': request.resolvedAt?.toIso8601String(),
+        });
+        _upsertCachedAffiliation(request);
+        return;
+      } catch (e) {
+        debugPrint('Supabase submitAffiliationRequest failed, falling back: $e');
+      }
+    }
+    _upsertCachedAffiliation(request);
+    await _saveAffiliationRequestsToPrefs();
+  }
+
+  void _upsertCachedAffiliation(OrgAffiliationRequestModel request) {
     final existingIdx =
         _cachedAffiliationRequests.indexWhere((r) => r.id == request.id);
     if (existingIdx != -1) {
@@ -299,13 +738,31 @@ class AdminDatabaseService {
     } else {
       _cachedAffiliationRequests.insert(0, request);
     }
-    await _saveAffiliationRequestsToPrefs();
   }
 
   Future<OrgAffiliationRequestModel?> updateAffiliationRequestStatus(
     String id,
     AffiliationStatus newStatus,
   ) async {
+    if (_useSupabase) {
+      try {
+        final row = await _client
+            .from('affiliation_requests')
+            .update({
+              'status': newStatus.name,
+              'resolved_at': DateTime.now().toIso8601String(),
+            })
+            .eq('id', id)
+            .select()
+            .single();
+        final updated = (await _affiliationsFromRows([row])).first;
+        _upsertCachedAffiliation(updated);
+        return updated;
+      } catch (e) {
+        debugPrint('Supabase updateAffiliationRequestStatus failed, falling back: $e');
+      }
+    }
+
     final idx = _cachedAffiliationRequests.indexWhere((r) => r.id == id);
     if (idx == -1) return null;
 
@@ -330,6 +787,70 @@ class AdminDatabaseService {
     } catch (e) {
       debugPrint('Error saving affiliation requests to SharedPreferences: $e');
     }
+  }
+
+  /// affiliation_requests doesn't store the org/streamer display fields
+  /// OrgAffiliationRequestModel carries (they're denormalized convenience
+  /// fields for the UI) -- batch-resolve them from organizations/profiles.
+  Future<List<OrgAffiliationRequestModel>> _affiliationsFromRows(
+      List<Map<String, dynamic>> rows) async {
+    if (rows.isEmpty) return [];
+
+    final orgIds = rows.map((r) => r['organization_id'] as String).toSet();
+    final streamerIds = rows.map((r) => r['streamer_profile_id'] as String).toSet();
+
+    Map<String, Map<String, dynamic>> orgs = {};
+    Map<String, Map<String, dynamic>> streamers = {};
+    try {
+      final orgRows = await _client
+          .from('organizations')
+          .select('id, name_en, name_ar, avatar_url')
+          .inFilter('id', orgIds.toList());
+      orgs = {
+        for (final r in (orgRows as List))
+          (r as Map<String, dynamic>)['id'] as String: r,
+      };
+      final profileRows = await _client
+          .from('profiles')
+          .select('id, display_name_en, avatar_url, email')
+          .inFilter('id', streamerIds.toList());
+      streamers = {
+        for (final r in (profileRows as List))
+          (r as Map<String, dynamic>)['id'] as String: r,
+      };
+    } catch (e) {
+      debugPrint('Failed to resolve affiliation request display fields: $e');
+    }
+
+    return rows.map((row) {
+      final org = orgs[row['organization_id']];
+      final streamer = streamers[row['streamer_profile_id']];
+      return OrgAffiliationRequestModel(
+        id: row['id'] as String,
+        orgId: row['organization_id'] as String,
+        orgNameEn: org?['name_en'] as String? ?? '',
+        orgNameAr: org?['name_ar'] as String? ?? '',
+        orgAvatarUrl: org?['avatar_url'] as String? ?? '',
+        streamerId: row['streamer_profile_id'] as String,
+        streamerNameEn: streamer?['display_name_en'] as String? ?? '',
+        streamerNameAr: streamer?['display_name_en'] as String? ?? '',
+        streamerAvatarUrl: streamer?['avatar_url'] as String? ?? '',
+        streamerEmail: streamer?['email'] as String? ?? '',
+        proposedRoleEn: row['proposed_role_en'] as String?,
+        proposedRoleAr: row['proposed_role_ar'] as String?,
+        note: row['note'] as String? ?? '',
+        direction: AffiliationDirection.values.byName(row['direction'] as String),
+        status: AffiliationStatus.values.byName(row['status'] as String),
+        permissions: row['permissions'] != null
+            ? OrgBroadcasterPermissions.fromJson(
+                row['permissions'] as Map<String, dynamic>)
+            : const OrgBroadcasterPermissions(),
+        createdAt: DateTime.parse(row['created_at'] as String),
+        resolvedAt: row['resolved_at'] != null
+            ? DateTime.parse(row['resolved_at'] as String)
+            : null,
+      );
+    }).toList();
   }
 
   List<OrgAffiliationRequestModel> _createInitialSeedAffiliations() {

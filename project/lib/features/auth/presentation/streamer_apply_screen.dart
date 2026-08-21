@@ -7,6 +7,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/services/translation/auto_translation_service.dart';
+import '../../../core/utils/id_generator.dart';
 import '../../admin/models/broadcaster_application_model.dart';
 import 'steps/apply_step_1_identity.dart';
 import 'steps/apply_step_2_media.dart';
@@ -222,7 +223,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       );
 
       final app = BroadcasterApplicationModel(
-        id: 'app_${DateTime.now().millisecondsSinceEpoch}',
+        id: newId(),
         accountType: _isOrganization
             ? ApplicationAccountType.organizationVenue
             : ApplicationAccountType.individualScholar,

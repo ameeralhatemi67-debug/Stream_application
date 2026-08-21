@@ -9,6 +9,7 @@ import '../services/notifications/watch_session_tracker.dart';
 import '../services/youtube_api_service.dart';
 import '../services/supabase_auth_service.dart';
 import '../services/admin_database_service.dart';
+import '../utils/id_generator.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -806,7 +807,7 @@ class AppProvider extends ChangeNotifier {
     // Record in immutable governance audit trail
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_app_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: application.isOrganization
             ? application.id
             : (application.institutionEn ?? 'Independent'),
@@ -866,7 +867,7 @@ class AppProvider extends ChangeNotifier {
     );
 
     final req = OrgAffiliationRequestModel(
-      id: 'aff_req_${DateTime.now().millisecondsSinceEpoch}',
+      id: newId(),
       orgId: orgId,
       orgNameEn: targetOrg.fullNameEn,
       orgNameAr: targetOrg.fullNameAr,
@@ -889,7 +890,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_aff_req_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'broadcaster@platform.com',
@@ -980,7 +981,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_spk_add_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1011,7 +1012,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_spk_rem_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1047,7 +1048,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_spk_perm_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1288,7 +1289,7 @@ class AppProvider extends ChangeNotifier {
       if (orgId != null) {
         await recordOrgAuditAction(
           OrgAuditLogEntry(
-            logId: 'audit_live_${DateTime.now().millisecondsSinceEpoch}',
+            logId: newId(),
             organizationId: orgId,
             timestamp: DateTime.now(),
             actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1332,7 +1333,7 @@ class AppProvider extends ChangeNotifier {
       if (orgId != null) {
         await recordOrgAuditAction(
           OrgAuditLogEntry(
-            logId: 'audit_live_end_${DateTime.now().millisecondsSinceEpoch}',
+            logId: newId(),
             organizationId: orgId,
             timestamp: DateTime.now(),
             actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1862,7 +1863,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_perm_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1932,7 +1933,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_branch_add_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1956,7 +1957,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_branch_upd_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -1984,7 +1985,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_branch_del_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -2008,7 +2009,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_spk_add_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -2032,7 +2033,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_spk_upd_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
@@ -2060,7 +2061,7 @@ class AppProvider extends ChangeNotifier {
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
-        logId: 'audit_spk_del_${DateTime.now().millisecondsSinceEpoch}',
+        logId: newId(),
         organizationId: orgId,
         timestamp: DateTime.now(),
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
