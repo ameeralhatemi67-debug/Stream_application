@@ -30,16 +30,18 @@ To maintain peak code quality, security verification, and store compliance throu
 
 | Skill / Repository | Target Milestones | Primary Purpose |
 |---|---|---|
+| **`shadcn/improve`** (`shadcn/improve`) | `v0.5` through `v1.1` | Tech-lead level automated auditing (`/improve security`, `/improve perf`, `/improve branch`) and machine-executable plan generation. |
 | **`supabase/agent-skills`** | `v0.5`, `v0.6`, `v0.8` | Supabase Auth, PostgreSQL schema conventions, Realtime channels, and CLI management. |
 | **`rls-audit`** (`ekhorkov/rls-audit`) | `v0.5`, `v0.8` | Automated verification of Row Level Security policies to prevent privilege escalation or data leaks. |
 | **`claude-flutter-skill`** (`Arcturus91/claude-flutter-skill`) | `v0.5` through `v1.1` | Flutter/Dart best practices, widget rebuild tree optimization, Provider/Selector state architecture. |
+| **`maestro-mcp`** (`docs.maestro.dev`) | `v0.6`, `v0.7`, `v1.0` | Mobile UI end-to-end testing, live emulator inspection, tap/swipe automation, and OS permission popups. |
 | **`appstore-review-skill`** (`devsemih/appstore-review-skill`) | `v0.9`, `v1.0`, `v1.1` | App Store Review Guidelines auditing (Account deletion flow, Guideline 1.2 UGC moderation, `PrivacyInfo.xcprivacy`). |
 | **`google-playstore-toolkit`** (`crgeee/google-playstore-toolkit`) | `v1.0` | Google Play Store Data Safety section, 16KB page-size alignment, release bundle configuration. |
 | **`owasp-security`** (`agamm/claude-code-owasp`) | `v0.5`, `v0.9` | Mobile application security hardening (transport layer, credentials, PII leakage). |
 | **`Graphify`** | `v0.5` CP4, `v0.8` | Architecture and dependency graph mapping for large refactors (e.g. `AppProvider` refactor). |
 | **`Thermo-Nuclear Code Review`** / **`Improve Codebase Architecture`** | Checkpoint boundaries | Deep code review during "🧹 optional polish sessions" at checkpoint boundaries. |
 
-> **Agent Note:** When starting a Version or Checkpoint, check the skill table above. If the recommended skill is not active in your session, notify the user with the installation command or repository link so it can be loaded before executing the checkpoint.
+> **Agent Note:** When starting a Version or Checkpoint, check the skill table above. `shadcn/improve` is installed globally (`/improve`). If any other recommended skill is not active in your session, prompt the user with the installation command or repository link so it can be loaded before executing the checkpoint.
 
 ---
 
