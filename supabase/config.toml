@@ -326,6 +326,15 @@ client_id = ""
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 # Overrides the default auth callback URL derived from auth.external_url.
 redirect_uri = ""
+
+# Google Sign-In, reusing the existing Web OAuth client from google_auth_service.dart
+# (GoogleAuthService.serverClientId). Local-dev-only config; the hosted project's
+# Authentication > Providers > Google settings are configured separately in the Dashboard.
+[auth.external.google]
+enabled = true
+client_id = "990812869923-esv0uio3vdrd1l12nr0lt5cfqvd7ftkl.apps.googleusercontent.com"
+# DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
+secret = "env(SUPABASE_AUTH_EXTERNAL_GOOGLE_SECRET)"
 # Overrides the default auth provider URL. Used to support self-hosted gitlab, single-tenant Azure,
 # or any other third-party OIDC providers.
 url = ""

@@ -10,4 +10,11 @@ class SupabaseConfig {
   static const String anonKey = String.fromEnvironment('SUPABASE_ANON_KEY');
 
   static bool get isConfigured => url.isNotEmpty && anonKey.isNotEmpty;
+
+  /// Deep link Supabase Auth redirects back to after the Google OAuth web
+  /// flow completes. Must match the intent-filter in
+  /// android/app/src/main/AndroidManifest.xml and be added to this Supabase
+  /// project's Authentication > URL Configuration > Redirect URLs allow-list.
+  /// Not used on web, where signInWithOAuth's redirectTo is left null.
+  static const String oauthRedirectUrl = 'com.example.streamerapp://login-callback';
 }
