@@ -1,6 +1,9 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'core/config/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
@@ -8,6 +11,18 @@ import 'core/routing/app_router.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+
+  if (SupabaseConfig.isConfigured) {
+    await Supabase.initialize(
+      url: SupabaseConfig.url,
+      publishableKey: SupabaseConfig.anonKey,
+    );
+  } else if (kDebugMode) {
+    debugPrint(
+      'Supabase not initialized: SUPABASE_URL / SUPABASE_ANON_KEY were not '
+      'provided via --dart-define.',
+    );
+  }
 
   runApp(
     EasyLocalization(

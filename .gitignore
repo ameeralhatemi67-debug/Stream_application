@@ -14,3 +14,7 @@ project/ios/Flutter/.last_build_id
 Thumbs.db
 *.log
 *.tmp
+
+# Node tooling (Supabase CLI, installed local-only via npm)
+node_modules/
+

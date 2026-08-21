@@ -1,0 +1,8 @@
+{
+  "name": "streamer_app",
+  "private": true,
+  "description": "Local tooling for the Streamer_app repo (Supabase CLI).",
+  "devDependencies": {
+    "supabase": "^2.115.0"
+  }
+}

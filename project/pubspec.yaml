@@ -46,6 +46,9 @@ dependencies:
   google_sign_in: ^6.2.0
   image_picker: ^1.1.2
 
+  # Backend
+  supabase_flutter: ^2.17.2
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
