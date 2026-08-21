@@ -17,19 +17,17 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool _isLoading = false;
 
-  Future<void> _handleGoogleAuth({required bool isNewSignUp}) async {
+  Future<void> _handleGoogleAuth() async {
     setState(() => _isLoading = true);
     final provider = context.read<AppProvider>();
 
     try {
-      await provider.loginWithGoogle(isNewSignUp: isNewSignUp);
-      if (!mounted) return;
-
-      if (isNewSignUp) {
-        context.go('/role-select');
-      } else {
-        context.go('/feed');
-      }
+      // Only launches the Google OAuth browser flow. Once the user
+      // completes sign-in and the app resumes via the OAuth redirect,
+      // AppProvider's auth listener picks up the new session and
+      // GoRouter's redirect (app_router.dart) takes it from there --
+      // there's nothing left to navigate to here.
+      await provider.loginWithGoogle();
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -165,7 +163,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                           onPressed: _isLoading
                               ? null
-                              : () => _handleGoogleAuth(isNewSignUp: true),
+                              : () => _handleGoogleAuth(),
                           child: _isLoading
                               ? const SizedBox(
                                   height: 20,
@@ -225,7 +223,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                           onPressed: _isLoading
                               ? null
-                              : () => _handleGoogleAuth(isNewSignUp: false),
+                              : () => _handleGoogleAuth(),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [

@@ -42,8 +42,7 @@ dependencies:
   google_fonts: ^6.2.1
   top_snackbar_flutter: ^3.1.0
 
-  # Authentication & Media Picker
-  google_sign_in: ^6.2.0
+  # Media Picker
   image_picker: ^1.1.2
 
   # Backend
