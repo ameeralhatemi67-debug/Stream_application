@@ -28,9 +28,44 @@ class AppRouter {
 
   static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
-  static final GoRouter router = GoRouter(
+  /// Routes that require a live, authenticated Supabase session.
+  /// See doc/Audit/01_Security_Data_Protection_Audit.md VULN-RBAC-01.
+  static const Set<String> _authGuardedPaths = {
+    '/admin',
+    '/settings',
+    '/streamer-apply',
+    '/application-pending',
+  };
+
+  /// Builds the app's router bound to a single [AppProvider] instance.
+  /// Must be created once (e.g. in a State.initState), not per-build --
+  /// GoRouter expects a stable instance so its internal navigation state
+  /// survives widget rebuilds.
+  static GoRouter build(AppProvider provider) => GoRouter(
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/splash',
+    // Re-evaluates `redirect` whenever auth state changes (sign-in
+    // completing after the OAuth redirect, sign-out, role refresh) --
+    // without this, GoRouter would only re-check on navigation.
+    refreshListenable: provider,
+    redirect: (context, state) {
+      final path = state.matchedLocation;
+      final isLoggedIn = provider.isLoggedInStreamer;
+
+      if (_authGuardedPaths.contains(path)) {
+        if (!isLoggedIn) return '/welcome';
+        if (path == '/admin' && !provider.isAdminUser) return '/feed';
+        return null;
+      }
+
+      // Once a session exists, leave the auth landing screen behind. Needed
+      // because the Google sign-in button (welcome_screen.dart) only
+      // launches the OAuth browser flow and can't navigate synchronously
+      // after it -- this is what actually completes that flow.
+      if (path == '/welcome' && isLoggedIn) return '/feed';
+
+      return null;
+    },
     errorBuilder: (context, state) => Scaffold(
       body: Center(
         child: Column(

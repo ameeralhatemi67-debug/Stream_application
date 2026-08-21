@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/theme/app_theme.dart';
@@ -35,21 +36,42 @@ void main() async {
   );
 }
 
-class StreamerApp extends StatelessWidget {
+class StreamerApp extends StatefulWidget {
   const StreamerApp({super.key});
 
   @override
+  State<StreamerApp> createState() => _StreamerAppState();
+}
+
+class _StreamerAppState extends State<StreamerApp> {
+  late final AppProvider _appProvider;
+  late final GoRouter _router;
+
+  @override
+  void initState() {
+    super.initState();
+    _appProvider = AppProvider();
+    // Start real-time live viewer polling now that the provider exists.
+    // This is intentionally NOT done inside AppProvider's constructor so that
+    // widget tests (which use their own AppProvider instances) stay free of
+    // pending Timer assertions.
+    _appProvider.ensureLivePollingActive();
+    // Built once and bound to _appProvider so its redirect (see
+    // app_router.dart) can react to auth state changes via refreshListenable
+    // -- GoRouter must not be rebuilt on every frame.
+    _router = AppRouter.build(_appProvider);
+  }
+
+  @override
+  void dispose() {
+    _appProvider.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) {
-        final provider = AppProvider();
-        // Start real-time live viewer polling now that the provider tree is ready.
-        // This is intentionally NOT done inside AppProvider's constructor so that
-        // widget tests (which use their own AppProvider instances) stay free of
-        // pending Timer assertions.
-        provider.ensureLivePollingActive();
-        return provider;
-      },
+    return ChangeNotifierProvider.value(
+      value: _appProvider,
       child: Builder(
         builder: (context) {
           return MaterialApp.router(
@@ -61,7 +83,7 @@ class StreamerApp extends StatelessWidget {
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
-            routerConfig: AppRouter.router,
+            routerConfig: _router,
           );
         },
       ),
