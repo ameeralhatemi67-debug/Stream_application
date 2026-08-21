@@ -8,6 +8,8 @@ import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
+import '../../features/organization/models/org_venue_branch_model.dart';
+import '../../features/organization/models/org_speaker_model.dart';
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -273,6 +275,7 @@ class AdminDatabaseService {
   ) {
     return BroadcasterApplicationModel(
       id: row['id'] as String,
+      applicantProfileId: row['applicant_profile_id'] as String?,
       accountType:
           ApplicationAccountType.values.byName(row['account_type'] as String),
       applicantNameEn: row['applicant_name_en'] as String? ?? '',
@@ -988,5 +991,184 @@ class AdminDatabaseService {
         },
       ),
     ];
+  }
+
+  // ==========================================
+  // Organization Venues & Speakers Repository (Checkpoint 3 Phase 2)
+  //
+  // No SharedPreferences fallback here -- unlike the domains above, this
+  // data never had a persistence layer before (it lived purely in the mock
+  // _streamers list). Callers (AppProvider) keep mutating that mock list
+  // as their own fallback and treat these as best-effort write-throughs:
+  // every method throws on failure (Supabase unavailable, or an orgId that
+  // isn't a real organizations.id yet) instead of silently no-op'ing, so
+  // the caller's existing try/catch decides what "fallback" means for it.
+  // ==========================================
+
+  Future<List<OrgVenueBranchModel>> loadOrgVenues(String orgId) async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('org_venues')
+        .select()
+        .eq('organization_id', orgId)
+        .order('created_at');
+    return rows.map(_venueFromRow).toList();
+  }
+
+  Future<List<OrgSpeakerModel>> loadOrgSpeakers(String orgId) async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('org_speakers')
+        .select()
+        .eq('organization_id', orgId)
+        .order('created_at');
+    return rows.map(_speakerFromRow).toList();
+  }
+
+  Future<void> upsertOrgVenue(String orgId, OrgVenueBranchModel venue) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('org_venues').upsert({
+      'id': venue.venueId,
+      'organization_id': orgId,
+      ..._venueToRow(venue),
+    });
+  }
+
+  Future<void> deleteOrgVenue(String venueId) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('org_venues').delete().eq('id', venueId);
+  }
+
+  Future<void> upsertOrgSpeaker(String orgId, OrgSpeakerModel speaker) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('org_speakers').upsert({
+      'id': speaker.speakerId,
+      'organization_id': orgId,
+      ..._speakerToRow(speaker),
+    });
+  }
+
+  Future<void> deleteOrgSpeaker(String speakerId) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('org_speakers').delete().eq('id', speakerId);
+  }
+
+  Map<String, dynamic> _venueToRow(OrgVenueBranchModel v) => {
+        'name_en': v.nameEn,
+        'name_ar': v.nameAr,
+        'city_en': v.cityEn,
+        'city_ar': v.cityAr,
+        'latitude': v.latitude,
+        'longitude': v.longitude,
+        'seating_capacity': v.seatingCapacity,
+        'is_main_headquarters': v.isMainHeadquarters,
+        'room_number_or_hall': v.roomNumberOrHall,
+        'available_facilities': v.availableFacilities,
+        'address_en': v.addressEn,
+        'address_ar': v.addressAr,
+      };
+
+  OrgVenueBranchModel _venueFromRow(Map<String, dynamic> row) =>
+      OrgVenueBranchModel(
+        venueId: row['id'] as String,
+        nameEn: row['name_en'] as String,
+        nameAr: row['name_ar'] as String,
+        cityEn: row['city_en'] as String,
+        cityAr: row['city_ar'] as String,
+        latitude: (row['latitude'] as num).toDouble(),
+        longitude: (row['longitude'] as num).toDouble(),
+        seatingCapacity: (row['seating_capacity'] as num?)?.toInt() ?? 100,
+        isMainHeadquarters: row['is_main_headquarters'] as bool? ?? false,
+        roomNumberOrHall: row['room_number_or_hall'] as String?,
+        availableFacilities:
+            List<String>.from(row['available_facilities'] as List? ?? const []),
+        addressEn: row['address_en'] as String?,
+        addressAr: row['address_ar'] as String?,
+      );
+
+  Map<String, dynamic> _speakerToRow(OrgSpeakerModel s) => {
+        'name_en': s.nameEn,
+        'name_ar': s.nameAr,
+        'role_or_title_en': s.roleOrTitleEn,
+        'role_or_title_ar': s.roleOrTitleAr,
+        'avatar_url': s.avatarUrl,
+        'bio_en': s.bioEn,
+        'bio_ar': s.bioAr,
+        'is_permanent_staff': s.isPermanentStaff,
+        'linked_email': s.linkedEmail,
+        'youtube_handle': s.youtubeHandle,
+        'permissions': s.permissions.toJson(),
+      };
+
+  OrgSpeakerModel _speakerFromRow(Map<String, dynamic> row) => OrgSpeakerModel(
+        speakerId: row['id'] as String,
+        nameEn: row['name_en'] as String,
+        nameAr: row['name_ar'] as String,
+        roleOrTitleEn: row['role_or_title_en'] as String,
+        roleOrTitleAr: row['role_or_title_ar'] as String,
+        avatarUrl: row['avatar_url'] as String? ?? '',
+        bioEn: row['bio_en'] as String? ?? '',
+        bioAr: row['bio_ar'] as String? ?? '',
+        isPermanentStaff: row['is_permanent_staff'] as bool? ?? true,
+        linkedEmail: row['linked_email'] as String?,
+        youtubeHandle: row['youtube_handle'] as String?,
+        permissions: row['permissions'] != null
+            ? OrgBroadcasterPermissions.fromJson(
+                row['permissions'] as Map<String, dynamic>)
+            : const OrgBroadcasterPermissions(),
+      );
+
+  // ==========================================
+  // Real organization/profile creation on application approval
+  // (Checkpoint 3 Phase 2)
+  // ==========================================
+
+  /// Creates a real organizations row for an approved org-type application,
+  /// owned by the applicant. Returns the new organization's real id.
+  Future<String> createOrganizationFromApplication(
+    BroadcasterApplicationModel app,
+    String ownerProfileId,
+  ) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final row = await _client.from('organizations').insert({
+      'owner_profile_id': ownerProfileId,
+      'name_en': app.applicantNameEn,
+      'name_ar': app.applicantNameAr,
+      'avatar_url': app.avatarUrl,
+      'banner_url': app.bannerUrl,
+      'bio_en': app.bioEn,
+      'bio_ar': app.bioAr,
+      'category_id': app.categoryId,
+      'tags': app.tags,
+      'official_website_url': app.officialWebsiteUrl,
+      'youtube_handle': app.youtubeHandle,
+      'is_verified': true,
+    }).select('id').single();
+    return row['id'] as String;
+  }
+
+  /// Marks the applicant's own profile as a verified individual streamer.
+  Future<void> markProfileAsStreamer(
+    String profileId,
+    BroadcasterApplicationModel app,
+  ) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('profiles').update({
+      'is_streamer': true,
+      'is_verified': true,
+      'title_en': app.academicTitleEn,
+      'title_ar': app.academicTitleAr,
+      'category_id': app.categoryId,
+      'tags': app.tags,
+      'venue_name_en': app.venueNameEn,
+      'venue_name_ar': app.venueNameAr,
+      'latitude': app.latitude,
+      'longitude': app.longitude,
+      'youtube_handle': app.youtubeHandle,
+      'bio_en': app.bioEn,
+      'bio_ar': app.bioAr,
+      'avatar_url': app.avatarUrl,
+      'banner_url': app.bannerUrl,
+    }).eq('id', profileId);
   }
 }

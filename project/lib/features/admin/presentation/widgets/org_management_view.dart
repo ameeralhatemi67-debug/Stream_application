@@ -9,6 +9,7 @@ import '../../../organization/models/org_audit_log_entry.dart';
 import '../../../organization/models/org_broadcaster_permissions.dart';
 import '../../../organization/models/org_affiliation_request_model.dart';
 import '../../../profile/models/streamer_models.dart';
+import '../../../../core/utils/id_generator.dart';
 
 class OrgManagementView extends StatefulWidget {
   final String orgId;
@@ -25,6 +26,14 @@ class OrgManagementView extends StatefulWidget {
 class _OrgManagementViewState extends State<OrgManagementView> {
   int _activeSubSection = 0; // 0: Branches, 1: Speakers, 2: Affiliations, 3: Audit Trail
   String _auditSearchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Prefetches this org's real venues/speakers from Supabase, if it has a
+    // real backend row (Checkpoint 3 Phase 2) -- no-ops for mock demo orgs.
+    context.read<AppProvider>().ensureOrgDataLoaded(widget.orgId);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -908,7 +917,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                   style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentAmber, foregroundColor: Colors.black),
                   onPressed: () {
                     final newBranch = OrgVenueBranchModel(
-                      venueId: branch?.venueId ?? 'venue_branch_${DateTime.now().millisecondsSinceEpoch}',
+                      venueId: branch?.venueId ?? newId(),
                       nameEn: nameEnCtrl.text.trim(),
                       nameAr: nameArCtrl.text.trim(),
                       cityEn: cityEnCtrl.text.trim(),
@@ -1016,7 +1025,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                   style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentAmber, foregroundColor: Colors.black),
                   onPressed: () {
                     final newSpeaker = OrgSpeakerModel(
-                      speakerId: speaker?.speakerId ?? 'spk_${DateTime.now().millisecondsSinceEpoch}',
+                      speakerId: speaker?.speakerId ?? newId(),
                       nameEn: nameEnCtrl.text.trim(),
                       nameAr: nameArCtrl.text.trim(),
                       roleOrTitleEn: roleEnCtrl.text.trim(),

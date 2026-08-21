@@ -16,6 +16,11 @@ enum ApplicationStatus {
 @immutable
 class BroadcasterApplicationModel {
   final String id;
+  // The Supabase profiles.id of whoever submitted this application. Only
+  // populated when loaded from the real backend (Checkpoint 3) -- null for
+  // legacy/seed data. Used to know which real profile/organization to
+  // update on approval.
+  final String? applicantProfileId;
   final ApplicationAccountType accountType;
   final String applicantNameEn;
   final String applicantNameAr;
@@ -56,6 +61,7 @@ class BroadcasterApplicationModel {
 
   const BroadcasterApplicationModel({
     required this.id,
+    this.applicantProfileId,
     required this.accountType,
     required this.applicantNameEn,
     required this.applicantNameAr,
@@ -119,6 +125,7 @@ class BroadcasterApplicationModel {
 
   BroadcasterApplicationModel copyWith({
     String? id,
+    String? applicantProfileId,
     ApplicationAccountType? accountType,
     String? applicantNameEn,
     String? applicantNameAr,
@@ -151,6 +158,7 @@ class BroadcasterApplicationModel {
   }) {
     return BroadcasterApplicationModel(
       id: id ?? this.id,
+      applicantProfileId: applicantProfileId ?? this.applicantProfileId,
       accountType: accountType ?? this.accountType,
       applicantNameEn: applicantNameEn ?? this.applicantNameEn,
       applicantNameAr: applicantNameAr ?? this.applicantNameAr,

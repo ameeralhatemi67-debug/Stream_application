@@ -58,6 +58,12 @@ class AppProvider extends ChangeNotifier {
   // Org $\leftrightarrow$ Streamer Affiliation State
   List<OrgAffiliationRequestModel> _affiliationRequests = [];
 
+  // Real (Supabase-backed) org venues/speakers cache, keyed by orgId.
+  // See ensureOrgDataLoaded/getOrganizationVenues/getOrganizationSpeakers.
+  final Map<String, List<OrgVenueBranchModel>> _realOrgVenues = {};
+  final Map<String, List<OrgSpeakerModel>> _realOrgSpeakers = {};
+  final Set<String> _orgDataLoaded = {};
+
   bool _isStreamerModeEnabled =
       false; // Toggle between Streamer and Viewer modes
   bool _isPitchDirectorModeEnabled = false;
@@ -978,6 +984,7 @@ class AppProvider extends ChangeNotifier {
       }
       return s;
     }).toList();
+    await _writeThroughOrgSpeaker(orgId, speaker);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -1009,6 +1016,7 @@ class AppProvider extends ChangeNotifier {
       }
       return s;
     }).toList();
+    await _writeThroughDeleteOrgSpeaker(orgId, speakerId);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -1674,9 +1682,34 @@ class AppProvider extends ChangeNotifier {
       _applications = List.from(await _adminDbService!.loadApplications());
     }
 
-    // Instantiate as a verified live StreamerModel
+    // Creates the real backend record this approval represents (Checkpoint
+    // 3 Phase 2) -- an organizations row for org-type applications, or
+    // profiles.is_streamer=true for individuals. Only possible when the
+    // applicant actually signed in via real Supabase auth (applicantProfileId
+    // is null for legacy/seed applications); best-effort, falls back to the
+    // mock-only StreamerModel below on any failure.
+    final applicantProfileId = updated?.applicantProfileId ?? app.applicantProfileId;
+    String? realOrgId;
+    if (applicantProfileId != null) {
+      try {
+        _adminDbService ??= await AdminDatabaseService.create();
+        if (app.isOrganization) {
+          realOrgId = await _adminDbService!
+              .createOrganizationFromApplication(app, applicantProfileId);
+        } else {
+          await _adminDbService!.markProfileAsStreamer(applicantProfileId, app);
+        }
+      } catch (e) {
+        debugPrint('Real org/profile creation on approval failed: $e');
+      }
+    }
+
+    // Instantiate as a verified live StreamerModel. Uses the real
+    // organizations.id when one was just created, so getOrganizationVenues/
+    // Speakers and future writes key off the real backend row instead of a
+    // synthetic id that never corresponds to anything in Supabase.
     final newStreamer = StreamerModel(
-      streamerId: 'streamer_${app.id}',
+      streamerId: realOrgId ?? 'streamer_${app.id}',
       fullNameEn: app.applicantNameEn,
       fullNameAr: app.applicantNameAr,
       titleEn: app.academicTitleEn ??
@@ -1829,14 +1862,102 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Prefetches an organization's real venues/speakers from Supabase, for
+  /// orgIds that have a real backend row (Checkpoint 3 Phase 2). No-ops for
+  /// the mock demo orgs, which have no backend row and keep being served
+  /// straight from _streamers. Safe to call repeatedly; call it from a
+  /// screen's initState (e.g. OrgManagementView) before reading
+  /// getOrganizationVenues/getOrganizationSpeakers.
+  Future<void> ensureOrgDataLoaded(String orgId) async {
+    if (_orgDataLoaded.contains(orgId)) return;
+    _orgDataLoaded.add(orgId);
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      final venues = await _adminDbService!.loadOrgVenues(orgId);
+      final speakers = await _adminDbService!.loadOrgSpeakers(orgId);
+      if (venues.isNotEmpty) _realOrgVenues[orgId] = venues;
+      if (speakers.isNotEmpty) _realOrgSpeakers[orgId] = speakers;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('ensureOrgDataLoaded($orgId) failed: $e');
+    }
+  }
+
   List<OrgVenueBranchModel> getOrganizationVenues(String orgId) {
+    final real = _realOrgVenues[orgId];
+    if (real != null) return real;
     final streamer = getStreamerById(orgId);
     return streamer?.venues ?? const [];
   }
 
   List<OrgSpeakerModel> getOrganizationSpeakers(String orgId) {
+    final real = _realOrgSpeakers[orgId];
+    if (real != null) return real;
     final streamer = getStreamerById(orgId);
     return streamer?.affiliatedSpeakers ?? const [];
+  }
+
+  /// Best-effort Supabase write-through for org venue/speaker mutations --
+  /// no-ops (with a debug log) for orgIds without a real backend row, since
+  /// _streamers is always updated separately by the caller regardless.
+  Future<void> _writeThroughOrgSpeaker(String orgId, OrgSpeakerModel speaker) async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.upsertOrgSpeaker(orgId, speaker);
+      final cached = _realOrgSpeakers[orgId];
+      if (cached != null) {
+        final list = List<OrgSpeakerModel>.from(cached);
+        final idx = list.indexWhere((s) => s.speakerId == speaker.speakerId);
+        if (idx != -1) {
+          list[idx] = speaker;
+        } else {
+          list.add(speaker);
+        }
+        _realOrgSpeakers[orgId] = list;
+      }
+    } catch (e) {
+      debugPrint('Supabase org speaker write-through failed: $e');
+    }
+  }
+
+  Future<void> _writeThroughOrgVenue(String orgId, OrgVenueBranchModel venue) async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.upsertOrgVenue(orgId, venue);
+      final cached = _realOrgVenues[orgId];
+      if (cached != null) {
+        final list = List<OrgVenueBranchModel>.from(cached);
+        final idx = list.indexWhere((v) => v.venueId == venue.venueId);
+        if (idx != -1) {
+          list[idx] = venue;
+        } else {
+          list.add(venue);
+        }
+        _realOrgVenues[orgId] = list;
+      }
+    } catch (e) {
+      debugPrint('Supabase org venue write-through failed: $e');
+    }
+  }
+
+  Future<void> _writeThroughDeleteOrgSpeaker(String orgId, String speakerId) async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.deleteOrgSpeaker(speakerId);
+      _realOrgSpeakers[orgId]?.removeWhere((s) => s.speakerId == speakerId);
+    } catch (e) {
+      debugPrint('Supabase org speaker delete write-through failed: $e');
+    }
+  }
+
+  Future<void> _writeThroughDeleteOrgVenue(String orgId, String venueId) async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.deleteOrgVenue(venueId);
+      _realOrgVenues[orgId]?.removeWhere((v) => v.venueId == venueId);
+    } catch (e) {
+      debugPrint('Supabase org venue delete write-through failed: $e');
+    }
   }
 
   Future<void> updateSpeakerPermissions(
@@ -1860,6 +1981,7 @@ class AppProvider extends ChangeNotifier {
 
     _streamers[streamerIdx] =
         currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
+    await _writeThroughOrgSpeaker(orgId, updatedSpeakers[speakerIdx]);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -1930,6 +2052,7 @@ class AppProvider extends ChangeNotifier {
     final currentOrg = _streamers[idx];
     final updatedVenues = List<OrgVenueBranchModel>.from(currentOrg.venues)..add(branch);
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
+    await _writeThroughOrgVenue(orgId, branch);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -1954,6 +2077,7 @@ class AppProvider extends ChangeNotifier {
     final currentOrg = _streamers[idx];
     final updatedVenues = currentOrg.venues.map((v) => v.venueId == branch.venueId ? branch : v).toList();
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
+    await _writeThroughOrgVenue(orgId, branch);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -1982,6 +2106,7 @@ class AppProvider extends ChangeNotifier {
     );
     final updatedVenues = currentOrg.venues.where((v) => v.venueId != venueId).toList();
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
+    await _writeThroughDeleteOrgVenue(orgId, venueId);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -2006,6 +2131,7 @@ class AppProvider extends ChangeNotifier {
     final currentOrg = _streamers[idx];
     final updatedSpeakers = List<OrgSpeakerModel>.from(currentOrg.affiliatedSpeakers)..add(speaker);
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
+    await _writeThroughOrgSpeaker(orgId, speaker);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -2030,6 +2156,7 @@ class AppProvider extends ChangeNotifier {
     final currentOrg = _streamers[idx];
     final updatedSpeakers = currentOrg.affiliatedSpeakers.map((s) => s.speakerId == speaker.speakerId ? speaker : s).toList();
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
+    await _writeThroughOrgSpeaker(orgId, speaker);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -2058,6 +2185,7 @@ class AppProvider extends ChangeNotifier {
     );
     final updatedSpeakers = currentOrg.affiliatedSpeakers.where((s) => s.speakerId != speakerId).toList();
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
+    await _writeThroughDeleteOrgSpeaker(orgId, speakerId);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
