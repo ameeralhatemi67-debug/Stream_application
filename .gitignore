@@ -18,3 +18,6 @@ Thumbs.db
 # Node tooling (Supabase CLI, installed local-only via npm)
 node_modules/
 
+# Local dart-define values (real Supabase keys) — never commit, see dart_define.example.json
+project/dart_define.local.json
+
