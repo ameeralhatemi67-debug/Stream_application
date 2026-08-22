@@ -550,6 +550,46 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
+  /// Slim, always-visible row so a dropped Realtime connection is visible
+  /// rather than the chat silently going stale (doc/Roadmap/v0.6...md
+  /// Checkpoint 1 Phase 3).
+  Widget _buildChatConnectionIndicator() {
+    final state = _chatController.connectionState;
+    final (color, label) = switch (state) {
+      ChatConnectionState.live => (AppTheme.accentGreen, 'live.chat_status_live'.tr()),
+      ChatConnectionState.connecting => (
+          AppTheme.accentAmber,
+          'live.chat_status_connecting'.tr()
+        ),
+      ChatConnectionState.reconnecting => (
+          AppTheme.accentRed,
+          'live.chat_status_reconnecting'.tr()
+        ),
+    };
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceMd, vertical: 4),
+      color: AppTheme.darkSurface1,
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildChatTabViewContent() {
     // messages is oldest-first; the reversed ListView wants newest-first at
     // index 0.
@@ -559,6 +599,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       children: [
         Column(
           children: [
+            _buildChatConnectionIndicator(),
+
             // Chat Stream List (Starts from bottom with newest messages, scroll up for older)
             Expanded(
               child: ListView.builder(

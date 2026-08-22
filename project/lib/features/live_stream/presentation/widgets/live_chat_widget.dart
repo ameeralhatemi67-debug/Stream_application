@@ -2,14 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/chat_message_model.dart';
+import '../../services/live_chat_controller.dart';
 
 class LiveChatWidget extends StatefulWidget {
   final List<ChatMessageModel> messages;
+  final ChatConnectionState connectionState;
   final Function(String messageText) onSendTextMessage;
 
   const LiveChatWidget({
     super.key,
     required this.messages,
+    required this.connectionState,
     required this.onSendTextMessage,
   });
 
@@ -71,32 +74,21 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                       ),
                 ),
                 const Spacer(),
+                _ConnectionStatusChip(state: widget.connectionState),
+                const SizedBox(width: 6),
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppTheme.darkSurface2,
                     borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.accentGreen,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${widget.messages.length}',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondaryDark,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
+                  child: Text(
+                    '${widget.messages.length}',
+                    style: const TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -307,6 +299,43 @@ class _ChatTile extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _ConnectionStatusChip extends StatelessWidget {
+  final ChatConnectionState state;
+
+  const _ConnectionStatusChip({required this.state});
+
+  @override
+  Widget build(BuildContext context) {
+    final (color, label) = switch (state) {
+      ChatConnectionState.live => (AppTheme.accentGreen, 'live.chat_status_live'.tr()),
+      ChatConnectionState.connecting => (
+          AppTheme.accentAmber,
+          'live.chat_status_connecting'.tr()
+        ),
+      ChatConnectionState.reconnecting => (
+          AppTheme.accentRed,
+          'live.chat_status_reconnecting'.tr()
+        ),
+    };
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 6,
+          height: 6,
+          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 4),
+        Text(
+          label,
+          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+        ),
+      ],
     );
   }
 }

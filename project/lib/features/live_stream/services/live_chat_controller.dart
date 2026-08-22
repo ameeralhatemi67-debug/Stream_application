@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/utils/id_generator.dart';
 import '../models/chat_message_model.dart';
 
 enum ChatConnectionState { connecting, live, reconnecting }
@@ -150,6 +151,12 @@ class LiveChatController extends ChangeNotifier {
     }).toList();
   }
 
+  /// Sends a message with an optimistic local echo: appended immediately
+  /// (isPending: true), then replaced by the real confirmed row once it
+  /// arrives back through this client's own postgres_changes subscription
+  /// (_handleInsert matches on id -- the client generates it up front so the
+  /// two can be matched without a round trip). Removed again if the insert
+  /// itself fails.
   Future<void> sendMessage(String body) async {
     final trimmed = body.trim();
     if (trimmed.isEmpty) return;
@@ -159,14 +166,33 @@ class LiveChatController extends ChangeNotifier {
       throw Exception('Sign in to send a chat message.');
     }
 
-    await _client.from('chat_messages').insert({
-      'stream_id': streamId,
-      'sender_id': currentUserId,
-      'body': trimmed,
-    });
-    // The insert this client just made comes back through its own
-    // postgres_changes subscription above (_handleInsert) -- no local append
-    // here. Phase 3 adds an optimistic local echo shown before that confirms.
+    final id = newId();
+    final cachedSelf = _profileCache[currentUserId];
+    _messages.add(ChatMessageModel(
+      id: id,
+      streamId: streamId,
+      senderId: currentUserId,
+      senderName: cachedSelf?.name ?? 'You',
+      senderAvatarUrl: cachedSelf?.avatarUrl,
+      body: trimmed,
+      createdAt: DateTime.now(),
+      isCurrentUser: true,
+      isPending: true,
+    ));
+    notifyListeners();
+
+    try {
+      await _client.from('chat_messages').insert({
+        'id': id,
+        'stream_id': streamId,
+        'sender_id': currentUserId,
+        'body': trimmed,
+      });
+    } catch (e) {
+      _messages.removeWhere((m) => m.id == id);
+      notifyListeners();
+      rethrow;
+    }
   }
 
   @override
