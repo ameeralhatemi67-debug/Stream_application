@@ -641,7 +641,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                             text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text: '${message.senderName}: ',
+                                  text: message.badges.isEmpty
+                                      ? '${message.senderName}: '
+                                      : '${message.senderName} ${message.badges.map((b) => b.emoji).join()}: ',
                                   style: TextStyle(
                                     color: message.isCurrentUser
                                         ? AppTheme.accentRed

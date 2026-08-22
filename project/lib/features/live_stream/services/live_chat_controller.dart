@@ -38,8 +38,13 @@ class LiveChatController extends ChangeNotifier {
   ChatConnectionState _connectionState = ChatConnectionState.connecting;
   ChatConnectionState get connectionState => _connectionState;
 
-  /// sender_id -> resolved display info, populated on demand from `profiles`.
-  final Map<String, ({String name, String? avatarUrl})> _profileCache = {};
+  /// sender_id -> resolved display info + role badges, populated on demand
+  /// via the chat_sender_info RPC (see supabase/migrations/
+  /// 20260823140000_chat_sender_info.sql). Not a plain `profiles` select --
+  /// profiles' own RLS only lets a viewer read their own row or an admin's,
+  /// so any other sender's name/badges need this SECURITY DEFINER function.
+  final Map<String, ({String name, String? avatarUrl, Set<ChatSenderBadge> badges})>
+      _profileCache = {};
 
   Future<void> start() async {
     await _loadRecentMessages();
@@ -135,19 +140,24 @@ class LiveChatController extends ChangeNotifier {
         .toSet();
     if (unresolvedIds.isNotEmpty) {
       try {
-        final profileRows = await _client
-            .from('profiles')
-            .select('id, display_name_en, avatar_url')
-            .inFilter('id', unresolvedIds.toList());
-        for (final p in profileRows) {
-          final displayName = p['display_name_en'] as String?;
-          _profileCache[p['id'] as String] = (
-            name: (displayName?.trim().isNotEmpty ?? false) ? displayName! : 'Viewer',
+        final senderRows = await _client.rpc('chat_sender_info', params: {
+          'p_profile_ids': unresolvedIds.toList(),
+        });
+        for (final p in (senderRows as List).cast<Map<String, dynamic>>()) {
+          final badges = <ChatSenderBadge>{
+            if (p['is_speaker'] == true) ChatSenderBadge.speaker,
+            if (p['is_org_owner'] == true) ChatSenderBadge.organization,
+            if (p['is_admin'] == true) ChatSenderBadge.admin,
+            if (p['is_verified'] == true) ChatSenderBadge.verified,
+          };
+          _profileCache[p['profile_id'] as String] = (
+            name: p['display_name'] as String? ?? 'Viewer',
             avatarUrl: p['avatar_url'] as String?,
+            badges: badges,
           );
         }
       } catch (e) {
-        debugPrint('LiveChatController: failed to resolve sender profiles: $e');
+        debugPrint('LiveChatController: failed to resolve sender info: $e');
       }
     }
 
@@ -160,6 +170,7 @@ class LiveChatController extends ChangeNotifier {
         senderId: senderId,
         senderName: cached?.name ?? 'Viewer',
         senderAvatarUrl: cached?.avatarUrl,
+        badges: cached?.badges ?? const {},
         body: r['body'] as String,
         createdAt: DateTime.parse(r['created_at'] as String),
         isCurrentUser: senderId == currentUserId,
@@ -190,6 +201,7 @@ class LiveChatController extends ChangeNotifier {
       senderId: currentUserId,
       senderName: cachedSelf?.name ?? 'You',
       senderAvatarUrl: cachedSelf?.avatarUrl,
+      badges: cachedSelf?.badges ?? const {},
       body: trimmed,
       createdAt: DateTime.now(),
       isCurrentUser: true,

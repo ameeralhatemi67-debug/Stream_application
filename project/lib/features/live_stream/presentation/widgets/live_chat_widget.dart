@@ -250,6 +250,11 @@ class _ChatTile extends StatelessWidget {
                             : AppTheme.textPrimaryDark,
                       ),
                     ),
+                    if (message.badges.isNotEmpty)
+                      Text(
+                        message.badges.map((b) => b.emoji).join(),
+                        style: const TextStyle(fontSize: 11),
+                      ),
                     if (message.isCurrentUser)
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
