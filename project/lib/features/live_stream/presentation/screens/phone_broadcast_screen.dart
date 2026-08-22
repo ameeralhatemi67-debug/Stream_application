@@ -60,6 +60,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     );
     if (!micGranted) return;
 
+    // v0.7 Checkpoint 3 Phase 2 -- best-effort only: RtmpForegroundService
+    // keeps the broadcast running in the background even without this (API
+    // < 33 doesn't need it at all; confirmed on-device), but on API 33+ its
+    // ongoing-broadcast notification is silently invisible without it. Not
+    // worth a rationale dialog or gating the broadcast on the answer.
+    await Permission.notification.request();
+
     try {
       await _engine.initializeCamera(preset: _preset);
       // v0.7 Checkpoint 3 Phase 1 -- reuses the same RTMP pipeline in

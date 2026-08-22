@@ -46,6 +46,26 @@ class RtmpPublisherBridge(
         // has to happen *after* handlePrepare's prepareVideo/prepareAudio,
         // not as soon as the surface exists.
         surfaceView = view
+        // Resuming from background/screen-lock (v0.7 Checkpoint 3 Phase 2):
+        // Android recreates a new Surface for the PlatformView, but the
+        // broadcast itself never stopped (see onSurfaceLost) -- just
+        // reattach the preview so the on-screen view comes back.
+        if (stream.isStreaming && !stream.isOnPreview) {
+            stream.startPreview(view)
+        }
+    }
+
+    /**
+     * The OS tore down the PlatformView's Surface -- app backgrounded,
+     * screen locked, etc. Only drops the on-screen preview binding; the
+     * broadcast itself (RtmpForegroundService keeping the process alive)
+     * keeps running. Only [detach] (the screen actually being disposed)
+     * stops the stream for real -- conflating the two here previously meant
+     * every background/lock silently ended the broadcast.
+     */
+    fun onSurfaceLost() {
+        if (stream.isOnPreview) stream.stopPreview()
+        surfaceView = null
     }
 
     fun detach() {

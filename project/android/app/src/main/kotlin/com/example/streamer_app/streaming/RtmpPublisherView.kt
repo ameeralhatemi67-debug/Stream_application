@@ -34,7 +34,13 @@ class RtmpPublisherView(
             override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {}
 
             override fun surfaceDestroyed(holder: SurfaceHolder) {
-                bridge.detach()
+                // v0.7 Checkpoint 3 Phase 2 -- backgrounding/locking the
+                // screen destroys this Surface (standard SurfaceView
+                // behavior) without disposing this PlatformView. Only drop
+                // the preview binding here; bridge.detach() (which actually
+                // stops the broadcast) belongs to dispose() below, when the
+                // screen is genuinely going away.
+                bridge.onSurfaceLost()
             }
         })
     }

@@ -21,6 +21,13 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
+    <!-- v0.7 Checkpoint 3 Phase 2: without this, RtmpForegroundService still
+         runs correctly in the background (confirmed via device testing;
+         Android only requires startForeground() to have been called, not
+         that the user granted this), but its ongoing-broadcast notification
+         is silently invisible on API 33+, which defeats the point of having
+         one. Requested at runtime, best-effort, in PhoneBroadcastScreen. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="streamer_app"
         android:name="${applicationName}"
