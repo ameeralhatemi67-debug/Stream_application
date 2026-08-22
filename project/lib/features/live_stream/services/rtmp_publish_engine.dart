@@ -101,17 +101,35 @@ class RtmpPublishEngine extends ChangeNotifier {
           _onEvent,
           onError: _onEventError,
         );
-    try {
-      await _channel.invokeMethod<void>('prepare', {
-        'width': preset.width,
-        'height': preset.height,
-        'videoBitrate': preset.videoBitrateBps,
-      });
-      _setState(RtmpPublishState.ready);
-    } on PlatformException catch (e) {
-      _lastError = e.message ?? e.code;
-      _setState(RtmpPublishState.error);
-      rethrow;
+
+    final arguments = {
+      'width': preset.width,
+      'height': preset.height,
+      'videoBitrate': preset.videoBitrateBps,
+    };
+
+    // NOT_READY means the PlatformView's native surface hasn't finished
+    // attaching to RtmpPublisherBridge yet -- normally a one-frame race, not
+    // a real failure, since the screen mounts the camera preview before
+    // calling this. A short bounded retry absorbs that race without needing
+    // a dedicated "view attached" channel event.
+    const maxAttempts = 10;
+    const retryDelay = Duration(milliseconds: 200);
+    for (var attempt = 1; attempt <= maxAttempts; attempt++) {
+      try {
+        await _channel.invokeMethod<void>('prepare', arguments);
+        _setState(RtmpPublishState.ready);
+        return;
+      } on PlatformException catch (e) {
+        final isNotReady = e.code == 'NOT_READY';
+        if (isNotReady && attempt < maxAttempts) {
+          await Future<void>.delayed(retryDelay);
+          continue;
+        }
+        _lastError = e.message ?? e.code;
+        _setState(RtmpPublishState.error);
+        rethrow;
+      }
     }
   }
 

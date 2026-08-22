@@ -102,12 +102,21 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     });
   }
 
+  // Tracks whether *this screen* was the one that flipped
+  // AppProvider.isBroadcastingLive on -- not just whether it's currently
+  // true, since a broadcast could already be live via OBS/YouTube-video-ID
+  // before this screen ever opened. Only undoes what it did: started here,
+  // stopped here (including on dispose, e.g. the user backing out mid-
+  // "connecting" rather than tapping End Broadcast first).
+  bool _weStartedBroadcast = false;
+
   Future<void> _startBroadcast() async {
     try {
       await _engine.startPublishing(_appProvider.phoneBroadcastFullUrl);
       if (!mounted) return;
       if (!_appProvider.isBroadcastingLive) {
         await _appProvider.toggleBroadcasterGoLive(context);
+        _weStartedBroadcast = true;
       }
     } on Exception {
       // The engine's own error state already drives the UI here.
@@ -116,9 +125,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
 
   Future<void> _stopBroadcast() async {
     await _engine.stopPublishing();
-    if (_appProvider.isBroadcastingLive) {
+    if (_weStartedBroadcast && _appProvider.isBroadcastingLive) {
       await _appProvider.toggleBroadcasterGoLive(mounted ? context : null);
     }
+    _weStartedBroadcast = false;
   }
 
   void _onEngineChanged() => setState(() {});
@@ -126,8 +136,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
   @override
   void dispose() {
     _engine.removeListener(_onEngineChanged);
-    if (_engine.state == RtmpPublishState.live && _appProvider.isBroadcastingLive) {
-      _appProvider.toggleBroadcasterGoLive();
+    if (_weStartedBroadcast && _appProvider.isBroadcastingLive) {
+      // Deferred to a microtask: AppRouter is built with
+      // refreshListenable: provider (ADR-001), so toggleBroadcasterGoLive's
+      // notifyListeners() re-enters GoRouter's own rebuild if called
+      // synchronously from dispose() while the Router is still mid-rebuild
+      // from the very pop that's disposing this screen -- observed on
+      // device as "setState() or markNeedsBuild() called when widget tree
+      // was locked" inside _RouterState._rebuild. Running it after the
+      // current frame finishes avoids the re-entrancy.
+      final provider = _appProvider;
+      Future.microtask(() => provider.toggleBroadcasterGoLive());
     }
     _engine.dispose();
     super.dispose();
@@ -170,31 +189,37 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
       return _buildPresetPicker();
     }
 
-    final previewReady = _engine.state == RtmpPublishState.ready ||
-        _engine.state == RtmpPublishState.connecting ||
-        _engine.state == RtmpPublishState.live ||
-        _engine.state == RtmpPublishState.stopped;
-    if (previewReady) {
-      return Stack(
-        children: [
-          const PhoneCameraPreview(),
-          if (_engine.state == RtmpPublishState.live)
-            Positioned(
-              top: AppTheme.spaceMd,
-              left: AppTheme.spaceMd,
-              child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
+    // The native OpenGlView (and RtmpPublisherBridge.attach()) only exists
+    // once this PlatformView is actually mounted -- so it has to be in the
+    // tree *before* RtmpPublishEngine.initializeCamera()'s "prepare" call,
+    // not gated behind it, or "prepare" reaches an unattached bridge (see
+    // NOT_READY in RtmpPublisherBridge). A loading spinner overlays it until
+    // the engine reports ready.
+    final loading = _engine.state == RtmpPublishState.idle ||
+        _engine.state == RtmpPublishState.initializingCamera;
+    return Stack(
+      children: [
+        const PhoneCameraPreview(),
+        if (loading)
+          const ColoredBox(
+            color: Colors.black,
+            child: Center(
+              child: CircularProgressIndicator(color: AppTheme.accentRed),
             ),
-          if (_engine.state == RtmpPublishState.connecting)
-            const Positioned(
-              top: AppTheme.spaceMd,
-              left: AppTheme.spaceMd,
-              child: _StatusPill(label: 'Connecting...', color: Colors.amber),
-            ),
-        ],
-      );
-    }
-    return const Center(
-      child: CircularProgressIndicator(color: AppTheme.accentRed),
+          ),
+        if (_engine.state == RtmpPublishState.live)
+          Positioned(
+            top: AppTheme.spaceMd,
+            left: AppTheme.spaceMd,
+            child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
+          ),
+        if (_engine.state == RtmpPublishState.connecting)
+          const Positioned(
+            top: AppTheme.spaceMd,
+            left: AppTheme.spaceMd,
+            child: _StatusPill(label: 'Connecting...', color: Colors.amber),
+          ),
+      ],
     );
   }
 

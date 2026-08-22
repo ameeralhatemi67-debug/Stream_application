@@ -61,6 +61,51 @@ void main() {
     expect(engine.lastError, 'no encoder');
   });
 
+  test(
+    'initializeCamera retries through NOT_READY until the native view attaches',
+    () async {
+      var calls = 0;
+      messenger.setMockMethodCallHandler(methodChannel, (call) async {
+        calls++;
+        if (calls < 3) {
+          throw PlatformException(
+            code: 'NOT_READY',
+            message: 'Camera preview is not attached yet.',
+          );
+        }
+        return null;
+      });
+
+      final engine = RtmpPublishEngine();
+      await engine.initializeCamera();
+
+      expect(calls, 3);
+      expect(engine.state, RtmpPublishState.ready);
+      expect(engine.lastError, isNull);
+    },
+  );
+
+  test(
+    'initializeCamera surfaces NOT_READY as error once retries are exhausted',
+    () async {
+      messenger.setMockMethodCallHandler(methodChannel, (call) async {
+        throw PlatformException(
+          code: 'NOT_READY',
+          message: 'Camera preview is not attached yet.',
+        );
+      });
+
+      final engine = RtmpPublishEngine();
+      await expectLater(
+        engine.initializeCamera(),
+        throwsA(isA<PlatformException>()),
+      );
+
+      expect(engine.state, RtmpPublishState.error);
+      expect(engine.lastError, 'Camera preview is not attached yet.');
+    },
+  );
+
   test('switchCamera toggles isFrontCamera on success', () async {
     messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
 
