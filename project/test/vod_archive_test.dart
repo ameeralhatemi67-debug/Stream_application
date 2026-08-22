@@ -86,6 +86,36 @@ void main() {
           equals('http://10.0.0.5:8888/live/demo/'));
     });
 
+    test(
+      'TC-RTMP-02: AppProvider Phone-to-YouTube Broadcast Target State (v0.7 CP2 Phase 2)',
+      () {
+        final provider = AppProvider();
+
+        expect(
+          provider.phoneBroadcastRtmpUrl,
+          equals('rtmp://a.rtmp.youtube.com/live2'),
+        );
+        expect(provider.phoneBroadcastStreamKey, equals(''));
+        // No stream key yet -- full URL degrades to just the ingest URL
+        // rather than appending a trailing "/".
+        expect(
+          provider.phoneBroadcastFullUrl,
+          equals('rtmp://a.rtmp.youtube.com/live2'),
+        );
+
+        provider.updatePhoneBroadcastTarget(
+          rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2',
+          streamKey: 'abcd-efgh-ijkl-mnop',
+        );
+
+        expect(provider.phoneBroadcastStreamKey, equals('abcd-efgh-ijkl-mnop'));
+        expect(
+          provider.phoneBroadcastFullUrl,
+          equals('rtmp://a.rtmp.youtube.com/live2/abcd-efgh-ijkl-mnop'),
+        );
+      },
+    );
+
     test('TC-FOLLOW-01: AppProvider Follow & Reminder State Management', () {
       final provider = AppProvider();
       const testStreamerId = 'prof_alghamdi_01';

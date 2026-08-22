@@ -6,8 +6,9 @@ import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/interactive_toast_overlay.dart';
 import '../../../profile/models/streamer_models.dart';
+import '../screens/phone_broadcast_screen.dart';
 
-enum BroadcastTargetType { localRtmp, youtubeLive }
+enum BroadcastTargetType { localRtmp, youtubeLive, phoneToYoutube }
 
 /// Pitch Director & Live Studio Settings Dialog.
 /// Allows switching Amir Al-Hatemi's live stream between Local OBS RTMP and YouTube Live.
@@ -30,6 +31,9 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
   BroadcastTargetType _selectedTarget = BroadcastTargetType.youtubeLive;
   late TextEditingController _ipController;
   late TextEditingController _youtubeUrlController;
+  late TextEditingController _phoneRtmpUrlController;
+  late TextEditingController _streamKeyController;
+  bool _streamKeyVisible = false;
 
   final List<String> _presetIps = [
     '127.0.0.1',
@@ -48,8 +52,14 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
           ? appProvider.customYouTubeLiveUrl
           : appProvider.customYouTubeVideoId,
     );
+    _phoneRtmpUrlController =
+        TextEditingController(text: appProvider.phoneBroadcastRtmpUrl);
+    _streamKeyController =
+        TextEditingController(text: appProvider.phoneBroadcastStreamKey);
     _ipController.addListener(_onFieldChanged);
     _youtubeUrlController.addListener(_onFieldChanged);
+    _phoneRtmpUrlController.addListener(_onFieldChanged);
+    _streamKeyController.addListener(_onFieldChanged);
   }
 
   void _onFieldChanged() {
@@ -60,13 +70,41 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
   void dispose() {
     _ipController.removeListener(_onFieldChanged);
     _youtubeUrlController.removeListener(_onFieldChanged);
+    _phoneRtmpUrlController.removeListener(_onFieldChanged);
+    _streamKeyController.removeListener(_onFieldChanged);
     _ipController.dispose();
     _youtubeUrlController.dispose();
+    _phoneRtmpUrlController.dispose();
+    _streamKeyController.dispose();
     super.dispose();
   }
 
   void _saveSettings() {
     final appProvider = Provider.of<AppProvider>(context, listen: false);
+
+    if (_selectedTarget == BroadcastTargetType.phoneToYoutube) {
+      final rtmpUrl = _phoneRtmpUrlController.text.trim();
+      final streamKey = _streamKeyController.text.trim();
+      if (streamKey.isEmpty) {
+        InteractiveToastOverlay.show(
+          context,
+          title: 'Stream Key Required',
+          message: 'Paste the stream key from YouTube Studio\'s Go Live > Stream tab.',
+          icon: Icons.error_outline_rounded,
+          accentColor: AppTheme.accentRed,
+        );
+        return;
+      }
+      appProvider.updatePhoneBroadcastTarget(
+        rtmpUrl: rtmpUrl,
+        streamKey: streamKey,
+      );
+      Navigator.of(context).pop();
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const PhoneBroadcastScreen()),
+      );
+      return;
+    }
 
     if (_selectedTarget == BroadcastTargetType.localRtmp) {
       final rawIp = _ipController.text.trim();
@@ -248,7 +286,7 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
 
               const SizedBox(height: AppTheme.spaceMd),
 
-              // Target Selector Tabs: OBS RTMP vs YouTube Live
+              // Target Selector Tabs: OBS RTMP vs YouTube Live vs Phone Camera
               Container(
                 decoration: BoxDecoration(
                   color: AppTheme.darkSurface1,
@@ -258,77 +296,30 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: InkWell(
+                      child: _TargetTab(
+                        icon: Icons.play_circle_fill_rounded,
+                        label: 'YouTube Live',
+                        selected: _selectedTarget == BroadcastTargetType.youtubeLive,
+                        selectedColor: AppTheme.accentRed,
                         onTap: () => setState(() => _selectedTarget = BroadcastTargetType.youtubeLive),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: _selectedTarget == BroadcastTargetType.youtubeLive
-                                ? AppTheme.accentRed
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.play_circle_fill_rounded,
-                                size: 16,
-                                color: _selectedTarget == BroadcastTargetType.youtubeLive
-                                    ? Colors.white
-                                    : AppTheme.textSecondaryDark,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'YouTube Live',
-                                style: TextStyle(
-                                  color: _selectedTarget == BroadcastTargetType.youtubeLive
-                                      ? Colors.white
-                                      : AppTheme.textSecondaryDark,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ),
                     ),
                     Expanded(
-                      child: InkWell(
+                      child: _TargetTab(
+                        icon: Icons.laptop_chromebook_rounded,
+                        label: 'Local OBS',
+                        selected: _selectedTarget == BroadcastTargetType.localRtmp,
+                        selectedColor: AppTheme.accentBlue,
                         onTap: () => setState(() => _selectedTarget = BroadcastTargetType.localRtmp),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8),
-                          decoration: BoxDecoration(
-                            color: _selectedTarget == BroadcastTargetType.localRtmp
-                                ? AppTheme.accentBlue
-                                : Colors.transparent,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.laptop_chromebook_rounded,
-                                size: 16,
-                                color: _selectedTarget == BroadcastTargetType.localRtmp
-                                    ? Colors.white
-                                    : AppTheme.textSecondaryDark,
-                              ),
-                              const SizedBox(width: 6),
-                              Text(
-                                'Local OBS RTMP',
-                                style: TextStyle(
-                                  color: _selectedTarget == BroadcastTargetType.localRtmp
-                                      ? Colors.white
-                                      : AppTheme.textSecondaryDark,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
+                      ),
+                    ),
+                    Expanded(
+                      child: _TargetTab(
+                        icon: Icons.smartphone_rounded,
+                        label: 'From Phone',
+                        selected: _selectedTarget == BroadcastTargetType.phoneToYoutube,
+                        selectedColor: AppTheme.accentGreen,
+                        onTap: () => setState(() => _selectedTarget = BroadcastTargetType.phoneToYoutube),
                       ),
                     ),
                   ],
@@ -639,6 +630,88 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
                 ),
               ],
 
+              // 🟢 Section 3: Broadcast From Phone (Camera/Mic -> YouTube RTMP)
+              if (_selectedTarget == BroadcastTargetType.phoneToYoutube) ...[
+                const Text(
+                  'YouTube RTMP Ingest URL',
+                  style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                TextField(
+                  controller: _phoneRtmpUrlController,
+                  keyboardType: TextInputType.url,
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'monospace'),
+                  decoration: InputDecoration(
+                    hintText: 'rtmp://a.rtmp.youtube.com/live2',
+                    hintStyle: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11.5),
+                    prefixIcon: const Icon(Icons.podcasts_rounded, color: AppTheme.accentGreen, size: 18),
+                    filled: true,
+                    fillColor: AppTheme.darkSurface1,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                const Text(
+                  'Stream Key',
+                  style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12, fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                TextField(
+                  controller: _streamKeyController,
+                  obscureText: !_streamKeyVisible,
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontFamily: 'monospace'),
+                  decoration: InputDecoration(
+                    hintText: 'xxxx-xxxx-xxxx-xxxx-xxxx',
+                    hintStyle: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11.5),
+                    prefixIcon: const Icon(Icons.key_rounded, color: AppTheme.accentGreen, size: 18),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _streamKeyVisible ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                        color: AppTheme.textMutedDark,
+                        size: 18,
+                      ),
+                      onPressed: () => setState(() => _streamKeyVisible = !_streamKeyVisible),
+                    ),
+                    filled: true,
+                    fillColor: AppTheme.darkSurface1,
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+
+                // Helper instructions for YouTube Studio
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spaceSm),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface1,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: AppTheme.darkBorderSubtle),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '💡 Where to find in YouTube Studio:',
+                        style: TextStyle(color: Colors.amberAccent, fontSize: 11, fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 3),
+                      Text(
+                        '1. In YouTube Studio, click "Go Live".\n2. Open the "Stream" tab.\n3. Copy the Stream URL and Stream Key and paste them above.',
+                        style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 10.5, height: 1.4),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+
               const SizedBox(height: AppTheme.spaceLg),
 
               // Action Buttons
@@ -653,16 +726,75 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
                   ElevatedButton(
                     onPressed: _saveSettings,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accentRed,
+                      backgroundColor: _selectedTarget == BroadcastTargetType.phoneToYoutube
+                          ? AppTheme.accentGreen
+                          : AppTheme.accentRed,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
                     ),
-                    child: const Text('Save & Apply', style: TextStyle(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      _selectedTarget == BroadcastTargetType.phoneToYoutube
+                          ? 'Open Camera'
+                          : 'Save & Apply',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
                   ),
                 ],
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// One tab in the broadcast-target selector row. Shared by all three
+/// targets (YouTube Live / Local OBS / From Phone) so adding a target only
+/// means one more instance, not another copy of the tab markup.
+class _TargetTab extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final Color selectedColor;
+  final VoidCallback onTap;
+
+  const _TargetTab({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.selectedColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = selected ? Colors.white : AppTheme.textSecondaryDark;
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        decoration: BoxDecoration(
+          color: selected ? selectedColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 16, color: color),
+            const SizedBox(width: 6),
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: color,
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
