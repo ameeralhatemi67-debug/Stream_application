@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../models/chat_message_model.dart';
+import '../models/ghost_comments.dart';
+import '../services/ghost_chat_fallback_controller.dart';
 import '../services/live_chat_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
@@ -33,6 +36,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   final TextEditingController _chatTextController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   late final LiveChatController _chatController;
+  late final GhostChatFallbackController _ghostChatController;
 
   late TabController _tabController;
   StreamSourceType _sourceType = StreamSourceType.youtubeEmbed;
@@ -52,6 +56,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       streamId: widget.streamId,
       onReaction: (type) => _reactionsController.spawnReaction(type),
     )..start();
+    _ghostChatController =
+        GhostChatFallbackController(streamId: widget.streamId);
+    _chatController.addListener(_handleChatConnectionChange);
   }
 
   @override
@@ -59,8 +66,25 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _tabController.dispose();
     _chatTextController.dispose();
     _chatScrollController.dispose();
+    _chatController.removeListener(_handleChatConnectionChange);
     _chatController.dispose();
+    _ghostChatController.dispose();
     super.dispose();
+  }
+
+  /// Switches the chat tab to the simulated ghost-chat fallback the moment
+  /// Realtime drops (Checkpoint 4), and back to real messages the moment it
+  /// recovers -- reusing LiveChatController's existing "reconnecting" state
+  /// rather than adding a new one, since that's already exactly "Realtime is
+  /// unreachable."
+  void _handleChatConnectionChange() {
+    final disconnected =
+        _chatController.connectionState == ChatConnectionState.reconnecting;
+    if (disconnected && !_ghostChatController.isActive) {
+      _ghostChatController.start();
+    } else if (!disconnected && _ghostChatController.isActive) {
+      _ghostChatController.stop();
+    }
   }
 
   ImageProvider _getImageProvider(String url) {
@@ -73,6 +97,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   void _handleSendLocalMessage() {
     final text = _chatTextController.text.trim();
     if (text.isEmpty) return;
+
+    if (_chatController.connectionState == ChatConnectionState.reconnecting) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('live.demo_mode_cannot_send_toast'.tr())),
+      );
+      return;
+    }
     _chatTextController.clear();
 
     _chatController.sendMessage(text).then((_) {
@@ -552,7 +583,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   // 💬 Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
   Widget _buildChatTabView() {
     return ListenableBuilder(
-      listenable: _chatController,
+      listenable: Listenable.merge([_chatController, _ghostChatController]),
       builder: (context, _) => _buildChatTabViewContent(),
     );
   }
@@ -601,95 +632,54 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
+  /// True once LiveChatController can't reach Realtime (dropped connection,
+  /// offline testing, ...) -- reusing its existing "reconnecting" state
+  /// rather than inventing a new one, since that already means exactly this.
+  bool get _isChatOffline =>
+      _chatController.connectionState == ChatConnectionState.reconnecting;
+
   Widget _buildChatTabViewContent() {
-    // messages is oldest-first; the reversed ListView wants newest-first at
-    // index 0.
+    final isOffline = _isChatOffline;
+    // Both lists are oldest-first; the reversed ListView wants newest-first
+    // at index 0.
     final messages = _chatController.messages.reversed.toList();
+    final ghostMessages = _ghostChatController.messages.reversed.toList();
+    final langCode = context.locale.languageCode;
 
     return Stack(
       children: [
         Column(
           children: [
             _buildChatConnectionIndicator(),
+            if (isOffline) _buildDemoModeBanner(),
 
             // Chat Stream List (Starts from bottom with newest messages, scroll up for older)
             Expanded(
-              child: ListView.builder(
-                controller: _chatScrollController,
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: BouncingScrollPhysics(),
-                ),
-                reverse: true,
-                padding: const EdgeInsets.symmetric(
-                    horizontal: AppTheme.spaceMd, vertical: 4),
-                itemCount: messages.length,
-                itemBuilder: (context, index) {
-                  final message = messages[index];
-                  return GestureDetector(
-                    onLongPress: message.isCurrentUser
-                        ? null
-                        : () => showChatMessageActionsSheet(
-                              context,
-                              message: message,
-                              controller: _chatController,
-                            ),
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          CircleAvatar(
-                            radius: 12,
-                            backgroundColor: AppTheme.darkSurface3,
-                            child: Text(
-                              message.senderName.isNotEmpty
-                                  ? message.senderName[0].toUpperCase()
-                                  : '?',
-                              style: const TextStyle(
-                                  color: AppTheme.accentBlue,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                          const SizedBox(width: AppTheme.spaceSm),
-                          Expanded(
-                            child: RichText(
-                              text: TextSpan(
-                                children: [
-                                  TextSpan(
-                                    text: message.badges.isEmpty
-                                        ? '${message.senderName}: '
-                                        : '${message.senderName} ${message.badges.map((b) => b.emoji).join()}: ',
-                                    style: TextStyle(
-                                      color: message.isCurrentUser
-                                          ? AppTheme.accentRed
-                                          : AppTheme.accentBlue,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  TextSpan(
-                                    text: message.body,
-                                    style: const TextStyle(
-                                        color: AppTheme.textPrimaryDark,
-                                        fontSize: 12),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                          Text(
-                            TimeOfDay.fromDateTime(message.createdAt.toLocal())
-                                .format(context),
-                            style: const TextStyle(
-                                color: AppTheme.textMutedDark, fontSize: 10),
-                          ),
-                        ],
+              child: isOffline
+                  ? ListView.builder(
+                      controller: _chatScrollController,
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
                       ),
+                      reverse: true,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spaceMd, vertical: 4),
+                      itemCount: ghostMessages.length,
+                      itemBuilder: (context, index) =>
+                          _buildGhostChatTile(ghostMessages[index], langCode),
+                    )
+                  : ListView.builder(
+                      controller: _chatScrollController,
+                      physics: const AlwaysScrollableScrollPhysics(
+                        parent: BouncingScrollPhysics(),
+                      ),
+                      reverse: true,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spaceMd, vertical: 4),
+                      itemCount: messages.length,
+                      itemBuilder: (context, index) =>
+                          _buildChatMessageTile(messages[index]),
                     ),
-                  );
-                },
-              ),
             ),
 
             // ✍️ Chat Input Bar with Raise Hand, Reactions FAB, and Send
@@ -821,6 +811,155 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             ),
           ),
       ],
+    );
+  }
+
+  Widget _buildDemoModeBanner() {
+    return Container(
+      width: double.infinity,
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 6),
+      color: AppTheme.accentAmber.withValues(alpha: 0.15),
+      child: Row(
+        children: [
+          const Icon(Icons.wifi_off_rounded,
+              size: 14, color: AppTheme.accentAmber),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'live.demo_mode_banner'.tr(),
+              style: const TextStyle(
+                color: AppTheme.accentAmber,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatMessageTile(ChatMessageModel message) {
+    return GestureDetector(
+      onLongPress: message.isCurrentUser
+          ? null
+          : () => showChatMessageActionsSheet(
+                context,
+                message: message,
+                controller: _chatController,
+              ),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 12,
+              backgroundColor: AppTheme.darkSurface3,
+              child: Text(
+                message.senderName.isNotEmpty
+                    ? message.senderName[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                    color: AppTheme.accentBlue,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceSm),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: message.badges.isEmpty
+                          ? '${message.senderName}: '
+                          : '${message.senderName} ${message.badges.map((b) => b.emoji).join()}: ',
+                      style: TextStyle(
+                        color: message.isCurrentUser
+                            ? AppTheme.accentRed
+                            : AppTheme.accentBlue,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    TextSpan(
+                      text: message.body,
+                      style: const TextStyle(
+                          color: AppTheme.textPrimaryDark, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Text(
+              TimeOfDay.fromDateTime(message.createdAt.toLocal())
+                  .format(context),
+              style:
+                  const TextStyle(color: AppTheme.textMutedDark, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Simulated fallback message tile (Checkpoint 4) -- deliberately styled
+  /// dimmer than _buildChatMessageTile (muted sender-name color, reduced
+  /// opacity) and not long-press-actionable, so demo content stays visually
+  /// distinct from real chat beyond just the banner above it.
+  Widget _buildGhostChatTile(GhostComment comment, String langCode) {
+    return Opacity(
+      opacity: 0.8,
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: 6),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 12,
+              backgroundColor: AppTheme.darkSurface3,
+              child: Text(
+                comment.getLocalizedSender(langCode).isNotEmpty
+                    ? comment.getLocalizedSender(langCode)[0].toUpperCase()
+                    : '?',
+                style: const TextStyle(
+                    color: AppTheme.textMutedDark,
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(width: AppTheme.spaceSm),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: '${comment.getLocalizedSender(langCode)}: ',
+                      style: const TextStyle(
+                        color: AppTheme.textMutedDark,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    TextSpan(
+                      text: comment.getLocalizedMessage(langCode),
+                      style: const TextStyle(
+                          color: AppTheme.textSecondaryDark, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Text(
+              comment.timestamp,
+              style:
+                  const TextStyle(color: AppTheme.textMutedDark, fontSize: 10),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

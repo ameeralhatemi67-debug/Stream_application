@@ -201,7 +201,9 @@
     "delete_message": "Delete Message",
     "delete_message_confirm_title": "Delete this message for everyone?",
     "user_muted_toast": "User muted for this stream.",
-    "message_deleted_toast": "Message deleted."
+    "message_deleted_toast": "Message deleted.",
+    "demo_mode_banner": "Demo Mode -- offline, showing simulated chat",
+    "demo_mode_cannot_send_toast": "You're offline -- messages can't be sent in demo mode."
   },
   "safety": {
     "modal_title": "Feature In Development",

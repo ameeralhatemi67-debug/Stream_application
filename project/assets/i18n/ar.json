@@ -201,7 +201,9 @@
     "delete_message": "حذف الرسالة",
     "delete_message_confirm_title": "هل تريد حذف هذه الرسالة للجميع؟",
     "user_muted_toast": "تم كتم المستخدم في هذا البث.",
-    "message_deleted_toast": "تم حذف الرسالة."
+    "message_deleted_toast": "تم حذف الرسالة.",
+    "demo_mode_banner": "وضع تجريبي -- غير متصل، يتم عرض محادثة محاكاة",
+    "demo_mode_cannot_send_toast": "أنت غير متصل -- لا يمكن إرسال الرسائل في الوضع التجريبي."
   },
   "safety": {
     "modal_title": "الميزة قيد التطوير",
