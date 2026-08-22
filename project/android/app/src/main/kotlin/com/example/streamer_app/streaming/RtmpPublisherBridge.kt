@@ -49,7 +49,7 @@ class RtmpPublisherBridge(
             return
         }
         when (call.method) {
-            "prepare" -> handlePrepare(cam, result)
+            "prepare" -> handlePrepare(cam, call, result)
             "switchCamera" -> handleSwitchCamera(cam, result)
             "startStream" -> handleStartStream(cam, call, result)
             "stopStream" -> handleStopStream(cam, result)
@@ -62,9 +62,16 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handlePrepare(cam: RtmpCamera2, result: MethodChannel.Result) {
+    private fun handlePrepare(cam: RtmpCamera2, call: MethodCall, result: MethodChannel.Result) {
+        // Resolution/bitrate preset (v0.7 Checkpoint 2 Phase 3 -- see
+        // BroadcastQualityPreset in rtmp_publish_engine.dart). Falls back to
+        // the medium preset's values if Dart ever calls prepare() without
+        // arguments.
+        val width = call.argument<Int>("width") ?: 1280
+        val height = call.argument<Int>("height") ?: 720
+        val videoBitrate = call.argument<Int>("videoBitrate") ?: 2_500_000
         try {
-            val prepared = cam.prepareVideo(1280, 720, 2_500_000) &&
+            val prepared = cam.prepareVideo(width, height, videoBitrate) &&
                 cam.prepareAudio(128_000, 44100, true)
             if (prepared) {
                 cam.startPreview()

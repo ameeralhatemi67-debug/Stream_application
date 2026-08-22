@@ -18,6 +18,58 @@ enum RtmpPublishState {
   error,
 }
 
+/// Resolution/bitrate presets for Checkpoint 2 Phase 3's go-live controls.
+/// Defaults to [medium] rather than [high] so a first-time broadcaster on a
+/// mid-tier phone/cellular upload doesn't saturate their connection before
+/// they've had a chance to see how [low]/[medium] performs.
+enum BroadcastQualityPreset { low, medium, high }
+
+extension BroadcastQualityPresetConfig on BroadcastQualityPreset {
+  int get width {
+    switch (this) {
+      case BroadcastQualityPreset.low:
+        return 640;
+      case BroadcastQualityPreset.medium:
+        return 1280;
+      case BroadcastQualityPreset.high:
+        return 1920;
+    }
+  }
+
+  int get height {
+    switch (this) {
+      case BroadcastQualityPreset.low:
+        return 480;
+      case BroadcastQualityPreset.medium:
+        return 720;
+      case BroadcastQualityPreset.high:
+        return 1080;
+    }
+  }
+
+  int get videoBitrateBps {
+    switch (this) {
+      case BroadcastQualityPreset.low:
+        return 800 * 1000;
+      case BroadcastQualityPreset.medium:
+        return 2500 * 1000;
+      case BroadcastQualityPreset.high:
+        return 4500 * 1000;
+    }
+  }
+
+  String get label {
+    switch (this) {
+      case BroadcastQualityPreset.low:
+        return 'Low (480p) -- safest on weak/cellular uploads';
+      case BroadcastQualityPreset.medium:
+        return 'Medium (720p) -- recommended default';
+      case BroadcastQualityPreset.high:
+        return 'High (1080p) -- needs a strong Wi-Fi upload';
+    }
+  }
+}
+
 class RtmpPublishEngine extends ChangeNotifier {
   static const MethodChannel _channel =
       MethodChannel('streamer_app/rtmp_publisher');
@@ -33,16 +85,28 @@ class RtmpPublishEngine extends ChangeNotifier {
   bool _isFrontCamera = false;
   bool get isFrontCamera => _isFrontCamera;
 
+  bool _isMuted = false;
+  bool get isMuted => _isMuted;
+
+  int? _lastBitrateBps;
+  int? get lastBitrateBps => _lastBitrateBps;
+
   StreamSubscription<dynamic>? _eventSub;
 
-  Future<void> initializeCamera() async {
+  Future<void> initializeCamera({
+    BroadcastQualityPreset preset = BroadcastQualityPreset.medium,
+  }) async {
     _setState(RtmpPublishState.initializingCamera);
     _eventSub ??= _events.receiveBroadcastStream().listen(
           _onEvent,
           onError: _onEventError,
         );
     try {
-      await _channel.invokeMethod<void>('prepare');
+      await _channel.invokeMethod<void>('prepare', {
+        'width': preset.width,
+        'height': preset.height,
+        'videoBitrate': preset.videoBitrateBps,
+      });
       _setState(RtmpPublishState.ready);
     } on PlatformException catch (e) {
       _lastError = e.message ?? e.code;
@@ -62,12 +126,63 @@ class RtmpPublishEngine extends ChangeNotifier {
     }
   }
 
+  Future<void> startPublishing(String url) async {
+    _setState(RtmpPublishState.connecting);
+    try {
+      await _channel.invokeMethod<void>('startStream', {'url': url});
+    } on PlatformException catch (e) {
+      _lastError = e.message ?? e.code;
+      _setState(RtmpPublishState.error);
+      rethrow;
+    }
+  }
+
+  Future<void> stopPublishing() async {
+    try {
+      await _channel.invokeMethod<void>('stopStream');
+    } on PlatformException catch (e) {
+      _lastError = e.message ?? e.code;
+    } finally {
+      _lastBitrateBps = null;
+      _setState(RtmpPublishState.stopped);
+    }
+  }
+
+  Future<void> setMuted(bool muted) async {
+    try {
+      await _channel.invokeMethod<void>('setMuted', {'muted': muted});
+      _isMuted = muted;
+      notifyListeners();
+    } on PlatformException catch (e) {
+      _lastError = e.message ?? e.code;
+      notifyListeners();
+    }
+  }
+
   void _onEvent(dynamic event) {
     if (event is! Map) return;
     final type = event['type'] as String?;
-    if (type == 'error') {
-      _lastError = event['message'] as String?;
-      _setState(RtmpPublishState.error);
+    switch (type) {
+      case 'connecting':
+        _setState(RtmpPublishState.connecting);
+        break;
+      case 'live':
+        _setState(RtmpPublishState.live);
+        break;
+      case 'stopped':
+        if (_state == RtmpPublishState.live ||
+            _state == RtmpPublishState.connecting) {
+          _setState(RtmpPublishState.stopped);
+        }
+        break;
+      case 'bitrate':
+        _lastBitrateBps = (event['value'] as num?)?.toInt();
+        notifyListeners();
+        break;
+      case 'error':
+        _lastError = event['message'] as String?;
+        _setState(RtmpPublishState.error);
+        break;
     }
   }
 

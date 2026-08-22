@@ -83,4 +83,97 @@ void main() {
     expect(engine.isFrontCamera, isFalse);
     expect(engine.lastError, 'no second camera');
   });
+
+  test("initializeCamera sends the selected preset's width/height/bitrate", () async {
+    Map<dynamic, dynamic>? capturedArgs;
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      capturedArgs = call.arguments as Map<dynamic, dynamic>?;
+      return null;
+    });
+
+    final engine = RtmpPublishEngine();
+    await engine.initializeCamera(preset: BroadcastQualityPreset.low);
+
+    expect(capturedArgs, {
+      'width': 640,
+      'height': 480,
+      'videoBitrate': 800000,
+    });
+  });
+
+  test('startPublishing sends the url and sets connecting state', () async {
+    MethodCall? captured;
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      if (call.method == 'startStream') captured = call;
+      return null;
+    });
+
+    final engine = RtmpPublishEngine();
+    await engine.startPublishing('rtmp://example.com/live2/key');
+
+    expect(captured?.method, 'startStream');
+    expect(captured?.arguments, {'url': 'rtmp://example.com/live2/key'});
+    expect(engine.state, RtmpPublishState.connecting);
+  });
+
+  test('startPublishing surfaces a PlatformException as error state', () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      throw PlatformException(code: 'START_FAILED', message: 'bad url');
+    });
+
+    final engine = RtmpPublishEngine();
+    await expectLater(
+      engine.startPublishing('rtmp://bad'),
+      throwsA(isA<PlatformException>()),
+    );
+
+    expect(engine.state, RtmpPublishState.error);
+    expect(engine.lastError, 'bad url');
+  });
+
+  test('stopPublishing invokes stopStream and sets stopped state', () async {
+    final calledMethods = <String>[];
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      calledMethods.add(call.method);
+      return null;
+    });
+
+    final engine = RtmpPublishEngine();
+    await engine.stopPublishing();
+
+    expect(calledMethods, contains('stopStream'));
+    expect(engine.state, RtmpPublishState.stopped);
+  });
+
+  test('setMuted toggles isMuted on success and sends the muted flag', () async {
+    MethodCall? captured;
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      captured = call;
+      return null;
+    });
+
+    final engine = RtmpPublishEngine();
+    expect(engine.isMuted, isFalse);
+
+    await engine.setMuted(true);
+
+    expect(engine.isMuted, isTrue);
+    expect(captured?.arguments, {'muted': true});
+  });
+
+  test('an event-channel "live" event flips state to live once initialized', () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
+
+    final engine = RtmpPublishEngine();
+    await engine.initializeCamera();
+
+    messenger.handlePlatformMessage(
+      eventChannel.name,
+      eventChannel.codec.encodeSuccessEnvelope({'type': 'live'}),
+      (_) {},
+    );
+    await Future<void>.delayed(Duration.zero);
+
+    expect(engine.state, RtmpPublishState.live);
+  });
 }
