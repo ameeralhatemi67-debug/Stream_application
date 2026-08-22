@@ -8,13 +8,19 @@
          option is built (see doc/Audit/02_Permissions_Audit.md). -->
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <!-- CAMERA + RECORD_AUDIO (v0.7 Checkpoint 1 spike, lib/spike_rtmp/): the
-         throwaway RTMP prototype needs both to run on-device at all. Bare
-         manifest declarations only; the runtime-permission rationale
-         dialogs and foreground-service work the audit flagged as this
-         feature's job to add are Checkpoint 2 Phase 1's, not this spike's. -->
+    <!-- CAMERA + RECORD_AUDIO (v0.7 Checkpoint 2): captures the phone's own
+         camera/mic to publish an RTMP broadcast, see
+         doc/Roadmap/v0.7_Mobile_Streaming_Android.md. Runtime-permission
+         rationale dialogs are shown contextually in-app (see
+         PermissionRationaleDialog) before the OS prompt fires. -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- Keeps camera+mic capture alive through backgrounding/screen-lock
+         while a phone broadcast is live (doc/Audit/02_Permissions_Audit.md's
+         previously-unverified foreground-service gap). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CAMERA"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
     <application
         android:label="streamer_app"
         android:name="${applicationName}"
@@ -57,6 +63,14 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+
+        <!-- v0.7 Checkpoint 2: foreground service backing the phone
+             broadcast's camera+mic capture (see RtmpPublisherBridge /
+             RtmpForegroundService). Only started while a broadcast is live. -->
+        <service
+            android:name=".streaming.RtmpForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="camera|microphone" />
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

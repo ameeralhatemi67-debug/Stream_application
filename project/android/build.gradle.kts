@@ -2,6 +2,9 @@ allprojects {
     repositories {
         google()
         mavenCentral()
+        // RootEncoder (v0.7 Checkpoint 2) is distributed via JitPack, not
+        // Maven Central -- see https://github.com/pedroSG94/rootencoder/wiki/Add-library-to-your-project
+        maven { url = uri("https://jitpack.io") }
     }
 }
 

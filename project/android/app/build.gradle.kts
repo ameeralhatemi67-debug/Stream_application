@@ -86,3 +86,14 @@ android {
 flutter {
     source = "../.."
 }
+
+dependencies {
+    // v0.7 Checkpoint 2 -- direct platform-channel wrapper against RootEncoder
+    // (recommended by the Checkpoint 1 spike over the rtmp_streaming pub.dev
+    // wrapper, which doesn't build on this project's toolchain -- see
+    // doc/Roadmap/v0.7_Mobile_Streaming_Android.md and commit 16cd9d3).
+    // Pinned to 2.7.5: the spike confirmed this is the newest release that
+    // still compiles clean against compileSdk 36 / AGP 8.11.1.
+    implementation("com.github.pedroSG94.RootEncoder:library:2.7.5")
+    implementation("androidx.core:core-ktx:1.13.1")
+}
