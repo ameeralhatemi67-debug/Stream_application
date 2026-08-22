@@ -6,8 +6,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **v0.5 Backend Foundation**: ✅ Complete (Supabase Auth, PostgreSQL RLS, PII Security, Secret externalization).
 - **v0.6 Live Chat & Engagement**: ✅ Complete (Realtime chat, floating reactions, role badges, server-enforced moderation, keyword filter, offline demo fallback).
-- **v0.7 Mobile Streaming (Android)**: Checkpoint 1 (Spike), Checkpoint 2 (Video broadcasting), & Checkpoint 3 (Audio-only broadcasting + background survival) ✅ Complete. Native encoder is `RtmpStream` (RootEncoder's generic pluggable-source class, migrated off the camera-only `RtmpCamera2` in Checkpoint 3 so the video source can swap to a static image for audio-only) plumbed through `RtmpPublisherBridge`.
-  - **👉 Next Up**: **Checkpoint 4 (Reliability)** from `doc/Roadmap/v0.7_Mobile_Streaming_Android.md` — connection-drop detection/reconnect, plus its "optional polish" real-device pass across multiple phones/network conditions.
+- **v0.7 Mobile Streaming (Android)**: ✅ Complete (Checkpoints 1–4: spike, video broadcasting, audio-only + background survival, connection-drop detection/reconnect). Native encoder is `RtmpStream` (RootEncoder's generic pluggable-source class, migrated off the camera-only `RtmpCamera2` in Checkpoint 3 so the video source can swap to a static image for audio-only, and exposes the `StreamClient` Checkpoint 4's reconnect logic needs) plumbed through `RtmpPublisherBridge`. Checkpoint 4's own "optional polish" item — a real-device pass across multiple *physical* Android phones/network conditions — is still outstanding; all verification so far is emulator + a local RTMP test server, not real hardware.
+- **v1.1 iOS Integration** (not started) is where iOS gets this same phone-streaming capability, per the roadmap's explicit platform-order decision (Android first, iOS bundled into its own version later) — not a v0.7 gap.
+  - **👉 Next Up**: **v0.8 Admin Upgrade** from `doc/Roadmap/v0.8_Admin_Upgrade.md` — the tiered Master Admin / Admin / Permitted Admin (Org Owner & Co-Owner) hierarchy, with checkbox-style granular permission grants.
 
 ## Workflow & Git Cadence
 
