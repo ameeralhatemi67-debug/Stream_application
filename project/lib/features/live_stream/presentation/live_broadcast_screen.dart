@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import '../models/ghost_comments.dart';
+import '../services/live_chat_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
@@ -31,6 +31,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       FloatingReactionsOverlayController();
   final TextEditingController _chatTextController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
+  late final LiveChatController _chatController;
 
   late TabController _tabController;
   StreamSourceType _sourceType = StreamSourceType.youtubeEmbed;
@@ -46,11 +47,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     super.initState();
     // 3 Tabs: Chat, Sources, Venue
     _tabController = TabController(length: 3, vsync: this);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context
-          .read<AppProvider>()
-          .seedGhostChatIfNeeded(streamId: widget.streamId);
-    });
+    _chatController = LiveChatController(streamId: widget.streamId)..start();
   }
 
   @override
@@ -58,6 +55,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _tabController.dispose();
     _chatTextController.dispose();
     _chatScrollController.dispose();
+    _chatController.dispose();
     super.dispose();
   }
 
@@ -71,53 +69,29 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   void _handleSendLocalMessage() {
     final text = _chatTextController.text.trim();
     if (text.isEmpty) return;
-
-    final now = DateTime.now();
-    final timeStr =
-        '${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-
-    final localComment = GhostComment(
-      messageId: 'user_${now.millisecondsSinceEpoch}',
-      streamId: widget.streamId,
-      senderNameEn: 'You',
-      senderNameAr: 'أنت',
-      senderAvatar: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-      messageTextEn: text,
-      messageTextAr: text,
-      timestamp: timeStr,
-      isCurrentUser: true,
-      isGhostSimulation: false,
-    );
-
-    context.read<AppProvider>().addChatMessage(localComment);
     _chatTextController.clear();
 
-    if (_chatScrollController.hasClients) {
+    _chatController.sendMessage(text).then((_) {
+      if (!mounted || !_chatScrollController.hasClients) return;
       _chatScrollController.animateTo(
         0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
-    }
+    }).catchError((Object e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: AppTheme.accentRed),
+      );
+    });
   }
 
   void _handleQuickReaction(String reactionType, String emoji) {
+    // Floating visual only for now -- Checkpoint 2 wires this to a
+    // broadcast event other viewers actually see (ephemeral, not persisted
+    // to chat_messages, per doc/Roadmap/v0.6_Live_Chat_Realtime_Engagement.md).
     _reactionsController.spawnReaction(reactionType);
     setState(() => _isReactionMenuOpen = false);
-
-    final reactionComment = GhostComment(
-      messageId: 'reaction_${DateTime.now().millisecondsSinceEpoch}',
-      streamId: widget.streamId,
-      senderNameEn: 'You',
-      senderNameAr: 'أنت',
-      senderAvatar: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-      messageTextEn: '$emoji Reacted',
-      messageTextAr: '$emoji تفاعل',
-      timestamp:
-          '${DateTime.now().hour}:${DateTime.now().minute.toString().padLeft(2, '0')}',
-      isCurrentUser: true,
-    );
-    context.read<AppProvider>().addChatMessage(reactionComment);
   }
 
   void _toggleRaiseHand() {
@@ -498,7 +472,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             child: TabBarView(
               controller: _tabController,
               children: [
-                _buildChatTabView(appProvider, langCode),
+                _buildChatTabView(),
                 _buildSourcesTabView(appProvider, streamer, langCode),
                 _buildVenueTabView(appProvider, streamer, langCode),
               ],
@@ -569,8 +543,17 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   // 💬 Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
-  Widget _buildChatTabView(AppProvider appProvider, String langCode) {
-    final comments = appProvider.chatMessages;
+  Widget _buildChatTabView() {
+    return ListenableBuilder(
+      listenable: _chatController,
+      builder: (context, _) => _buildChatTabViewContent(),
+    );
+  }
+
+  Widget _buildChatTabViewContent() {
+    // messages is oldest-first; the reversed ListView wants newest-first at
+    // index 0.
+    final messages = _chatController.messages.reversed.toList();
 
     return Stack(
       children: [
@@ -586,9 +569,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 reverse: true,
                 padding: const EdgeInsets.symmetric(
                     horizontal: AppTheme.spaceMd, vertical: 4),
-                itemCount: comments.length,
+                itemCount: messages.length,
                 itemBuilder: (context, index) {
-                  final comment = comments[index];
+                  final message = messages[index];
                   return Padding(
                     padding: const EdgeInsets.only(bottom: 6),
                     child: Row(
@@ -598,10 +581,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                           radius: 12,
                           backgroundColor: AppTheme.darkSurface3,
                           child: Text(
-                            comment.getLocalizedSender(langCode).isNotEmpty
-                                ? comment
-                                    .getLocalizedSender(langCode)[0]
-                                    .toUpperCase()
+                            message.senderName.isNotEmpty
+                                ? message.senderName[0].toUpperCase()
                                 : '?',
                             style: const TextStyle(
                                 color: AppTheme.accentBlue,
@@ -615,10 +596,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                             text: TextSpan(
                               children: [
                                 TextSpan(
-                                  text:
-                                      '${comment.getLocalizedSender(langCode)}: ',
+                                  text: '${message.senderName}: ',
                                   style: TextStyle(
-                                    color: comment.isCurrentUser
+                                    color: message.isCurrentUser
                                         ? AppTheme.accentRed
                                         : AppTheme.accentBlue,
                                     fontWeight: FontWeight.bold,
@@ -626,7 +606,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                                   ),
                                 ),
                                 TextSpan(
-                                  text: comment.getLocalizedMessage(langCode),
+                                  text: message.body,
                                   style: const TextStyle(
                                       color: AppTheme.textPrimaryDark,
                                       fontSize: 12),
@@ -636,7 +616,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                           ),
                         ),
                         Text(
-                          comment.timestamp,
+                          TimeOfDay.fromDateTime(message.createdAt.toLocal())
+                              .format(context),
                           style: const TextStyle(
                               color: AppTheme.textMutedDark, fontSize: 10),
                         ),
