@@ -6,8 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **v0.5 Backend Foundation**: ✅ Complete (Supabase Auth, PostgreSQL RLS, PII Security, Secret externalization).
 - **v0.6 Live Chat & Engagement**: ✅ Complete (Realtime chat, floating reactions, role badges, server-enforced moderation, keyword filter, offline demo fallback).
-- **v0.7 Mobile Streaming (Android)**: Checkpoint 1 (Spike) & Checkpoint 2 (Video broadcasting via RootEncoder 2.7.5 platform channel) ✅ Complete.
-  - **👉 Next Up**: **Checkpoint 3 (Audio-Only Phone Broadcasting)** from `doc/Roadmap/v0.7_Mobile_Streaming_Android.md`.
+- **v0.7 Mobile Streaming (Android)**: Checkpoint 1 (Spike), Checkpoint 2 (Video broadcasting), & Checkpoint 3 (Audio-only broadcasting + background survival) ✅ Complete. Native encoder is `RtmpStream` (RootEncoder's generic pluggable-source class, migrated off the camera-only `RtmpCamera2` in Checkpoint 3 so the video source can swap to a static image for audio-only) plumbed through `RtmpPublisherBridge`.
+  - **👉 Next Up**: **Checkpoint 4 (Reliability)** from `doc/Roadmap/v0.7_Mobile_Streaming_Android.md` — connection-drop detection/reconnect, plus its "optional polish" real-device pass across multiple phones/network conditions.
 
 ## Workflow & Git Cadence
 
