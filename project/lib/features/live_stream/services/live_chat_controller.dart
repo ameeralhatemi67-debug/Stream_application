@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/utils/id_generator.dart';
 import '../models/chat_message_model.dart';
@@ -33,7 +34,17 @@ class LiveChatController extends ChangeNotifier {
   bool _disposed = false;
 
   final List<ChatMessageModel> _messages = [];
-  List<ChatMessageModel> get messages => List.unmodifiable(_messages);
+
+  /// Senders the current viewer has blocked (Checkpoint 3 Phase 1) --
+  /// per-viewer and client-side only, never a platform-wide action, so it's
+  /// filtered here rather than server-side.
+  final Set<String> _blockedSenderIds = {};
+
+  List<ChatMessageModel> get messages => List.unmodifiable(
+        _messages.where((m) => !_blockedSenderIds.contains(m.senderId)),
+      );
+
+  bool isBlocked(String senderId) => _blockedSenderIds.contains(senderId);
 
   ChatConnectionState _connectionState = ChatConnectionState.connecting;
   ChatConnectionState get connectionState => _connectionState;
@@ -43,12 +54,70 @@ class LiveChatController extends ChangeNotifier {
   /// 20260823140000_chat_sender_info.sql). Not a plain `profiles` select --
   /// profiles' own RLS only lets a viewer read their own row or an admin's,
   /// so any other sender's name/badges need this SECURITY DEFINER function.
-  final Map<String, ({String name, String? avatarUrl, Set<ChatSenderBadge> badges})>
+  final Map<String,
+          ({String name, String? avatarUrl, Set<ChatSenderBadge> badges})>
       _profileCache = {};
 
   Future<void> start() async {
+    await _loadBlockedUsers();
     await _loadRecentMessages();
     _subscribe();
+  }
+
+  static const _blockedUsersPrefsPrefix = 'chat_blocked_users_';
+
+  Future<void> _loadBlockedUsers() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getStringList('$_blockedUsersPrefsPrefix$userId');
+      if (stored != null) _blockedSenderIds.addAll(stored);
+    } catch (e) {
+      debugPrint('LiveChatController: failed to load blocked users: $e');
+    }
+  }
+
+  /// Hides this sender's messages (past and future) for the current viewer
+  /// only. Persisted per-viewer so it survives leaving and re-entering the
+  /// stream.
+  Future<void> blockUser(String senderId) async {
+    if (!_blockedSenderIds.add(senderId)) return;
+    notifyListeners();
+
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        '$_blockedUsersPrefsPrefix$userId',
+        _blockedSenderIds.toList(),
+      );
+    } catch (e) {
+      debugPrint('LiveChatController: failed to persist blocked users: $e');
+    }
+  }
+
+  /// Reports a message to admin tiers (chat_reports, RLS-gated -- see
+  /// supabase/migrations/20260824090000_chat_reports.sql). Throws if the
+  /// viewer already reported this same message (unique constraint) or isn't
+  /// signed in; the caller surfaces that to the user.
+  Future<void> reportMessage({
+    required String messageId,
+    required String reportedSenderId,
+    required String reason,
+  }) async {
+    final reporterId = _client.auth.currentUser?.id;
+    if (reporterId == null) {
+      throw Exception('Sign in to report a message.');
+    }
+    await _client.from('chat_reports').insert({
+      'message_id': messageId,
+      'stream_id': streamId,
+      'reported_sender_id': reportedSenderId,
+      'reporter_id': reporterId,
+      'reason': reason,
+    });
   }
 
   Future<void> _loadRecentMessages() async {
@@ -101,7 +170,8 @@ class LiveChatController extends ChangeNotifier {
             case RealtimeSubscribeStatus.timedOut:
               _connectionState = ChatConnectionState.reconnecting;
               if (error != null) {
-                debugPrint('LiveChatController: channel status $status: $error');
+                debugPrint(
+                    'LiveChatController: channel status $status: $error');
               }
           }
           notifyListeners();

@@ -10,6 +10,7 @@ import '../../profile/models/streamer_models.dart';
 import '../../profile/models/vod_models.dart';
 import '../../map/presentation/widgets/venue_navigation_sheet.dart';
 import 'abstract_video_player.dart';
+import 'widgets/chat_message_actions_sheet.dart';
 import 'widgets/floating_reactions_overlay.dart';
 import 'widgets/live_player_overlay_controls.dart';
 import 'widgets/live_multi_speaker_overlay.dart';
@@ -175,7 +176,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     context.pop();
                   },
                 ),
-                if (appProvider.isLoggedInStreamer && appProvider.isStreamerModeEnabled)
+                if (appProvider.isLoggedInStreamer &&
+                    appProvider.isStreamerModeEnabled)
                   IconButton(
                     icon: const Icon(Icons.cell_tower_rounded, size: 20),
                     tooltip: 'live.rtmp_ip_tooltip'.tr(),
@@ -239,8 +241,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
-  Widget _buildVideoViewport(
-      AppProvider appProvider, StreamerModel streamer, int viewerCount, String langCode,
+  Widget _buildVideoViewport(AppProvider appProvider, StreamerModel streamer,
+      int viewerCount, String langCode,
       {required bool isSideBySide}) {
     final isAudioLive = streamer.isAudioLive;
 
@@ -291,7 +293,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             ),
 
           // 2b. Multi-Speaker Floating Video Overlay
-          if (!isAudioLive && (streamer.isOrganization || streamer.affiliatedSpeakers.isNotEmpty))
+          if (!isAudioLive &&
+              (streamer.isOrganization ||
+                  streamer.affiliatedSpeakers.isNotEmpty))
             Positioned(
               top: 44,
               left: 12,
@@ -559,7 +563,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   Widget _buildChatConnectionIndicator() {
     final state = _chatController.connectionState;
     final (color, label) = switch (state) {
-      ChatConnectionState.live => (AppTheme.accentGreen, 'live.chat_status_live'.tr()),
+      ChatConnectionState.live => (
+          AppTheme.accentGreen,
+          'live.chat_status_live'.tr()
+        ),
       ChatConnectionState.connecting => (
           AppTheme.accentAmber,
           'live.chat_status_connecting'.tr()
@@ -572,8 +579,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spaceMd, vertical: 4),
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 4),
       color: AppTheme.darkSurface1,
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -586,7 +593,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           const SizedBox(width: 5),
           Text(
             label,
-            style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: color, fontSize: 10, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -617,58 +625,67 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 itemCount: messages.length,
                 itemBuilder: (context, index) {
                   final message = messages[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        CircleAvatar(
-                          radius: 12,
-                          backgroundColor: AppTheme.darkSurface3,
-                          child: Text(
-                            message.senderName.isNotEmpty
-                                ? message.senderName[0].toUpperCase()
-                                : '?',
-                            style: const TextStyle(
-                                color: AppTheme.accentBlue,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spaceSm),
-                        Expanded(
-                          child: RichText(
-                            text: TextSpan(
-                              children: [
-                                TextSpan(
-                                  text: message.badges.isEmpty
-                                      ? '${message.senderName}: '
-                                      : '${message.senderName} ${message.badges.map((b) => b.emoji).join()}: ',
-                                  style: TextStyle(
-                                    color: message.isCurrentUser
-                                        ? AppTheme.accentRed
-                                        : AppTheme.accentBlue,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                                TextSpan(
-                                  text: message.body,
-                                  style: const TextStyle(
-                                      color: AppTheme.textPrimaryDark,
-                                      fontSize: 12),
-                                ),
-                              ],
+                  return GestureDetector(
+                    onLongPress: message.isCurrentUser
+                        ? null
+                        : () => showChatMessageActionsSheet(
+                              context,
+                              message: message,
+                              controller: _chatController,
+                            ),
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          CircleAvatar(
+                            radius: 12,
+                            backgroundColor: AppTheme.darkSurface3,
+                            child: Text(
+                              message.senderName.isNotEmpty
+                                  ? message.senderName[0].toUpperCase()
+                                  : '?',
+                              style: const TextStyle(
+                                  color: AppTheme.accentBlue,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold),
                             ),
                           ),
-                        ),
-                        Text(
-                          TimeOfDay.fromDateTime(message.createdAt.toLocal())
-                              .format(context),
-                          style: const TextStyle(
-                              color: AppTheme.textMutedDark, fontSize: 10),
-                        ),
-                      ],
+                          const SizedBox(width: AppTheme.spaceSm),
+                          Expanded(
+                            child: RichText(
+                              text: TextSpan(
+                                children: [
+                                  TextSpan(
+                                    text: message.badges.isEmpty
+                                        ? '${message.senderName}: '
+                                        : '${message.senderName} ${message.badges.map((b) => b.emoji).join()}: ',
+                                    style: TextStyle(
+                                      color: message.isCurrentUser
+                                          ? AppTheme.accentRed
+                                          : AppTheme.accentBlue,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                  TextSpan(
+                                    text: message.body,
+                                    style: const TextStyle(
+                                        color: AppTheme.textPrimaryDark,
+                                        fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          Text(
+                            TimeOfDay.fromDateTime(message.createdAt.toLocal())
+                                .format(context),
+                            style: const TextStyle(
+                                color: AppTheme.textMutedDark, fontSize: 10),
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 },

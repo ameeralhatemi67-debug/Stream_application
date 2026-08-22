@@ -186,7 +186,17 @@
     "get_directions": "Get Driving Directions",
     "mini_player_tooltip": "Watch in Mini-Player",
     "rtmp_ip_tooltip": "RTMP IP Settings",
-    "watch_live": "Watch Live"
+    "watch_live": "Watch Live",
+    "report_message": "Report Message",
+    "block_user": "Block User",
+    "report_reason_prompt": "Why are you reporting this message?",
+    "report_reason_spam": "Spam",
+    "report_reason_harassment": "Harassment or Bullying",
+    "report_reason_hate": "Hate Speech",
+    "report_reason_other": "Other",
+    "report_submitted_toast": "Message reported. Our team will review it.",
+    "report_already_submitted_toast": "You've already reported this message.",
+    "user_blocked_toast": "You won't see messages from this user anymore."
   },
   "safety": {
     "modal_title": "Feature In Development",

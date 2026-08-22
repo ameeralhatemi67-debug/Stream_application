@@ -186,7 +186,17 @@
     "get_directions": "فتح الاتجاهات بالخريطة",
     "mini_player_tooltip": "المشاهدة في مشغل مصغر",
     "rtmp_ip_tooltip": "إعدادات IP لبث RTMP",
-    "watch_live": "دخول البث المباشر"
+    "watch_live": "دخول البث المباشر",
+    "report_message": "الإبلاغ عن الرسالة",
+    "block_user": "حظر المستخدم",
+    "report_reason_prompt": "لماذا تبلغ عن هذه الرسالة؟",
+    "report_reason_spam": "رسائل مزعجة (سبام)",
+    "report_reason_harassment": "تحرش أو تنمر",
+    "report_reason_hate": "خطاب كراهية",
+    "report_reason_other": "أخرى",
+    "report_submitted_toast": "تم الإبلاغ عن الرسالة. سيقوم فريقنا بمراجعتها.",
+    "report_already_submitted_toast": "لقد قمت بالإبلاغ عن هذه الرسالة مسبقاً.",
+    "user_blocked_toast": "لن تظهر لك رسائل هذا المستخدم بعد الآن."
   },
   "safety": {
     "modal_title": "الميزة قيد التطوير",

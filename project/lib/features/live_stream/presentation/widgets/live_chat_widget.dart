@@ -9,11 +9,18 @@ class LiveChatWidget extends StatefulWidget {
   final ChatConnectionState connectionState;
   final Function(String messageText) onSendTextMessage;
 
+  /// Long-press on someone else's message (Checkpoint 3 Phase 1) -- never
+  /// called for the viewer's own message. This widget stays a "dumb" one
+  /// that only reports the gesture; showing the report/block action sheet is
+  /// the caller's job, same shape as onSendTextMessage.
+  final void Function(ChatMessageModel message)? onMessageLongPress;
+
   const LiveChatWidget({
     super.key,
     required this.messages,
     required this.connectionState,
     required this.onSendTextMessage,
+    this.onMessageLongPress,
   });
 
   @override
@@ -77,7 +84,8 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                 _ConnectionStatusChip(state: widget.connectionState),
                 const SizedBox(width: 6),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: AppTheme.darkSurface2,
                     borderRadius: BorderRadius.circular(AppTheme.radiusXs),
@@ -112,7 +120,14 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                 // newest-first at index 0.
                 final message =
                     widget.messages[widget.messages.length - 1 - index];
-                return _ChatTile(message: message);
+                return _ChatTile(
+                  message: message,
+                  onLongPress: message.isCurrentUser
+                      ? null
+                      : widget.onMessageLongPress == null
+                          ? null
+                          : () => widget.onMessageLongPress!(message),
+                );
               },
             ),
           ),
@@ -188,121 +203,133 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
 
 class _ChatTile extends StatelessWidget {
   final ChatMessageModel message;
+  final VoidCallback? onLongPress;
 
-  const _ChatTile({required this.message});
+  const _ChatTile({required this.message, this.onLongPress});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: message.isCurrentUser
-            ? AppTheme.accentBlue.withValues(alpha: 0.1)
-            : Colors.transparent,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: message.isCurrentUser
-            ? Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.3), width: 1)
-            : null,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          CircleAvatar(
-            radius: 14,
-            backgroundColor:
-                message.isCurrentUser ? AppTheme.accentBlue : AppTheme.darkSurface3,
-            backgroundImage: (message.senderAvatarUrl?.startsWith('assets/') ?? false)
-                ? AssetImage(message.senderAvatarUrl!) as ImageProvider
-                : (message.senderAvatarUrl != null
-                    ? NetworkImage(message.senderAvatarUrl!) as ImageProvider
-                    : null),
-            child: message.senderAvatarUrl == null
-                ? Text(
-                    message.senderName.isNotEmpty
-                        ? message.senderName[0].toUpperCase()
-                        : 'U',
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  )
-                : null,
-          ),
-          const SizedBox(width: AppTheme.spaceSm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 6,
-                  runSpacing: 2,
-                  children: [
-                    Text(
-                      message.senderName,
-                      style: TextStyle(
-                        fontSize: 12,
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: message.isCurrentUser
+              ? AppTheme.accentBlue.withValues(alpha: 0.1)
+              : Colors.transparent,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: message.isCurrentUser
+              ? Border.all(
+                  color: AppTheme.accentBlue.withValues(alpha: 0.3), width: 1)
+              : null,
+        ),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            CircleAvatar(
+              radius: 14,
+              backgroundColor: message.isCurrentUser
+                  ? AppTheme.accentBlue
+                  : AppTheme.darkSurface3,
+              backgroundImage:
+                  (message.senderAvatarUrl?.startsWith('assets/') ?? false)
+                      ? AssetImage(message.senderAvatarUrl!) as ImageProvider
+                      : (message.senderAvatarUrl != null
+                          ? NetworkImage(message.senderAvatarUrl!)
+                              as ImageProvider
+                          : null),
+              child: message.senderAvatarUrl == null
+                  ? Text(
+                      message.senderName.isNotEmpty
+                          ? message.senderName[0].toUpperCase()
+                          : 'U',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
                         fontWeight: FontWeight.bold,
-                        color: message.isCurrentUser
-                            ? AppTheme.accentBlue
-                            : AppTheme.textPrimaryDark,
                       ),
-                    ),
-                    if (message.badges.isNotEmpty)
+                    )
+                  : null,
+            ),
+            const SizedBox(width: AppTheme.spaceSm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Wrap(
+                    crossAxisAlignment: WrapCrossAlignment.center,
+                    spacing: 6,
+                    runSpacing: 2,
+                    children: [
                       Text(
-                        message.badges.map((b) => b.emoji).join(),
-                        style: const TextStyle(fontSize: 11),
-                      ),
-                    if (message.isCurrentUser)
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentBlue.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                          border: Border.all(color: AppTheme.accentBlue, width: 0.8),
+                        message.senderName,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          color: message.isCurrentUser
+                              ? AppTheme.accentBlue
+                              : AppTheme.textPrimaryDark,
                         ),
-                        child: Text(
-                          'live.you'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.accentBlue,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
+                      ),
+                      if (message.badges.isNotEmpty)
+                        Text(
+                          message.badges.map((b) => b.emoji).join(),
+                          style: const TextStyle(fontSize: 11),
+                        ),
+                      if (message.isCurrentUser)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 5, vertical: 1),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentBlue.withValues(alpha: 0.2),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusXs),
+                            border: Border.all(
+                                color: AppTheme.accentBlue, width: 0.8),
+                          ),
+                          child: Text(
+                            'live.you'.tr(),
+                            style: const TextStyle(
+                              color: AppTheme.accentBlue,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                      ),
-                    Text(
-                      TimeOfDay.fromDateTime(message.createdAt.toLocal()).format(context),
-                      style: const TextStyle(
-                        fontSize: 10,
-                        color: AppTheme.textMutedDark,
-                      ),
-                    ),
-                    if (message.isPending)
-                      const SizedBox(
-                        width: 9,
-                        height: 9,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 1.5,
+                      Text(
+                        TimeOfDay.fromDateTime(message.createdAt.toLocal())
+                            .format(context),
+                        style: const TextStyle(
+                          fontSize: 10,
                           color: AppTheme.textMutedDark,
                         ),
                       ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  message.body,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppTheme.textSecondaryDark,
-                    height: 1.3,
+                      if (message.isPending)
+                        const SizedBox(
+                          width: 9,
+                          height: 9,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 1.5,
+                            color: AppTheme.textMutedDark,
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    message.body,
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppTheme.textSecondaryDark,
+                      height: 1.3,
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -316,7 +343,10 @@ class _ConnectionStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (state) {
-      ChatConnectionState.live => (AppTheme.accentGreen, 'live.chat_status_live'.tr()),
+      ChatConnectionState.live => (
+          AppTheme.accentGreen,
+          'live.chat_status_live'.tr()
+        ),
       ChatConnectionState.connecting => (
           AppTheme.accentAmber,
           'live.chat_status_connecting'.tr()
@@ -338,7 +368,8 @@ class _ConnectionStatusChip extends StatelessWidget {
         const SizedBox(width: 4),
         Text(
           label,
-          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold),
+          style: TextStyle(
+              color: color, fontSize: 10, fontWeight: FontWeight.bold),
         ),
       ],
     );
