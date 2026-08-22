@@ -9,6 +9,8 @@ import '../../profile/presentation/widgets/streamer_editor_sheet.dart';
 import 'widgets/org_management_view.dart';
 import '../models/broadcaster_application_model.dart';
 import '../models/terms_and_conditions_model.dart';
+import '../models/viewer_analytics_model.dart';
+import '../../profile/models/streamer_models.dart';
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
 class AdminHubScreen extends StatefulWidget {
@@ -112,7 +114,34 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AppProvider>();
+    // context.read for the instance the many mutation calls elsewhere in this
+    // file need (approve/rejectBroadcasterApplication, deleteStreamer, etc.).
+    // context.select scopes this screen's rebuild to the fields its tabs
+    // (governance, applications, streamers, terms, analytics) actually
+    // render -- context.watch<AppProvider>() previously rebuilt this whole
+    // multi-tab admin dashboard on ANY AppProvider change platform-wide.
+    final provider = context.read<AppProvider>();
+    context.select<
+        AppProvider,
+        ({
+          bool isAdminUser,
+          String? googleUserName,
+          String? googleUserEmail,
+          List<BroadcasterApplicationModel> pendingApplications,
+          List<StreamerModel> streamers,
+          ViewerAnalyticsModel viewerAnalytics,
+          List<BroadcasterApplicationModel> applications,
+          TermsAndConditionsModel termsAndConditions,
+        })>((p) => (
+          isAdminUser: p.isAdminUser,
+          googleUserName: p.googleUserName,
+          googleUserEmail: p.googleUserEmail,
+          pendingApplications: p.pendingApplications,
+          streamers: p.streamers,
+          viewerAnalytics: p.viewerAnalytics,
+          applications: p.applications,
+          termsAndConditions: p.termsAndConditions,
+        ));
     final isAr = context.locale.languageCode == 'ar';
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 

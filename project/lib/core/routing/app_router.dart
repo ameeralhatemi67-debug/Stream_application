@@ -202,7 +202,13 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
-    final provider = context.watch<AppProvider>();
+    final (isStreamerModeEnabled, isAdminUser, hasPendingApplications, pendingCount) =
+        context.select<AppProvider, (bool, bool, bool, int)>((p) => (
+              p.isStreamerModeEnabled,
+              p.isAdminUser,
+              p.pendingApplications.isNotEmpty,
+              p.pendingApplications.length,
+            ));
 
     return Scaffold(
       backgroundColor: AppTheme.darkBgBase,
@@ -288,7 +294,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                       ),
                       _DesktopNavItem(
                         icon: Icons.person_rounded,
-                        label: provider.isStreamerModeEnabled ? 'Studio Profile' : 'My Profile',
+                        label: isStreamerModeEnabled ? 'Studio Profile' : 'My Profile',
                         isSelected: false,
                         onTap: () => context.push('/profile/prof_alghamdi_01'),
                       ),
@@ -298,14 +304,12 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                         isSelected: false,
                         onTap: () => context.push('/settings'),
                       ),
-                      if (provider.isAdminUser) ...[
+                      if (isAdminUser) ...[
                         const SizedBox(height: 4),
                         _DesktopNavItem(
                           icon: Icons.admin_panel_settings_rounded,
                           label: 'Admin Hub',
-                          badge: provider.pendingApplications.isNotEmpty
-                              ? '${provider.pendingApplications.length}'
-                              : null,
+                          badge: hasPendingApplications ? '$pendingCount' : null,
                           isSelected: false,
                           onTap: () => context.push('/admin'),
                         ),
@@ -321,20 +325,20 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                           color: AppTheme.darkSurface2,
                           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                           border: Border.all(
-                            color: provider.isStreamerModeEnabled ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+                            color: isStreamerModeEnabled ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
                           ),
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              provider.isStreamerModeEnabled ? Icons.videocam_rounded : Icons.visibility_rounded,
+                              isStreamerModeEnabled ? Icons.videocam_rounded : Icons.visibility_rounded,
                               size: 18,
-                              color: provider.isStreamerModeEnabled ? AppTheme.accentRed : AppTheme.accentBlue,
+                              color: isStreamerModeEnabled ? AppTheme.accentRed : AppTheme.accentBlue,
                             ),
                             const SizedBox(width: AppTheme.spaceSm),
                             Expanded(
                               child: Text(
-                                provider.isStreamerModeEnabled ? 'Streamer Mode' : 'Viewer Mode',
+                                isStreamerModeEnabled ? 'Streamer Mode' : 'Viewer Mode',
                                 style: const TextStyle(
                                   color: AppTheme.textPrimaryDark,
                                   fontSize: 11,

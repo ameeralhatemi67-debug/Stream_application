@@ -33,9 +33,22 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = context.watch<AppProvider>();
+    // context.read for method calls -- doesn't need to rebuild this widget on
+    // its own. context.select scopes the rebuild to just the 3 fields this
+    // sheet actually renders (notificationPreferences is included because
+    // _buildNotificationTile's isEntityMuted check depends on it -- without
+    // it, toggling mute wouldn't visibly update the mute icon).
+    final appProvider = context.read<AppProvider>();
+    final (allNotifications, unreadNotificationsCount, _) = context.select<
+        AppProvider,
+        (List<AppNotificationModel>, int, NotificationPreferencesModel)>(
+      (p) => (
+        p.enhancedNotifications,
+        p.unreadNotificationsCount,
+        p.notificationPreferences,
+      ),
+    );
     final isAr = context.locale.languageCode == 'ar';
-    final allNotifications = appProvider.enhancedNotifications;
 
     final filteredNotifications = _selectedCategory == NotificationCategory.all
         ? allNotifications
@@ -77,7 +90,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                if (appProvider.unreadNotificationsCount > 0) ...[
+                if (unreadNotificationsCount > 0) ...[
                   const SizedBox(width: 8),
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
@@ -86,7 +99,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
-                      '${appProvider.unreadNotificationsCount}',
+                      '$unreadNotificationsCount',
                       style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),

@@ -98,9 +98,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = context.watch<AppProvider>();
-    final displayedStreamers = appProvider.filteredStreamers;
-    final currentCategoryFilter = appProvider.currentCategoryFilter;
+    // AppProvider.select uses DeepCollectionEquality by default, so this
+    // only rebuilds when the filtered list's actual contents change (streamer
+    // added/removed/mutated), not on every unrelated notifyListeners() call
+    // elsewhere in the app.
+    final displayedStreamers =
+        context.select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers);
+    final currentCategoryFilter =
+        context.select<AppProvider, String>((p) => p.currentCategoryFilter);
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 
     return Scaffold(

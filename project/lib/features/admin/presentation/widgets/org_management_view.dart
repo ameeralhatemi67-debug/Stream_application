@@ -37,8 +37,28 @@ class _OrgManagementViewState extends State<OrgManagementView> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AppProvider>();
-    final org = provider.getStreamerById(widget.orgId);
+    // context.read for the instance the many mutation calls below need
+    // (addOrganizationBranch, updateSpeakerPermissions, etc.). context.select
+    // scopes this screen's rebuild to just this org's own data -- previously
+    // context.watch<AppProvider>() rebuilt this whole management view on ANY
+    // AppProvider change platform-wide, including other orgs' audit logs and
+    // affiliation requests.
+    final provider = context.read<AppProvider>();
+    final (org, branches, speakers, affiliations, auditLogs) = context.select<
+        AppProvider,
+        (
+          StreamerModel?,
+          List<OrgVenueBranchModel>,
+          List<OrgSpeakerModel>,
+          List<OrgAffiliationRequestModel>,
+          List<OrgAuditLogEntry>
+        )>((p) => (
+          p.getStreamerById(widget.orgId),
+          p.getOrganizationVenues(widget.orgId),
+          p.getOrganizationSpeakers(widget.orgId),
+          p.affiliationRequests.where((r) => r.orgId == widget.orgId).toList(),
+          p.auditLogs.where((l) => l.organizationId == widget.orgId).toList(),
+        ));
     final langCode = context.locale.languageCode;
 
     if (org == null) {
@@ -49,15 +69,6 @@ class _OrgManagementViewState extends State<OrgManagementView> {
         ),
       );
     }
-
-    final branches = provider.getOrganizationVenues(widget.orgId);
-    final speakers = provider.getOrganizationSpeakers(widget.orgId);
-    final affiliations = provider.affiliationRequests
-        .where((req) => req.orgId == widget.orgId)
-        .toList();
-    final auditLogs = provider.auditLogs
-        .where((log) => log.organizationId == widget.orgId)
-        .toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spaceLg),

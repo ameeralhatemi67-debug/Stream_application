@@ -5,7 +5,10 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../profile/models/streamer_models.dart';
+import '../models/user_account_model.dart';
 import '../../admin/models/broadcaster_application_model.dart';
+import '../../admin/models/terms_and_conditions_model.dart';
+import '../../../core/services/notifications/notification_models.dart';
 import 'widgets/broadcaster_application_sheet.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -157,7 +160,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = context.watch<AppProvider>();
+    // context.read for the instance the many _build* helpers below need (they
+    // call mutation methods like setRoleMode/signOut/loginWithGoogle directly
+    // on it). context.select registers this screen's rebuild dependency on
+    // exactly the fields those helpers read -- context.watch<AppProvider>()
+    // previously rebuilt this whole multi-section screen on ANY AppProvider
+    // change anywhere in the app (map streamers, other users' notifications,
+    // admin audit logs, none of which this screen displays).
+    final appProvider = context.read<AppProvider>();
+    context.select<
+        AppProvider,
+        ({
+          UserProfileModel userProfile,
+          bool isStreamerModeEnabled,
+          bool isLoggedInStreamer,
+          String? googleUserEmail,
+          String? googleUserName,
+          List<BroadcasterApplicationModel> applications,
+          bool isBroadcastingLive,
+          BroadcastType customBroadcastType,
+          String? selectedBroadcastOrgId,
+          String? selectedVenueBranchId,
+          List<String> selectedCoSpeakerIds,
+          String selectedStreamingQuality,
+          bool isPitchDirectorModeEnabled,
+          String rtmpLaptopIp,
+          TermsAndConditionsModel termsAndConditions,
+          NotificationPreferencesModel notificationPreferences,
+        })>((p) => (
+          userProfile: p.userProfile,
+          isStreamerModeEnabled: p.isStreamerModeEnabled,
+          isLoggedInStreamer: p.isLoggedInStreamer,
+          googleUserEmail: p.googleUserEmail,
+          googleUserName: p.googleUserName,
+          applications: p.applications,
+          isBroadcastingLive: p.isBroadcastingLive,
+          customBroadcastType: p.customBroadcastType,
+          selectedBroadcastOrgId: p.selectedBroadcastOrgId,
+          selectedVenueBranchId: p.selectedVenueBranchId,
+          selectedCoSpeakerIds: p.selectedCoSpeakerIds,
+          selectedStreamingQuality: p.selectedStreamingQuality,
+          isPitchDirectorModeEnabled: p.isPitchDirectorModeEnabled,
+          rtmpLaptopIp: p.rtmpLaptopIp,
+          termsAndConditions: p.termsAndConditions,
+          notificationPreferences: p.notificationPreferences,
+        ));
     final currentLocale = context.locale.languageCode;
     final isAr = currentLocale == 'ar';
     final isStreamer = appProvider.isStreamerModeEnabled;

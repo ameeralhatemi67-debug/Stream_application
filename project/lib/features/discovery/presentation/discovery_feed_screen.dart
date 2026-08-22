@@ -90,17 +90,49 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = context.watch<AppProvider>();
+    // context.read for method calls (setSearchQuery) -- doesn't need to
+    // rebuild this widget on its own. context.select below scopes the
+    // rebuild to just the 8 fields this screen actually renders, instead of
+    // every AppProvider change (uses DeepCollectionEquality by default, so
+    // the two lists only trigger a rebuild when their contents actually
+    // change, not on every unrelated notifyListeners() call).
+    final appProvider = context.read<AppProvider>();
+    final (
+      selectedCategory,
+      liveStreamers,
+      displayedStreamers,
+      isStreamerModeEnabled,
+      isBroadcastingLive,
+      customBroadcastType,
+      unreadNotificationsCount,
+      selectedTagFilter,
+    ) = context.select<
+        AppProvider,
+        (
+          String,
+          List<StreamerModel>,
+          List<StreamerModel>,
+          bool,
+          bool,
+          BroadcastType,
+          int,
+          String
+        )>((p) => (
+          p.currentCategoryFilter,
+          p.liveStreamers,
+          p.filteredStreamers,
+          p.isStreamerModeEnabled,
+          p.isBroadcastingLive,
+          p.customBroadcastType,
+          p.unreadNotificationsCount,
+          p.selectedTagFilter,
+        ));
     final langCode = context.locale.languageCode;
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
     final streamerGridColumns = isDesktop ? 4 : (screenWidth > 600 ? 3 : 2);
 
-    final selectedCategory = appProvider.currentCategoryFilter;
-    final liveStreamers = appProvider.liveStreamers;
-    final displayedStreamers = appProvider.filteredStreamers;
-    final isUserStreamerLive =
-        appProvider.isStreamerModeEnabled && appProvider.isBroadcastingLive;
+    final isUserStreamerLive = isStreamerModeEnabled && isBroadcastingLive;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBgBase,
@@ -110,12 +142,12 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             ? Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: appProvider.customBroadcastType == BroadcastType.liveAudio
+                  color: customBroadcastType == BroadcastType.liveAudio
                       ? const Color(0xFF3F3F46)
                       : AppTheme.accentRed.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   border: Border.all(
-                    color: appProvider.customBroadcastType == BroadcastType.liveAudio
+                    color: customBroadcastType == BroadcastType.liveAudio
                         ? const Color(0xFFA1A1AA)
                         : AppTheme.accentRed.withValues(alpha: 0.8),
                   ),
@@ -123,7 +155,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (appProvider.customBroadcastType == BroadcastType.liveAudio) ...[
+                    if (customBroadcastType == BroadcastType.liveAudio) ...[
                       const Icon(Icons.mic_rounded, size: 12, color: Color(0xFFE4E4E7)),
                       const SizedBox(width: 5),
                       Text(
@@ -163,7 +195,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             icon: Stack(
               children: [
                 const Icon(Icons.notifications_outlined, size: 22),
-                if (appProvider.unreadNotificationsCount > 0)
+                if (unreadNotificationsCount > 0)
                   Positioned(
                     right: 0,
                     top: 0,
@@ -250,7 +282,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14.0),
                     side: BorderSide(
-                      color: appProvider.selectedTagFilter != 'all'
+                      color: selectedTagFilter != 'all'
                           ? AppTheme.accentRed
                           : AppTheme.darkBorderSubtle,
                       width: 1.2,
@@ -265,7 +297,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       alignment: Alignment.center,
                       child: Icon(
                         Icons.tune_rounded,
-                        color: appProvider.selectedTagFilter != 'all'
+                        color: selectedTagFilter != 'all'
                             ? AppTheme.accentRed
                             : AppTheme.textPrimaryDark,
                         size: 20,
