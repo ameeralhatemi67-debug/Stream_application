@@ -264,4 +264,77 @@ void main() {
 
     expect(engine.state, RtmpPublishState.live);
   });
+
+  test(
+    'a "reconnecting" event surfaces the attempt/maxAttempts and clears on "live"',
+    () async {
+      messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
+
+      final engine = RtmpPublishEngine();
+      await engine.initializeCamera();
+
+      messenger.handlePlatformMessage(
+        eventChannel.name,
+        eventChannel.codec.encodeSuccessEnvelope(
+          {'type': 'reconnecting', 'attempt': 2, 'maxAttempts': 6},
+        ),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(engine.state, RtmpPublishState.reconnecting);
+      expect(engine.reconnectAttempt, 2);
+      expect(engine.maxReconnectAttempts, 6);
+
+      messenger.handlePlatformMessage(
+        eventChannel.name,
+        eventChannel.codec.encodeSuccessEnvelope({'type': 'live'}),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(engine.state, RtmpPublishState.live);
+      expect(engine.reconnectAttempt, isNull);
+      expect(engine.maxReconnectAttempts, isNull);
+    },
+  );
+
+  test(
+    'a final "error" event after reconnecting clears the attempt counters',
+    () async {
+      messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
+
+      final engine = RtmpPublishEngine();
+      await engine.initializeCamera();
+
+      messenger.handlePlatformMessage(
+        eventChannel.name,
+        eventChannel.codec.encodeSuccessEnvelope(
+          {'type': 'reconnecting', 'attempt': 6, 'maxAttempts': 6},
+        ),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      messenger.handlePlatformMessage(
+        eventChannel.name,
+        eventChannel.codec.encodeSuccessEnvelope(
+          {
+            'type': 'error',
+            'message': 'Lost connection and could not reconnect: timeout',
+          },
+        ),
+        (_) {},
+      );
+      await Future<void>.delayed(Duration.zero);
+
+      expect(engine.state, RtmpPublishState.error);
+      expect(
+        engine.lastError,
+        'Lost connection and could not reconnect: timeout',
+      );
+      expect(engine.reconnectAttempt, isNull);
+      expect(engine.maxReconnectAttempts, isNull);
+    },
+  );
 }

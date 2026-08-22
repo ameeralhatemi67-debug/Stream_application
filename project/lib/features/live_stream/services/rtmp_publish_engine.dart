@@ -14,6 +14,12 @@ enum RtmpPublishState {
   ready,
   connecting,
   live,
+  /// v0.7 Checkpoint 4 Phase 1 -- the connection dropped mid-broadcast
+  /// (network switch, weak signal) and RootEncoder is retrying with
+  /// exponential backoff. Distinct from [connecting] (the initial connect)
+  /// so the UI can say "stream interrupted" rather than repeat the
+  /// first-connect copy.
+  reconnecting,
   stopped,
   error,
 }
@@ -94,7 +100,21 @@ class RtmpPublishEngine extends ChangeNotifier {
   int? _lastBitrateBps;
   int? get lastBitrateBps => _lastBitrateBps;
 
+  int? _reconnectAttempt;
+  int? get reconnectAttempt => _reconnectAttempt;
+  int? _maxReconnectAttempts;
+  int? get maxReconnectAttempts => _maxReconnectAttempts;
+
   StreamSubscription<dynamic>? _eventSub;
+
+  // v0.7 Checkpoint 4 Phase 1 -- a watchdog, not just a display concern.
+  // Confirmed on-device that a write-side connection drop (broken pipe from
+  // a killed RTMP server) doesn't always reach RootEncoder's ConnectChecker
+  // at all -- only read-side failures reliably do -- so this engine can't
+  // assume a native event will always eventually arrive to end a
+  // connecting/reconnecting wait. Without this, that gap is a genuine
+  // silent freeze: an unbounded "reconnecting" banner with no way out.
+  Timer? _watchdogTimer;
 
   Future<void> initializeCamera({
     BroadcastQualityPreset preset = BroadcastQualityPreset.medium,
@@ -181,6 +201,8 @@ class RtmpPublishEngine extends ChangeNotifier {
       _lastError = e.message ?? e.code;
     } finally {
       _lastBitrateBps = null;
+      _reconnectAttempt = null;
+      _maxReconnectAttempts = null;
       _setState(RtmpPublishState.stopped);
     }
   }
@@ -204,11 +226,21 @@ class RtmpPublishEngine extends ChangeNotifier {
         _setState(RtmpPublishState.connecting);
         break;
       case 'live':
+        _reconnectAttempt = null;
+        _maxReconnectAttempts = null;
         _setState(RtmpPublishState.live);
+        break;
+      case 'reconnecting':
+        _reconnectAttempt = (event['attempt'] as num?)?.toInt();
+        _maxReconnectAttempts = (event['maxAttempts'] as num?)?.toInt();
+        _setState(RtmpPublishState.reconnecting);
         break;
       case 'stopped':
         if (_state == RtmpPublishState.live ||
-            _state == RtmpPublishState.connecting) {
+            _state == RtmpPublishState.connecting ||
+            _state == RtmpPublishState.reconnecting) {
+          _reconnectAttempt = null;
+          _maxReconnectAttempts = null;
           _setState(RtmpPublishState.stopped);
         }
         break;
@@ -217,6 +249,8 @@ class RtmpPublishEngine extends ChangeNotifier {
         notifyListeners();
         break;
       case 'error':
+        _reconnectAttempt = null;
+        _maxReconnectAttempts = null;
         _lastError = event['message'] as String?;
         _setState(RtmpPublishState.error);
         break;
@@ -229,12 +263,46 @@ class RtmpPublishEngine extends ChangeNotifier {
   }
 
   void _setState(RtmpPublishState value) {
+    _watchdogTimer?.cancel();
     _state = value;
+    switch (value) {
+      case RtmpPublishState.connecting:
+        _armWatchdog(
+          const Duration(seconds: 20),
+          'Could not connect -- timed out.',
+        );
+        break;
+      case RtmpPublishState.reconnecting:
+        // Ceiling comfortably above the backoff schedule's own total
+        // (2+4+8+16+30 = 60s for 6 attempts), so it only fires if the
+        // native side genuinely stopped reporting progress.
+        _armWatchdog(
+          const Duration(seconds: 75),
+          'Lost connection and could not reconnect in time.',
+        );
+        break;
+      default:
+        _watchdogTimer = null;
+        break;
+    }
     notifyListeners();
+  }
+
+  void _armWatchdog(Duration timeout, String timeoutMessage) {
+    _watchdogTimer = Timer(timeout, () {
+      if (_state == RtmpPublishState.connecting ||
+          _state == RtmpPublishState.reconnecting) {
+        _reconnectAttempt = null;
+        _maxReconnectAttempts = null;
+        _lastError = timeoutMessage;
+        _setState(RtmpPublishState.error);
+      }
+    });
   }
 
   @override
   void dispose() {
+    _watchdogTimer?.cancel();
     _eventSub?.cancel();
     _channel.invokeMethod<void>('dispose').catchError((_) {});
     super.dispose();

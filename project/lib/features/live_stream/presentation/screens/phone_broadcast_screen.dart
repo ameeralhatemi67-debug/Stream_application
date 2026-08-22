@@ -234,6 +234,23 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
             left: AppTheme.spaceMd,
             child: _StatusPill(label: 'Connecting...', color: Colors.amber),
           ),
+        if (_engine.state == RtmpPublishState.reconnecting)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _ReconnectingBanner(
+              attempt: _engine.reconnectAttempt,
+              maxAttempts: _engine.maxReconnectAttempts,
+            ),
+          ),
+        if (_engine.state == RtmpPublishState.error && _engine.lastError != null)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: _StreamErrorBanner(message: _engine.lastError!),
+          ),
         if (_engine.isAudioOnly)
           const Positioned(
             top: AppTheme.spaceMd,
@@ -297,7 +314,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
         _engine.state == RtmpPublishState.stopped;
     final live = _engine.state == RtmpPublishState.live;
     final connecting = _engine.state == RtmpPublishState.connecting;
-    final canToggleGoLive = ready || live;
+    // v0.7 Checkpoint 4 Phase 1 -- reconnecting still counts as an active
+    // broadcast session for control purposes: mic-mute/camera-swap stay
+    // available, and End Broadcast lets the user bail out of a stuck
+    // reconnect loop rather than being stuck with no way to stop.
+    final broadcastActive = live || _engine.state == RtmpPublishState.reconnecting;
+    // v0.7 Checkpoint 4 Phase 1 -- a connection failure (including a
+    // reconnect that ran out of attempts) shouldn't be a dead end: the
+    // camera is still prepared, so Go Live can retry a fresh connection
+    // attempt rather than leaving the broadcaster stuck.
+    final canToggleGoLive =
+        ready || broadcastActive || _engine.state == RtmpPublishState.error;
 
     return Container(
       color: AppTheme.darkSurface1,
@@ -309,7 +336,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
         children: [
           IconButton(
-            onPressed: live || ready ? () => _engine.setMuted(!_engine.isMuted) : null,
+            onPressed: broadcastActive || ready
+                ? () => _engine.setMuted(!_engine.isMuted)
+                : null,
             icon: Icon(
               _engine.isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
               color: Colors.white,
@@ -320,25 +349,27 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
             onPressed: connecting
                 ? null
                 : canToggleGoLive
-                    ? (live ? _stopBroadcast : _startBroadcast)
+                    ? (broadcastActive ? _stopBroadcast : _startBroadcast)
                     : null,
-            icon: Icon(live ? Icons.stop_circle_rounded : Icons.sensors_rounded),
+            icon: Icon(
+              broadcastActive ? Icons.stop_circle_rounded : Icons.sensors_rounded,
+            ),
             label: Text(
               connecting
                   ? 'Connecting...'
-                  : live
+                  : broadcastActive
                       ? 'End Broadcast'
                       : 'Go Live',
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: live ? Colors.red.shade800 : AppTheme.accentGreen,
+              backgroundColor: broadcastActive ? Colors.red.shade800 : AppTheme.accentGreen,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
           ),
           IconButton(
-            onPressed: (ready || live) && !_engine.isAudioOnly
+            onPressed: (ready || broadcastActive) && !_engine.isAudioOnly
                 ? _engine.switchCamera
                 : null,
             icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
@@ -416,6 +447,87 @@ class _LiveBadge extends StatelessWidget {
     return _StatusPill(
       label: 'LIVE$bitrateLabel',
       color: AppTheme.accentRed,
+    );
+  }
+}
+
+/// v0.7 Checkpoint 4 Phase 1 -- shown full-width when the RTMP connection
+/// drops mid-broadcast and RootEncoder is retrying with backoff, so the
+/// broadcaster sees a clear "stream interrupted" state instead of a silent
+/// freeze while the connection is down.
+class _ReconnectingBanner extends StatelessWidget {
+  final int? attempt;
+  final int? maxAttempts;
+
+  const _ReconnectingBanner({required this.attempt, required this.maxAttempts});
+
+  @override
+  Widget build(BuildContext context) {
+    final attemptLabel = (attempt != null && maxAttempts != null)
+        ? ' (attempt $attempt/$maxAttempts)'
+        : '';
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceSm,
+      ),
+      color: Colors.orange.shade900,
+      child: Row(
+        children: [
+          const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Text(
+              'Stream interrupted -- reconnecting$attemptLabel...',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// v0.7 Checkpoint 4 Phase 1 -- shown when a broadcast ends in a real
+/// failure (reconnect attempts exhausted, or a native-side connection
+/// timeout with no further recovery). The camera stays prepared, so Go
+/// Live in the controls below retries a fresh connection rather than
+/// leaving the broadcaster stuck looking at this with no way forward.
+class _StreamErrorBanner extends StatelessWidget {
+  final String message;
+
+  const _StreamErrorBanner({required this.message});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceSm,
+      ),
+      color: Colors.red.shade900,
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
