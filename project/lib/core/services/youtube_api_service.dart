@@ -6,8 +6,11 @@ import '../../features/profile/models/vod_models.dart';
 
 /// Service for communicating with YouTube Data API v3 REST endpoints.
 class YouTubeApiService {
+  /// Injected at build/run time via `--dart-define=YOUTUBE_API_KEY=...`
+  /// (or --dart-define-from-file for local dev). Never hardcode a real key
+  /// here -- see doc/Audit/01_Security_Data_Protection_Audit.md VULN-DATA-01.
   static const String _defaultApiKey =
-      'AIzaSyADRzIa7p3RlPlik-8C1r0bZjUipQTpOis';
+      String.fromEnvironment('YOUTUBE_API_KEY');
   static const String _baseUrl = 'https://www.googleapis.com/youtube/v3';
 
   final String apiKey;
