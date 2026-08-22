@@ -206,6 +206,49 @@ void main() {
     expect(captured?.arguments, {'muted': true});
   });
 
+  test(
+    'setAudioOnly toggles isAudioOnly on success and sends the flag',
+    () async {
+      MethodCall? captured;
+      messenger.setMockMethodCallHandler(methodChannel, (call) async {
+        captured = call;
+        return null;
+      });
+
+      final engine = RtmpPublishEngine();
+      expect(engine.isAudioOnly, isFalse);
+
+      await engine.setAudioOnly(true);
+
+      expect(engine.isAudioOnly, isTrue);
+      expect(captured?.method, 'setAudioOnly');
+      expect(captured?.arguments, {'audioOnly': true});
+
+      await engine.setAudioOnly(false);
+
+      expect(engine.isAudioOnly, isFalse);
+      expect(captured?.arguments, {'audioOnly': false});
+    },
+  );
+
+  test(
+    'setAudioOnly surfaces an error without flipping isAudioOnly',
+    () async {
+      messenger.setMockMethodCallHandler(methodChannel, (call) async {
+        throw PlatformException(
+          code: 'SOURCE_SWITCH_FAILED',
+          message: 'no bitmap decoded',
+        );
+      });
+
+      final engine = RtmpPublishEngine();
+      await engine.setAudioOnly(true);
+
+      expect(engine.isAudioOnly, isFalse);
+      expect(engine.lastError, 'no bitmap decoded');
+    },
+  );
+
   test('an event-channel "live" event flips state to live once initialized', () async {
     messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
 

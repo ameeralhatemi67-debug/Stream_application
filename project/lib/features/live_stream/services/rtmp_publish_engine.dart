@@ -88,6 +88,9 @@ class RtmpPublishEngine extends ChangeNotifier {
   bool _isMuted = false;
   bool get isMuted => _isMuted;
 
+  bool _isAudioOnly = false;
+  bool get isAudioOnly => _isAudioOnly;
+
   int? _lastBitrateBps;
   int? get lastBitrateBps => _lastBitrateBps;
 
@@ -137,6 +140,22 @@ class RtmpPublishEngine extends ChangeNotifier {
     try {
       await _channel.invokeMethod<void>('switchCamera');
       _isFrontCamera = !_isFrontCamera;
+      notifyListeners();
+    } on PlatformException catch (e) {
+      _lastError = e.message ?? e.code;
+      notifyListeners();
+    }
+  }
+
+  /// v0.7 Checkpoint 3 Phase 1 -- swaps the encoder's video source between
+  /// the live camera and a static branded image, so a broadcast can go out
+  /// mic-only without dropping the video track YouTube's RTMP ingest
+  /// requires. Safe to call before or after [startPublishing]; RootEncoder
+  /// applies source changes on the fly.
+  Future<void> setAudioOnly(bool audioOnly) async {
+    try {
+      await _channel.invokeMethod<void>('setAudioOnly', {'audioOnly': audioOnly});
+      _isAudioOnly = audioOnly;
       notifyListeners();
     } on PlatformException catch (e) {
       _lastError = e.message ?? e.code;

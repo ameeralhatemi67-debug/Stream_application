@@ -413,96 +413,9 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
                 const SizedBox(height: AppTheme.spaceSm),
 
                 // Broadcast Format Selector (Video vs Audio-Only)
-                Row(
-                  children: [
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => appProvider.setBroadcastType(BroadcastType.liveVideo),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                          decoration: BoxDecoration(
-                            color: appProvider.customBroadcastType == BroadcastType.liveVideo
-                                ? AppTheme.accentRed.withValues(alpha: 0.2)
-                                : AppTheme.darkSurface1,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                            border: Border.all(
-                              color: appProvider.customBroadcastType == BroadcastType.liveVideo
-                                  ? AppTheme.accentRed
-                                  : AppTheme.darkBorderSubtle,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.videocam_rounded,
-                                size: 15,
-                                color: appProvider.customBroadcastType == BroadcastType.liveVideo
-                                    ? AppTheme.accentRed
-                                    : AppTheme.textMutedDark,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'Video Stream',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: appProvider.customBroadcastType == BroadcastType.liveVideo
-                                      ? Colors.white
-                                      : AppTheme.textSecondaryDark,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: InkWell(
-                        onTap: () => appProvider.setBroadcastType(BroadcastType.liveAudio),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
-                          decoration: BoxDecoration(
-                            color: appProvider.customBroadcastType == BroadcastType.liveAudio
-                                ? const Color(0xFF3F3F46)
-                                : AppTheme.darkSurface1,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                            border: Border.all(
-                              color: appProvider.customBroadcastType == BroadcastType.liveAudio
-                                  ? const Color(0xFFA1A1AA)
-                                  : AppTheme.darkBorderSubtle,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.mic_rounded,
-                                size: 15,
-                                color: appProvider.customBroadcastType == BroadcastType.liveAudio
-                                    ? const Color(0xFFE4E4E7)
-                                    : AppTheme.textMutedDark,
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                'Audio-Only',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: appProvider.customBroadcastType == BroadcastType.liveAudio
-                                      ? Colors.white
-                                      : AppTheme.textSecondaryDark,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                _BroadcastFormatSelector(
+                  selected: appProvider.customBroadcastType,
+                  onChanged: appProvider.setBroadcastType,
                 ),
 
                 const SizedBox(height: AppTheme.spaceSm),
@@ -687,6 +600,16 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
 
+                // v0.7 Checkpoint 3 Phase 1 -- same Video/Audio-Only choice
+                // as the YouTube Live section above, since a phone broadcast
+                // can go out audio-only too (mic capture + static thumbnail,
+                // no camera).
+                _BroadcastFormatSelector(
+                  selected: appProvider.customBroadcastType,
+                  onChanged: appProvider.setBroadcastType,
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+
                 // Helper instructions for YouTube Studio
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceSm),
@@ -743,6 +666,107 @@ class _RtmpIpSettingsDialogState extends State<RtmpIpSettingsDialog> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Video-vs-audio-only toggle, shared by the YouTube Live section and the
+/// From Phone section (v0.7 Checkpoint 3 Phase 1) so both stay visually and
+/// behaviorally identical without duplicating the markup a third time.
+class _BroadcastFormatSelector extends StatelessWidget {
+  final BroadcastType selected;
+  final ValueChanged<BroadcastType> onChanged;
+
+  const _BroadcastFormatSelector({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _FormatOption(
+            icon: Icons.videocam_rounded,
+            label: 'Video Stream',
+            selected: selected == BroadcastType.liveVideo,
+            selectedColor: AppTheme.accentRed.withValues(alpha: 0.2),
+            selectedBorderColor: AppTheme.accentRed,
+            selectedIconColor: AppTheme.accentRed,
+            onTap: () => onChanged(BroadcastType.liveVideo),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _FormatOption(
+            icon: Icons.mic_rounded,
+            label: 'Audio-Only',
+            selected: selected == BroadcastType.liveAudio,
+            selectedColor: const Color(0xFF3F3F46),
+            selectedBorderColor: const Color(0xFFA1A1AA),
+            selectedIconColor: const Color(0xFFE4E4E7),
+            onTap: () => onChanged(BroadcastType.liveAudio),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FormatOption extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final Color selectedColor;
+  final Color selectedBorderColor;
+  final Color selectedIconColor;
+  final VoidCallback onTap;
+
+  const _FormatOption({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.selectedColor,
+    required this.selectedBorderColor,
+    required this.selectedIconColor,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+        decoration: BoxDecoration(
+          color: selected ? selectedColor : AppTheme.darkSurface1,
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: Border.all(
+            color: selected ? selectedBorderColor : AppTheme.darkBorderSubtle,
+          ),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 15,
+              color: selected ? selectedIconColor : AppTheme.textMutedDark,
+            ),
+            const SizedBox(width: 5),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+                color: selected ? Colors.white : AppTheme.textSecondaryDark,
+              ),
+            ),
+          ],
         ),
       ),
     );

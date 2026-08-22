@@ -9,8 +9,8 @@ import io.flutter.plugin.platform.PlatformView
 /**
  * PlatformView hosting RootEncoder's [OpenGlView] camera preview. Only
  * hands the raw view to [RtmpPublisherBridge] once its surface actually
- * exists -- attaching RtmpCamera2 to a not-yet-created surface is what the
- * library's own preview/stream lifecycle assumes never happens.
+ * exists -- starting a preview against a not-yet-created surface is what
+ * the library's own preview/stream lifecycle assumes never happens.
  */
 class RtmpPublisherView(
     context: Context,

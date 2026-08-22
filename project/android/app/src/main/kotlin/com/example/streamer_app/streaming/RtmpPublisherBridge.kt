@@ -2,58 +2,71 @@ package com.example.streamer_app.streaming
 
 import android.content.Context
 import android.content.Intent
+import android.graphics.BitmapFactory
 import android.os.Build
+import android.view.SurfaceView
+import com.example.streamer_app.R
 import com.pedro.common.ConnectChecker
-import com.pedro.library.rtmp.RtmpCamera2
-import com.pedro.library.view.OpenGlView
+import com.pedro.encoder.input.sources.audio.MicrophoneSource
+import com.pedro.encoder.input.sources.video.BitmapSource
+import com.pedro.encoder.input.sources.video.Camera2Source
+import com.pedro.library.rtmp.RtmpStream
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * Owns the [RtmpCamera2] lifecycle end to end. [RtmpPublisherView] only ever
- * hands this bridge the [OpenGlView] it renders into; Dart's
- * RtmpPublishEngine only ever talks to this bridge over
- * MethodChannel/EventChannel, never to RootEncoder directly -- the same
- * engine/UI split validated by the v0.7 Checkpoint 1 spike
- * (lib/spike_rtmp/rtmp_publish_engine.dart), so v1.1's iOS engine can sit
- * behind the exact same Dart-facing surface.
+ * Owns the [RtmpStream] lifecycle end to end. Built on RootEncoder's generic
+ * pluggable-source architecture (not the camera-only RtmpCamera2 used by the
+ * v0.7 Checkpoint 1 spike and Checkpoint 2 Phase 1) specifically so
+ * Checkpoint 3 can swap the video source between the live camera and a
+ * static [BitmapSource] for audio-only broadcasts, without needing two
+ * separate encoder pipelines. [RtmpPublisherView] only ever hands this
+ * bridge the [SurfaceView] it renders into; Dart's RtmpPublishEngine only
+ * ever talks to this bridge over MethodChannel/EventChannel, never to
+ * RootEncoder directly -- the same engine/UI split validated by the
+ * Checkpoint 1 spike, so v1.1's iOS engine can sit behind the exact same
+ * Dart-facing surface.
  */
 class RtmpPublisherBridge(
     private val appContext: Context
 ) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ConnectChecker {
 
-    private var camera: RtmpCamera2? = null
-    private var openGlView: OpenGlView? = null
+    private val cameraSource = Camera2Source(appContext)
+    private val microphoneSource = MicrophoneSource()
+    private val stream = RtmpStream(appContext, this, cameraSource, microphoneSource)
+
+    private var surfaceView: SurfaceView? = null
     private var eventSink: EventChannel.EventSink? = null
 
-    fun attach(view: OpenGlView) {
-        if (camera != null) return
-        openGlView = view
-        camera = RtmpCamera2(view, this)
+    fun attach(view: SurfaceView) {
+        // Only stores the view -- RtmpStream rejects prepareVideo/
+        // prepareAudio once a preview is already running ("Stream, record
+        // and preview must be stopped before prepareVideo"), so startPreview
+        // has to happen *after* handlePrepare's prepareVideo/prepareAudio,
+        // not as soon as the surface exists.
+        surfaceView = view
     }
 
     fun detach() {
-        val cam = camera ?: return
-        if (cam.isStreaming) cam.stopStream()
-        if (cam.isOnPreview()) cam.stopPreview()
-        camera = null
-        openGlView = null
+        if (stream.isStreaming) stream.stopStream()
+        if (stream.isOnPreview) stream.stopPreview()
+        surfaceView = null
         stopForegroundService()
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        val cam = camera
-        if (cam == null) {
+        if (surfaceView == null) {
             result.error("NOT_READY", "Camera preview is not attached yet.", null)
             return
         }
         when (call.method) {
-            "prepare" -> handlePrepare(cam, call, result)
-            "switchCamera" -> handleSwitchCamera(cam, result)
-            "startStream" -> handleStartStream(cam, call, result)
-            "stopStream" -> handleStopStream(cam, result)
-            "setMuted" -> handleSetMuted(cam, call, result)
+            "prepare" -> handlePrepare(call, result)
+            "switchCamera" -> handleSwitchCamera(result)
+            "setAudioOnly" -> handleSetAudioOnly(call, result)
+            "startStream" -> handleStartStream(call, result)
+            "stopStream" -> handleStopStream(result)
+            "setMuted" -> handleSetMuted(call, result)
             "dispose" -> {
                 detach()
                 result.success(null)
@@ -62,7 +75,7 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handlePrepare(cam: RtmpCamera2, call: MethodCall, result: MethodChannel.Result) {
+    private fun handlePrepare(call: MethodCall, result: MethodChannel.Result) {
         // Resolution/bitrate preset (v0.7 Checkpoint 2 Phase 3 -- see
         // BroadcastQualityPreset in rtmp_publish_engine.dart). Falls back to
         // the medium preset's values if Dart ever calls prepare() without
@@ -70,11 +83,16 @@ class RtmpPublisherBridge(
         val width = call.argument<Int>("width") ?: 1280
         val height = call.argument<Int>("height") ?: 720
         val videoBitrate = call.argument<Int>("videoBitrate") ?: 2_500_000
+        val view = surfaceView
+        if (view == null) {
+            result.error("NOT_READY", "Camera preview is not attached yet.", null)
+            return
+        }
         try {
-            val prepared = cam.prepareVideo(width, height, videoBitrate) &&
-                cam.prepareAudio(128_000, 44100, true)
+            val prepared = stream.prepareVideo(width, height, videoBitrate) &&
+                stream.prepareAudio(44100, true, 128_000)
             if (prepared) {
-                cam.startPreview()
+                if (!stream.isOnPreview) stream.startPreview(view)
                 result.success(null)
             } else {
                 result.error(
@@ -88,16 +106,39 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handleSwitchCamera(cam: RtmpCamera2, result: MethodChannel.Result) {
+    private fun handleSwitchCamera(result: MethodChannel.Result) {
         try {
-            cam.switchCamera()
+            cameraSource.switchCamera()
             result.success(null)
         } catch (e: Exception) {
             result.error("SWITCH_FAILED", e.message, null)
         }
     }
 
-    private fun handleStartStream(cam: RtmpCamera2, call: MethodCall, result: MethodChannel.Result) {
+    private fun handleSetAudioOnly(call: MethodCall, result: MethodChannel.Result) {
+        val audioOnly = call.argument<Boolean>("audioOnly") ?: false
+        try {
+            if (audioOnly) {
+                // v0.7 Checkpoint 3 Phase 1 -- YouTube's RTMP ingest requires
+                // a video track even for an audio-only broadcast, so a
+                // static branded image stands in for the camera feed rather
+                // than dropping video entirely (RtmpOnlyAudio would send no
+                // video track at all).
+                val bitmap = BitmapFactory.decodeResource(
+                    appContext.resources,
+                    R.mipmap.ic_launcher
+                )
+                stream.changeVideoSource(BitmapSource(bitmap))
+            } else {
+                stream.changeVideoSource(cameraSource)
+            }
+            result.success(null)
+        } catch (e: Exception) {
+            result.error("SOURCE_SWITCH_FAILED", e.message, null)
+        }
+    }
+
+    private fun handleStartStream(call: MethodCall, result: MethodChannel.Result) {
         val url = call.argument<String>("url")
         if (url.isNullOrBlank()) {
             result.error("INVALID_URL", "No RTMP URL was provided.", null)
@@ -105,7 +146,7 @@ class RtmpPublisherBridge(
         }
         try {
             startForegroundService()
-            cam.startStream(url)
+            stream.startStream(url)
             result.success(null)
         } catch (e: Exception) {
             stopForegroundService()
@@ -113,18 +154,21 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handleStopStream(cam: RtmpCamera2, result: MethodChannel.Result) {
+    private fun handleStopStream(result: MethodChannel.Result) {
         try {
-            cam.stopStream()
+            stream.stopStream()
         } finally {
             stopForegroundService()
         }
         result.success(null)
     }
 
-    private fun handleSetMuted(cam: RtmpCamera2, call: MethodCall, result: MethodChannel.Result) {
+    private fun handleSetMuted(call: MethodCall, result: MethodChannel.Result) {
         val muted = call.argument<Boolean>("muted") ?: false
-        if (muted) cam.disableAudio() else cam.enableAudio()
+        // RtmpStream (unlike the camera-specific RtmpCamera2) has no
+        // disableAudio()/enableAudio() of its own -- mute lives on the
+        // MicrophoneSource instance itself.
+        if (muted) microphoneSource.mute() else microphoneSource.unMute()
         result.success(null)
     }
 

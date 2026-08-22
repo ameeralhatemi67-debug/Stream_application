@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../profile/models/streamer_models.dart';
 import '../../services/rtmp_publish_engine.dart';
 import '../widgets/permission_rationale_dialog.dart';
 import '../widgets/phone_camera_preview.dart';
@@ -61,6 +62,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
 
     try {
       await _engine.initializeCamera(preset: _preset);
+      // v0.7 Checkpoint 3 Phase 1 -- reuses the same RTMP pipeline in
+      // mic-only mode when the streamer picked Audio-Only in the target
+      // dialog (rtmp_ip_dialog.dart's _BroadcastFormatSelector), swapping
+      // the encoder's video source to a static branded image.
+      if (_appProvider.customBroadcastType == BroadcastType.liveAudio) {
+        await _engine.setAudioOnly(true);
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _setupError = 'Could not start the camera: $e');
@@ -219,6 +227,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
             left: AppTheme.spaceMd,
             child: _StatusPill(label: 'Connecting...', color: Colors.amber),
           ),
+        if (_engine.isAudioOnly)
+          const Positioned(
+            top: AppTheme.spaceMd,
+            right: AppTheme.spaceMd,
+            child: _StatusPill(label: 'AUDIO ONLY', color: AppTheme.accentBlue),
+          ),
       ],
     );
   }
@@ -317,9 +331,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
             ),
           ),
           IconButton(
-            onPressed: ready || live ? _engine.switchCamera : null,
+            onPressed: (ready || live) && !_engine.isAudioOnly
+                ? _engine.switchCamera
+                : null,
             icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
-            tooltip: 'Swap camera',
+            tooltip: _engine.isAudioOnly
+                ? 'Not available in audio-only mode'
+                : 'Swap camera',
           ),
         ],
       ),
