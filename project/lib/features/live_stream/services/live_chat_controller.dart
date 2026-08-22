@@ -13,11 +13,20 @@ enum ChatConnectionState { connecting, live, reconnecting }
 ///
 /// Realtime channel naming convention: `chat:<streamId>` (see
 /// supabase/migrations/20260823090000_chat_messages.sql) -- the same channel
-/// Checkpoint 2 will reuse for ephemeral broadcast reactions.
+/// Checkpoint 2 reuses for ephemeral broadcast reactions (never persisted --
+/// no reason to store millions of reaction rows against the free tier's
+/// quota). Reactions aren't gated behind sign-in like sending a chat message
+/// is: broadcast isn't covered by chat_messages' RLS at all, and there's no
+/// reason a guest viewer shouldn't be able to react.
 class LiveChatController extends ChangeNotifier {
-  LiveChatController({required this.streamId});
+  LiveChatController({required this.streamId, this.onReaction});
 
   final String streamId;
+
+  /// Invoked when another client broadcasts a reaction on this stream's
+  /// channel (not when this client sends its own -- the caller already shows
+  /// that immediately/locally on tap, without waiting on a round trip).
+  final void Function(String reactionType)? onReaction;
 
   SupabaseClient get _client => Supabase.instance.client;
   RealtimeChannel? _channel;
@@ -69,6 +78,13 @@ class LiveChatController extends ChangeNotifier {
             value: streamId,
           ),
           callback: (payload) => _handleInsert(payload.newRecord),
+        )
+        ..onBroadcast(
+          event: 'reaction',
+          callback: (payload) {
+            final type = payload['reaction_type'] as String?;
+            if (type != null) onReaction?.call(type);
+          },
         )
         ..subscribe((status, error) {
           if (_disposed) return;
@@ -192,6 +208,23 @@ class LiveChatController extends ChangeNotifier {
       _messages.removeWhere((m) => m.id == id);
       notifyListeners();
       rethrow;
+    }
+  }
+
+  /// Broadcasts an ephemeral reaction ('heart', 'clap', 'idea', 'fire',
+  /// 'scholar', ...) to other clients on this stream's channel. Never
+  /// persisted -- the caller is responsible for showing its own local
+  /// floating-emoji effect immediately, without waiting on this.
+  Future<void> sendReaction(String reactionType) async {
+    final channel = _channel;
+    if (channel == null) return;
+    try {
+      await channel.sendBroadcastMessage(
+        event: 'reaction',
+        payload: {'reaction_type': reactionType},
+      );
+    } catch (e) {
+      debugPrint('LiveChatController: failed to send reaction: $e');
     }
   }
 

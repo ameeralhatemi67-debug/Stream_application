@@ -47,7 +47,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     super.initState();
     // 3 Tabs: Chat, Sources, Venue
     _tabController = TabController(length: 3, vsync: this);
-    _chatController = LiveChatController(streamId: widget.streamId)..start();
+    _chatController = LiveChatController(
+      streamId: widget.streamId,
+      onReaction: (type) => _reactionsController.spawnReaction(type),
+    )..start();
   }
 
   @override
@@ -87,10 +90,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   void _handleQuickReaction(String reactionType, String emoji) {
-    // Floating visual only for now -- Checkpoint 2 wires this to a
-    // broadcast event other viewers actually see (ephemeral, not persisted
-    // to chat_messages, per doc/Roadmap/v0.6_Live_Chat_Realtime_Engagement.md).
+    // Shown immediately/locally rather than waiting on the broadcast round
+    // trip; other viewers see it via LiveChatController.onReaction above.
     _reactionsController.spawnReaction(reactionType);
+    _chatController.sendReaction(reactionType);
     setState(() => _isReactionMenuOpen = false);
   }
 

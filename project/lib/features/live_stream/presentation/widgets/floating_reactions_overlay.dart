@@ -78,14 +78,14 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
   }
 
   void spawnReaction(String reactionType) {
-    String emoji = '❤️';
-    if (reactionType == 'clap') {
-      emoji = '👏';
-    } else if (reactionType == 'raise_hand') {
-      emoji = '✋';
-    } else if (reactionType == 'heart') {
-      emoji = '❤️';
-    }
+    final emoji = switch (reactionType) {
+      'clap' => '👏',
+      'raise_hand' => '✋',
+      'idea' => '💡',
+      'fire' => '🔥',
+      'scholar' => '🎓',
+      _ => '❤️', // 'heart' and any unrecognized type
+    };
 
     final id = 'particle_${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1000)}';
     final startX = 0.65 + _random.nextDouble() * 0.25; // 65% to 90% of screen width
