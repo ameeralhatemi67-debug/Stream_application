@@ -196,7 +196,12 @@
     "report_reason_other": "أخرى",
     "report_submitted_toast": "تم الإبلاغ عن الرسالة. سيقوم فريقنا بمراجعتها.",
     "report_already_submitted_toast": "لقد قمت بالإبلاغ عن هذه الرسالة مسبقاً.",
-    "user_blocked_toast": "لن تظهر لك رسائل هذا المستخدم بعد الآن."
+    "user_blocked_toast": "لن تظهر لك رسائل هذا المستخدم بعد الآن.",
+    "mute_user": "كتم المستخدم",
+    "delete_message": "حذف الرسالة",
+    "delete_message_confirm_title": "هل تريد حذف هذه الرسالة للجميع؟",
+    "user_muted_toast": "تم كتم المستخدم في هذا البث.",
+    "message_deleted_toast": "تم حذف الرسالة."
   },
   "safety": {
     "modal_title": "الميزة قيد التطوير",

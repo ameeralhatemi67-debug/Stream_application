@@ -196,7 +196,12 @@
     "report_reason_other": "Other",
     "report_submitted_toast": "Message reported. Our team will review it.",
     "report_already_submitted_toast": "You've already reported this message.",
-    "user_blocked_toast": "You won't see messages from this user anymore."
+    "user_blocked_toast": "You won't see messages from this user anymore.",
+    "mute_user": "Mute User",
+    "delete_message": "Delete Message",
+    "delete_message_confirm_title": "Delete this message for everyone?",
+    "user_muted_toast": "User muted for this stream.",
+    "message_deleted_toast": "Message deleted."
   },
   "safety": {
     "modal_title": "Feature In Development",

@@ -46,6 +46,14 @@ class LiveChatController extends ChangeNotifier {
 
   bool isBlocked(String senderId) => _blockedSenderIds.contains(senderId);
 
+  /// Whether the current viewer is this stream's owner or an admin tier --
+  /// resolved once via chat_can_moderate (see supabase/migrations/
+  /// 20260825090000_chat_moderation.sql) and cached. Purely a UX gate for
+  /// whether to show Mute/Delete in the chat action sheet; the mute/delete
+  /// RLS policies are what actually enforce it, not this flag.
+  bool _canModerate = false;
+  bool get canModerate => _canModerate;
+
   ChatConnectionState _connectionState = ChatConnectionState.connecting;
   ChatConnectionState get connectionState => _connectionState;
 
@@ -60,8 +68,21 @@ class LiveChatController extends ChangeNotifier {
 
   Future<void> start() async {
     await _loadBlockedUsers();
+    await _loadCanModerate();
     await _loadRecentMessages();
     _subscribe();
+  }
+
+  Future<void> _loadCanModerate() async {
+    if (_client.auth.currentUser?.id == null) return;
+    try {
+      final result = await _client
+          .rpc('chat_can_moderate', params: {'p_stream_id': streamId});
+      _canModerate = result as bool? ?? false;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('LiveChatController: failed to resolve moderation status: $e');
+    }
   }
 
   static const _blockedUsersPrefsPrefix = 'chat_blocked_users_';
@@ -120,6 +141,38 @@ class LiveChatController extends ChangeNotifier {
     });
   }
 
+  /// Mutes a sender for this stream (Checkpoint 3 Phase 2) -- server-enforced
+  /// via chat_muted_users' RLS (owner/admin only) and the chat_messages
+  /// insert policy that rejects muted senders, not just this client-side
+  /// gate. Throws if the caller isn't this stream's owner or an admin tier.
+  Future<void> muteUser(String senderId) async {
+    final mutedBy = _client.auth.currentUser?.id;
+    if (mutedBy == null) throw Exception('Sign in to moderate chat.');
+    await _client.from('chat_muted_users').insert({
+      'stream_id': streamId,
+      'muted_profile_id': senderId,
+      'muted_by': mutedBy,
+    });
+  }
+
+  Future<void> unmuteUser(String senderId) async {
+    await _client
+        .from('chat_muted_users')
+        .delete()
+        .eq('stream_id', streamId)
+        .eq('muted_profile_id', senderId);
+  }
+
+  /// Deletes a message (Checkpoint 3 Phase 2) -- server-enforced via
+  /// chat_messages' delete RLS policy (owner/admin only). The local removal
+  /// here is just for the caller's own optimistic UI; every other viewer
+  /// removes it on the postgres_changes DELETE event (_handleDelete).
+  Future<void> deleteMessage(String messageId) async {
+    await _client.from('chat_messages').delete().eq('id', messageId);
+    _messages.removeWhere((m) => m.id == messageId);
+    notifyListeners();
+  }
+
   Future<void> _loadRecentMessages() async {
     try {
       final rows = await _client
@@ -152,6 +205,17 @@ class LiveChatController extends ChangeNotifier {
             value: streamId,
           ),
           callback: (payload) => _handleInsert(payload.newRecord),
+        )
+        // No stream_id filter here: Realtime can only filter DELETE events on
+        // REPLICA IDENTITY FULL tables (chat_messages isn't -- default
+        // identity only replicates the primary key on delete), so this
+        // receives every stream's deletes and _handleDelete just checks
+        // whether the id is one of ours.
+        ..onPostgresChanges(
+          event: PostgresChangeEvent.delete,
+          schema: 'public',
+          table: 'chat_messages',
+          callback: (payload) => _handleDelete(payload.oldRecord),
         )
         ..onBroadcast(
           event: 'reaction',
@@ -196,6 +260,14 @@ class LiveChatController extends ChangeNotifier {
       _messages.add(message);
     }
     notifyListeners();
+  }
+
+  void _handleDelete(Map<String, dynamic> oldRow) {
+    final id = oldRow['id'] as String?;
+    if (id == null) return;
+    final before = _messages.length;
+    _messages.removeWhere((m) => m.id == id);
+    if (_messages.length != before) notifyListeners();
   }
 
   Future<List<ChatMessageModel>> _rowsToMessages(
