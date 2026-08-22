@@ -361,6 +361,11 @@ class LiveChatController extends ChangeNotifier {
     } catch (e) {
       _messages.removeWhere((m) => m.id == id);
       notifyListeners();
+      // Rejected by chat_check_banned_keywords (Checkpoint 3 Phase 3) --
+      // surface something readable instead of the raw Postgrest exception.
+      if ('$e'.contains('banned keyword')) {
+        throw Exception("Message blocked: that language isn't allowed here.");
+      }
       rethrow;
     }
   }
