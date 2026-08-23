@@ -15,7 +15,7 @@ class SupabaseAuthService {
   Future<void> signInWithGoogle() async {
     final launched = await _client.auth.signInWithOAuth(
       OAuthProvider.google,
-      redirectTo: kIsWeb ? null : SupabaseConfig.oauthRedirectUrl,
+      redirectTo: kIsWeb ? Uri.base.origin : SupabaseConfig.oauthRedirectUrl,
     );
     if (!launched) {
       throw Exception('Could not launch the Google sign-in screen.');
