@@ -211,6 +211,41 @@ class AdminDatabaseService {
     return updated;
   }
 
+  Future<BroadcasterApplicationModel?> loadMyApplication(String profileId) async {
+    if (!_useSupabase || !_looksLikeUuid(profileId)) return null;
+    try {
+      final rows = await _client
+          .from('broadcaster_applications')
+          .select()
+          .eq('applicant_profile_id', profileId)
+          .order('submitted_at', ascending: false)
+          .limit(1);
+      if (rows.isEmpty) return null;
+      final reviewerNames = await _resolveDisplayNames(
+        rows.map((r) => r['reviewed_by'] as String?),
+      );
+      return _applicationFromRow(rows.first, reviewerNames);
+    } catch (e) {
+      debugPrint('loadMyApplication failed: $e');
+      return null;
+    }
+  }
+
+  Future<bool> checkIsProfileStreamer(String profileId) async {
+    if (!_useSupabase || !_looksLikeUuid(profileId)) return false;
+    try {
+      final row = await _client
+          .from('profiles')
+          .select('is_streamer')
+          .eq('id', profileId)
+          .maybeSingle();
+      return row?['is_streamer'] == true;
+    } catch (e) {
+      debugPrint('checkIsProfileStreamer failed: $e');
+      return false;
+    }
+  }
+
   Future<bool> deleteApplication(String id) async {
     if (_useSupabase) {
       try {

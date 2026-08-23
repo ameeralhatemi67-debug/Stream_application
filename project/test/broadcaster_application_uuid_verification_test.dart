@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/utils/id_generator.dart';
 import 'package:streamer_app/features/admin/models/broadcaster_application_model.dart';
 
@@ -48,6 +49,45 @@ void main() {
 
       expect(uuidRegex.hasMatch(app.id), isTrue);
       expect(app.status, ApplicationStatus.pending);
+    });
+
+    test('TC-AUTH-08: Non-streamer users cannot toggle Streamer Mode on', () {
+      final provider = AppProvider();
+      provider.debugSetSignedInForTests(
+        email: 'viewer@example.com',
+        name: 'Regular Viewer',
+        isStreamer: false,
+        isAdmin: false,
+      );
+
+      expect(provider.isApprovedStreamer, isFalse);
+      expect(provider.isStreamerModeEnabled, isFalse);
+
+      // Attempt to toggle Streamer Mode
+      provider.setRoleMode(true);
+      expect(provider.isStreamerModeEnabled, isFalse,
+          reason: 'Unapproved viewer must not be allowed to enable Streamer Mode');
+    });
+
+    test('TC-AUTH-09: Approved streamers can toggle Streamer Mode freely', () {
+      final provider = AppProvider();
+      provider.debugSetSignedInForTests(
+        email: 'scholar@example.com',
+        name: 'Approved Scholar',
+        isStreamer: true,
+        isAdmin: false,
+      );
+
+      expect(provider.isApprovedStreamer, isTrue);
+      expect(provider.isStreamerModeEnabled, isTrue);
+
+      // Switch to Viewer Mode
+      provider.setRoleMode(false);
+      expect(provider.isStreamerModeEnabled, isFalse);
+
+      // Switch back to Streamer Mode
+      provider.setRoleMode(true);
+      expect(provider.isStreamerModeEnabled, isTrue);
     });
   });
 }

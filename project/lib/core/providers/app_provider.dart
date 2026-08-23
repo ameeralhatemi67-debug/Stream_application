@@ -201,7 +201,7 @@ class AppProvider extends ChangeNotifier {
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
     _isGuestViewer = false;
-    _isStreamerModeEnabled = true;
+    _isStreamerModeEnabled = _isAdminFromRoles || _isApprovedStreamer;
     _googleUserEmail = user.email;
 
     final meta = user.userMetadata ?? const <String, dynamic>{};
@@ -221,6 +221,7 @@ class AppProvider extends ChangeNotifier {
       await _ensureProfileRow(user);
       await _refreshAdminRoleFromBackend();
       await _refreshPermittedAdminOrgsFromBackend();
+      await refreshMyApplicationAndStreamerStatus();
       if (_isAdminFromRoles) {
         await refreshAdminData();
       }
@@ -289,9 +290,63 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  bool _isApprovedStreamer = false;
+  bool get isApprovedStreamer =>
+      _isApprovedStreamer || _isAdminFromRoles || _permittedAdminOrgIds.isNotEmpty;
+
+  BroadcasterApplicationModel? _myApplication;
+  BroadcasterApplicationModel? get myApplication => _myApplication;
+
+  Future<void> refreshMyApplicationAndStreamerStatus() async {
+    final user = _authService.currentSession?.user;
+    if (user == null) return;
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      final isStreamer = await _adminDbService!.checkIsProfileStreamer(user.id);
+      final myApp = await _adminDbService!.loadMyApplication(user.id);
+
+      final previousApp = _myApplication;
+      _myApplication = myApp;
+
+      if (isStreamer ||
+          myApp?.status == ApplicationStatus.approved ||
+          _isAdminFromRoles ||
+          _permittedAdminOrgIds.isNotEmpty) {
+        _isApprovedStreamer = true;
+        _isStreamerModeEnabled = true;
+
+        if (previousApp != null &&
+            previousApp.status == ApplicationStatus.pending &&
+            myApp?.status == ApplicationStatus.approved) {
+          addEnhancedNotification(
+            AppNotificationModel(
+              id: 'notif_app_approved_${DateTime.now().millisecondsSinceEpoch}',
+              type: NotificationType.streamerApplicationApproved,
+              streamerId: user.id,
+              streamerName: _googleUserName ?? 'Broadcaster',
+              titleEn: '🎉 Broadcaster Application Approved!',
+              titleAr: '🎉 تم قبول طلب توثيق البث!',
+              bodyEn: 'Congratulations! Your broadcaster application was approved by the administration. Streamer Studio is now unlocked!',
+              bodyAr: 'تهانينا! تمت الموافقة على طلب التوثيق من قبل الإدارة. تم تفعيل استوديو البث المباشر لحسابك!',
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
+      } else {
+        _isApprovedStreamer = false;
+        _isStreamerModeEnabled = false;
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshMyApplicationAndStreamerStatus failed: $e');
+    }
+  }
+
   void _clearAuthState() {
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
+    _isApprovedStreamer = false;
+    _myApplication = null;
     _googleUserEmail = null;
     _googleUserName = null;
     _googleUserAvatar = null;
@@ -310,12 +365,14 @@ class AppProvider extends ChangeNotifier {
     String? name,
     bool isAdmin = false,
     bool isMasterAdmin = false,
+    bool isStreamer = true,
     List<String> permittedAdminOrgIds = const [],
   }) {
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
     _isGuestViewer = false;
-    _isStreamerModeEnabled = true;
+    _isApprovedStreamer = isStreamer || isAdmin || isMasterAdmin;
+    _isStreamerModeEnabled = isStreamer || isAdmin || isMasterAdmin;
     _googleUserEmail = email;
     _googleUserName = name ?? email;
     _isAdminFromRoles = isAdmin || isMasterAdmin;
@@ -1179,11 +1236,9 @@ class AppProvider extends ChangeNotifier {
 
   // Toggle Streamer / Viewer Mode
   void setRoleMode(bool isStreamer) {
-    // Enabling Streamer Mode requires an already-authenticated session --
-    // role changes go through the real backend now, not a local toggle that
-    // auto-assigns an identity. See doc/Audit/01_Security_Data_Protection_Audit.md
-    // VULN-AUTH-02.
-    if (isStreamer && !_isLoggedInStreamer) return;
+    // Enabling Streamer Mode requires an already-authenticated session that is
+    // an approved broadcaster or admin -- role changes go through the real backend.
+    if (isStreamer && !isApprovedStreamer) return;
     _isStreamerModeEnabled = isStreamer;
     notifyListeners();
   }

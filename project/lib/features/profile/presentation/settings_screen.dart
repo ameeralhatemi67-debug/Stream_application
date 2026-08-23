@@ -32,6 +32,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _titleController.text = provider.customLiveTitle;
     _venueController.text = provider.customLiveVenue;
     _slidesController.text = provider.customSlidesUrl;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        context.read<AppProvider>().refreshMyApplicationAndStreamerStatus();
+      }
+    });
   }
 
   @override
@@ -402,17 +407,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Widget _buildRoleModeToggleCard(BuildContext context, AppProvider provider) {
-    final isStreamer = provider.isStreamerModeEnabled;
+    final isApproved = provider.isApprovedStreamer;
+    final isStreamer = provider.isStreamerModeEnabled && isApproved;
     final isLoggedIn = provider.isLoggedInStreamer;
-    final googleEmail = provider.googleUserEmail ?? 'amir.alhatemi@gmail.com';
-    final googleName = provider.googleUserName ?? 'Amir Al-Hatemi';
+    final googleEmail = provider.googleUserEmail ?? '';
+    final googleName = provider.googleUserName ?? '';
+    final isAr = context.locale.languageCode == 'ar';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
         color: AppTheme.darkSurface1,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: isStreamer ? AppTheme.accentRed.withValues(alpha: 0.5) : AppTheme.darkBorderSubtle),
+        border: Border.all(
+          color: isStreamer
+              ? AppTheme.accentRed.withValues(alpha: 0.5)
+              : AppTheme.darkBorderSubtle,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -423,7 +434,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: isStreamer ? AppTheme.accentRed.withValues(alpha: 0.15) : AppTheme.accentBlue.withValues(alpha: 0.15),
+                  color: isStreamer
+                      ? AppTheme.accentRed.withValues(alpha: 0.15)
+                      : AppTheme.accentBlue.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Icon(
@@ -438,7 +451,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      isStreamer ? 'settings.role_streamer_active'.tr() : 'settings.role_viewer_active'.tr(),
+                      isStreamer
+                          ? 'settings.role_streamer_active'.tr()
+                          : 'settings.role_viewer_active'.tr(),
                       style: const TextStyle(
                         color: AppTheme.textPrimaryDark,
                         fontWeight: FontWeight.bold,
@@ -447,7 +462,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      isStreamer ? 'settings.role_streamer_desc'.tr() : 'settings.role_viewer_desc'.tr(),
+                      isApproved
+                          ? (isStreamer
+                              ? 'settings.role_streamer_desc'.tr()
+                              : 'settings.role_viewer_desc'.tr())
+                          : (isAr
+                              ? 'حساب مشاهد عادي (يتطلب توثيق المذيع لتفعيل وضع البث)'
+                              : 'Viewer Mode (Streamer Studio unlocked upon Broadcaster verification)'),
                       style: const TextStyle(
                         color: AppTheme.textSecondaryDark,
                         fontSize: 11,
@@ -459,9 +480,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Switch(
                 value: isStreamer,
                 activeThumbColor: AppTheme.accentRed,
-                onChanged: (val) {
-                  provider.setRoleMode(val);
-                },
+                onChanged: isApproved
+                    ? (val) {
+                        provider.setRoleMode(val);
+                      }
+                    : null,
               ),
             ],
           ),
@@ -622,21 +645,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final userEmail = provider.googleUserEmail?.toLowerCase().trim();
 
     // Look for application submitted by this user
-    BroadcasterApplicationModel? userApp;
-    if (userEmail != null && userEmail.isNotEmpty) {
+    BroadcasterApplicationModel? userApp = provider.myApplication;
+    if (userApp == null && userEmail != null && userEmail.isNotEmpty) {
       final matches = provider.applications
           .where((a) => a.email.toLowerCase().trim() == userEmail)
           .toList();
       if (matches.isNotEmpty) {
-        userApp = matches.last;
+        userApp = matches.first;
       }
-    }
-
-    if (userApp == null && provider.applications.isNotEmpty) {
-      userApp = provider.applications.firstWhere(
-        (a) => a.applicantNameEn.contains('Amir') || a.id.startsWith('app_user'),
-        orElse: () => provider.applications.first,
-      );
     }
 
     if (userApp == null) {
