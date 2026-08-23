@@ -221,14 +221,14 @@ class AppProvider extends ChangeNotifier {
 
     if (isFreshSignIn) {
       await _ensureProfileRow(user);
-      await _refreshAdminRoleFromBackend();
-      await _refreshPermittedAdminOrgsFromBackend();
-      await refreshMyApplicationAndStreamerStatus();
-      if (_isAdminFromRoles) {
-        await refreshAdminData();
-      }
-      notifyListeners();
     }
+    await _refreshAdminRoleFromBackend();
+    await _refreshPermittedAdminOrgsFromBackend();
+    await refreshMyApplicationAndStreamerStatus();
+    if (_isAdminFromRoles) {
+      await refreshAdminData();
+    }
+    notifyListeners();
   }
 
   /// Creates this user's profiles row on their very first sign-in. Existing
@@ -310,6 +310,13 @@ class AppProvider extends ChangeNotifier {
       final previousApp = _myApplication;
       _myApplication = myApp;
 
+      if (myApp == null) {
+        _applications.removeWhere((a) =>
+            a.applicantProfileId == user.id ||
+            (user.email != null &&
+                a.email.toLowerCase() == user.email!.toLowerCase()));
+      }
+
       if (isStreamer ||
           myApp?.status == ApplicationStatus.approved ||
           _isAdminFromRoles ||
@@ -337,6 +344,39 @@ class AppProvider extends ChangeNotifier {
       } else {
         _isApprovedStreamer = false;
         _isStreamerModeEnabled = false;
+
+        if (previousApp != null && myApp == null) {
+          addEnhancedNotification(
+            AppNotificationModel(
+              id: 'notif_app_removed_${DateTime.now().millisecondsSinceEpoch}',
+              type: NotificationType.systemAlert,
+              streamerId: user.id,
+              streamerName: _googleUserName ?? 'User',
+              titleEn: 'ℹ️ Application Status Update',
+              titleAr: 'ℹ️ تحديث حالة الطلب',
+              bodyEn: 'Your broadcaster application was removed. You can submit a new application anytime.',
+              bodyAr: 'تم إزالة طلب التوثيق الخاص بك. يمكنك تقديم طلب جديد في أي وقت.',
+              timestamp: DateTime.now(),
+            ),
+          );
+        } else if (previousApp != null &&
+            previousApp.status != ApplicationStatus.rejected &&
+            myApp?.status == ApplicationStatus.rejected) {
+          final reason = myApp?.adminReviewNotes ?? 'Incomplete application requirements.';
+          addEnhancedNotification(
+            AppNotificationModel(
+              id: 'notif_app_rejected_${DateTime.now().millisecondsSinceEpoch}',
+              type: NotificationType.streamerApplicationRejected,
+              streamerId: user.id,
+              streamerName: _googleUserName ?? 'User',
+              titleEn: '📋 Broadcaster Application Status Update',
+              titleAr: '📋 تحديث بخصوص طلب التوثيق الأكاديمي',
+              bodyEn: 'We could not approve your application at this time: "$reason". You are welcome to re-apply!',
+              bodyAr: 'تعذر قبول الطلب حالياً للملاحظات التالية: «$reason». يسعدنا تقديمك مجدداً بعد التعديل!',
+              timestamp: DateTime.now(),
+            ),
+          );
+        }
       }
       notifyListeners();
     } catch (e) {

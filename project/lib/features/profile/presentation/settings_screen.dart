@@ -642,18 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildApplicationSection(BuildContext context, AppProvider provider) {
     final isAr = context.locale.languageCode == 'ar';
-    final userEmail = provider.googleUserEmail?.toLowerCase().trim();
-
-    // Look for application submitted by this user
-    BroadcasterApplicationModel? userApp = provider.myApplication;
-    if (userApp == null && userEmail != null && userEmail.isNotEmpty) {
-      final matches = provider.applications
-          .where((a) => a.email.toLowerCase().trim() == userEmail)
-          .toList();
-      if (matches.isNotEmpty) {
-        userApp = matches.first;
-      }
-    }
+    final userApp = provider.myApplication;
 
     if (userApp == null) {
       return _buildBecomeBroadcasterPromoCard(context);

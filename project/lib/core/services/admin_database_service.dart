@@ -183,12 +183,24 @@ class AdminDatabaseService {
             .eq('id', id)
             .select()
             .single();
+
+        if (newStatus == ApplicationStatus.rejected) {
+          final applicantId = row['applicant_profile_id'] as String?;
+          if (applicantId != null && _looksLikeUuid(applicantId)) {
+            await _client.from('profiles').update({
+              'is_streamer': false,
+              'is_verified': false,
+            }).eq('id', applicantId);
+          }
+        }
+
         final reviewerNames = await _resolveDisplayNames([row['reviewed_by'] as String?]);
         final updated = _applicationFromRow(row, reviewerNames);
         final idx = _cachedApplications.indexWhere((a) => a.id == id);
         if (idx != -1) {
           _cachedApplications[idx] = updated;
         }
+        await _saveApplicationsToPrefs();
         return updated;
       } catch (e) {
         debugPrint('Supabase updateApplicationStatus failed, falling back: $e');
@@ -198,14 +210,13 @@ class AdminDatabaseService {
     final idx = _cachedApplications.indexWhere((a) => a.id == id);
     if (idx == -1) return null;
 
-    final current = _cachedApplications[idx];
-    final updated = current.copyWith(
+    final existing = _cachedApplications[idx];
+    final updated = existing.copyWith(
       status: newStatus,
-      adminReviewNotes: reviewNotes ?? current.adminReviewNotes,
-      reviewedBy: reviewedBy ?? current.reviewedBy ?? 'Amir Al-Hatemi (Super Admin)',
+      adminReviewNotes: reviewNotes,
+      reviewedBy: reviewedBy ?? 'Admin',
       reviewedAt: DateTime.now(),
     );
-
     _cachedApplications[idx] = updated;
     await _saveApplicationsToPrefs();
     return updated;
@@ -271,8 +282,24 @@ class AdminDatabaseService {
   Future<bool> deleteApplication(String id) async {
     if (_useSupabase) {
       try {
+        final row = await _client
+            .from('broadcaster_applications')
+            .select('applicant_profile_id')
+            .eq('id', id)
+            .maybeSingle();
+        final applicantId = row?['applicant_profile_id'] as String?;
+
         await _client.from('broadcaster_applications').delete().eq('id', id);
+
+        if (applicantId != null && _looksLikeUuid(applicantId)) {
+          await _client.from('profiles').update({
+            'is_streamer': false,
+            'is_verified': false,
+          }).eq('id', applicantId);
+        }
+
         _cachedApplications.removeWhere((a) => a.id == id);
+        await _saveApplicationsToPrefs();
         return true;
       } catch (e) {
         debugPrint('Supabase deleteApplication failed, falling back: $e');
