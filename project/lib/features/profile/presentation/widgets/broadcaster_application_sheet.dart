@@ -84,9 +84,15 @@ class _BroadcasterApplicationSheetState
     final app = widget.existingApplication;
     _selectedRole = app?.accountType ?? ApplicationAccountType.individualScholar;
 
-    _nameEnController = TextEditingController(text: app?.applicantNameEn ?? '');
-    _nameArController = TextEditingController(text: app?.applicantNameAr ?? '');
-    _emailController = TextEditingController(text: app?.email ?? '');
+    final provider = context.read<AppProvider>();
+    final defaultEmail = provider.currentUserEmail ?? provider.googleUserEmail ?? '';
+    final defaultName = provider.googleUserName ?? provider.userProfile.nameEn;
+
+    _nameEnController = TextEditingController(text: app?.applicantNameEn ?? (defaultName.isNotEmpty ? defaultName : ''));
+    _nameArController = TextEditingController(
+        text: app?.applicantNameAr ??
+            (provider.userProfile.nameAr.isNotEmpty ? provider.userProfile.nameAr : (defaultName.isNotEmpty ? defaultName : '')));
+    _emailController = TextEditingController(text: app?.email ?? defaultEmail);
     _phoneController = TextEditingController(text: app?.phone ?? '+966 ');
 
     _academicTitleEnController =

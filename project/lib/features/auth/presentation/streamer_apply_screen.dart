@@ -68,8 +68,11 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   void initState() {
     super.initState();
     final provider = context.read<AppProvider>();
-    if (provider.googleUserName != null && provider.googleUserName!.isNotEmpty) {
-      _nameController.text = provider.googleUserName!;
+    final defaultName = provider.googleUserName ?? provider.userProfile.nameEn;
+    if (defaultName.isNotEmpty) {
+      _nameController.text = defaultName;
+      final cleanHandle = defaultName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_');
+      _handleController.text = '@$cleanHandle';
     }
     if (provider.googleUserAvatar != null && provider.googleUserAvatar!.isNotEmpty) {
       _avatarPath = provider.googleUserAvatar;

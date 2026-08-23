@@ -916,11 +916,6 @@ class AppProvider extends ChangeNotifier {
     );
 
     _hasCompletedOnboarding = true;
-    if (!isAdminUser) {
-      _googleUserEmail = application.email;
-      _googleUserName = application.applicantNameEn;
-      _googleUserAvatar = application.avatarUrl;
-    }
 
     _userProfile = _userProfile.copyWith(
       nameEn: application.applicantNameEn,
