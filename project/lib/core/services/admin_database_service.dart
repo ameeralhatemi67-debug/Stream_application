@@ -1008,7 +1008,7 @@ class AdminDatabaseService {
   // ==========================================
 
   Future<List<OrgVenueBranchModel>> loadOrgVenues(String orgId) async {
-    if (!_useSupabase) return const [];
+    if (!_useSupabase || !_looksLikeUuid(orgId)) return const [];
     final rows = await _client
         .from('org_venues')
         .select()
@@ -1018,7 +1018,7 @@ class AdminDatabaseService {
   }
 
   Future<List<OrgSpeakerModel>> loadOrgSpeakers(String orgId) async {
-    if (!_useSupabase) return const [];
+    if (!_useSupabase || !_looksLikeUuid(orgId)) return const [];
     final rows = await _client
         .from('org_speakers')
         .select()
@@ -1150,7 +1150,7 @@ class AdminDatabaseService {
   /// appended at the moment its application is approved, in that same
   /// session; nothing bulk-loads every real organization on app start).
   Future<Map<String, dynamic>?> loadOrganizationProfile(String orgId) async {
-    if (!_useSupabase) return null;
+    if (!_useSupabase || !_looksLikeUuid(orgId)) return null;
     return await _client
         .from('organizations')
         .select()

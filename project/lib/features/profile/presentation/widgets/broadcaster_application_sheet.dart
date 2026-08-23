@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/utils/id_generator.dart';
 import '../../../admin/models/broadcaster_application_model.dart';
 
 /// Interactive In-App Application Sheet for Viewers applying to become
@@ -290,8 +291,7 @@ class _BroadcasterApplicationSheetState
     final capacity = int.tryParse(_seatingCapacityController.text.trim()) ?? 250;
 
     final application = BroadcasterApplicationModel(
-      id: widget.existingApplication?.id ??
-          'app_${DateTime.now().millisecondsSinceEpoch}',
+      id: widget.existingApplication?.id ?? newId(),
       accountType: _selectedRole,
       applicantNameEn: nameEn,
       applicantNameAr: nameAr,
