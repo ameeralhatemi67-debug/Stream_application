@@ -221,6 +221,9 @@ class AppProvider extends ChangeNotifier {
       await _ensureProfileRow(user);
       await _refreshAdminRoleFromBackend();
       await _refreshPermittedAdminOrgsFromBackend();
+      if (_isAdminFromRoles) {
+        await refreshAdminData();
+      }
       notifyListeners();
     }
   }
@@ -322,14 +325,24 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _initAdminDatabase() async {
-    _adminDbService ??= await AdminDatabaseService.create();
-    _applications = List.from(await _adminDbService!.loadApplications());
-    _termsAndConditions = await _adminDbService!.loadTerms();
-    _viewerAnalytics = await _adminDbService!.loadAnalytics();
-    _auditLogs = List.from(await _adminDbService!.loadAuditLogs());
-    _affiliationRequests =
-        List.from(await _adminDbService!.loadAffiliationRequests());
-    notifyListeners();
+    await refreshAdminData();
+  }
+
+  /// Reloads all admin-tier data (applications, audit logs, analytics, affiliation requests)
+  /// from the Supabase backend.
+  Future<void> refreshAdminData() async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      _applications = List.from(await _adminDbService!.loadApplications());
+      _termsAndConditions = await _adminDbService!.loadTerms();
+      _viewerAnalytics = await _adminDbService!.loadAnalytics();
+      _auditLogs = List.from(await _adminDbService!.loadAuditLogs());
+      _affiliationRequests =
+          List.from(await _adminDbService!.loadAffiliationRequests());
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshAdminData failed: $e');
+    }
   }
 
   /// Starts or restarts the 60-second polling loop that reads real
@@ -875,8 +888,9 @@ class AppProvider extends ChangeNotifier {
   /// Submits a multi-step Broadcaster / Organization verification application
   Future<void> submitBroadcasterApplication(
       BroadcasterApplicationModel application) async {
+    _adminDbService ??= await AdminDatabaseService.create();
     _applications.insert(0, application);
-    await _adminDbService?.submitApplication(application);
+    await _adminDbService!.submitApplication(application);
 
     // Record in immutable governance audit trail
     await recordOrgAuditAction(

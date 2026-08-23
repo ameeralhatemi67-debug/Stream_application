@@ -67,6 +67,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       provider.ensureRoleManagementDataLoaded();
     }
     provider.ensureChatReportsLoaded();
+    provider.refreshAdminData();
 
     final terms = provider.termsAndConditions;
 
@@ -849,6 +850,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               const SizedBox(width: 6),
               _buildAppFilterChip(
                   'admin.filter_rejected'.tr(), ApplicationStatus.rejected),
+              const SizedBox(width: 8),
+              IconButton(
+                tooltip: 'Refresh Applications',
+                icon: const Icon(Icons.refresh_rounded, color: AppTheme.accentBlue),
+                onPressed: () async {
+                  await provider.refreshAdminData();
+                  setState(() {});
+                },
+              ),
             ],
           ),
 
