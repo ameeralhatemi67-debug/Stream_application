@@ -69,3 +69,16 @@
   - Disabled the Streamer Mode toggle in Settings for unapproved users and clearly marked them as Viewer accounts.
   - Added `refreshMyApplicationAndStreamerStatus()` to automatically detect admin approvals, promote user to Streamer, unlock the studio, and trigger the in-app celebration notification (`🎉 Broadcaster Application Approved!`).
 - **Related Commits:** `5d5d410`
+
+---
+
+## 7. Broadcaster Application Deletion & Streamer Revocation with Realtime Sync
+- **Symptom:** Deleting an application on the Web Admin removed it visually from the Laptop, but the application was never deleted in Supabase and remained pending on the Phone.
+- **Root Cause:**
+  - PostgreSQL's `broadcaster_applications` table had RLS enabled but lacked a `FOR DELETE` policy, causing PostgreSQL to block all DELETE statements.
+  - `deleteStreamer` in `AppProvider` only modified the in-memory `_streamers` list without demoting `profiles.is_streamer` in Supabase.
+- **Resolution:**
+  - Created and deployed migration `20260828100000_broadcaster_applications_delete_admin.sql` granting admin-tier DELETE privileges on `broadcaster_applications`.
+  - Added `revokeStreamer(streamerIdOrProfileId)` in `AdminDatabaseService` and `AppProvider` to demote `profiles.is_streamer = false` and mark applications as rejected on backend.
+  - Connected a Supabase Realtime WebSocket listener (`user_status:$userId`) in `AppProvider` so that as soon as an Admin approves, rejects, or deletes an application on the Web, the phone instantly syncs its UI in real time.
+- **Related Commits:** `7a3eedb`
