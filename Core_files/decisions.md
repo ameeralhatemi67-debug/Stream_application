@@ -60,3 +60,11 @@ updated: 2026-08-09
   4. Embed source URL: `https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1`.
 * **Consequences:** 100% verified, seamless playback for both YouTube Live Streams and Archived Lectures (VODs) across all Android and iOS devices with zero Error 150/152/153 crashes.
 
+---
+
+## ADR-007: "Permitted Admin" / "User" Tiers Map onto Existing `org_owner`/`org_co_owner`/No-Row Scheme
+* **Status:** `ACCEPTED`
+* **Context:** `doc/Roadmap/v0.8_Admin_Upgrade.md` describes the `user_roles.role` hierarchy as `master_admin`, `admin`, `permitted_admin`, `user`. The table was already scaffolded in v0.5 (`20260821203000_initial_schema.sql`) with `role in ('master_admin', 'admin', 'org_owner', 'org_co_owner')` and no stored value for a base "user" — specifically so v0.8 "doesn't need another schema migration round" (roadmap's own words). Renaming the enum values to match the roadmap's prose literally would be that extra migration round the roadmap says to avoid, and would also erase the existing owner-vs-co-owner distinction other code paths may need later (e.g. org transfer flows, different scopes of org authority).
+* **Decision:** Keep the v0.5 enum values as-is. `org_owner` and `org_co_owner` together ARE the roadmap's "Permitted Admin" tier (two DB values instead of one, both org-scoped via `organization_id`). "User" tier is the implicit case of having no `user_roles` row at all — no code should ever query `role = 'user'`. v0.8 Checkpoint 1 Phase 1 (`20260827090000_rbac_role_hierarchy_hardening.sql`) hardens RLS around this existing shape rather than reshaping it: added `is_master_admin()` and split the old blanket admin-tier write policy into a master_admin-only policy (full control) and a plain-admin policy restricted to `org_owner`/`org_co_owner` rows only, plus a `granted_by = auth.uid()` check to keep the audit trail honest.
+* **Consequences:** No new schema migration for Checkpoint 1 Phase 1, consistent with the roadmap's own stated intent. Any future code/UI referencing "Permitted Admin" (Checkpoint 2's role-management screen, Checkpoint 3's org-scoped surface) should treat `role in ('org_owner', 'org_co_owner')` as that tier, not look for a literal `permitted_admin` string.
+
