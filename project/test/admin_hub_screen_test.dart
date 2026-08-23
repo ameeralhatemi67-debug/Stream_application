@@ -46,6 +46,46 @@ void main() {
       expect(provider.isAdminUser, isFalse);
     });
 
+    test(
+        'TC-ADMIN-01b: isMasterAdmin Is Distinct From (and Narrower Than) isAdminUser',
+        () async {
+      // A plain admin is an admin-tier user but not a master admin -- the
+      // v0.8 Checkpoint 1/2 distinction that gates master_admin-only writes
+      // (user_roles/user_permissions RLS) and the Role & Permission
+      // Management tab.
+      provider.debugSetSignedInForTests(
+        email: 'plain.admin@example.com',
+        isAdmin: true,
+      );
+      expect(provider.isAdminUser, isTrue);
+      expect(provider.isMasterAdmin, isFalse);
+
+      provider.debugSetSignedInForTests(
+        email: 'master.admin@example.com',
+        isMasterAdmin: true,
+      );
+      expect(provider.isAdminUser, isTrue);
+      expect(provider.isMasterAdmin, isTrue);
+    });
+
+    test(
+        'TC-ADMIN-08: Role Management Data Loads Safely Without a Real Supabase Backend',
+        () async {
+      // No Supabase in this widget test (see AdminDatabaseService(null)
+      // above) -- ensureRoleManagementDataLoaded must degrade to an empty
+      // roster rather than throwing, same contract as
+      // ensureOrgDataLoaded/getOrganizationVenues.
+      provider.debugSetSignedInForTests(
+        email: 'master.admin@example.com',
+        isMasterAdmin: true,
+      );
+
+      await provider.ensureRoleManagementDataLoaded();
+
+      expect(provider.roleAssignments, isEmpty);
+      expect(provider.permissionsForProfile('any-profile-id'), isEmpty);
+    });
+
     test('TC-ADMIN-02: Verification Queue Approval & Live Streamer Instantiation',
         () async {
       provider.debugSetSignedInForTests(

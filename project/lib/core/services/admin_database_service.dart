@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/admin/models/broadcaster_application_model.dart';
 import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
+import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -1170,5 +1171,163 @@ class AdminDatabaseService {
       'avatar_url': app.avatarUrl,
       'banner_url': app.bannerUrl,
     }).eq('id', profileId);
+  }
+
+  // ==========================================
+  // Role & Permission Management (v0.8 Checkpoint 2 Phase 3)
+  //
+  // user_roles/user_permissions are real-backend-only, same as
+  // org_venues/org_speakers above -- no SharedPreferences fallback. This
+  // screen's entire purpose is administering the real RLS-backed source of
+  // truth from Checkpoint 1; a fake local fallback that let you "promote"
+  // someone without touching Supabase would be actively misleading rather
+  // than a graceful degradation. Every method here returns empty/no-ops (or
+  // throws for writes) when Supabase isn't available, same contract as
+  // loadOrgVenues/upsertOrgVenue.
+  // ==========================================
+
+  /// All user_roles rows (any tier), joined with display info. Master Admin
+  /// only in practice -- the UI that calls this gates on isMasterAdmin -- but
+  /// RLS already allows any admin-tier account to SELECT every row.
+  Future<List<AdminRoleAssignmentModel>> loadAdminRoleAssignments() async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('user_roles')
+        .select()
+        .order('granted_at', ascending: false);
+    final profiles = await _resolveProfileSummaries(
+      rows.map((r) => r['profile_id'] as String?),
+    );
+    return rows.map((row) {
+      final profile = profiles[row['profile_id'] as String];
+      return AdminRoleAssignmentModel(
+        profileId: row['profile_id'] as String,
+        role: row['role'] as String,
+        organizationId: row['organization_id'] as String?,
+        grantedBy: row['granted_by'] as String?,
+        grantedAt: DateTime.parse(row['granted_at'] as String),
+        displayName: profile?['display_name_en'] as String? ??
+            profile?['email'] as String? ??
+            'Unknown user',
+        email: profile?['email'] as String?,
+        avatarUrl: profile?['avatar_url'] as String?,
+      );
+    }).toList();
+  }
+
+  /// All granted capability checkboxes, keyed by profile_id -> set of
+  /// permission_key. organization_id-scoped grants are included by key only
+  /// (this screen manages platform-wide grants; org-scoped grants are
+  /// Checkpoint 3's org-scoped surface).
+  Future<Map<String, Set<String>>> loadUserPermissionsByProfile() async {
+    if (!_useSupabase) return const {};
+    final rows = await _client.from('user_permissions').select();
+    final result = <String, Set<String>>{};
+    for (final row in rows) {
+      final profileId = row['profile_id'] as String;
+      (result[profileId] ??= {}).add(row['permission_key'] as String);
+    }
+    return result;
+  }
+
+  /// Looks up a profile by exact email for the "grant a role" search field.
+  Future<Map<String, dynamic>?> findProfileByEmail(String email) async {
+    if (!_useSupabase) return null;
+    return await _client
+        .from('profiles')
+        .select('id, email, display_name_en, avatar_url')
+        .eq('email', email.trim().toLowerCase())
+        .maybeSingle();
+  }
+
+  Future<Map<String, Map<String, dynamic>>> _resolveProfileSummaries(
+    Iterable<String?> ids,
+  ) async {
+    final uniqueIds = ids.whereType<String>().toSet();
+    if (uniqueIds.isEmpty) return {};
+    final rows = await _client
+        .from('profiles')
+        .select('id, display_name_en, email, avatar_url')
+        .inFilter('id', uniqueIds.toList());
+    return {
+      for (final row in rows) row['id'] as String: row,
+    };
+  }
+
+  /// Grants profileId the given platform-wide role (master_admin/admin) or
+  /// org-scoped role (org_owner/org_co_owner, requires organizationId).
+  /// granted_by is always the caller's own id -- RLS's with-check requires
+  /// granted_by = auth.uid() (see 20260827090000) -- so this resolves it
+  /// from the live session rather than trusting a caller-supplied value.
+  Future<void> grantUserRole({
+    required String profileId,
+    required String role,
+    String? organizationId,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final grantedBy = _client.auth.currentUser?.id;
+    if (grantedBy == null) throw Exception('Not signed in.');
+    await _client.from('user_roles').upsert(
+      {
+        'profile_id': profileId,
+        'role': role,
+        'organization_id': organizationId,
+        'granted_by': grantedBy,
+      },
+      onConflict: 'profile_id,role,organization_id',
+    );
+  }
+
+  Future<void> revokeUserRole({
+    required String profileId,
+    required String role,
+    String? organizationId,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    if (organizationId != null) {
+      await _client
+          .from('user_roles')
+          .delete()
+          .eq('profile_id', profileId)
+          .eq('role', role)
+          .eq('organization_id', organizationId);
+    } else {
+      await _client
+          .from('user_roles')
+          .delete()
+          .eq('profile_id', profileId)
+          .eq('role', role)
+          .isFilter('organization_id', null);
+    }
+  }
+
+  /// Toggles one platform-wide capability checkbox for profileId. Master
+  /// Admin only at the RLS layer (20260827100000).
+  Future<void> setUserPermission({
+    required String profileId,
+    required String capability,
+    required bool granted,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    if (granted) {
+      final grantedBy = _client.auth.currentUser?.id;
+      if (grantedBy == null) throw Exception('Not signed in.');
+      await _client.from('user_permissions').upsert(
+        {
+          'profile_id': profileId,
+          'permission_key': capability,
+          'organization_id': null,
+          'granted_by': grantedBy,
+        },
+        onConflict: 'profile_id,permission_key,organization_id',
+      );
+    } else {
+      await _client
+          .from('user_permissions')
+          .delete()
+          .eq('profile_id', profileId)
+          .eq('permission_key', capability)
+          .isFilter('organization_id', null);
+    }
   }
 }

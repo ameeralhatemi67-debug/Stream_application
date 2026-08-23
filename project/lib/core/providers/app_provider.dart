@@ -23,6 +23,7 @@ import '../../features/live_stream/models/qa_question_model.dart';
 import '../../features/admin/models/broadcaster_application_model.dart';
 import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
+import '../../features/admin/models/admin_role_assignment_model.dart';
 
 class AppProvider extends ChangeNotifier {
   List<StreamerModel> _streamers = List.from(mockStreamers);
@@ -68,6 +69,12 @@ class AppProvider extends ChangeNotifier {
   final Map<String, List<OrgVenueBranchModel>> _realOrgVenues = {};
   final Map<String, List<OrgSpeakerModel>> _realOrgSpeakers = {};
   final Set<String> _orgDataLoaded = {};
+
+  // Role & Permission Management (v0.8 Checkpoint 2 Phase 3) -- Master Admin
+  // only, see ensureRoleManagementDataLoaded/roleAssignments.
+  List<AdminRoleAssignmentModel> _roleAssignments = [];
+  Map<String, Set<String>> _userPermissionsByProfile = {};
+  bool _roleManagementLoaded = false;
 
   bool _isStreamerModeEnabled =
       false; // Toggle between Streamer and Viewer modes
@@ -1985,6 +1992,89 @@ class AppProvider extends ChangeNotifier {
     if (real != null) return real;
     final streamer = getStreamerById(orgId);
     return streamer?.affiliatedSpeakers ?? const [];
+  }
+
+  // ==========================================
+  // Role & Permission Management (v0.8 Checkpoint 2 Phase 3)
+  // ==========================================
+
+  List<AdminRoleAssignmentModel> get roleAssignments =>
+      List.unmodifiable(_roleAssignments);
+
+  Set<String> permissionsForProfile(String profileId) =>
+      _userPermissionsByProfile[profileId] ?? const {};
+
+  /// Loads every user_roles/user_permissions row for the Role & Permission
+  /// Management tab. Call from that tab's initState; safe to call
+  /// repeatedly (only hits the backend once per app session, same caching
+  /// shape as ensureOrgDataLoaded).
+  Future<void> ensureRoleManagementDataLoaded() async {
+    if (_roleManagementLoaded) return;
+    _roleManagementLoaded = true;
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      final assignments = await _adminDbService!.loadAdminRoleAssignments();
+      final permissions = await _adminDbService!.loadUserPermissionsByProfile();
+      _roleAssignments = assignments;
+      _userPermissionsByProfile = permissions;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('ensureRoleManagementDataLoaded failed: $e');
+    }
+  }
+
+  Future<void> _refreshRoleManagementData() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    _roleAssignments = await _adminDbService!.loadAdminRoleAssignments();
+    _userPermissionsByProfile =
+        await _adminDbService!.loadUserPermissionsByProfile();
+    notifyListeners();
+  }
+
+  /// Looks up a profile by exact email, for the "grant a role" search field.
+  Future<Map<String, dynamic>?> findProfileByEmail(String email) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    return _adminDbService!.findProfileByEmail(email);
+  }
+
+  /// Grants a platform-wide role (master_admin/admin). Throws on failure --
+  /// the Master-Admin-only UI that calls this shows the error directly
+  /// rather than silently no-op'ing, since a failed grant should be obvious.
+  Future<void> grantAdminRole({
+    required String profileId,
+    required String role,
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.grantUserRole(profileId: profileId, role: role);
+    await _refreshRoleManagementData();
+  }
+
+  Future<void> revokeAdminRole({
+    required String profileId,
+    required String role,
+    String? organizationId,
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.revokeUserRole(
+      profileId: profileId,
+      role: role,
+      organizationId: organizationId,
+    );
+    await _refreshRoleManagementData();
+  }
+
+  Future<void> setUserPermission({
+    required String profileId,
+    required String capability,
+    required bool granted,
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.setUserPermission(
+      profileId: profileId,
+      capability: capability,
+      granted: granted,
+    );
+    await _refreshRoleManagementData();
   }
 
   /// Best-effort Supabase write-through for org venue/speaker mutations --

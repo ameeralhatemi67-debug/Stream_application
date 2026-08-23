@@ -11,6 +11,7 @@ import '../models/broadcaster_application_model.dart';
 import '../models/terms_and_conditions_model.dart';
 import '../models/viewer_analytics_model.dart';
 import '../../profile/models/streamer_models.dart';
+import 'widgets/role_permission_management_view.dart';
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
 class AdminHubScreen extends StatefulWidget {
@@ -23,6 +24,12 @@ class AdminHubScreen extends StatefulWidget {
 class _AdminHubScreenState extends State<AdminHubScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  // Decided once in initState from the role known at navigation time (Admin
+  // Hub is only reachable after sign-in already resolved is_master_admin(),
+  // see AppProvider._refreshAdminRoleFromBackend) -- the tab count can't
+  // change out from under a live TabController, so this mirrors whichever
+  // value initState used to size it.
+  late final bool _isMasterAdminForTabs;
 
   // Search & Filter Controllers
   final TextEditingController _appSearchController = TextEditingController();
@@ -47,9 +54,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 6, vsync: this);
-
     final provider = context.read<AppProvider>();
+    _isMasterAdminForTabs = provider.isMasterAdmin;
+    _tabController =
+        TabController(length: _isMasterAdminForTabs ? 7 : 6, vsync: this);
+    if (_isMasterAdminForTabs) {
+      provider.ensureRoleManagementDataLoaded();
+    }
+
     final terms = provider.termsAndConditions;
 
     _termsEnController = TextEditingController(text: terms.termsOfServiceEn);
@@ -237,6 +249,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 const OrgManagementView(orgId: 'org_dalilk_04'),
                 _buildViewerAnalyticsTab(context, provider, isAr),
                 _buildTermsGovernanceTab(context, provider, isAr),
+                if (_isMasterAdminForTabs) const RolePermissionManagementView(),
               ],
             ),
           ),
@@ -452,6 +465,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             icon: const Icon(Icons.gavel_rounded, size: 18),
             text: 'admin.tab_terms'.tr(),
           ),
+          if (_isMasterAdminForTabs)
+            Tab(
+              icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
+              text: 'admin.tab_roles'.tr(),
+            ),
         ],
       ),
     );
