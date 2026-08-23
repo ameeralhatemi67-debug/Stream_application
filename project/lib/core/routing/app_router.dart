@@ -67,6 +67,14 @@ class AppRouter {
       // after it -- this is what actually completes that flow.
       if (path == '/welcome' && isLoggedIn) return '/feed';
 
+      // Handle OAuth callback deep link redirects (e.g. com.example.streamerapp://login-callback)
+      // gracefully without ever falling through to "Route Not Found".
+      if (state.uri.host == 'login-callback' ||
+          path == '/login-callback' ||
+          state.uri.path == '/login-callback') {
+        return isLoggedIn ? '/feed' : '/welcome';
+      }
+
       return null;
     },
     errorBuilder: (context, state) => Scaffold(
@@ -90,6 +98,12 @@ class AppRouter {
       ),
     ),
     routes: [
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/login-callback',
+        name: 'login-callback',
+        builder: (context, state) => const AppSplashScreen(),
+      ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,
         path: '/splash',
