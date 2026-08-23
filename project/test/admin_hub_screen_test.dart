@@ -112,6 +112,22 @@ void main() {
       expect(provider.permissionsForProfile('any-profile-id'), isEmpty);
     });
 
+    test(
+        'TC-ADMIN-10: Chat Moderation Queue Loads Safely Without a Real Supabase Backend (v0.8 Checkpoint 4)',
+        () async {
+      // No Supabase in this widget test -- ensureChatReportsLoaded must
+      // degrade to an empty queue rather than throwing, same contract as
+      // ensureOrgDataLoaded/ensureRoleManagementDataLoaded.
+      provider.debugSetSignedInForTests(
+        email: 'admin@example.com',
+        isAdmin: true,
+      );
+
+      await provider.ensureChatReportsLoaded();
+
+      expect(provider.chatReports, isEmpty);
+    });
+
     test('TC-ADMIN-02: Verification Queue Approval & Live Streamer Instantiation',
         () async {
       provider.debugSetSignedInForTests(

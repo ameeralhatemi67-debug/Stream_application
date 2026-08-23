@@ -6,6 +6,7 @@ import '../../features/admin/models/broadcaster_application_model.dart';
 import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
+import '../../features/admin/models/chat_report_model.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -1367,5 +1368,117 @@ class AdminDatabaseService {
           .eq('permission_key', capability)
           .isFilter('organization_id', null);
     }
+  }
+
+  // ==========================================
+  // Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1)
+  //
+  // Real-backend-only, same contract as the org/role management sections
+  // above -- chat_reports/chat_messages/chat_muted_users are v0.6 tables
+  // with no SharedPreferences shape, and this dashboard's whole point is
+  // acting on the real RLS-backed moderation queue.
+  // ==========================================
+
+  /// Every open chat_reports row, joined with the reported message's body
+  /// and both parties' display info. Admin-tier only at the RLS layer
+  /// (chat_reports_select_admin, 20260824090000) -- a non-admin caller
+  /// would just get an empty list back, not an error.
+  Future<List<ChatReportModel>> loadChatReports() async {
+    if (!_useSupabase) return const [];
+    final reportRows = await _client
+        .from('chat_reports')
+        .select()
+        .order('created_at', ascending: false);
+    if (reportRows.isEmpty) return const [];
+
+    final messageIds =
+        reportRows.map((r) => r['message_id'] as String).toSet().toList();
+    final messageRows = await _client
+        .from('chat_messages')
+        .select('id, body')
+        .inFilter('id', messageIds);
+    final bodiesById = {
+      for (final m in messageRows) m['id'] as String: m['body'] as String,
+    };
+
+    final profileIds = <String?>{};
+    for (final r in reportRows) {
+      profileIds.add(r['reporter_id'] as String?);
+      profileIds.add(r['reported_sender_id'] as String?);
+    }
+    final profiles = await _resolveProfileSummaries(profileIds);
+
+    return reportRows.map((row) {
+      final reporter = profiles[row['reporter_id'] as String];
+      final reported = profiles[row['reported_sender_id'] as String];
+      return ChatReportModel(
+        id: row['id'] as String,
+        messageId: row['message_id'] as String,
+        streamId: row['stream_id'] as String,
+        reportedSenderId: row['reported_sender_id'] as String,
+        reporterId: row['reporter_id'] as String,
+        reason: row['reason'] as String,
+        createdAt: DateTime.parse(row['created_at'] as String),
+        messageBody:
+            bodiesById[row['message_id'] as String] ?? '(message unavailable)',
+        reporterDisplayName: reporter?['display_name_en'] as String? ??
+            reporter?['email'] as String? ??
+            'Unknown user',
+        reporterEmail: reporter?['email'] as String?,
+        reportedDisplayName: reported?['display_name_en'] as String? ??
+            reported?['email'] as String? ??
+            'Unknown user',
+        reportedEmail: reported?['email'] as String?,
+      );
+    }).toList();
+  }
+
+  /// Dismisses a report with no other action -- just removes it from the
+  /// queue (chat_reports_delete_admin, 20260827120000).
+  Future<void> dismissChatReport(String reportId) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('chat_reports').delete().eq('id', reportId);
+  }
+
+  /// Deletes the reported message (propagates to every viewer's live chat
+  /// via the chat_messages postgres_changes DELETE event -- see
+  /// LiveChatController._handleDelete, no separate broadcast needed) and
+  /// resolves this report. The FK cascade on chat_reports.message_id
+  /// already removes every report referencing this message, including this
+  /// one -- the explicit delete-by-id below is just so a caller doesn't
+  /// need to know that detail, and is a no-op if the cascade beat it to it.
+  Future<void> deleteChatMessageAndResolveReport({
+    required String messageId,
+    required String reportId,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('chat_messages').delete().eq('id', messageId);
+    await _client.from('chat_reports').delete().eq('id', reportId);
+  }
+
+  /// Mutes/bans the reported sender from this one stream's chat (server-
+  /// enforced via chat_muted_users + the chat_messages insert policy that
+  /// rejects muted senders, not just a client-side gate) and resolves this
+  /// report. A duplicate mute (sender already muted on this stream) is
+  /// swallowed as a success -- the desired end state ("sender can't post
+  /// here") already holds.
+  Future<void> muteChatSenderAndResolveReport({
+    required String streamId,
+    required String senderId,
+    required String reportId,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final mutedBy = _client.auth.currentUser?.id;
+    if (mutedBy == null) throw Exception('Not signed in.');
+    try {
+      await _client.from('chat_muted_users').insert({
+        'stream_id': streamId,
+        'muted_profile_id': senderId,
+        'muted_by': mutedBy,
+      });
+    } on PostgrestException catch (e) {
+      if (e.code != '23505') rethrow; // 23505 = unique_violation
+    }
+    await _client.from('chat_reports').delete().eq('id', reportId);
   }
 }

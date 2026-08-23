@@ -24,6 +24,7 @@ import '../../features/admin/models/broadcaster_application_model.dart';
 import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
+import '../../features/admin/models/chat_report_model.dart';
 
 class AppProvider extends ChangeNotifier {
   List<StreamerModel> _streamers = List.from(mockStreamers);
@@ -81,6 +82,11 @@ class AppProvider extends ChangeNotifier {
   List<AdminRoleAssignmentModel> _roleAssignments = [];
   Map<String, Set<String>> _userPermissionsByProfile = {};
   bool _roleManagementLoaded = false;
+
+  // Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1) -- Admin tier,
+  // see ensureChatReportsLoaded/chatReports.
+  List<ChatReportModel> _chatReports = [];
+  bool _chatReportsLoaded = false;
 
   bool _isStreamerModeEnabled =
       false; // Toggle between Streamer and Viewer modes
@@ -2145,6 +2151,63 @@ class AppProvider extends ChangeNotifier {
       granted: granted,
     );
     await _refreshRoleManagementData();
+  }
+
+  // ==========================================
+  // Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1)
+  // ==========================================
+
+  List<ChatReportModel> get chatReports => List.unmodifiable(_chatReports);
+
+  /// Loads the open chat_reports queue. Call from the moderation tab's
+  /// initState; safe to call repeatedly (only hits the backend once per app
+  /// session, same caching shape as ensureRoleManagementDataLoaded).
+  Future<void> ensureChatReportsLoaded() async {
+    if (_chatReportsLoaded) return;
+    _chatReportsLoaded = true;
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _chatReports = await _adminDbService!.loadChatReports();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('ensureChatReportsLoaded failed: $e');
+    }
+  }
+
+  Future<void> _refreshChatReports() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    _chatReports = await _adminDbService!.loadChatReports();
+    notifyListeners();
+  }
+
+  Future<void> dismissChatReport(String reportId) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.dismissChatReport(reportId);
+    await _refreshChatReports();
+  }
+
+  /// Deletes the reported message -- propagates to every viewer's live chat
+  /// via chat_messages' postgres_changes DELETE event, the same mechanism
+  /// LiveChatController.deleteMessage uses; no separate broadcast needed
+  /// since Realtime replicates the DELETE to every subscribed client
+  /// regardless of which client issued it.
+  Future<void> deleteChatMessageAndResolveReport(ChatReportModel report) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.deleteChatMessageAndResolveReport(
+      messageId: report.messageId,
+      reportId: report.id,
+    );
+    await _refreshChatReports();
+  }
+
+  Future<void> muteChatSenderAndResolveReport(ChatReportModel report) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.muteChatSenderAndResolveReport(
+      streamId: report.streamId,
+      senderId: report.reportedSenderId,
+      reportId: report.id,
+    );
+    await _refreshChatReports();
   }
 
   /// Best-effort Supabase write-through for org venue/speaker mutations --

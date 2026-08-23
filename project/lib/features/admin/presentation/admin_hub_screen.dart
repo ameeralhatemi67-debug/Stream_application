@@ -10,8 +10,10 @@ import 'widgets/org_management_view.dart';
 import '../models/broadcaster_application_model.dart';
 import '../models/terms_and_conditions_model.dart';
 import '../models/viewer_analytics_model.dart';
+import '../models/chat_report_model.dart';
 import '../../profile/models/streamer_models.dart';
 import 'widgets/role_permission_management_view.dart';
+import 'widgets/chat_moderation_view.dart';
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
 class AdminHubScreen extends StatefulWidget {
@@ -56,11 +58,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     super.initState();
     final provider = context.read<AppProvider>();
     _isMasterAdminForTabs = provider.isMasterAdmin;
+    // +1 for the always-present Chat Moderation tab (Checkpoint 4 Phase 1,
+    // any admin-tier viewer), +1 more for Roles & Permissions when this
+    // viewer is also a Master Admin (Checkpoint 2 Phase 3).
     _tabController =
-        TabController(length: _isMasterAdminForTabs ? 7 : 6, vsync: this);
+        TabController(length: _isMasterAdminForTabs ? 8 : 7, vsync: this);
     if (_isMasterAdminForTabs) {
       provider.ensureRoleManagementDataLoaded();
     }
+    provider.ensureChatReportsLoaded();
 
     final terms = provider.termsAndConditions;
 
@@ -150,6 +156,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ViewerAnalyticsModel viewerAnalytics,
           List<BroadcasterApplicationModel> applications,
           TermsAndConditionsModel termsAndConditions,
+          List<ChatReportModel> chatReports,
         })>((p) => (
           isAdminUser: p.isAdminUser,
           isMasterAdmin: p.isMasterAdmin,
@@ -160,6 +167,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           viewerAnalytics: p.viewerAnalytics,
           applications: p.applications,
           termsAndConditions: p.termsAndConditions,
+          chatReports: p.chatReports,
         ));
     final isAr = context.locale.languageCode == 'ar';
     final isDesktop = MediaQuery.of(context).size.width >= 900;
@@ -249,6 +257,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 const OrgManagementView(orgId: 'org_dalilk_04'),
                 _buildViewerAnalyticsTab(context, provider, isAr),
                 _buildTermsGovernanceTab(context, provider, isAr),
+                const ChatModerationView(),
                 if (_isMasterAdminForTabs) const RolePermissionManagementView(),
               ],
             ),
@@ -400,6 +409,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   Widget _buildTabBar(AppProvider provider) {
     final pendingCount = provider.pendingApplications.length;
+    final chatReportsCount = provider.chatReports.length;
 
     return Container(
       decoration: const BoxDecoration(
@@ -464,6 +474,34 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           Tab(
             icon: const Icon(Icons.gavel_rounded, size: 18),
             text: 'admin.tab_terms'.tr(),
+          ),
+          Tab(
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.report_gmailerrorred_rounded, size: 18),
+                if (chatReportsCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentRed,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$chatReportsCount',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            text: 'admin.tab_chat_moderation'.tr(),
           ),
           if (_isMasterAdminForTabs)
             Tab(
