@@ -378,6 +378,7 @@ class AppProvider extends ChangeNotifier {
           );
         }
       }
+      _syncCurrentUserStreamerProfile();
       notifyListeners();
     } catch (e) {
       debugPrint('refreshMyApplicationAndStreamerStatus failed: $e');
@@ -438,8 +439,149 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  StreamerModel _createStreamerModelForUser({
+    required String userId,
+    BroadcasterApplicationModel? app,
+  }) {
+    final nameEn = (app != null && app.applicantNameEn.trim().isNotEmpty)
+        ? app.applicantNameEn.trim()
+        : (_googleUserName ?? _userProfile.nameEn);
+    final nameAr = (app != null && app.applicantNameAr.trim().isNotEmpty)
+        ? app.applicantNameAr.trim()
+        : (_googleUserName ?? _userProfile.nameAr);
+
+    final titleEn = (app != null &&
+            app.academicTitleEn != null &&
+            app.academicTitleEn!.trim().isNotEmpty)
+        ? app.academicTitleEn!.trim()
+        : ((app?.isOrganization == true)
+            ? 'Educational Institution & Venue'
+            : 'Lecturer & Academic Researcher');
+    final titleAr = (app != null &&
+            app.academicTitleAr != null &&
+            app.academicTitleAr!.trim().isNotEmpty)
+        ? app.academicTitleAr!.trim()
+        : ((app?.isOrganization == true)
+            ? 'مؤسسة تعليمية وقاعة'
+            : 'محاضر وباحث أكاديمي');
+
+    final orgEn = (app != null &&
+            app.institutionEn != null &&
+            app.institutionEn!.trim().isNotEmpty)
+        ? app.institutionEn!.trim()
+        : ((app?.isOrganization == true)
+            ? nameEn
+            : 'Independent Academic Broadcaster');
+    final orgAr = (app != null &&
+            app.institutionAr != null &&
+            app.institutionAr!.trim().isNotEmpty)
+        ? app.institutionAr!.trim()
+        : ((app?.isOrganization == true) ? nameAr : 'بث أكاديمي مستقل');
+
+    final avatar = (app != null && app.avatarUrl.trim().isNotEmpty)
+        ? app.avatarUrl.trim()
+        : (_googleUserAvatar ?? _userProfile.avatarUrl);
+
+    final banner = (app != null && app.bannerUrl.trim().isNotEmpty)
+        ? app.bannerUrl.trim()
+        : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4';
+
+    final bioEn = (app != null && app.bioEn.trim().isNotEmpty)
+        ? app.bioEn.trim()
+        : 'Verified academic lecturer and live broadcaster on Streamer App.';
+    final bioAr = (app != null && app.bioAr.trim().isNotEmpty)
+        ? app.bioAr.trim()
+        : 'محاضر أكاديمي معتمد ومذيع مباشر على منصة البث التفاعلي.';
+
+    final categoryId = (app != null && app.categoryId.trim().isNotEmpty)
+        ? app.categoryId.trim()
+        : 'computer_science';
+
+    final tags = (app != null && app.tags.isNotEmpty)
+        ? app.tags
+        : const ['#Live', '#Academic', '#Education'];
+
+    final venueEn = (app != null && app.venueNameEn.trim().isNotEmpty)
+        ? app.venueNameEn.trim()
+        : 'Al Khobar Innovation Hall';
+    final venueAr = (app != null && app.venueNameAr.trim().isNotEmpty)
+        ? app.venueNameAr.trim()
+        : 'قاعة الابتكار بالخبر';
+
+    final lat = (app != null && app.latitude != 0.0) ? app.latitude : 26.2871;
+    final lng = (app != null && app.longitude != 0.0) ? app.longitude : 50.2125;
+
+    final ytHandle = (app != null && app.youtubeHandle.trim().isNotEmpty)
+        ? app.youtubeHandle.trim()
+        : 'ahmedamercaller';
+
+    return StreamerModel(
+      streamerId: userId,
+      fullNameEn: nameEn,
+      fullNameAr: nameAr,
+      titleEn: titleEn,
+      titleAr: titleAr,
+      organizationEn: orgEn,
+      organizationAr: orgAr,
+      avatarUrl: avatar,
+      bannerUrl: banner,
+      bioEn: bioEn,
+      bioAr: bioAr,
+      isVerified: true,
+      followerCount: 0,
+      categoryId: categoryId,
+      tags: tags,
+      cityEn: 'Al Khobar',
+      cityAr: 'الخبر',
+      venueNameEn: venueEn,
+      venueNameAr: venueAr,
+      latitude: lat,
+      longitude: lng,
+      isCurrentlyLive: _isBroadcastingLive,
+      broadcastType:
+          _isBroadcastingLive ? _customBroadcastType : BroadcastType.offline,
+      isOrganization: app?.isOrganization ?? false,
+      youtubeHandle: ytHandle,
+      youtubeVideoId: 'dQw4w9WgXcQ',
+    );
+  }
+
+  void _syncCurrentUserStreamerProfile() {
+    final userId = _authService.currentSession?.user.id;
+    if (userId == null) return;
+
+    if (isApprovedStreamer && _isStreamerModeEnabled) {
+      final userStreamer = _createStreamerModelForUser(
+        userId: userId,
+        app: _myApplication,
+      );
+      final idx = _streamers.indexWhere((s) =>
+          s.streamerId == userId ||
+          s.streamerId == 'streamer_$userId' ||
+          (userStreamer.streamerId.isNotEmpty &&
+              s.streamerId == userStreamer.streamerId));
+      if (idx != -1) {
+        _streamers[idx] = userStreamer;
+      } else {
+        _streamers.add(userStreamer);
+      }
+    } else {
+      _streamers.removeWhere((s) =>
+          s.streamerId == userId ||
+          s.streamerId == 'streamer_$userId' ||
+          (!protectedStreamerIds.contains(s.streamerId) &&
+              _myApplication != null &&
+              s.streamerId == 'streamer_${_myApplication!.id}'));
+    }
+  }
+
   void _clearAuthState() {
     _unsubscribeFromUserStatusChanges();
+    final userId = _authService.currentSession?.user.id;
+    if (userId != null) {
+      _streamers.removeWhere((s) =>
+          s.streamerId == userId || s.streamerId == 'streamer_$userId');
+    }
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
     _isApprovedStreamer = false;
@@ -1445,6 +1587,7 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  // Custom Live Stream Configurations
   void setCustomBroadcastDetails({
     required String title,
     required String category,
@@ -1458,10 +1601,25 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void updateCustomLiveBroadcast({
+    required String title,
+    required String category,
+    required String venue,
+    required String slidesUrl,
+  }) =>
+      setCustomBroadcastDetails(
+        title: title,
+        category: category,
+        venue: venue,
+        slidesUrl: slidesUrl,
+      );
+
   void setBroadcastType(BroadcastType type) {
     _customBroadcastType = type;
+    final currentUserId = _authService.currentSession?.user.id;
     _streamers = _streamers.map((streamer) {
-      if (streamer.streamerId == 'prof_alghamdi_01') {
+      if (streamer.streamerId == 'prof_alghamdi_01' ||
+          (currentUserId != null && streamer.streamerId == currentUserId)) {
         return streamer.copyWith(
           broadcastType: streamer.isCurrentlyLive ? type : type,
         );
@@ -1474,8 +1632,9 @@ class AppProvider extends ChangeNotifier {
   Future<void> toggleBroadcasterGoLive([BuildContext? context]) async {
     _isBroadcastingLive = !_isBroadcastingLive;
 
+    final currentUserId = _authService.currentSession?.user.id;
     final orgId = _selectedBroadcastOrgId;
-    final targetStreamerId = orgId ?? 'prof_alghamdi_01';
+    final targetStreamerId = orgId ?? currentUserId ?? 'prof_alghamdi_01';
 
     // Synchronize target streamer model with the custom live data
     _streamers = _streamers.map<StreamerModel>((streamer) {

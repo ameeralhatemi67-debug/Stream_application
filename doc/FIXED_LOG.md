@@ -81,4 +81,8 @@
   - Created and deployed migration `20260828100000_broadcaster_applications_delete_admin.sql` granting admin-tier DELETE privileges on `broadcaster_applications`.
   - Added `revokeStreamer(streamerIdOrProfileId)` in `AdminDatabaseService` and `AppProvider` to demote `profiles.is_streamer = false` and mark applications as rejected on backend.
   - Connected a Supabase Realtime WebSocket listener (`user_status:$userId`) in `AppProvider` so that as soon as an Admin approves, rejects, or deletes an application on the Web, the phone instantly syncs its UI in real time.
-- **Related Commits:** `7a3eedb`
+- **Verified Status:**
+  - ✅ Connection of approval action between the user and admin to become streamer is Working.
+  - ✅ Connection of delete action between the user and admin to delete streamer is Working.
+  - ✅ Connection of rejecting a user wanting to be a streamer by the admin is working.
+- **Related Commits:** `7a3eedb`, `f364db6`
