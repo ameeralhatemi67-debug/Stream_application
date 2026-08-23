@@ -16,6 +16,7 @@ import '../../features/profile/presentation/broadcaster_profile_screen.dart';
 import '../../features/profile/presentation/settings_screen.dart';
 import '../../features/live_stream/presentation/live_broadcast_screen.dart';
 import '../../features/admin/presentation/admin_hub_screen.dart';
+import '../../features/admin/presentation/org_admin_screen.dart';
 import '../../features/splash/presentation/app_splash_screen.dart';
 
 class AppRouter {
@@ -32,6 +33,7 @@ class AppRouter {
   /// See doc/Audit/01_Security_Data_Protection_Audit.md VULN-RBAC-01.
   static const Set<String> _authGuardedPaths = {
     '/admin',
+    '/org-admin',
     '/settings',
     '/streamer-apply',
     '/application-pending',
@@ -55,6 +57,7 @@ class AppRouter {
       if (_authGuardedPaths.contains(path)) {
         if (!isLoggedIn) return '/welcome';
         if (path == '/admin' && !provider.isAdminUser) return '/feed';
+        if (path == '/org-admin' && !provider.isPermittedAdmin) return '/feed';
         return null;
       }
 
@@ -186,6 +189,12 @@ class AppRouter {
         name: 'admin',
         builder: (context, state) => const AdminHubScreen(),
       ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/org-admin',
+        name: 'orgAdmin',
+        builder: (context, state) => const OrgAdminScreen(),
+      ),
     ],
   );
 }
@@ -202,10 +211,11 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
-    final (isStreamerModeEnabled, isAdminUser, hasPendingApplications, pendingCount) =
-        context.select<AppProvider, (bool, bool, bool, int)>((p) => (
+    final (isStreamerModeEnabled, isAdminUser, isPermittedAdmin, hasPendingApplications, pendingCount) =
+        context.select<AppProvider, (bool, bool, bool, bool, int)>((p) => (
               p.isStreamerModeEnabled,
               p.isAdminUser,
+              p.isPermittedAdmin,
               p.pendingApplications.isNotEmpty,
               p.pendingApplications.length,
             ));
@@ -312,6 +322,15 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                           badge: hasPendingApplications ? '$pendingCount' : null,
                           isSelected: false,
                           onTap: () => context.push('/admin'),
+                        ),
+                      ],
+                      if (isPermittedAdmin) ...[
+                        const SizedBox(height: 4),
+                        _DesktopNavItem(
+                          icon: Icons.apartment_rounded,
+                          label: 'Org Admin',
+                          isSelected: false,
+                          onTap: () => context.push('/org-admin'),
                         ),
                       ],
 

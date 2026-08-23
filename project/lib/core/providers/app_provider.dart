@@ -59,6 +59,12 @@ class AppProvider extends ChangeNotifier {
   // master_admin-only surfaces (e.g. Checkpoint 2's role/permission
   // management tab) on top of the existing isAdminUser check.
   bool _isMasterAdminFromRoles = false;
+  // organization_id(s) this user is org_owner/org_co_owner for -- the
+  // roadmap's "Permitted Admin" tier (see ADR-007). Disjoint from
+  // isAdminUser: a Permitted Admin is not admin-tier, so AdminHubScreen's
+  // guard still excludes them -- they get the org-scoped surface in
+  // OrgAdminScreen instead (v0.8 Checkpoint 3 Phase 1).
+  List<String> _permittedAdminOrgIds = [];
   StreamSubscription<AuthState>? _authStateSub;
 
   // Org $\leftrightarrow$ Streamer Affiliation State
@@ -208,6 +214,7 @@ class AppProvider extends ChangeNotifier {
     if (isFreshSignIn) {
       await _ensureProfileRow(user);
       await _refreshAdminRoleFromBackend();
+      await _refreshPermittedAdminOrgsFromBackend();
       notifyListeners();
     }
   }
@@ -260,6 +267,19 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  /// organization_id(s) this user is org_owner/org_co_owner for, via a
+  /// direct user_roles select (RLS already lets any signed-in user read
+  /// their own rows -- no admin tier needed, unlike is_admin_tier()).
+  Future<void> _refreshPermittedAdminOrgsFromBackend() async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      _permittedAdminOrgIds = await _adminDbService!.loadPermittedAdminOrgIds();
+    } catch (e) {
+      debugPrint('Permitted admin org lookup failed: $e');
+      _permittedAdminOrgIds = [];
+    }
+  }
+
   void _clearAuthState() {
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
@@ -268,6 +288,7 @@ class AppProvider extends ChangeNotifier {
     _googleUserAvatar = null;
     _isAdminFromRoles = false;
     _isMasterAdminFromRoles = false;
+    _permittedAdminOrgIds = [];
     notifyListeners();
   }
 
@@ -280,6 +301,7 @@ class AppProvider extends ChangeNotifier {
     String? name,
     bool isAdmin = false,
     bool isMasterAdmin = false,
+    List<String> permittedAdminOrgIds = const [],
   }) {
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
@@ -289,6 +311,7 @@ class AppProvider extends ChangeNotifier {
     _googleUserName = name ?? email;
     _isAdminFromRoles = isAdmin || isMasterAdmin;
     _isMasterAdminFromRoles = isMasterAdmin;
+    _permittedAdminOrgIds = permittedAdminOrgIds;
     notifyListeners();
   }
 
@@ -366,6 +389,9 @@ class AppProvider extends ChangeNotifier {
   // Admin & Governance Getters
   bool get isAdminUser => _isLoggedInStreamer && _isAdminFromRoles;
   bool get isMasterAdmin => _isLoggedInStreamer && _isMasterAdminFromRoles;
+  List<String> get permittedAdminOrgIds =>
+      _isLoggedInStreamer ? List.unmodifiable(_permittedAdminOrgIds) : const [];
+  bool get isPermittedAdmin => permittedAdminOrgIds.isNotEmpty;
 
   List<BroadcasterApplicationModel> get applications =>
       List.unmodifiable(_applications);
@@ -1970,6 +1996,19 @@ class AppProvider extends ChangeNotifier {
     _orgDataLoaded.add(orgId);
     _adminDbService ??= await AdminDatabaseService.create();
     try {
+      // _streamers only gets a real org appended at the moment its
+      // application is approved, in that same session (see
+      // approveBroadcasterApplication) -- nothing bulk-loads every real
+      // organization on app start, so a Permitted Admin returning on a
+      // fresh session would otherwise hit "Organization not found" for
+      // their own real org even though RLS would let them manage it (v0.8
+      // Checkpoint 3 Phase 1). Seed it from the real backend if missing.
+      if (getStreamerById(orgId) == null) {
+        final orgRow = await _adminDbService!.loadOrganizationProfile(orgId);
+        if (orgRow != null) {
+          _streamers.add(_streamerFromOrganizationRow(orgRow));
+        }
+      }
       final venues = await _adminDbService!.loadOrgVenues(orgId);
       final speakers = await _adminDbService!.loadOrgSpeakers(orgId);
       if (venues.isNotEmpty) _realOrgVenues[orgId] = venues;
@@ -1978,6 +2017,37 @@ class AppProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('ensureOrgDataLoaded($orgId) failed: $e');
     }
+  }
+
+  StreamerModel _streamerFromOrganizationRow(Map<String, dynamic> row) {
+    final nameEn = row['name_en'] as String? ?? 'Organization';
+    final nameAr = row['name_ar'] as String? ?? nameEn;
+    return StreamerModel(
+      streamerId: row['id'] as String,
+      fullNameEn: nameEn,
+      fullNameAr: nameAr,
+      titleEn: 'Educational Institution',
+      titleAr: 'مؤسسة تعليمية وقاعة',
+      organizationEn: nameEn,
+      organizationAr: nameAr,
+      avatarUrl: row['avatar_url'] as String? ?? '',
+      bannerUrl: row['banner_url'] as String? ?? '',
+      bioEn: row['bio_en'] as String? ?? '',
+      bioAr: row['bio_ar'] as String? ?? '',
+      isVerified: row['is_verified'] as bool? ?? false,
+      followerCount: (row['follower_count'] as num?)?.toInt() ?? 0,
+      categoryId: row['category_id'] as String? ?? 'general',
+      tags: List<String>.from(row['tags'] as List? ?? const []),
+      cityEn: '',
+      cityAr: '',
+      venueNameEn: '',
+      venueNameAr: '',
+      latitude: 0,
+      longitude: 0,
+      isCurrentlyLive: row['is_currently_live'] as bool? ?? false,
+      isOrganization: true,
+      youtubeHandle: row['youtube_handle'] as String? ?? '',
+    );
   }
 
   List<OrgVenueBranchModel> getOrganizationVenues(String orgId) {

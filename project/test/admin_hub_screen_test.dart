@@ -69,6 +69,32 @@ void main() {
     });
 
     test(
+        'TC-ADMIN-09: isPermittedAdmin Is Org-Scoped and Disjoint From isAdminUser (v0.8 Checkpoint 3)',
+        () async {
+      // Default: no organizations owned/co-owned.
+      expect(provider.isPermittedAdmin, isFalse);
+      expect(provider.permittedAdminOrgIds, isEmpty);
+
+      // A Permitted Admin (Org Owner/Co-Owner) is scoped to their own
+      // org(s) and is NOT admin-tier -- AdminHubScreen's guard still
+      // excludes them; they get OrgAdminScreen instead.
+      provider.debugSetSignedInForTests(
+        email: 'org.owner@example.com',
+        permittedAdminOrgIds: const ['org_real_123', 'org_real_456'],
+      );
+      expect(provider.isPermittedAdmin, isTrue);
+      expect(provider.permittedAdminOrgIds,
+          containsAll(['org_real_123', 'org_real_456']));
+      expect(provider.isAdminUser, isFalse);
+      expect(provider.isMasterAdmin, isFalse);
+
+      // Signing out clears it, same as every other auth-derived flag.
+      provider.debugSetSignedInForTests(email: 'someone.else@example.com');
+      expect(provider.isPermittedAdmin, isFalse);
+      expect(provider.permittedAdminOrgIds, isEmpty);
+    });
+
+    test(
         'TC-ADMIN-08: Role Management Data Loads Safely Without a Real Supabase Backend',
         () async {
       // No Supabase in this widget test (see AdminDatabaseService(null)

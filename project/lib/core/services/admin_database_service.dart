@@ -1120,6 +1120,44 @@ class AdminDatabaseService {
       );
 
   // ==========================================
+  // Permitted Admin org scoping (v0.8 Checkpoint 3 Phase 1)
+  // ==========================================
+
+  /// organization_id(s) the signed-in user is org_owner/org_co_owner for --
+  /// RLS (user_roles_select_own_or_admin) already lets any signed-in user
+  /// read their own rows, no admin tier required, so this is a plain filtered
+  /// select rather than a SECURITY DEFINER RPC.
+  Future<List<String>> loadPermittedAdminOrgIds() async {
+    if (!_useSupabase) return const [];
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const [];
+    final rows = await _client
+        .from('user_roles')
+        .select('organization_id')
+        .eq('profile_id', userId)
+        .inFilter('role', ['org_owner', 'org_co_owner']);
+    return rows
+        .map((r) => r['organization_id'] as String?)
+        .whereType<String>()
+        .toSet()
+        .toList();
+  }
+
+  /// Core organizations row for orgId, for seeding a StreamerModel when the
+  /// org isn't already in AppProvider's in-memory _streamers list (true for
+  /// any real org on a fresh session -- _streamers only gets a real org
+  /// appended at the moment its application is approved, in that same
+  /// session; nothing bulk-loads every real organization on app start).
+  Future<Map<String, dynamic>?> loadOrganizationProfile(String orgId) async {
+    if (!_useSupabase) return null;
+    return await _client
+        .from('organizations')
+        .select()
+        .eq('id', orgId)
+        .maybeSingle();
+  }
+
+  // ==========================================
   // Real organization/profile creation on application approval
   // (Checkpoint 3 Phase 2)
   // ==========================================

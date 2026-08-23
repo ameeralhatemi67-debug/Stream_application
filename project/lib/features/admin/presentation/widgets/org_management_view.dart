@@ -14,9 +14,17 @@ import '../../../../core/utils/id_generator.dart';
 class OrgManagementView extends StatefulWidget {
   final String orgId;
 
+  /// Audit Trail reads audit_logs, which is admin-tier-only at the RLS
+  /// layer (20260821203100) -- a Permitted Admin viewer would just see an
+  /// always-empty tab, which reads as broken rather than "no history yet".
+  /// v0.8 Checkpoint 3's org-scoped surface for Permitted Admins passes
+  /// false; AdminHubScreen (admin-tier only) keeps the default true.
+  final bool showAuditTrail;
+
   const OrgManagementView({
     super.key,
     this.orgId = 'org_dalilk_04',
+    this.showAuditTrail = true,
   });
 
   @override
@@ -90,7 +98,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             _buildSpeakersSection(context, provider, speakers, langCode)
           else if (_activeSubSection == 2)
             _buildAffiliationsSection(context, provider, affiliations, langCode)
-          else
+          else if (widget.showAuditTrail)
             _buildAuditTrailSection(context, provider, auditLogs, langCode),
         ],
       ),
@@ -226,12 +234,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
           icon: Icons.mark_email_unread_rounded,
           count: affCount,
         ),
-        _buildTabBtn(
-          index: 3,
-          label: 'admin.org_audit_trail_title'.tr(),
-          icon: Icons.history_edu_rounded,
-          count: auditCount,
-        ),
+        if (widget.showAuditTrail)
+          _buildTabBtn(
+            index: 3,
+            label: 'admin.org_audit_trail_title'.tr(),
+            icon: Icons.history_edu_rounded,
+            count: auditCount,
+          ),
       ],
     );
   }

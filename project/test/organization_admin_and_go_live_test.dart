@@ -286,5 +286,31 @@ void main() {
 
       expect(find.byType(TextField), findsOneWidget); // Search bar
     });
+
+    testWidgets(
+        'TC-ORG-ADMIN-05: showAuditTrail=false hides the Audit Trail tab (Permitted Admin surface, v0.8 Checkpoint 3)',
+        (tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+
+      final db = await AdminDatabaseService.create();
+      final freshProvider = AppProvider(db);
+
+      await pumpTestApp(
+        tester,
+        const OrgManagementView(orgId: 'org_dalilk_04', showAuditTrail: false),
+        freshProvider,
+      );
+
+      // Header and other sub-tabs still render...
+      expect(find.textContaining('Dalilk 4 IELTS'), findsWidgets);
+      expect(find.byIcon(Icons.apartment_rounded), findsWidgets);
+      expect(find.byIcon(Icons.groups_rounded), findsWidgets);
+
+      // ...but Audit Trail (admin-tier-only at the RLS layer) is gone, since
+      // audit_logs would just be empty for a Permitted Admin viewer anyway.
+      expect(find.byIcon(Icons.history_edu_rounded), findsNothing);
+    });
   });
 }
