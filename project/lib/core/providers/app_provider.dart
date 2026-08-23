@@ -1149,6 +1149,9 @@ class AppProvider extends ChangeNotifier {
     _isLoggedInStreamer = false;
     _isGuestViewer = false;
     _isStreamerModeEnabled = false;
+    _isAdminFromRoles = false;
+    _isMasterAdminFromRoles = false;
+    _permittedAdminOrgIds = [];
     _googleUserEmail = null;
     _googleUserName = null;
     _googleUserAvatar = null;

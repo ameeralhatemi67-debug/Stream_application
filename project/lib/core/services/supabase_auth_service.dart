@@ -16,6 +16,9 @@ class SupabaseAuthService {
     final launched = await _client.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: kIsWeb ? Uri.base.origin : SupabaseConfig.oauthRedirectUrl,
+      queryParams: {
+        'prompt': 'select_account',
+      },
     );
     if (!launched) {
       throw Exception('Could not launch the Google sign-in screen.');
