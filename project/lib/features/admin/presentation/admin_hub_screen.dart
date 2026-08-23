@@ -31,6 +31,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   ApplicationStatus? _applicationFilter;
   String _streamerTypeFilter = 'all';
 
+  // Verification Queue Batch Selection (v0.8 Checkpoint 2 Phase 2) -- only
+  // pending applications are selectable, since approve/reject only make
+  // sense for those.
+  final Set<String> _selectedApplicationIds = {};
+
   // Terms & Conditions Edit Controllers
   late final TextEditingController _termsEnController;
   late final TextEditingController _termsArController;
@@ -718,6 +723,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       }).toList();
     }
 
+    final visiblePendingIds = applications
+        .where((a) => a.status == ApplicationStatus.pending)
+        .map((a) => a.id)
+        .toList();
+    final allVisiblePendingSelected = visiblePendingIds.isNotEmpty &&
+        visiblePendingIds.every(_selectedApplicationIds.contains);
+
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spaceXl),
       child: Column(
@@ -726,6 +738,24 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           // Filter Bar
           Row(
             children: [
+              if (visiblePendingIds.isNotEmpty)
+                Tooltip(
+                  message: allVisiblePendingSelected
+                      ? 'Deselect all pending'
+                      : 'Select all pending',
+                  child: Checkbox(
+                    value: allVisiblePendingSelected,
+                    activeColor: AppTheme.accentBlue,
+                    onChanged: (_) => setState(() {
+                      if (allVisiblePendingSelected) {
+                        _selectedApplicationIds
+                            .removeWhere(visiblePendingIds.contains);
+                      } else {
+                        _selectedApplicationIds.addAll(visiblePendingIds);
+                      }
+                    }),
+                  ),
+                ),
               Expanded(
                 child: TextField(
                   controller: _appSearchController,
@@ -765,6 +795,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   'admin.filter_rejected'.tr(), ApplicationStatus.rejected),
             ],
           ),
+
+          if (_selectedApplicationIds.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceMd),
+            _buildBatchActionBar(context, provider),
+          ],
           const SizedBox(height: AppTheme.spaceLg),
 
           // Applications List
@@ -796,6 +831,205 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildBatchActionBar(BuildContext context, AppProvider provider) {
+    final count = _selectedApplicationIds.length;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
+      decoration: BoxDecoration(
+        color: AppTheme.accentBlue.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.check_box_rounded,
+              size: 16, color: AppTheme.accentBlue),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              '$count application${count == 1 ? '' : 's'} selected',
+              style: const TextStyle(
+                color: AppTheme.textPrimaryDark,
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => setState(() => _selectedApplicationIds.clear()),
+            child: Text('Clear',
+                style: const TextStyle(color: AppTheme.textSecondaryDark)
+                    .copyWith(fontSize: 12)),
+          ),
+          const SizedBox(width: 4),
+          OutlinedButton.icon(
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.accentRed,
+              side: const BorderSide(color: AppTheme.accentRed),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            icon: const Icon(Icons.cancel_outlined, size: 15),
+            label: const Text('Reject Selected'),
+            onPressed: () => _showBulkRejectDialog(context, provider),
+          ),
+          const SizedBox(width: 8),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.accentGreen,
+              foregroundColor: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            ),
+            icon: const Icon(Icons.done_all_rounded, size: 15),
+            label: const Text('Approve Selected'),
+            onPressed: () => _showBulkApproveDialog(context, provider),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showBulkApproveDialog(BuildContext context, AppProvider provider) {
+    final ids = _selectedApplicationIds.toList();
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.darkSurface1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+          ),
+          title: const Text(
+            'Approve Selected Applications?',
+            style: TextStyle(
+                color: AppTheme.textPrimaryDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 16),
+          ),
+          content: Text(
+            'This will approve ${ids.length} pending application${ids.length == 1 ? '' : 's'}, creating a live broadcaster profile for each.',
+            style:
+                const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'settings.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMutedDark),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentGreen,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                Navigator.pop(dialogContext);
+                final result = await provider.bulkApproveBroadcasterApplications(
+                  ids,
+                  adminNotes:
+                      'Batch-verified official credentials and venue facilities.',
+                );
+                setState(() => _selectedApplicationIds.clear());
+                _showSuccessNotification(
+                    '${result.succeeded} application${result.succeeded == 1 ? '' : 's'} approved.');
+              },
+              child: Text('admin.btn_approve'.tr()),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showBulkRejectDialog(BuildContext context, AppProvider provider) {
+    final ids = _selectedApplicationIds.toList();
+    final reasonController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.darkSurface1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+          ),
+          title: Text(
+            'Reject ${ids.length} Selected Application${ids.length == 1 ? '' : 's'}?',
+            style: const TextStyle(
+                color: AppTheme.textPrimaryDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 16),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'This feedback note is sent to every selected applicant:',
+                style: TextStyle(
+                    color: AppTheme.textSecondaryDark, fontSize: 12),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+              TextField(
+                controller: reasonController,
+                maxLines: 3,
+                style: const TextStyle(
+                    color: AppTheme.textPrimaryDark, fontSize: 13),
+                decoration: InputDecoration(
+                  hintText: 'admin.reject_dialog_hint'.tr(),
+                  hintStyle: const TextStyle(
+                      color: AppTheme.textMutedDark, fontSize: 12),
+                  filled: true,
+                  fillColor: AppTheme.darkSurface2,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    borderSide:
+                        const BorderSide(color: AppTheme.darkBorderSubtle),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'settings.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMutedDark),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentRed,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () async {
+                final reason = reasonController.text.trim().isNotEmpty
+                    ? reasonController.text.trim()
+                    : 'Application rejected due to incomplete accreditation.';
+                Navigator.pop(dialogContext);
+                final result = await provider.bulkRejectBroadcasterApplications(
+                  ids,
+                  reason: reason,
+                );
+                setState(() => _selectedApplicationIds.clear());
+                _showSuccessNotification(
+                    '${result.succeeded} application${result.succeeded == 1 ? '' : 's'} rejected.');
+              },
+              child: Text('admin.btn_reject'.tr()),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -854,6 +1088,21 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (app.status == ApplicationStatus.pending)
+                Padding(
+                  padding: const EdgeInsets.only(right: 4, top: 4),
+                  child: Checkbox(
+                    value: _selectedApplicationIds.contains(app.id),
+                    activeColor: AppTheme.accentBlue,
+                    onChanged: (checked) => setState(() {
+                      if (checked == true) {
+                        _selectedApplicationIds.add(app.id);
+                      } else {
+                        _selectedApplicationIds.remove(app.id);
+                      }
+                    }),
+                  ),
+                ),
               CircleAvatar(
                 radius: 24,
                 backgroundColor: AppTheme.darkSurface2,

@@ -1866,6 +1866,58 @@ class AppProvider extends ChangeNotifier {
     return success;
   }
 
+  /// Batch approve for the verification queue's multi-select (v0.8
+  /// Checkpoint 2 Phase 2). Deliberately loops the existing single-item
+  /// approveBroadcasterApplication rather than a bulk SQL update, so every
+  /// approval still gets its real org/streamer-profile creation and
+  /// notification side effects, not just a status flip.
+  Future<({int succeeded, int failed})> bulkApproveBroadcasterApplications(
+    List<String> applicationIds, {
+    String? adminNotes,
+    BuildContext? context,
+  }) async {
+    int succeeded = 0;
+    int failed = 0;
+    for (final id in applicationIds) {
+      final success = await approveBroadcasterApplication(
+        id,
+        adminNotes: adminNotes,
+        context: context,
+      );
+      if (success) {
+        succeeded++;
+      } else {
+        failed++;
+      }
+    }
+    return (succeeded: succeeded, failed: failed);
+  }
+
+  /// Batch reject counterpart to [bulkApproveBroadcasterApplications] --
+  /// same reasoning: loops rejectBroadcasterApplication per id so every
+  /// applicant still gets their real rejection notification.
+  Future<({int succeeded, int failed})> bulkRejectBroadcasterApplications(
+    List<String> applicationIds, {
+    required String reason,
+    BuildContext? context,
+  }) async {
+    int succeeded = 0;
+    int failed = 0;
+    for (final id in applicationIds) {
+      final success = await rejectBroadcasterApplication(
+        id,
+        reason: reason,
+        context: context,
+      );
+      if (success) {
+        succeeded++;
+      } else {
+        failed++;
+      }
+    }
+    return (succeeded: succeeded, failed: failed);
+  }
+
   Future<void> updateTermsAndConditions(TermsAndConditionsModel newTerms) async {
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.saveTerms(newTerms);

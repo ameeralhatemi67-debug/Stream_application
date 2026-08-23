@@ -180,5 +180,98 @@ void main() {
       expect(provider.viewerAnalytics.totalAuditoriumRsvps, equals(580));
       expect(provider.viewerAnalytics.totalLectureBookmarks, equals(1200));
     });
+
+    test('TC-ADMIN-06: Batch Approve Applies Every Selected Application',
+        () async {
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isAdmin: true,
+      );
+
+      final batch = [
+        _buildTestApplication('app_batch_approve_01', 'Batch Applicant One'),
+        _buildTestApplication('app_batch_approve_02', 'Batch Applicant Two'),
+      ];
+      for (final app in batch) {
+        await provider.submitBroadcasterApplication(app);
+      }
+
+      final initialStreamers = provider.streamers.length;
+      final result = await provider.bulkApproveBroadcasterApplications(
+        batch.map((a) => a.id).toList(),
+        adminNotes: 'Batch-verified official credentials and venue facilities.',
+      );
+
+      expect(result.succeeded, equals(2));
+      expect(result.failed, equals(0));
+      expect(provider.streamers.length, equals(initialStreamers + 2));
+      for (final app in batch) {
+        expect(provider.approvedApplications.any((a) => a.id == app.id),
+            isTrue);
+        expect(provider.pendingApplications.any((a) => a.id == app.id),
+            isFalse);
+      }
+    });
+
+    test('TC-ADMIN-07: Batch Reject Applies the Same Feedback to Every Selected Application',
+        () async {
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isAdmin: true,
+      );
+
+      final batch = [
+        _buildTestApplication('app_batch_reject_01', 'Batch Reject One'),
+        _buildTestApplication('app_batch_reject_02', 'Batch Reject Two'),
+      ];
+      for (final app in batch) {
+        await provider.submitBroadcasterApplication(app);
+      }
+
+      const feedback = 'Batch rejected: missing accreditation documents.';
+      final result = await provider.bulkRejectBroadcasterApplications(
+        batch.map((a) => a.id).toList(),
+        reason: feedback,
+      );
+
+      expect(result.succeeded, equals(2));
+      expect(result.failed, equals(0));
+      for (final app in batch) {
+        final fetched =
+            provider.applications.firstWhere((a) => a.id == app.id);
+        expect(fetched.status, equals(ApplicationStatus.rejected));
+        expect(fetched.adminReviewNotes, equals(feedback));
+      }
+    });
   });
+}
+
+BroadcasterApplicationModel _buildTestApplication(String id, String nameEn) {
+  return BroadcasterApplicationModel(
+    id: id,
+    accountType: ApplicationAccountType.individualScholar,
+    applicantNameEn: nameEn,
+    applicantNameAr: nameEn,
+    email: '$id@test.edu.sa',
+    phone: '+966550011224',
+    academicTitleEn: 'Lecturer',
+    academicTitleAr: 'محاضر',
+    institutionEn: 'Dammam Technical Institute',
+    institutionAr: 'معهد الدمام التقني',
+    categoryId: 'computer_science',
+    tags: const ['#Coding'],
+    venueNameEn: 'Lab 4',
+    venueNameAr: 'مختبر 4',
+    latitude: 26.4200,
+    longitude: 50.0900,
+    seatingCapacity: 40,
+    youtubeChannelUrl: 'https://youtube.com/@$id',
+    youtubeHandle: id,
+    bioEn: 'Introductory programming tutorials.',
+    bioAr: 'شروحات برمجية للمبتدئين.',
+    avatarUrl: 'assets/images/default.jpg',
+    bannerUrl: 'assets/images/default_banner.jpg',
+    status: ApplicationStatus.pending,
+    submittedAt: DateTime.now(),
+  );
 }
