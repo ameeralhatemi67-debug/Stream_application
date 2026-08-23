@@ -246,6 +246,28 @@ class AdminDatabaseService {
     }
   }
 
+  Future<bool> revokeStreamer(String streamerIdOrProfileId) async {
+    if (!_useSupabase) return false;
+    try {
+      final cleanId = streamerIdOrProfileId.replaceFirst('streamer_', '');
+      if (_looksLikeUuid(cleanId)) {
+        await _client.from('profiles').update({
+          'is_streamer': false,
+          'is_verified': false,
+        }).eq('id', cleanId);
+
+        await _client.from('broadcaster_applications').update({
+          'status': 'rejected',
+          'admin_review_notes': 'Streamer privileges revoked by administration.',
+        }).eq('applicant_profile_id', cleanId);
+      }
+      return true;
+    } catch (e) {
+      debugPrint('Supabase revokeStreamer failed: $e');
+      return false;
+    }
+  }
+
   Future<bool> deleteApplication(String id) async {
     if (_useSupabase) {
       try {

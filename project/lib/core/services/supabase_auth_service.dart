@@ -27,7 +27,21 @@ class SupabaseAuthService {
 
   Stream<AuthState> get onAuthStateChange => _client.auth.onAuthStateChange;
 
-  Session? get currentSession => _client.auth.currentSession;
+  Session? get currentSession {
+    try {
+      if (!Supabase.instance.isInitialized) return null;
+      return _client.auth.currentSession;
+    } catch (_) {
+      return null;
+    }
+  }
 
-  Future<void> signOut() => _client.auth.signOut();
+  Future<void> signOut() async {
+    try {
+      if (!Supabase.instance.isInitialized) return;
+      await _client.auth.signOut();
+    } catch (e) {
+      debugPrint('Supabase sign-out failed: $e');
+    }
+  }
 }

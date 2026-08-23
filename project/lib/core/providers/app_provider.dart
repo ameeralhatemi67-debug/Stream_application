@@ -217,6 +217,8 @@ class AppProvider extends ChangeNotifier {
 
     notifyListeners();
 
+    _subscribeToUserStatusChanges(user.id);
+
     if (isFreshSignIn) {
       await _ensureProfileRow(user);
       await _refreshAdminRoleFromBackend();
@@ -342,7 +344,62 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  RealtimeChannel? _userStatusChannel;
+
+  void _subscribeToUserStatusChanges(String userId) {
+    _unsubscribeFromUserStatusChanges();
+    try {
+      if (!Supabase.instance.isInitialized) return;
+      final client = Supabase.instance.client;
+      _userStatusChannel = client
+          .channel('user_status:$userId')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'broadcaster_applications',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'applicant_profile_id',
+              value: userId,
+            ),
+            callback: (payload) {
+              debugPrint('Realtime: user application changed ($payload)');
+              refreshMyApplicationAndStreamerStatus();
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'profiles',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'id',
+              value: userId,
+            ),
+            callback: (payload) {
+              debugPrint('Realtime: user profile changed ($payload)');
+              refreshMyApplicationAndStreamerStatus();
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      debugPrint('Realtime user status channel subscription failed: $e');
+    }
+  }
+
+  void _unsubscribeFromUserStatusChanges() {
+    if (_userStatusChannel != null) {
+      try {
+        if (Supabase.instance.isInitialized) {
+          Supabase.instance.client.removeChannel(_userStatusChannel!);
+        }
+      } catch (_) {}
+      _userStatusChannel = null;
+    }
+  }
+
   void _clearAuthState() {
+    _unsubscribeFromUserStatusChanges();
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
     _isApprovedStreamer = false;
@@ -774,11 +831,23 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  bool deleteStreamer(String streamerId) {
+  Future<bool> deleteStreamer(String streamerId) async {
     if (protectedStreamerIds.contains(streamerId)) {
       return false; // Protected original streamer cannot be deleted
     }
     _streamers.removeWhere((s) => s.streamerId == streamerId);
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.revokeStreamer(streamerId);
+
+    // If revoking self, downgrade state
+    final currentUserId = _authService.currentSession?.user.id;
+    if (currentUserId != null &&
+        (streamerId == currentUserId ||
+            streamerId == 'streamer_$currentUserId')) {
+      _isApprovedStreamer = false;
+      _isStreamerModeEnabled = false;
+      await refreshMyApplicationAndStreamerStatus();
+    }
     notifyListeners();
     return true;
   }

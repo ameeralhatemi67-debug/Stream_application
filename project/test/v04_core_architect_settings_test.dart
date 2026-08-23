@@ -85,13 +85,13 @@ void main() {
       expect(enNav.keys.toSet(), equals(arNav.keys.toSet()));
     });
 
-    test('TC-V04-SET-05: Streamer CRUD and Protected Original 5 Verification', () {
+    test('TC-V04-SET-05: Streamer CRUD and Protected Original 5 Verification', () async {
       expect(provider.streamers.length, equals(5));
       expect(provider.isProtectedStreamer('prof_alghamdi_01'), isTrue);
       expect(provider.isProtectedStreamer('prof_otaibi_02'), isTrue);
 
       // Cannot delete original protected streamers
-      final deleteProtectedResult = provider.deleteStreamer('prof_alghamdi_01');
+      final deleteProtectedResult = await provider.deleteStreamer('prof_alghamdi_01');
       expect(deleteProtectedResult, isFalse);
       expect(provider.streamers.length, equals(5));
 
@@ -132,7 +132,7 @@ void main() {
       expect(updated?.fullNameEn, equals('Dr. Fahad M. Al-Mutairi'));
 
       // Delete custom streamer
-      final deleteResult = provider.deleteStreamer('custom_dr_fahad');
+      final deleteResult = await provider.deleteStreamer('custom_dr_fahad');
       expect(deleteResult, isTrue);
       expect(provider.streamers.length, equals(5));
     });

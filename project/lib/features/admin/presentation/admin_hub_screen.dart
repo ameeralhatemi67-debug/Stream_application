@@ -1766,8 +1766,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           icon: const Icon(Icons.delete_outline_rounded,
                               size: 16, color: AppTheme.accentRed),
                           tooltip: 'Delete Streamer',
-                          onPressed: () {
-                            provider.deleteStreamer(s.streamerId);
+                          onPressed: () async {
+                            await provider.deleteStreamer(s.streamerId);
                             _showSuccessNotification(
                                 'Broadcaster profile removed.');
                           },
