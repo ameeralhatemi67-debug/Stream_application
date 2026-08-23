@@ -55,3 +55,17 @@
   - Replaced legacy string ID generation with `newId()` (RFC4122 v4 UUID).
   - Added `_looksLikeUuid()` guards to `loadOrgVenues`, `loadOrgSpeakers`, and `loadOrganizationProfile` in `AdminDatabaseService` to prevent 22P02 errors on seed mock IDs.
 - **Related Commits:** `6c6070b`
+
+---
+
+## 6. Streamer Mode Role-Gating & Live Application Status Sync
+- **Symptom:** Non-streamer viewers had access to the "Broadcaster / Streamer Mode Active" toggle, and applicants' phones remained stuck on "Application Under Review" after admin approval.
+- **Root Cause:**
+  - `_applySessionUser` unconditionally set `_isStreamerModeEnabled = true` for all authenticated users upon sign-in.
+  - `settings_screen.dart` used a mock fallback (`firstWhere`) instead of retrieving the active user's real Supabase application record.
+- **Resolution:**
+  - Added `isApprovedStreamer` gate (`_isApprovedStreamer || _isAdminFromRoles || _permittedAdminOrgIds.isNotEmpty`) in `AppProvider`.
+  - Added `loadMyApplication(profileId)` and `checkIsProfileStreamer(profileId)` in `AdminDatabaseService`.
+  - Disabled the Streamer Mode toggle in Settings for unapproved users and clearly marked them as Viewer accounts.
+  - Added `refreshMyApplicationAndStreamerStatus()` to automatically detect admin approvals, promote user to Streamer, unlock the studio, and trigger the in-app celebration notification (`🎉 Broadcaster Application Approved!`).
+- **Related Commits:** `5d5d410`
