@@ -125,6 +125,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         AppProvider,
         ({
           bool isAdminUser,
+          bool isMasterAdmin,
           String? googleUserName,
           String? googleUserEmail,
           List<BroadcasterApplicationModel> pendingApplications,
@@ -134,6 +135,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           TermsAndConditionsModel termsAndConditions,
         })>((p) => (
           isAdminUser: p.isAdminUser,
+          isMasterAdmin: p.isMasterAdmin,
           googleUserName: p.googleUserName,
           googleUserEmail: p.googleUserEmail,
           pendingApplications: p.pendingApplications,
@@ -176,7 +178,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     color: AppTheme.accentRed, size: 54),
                 const SizedBox(height: AppTheme.spaceMd),
                 const Text(
-                  'Super Admin Access Required',
+                  'Admin Access Required',
                   style: TextStyle(
                     color: AppTheme.textPrimaryDark,
                     fontSize: 18,
@@ -185,7 +187,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
                 const Text(
-                  'Please sign in with an authorized Super Admin account (e.g. polkgvd2@gmail.com, ameeralhatemi67@gmail.com).',
+                  'Your account does not have Admin or Master Admin access. Ask a Master Admin to grant your account a role.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: AppTheme.textSecondaryDark,
@@ -213,7 +215,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       body: Column(
         children: [
           // Top Admin Header
-          _buildAdminHeader(context, provider, isAr, isDesktop),
+          _buildAdminHeader(context, provider, isAr, isDesktop,
+              isMasterAdmin: provider.isMasterAdmin),
 
           // Horizontal Navigation Tabs
           _buildTabBar(provider),
@@ -238,7 +241,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   }
 
   Widget _buildAdminHeader(BuildContext context, AppProvider provider,
-      bool isAr, bool isDesktop) {
+      bool isAr, bool isDesktop,
+      {required bool isMasterAdmin}) {
+    final tierLabel = isMasterAdmin ? 'MASTER ADMIN' : 'ADMIN';
+    final tierColor =
+        isMasterAdmin ? AppTheme.accentRed : AppTheme.accentBlue;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceXl,
@@ -291,21 +298,21 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentRed.withValues(alpha: 0.2),
+                        color: tierColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                            color: AppTheme.accentRed.withValues(alpha: 0.6)),
+                            color: tierColor.withValues(alpha: 0.6)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.shield_rounded,
-                              size: 11, color: AppTheme.accentRed),
-                          SizedBox(width: 4),
+                              size: 11, color: tierColor),
+                          const SizedBox(width: 4),
                           Text(
-                            'SUPER ADMIN',
+                            tierLabel,
                             style: TextStyle(
-                              color: AppTheme.accentRed,
+                              color: tierColor,
                               fontSize: 9.5,
                               fontWeight: FontWeight.w900,
                             ),

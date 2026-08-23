@@ -53,6 +53,11 @@ class AppProvider extends ChangeNotifier {
   // Admin status now comes from the user_roles table (via the is_admin_tier()
   // RPC) instead of a hardcoded email allowlist -- see _refreshAdminRoleFromBackend.
   bool _isAdminFromRoles = false;
+  // Distinguishes master_admin from plain admin within is_admin_tier() (via
+  // the is_master_admin() RPC -- see v0.8 Checkpoint 1 Phase 1). Used to gate
+  // master_admin-only surfaces (e.g. Checkpoint 2's role/permission
+  // management tab) on top of the existing isAdminUser check.
+  bool _isMasterAdminFromRoles = false;
   StreamSubscription<AuthState>? _authStateSub;
 
   // Org $\leftrightarrow$ Streamer Affiliation State
@@ -230,13 +235,21 @@ class AppProvider extends ChangeNotifier {
   /// Source of truth for admin status: the user_roles table, via the
   /// is_admin_tier() SECURITY DEFINER RPC (see supabase/migrations). Replaces
   /// the hardcoded _superAdminEmails allowlist removed in this refactor.
+  /// Also resolves is_master_admin() so the UI can tell master_admin and
+  /// plain admin apart (both pass isAdminUser; only the former passes
+  /// isMasterAdmin -- see ADR-007).
   Future<void> _refreshAdminRoleFromBackend() async {
     try {
-      final result = await Supabase.instance.client.rpc('is_admin_tier');
-      _isAdminFromRoles = result == true;
+      final results = await Future.wait([
+        Supabase.instance.client.rpc('is_admin_tier'),
+        Supabase.instance.client.rpc('is_master_admin'),
+      ]);
+      _isAdminFromRoles = results[0] == true;
+      _isMasterAdminFromRoles = results[1] == true;
     } catch (e) {
       debugPrint('Admin role check failed: $e');
       _isAdminFromRoles = false;
+      _isMasterAdminFromRoles = false;
     }
   }
 
@@ -247,6 +260,7 @@ class AppProvider extends ChangeNotifier {
     _googleUserName = null;
     _googleUserAvatar = null;
     _isAdminFromRoles = false;
+    _isMasterAdminFromRoles = false;
     notifyListeners();
   }
 
@@ -258,6 +272,7 @@ class AppProvider extends ChangeNotifier {
     required String email,
     String? name,
     bool isAdmin = false,
+    bool isMasterAdmin = false,
   }) {
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
@@ -265,7 +280,8 @@ class AppProvider extends ChangeNotifier {
     _isStreamerModeEnabled = true;
     _googleUserEmail = email;
     _googleUserName = name ?? email;
-    _isAdminFromRoles = isAdmin;
+    _isAdminFromRoles = isAdmin || isMasterAdmin;
+    _isMasterAdminFromRoles = isMasterAdmin;
     notifyListeners();
   }
 
@@ -342,6 +358,7 @@ class AppProvider extends ChangeNotifier {
 
   // Admin & Governance Getters
   bool get isAdminUser => _isLoggedInStreamer && _isAdminFromRoles;
+  bool get isMasterAdmin => _isLoggedInStreamer && _isMasterAdminFromRoles;
 
   List<BroadcasterApplicationModel> get applications =>
       List.unmodifiable(_applications);
