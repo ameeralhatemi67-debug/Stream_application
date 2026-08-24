@@ -717,7 +717,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 style:
                     const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
               ),
-              onPressed: () => BroadcasterApplicationSheet.show(context),
+              onPressed: () => context.push('/streamer-apply'),
             ),
           ),
         ],
@@ -889,8 +889,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : 'Edit Application',
                     style: const TextStyle(fontSize: 11.5),
                   ),
-                  onPressed: () => BroadcasterApplicationSheet.show(context,
-                      application: app),
+                  onPressed: () => context.push('/streamer-apply'),
                 ),
               ),
               const SizedBox(width: AppTheme.spaceSm),

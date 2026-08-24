@@ -1,0 +1,1 @@
+{"nodes": [{"id": "$graphify-root$_supabase_migrations_20260828090000_chat_messages_public_read_sql", "label": "20260828090000_chat_messages_public_read.sql", "file_type": "code", "source_file": "supabase/migrations/20260828090000_chat_messages_public_read.sql", "source_location": null}], "edges": []}

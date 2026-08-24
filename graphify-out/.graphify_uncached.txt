@@ -1,0 +1,151 @@
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\.serena\project.yml
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\CLAUDE.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\AUTH_ONBOARDING_ORG_MANAGEMENT_SPEC.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\Desgin.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\README.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\STATUS.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\agents\01_lead_architect_agent.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\agents\02_ui_ux_design_specialist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\agents\03_youtube_streaming_specialist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\agents\04_gis_spatial_map_specialist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\decisions.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\extracted_design\streamer-app-design\DESIGN.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\Core_files\progres.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\PRODUCT.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\Drawing 2026-07-30 10.07.59.excalidraw.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\00_Audit_Master_Plan.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\01_Security_Data_Protection_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\02_Permissions_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\03_Saudi_Legal_And_Store_Compliance_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\04_Missing_Incomplete_Features_Inventory.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\05_Performance_Optimization_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\06a_Admin_Side_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\06b_Streamer_Side_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\06c_Organization_Side_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\06d_Viewer_Side_Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\07_Platform_Build_Readiness.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Audit\08_Consolidated_Findings_And_Publishing_Checklist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\FIXED_LOG.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\LOG.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Manual_Testing_Checklist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\00_Roadmap_Overview.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\v0.5_Backend_Foundation.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\v0.6_Live_Chat_Realtime_Engagement.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\v0.7_Mobile_Streaming_Android.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\v0.8_Admin_Upgrade.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\v0.9_Settings_Legal_Account_Deletion.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\v1.0_Onboarding_Store_Submission_Prep.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Roadmap\v1.1_iOS_Integration.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\Notifications.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\Organization_featrue_brainStorming.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\Performance, Rendering & Resource Optimization Report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\README.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\Security, Vulnerability & Platform Hardening Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\User Flow & UX Ergonomics Comprehensive Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\fix bug list.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\more thing to add.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\new feature list.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\roadmap to publishing.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\roadmap_admin_hub_and_broadcaster_auth.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\doc\Vault\technical_specs_admin_hub_and_governance.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\README.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\analysis_options.yaml
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\Ahmed_Amer_YouTube.html
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\devtools_options.yaml
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\Main_Docs\00_Project_Overview.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\Main_Docs\01_Project_Objectives.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\Main_Docs\02_Design_System.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\Main_Docs\03_Data_Schemas.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\Main_Docs\Cloud Streaming Project Viability Research.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\Main_Docs\Complete UI-UX & Web Design Master Report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\Main_Docs\MVP Roadmap.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\agent_group_research.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\deep_search_map_bug_context.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\design_gis_critic_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\flutter_code_critic_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\line_by_line_debugger_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\map_engine_expert_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\map_optimization_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\stream_demo_bug.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\svg_geometry_trimmer_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\technical_documentation_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\tile_provider_inspector_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\critic\visual_ux_alternative_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\laptop_stream_setup_guide.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\documents\research\Flutter Map Performance Bug Solutions.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\pubspec.yaml
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\reports\map_optimization.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\Spatial Map & GIS Specialist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\Streaming, Media & Real-Time Engine Specialist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\Team Lead & Core Architect.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\UI-UX Localization and Safety Specialist.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\documents\critic\agent_group_research.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\documents\critic\deep_search_map_bug_context.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\documents\critic\line_by_line_debugger_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\documents\critic\map_engine_expert_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\documents\critic\svg_geometry_trimmer_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\documents\critic\tile_provider_inspector_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\documents\critic\visual_ux_alternative_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\questions\user_questions.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\reports\core_architect_v0.1_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\reports\gis_specialist_v0.1_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\reports\map_optimization.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\reports\streaming_specialist_v0.1_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\reports\ui_ux_specialist_v0.1_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\reports\v0.1_master_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\team.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\testAndErrors\core_architect_tests.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\testAndErrors\gis_specialist_tests.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\testAndErrors\streaming_specialist_tests.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\testAndErrors\ui_ux_specialist_tests.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\team\testAndErrors\v0.1_test_execution_report.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\web\index.html
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\windows\CMakeLists.txt
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\windows\flutter\CMakeLists.txt
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\windows\runner\CMakeLists.txt
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\Admin Hub, Multi-Tier Auth & Platform Governance Architecture.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\Arabic Localization, RTL Ergonomics & Missing Translations Comprehensive Audit.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\Automated Bidirectional Arabic-English Data Translation & Transliteration Architecture.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\Cloud Streaming Project Viability Research - Arabic with new daiagrams.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\Cloud Streaming Project Viability Research - Arabic.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\Cloud Streaming Project Viability Research with diagrams.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\Image Cropping, Anti-Background Clamping & Multi-Platform Viewport Systems - Comprehensive Master Research.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\research docs\YouTube Embedded Streaming & Mobile WebView Errors (150-152-153) - Comprehensive Research & Solutions.md
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\10th.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\121.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\123.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\234.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\3ird.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\4th.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\5th.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\6th.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\7th.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\8th.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\9th.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\First.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\diagrams\second.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\android\app\src\main\res\mipmap-hdpi\ic_launcher.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\android\app\src\main\res\mipmap-mdpi\ic_launcher.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\android\app\src\main\res\mipmap-xhdpi\ic_launcher.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\android\app\src\main\res\mipmap-xxhdpi\ic_launcher.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\android\app\src\main\res\mipmap-xxxhdpi\ic_launcher.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Ahmed_Amer_YouTube_files\Ahmed_Amer_banner.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Ahmed_Amer_YouTube_files\Ahmed_Amer_profile.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Amir_Alhatemi\amir_card_pic.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Amir_Alhatemi\amir_person_pic.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\BidonWaraq\BidonWaraq_banner.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\BidonWaraq\BidonWaraq_profile.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Dalilak\OrgBanner.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Dalilak\OrgMainProfile.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Dalilak\profile1.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Dalilak\profile2.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\Dalilak\profile3.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\quran\Quran_banner.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\images\quran\Quran_profile.jpg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\assets\map\gadm41_SAU_2.svg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\gadm41_SAU_2.svg
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\web\favicon.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\web\icons\Icon-192.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\web\icons\Icon-512.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\web\icons\Icon-maskable-192.png
+C:\Users\User\Documents\Amir Ob\projects\Ideas\Current\Streamer_app\project\web\icons\Icon-maskable-512.png

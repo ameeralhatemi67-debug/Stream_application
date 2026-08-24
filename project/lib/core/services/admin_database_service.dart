@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -12,6 +13,7 @@ import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_speaker_model.dart';
+import '../../features/profile/models/streamer_models.dart';
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -126,6 +128,30 @@ class AdminDatabaseService {
     _cachedApplications = _createInitialSeedApplications();
     await _saveApplicationsToPrefs();
     return List.unmodifiable(_cachedApplications);
+  }
+
+  /// Uploads binary image bytes to the Supabase Storage 'streamer-assets' bucket
+  /// and returns the public CDN URL. Falls back to null if offline.
+  Future<String?> uploadStreamerAsset({
+    required String fileName,
+    required Uint8List fileBytes,
+    String contentType = 'image/jpeg',
+  }) async {
+    if (!_useSupabase) return null;
+    try {
+      final safeName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
+      final path = 'applications/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+      await _client.storage.from('streamer-assets').uploadBinary(
+        path,
+        fileBytes,
+        fileOptions: FileOptions(contentType: contentType, upsert: true),
+      );
+      final publicUrl = _client.storage.from('streamer-assets').getPublicUrl(path);
+      return publicUrl;
+    } catch (e) {
+      debugPrint('uploadStreamerAsset failed: $e');
+      return null;
+    }
   }
 
   Future<void> submitApplication(BroadcasterApplicationModel application) async {
@@ -258,25 +284,76 @@ class AdminDatabaseService {
   }
 
   Future<bool> revokeStreamer(String streamerIdOrProfileId) async {
-    if (!_useSupabase) return false;
-    try {
-      final cleanId = streamerIdOrProfileId.replaceFirst('streamer_', '');
-      if (_looksLikeUuid(cleanId)) {
-        await _client.from('profiles').update({
-          'is_streamer': false,
-          'is_verified': false,
-        }).eq('id', cleanId);
+    if (_useSupabase) {
+      try {
+        final cleanId =
+            streamerIdOrProfileId.replaceFirst('streamer_', '').trim();
+        if (_looksLikeUuid(cleanId)) {
+          await _client.from('profiles').update({
+            'is_streamer': false,
+            'is_verified': false,
+          }).eq('id', cleanId);
 
-        await _client.from('broadcaster_applications').update({
-          'status': 'rejected',
-          'admin_review_notes': 'Streamer privileges revoked by administration.',
-        }).eq('applicant_profile_id', cleanId);
+          await _client.from('broadcaster_applications').update({
+            'status': 'rejected',
+            'admin_review_notes':
+                'Streamer privileges revoked by administration.',
+          }).eq('applicant_profile_id', cleanId);
+
+          try {
+            await _client
+                .from('organizations')
+                .delete()
+                .eq('owner_profile_id', cleanId);
+            await _client.from('organizations').delete().eq('id', cleanId);
+          } catch (_) {}
+        } else {
+          final appRow = await _client
+              .from('broadcaster_applications')
+              .select('id, applicant_profile_id')
+              .or('id.eq.$cleanId,applicant_profile_id.eq.$cleanId')
+              .maybeSingle();
+
+          final applicantProfileId = appRow?['applicant_profile_id'] as String?;
+          final actualAppId = appRow?['id'] as String? ?? cleanId;
+
+          if (applicantProfileId != null && _looksLikeUuid(applicantProfileId)) {
+            await _client.from('profiles').update({
+              'is_streamer': false,
+              'is_verified': false,
+            }).eq('id', applicantProfileId);
+
+            await _client.from('broadcaster_applications').update({
+              'status': 'rejected',
+              'admin_review_notes':
+                  'Streamer privileges revoked by administration.',
+            }).eq('id', actualAppId);
+
+            try {
+              await _client
+                  .from('organizations')
+                  .delete()
+                  .eq('owner_profile_id', applicantProfileId);
+            } catch (_) {}
+          }
+
+          try {
+            await _client.from('organizations').delete().eq('id', cleanId);
+          } catch (_) {}
+        }
+        return true;
+      } catch (e) {
+        debugPrint('Supabase revokeStreamer failed: $e');
+        return false;
       }
-      return true;
-    } catch (e) {
-      debugPrint('Supabase revokeStreamer failed: $e');
-      return false;
     }
+
+    _cachedApplications.removeWhere((a) =>
+        a.id == streamerIdOrProfileId ||
+        a.applicantProfileId == streamerIdOrProfileId ||
+        'streamer_${a.id}' == streamerIdOrProfileId);
+    await _saveApplicationsToPrefs();
+    return true;
   }
 
   Future<bool> deleteApplication(String id) async {
@@ -296,6 +373,10 @@ class AdminDatabaseService {
             'is_streamer': false,
             'is_verified': false,
           }).eq('id', applicantId);
+
+          try {
+            await _client.from('organizations').delete().eq('owner_profile_id', applicantId);
+          } catch (_) {}
         }
 
         _cachedApplications.removeWhere((a) => a.id == id);
@@ -1294,6 +1375,139 @@ class AdminDatabaseService {
       'avatar_url': app.avatarUrl,
       'banner_url': app.bannerUrl,
     }).eq('id', profileId);
+  }
+
+  /// Fetches all verified broadcasters and organizations from Supabase public views/tables.
+  /// Used to populate Discovery feed and Spatial Map on cold-start and sync across devices.
+  Future<List<StreamerModel>> loadVerifiedStreamersFromBackend() async {
+    if (!_useSupabase) return const [];
+    final List<StreamerModel> results = [];
+
+    // 1. Fetch verified individual scholars from streamer_public_profiles
+    try {
+      final streamerRows = await _client
+          .from('streamer_public_profiles')
+          .select()
+          .order('display_name_en', ascending: true);
+
+      for (final row in streamerRows) {
+        final id = row['id'] as String;
+        final nameEn = (row['display_name_en'] as String?) ?? 'Academic Scholar';
+        final nameAr = (row['display_name_ar'] as String?) ?? nameEn;
+        final avatar = (row['avatar_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
+        final banner = (row['banner_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        final bioEn = (row['bio_en'] as String?) ?? '';
+        final bioAr = (row['bio_ar'] as String?) ?? '';
+        final titleEn = (row['title_en'] as String?) ?? 'Academic Scholar';
+        final titleAr = (row['title_ar'] as String?) ?? 'محاضر وباحث أكاديمي';
+        final categoryId = (row['category_id'] as String?) ?? 'general_edu';
+        final tagsList = (row['tags'] as List<dynamic>?)?.map((t) => t.toString()).toList() ?? const <String>[];
+        final cityEn = (row['city_en'] as String?) ?? 'Al Khobar';
+        final cityAr = (row['city_ar'] as String?) ?? 'الخبر';
+        final venueEn = (row['venue_name_en'] as String?) ?? 'Academic Auditorium';
+        final venueAr = (row['venue_name_ar'] as String?) ?? 'قاعة المحاضرات';
+        final lat = (row['latitude'] as num?)?.toDouble() ?? 26.2871;
+        final lng = (row['longitude'] as num?)?.toDouble() ?? 50.2125;
+        final ytHandle = (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
+        final ytVideoId = (row['youtube_video_id'] as String?) ?? 'dQw4w9WgXcQ';
+        final isLive = (row['is_currently_live'] as bool?) ?? false;
+        final isVerified = (row['is_verified'] as bool?) ?? true;
+        final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
+
+        results.add(
+          StreamerModel(
+            streamerId: id,
+            fullNameEn: nameEn,
+            fullNameAr: nameAr,
+            titleEn: titleEn,
+            titleAr: titleAr,
+            organizationEn: 'Independent Broadcaster',
+            organizationAr: 'بث أكاديمي مستقل',
+            avatarUrl: avatar,
+            bannerUrl: banner,
+            bioEn: bioEn,
+            bioAr: bioAr,
+            isVerified: isVerified,
+            followerCount: followerCount,
+            categoryId: categoryId,
+            tags: tagsList,
+            cityEn: cityEn,
+            cityAr: cityAr,
+            venueNameEn: venueEn,
+            venueNameAr: venueAr,
+            latitude: lat,
+            longitude: lng,
+            isCurrentlyLive: isLive,
+            broadcastType: isLive ? BroadcastType.liveAudio : BroadcastType.offline,
+            isOrganization: false,
+            youtubeHandle: ytHandle,
+            youtubeVideoId: ytVideoId,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error loading streamer_public_profiles: $e');
+    }
+
+    // 2. Fetch verified organizations from organization_public_profiles
+    try {
+      final orgRows = await _client
+          .from('organization_public_profiles')
+          .select()
+          .order('name_en', ascending: true);
+
+      for (final row in orgRows) {
+        final id = row['id'] as String;
+        final nameEn = (row['name_en'] as String?) ?? 'Educational Organization';
+        final nameAr = (row['name_ar'] as String?) ?? nameEn;
+        final avatar = (row['avatar_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        final banner = (row['banner_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        final bioEn = (row['bio_en'] as String?) ?? '';
+        final bioAr = (row['bio_ar'] as String?) ?? '';
+        final categoryId = (row['category_id'] as String?) ?? 'general_edu';
+        final tagsList = (row['tags'] as List<dynamic>?)?.map((t) => t.toString()).toList() ?? const <String>[];
+        final ytHandle = (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
+        final ytVideoId = (row['youtube_video_id'] as String?) ?? 'dQw4w9WgXcQ';
+        final isLive = (row['is_currently_live'] as bool?) ?? false;
+        final isVerified = (row['is_verified'] as bool?) ?? true;
+        final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
+
+        results.add(
+          StreamerModel(
+            streamerId: id,
+            fullNameEn: nameEn,
+            fullNameAr: nameAr,
+            titleEn: 'Educational Academy & Venue',
+            titleAr: 'مؤسسة تعليمية وقاعة',
+            organizationEn: nameEn,
+            organizationAr: nameAr,
+            avatarUrl: avatar,
+            bannerUrl: banner,
+            bioEn: bioEn,
+            bioAr: bioAr,
+            isVerified: isVerified,
+            followerCount: followerCount,
+            categoryId: categoryId,
+            tags: tagsList,
+            cityEn: 'Al Khobar',
+            cityAr: 'الخبر',
+            venueNameEn: nameEn,
+            venueNameAr: nameAr,
+            latitude: 26.2871,
+            longitude: 50.2125,
+            isCurrentlyLive: isLive,
+            broadcastType: isLive ? BroadcastType.liveAudio : BroadcastType.offline,
+            isOrganization: true,
+            youtubeHandle: ytHandle,
+            youtubeVideoId: ytVideoId,
+          ),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error loading organization_public_profiles: $e');
+    }
+
+    return results;
   }
 
   // ==========================================

@@ -180,7 +180,11 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      context.go('/role-select');
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      } else {
+        context.go('/settings');
+      }
     }
   }
 
@@ -206,7 +210,30 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       final provider = context.read<AppProvider>();
       final email = provider.currentUserEmail ?? 'applicant@streamer.app';
 
-      // 🧠 Execute Automated Bidirectional Translation & Transliteration
+      // 1. Upload custom avatar / banner to Supabase Storage if available
+      String finalAvatarUrl = _avatarPath ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
+      if (_avatarBytes != null) {
+        final uploaded = await provider.uploadStreamerMediaAsset(
+          fileName: 'avatar_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.jpg',
+          fileBytes: _avatarBytes!,
+        );
+        if (uploaded != null) {
+          finalAvatarUrl = uploaded;
+        }
+      }
+
+      String finalBannerUrl = _bannerPath ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+      if (_bannerBytes != null) {
+        final uploaded = await provider.uploadStreamerMediaAsset(
+          fileName: 'banner_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.jpg',
+          fileBytes: _bannerBytes!,
+        );
+        if (uploaded != null) {
+          finalBannerUrl = uploaded;
+        }
+      }
+
+      // 2. Execute Automated Bidirectional Translation & Transliteration
       final effectiveName = _isOrganization && _orgNameController.text.trim().isNotEmpty
           ? _orgNameController.text.trim()
           : _nameController.text.trim();
@@ -227,6 +254,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
 
       final app = BroadcasterApplicationModel(
         id: newId(),
+        applicantProfileId: provider.currentUserSessionId,
         accountType: _isOrganization
             ? ApplicationAccountType.organizationVenue
             : ApplicationAccountType.individualScholar,
@@ -246,16 +274,16 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         latitude: _selectedCoordinates.latitude,
         longitude: _selectedCoordinates.longitude,
         seatingCapacity: _isOrganization ? 300 : 120,
-        youtubeChannelUrl: _youtubeController.text.trim().startsWith('http')
-            ? _youtubeController.text.trim()
-            : 'https://www.youtube.com/${_youtubeController.text.trim()}',
-        youtubeHandle: _youtubeController.text.trim().startsWith('@')
-            ? _youtubeController.text.trim()
-            : '@${_youtubeController.text.trim().split('/').last}',
+        youtubeChannelUrl: ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text).isNotEmpty
+            ? 'https://www.youtube.com/@${ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text)}'
+            : 'https://www.youtube.com/@broadcaster',
+        youtubeHandle: ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text).isNotEmpty
+            ? '@${ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text)}'
+            : '@broadcaster',
         bioEn: bilingual.bioEn,
         bioAr: bilingual.bioAr,
-        avatarUrl: _avatarPath ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-        bannerUrl: _bannerPath ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
+        avatarUrl: finalAvatarUrl,
+        bannerUrl: finalBannerUrl,
         status: ApplicationStatus.pending,
         submittedAt: DateTime.now(),
       );

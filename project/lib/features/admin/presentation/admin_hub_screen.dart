@@ -14,6 +14,7 @@ import '../models/chat_report_model.dart';
 import '../../profile/models/streamer_models.dart';
 import 'widgets/role_permission_management_view.dart';
 import 'widgets/chat_moderation_view.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
 class AdminHubScreen extends StatefulWidget {
@@ -116,6 +117,47 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           child: Row(
             children: [
               const Icon(Icons.check_circle_outline_rounded,
+                  color: Colors.white),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  message,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+      displayDuration: const Duration(seconds: 4),
+    );
+  }
+
+  void _showErrorNotification(String message) {
+    showTopSnackBar(
+      Overlay.of(context),
+      Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: AppTheme.accentRed,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            boxShadow: const [
+              BoxShadow(
+                color: Colors.black45,
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded,
                   color: Colors.white),
               const SizedBox(width: 12),
               Expanded(
@@ -1172,7 +1214,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               CircleAvatar(
                 radius: 24,
                 backgroundColor: AppTheme.darkSurface2,
-                backgroundImage: AssetImage(app.avatarUrl),
+                backgroundImage: buildSafeImageProvider(
+                  path: app.avatarUrl,
+                  defaultAsset: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+                ),
                 child: app.avatarUrl.isEmpty
                     ? Icon(
                         app.isOrganization
@@ -1362,10 +1407,85 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   void _handleApproveApplication(BuildContext context, AppProvider provider,
       BroadcasterApplicationModel app) async {
+    int currentStage = 1;
+    String stageDescription = 'Starting verification pipeline...';
+    StateSetter? dialogSetState;
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (ctx, setDialogState) {
+          dialogSetState = setDialogState;
+          final double progress = currentStage / 5.0;
+          return AlertDialog(
+            backgroundColor: AppTheme.darkSurface1,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              side: const BorderSide(color: AppTheme.darkBorderSubtle),
+            ),
+            title: const Row(
+              children: [
+                Icon(Icons.verified_user_rounded,
+                    color: AppTheme.accentGreen, size: 22),
+                SizedBox(width: 8),
+                Text(
+                  'Approving Broadcaster',
+                  style: TextStyle(
+                    color: AppTheme.textPrimaryDark,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Stage $currentStage of 5: $stageDescription',
+                  style: const TextStyle(
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: 12.5,
+                    height: 1.4,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: AppTheme.darkSurface2,
+                    valueColor: const AlwaysStoppedAnimation<Color>(
+                        AppTheme.accentGreen),
+                    minHeight: 8,
+                  ),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+
     final success = await provider.approveBroadcasterApplication(
       app.id,
       adminNotes: 'Verified official credentials and venue facilities.',
+      onProgress: (stage, desc) {
+        if (dialogSetState != null) {
+          dialogSetState!(() {
+            currentStage = stage;
+            stageDescription = desc;
+          });
+        }
+      },
     );
+
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+
     if (success) {
       _showSuccessNotification('admin.app_approved_toast'.tr());
     }
@@ -1455,80 +1575,281 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   void _showApplicationDetailsDialog(
       BuildContext context, BroadcasterApplicationModel app, bool isAr) {
+    final provider = context.read<AppProvider>();
     showDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return Dialog(
           backgroundColor: AppTheme.darkSurface1,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
             side: const BorderSide(color: AppTheme.darkBorderSubtle),
           ),
-          title: Row(
-            children: [
-              Icon(
-                app.isOrganization
-                    ? Icons.apartment_rounded
-                    : Icons.school_rounded,
-                color: AppTheme.accentBlue,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  isAr ? app.applicantNameAr : app.applicantNameEn,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15),
-                ),
-              ),
-            ],
-          ),
-          content: SizedBox(
-            width: 500,
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow('Account Type',
-                      app.isOrganization ? 'Organization Venue' : 'Individual Scholar'),
-                  _buildDetailRow('Email', app.email),
-                  _buildDetailRow('Phone', app.phone),
-                  if (!app.isOrganization) ...[
-                    _buildDetailRow('Academic Title',
-                        '${app.academicTitleEn ?? ''} / ${app.academicTitleAr ?? ''}'),
-                    _buildDetailRow('Institution',
-                        '${app.institutionEn ?? ''} / ${app.institutionAr ?? ''}'),
-                  ] else ...[
-                    _buildDetailRow('Organization Type',
-                        app.organizationType ?? 'Academic Entity'),
-                    _buildDetailRow('Auditorium Name',
-                        '${app.venueNameEn} / ${app.venueNameAr}'),
-                    _buildDetailRow('Seating Capacity',
-                        '${app.seatingCapacity} seats'),
-                    _buildDetailRow('GPS Coordinates',
-                        'Lat: ${app.latitude}, Lng: ${app.longitude}'),
-                    _buildDetailRow('Website',
-                        app.officialWebsiteUrl ?? 'N/A'),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 620, maxHeight: 720),
+            child: Column(
+              children: [
+                // Top Header Banner with Floating Avatar
+                Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      height: 120,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(AppTheme.radiusLg)),
+                        image: DecorationImage(
+                          image: buildSafeImageProvider(
+                            path: app.bannerUrl,
+                            defaultAsset:
+                                'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
+                          ),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(AppTheme.radiusLg)),
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.3),
+                            Colors.black.withValues(alpha: 0.75),
+                          ],
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      top: 10,
+                      right: 10,
+                      child: IconButton(
+                        icon: const Icon(Icons.close_rounded,
+                            color: Colors.white, size: 22),
+                        onPressed: () => Navigator.pop(dialogContext),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: -32,
+                      left: 20,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border:
+                              Border.all(color: AppTheme.darkSurface1, width: 3),
+                        ),
+                        child: CircleAvatar(
+                          radius: 34,
+                          backgroundImage: buildSafeImageProvider(
+                            path: app.avatarUrl,
+                            defaultAsset:
+                                'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+                          ),
+                        ),
+                      ),
+                    ),
                   ],
-                  _buildDetailRow('YouTube Channel', app.youtubeChannelUrl),
-                  _buildDetailRow('YouTube Handle', '@${app.youtubeHandle}'),
-                  _buildDetailRow('Research Bio (En)', app.bioEn),
-                  _buildDetailRow('Research Bio (Ar)', app.bioAr),
-                ],
-              ),
+                ),
+                const SizedBox(height: 38),
+
+                // Title and Metadata
+                Padding(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  isAr
+                                      ? app.applicantNameAr
+                                      : app.applicantNameEn,
+                                  style: const TextStyle(
+                                    color: AppTheme.textPrimaryDark,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(Icons.verified_rounded,
+                                    color: AppTheme.accentBlue, size: 18),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              app.isOrganization
+                                  ? (app.organizationType ??
+                                      'Educational Academy')
+                                  : (isAr
+                                      ? (app.academicTitleAr ?? 'محاضر وباحث')
+                                      : (app.academicTitleEn ??
+                                          'Academic Scholar')),
+                              style: const TextStyle(
+                                color: AppTheme.accentPurple,
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkSurface2,
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          border:
+                              Border.all(color: AppTheme.darkBorderSubtle),
+                        ),
+                        child: Text(
+                          app.isOrganization
+                              ? 'ORGANIZATION'
+                              : 'INDIVIDUAL',
+                          style: const TextStyle(
+                            color: AppTheme.textMutedDark,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+
+                // Content Scrollable Details
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spaceLg),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildDetailRow('Email', app.email),
+                        _buildDetailRow('Phone', app.phone),
+                        _buildDetailRow('YouTube Handle', '@${app.youtubeHandle}'),
+                        _buildDetailRow('YouTube Channel', app.youtubeChannelUrl),
+                        _buildDetailRow(
+                            'Category', app.categoryId.replaceAll('_', ' ').toUpperCase()),
+                        if (app.tags.isNotEmpty)
+                          _buildDetailRow('Tags', app.tags.join(' ')),
+                        _buildDetailRow(
+                          'Venue & Coordinates',
+                          '${app.venueNameEn} (Lat: ${app.latitude.toStringAsFixed(4)}, Lng: ${app.longitude.toStringAsFixed(4)})',
+                        ),
+                        const SizedBox(height: AppTheme.spaceSm),
+                        const Divider(color: AppTheme.darkBorderSubtle),
+                        const SizedBox(height: AppTheme.spaceSm),
+                        const Text(
+                          'Research Biography (English)',
+                          style: TextStyle(
+                            color: AppTheme.textMutedDark,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          app.bioEn.isNotEmpty ? app.bioEn : 'N/A',
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 12),
+                        ),
+                        const SizedBox(height: AppTheme.spaceMd),
+                        const Text(
+                          'نبذة السيرة الذاتية (عربي)',
+                          style: TextStyle(
+                            color: AppTheme.textMutedDark,
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          app.bioAr.isNotEmpty ? app.bioAr : 'لا يوجد',
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Bottom Action Footer
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  decoration: const BoxDecoration(
+                    color: AppTheme.darkSurface2,
+                    borderRadius: BorderRadius.vertical(
+                        bottom: Radius.circular(AppTheme.radiusLg)),
+                    border: Border(
+                        top: BorderSide(color: AppTheme.darkBorderSubtle)),
+                  ),
+                  child: Row(
+                    children: [
+                      if (app.status == ApplicationStatus.pending) ...[
+                        ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.accentGreen,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 16, vertical: 10),
+                          ),
+                          icon: const Icon(Icons.check_circle_rounded, size: 16),
+                          label: const Text('Approve Broadcaster'),
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                            _handleApproveApplication(context, provider, app);
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: AppTheme.accentRed,
+                            side: const BorderSide(color: AppTheme.accentRed),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 14, vertical: 10),
+                          ),
+                          icon: const Icon(Icons.cancel_outlined, size: 16),
+                          label: const Text('Reject'),
+                          onPressed: () {
+                            Navigator.pop(dialogContext);
+                            _showRejectDialog(context, provider, app);
+                          },
+                        ),
+                      ],
+                      const Spacer(),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded,
+                            color: AppTheme.accentRed, size: 20),
+                        tooltip: 'Delete Application',
+                        onPressed: () async {
+                          Navigator.pop(dialogContext);
+                          await provider.deleteBroadcasterApplication(app.id);
+                          _showSuccessNotification('admin.app_deleted_toast'.tr());
+                        },
+                      ),
+                      const SizedBox(width: 6),
+                      TextButton(
+                        onPressed: () => Navigator.pop(dialogContext),
+                        child: const Text('Close',
+                            style: TextStyle(color: AppTheme.textPrimaryDark)),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
           ),
-          actions: [
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.darkSurface2,
-                foregroundColor: AppTheme.textPrimaryDark,
-              ),
-              onPressed: () => Navigator.pop(dialogContext),
-              child: const Text('Close'),
-            ),
-          ],
         );
       },
     );
@@ -1654,7 +1975,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       CircleAvatar(
                         radius: 20,
                         backgroundColor: AppTheme.darkSurface2,
-                        backgroundImage: AssetImage(s.avatarUrl),
+                        backgroundImage: buildSafeImageProvider(
+                          path: s.avatarUrl,
+                          defaultAsset: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+                        ),
                       ),
                       const SizedBox(width: AppTheme.spaceMd),
                       Expanded(
@@ -1767,9 +2091,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                               size: 16, color: AppTheme.accentRed),
                           tooltip: 'Delete Streamer',
                           onPressed: () async {
-                            await provider.deleteStreamer(s.streamerId);
-                            _showSuccessNotification(
-                                'Broadcaster profile removed.');
+                            final success =
+                                await provider.deleteStreamer(s.streamerId);
+                            if (success) {
+                              _showSuccessNotification(
+                                  'Broadcaster profile removed.');
+                            } else {
+                              _showErrorNotification(
+                                  'Failed to remove broadcaster profile.');
+                            }
                           },
                         ),
                     ],

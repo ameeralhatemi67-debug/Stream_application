@@ -38,6 +38,31 @@ class ApplyStep3Professional extends StatefulWidget {
     required this.onTagToggled,
   });
 
+  /// Robust parser that extracts the YouTube handle from various formats:
+  /// - `youtube.com/@apop8091`
+  /// - `www.youtube.com/@apop8091`
+  /// - `@apop8091`
+  /// - `https://www.youtube.com/@apop8091`
+  /// - `https://youtube.com/c/apop8091`
+  /// - `apop8091`
+  static String extractCleanYouTubeHandle(String input) {
+    var text = input.trim();
+    if (text.isEmpty) return '';
+
+    if (text.contains('?')) {
+      text = text.split('?').first;
+    }
+
+    text = text.replaceFirst(RegExp(r'^https?:\/\/', caseSensitive: false), '');
+    text = text.replaceFirst(RegExp(r'^www\.', caseSensitive: false), '');
+    text = text.replaceFirst(RegExp(r'^(youtube\.com|youtu\.be)\/', caseSensitive: false), '');
+    text = text.replaceFirst(RegExp(r'^(c\/|user\/|channel\/)', caseSensitive: false), '');
+    text = text.replaceAll('/videos', '').replaceAll('/featured', '').replaceAll('/playlists', '').replaceAll('/streams', '');
+    text = text.replaceAll('@', '');
+    text = text.replaceAll('/', '').trim();
+    return text;
+  }
+
   @override
   State<ApplyStep3Professional> createState() => _ApplyStep3ProfessionalState();
 }
@@ -97,14 +122,10 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
       return;
     }
 
-    final hasValidSyntax = text.startsWith('https://www.youtube.com/@') ||
-        text.startsWith('http://www.youtube.com/@') ||
-        text.startsWith('https://youtube.com/@') ||
-        text.startsWith('youtube.com/@') ||
-        text.startsWith('www.youtube.com/@') ||
-        (text.startsWith('@') && text.length > 2);
+    final cleanHandle = ApplyStep3Professional.extractCleanYouTubeHandle(text);
+    final isValidHandle = cleanHandle.length >= 2 && RegExp(r'^[a-zA-Z0-9._-]+$').hasMatch(cleanHandle);
 
-    if (!hasValidSyntax) {
+    if (!isValidHandle) {
       setState(() {
         _ytState = YoutubeVerificationState.invalidFormat;
         _ytFeedbackMessage = 'wizard_steps.step3_yt_invalid'.tr();
@@ -118,16 +139,9 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     });
 
     _debounceTimer = Timer(const Duration(milliseconds: 400), () async {
-      final cleanHandle = text.replaceAll('https://www.youtube.com/', '')
-          .replaceAll('http://www.youtube.com/', '')
-          .replaceAll('https://youtube.com/', '')
-          .replaceAll('youtube.com/', '')
-          .replaceAll('www.youtube.com/', '')
-          .replaceAll('@', '');
-
       final provider = context.read<AppProvider>();
       final isRegisteredStreamer = provider.streamers.any(
-        (s) => s.youtubeHandle.replaceAll('@', '').toLowerCase() == cleanHandle.toLowerCase(),
+        (s) => ApplyStep3Professional.extractCleanYouTubeHandle(s.youtubeHandle).toLowerCase() == cleanHandle.toLowerCase(),
       );
 
       if (isRegisteredStreamer) {

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,6 +26,11 @@ import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/admin/models/chat_report_model.dart';
+
+final RegExp _uuidPattern = RegExp(
+  r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
+);
+bool _looksLikeUuid(String? value) => value != null && _uuidPattern.hasMatch(value);
 
 class AppProvider extends ChangeNotifier {
   List<StreamerModel> _streamers = List.from(mockStreamers);
@@ -439,6 +445,103 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  RealtimeChannel? _publicStreamersChannel;
+
+  /// Global Realtime subscription that listens for new verified streamers/organizations
+  /// across the platform so all devices (Phone 2, etc.) update their Discovery & Map in real time.
+  void _subscribeToPublicStreamerChanges() {
+    _unsubscribeFromPublicStreamerChanges();
+    try {
+      if (!Supabase.instance.isInitialized) return;
+      final client = Supabase.instance.client;
+      _publicStreamersChannel = client
+          .channel('public_streamers_discovery')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'profiles',
+            callback: (payload) {
+              debugPrint('Realtime: public profile changed ($payload)');
+              loadVerifiedStreamersFromBackend();
+              if (_isAdminFromRoles) {
+                refreshAdminData();
+              }
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'organizations',
+            callback: (payload) {
+              debugPrint('Realtime: organization changed ($payload)');
+              loadVerifiedStreamersFromBackend();
+              if (_isAdminFromRoles) {
+                refreshAdminData();
+              }
+            },
+          )
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'broadcaster_applications',
+            callback: (payload) {
+              debugPrint('Realtime: broadcaster application status changed ($payload)');
+              loadVerifiedStreamersFromBackend();
+              refreshAdminData();
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      debugPrint('Realtime public streamer subscription failed: $e');
+    }
+  }
+
+  void _unsubscribeFromPublicStreamerChanges() {
+    if (_publicStreamersChannel != null) {
+      try {
+        if (Supabase.instance.isInitialized) {
+          Supabase.instance.client.removeChannel(_publicStreamersChannel!);
+        }
+      } catch (_) {}
+      _publicStreamersChannel = null;
+    }
+  }
+
+  /// Fetches verified broadcasters and organizations from Supabase backend
+  /// and merges them into _streamers so all devices see new verified streamers.
+  Future<void> loadVerifiedStreamersFromBackend() async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      final backendStreamers =
+          await _adminDbService!.loadVerifiedStreamersFromBackend();
+
+      final backendIds = backendStreamers.map((s) => s.streamerId).toSet();
+      final currentUserId = _authService.currentSession?.user.id;
+
+      // Remove any previously-loaded backend streamer that is no longer verified in DB
+      _streamers.removeWhere((s) =>
+          !protectedStreamerIds.contains(s.streamerId) &&
+          (currentUserId == null ||
+              (s.streamerId != currentUserId &&
+                  s.streamerId != 'streamer_$currentUserId')) &&
+          _looksLikeUuid(s.streamerId.replaceFirst('streamer_', '')) &&
+          !backendIds.contains(s.streamerId));
+
+      for (final bs in backendStreamers) {
+        final idx =
+            _streamers.indexWhere((s) => s.streamerId == bs.streamerId);
+        if (idx != -1) {
+          _streamers[idx] = bs;
+        } else {
+          _streamers.add(bs);
+        }
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('loadVerifiedStreamersFromBackend failed: $e');
+    }
+  }
+
   StreamerModel _createStreamerModelForUser({
     required String userId,
     BroadcasterApplicationModel? app,
@@ -621,6 +724,8 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> _initAdminDatabase() async {
+    _subscribeToPublicStreamerChanges();
+    await loadVerifiedStreamersFromBackend();
     await refreshAdminData();
   }
 
@@ -635,6 +740,7 @@ class AppProvider extends ChangeNotifier {
       _auditLogs = List.from(await _adminDbService!.loadAuditLogs());
       _affiliationRequests =
           List.from(await _adminDbService!.loadAffiliationRequests());
+      await loadVerifiedStreamersFromBackend();
       notifyListeners();
     } catch (e) {
       debugPrint('refreshAdminData failed: $e');
@@ -698,6 +804,8 @@ class AppProvider extends ChangeNotifier {
   void dispose() {
     _stopLiveViewerPolling();
     _authStateSub?.cancel();
+    _unsubscribeFromUserStatusChanges();
+    _unsubscribeFromPublicStreamerChanges();
     super.dispose();
   }
 
@@ -735,6 +843,8 @@ class AppProvider extends ChangeNotifier {
   String? get guestViewerAvatar => _guestViewerAvatar;
   String? get googleUserEmail => _googleUserEmail;
   String? get currentUserEmail => _googleUserEmail;
+  String? get currentUserId => _authService.currentSession?.user.id;
+  String? get currentUserSessionId => _authService.currentSession?.user.id;
   String? get googleUserName => _googleUserName;
   String? get googleUserAvatar => _googleUserAvatar;
 
@@ -1017,9 +1127,11 @@ class AppProvider extends ChangeNotifier {
     if (protectedStreamerIds.contains(streamerId)) {
       return false; // Protected original streamer cannot be deleted
     }
-    _streamers.removeWhere((s) => s.streamerId == streamerId);
+    _streamers.removeWhere((s) =>
+        s.streamerId == streamerId ||
+        s.streamerId == 'streamer_$streamerId');
     _adminDbService ??= await AdminDatabaseService.create();
-    await _adminDbService!.revokeStreamer(streamerId);
+    final success = await _adminDbService!.revokeStreamer(streamerId);
 
     // If revoking self, downgrade state
     final currentUserId = _authService.currentSession?.user.id;
@@ -1030,8 +1142,13 @@ class AppProvider extends ChangeNotifier {
       _isStreamerModeEnabled = false;
       await refreshMyApplicationAndStreamerStatus();
     }
+
+    await loadVerifiedStreamersFromBackend();
+    if (_isAdminFromRoles) {
+      await refreshAdminData();
+    }
     notifyListeners();
-    return true;
+    return success;
   }
 
   StreamerModel? getStreamerById(String streamerIdOrStreamId) {
@@ -1193,12 +1310,27 @@ class AppProvider extends ChangeNotifier {
   /// redirect completes.
   Future<void> loginWithGoogle() => _authService.signInWithGoogle();
 
+  /// Uploads binary media (avatar/banner) to Supabase Storage 'streamer-assets' bucket
+  Future<String?> uploadStreamerMediaAsset({
+    required String fileName,
+    required Uint8List fileBytes,
+    String contentType = 'image/jpeg',
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    return _adminDbService!.uploadStreamerAsset(
+      fileName: fileName,
+      fileBytes: fileBytes,
+      contentType: contentType,
+    );
+  }
+
   /// Submits a multi-step Broadcaster / Organization verification application
   Future<void> submitBroadcasterApplication(
       BroadcasterApplicationModel application) async {
     _adminDbService ??= await AdminDatabaseService.create();
     _applications.insert(0, application);
     await _adminDbService!.submitApplication(application);
+    _applications = List.from(await _adminDbService!.loadApplications());
 
     // Record in immutable governance audit trail
     await recordOrgAuditAction(
@@ -2077,12 +2209,16 @@ class AppProvider extends ChangeNotifier {
     String applicationId, {
     String? adminNotes,
     BuildContext? context,
+    Function(int stage, String stageDescription)? onProgress,
   }) async {
     final idx = _applications.indexWhere((a) => a.id == applicationId);
     if (idx == -1) return false;
 
     final app = _applications[idx];
     _adminDbService ??= await AdminDatabaseService.create();
+
+    // Stage 1: Update Application Status and Backend Profile
+    onProgress?.call(1, 'Updating application status & granting broadcaster credentials...');
     final updated = await _adminDbService!.updateApplicationStatus(
       applicationId,
       ApplicationStatus.approved,
@@ -2094,12 +2230,6 @@ class AppProvider extends ChangeNotifier {
       _applications = List.from(await _adminDbService!.loadApplications());
     }
 
-    // Creates the real backend record this approval represents (Checkpoint
-    // 3 Phase 2) -- an organizations row for org-type applications, or
-    // profiles.is_streamer=true for individuals. Only possible when the
-    // applicant actually signed in via real Supabase auth (applicantProfileId
-    // is null for legacy/seed applications); best-effort, falls back to the
-    // mock-only StreamerModel below on any failure.
     final applicantProfileId = updated?.applicantProfileId ?? app.applicantProfileId;
     String? realOrgId;
     if (applicantProfileId != null) {
@@ -2116,12 +2246,10 @@ class AppProvider extends ChangeNotifier {
       }
     }
 
-    // Instantiate as a verified live StreamerModel. Uses the real
-    // organizations.id when one was just created, so getOrganizationVenues/
-    // Speakers and future writes key off the real backend row instead of a
-    // synthetic id that never corresponds to anything in Supabase.
+    // Stage 2: Create StreamerModel & Inject into Discovery Feed
+    onProgress?.call(2, 'Creating Broadcaster card & integrating into Discovery Feed...');
     final newStreamer = StreamerModel(
-      streamerId: realOrgId ?? 'streamer_${app.id}',
+      streamerId: realOrgId ?? applicantProfileId ?? 'streamer_${app.id}',
       fullNameEn: app.applicantNameEn,
       fullNameAr: app.applicantNameAr,
       titleEn: app.academicTitleEn ??
@@ -2142,8 +2270,8 @@ class AppProvider extends ChangeNotifier {
       cityAr: 'الخبر',
       venueNameEn: app.venueNameEn,
       venueNameAr: app.venueNameAr,
-      latitude: app.latitude,
-      longitude: app.longitude,
+      latitude: app.latitude != 0.0 ? app.latitude : 26.2871,
+      longitude: app.longitude != 0.0 ? app.longitude : 50.2125,
       isCurrentlyLive: false,
       broadcastType: BroadcastType.offline,
       isOrganization: app.isOrganization,
@@ -2158,7 +2286,32 @@ class AppProvider extends ChangeNotifier {
     } else {
       _streamers.add(newStreamer);
     }
+    notifyListeners();
 
+    // Stage 3: Background YouTube Channel Video & Playlist Sync
+    onProgress?.call(3, 'Resolving YouTube channel uploads & video archives...');
+    try {
+      final cleanHandle = app.youtubeHandle.replaceFirst('@', '').trim();
+      if (cleanHandle.isNotEmpty) {
+        final uploads = await _youTubeService.fetchChannelVideos(
+          streamerId: newStreamer.streamerId,
+          handle: cleanHandle,
+          maxResults: 10,
+        );
+        if (uploads.isNotEmpty) {
+          final latestVideoId = uploads.first.youtubeVideoId;
+          final sIdx = _streamers.indexWhere((s) => s.streamerId == newStreamer.streamerId);
+          if (sIdx != -1) {
+            _streamers[sIdx] = _streamers[sIdx].copyWith(youtubeVideoId: latestVideoId);
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint('Background YouTube bootstrap failed gracefully: $e');
+    }
+
+    // Stage 4: Plot on Spatial Map & Send Realtime Notification
+    onProgress?.call(4, 'Plotting venue location on Spatial Map & dispatching notification...');
     addEnhancedNotification(
       AppNotificationModel(
         id: 'notif_verified_${app.id}',
@@ -2177,6 +2330,8 @@ class AppProvider extends ChangeNotifier {
       context: context != null && context.mounted ? context : null,
     );
 
+    // Stage 5: Finalization
+    onProgress?.call(5, 'Verification pipeline completed successfully!');
     notifyListeners();
     return true;
   }
@@ -2229,12 +2384,14 @@ class AppProvider extends ChangeNotifier {
 
   Future<bool> deleteBroadcasterApplication(String applicationId) async {
     final idx = _applications.indexWhere((a) => a.id == applicationId);
-    if (idx == -1) return false;
-
     _adminDbService ??= await AdminDatabaseService.create();
     final success = await _adminDbService!.deleteApplication(applicationId);
     if (success) {
-      _applications.removeAt(idx);
+      if (idx != -1) _applications.removeAt(idx);
+      _streamers.removeWhere((s) =>
+          s.streamerId == applicationId ||
+          s.streamerId == 'streamer_$applicationId');
+      await loadVerifiedStreamersFromBackend();
       notifyListeners();
     }
     return success;
