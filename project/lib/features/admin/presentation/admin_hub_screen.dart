@@ -54,16 +54,22 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   late final TextEditingController _privacyEnController;
   late final TextEditingController _privacyArController;
 
+  // Testing Tools / Pitch Director controls (v0.9 Checkpoint 1 Phase 1 --
+  // moved here from the general Settings screen; only admin-tier viewers
+  // reach this hub at all).
+  late final TextEditingController _rtmpIpController;
+
   @override
   void initState() {
     super.initState();
     final provider = context.read<AppProvider>();
     _isMasterAdminForTabs = provider.isMasterAdmin;
     // +1 for the always-present Chat Moderation tab (Checkpoint 4 Phase 1,
-    // any admin-tier viewer), +1 more for Roles & Permissions when this
+    // any admin-tier viewer), +1 for the always-present Testing Tools tab
+    // (v0.9 Checkpoint 1 Phase 1), +1 more for Roles & Permissions when this
     // viewer is also a Master Admin (Checkpoint 2 Phase 3).
     _tabController =
-        TabController(length: _isMasterAdminForTabs ? 8 : 7, vsync: this);
+        TabController(length: _isMasterAdminForTabs ? 9 : 8, vsync: this);
     if (_isMasterAdminForTabs) {
       provider.ensureRoleManagementDataLoaded();
     }
@@ -80,6 +86,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         TextEditingController(text: terms.broadcasterGuidelinesAr);
     _privacyEnController = TextEditingController(text: terms.privacyPolicyEn);
     _privacyArController = TextEditingController(text: terms.privacyPolicyAr);
+
+    _rtmpIpController = TextEditingController(text: provider.rtmpLaptopIp);
   }
 
   @override
@@ -93,6 +101,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     _guidelinesArController.dispose();
     _privacyEnController.dispose();
     _privacyArController.dispose();
+    _rtmpIpController.dispose();
     super.dispose();
   }
 
@@ -157,8 +166,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
           child: Row(
             children: [
-              const Icon(Icons.error_outline_rounded,
-                  color: Colors.white),
+              const Icon(Icons.error_outline_rounded, color: Colors.white),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
@@ -200,6 +208,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           List<BroadcasterApplicationModel> applications,
           TermsAndConditionsModel termsAndConditions,
           List<ChatReportModel> chatReports,
+          bool isPitchDirectorModeEnabled,
+          String rtmpLaptopIp,
         })>((p) => (
           isAdminUser: p.isAdminUser,
           isMasterAdmin: p.isMasterAdmin,
@@ -211,6 +221,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           applications: p.applications,
           termsAndConditions: p.termsAndConditions,
           chatReports: p.chatReports,
+          isPitchDirectorModeEnabled: p.isPitchDirectorModeEnabled,
+          rtmpLaptopIp: p.rtmpLaptopIp,
         ));
     final isAr = context.locale.languageCode == 'ar';
     final isDesktop = MediaQuery.of(context).size.width >= 900;
@@ -301,6 +313,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 _buildViewerAnalyticsTab(context, provider, isAr),
                 _buildTermsGovernanceTab(context, provider, isAr),
                 const ChatModerationView(),
+                _buildTestingToolsTab(context, provider),
                 if (_isMasterAdminForTabs) const RolePermissionManagementView(),
               ],
             ),
@@ -310,12 +323,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     );
   }
 
-  Widget _buildAdminHeader(BuildContext context, AppProvider provider,
-      bool isAr, bool isDesktop,
+  Widget _buildAdminHeader(
+      BuildContext context, AppProvider provider, bool isAr, bool isDesktop,
       {required bool isMasterAdmin}) {
     final tierLabel = isMasterAdmin ? 'MASTER ADMIN' : 'ADMIN';
-    final tierColor =
-        isMasterAdmin ? AppTheme.accentRed : AppTheme.accentBlue;
+    final tierColor = isMasterAdmin ? AppTheme.accentRed : AppTheme.accentBlue;
     return Container(
       padding: const EdgeInsets.symmetric(
         horizontal: AppTheme.spaceXl,
@@ -370,8 +382,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       decoration: BoxDecoration(
                         color: tierColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                            color: tierColor.withValues(alpha: 0.6)),
+                        border:
+                            Border.all(color: tierColor.withValues(alpha: 0.6)),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
@@ -546,11 +558,124 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             ),
             text: 'admin.tab_chat_moderation'.tr(),
           ),
+          Tab(
+            icon: const Icon(Icons.science_rounded, size: 18),
+            text: 'admin.tab_testing'.tr(),
+          ),
           if (_isMasterAdminForTabs)
             Tab(
               icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
               text: 'admin.tab_roles'.tr(),
             ),
+        ],
+      ),
+    );
+  }
+
+  // ==========================================
+  // TAB: TESTING TOOLS (Pitch Director Mode)
+  // ==========================================
+  // Moved here from the general Settings screen (v0.9 Checkpoint 1 Phase 1)
+  // -- these are demo/dev-only overrides (ADR-005), not something every
+  // viewer should see in their personal settings.
+
+  Widget _buildTestingToolsTab(BuildContext context, AppProvider provider) {
+    final isPitchActive = provider.isPitchDirectorModeEnabled;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spaceXl),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.science_rounded,
+                  color: AppTheme.accentRed, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'admin.tab_testing'.tr(),
+                style: const TextStyle(
+                  color: AppTheme.textPrimaryDark,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceLg),
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface1,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(
+                color: isPitchActive
+                    ? AppTheme.accentRed
+                    : AppTheme.darkBorderSubtle,
+                width: isPitchActive ? 1.5 : 1.0,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'settings.pitch_mode'.tr(),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimaryDark,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                    Switch(
+                      value: isPitchActive,
+                      activeThumbColor: AppTheme.accentRed,
+                      onChanged: (val) => provider.setPitchDirectorMode(val),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  'settings.pitch_mode_desc'.tr(),
+                  style: const TextStyle(
+                      color: AppTheme.textSecondaryDark, fontSize: 11),
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+                TextField(
+                  controller: _rtmpIpController,
+                  style: const TextStyle(
+                      color: AppTheme.textPrimaryDark, fontSize: 13),
+                  decoration: InputDecoration(
+                    labelText: 'settings.rtmp_ip'.tr(),
+                    prefixIcon: const Icon(Icons.wifi_tethering_rounded,
+                        color: AppTheme.accentBlue, size: 20),
+                  ),
+                  onSubmitted: (val) => provider.updateRtmpLaptopIp(val),
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    icon: const Icon(Icons.notifications_active_outlined,
+                        size: 18),
+                    label: Text('settings.trigger_notification'.tr()),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.accentRed,
+                      side: const BorderSide(color: AppTheme.accentRed),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd)),
+                    ),
+                    onPressed: () =>
+                        provider.triggerSimulatedNotification(context),
+                  ),
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -895,7 +1020,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               const SizedBox(width: 8),
               IconButton(
                 tooltip: 'Refresh Applications',
-                icon: const Icon(Icons.refresh_rounded, color: AppTheme.accentBlue),
+                icon: const Icon(Icons.refresh_rounded,
+                    color: AppTheme.accentBlue),
                 onPressed: () async {
                   await provider.refreshAdminData();
                   setState(() {});
@@ -933,7 +1059,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         const SizedBox(height: AppTheme.spaceMd),
                     itemBuilder: (context, index) {
                       final app = applications[index];
-                      return _buildApplicationCard(context, provider, app, isAr);
+                      return _buildApplicationCard(
+                          context, provider, app, isAr);
                     },
                   ),
           ),
@@ -978,8 +1105,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             style: OutlinedButton.styleFrom(
               foregroundColor: AppTheme.accentRed,
               side: const BorderSide(color: AppTheme.accentRed),
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             icon: const Icon(Icons.cancel_outlined, size: 15),
             label: const Text('Reject Selected'),
@@ -990,8 +1116,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             style: ElevatedButton.styleFrom(
               backgroundColor: AppTheme.accentGreen,
               foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             icon: const Icon(Icons.done_all_rounded, size: 15),
             label: const Text('Approve Selected'),
@@ -1022,8 +1147,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
           content: Text(
             'This will approve ${ids.length} pending application${ids.length == 1 ? '' : 's'}, creating a live broadcaster profile for each.',
-            style:
-                const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 12),
           ),
           actions: [
             TextButton(
@@ -1040,7 +1165,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ),
               onPressed: () async {
                 Navigator.pop(dialogContext);
-                final result = await provider.bulkApproveBroadcasterApplications(
+                final result =
+                    await provider.bulkApproveBroadcasterApplications(
                   ids,
                   adminNotes:
                       'Batch-verified official credentials and venue facilities.',
@@ -1083,8 +1209,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             children: [
               const Text(
                 'This feedback note is sent to every selected applicant:',
-                style: TextStyle(
-                    color: AppTheme.textSecondaryDark, fontSize: 12),
+                style:
+                    TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
               ),
               const SizedBox(height: AppTheme.spaceMd),
               TextField(
@@ -1149,14 +1275,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       selectedColor: AppTheme.accentBlue.withValues(alpha: 0.2),
       backgroundColor: AppTheme.darkSurface1,
       labelStyle: TextStyle(
-        color:
-            isSelected ? AppTheme.accentBlue : AppTheme.textSecondaryDark,
+        color: isSelected ? AppTheme.accentBlue : AppTheme.textSecondaryDark,
         fontSize: 11.5,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color:
-            isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
+        color: isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
       ),
       onSelected: (_) => setState(() => _applicationFilter = status),
     );
@@ -1216,7 +1340,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 backgroundColor: AppTheme.darkSurface2,
                 backgroundImage: buildSafeImageProvider(
                   path: app.avatarUrl,
-                  defaultAsset: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+                  defaultAsset:
+                      'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
                 ),
                 child: app.avatarUrl.isEmpty
                     ? Icon(
@@ -1363,7 +1488,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       tooltip: 'admin.btn_delete'.tr(),
                       onPressed: () async {
                         await provider.deleteBroadcasterApplication(app.id);
-                        _showSuccessNotification('admin.app_deleted_toast'.tr());
+                        _showSuccessNotification(
+                            'admin.app_deleted_toast'.tr());
                       },
                     ),
                   ],
@@ -1371,7 +1497,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ),
             ],
           ),
-
           if (app.adminReviewNotes != null &&
               app.adminReviewNotes!.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spaceSm),
@@ -1639,8 +1764,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border:
-                              Border.all(color: AppTheme.darkSurface1, width: 3),
+                          border: Border.all(
+                              color: AppTheme.darkSurface1, width: 3),
                         ),
                         child: CircleAvatar(
                           radius: 34,
@@ -1708,13 +1833,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           color: AppTheme.darkSurface2,
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          border:
-                              Border.all(color: AppTheme.darkBorderSubtle),
+                          border: Border.all(color: AppTheme.darkBorderSubtle),
                         ),
                         child: Text(
-                          app.isOrganization
-                              ? 'ORGANIZATION'
-                              : 'INDIVIDUAL',
+                          app.isOrganization ? 'ORGANIZATION' : 'INDIVIDUAL',
                           style: const TextStyle(
                             color: AppTheme.textMutedDark,
                             fontSize: 10,
@@ -1737,10 +1859,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       children: [
                         _buildDetailRow('Email', app.email),
                         _buildDetailRow('Phone', app.phone),
-                        _buildDetailRow('YouTube Handle', '@${app.youtubeHandle}'),
-                        _buildDetailRow('YouTube Channel', app.youtubeChannelUrl),
                         _buildDetailRow(
-                            'Category', app.categoryId.replaceAll('_', ' ').toUpperCase()),
+                            'YouTube Handle', '@${app.youtubeHandle}'),
+                        _buildDetailRow(
+                            'YouTube Channel', app.youtubeChannelUrl),
+                        _buildDetailRow('Category',
+                            app.categoryId.replaceAll('_', ' ').toUpperCase()),
                         if (app.tags.isNotEmpty)
                           _buildDetailRow('Tags', app.tags.join(' ')),
                         _buildDetailRow(
@@ -1804,7 +1928,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 16, vertical: 10),
                           ),
-                          icon: const Icon(Icons.check_circle_rounded, size: 16),
+                          icon:
+                              const Icon(Icons.check_circle_rounded, size: 16),
                           label: const Text('Approve Broadcaster'),
                           onPressed: () {
                             Navigator.pop(dialogContext);
@@ -1835,7 +1960,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         onPressed: () async {
                           Navigator.pop(dialogContext);
                           await provider.deleteBroadcasterApplication(app.id);
-                          _showSuccessNotification('admin.app_deleted_toast'.tr());
+                          _showSuccessNotification(
+                              'admin.app_deleted_toast'.tr());
                         },
                       ),
                       const SizedBox(width: 6),
@@ -1977,7 +2103,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         backgroundColor: AppTheme.darkSurface2,
                         backgroundImage: buildSafeImageProvider(
                           path: s.avatarUrl,
-                          defaultAsset: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+                          defaultAsset:
+                              'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
                         ),
                       ),
                       const SizedBox(width: AppTheme.spaceMd),
@@ -2044,7 +2171,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           color: s.isCurrentlyLive
                               ? AppTheme.accentRed.withValues(alpha: 0.15)
                               : AppTheme.darkSurface2,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
                           border: Border.all(
                             color: s.isCurrentlyLive
                                 ? AppTheme.accentRed
@@ -2121,16 +2249,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       selectedColor: AppTheme.accentPurple.withValues(alpha: 0.2),
       backgroundColor: AppTheme.darkSurface1,
       labelStyle: TextStyle(
-        color: isSelected
-            ? AppTheme.accentPurple
-            : AppTheme.textSecondaryDark,
+        color: isSelected ? AppTheme.accentPurple : AppTheme.textSecondaryDark,
         fontSize: 11.5,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected
-            ? AppTheme.accentPurple
-            : AppTheme.darkBorderSubtle,
+        color: isSelected ? AppTheme.accentPurple : AppTheme.darkBorderSubtle,
       ),
       onSelected: (_) => setState(() => _streamerTypeFilter = value),
     );
