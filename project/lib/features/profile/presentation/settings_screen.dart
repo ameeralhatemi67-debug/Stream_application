@@ -435,6 +435,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               backgroundColor: AppTheme.darkSurface2,
               foregroundColor: AppTheme.textPrimaryDark,
               elevation: 0,
+              minimumSize: const Size(0, 44),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -1509,7 +1510,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final quality = provider.selectedStreamingQuality;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
         color: AppTheme.darkSurface1,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -1675,7 +1676,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildVersionInfoCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
         color: AppTheme.darkSurface1,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -1714,7 +1715,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final terms = provider.termsAndConditions;
 
     return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
         color: AppTheme.darkSurface1,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -2074,7 +2075,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Switch(
             value: value,
             activeThumbColor: AppTheme.accentBlue,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             onChanged: onChanged,
           ),
         ],
