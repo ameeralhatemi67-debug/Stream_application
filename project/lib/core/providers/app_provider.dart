@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../widgets/interactive_toast_overlay.dart';
 import '../services/notifications/notification_models.dart';
@@ -231,6 +232,7 @@ class AppProvider extends ChangeNotifier {
     if (isFreshSignIn) {
       await _ensureProfileRow(user);
     }
+    await _flushPendingConsentIfAny(user.id);
     await _refreshAdminRoleFromBackend();
     await _refreshPermittedAdminOrgsFromBackend();
     await refreshMyApplicationAndStreamerStatus();
@@ -264,6 +266,91 @@ class AppProvider extends ChangeNotifier {
       }
     } catch (e) {
       debugPrint('Profile provisioning failed: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // PDPL Consent Tracking (v0.9 Checkpoint 3 Phase 1) -- see ConsentDialog
+  // (lib/core/widgets/consent_dialog.dart) and
+  // 20260829000100_pdpl_consent_tracking.sql. Bumping kConsentVersion is
+  // how a future policy update would require re-consent, though today
+  // nothing re-checks it for an already-signed-in user returning on a new
+  // session -- this gate only covers the WelcomeScreen entry point
+  // ("before any personal data is gathered"), not a forced re-consent flow
+  // for existing accounts.
+  // ---------------------------------------------------------------------
+  static const String kConsentVersion = 'v1.0';
+  static const String _kPendingConsentVersionPrefKey =
+      'pending_consent_version';
+  static const String _kPendingConsentAcceptedAtPrefKey =
+      'pending_consent_accepted_at';
+
+  String? _consentVersion;
+  DateTime? _consentAcceptedAt;
+
+  String? get consentVersion => _consentVersion;
+  DateTime? get consentAcceptedAt => _consentAcceptedAt;
+  bool get hasAcceptedCurrentConsent => _consentVersion == kConsentVersion;
+
+  /// Records explicit consent from ConsentDialog, for both the Google
+  /// sign-in and guest flows. Consent is captured on WelcomeScreen before
+  /// OAuth has necessarily completed, so if there's no session yet this
+  /// stashes it in SharedPreferences instead of writing straight to
+  /// profiles -- required because Supabase's web OAuth redirect reloads the
+  /// page and wipes in-memory state; _flushPendingConsentIfAny() picks it
+  /// up once the session exists. A guest viewer never gets a profiles row
+  /// at all, so their consent stays local-only, which is consistent with
+  /// the rest of their session being local-only too.
+  Future<void> recordConsent() async {
+    _consentVersion = kConsentVersion;
+    _consentAcceptedAt = DateTime.now();
+    notifyListeners();
+
+    final userId = _authService.currentSession?.user.id;
+    if (userId != null) {
+      await _persistConsent(userId, _consentVersion!, _consentAcceptedAt!);
+      return;
+    }
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kPendingConsentVersionPrefKey, _consentVersion!);
+      await prefs.setString(_kPendingConsentAcceptedAtPrefKey,
+          _consentAcceptedAt!.toIso8601String());
+    } catch (e) {
+      debugPrint('Failed to stash pending consent: $e');
+    }
+  }
+
+  Future<void> _persistConsent(
+      String userId, String version, DateTime acceptedAt) async {
+    try {
+      await Supabase.instance.client.from('profiles').update({
+        'consent_version': version,
+        'consent_accepted_at': acceptedAt.toIso8601String(),
+      }).eq('id', userId);
+    } catch (e) {
+      debugPrint('Failed to persist consent: $e');
+    }
+  }
+
+  Future<void> _flushPendingConsentIfAny(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final pendingVersion = prefs.getString(_kPendingConsentVersionPrefKey);
+      final pendingAcceptedAtRaw =
+          prefs.getString(_kPendingConsentAcceptedAtPrefKey);
+      if (pendingVersion == null || pendingAcceptedAtRaw == null) return;
+
+      final acceptedAt = DateTime.parse(pendingAcceptedAtRaw);
+      await _persistConsent(userId, pendingVersion, acceptedAt);
+      _consentVersion = pendingVersion;
+      _consentAcceptedAt = acceptedAt;
+      await prefs.remove(_kPendingConsentVersionPrefKey);
+      await prefs.remove(_kPendingConsentAcceptedAtPrefKey);
+      notifyListeners();
+    } catch (e) {
+      debugPrint('Failed to flush pending consent: $e');
     }
   }
 

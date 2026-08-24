@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
+import '../../../core/widgets/consent_dialog.dart';
 
 /// Master Welcome & Authentication Landing Screen
 class WelcomeScreen extends StatefulWidget {
@@ -17,7 +18,23 @@ class WelcomeScreen extends StatefulWidget {
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool _isLoading = false;
 
+  /// PDPL onboarding consent gate (v0.9 Checkpoint 3 Phase 1) -- both the
+  /// Google sign-in and guest flows route through this before gathering any
+  /// personal data. Returns true only once consent is on record (already
+  /// accepted, or just accepted now).
+  Future<bool> _ensureConsent() async {
+    final provider = context.read<AppProvider>();
+    if (provider.hasAcceptedCurrentConsent) return true;
+    final accepted = await ConsentDialog.show(context);
+    if (!accepted) return false;
+    await provider.recordConsent();
+    return true;
+  }
+
   Future<void> _handleGoogleAuth() async {
+    final consented = await _ensureConsent();
+    if (!consented || !mounted) return;
+
     setState(() => _isLoading = true);
     final provider = context.read<AppProvider>();
 
@@ -91,7 +108,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       color: AppTheme.textPrimaryDark,
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: context.locale.languageCode == 'ar' ? 0.0 : 2.0,
+                      letterSpacing:
+                          context.locale.languageCode == 'ar' ? 0.0 : 2.0,
                     ),
                     textAlign: TextAlign.center,
                   ),
@@ -116,7 +134,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     decoration: BoxDecoration(
                       color: AppTheme.darkSurface1,
                       borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                      border: Border.all(color: AppTheme.darkBorderSubtle, width: 1.2),
+                      border: Border.all(
+                          color: AppTheme.darkBorderSubtle, width: 1.2),
                       boxShadow: [
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.4),
@@ -161,9 +180,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             ),
                             elevation: 2,
                           ),
-                          onPressed: _isLoading
-                              ? null
-                              : () => _handleGoogleAuth(),
+                          onPressed:
+                              _isLoading ? null : () => _handleGoogleAuth(),
                           child: _isLoading
                               ? const SizedBox(
                                   height: 20,
@@ -221,9 +239,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   BorderRadius.circular(AppTheme.radiusMd),
                             ),
                           ),
-                          onPressed: _isLoading
-                              ? null
-                              : () => _handleGoogleAuth(),
+                          onPressed:
+                              _isLoading ? null : () => _handleGoogleAuth(),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -251,7 +268,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               child: Divider(color: AppTheme.darkBorderSubtle),
                             ),
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
                               child: Text(
                                 'auth_welcome.divider_or'.tr(),
                                 style: const TextStyle(
@@ -274,7 +292,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             foregroundColor: AppTheme.accentBlue,
                             padding: const EdgeInsets.symmetric(vertical: 10),
                           ),
-                          onPressed: () {
+                          onPressed: () async {
+                            final consented = await _ensureConsent();
+                            if (!consented || !context.mounted) return;
                             context.go('/viewer-setup');
                           },
                           child: Row(
@@ -302,7 +322,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
                   // 🌍 Bottom Language Switcher Bar
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppTheme.darkSurface1,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),

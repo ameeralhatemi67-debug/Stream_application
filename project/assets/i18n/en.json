@@ -521,6 +521,16 @@
     "arrange": "Arrange",
     "change": "Change"
   },
+  "consent": {
+    "title": "Before You Continue",
+    "body_intro": "To create your account and personalize your experience, we collect a small set of data. Please review before continuing:",
+    "data_point_profile": "Your display name, avatar, and (for Google sign-in) email address",
+    "data_point_location": "Venue location, only if you apply to broadcast from a physical auditorium",
+    "data_point_chat": "Messages you send in live chat, visible to other viewers of that stream",
+    "view_full_policy": "View Full Privacy Policy",
+    "checkbox_label": "I have read and agree to the Privacy Policy and Terms of Service.",
+    "accept_btn": "Agree & Continue"
+  },
   "auth_welcome": {
     "brand_title": "STREAMER APP",
     "subtitle": "Knowledge & Educational Live Streaming Platform\nEastern Province / Al Khobar / Dhahran",
