@@ -208,6 +208,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           String selectedStreamingQuality,
           TermsAndConditionsModel termsAndConditions,
           NotificationPreferencesModel notificationPreferences,
+          bool isPermittedAdmin,
+          bool isAdminUser,
         })>((p) => (
           userProfile: p.userProfile,
           isStreamerModeEnabled: p.isStreamerModeEnabled,
@@ -223,6 +225,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           selectedStreamingQuality: p.selectedStreamingQuality,
           termsAndConditions: p.termsAndConditions,
           notificationPreferences: p.notificationPreferences,
+          isPermittedAdmin: p.isPermittedAdmin,
+          isAdminUser: p.isAdminUser,
         ));
     final currentLocale = context.locale.languageCode;
     final isAr = currentLocale == 'ar';
@@ -300,15 +304,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildNotificationPreferencesCard(context, appProvider),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // Section 4: Streaming Quality
-          _buildSectionHeader(
-            context,
-            title: 'settings.streaming'.tr(),
-            icon: Icons.tune_rounded,
-          ),
-          const SizedBox(height: AppTheme.spaceSm),
-          _buildStreamingQualityCard(context, appProvider),
-          const SizedBox(height: AppTheme.spaceLg),
+          // Section 4 (Streamer Only): Streaming Quality Defaults
+          if (isStreamer) ...[
+            _buildSectionHeader(
+              context,
+              title: 'settings.streaming'.tr(),
+              icon: Icons.tune_rounded,
+            ),
+            const SizedBox(height: AppTheme.spaceSm),
+            _buildStreamingQualityCard(context, appProvider),
+            const SizedBox(height: AppTheme.spaceLg),
+          ],
+
+          // Section 4.5 (Org Owner/Co-Owner Only): Organization Management
+          if (appProvider.isPermittedAdmin) ...[
+            _buildSectionHeader(
+              context,
+              title: 'settings.org_management_title'.tr(),
+              icon: Icons.apartment_rounded,
+              iconColor: AppTheme.accentAmber,
+            ),
+            const SizedBox(height: AppTheme.spaceSm),
+            _buildOrgManagementShortcutCard(context),
+            const SizedBox(height: AppTheme.spaceLg),
+          ],
+
+          // Section 4.6 (Admin/Master Admin Only): Admin Hub Shortcut
+          if (appProvider.isAdminUser) ...[
+            _buildSectionHeader(
+              context,
+              title: 'settings.admin_hub_title'.tr(),
+              icon: Icons.admin_panel_settings_rounded,
+              iconColor: AppTheme.accentPurple,
+            ),
+            const SizedBox(height: AppTheme.spaceSm),
+            _buildAdminHubShortcutCard(context),
+            const SizedBox(height: AppTheme.spaceLg),
+          ],
 
           // Section 6: Platform Governance, Terms & Privacy
           _buildSectionHeader(
@@ -1527,6 +1559,116 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildOrgManagementShortcutCard(BuildContext context) {
+    return InkWell(
+      onTap: () => context.push('/org-admin'),
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurface1,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border:
+              Border.all(color: AppTheme.accentAmber.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.accentAmber.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: const Icon(Icons.apartment_rounded,
+                  color: AppTheme.accentAmber, size: 22),
+            ),
+            const SizedBox(width: AppTheme.spaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'settings.org_management_title'.tr(),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'settings.org_management_desc'.tr(),
+                    style: const TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textSecondaryDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminHubShortcutCard(BuildContext context) {
+    return InkWell(
+      onTap: () => context.push('/admin'),
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurface1,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border:
+              Border.all(color: AppTheme.accentPurple.withValues(alpha: 0.3)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppTheme.accentPurple.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: const Icon(Icons.admin_panel_settings_rounded,
+                  color: AppTheme.accentPurple, size: 22),
+            ),
+            const SizedBox(width: AppTheme.spaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'settings.admin_hub_title'.tr(),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'settings.admin_hub_desc'.tr(),
+                    style: const TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textSecondaryDark),
+          ],
+        ),
       ),
     );
   }
