@@ -30,7 +30,8 @@ import '../../features/admin/models/chat_report_model.dart';
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
 );
-bool _looksLikeUuid(String? value) => value != null && _uuidPattern.hasMatch(value);
+bool _looksLikeUuid(String? value) =>
+    value != null && _uuidPattern.hasMatch(value);
 
 class AppProvider extends ChangeNotifier {
   List<StreamerModel> _streamers = List.from(mockStreamers);
@@ -196,14 +197,16 @@ class AppProvider extends ChangeNotifier {
         _applySessionUser(session.user, isFreshSignIn: isFreshSignIn);
       });
     } catch (e) {
-      debugPrint('Supabase auth listener not attached (Supabase not initialized?): $e');
+      debugPrint(
+          'Supabase auth listener not attached (Supabase not initialized?): $e');
     }
   }
 
   /// Populates auth/display state from a live Supabase session. On a fresh
   /// sign-in, also provisions the profiles row (if missing) and refreshes
   /// admin status from user_roles via the is_admin_tier() RPC.
-  Future<void> _applySessionUser(User user, {required bool isFreshSignIn}) async {
+  Future<void> _applySessionUser(User user,
+      {required bool isFreshSignIn}) async {
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
     _isGuestViewer = false;
@@ -300,7 +303,9 @@ class AppProvider extends ChangeNotifier {
 
   bool _isApprovedStreamer = false;
   bool get isApprovedStreamer =>
-      _isApprovedStreamer || _isAdminFromRoles || _permittedAdminOrgIds.isNotEmpty;
+      _isApprovedStreamer ||
+      _isAdminFromRoles ||
+      _permittedAdminOrgIds.isNotEmpty;
 
   BroadcasterApplicationModel? _myApplication;
   BroadcasterApplicationModel? get myApplication => _myApplication;
@@ -341,8 +346,10 @@ class AppProvider extends ChangeNotifier {
               streamerName: _googleUserName ?? 'Broadcaster',
               titleEn: '🎉 Broadcaster Application Approved!',
               titleAr: '🎉 تم قبول طلب توثيق البث!',
-              bodyEn: 'Congratulations! Your broadcaster application was approved by the administration. Streamer Studio is now unlocked!',
-              bodyAr: 'تهانينا! تمت الموافقة على طلب التوثيق من قبل الإدارة. تم تفعيل استوديو البث المباشر لحسابك!',
+              bodyEn:
+                  'Congratulations! Your broadcaster application was approved by the administration. Streamer Studio is now unlocked!',
+              bodyAr:
+                  'تهانينا! تمت الموافقة على طلب التوثيق من قبل الإدارة. تم تفعيل استوديو البث المباشر لحسابك!',
               timestamp: DateTime.now(),
             ),
           );
@@ -360,15 +367,18 @@ class AppProvider extends ChangeNotifier {
               streamerName: _googleUserName ?? 'User',
               titleEn: 'ℹ️ Application Status Update',
               titleAr: 'ℹ️ تحديث حالة الطلب',
-              bodyEn: 'Your broadcaster application was removed. You can submit a new application anytime.',
-              bodyAr: 'تم إزالة طلب التوثيق الخاص بك. يمكنك تقديم طلب جديد في أي وقت.',
+              bodyEn:
+                  'Your broadcaster application was removed. You can submit a new application anytime.',
+              bodyAr:
+                  'تم إزالة طلب التوثيق الخاص بك. يمكنك تقديم طلب جديد في أي وقت.',
               timestamp: DateTime.now(),
             ),
           );
         } else if (previousApp != null &&
             previousApp.status != ApplicationStatus.rejected &&
             myApp?.status == ApplicationStatus.rejected) {
-          final reason = myApp?.adminReviewNotes ?? 'Incomplete application requirements.';
+          final reason =
+              myApp?.adminReviewNotes ?? 'Incomplete application requirements.';
           addEnhancedNotification(
             AppNotificationModel(
               id: 'notif_app_rejected_${DateTime.now().millisecondsSinceEpoch}',
@@ -377,8 +387,10 @@ class AppProvider extends ChangeNotifier {
               streamerName: _googleUserName ?? 'User',
               titleEn: '📋 Broadcaster Application Status Update',
               titleAr: '📋 تحديث بخصوص طلب التوثيق الأكاديمي',
-              bodyEn: 'We could not approve your application at this time: "$reason". You are welcome to re-apply!',
-              bodyAr: 'تعذر قبول الطلب حالياً للملاحظات التالية: «$reason». يسعدنا تقديمك مجدداً بعد التعديل!',
+              bodyEn:
+                  'We could not approve your application at this time: "$reason". You are welcome to re-apply!',
+              bodyAr:
+                  'تعذر قبول الطلب حالياً للملاحظات التالية: «$reason». يسعدنا تقديمك مجدداً بعد التعديل!',
               timestamp: DateTime.now(),
             ),
           );
@@ -485,7 +497,8 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'broadcaster_applications',
             callback: (payload) {
-              debugPrint('Realtime: broadcaster application status changed ($payload)');
+              debugPrint(
+                  'Realtime: broadcaster application status changed ($payload)');
               loadVerifiedStreamersFromBackend();
               refreshAdminData();
             },
@@ -528,8 +541,7 @@ class AppProvider extends ChangeNotifier {
           !backendIds.contains(s.streamerId));
 
       for (final bs in backendStreamers) {
-        final idx =
-            _streamers.indexWhere((s) => s.streamerId == bs.streamerId);
+        final idx = _streamers.indexWhere((s) => s.streamerId == bs.streamerId);
         if (idx != -1) {
           _streamers[idx] = bs;
         } else {
@@ -682,8 +694,8 @@ class AppProvider extends ChangeNotifier {
     _unsubscribeFromUserStatusChanges();
     final userId = _authService.currentSession?.user.id;
     if (userId != null) {
-      _streamers.removeWhere((s) =>
-          s.streamerId == userId || s.streamerId == 'streamer_$userId');
+      _streamers.removeWhere(
+          (s) => s.streamerId == userId || s.streamerId == 'streamer_$userId');
     }
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
@@ -776,8 +788,9 @@ class AppProvider extends ChangeNotifier {
   /// Fetches real concurrent viewer counts for all currently-live streamers
   /// and updates their `activeViewerCount` if the value changed.
   Future<void> _pollLiveViewers() async {
-    final liveStreamers = _streamers.where((s) =>
-        s.isCurrentlyLive && s.youtubeVideoId.isNotEmpty).toList();
+    final liveStreamers = _streamers
+        .where((s) => s.isCurrentlyLive && s.youtubeVideoId.isNotEmpty)
+        .toList();
 
     if (liveStreamers.isEmpty) return;
 
@@ -896,7 +909,8 @@ class AppProvider extends ChangeNotifier {
   bool get isBroadcastingLive => _isBroadcastingLive;
   String? get selectedBroadcastOrgId => _selectedBroadcastOrgId;
   String? get selectedVenueBranchId => _selectedVenueBranchId;
-  List<String> get selectedCoSpeakerIds => List.unmodifiable(_selectedCoSpeakerIds);
+  List<String> get selectedCoSpeakerIds =>
+      List.unmodifiable(_selectedCoSpeakerIds);
 
   void setSelectedBroadcastOrgId(String? orgId) {
     _selectedBroadcastOrgId = orgId;
@@ -904,11 +918,24 @@ class AppProvider extends ChangeNotifier {
       final venues = getOrganizationVenues(orgId);
       final mainHq = venues.firstWhere(
         (v) => v.isMainHeadquarters,
-        orElse: () => venues.isNotEmpty ? venues.first : const OrgVenueBranchModel(venueId: '', nameEn: '', nameAr: '', cityEn: '', cityAr: '', latitude: 0, longitude: 0, seatingCapacity: 0),
+        orElse: () => venues.isNotEmpty
+            ? venues.first
+            : const OrgVenueBranchModel(
+                venueId: '',
+                nameEn: '',
+                nameAr: '',
+                cityEn: '',
+                cityAr: '',
+                latitude: 0,
+                longitude: 0,
+                seatingCapacity: 0),
       );
-      _selectedVenueBranchId = mainHq.venueId.isNotEmpty ? mainHq.venueId : (venues.isNotEmpty ? venues.first.venueId : null);
+      _selectedVenueBranchId = mainHq.venueId.isNotEmpty
+          ? mainHq.venueId
+          : (venues.isNotEmpty ? venues.first.venueId : null);
       final speakers = getOrganizationSpeakers(orgId);
-      _selectedCoSpeakerIds = speakers.isNotEmpty ? [speakers.first.speakerId] : [];
+      _selectedCoSpeakerIds =
+          speakers.isNotEmpty ? [speakers.first.speakerId] : [];
     } else {
       _selectedVenueBranchId = null;
       _selectedCoSpeakerIds = [];
@@ -976,7 +1003,8 @@ class AppProvider extends ChangeNotifier {
   }
 
   void toggleMuteEntity(String entityId) {
-    final currentMuted = Set<String>.from(_notificationPreferences.mutedEntityIds);
+    final currentMuted =
+        Set<String>.from(_notificationPreferences.mutedEntityIds);
     if (currentMuted.contains(entityId)) {
       currentMuted.remove(entityId);
     } else {
@@ -1070,7 +1098,8 @@ class AppProvider extends ChangeNotifier {
 
     // Display interactive dismissible overlay if context is provided
     if (context != null && context.mounted) {
-      final isAr = EasyLocalization.of(context)?.currentLocale?.languageCode == 'ar';
+      final isAr =
+          EasyLocalization.of(context)?.currentLocale?.languageCode == 'ar';
       InteractiveToastOverlay.show(
         context,
         title: item.getLocalizedTitle(isAr ? 'ar' : 'en'),
@@ -1080,7 +1109,8 @@ class AppProvider extends ChangeNotifier {
             : (item.type == NotificationType.watchMilestoneOneHour
                 ? Icons.workspace_premium_rounded
                 : Icons.notifications_active_rounded),
-        accentColor: item.isLiveAlert ? AppTheme.accentRed : AppTheme.accentBlue,
+        accentColor:
+            item.isLiveAlert ? AppTheme.accentRed : AppTheme.accentBlue,
         actionLabel: item.streamId != null ? (isAr ? 'مشاهدة' : 'Watch') : null,
       );
     }
@@ -1128,8 +1158,7 @@ class AppProvider extends ChangeNotifier {
       return false; // Protected original streamer cannot be deleted
     }
     _streamers.removeWhere((s) =>
-        s.streamerId == streamerId ||
-        s.streamerId == 'streamer_$streamerId');
+        s.streamerId == streamerId || s.streamerId == 'streamer_$streamerId');
     _adminDbService ??= await AdminDatabaseService.create();
     final success = await _adminDbService!.revokeStreamer(streamerId);
 
@@ -1153,7 +1182,8 @@ class AppProvider extends ChangeNotifier {
 
   StreamerModel? getStreamerById(String streamerIdOrStreamId) {
     try {
-      final clean = streamerIdOrStreamId.trim().replaceAll('@', '').toLowerCase();
+      final clean =
+          streamerIdOrStreamId.trim().replaceAll('@', '').toLowerCase();
       return _streamers.firstWhere((s) =>
           s.streamerId == streamerIdOrStreamId ||
           s.activeStreamId == streamerIdOrStreamId ||
@@ -1511,8 +1541,10 @@ class AppProvider extends ChangeNotifier {
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
         actorName: _googleUserName ?? 'Administrator',
         action: OrgAuditAction.addSpeakerToRoster,
-        descriptionEn: 'Added ${speaker.nameEn} to organization speaker roster.',
-        descriptionAr: 'تمت إضافة ${speaker.nameAr} إلى قائمة المدربين المعتمدين.',
+        descriptionEn:
+            'Added ${speaker.nameEn} to organization speaker roster.',
+        descriptionAr:
+            'تمت إضافة ${speaker.nameAr} إلى قائمة المدربين المعتمدين.',
         metadata: {
           'speaker_id': speaker.speakerId,
           'role': speaker.roleOrTitleEn,
@@ -1615,6 +1647,25 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> signOut() async {
     await logout();
+  }
+
+  /// Self-service account & data deletion (v0.9 Checkpoint 2 Phase 1) --
+  /// Apple/Google store-submission requirement. Calls the security-definer
+  /// `delete_own_account()` RPC (20260829000000_account_deletion_cascades.sql),
+  /// which deletes the caller's own auth.users row; that cascades to
+  /// profiles and everything hanging off it (broadcaster_applications,
+  /// chat_messages, user_roles, user_permissions, owned organizations via
+  /// the before-delete trigger). Local client state is cleared the same way
+  /// signOut() clears it, since the session is no longer valid either way.
+  Future<bool> deleteOwnAccount() async {
+    try {
+      await Supabase.instance.client.rpc('delete_own_account');
+    } catch (e) {
+      debugPrint('Account deletion failed: $e');
+      return false;
+    }
+    await logout();
+    return true;
   }
 
   // Toggle Streamer / Viewer Mode
@@ -1772,7 +1823,9 @@ class AppProvider extends ChangeNotifier {
     _streamers = _streamers.map<StreamerModel>((streamer) {
       if (streamer.streamerId == targetStreamerId) {
         OrgVenueBranchModel? activeBranch;
-        if (orgId != null && _selectedVenueBranchId != null && streamer.venues.isNotEmpty) {
+        if (orgId != null &&
+            _selectedVenueBranchId != null &&
+            streamer.venues.isNotEmpty) {
           activeBranch = streamer.venues.firstWhere(
             (v) => v.venueId == _selectedVenueBranchId,
             orElse: () => streamer.venues.first,
@@ -1781,16 +1834,25 @@ class AppProvider extends ChangeNotifier {
 
         return streamer.copyWith(
           isCurrentlyLive: _isBroadcastingLive,
-          broadcastType: _isBroadcastingLive ? _customBroadcastType : BroadcastType.offline,
+          broadcastType: _isBroadcastingLive
+              ? _customBroadcastType
+              : BroadcastType.offline,
           activeStreamId: _isBroadcastingLive ? 'stream_live_992' : null,
           activeViewerCount: _isBroadcastingLive ? 0 : 0,
           titleEn: _customLiveTitle,
           titleAr: _customLiveTitle,
-          latitude: activeBranch != null ? activeBranch.latitude : streamer.latitude,
-          longitude: activeBranch != null ? activeBranch.longitude : streamer.longitude,
-          venueNameEn: activeBranch != null ? activeBranch.nameEn : streamer.venueNameEn,
-          venueNameAr: activeBranch != null ? activeBranch.nameAr : streamer.venueNameAr,
-          activeLiveVenueId: _isBroadcastingLive ? (_selectedVenueBranchId ?? streamer.activeLiveVenueId) : null,
+          latitude:
+              activeBranch != null ? activeBranch.latitude : streamer.latitude,
+          longitude: activeBranch != null
+              ? activeBranch.longitude
+              : streamer.longitude,
+          venueNameEn:
+              activeBranch != null ? activeBranch.nameEn : streamer.venueNameEn,
+          venueNameAr:
+              activeBranch != null ? activeBranch.nameAr : streamer.venueNameAr,
+          activeLiveVenueId: _isBroadcastingLive
+              ? (_selectedVenueBranchId ?? streamer.activeLiveVenueId)
+              : null,
         );
       }
       return streamer;
@@ -1800,7 +1862,8 @@ class AppProvider extends ChangeNotifier {
       // Start polling real viewer count from YouTube
       _startLiveViewerPolling();
       final isAudio = _customBroadcastType == BroadcastType.liveAudio;
-      final streamerNameEn = orgId != null ? 'Dalilk 4 IELTS' : 'Amir Al-Hatemi';
+      final streamerNameEn =
+          orgId != null ? 'Dalilk 4 IELTS' : 'Amir Al-Hatemi';
       final streamerNameAr = orgId != null ? 'دليل الآيلتس' : 'أمير الحاتمي';
 
       addEnhancedNotification(
@@ -1814,9 +1877,8 @@ class AppProvider extends ChangeNotifier {
           titleEn: isAudio
               ? '🎙️ Live Audio Stage Started'
               : '🔴 Live Broadcast Started',
-          titleAr: isAudio
-              ? '🎙️ مساحة صوتية مباشرة'
-              : '🔴 بدأ البث المباشر الآن',
+          titleAr:
+              isAudio ? '🎙️ مساحة صوتية مباشرة' : '🔴 بدأ البث المباشر الآن',
           bodyEn: isAudio
               ? 'Live Audio Stage with $streamerNameEn: "$_customLiveTitle" .. Join in!'
               : '🔴 $streamerNameEn is live now: "$_customLiveTitle" .. Join and interact!',
@@ -1838,8 +1900,10 @@ class AppProvider extends ChangeNotifier {
             actorEmail: _googleUserEmail ?? 'admin@platform.com',
             actorName: _googleUserName ?? 'Administrator',
             action: OrgAuditAction.startLiveBroadcast,
-            descriptionEn: 'Started live broadcast "$_customLiveTitle" (${isAudio ? 'Audio-Only' : 'Video'}).',
-            descriptionAr: 'بدأ بث مباشر "$_customLiveTitle" (${isAudio ? 'صوتي' : 'مرئي'}).',
+            descriptionEn:
+                'Started live broadcast "$_customLiveTitle" (${isAudio ? 'Audio-Only' : 'Video'}).',
+            descriptionAr:
+                'بدأ بث مباشر "$_customLiveTitle" (${isAudio ? 'صوتي' : 'مرئي'}).',
             metadata: {
               'venue_id': _selectedVenueBranchId,
               'speakers': _selectedCoSpeakerIds,
@@ -1895,7 +1959,8 @@ class AppProvider extends ChangeNotifier {
             streamerName: 'Dalilk 4 IELTS',
             titleEn: '📡 Stream Session Concluded',
             titleAr: '📡 انتهت جلسة البث المباشر',
-            bodyEn: 'Faculty member concluded their live session at Dalilk Auditorium.',
+            bodyEn:
+                'Faculty member concluded their live session at Dalilk Auditorium.',
             bodyAr: 'أنهى عضو الكادر جلسته التدريبية المباشرة في مدرج دليلك.',
             timestamp: DateTime.now(),
           ),
@@ -1907,8 +1972,8 @@ class AppProvider extends ChangeNotifier {
       final anyOtherLive = _streamers.any((s) => s.isCurrentlyLive);
       if (!anyOtherLive) {
         // Still keep polling for the always-on Quran stream if it is live
-        final quranStillLive = _streamers.any(
-            (s) => s.streamerId == 'quran_4k_05' && s.isCurrentlyLive);
+        final quranStillLive = _streamers
+            .any((s) => s.streamerId == 'quran_4k_05' && s.isCurrentlyLive);
         if (!quranStillLive) _stopLiveViewerPolling();
       }
     }
@@ -1918,9 +1983,11 @@ class AppProvider extends ChangeNotifier {
   static String extractYouTubeId(String url) {
     final trimmed = url.trim();
     if (trimmed.isEmpty) return 'dQw4w9WgXcQ';
-    
+
     // Support youtube.com/live/VIDEO_ID format
-    final liveMatch = RegExp(r'youtube\.com\/live\/([a-zA-Z0-9_-]{11})', caseSensitive: false).firstMatch(trimmed);
+    final liveMatch =
+        RegExp(r'youtube\.com\/live\/([a-zA-Z0-9_-]{11})', caseSensitive: false)
+            .firstMatch(trimmed);
     if (liveMatch != null) return liveMatch.group(1)!;
 
     final regExp = RegExp(
@@ -2193,7 +2260,8 @@ class AppProvider extends ChangeNotifier {
         titleEn: '🔴 Live Broadcast Started',
         titleAr: '🔴 بدأ البث المباشر الآن',
         bodyEn: '🔴 Amir Al-Hatemi is live now: "$customLiveTitle" .. Join in!',
-        bodyAr: '🔴 أمير الحاتمي بدأ بثاً مباشراً الآن: «$customLiveTitle».. حيّاك شاركنا وتفاعل!',
+        bodyAr:
+            '🔴 أمير الحاتمي بدأ بثاً مباشراً الآن: «$customLiveTitle».. حيّاك شاركنا وتفاعل!',
         timestamp: DateTime.now(),
         streamId: 'stream_live_992',
       ),
@@ -2218,7 +2286,8 @@ class AppProvider extends ChangeNotifier {
     _adminDbService ??= await AdminDatabaseService.create();
 
     // Stage 1: Update Application Status and Backend Profile
-    onProgress?.call(1, 'Updating application status & granting broadcaster credentials...');
+    onProgress?.call(
+        1, 'Updating application status & granting broadcaster credentials...');
     final updated = await _adminDbService!.updateApplicationStatus(
       applicationId,
       ApplicationStatus.approved,
@@ -2230,7 +2299,8 @@ class AppProvider extends ChangeNotifier {
       _applications = List.from(await _adminDbService!.loadApplications());
     }
 
-    final applicantProfileId = updated?.applicantProfileId ?? app.applicantProfileId;
+    final applicantProfileId =
+        updated?.applicantProfileId ?? app.applicantProfileId;
     String? realOrgId;
     if (applicantProfileId != null) {
       try {
@@ -2247,7 +2317,8 @@ class AppProvider extends ChangeNotifier {
     }
 
     // Stage 2: Create StreamerModel & Inject into Discovery Feed
-    onProgress?.call(2, 'Creating Broadcaster card & integrating into Discovery Feed...');
+    onProgress?.call(
+        2, 'Creating Broadcaster card & integrating into Discovery Feed...');
     final newStreamer = StreamerModel(
       streamerId: realOrgId ?? applicantProfileId ?? 'streamer_${app.id}',
       fullNameEn: app.applicantNameEn,
@@ -2289,7 +2360,8 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
 
     // Stage 3: Background YouTube Channel Video & Playlist Sync
-    onProgress?.call(3, 'Resolving YouTube channel uploads & video archives...');
+    onProgress?.call(
+        3, 'Resolving YouTube channel uploads & video archives...');
     try {
       final cleanHandle = app.youtubeHandle.replaceFirst('@', '').trim();
       if (cleanHandle.isNotEmpty) {
@@ -2300,9 +2372,11 @@ class AppProvider extends ChangeNotifier {
         );
         if (uploads.isNotEmpty) {
           final latestVideoId = uploads.first.youtubeVideoId;
-          final sIdx = _streamers.indexWhere((s) => s.streamerId == newStreamer.streamerId);
+          final sIdx = _streamers
+              .indexWhere((s) => s.streamerId == newStreamer.streamerId);
           if (sIdx != -1) {
-            _streamers[sIdx] = _streamers[sIdx].copyWith(youtubeVideoId: latestVideoId);
+            _streamers[sIdx] =
+                _streamers[sIdx].copyWith(youtubeVideoId: latestVideoId);
           }
         }
       }
@@ -2311,7 +2385,8 @@ class AppProvider extends ChangeNotifier {
     }
 
     // Stage 4: Plot on Spatial Map & Send Realtime Notification
-    onProgress?.call(4, 'Plotting venue location on Spatial Map & dispatching notification...');
+    onProgress?.call(4,
+        'Plotting venue location on Spatial Map & dispatching notification...');
     addEnhancedNotification(
       AppNotificationModel(
         id: 'notif_verified_${app.id}',
@@ -2449,7 +2524,8 @@ class AppProvider extends ChangeNotifier {
     return (succeeded: succeeded, failed: failed);
   }
 
-  Future<void> updateTermsAndConditions(TermsAndConditionsModel newTerms) async {
+  Future<void> updateTermsAndConditions(
+      TermsAndConditionsModel newTerms) async {
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.saveTerms(newTerms);
     _termsAndConditions = newTerms;
@@ -2471,7 +2547,9 @@ class AppProvider extends ChangeNotifier {
 
   List<OrgAuditLogEntry> getOrganizationAuditLogs([String? organizationId]) {
     if (organizationId != null && organizationId.isNotEmpty) {
-      return _auditLogs.where((l) => l.organizationId == organizationId).toList();
+      return _auditLogs
+          .where((l) => l.organizationId == organizationId)
+          .toList();
     }
     return List.unmodifiable(_auditLogs);
   }
@@ -2705,7 +2783,8 @@ class AppProvider extends ChangeNotifier {
   /// Best-effort Supabase write-through for org venue/speaker mutations --
   /// no-ops (with a debug log) for orgIds without a real backend row, since
   /// _streamers is always updated separately by the caller regardless.
-  Future<void> _writeThroughOrgSpeaker(String orgId, OrgSpeakerModel speaker) async {
+  Future<void> _writeThroughOrgSpeaker(
+      String orgId, OrgSpeakerModel speaker) async {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
       await _adminDbService!.upsertOrgSpeaker(orgId, speaker);
@@ -2725,7 +2804,8 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _writeThroughOrgVenue(String orgId, OrgVenueBranchModel venue) async {
+  Future<void> _writeThroughOrgVenue(
+      String orgId, OrgVenueBranchModel venue) async {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
       await _adminDbService!.upsertOrgVenue(orgId, venue);
@@ -2745,7 +2825,8 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<void> _writeThroughDeleteOrgSpeaker(String orgId, String speakerId) async {
+  Future<void> _writeThroughDeleteOrgSpeaker(
+      String orgId, String speakerId) async {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
       await _adminDbService!.deleteOrgSpeaker(speakerId);
@@ -2798,8 +2879,7 @@ class AppProvider extends ChangeNotifier {
         action: OrgAuditAction.grantBroadcastPermission,
         descriptionEn:
             'Updated broadcast permissions for speaker ${currentSpeaker.nameEn}.',
-        descriptionAr:
-            'تم تحديث صلاحيات البث للمدرب ${currentSpeaker.nameAr}.',
+        descriptionAr: 'تم تحديث صلاحيات البث للمدرب ${currentSpeaker.nameAr}.',
         metadata: {
           'speaker_id': speakerId,
           'permissions': newPermissions.toJson(),
@@ -2850,12 +2930,14 @@ class AppProvider extends ChangeNotifier {
     return false;
   }
 
-  Future<void> addOrganizationBranch(String orgId, OrgVenueBranchModel branch) async {
+  Future<void> addOrganizationBranch(
+      String orgId, OrgVenueBranchModel branch) async {
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
     final currentOrg = _streamers[idx];
-    final updatedVenues = List<OrgVenueBranchModel>.from(currentOrg.venues)..add(branch);
+    final updatedVenues = List<OrgVenueBranchModel>.from(currentOrg.venues)
+      ..add(branch);
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
     await _writeThroughOrgVenue(orgId, branch);
 
@@ -2867,20 +2949,25 @@ class AppProvider extends ChangeNotifier {
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
         actorName: _googleUserName ?? 'Administrator',
         action: OrgAuditAction.addVenueBranch,
-        descriptionEn: 'Added new campus branch: ${branch.nameEn} (${branch.cityEn}).',
-        descriptionAr: 'تمت إضافة فرع جديد: ${branch.nameAr} (${branch.cityAr}).',
+        descriptionEn:
+            'Added new campus branch: ${branch.nameEn} (${branch.cityEn}).',
+        descriptionAr:
+            'تمت إضافة فرع جديد: ${branch.nameAr} (${branch.cityAr}).',
         metadata: branch.toJson(),
       ),
     );
     notifyListeners();
   }
 
-  Future<void> updateOrganizationBranch(String orgId, OrgVenueBranchModel branch) async {
+  Future<void> updateOrganizationBranch(
+      String orgId, OrgVenueBranchModel branch) async {
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
     final currentOrg = _streamers[idx];
-    final updatedVenues = currentOrg.venues.map((v) => v.venueId == branch.venueId ? branch : v).toList();
+    final updatedVenues = currentOrg.venues
+        .map((v) => v.venueId == branch.venueId ? branch : v)
+        .toList();
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
     await _writeThroughOrgVenue(orgId, branch);
 
@@ -2907,9 +2994,18 @@ class AppProvider extends ChangeNotifier {
     final currentOrg = _streamers[idx];
     final removed = currentOrg.venues.firstWhere(
       (v) => v.venueId == venueId,
-      orElse: () => const OrgVenueBranchModel(venueId: '', nameEn: '', nameAr: '', cityEn: '', cityAr: '', latitude: 0, longitude: 0, seatingCapacity: 0),
+      orElse: () => const OrgVenueBranchModel(
+          venueId: '',
+          nameEn: '',
+          nameAr: '',
+          cityEn: '',
+          cityAr: '',
+          latitude: 0,
+          longitude: 0,
+          seatingCapacity: 0),
     );
-    final updatedVenues = currentOrg.venues.where((v) => v.venueId != venueId).toList();
+    final updatedVenues =
+        currentOrg.venues.where((v) => v.venueId != venueId).toList();
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
     await _writeThroughDeleteOrgVenue(orgId, venueId);
 
@@ -2921,20 +3017,24 @@ class AppProvider extends ChangeNotifier {
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
         actorName: _googleUserName ?? 'Administrator',
         action: OrgAuditAction.removeVenueBranch,
-        descriptionEn: 'Removed campus branch: ${removed.nameEn.isNotEmpty ? removed.nameEn : venueId}.',
-        descriptionAr: 'تم حذف الفرع: ${removed.nameAr.isNotEmpty ? removed.nameAr : venueId}.',
+        descriptionEn:
+            'Removed campus branch: ${removed.nameEn.isNotEmpty ? removed.nameEn : venueId}.',
+        descriptionAr:
+            'تم حذف الفرع: ${removed.nameAr.isNotEmpty ? removed.nameAr : venueId}.',
         metadata: {'venue_id': venueId},
       ),
     );
     notifyListeners();
   }
 
-  Future<void> addOrganizationSpeaker(String orgId, OrgSpeakerModel speaker) async {
+  Future<void> addOrganizationSpeaker(
+      String orgId, OrgSpeakerModel speaker) async {
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
     final currentOrg = _streamers[idx];
-    final updatedSpeakers = List<OrgSpeakerModel>.from(currentOrg.affiliatedSpeakers)..add(speaker);
+    final updatedSpeakers =
+        List<OrgSpeakerModel>.from(currentOrg.affiliatedSpeakers)..add(speaker);
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
     await _writeThroughOrgSpeaker(orgId, speaker);
 
@@ -2946,20 +3046,25 @@ class AppProvider extends ChangeNotifier {
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
         actorName: _googleUserName ?? 'Administrator',
         action: OrgAuditAction.addSpeakerToRoster,
-        descriptionEn: 'Added instructor to roster: ${speaker.nameEn} (${speaker.roleOrTitleEn}).',
-        descriptionAr: 'تمت إضافة مدرب إلى الكادر: ${speaker.nameAr} (${speaker.roleOrTitleAr}).',
+        descriptionEn:
+            'Added instructor to roster: ${speaker.nameEn} (${speaker.roleOrTitleEn}).',
+        descriptionAr:
+            'تمت إضافة مدرب إلى الكادر: ${speaker.nameAr} (${speaker.roleOrTitleAr}).',
         metadata: speaker.toJson(),
       ),
     );
     notifyListeners();
   }
 
-  Future<void> updateOrganizationSpeaker(String orgId, OrgSpeakerModel speaker) async {
+  Future<void> updateOrganizationSpeaker(
+      String orgId, OrgSpeakerModel speaker) async {
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
     final currentOrg = _streamers[idx];
-    final updatedSpeakers = currentOrg.affiliatedSpeakers.map((s) => s.speakerId == speaker.speakerId ? speaker : s).toList();
+    final updatedSpeakers = currentOrg.affiliatedSpeakers
+        .map((s) => s.speakerId == speaker.speakerId ? speaker : s)
+        .toList();
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
     await _writeThroughOrgSpeaker(orgId, speaker);
 
@@ -2986,9 +3091,19 @@ class AppProvider extends ChangeNotifier {
     final currentOrg = _streamers[idx];
     final removed = currentOrg.affiliatedSpeakers.firstWhere(
       (s) => s.speakerId == speakerId,
-      orElse: () => const OrgSpeakerModel(speakerId: '', nameEn: '', nameAr: '', roleOrTitleEn: '', roleOrTitleAr: '', avatarUrl: '', bioEn: '', bioAr: ''),
+      orElse: () => const OrgSpeakerModel(
+          speakerId: '',
+          nameEn: '',
+          nameAr: '',
+          roleOrTitleEn: '',
+          roleOrTitleAr: '',
+          avatarUrl: '',
+          bioEn: '',
+          bioAr: ''),
     );
-    final updatedSpeakers = currentOrg.affiliatedSpeakers.where((s) => s.speakerId != speakerId).toList();
+    final updatedSpeakers = currentOrg.affiliatedSpeakers
+        .where((s) => s.speakerId != speakerId)
+        .toList();
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
     await _writeThroughDeleteOrgSpeaker(orgId, speakerId);
 
@@ -3000,8 +3115,10 @@ class AppProvider extends ChangeNotifier {
         actorEmail: _googleUserEmail ?? 'admin@platform.com',
         actorName: _googleUserName ?? 'Administrator',
         action: OrgAuditAction.removeSpeakerFromRoster,
-        descriptionEn: 'Removed instructor from roster: ${removed.nameEn.isNotEmpty ? removed.nameEn : speakerId}.',
-        descriptionAr: 'تم حذف المدرب من الكادر: ${removed.nameAr.isNotEmpty ? removed.nameAr : speakerId}.',
+        descriptionEn:
+            'Removed instructor from roster: ${removed.nameEn.isNotEmpty ? removed.nameEn : speakerId}.',
+        descriptionAr:
+            'تم حذف المدرب من الكادر: ${removed.nameAr.isNotEmpty ? removed.nameAr : speakerId}.',
         metadata: {'speaker_id': speakerId},
       ),
     );

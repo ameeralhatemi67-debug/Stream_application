@@ -23,6 +23,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _venueController = TextEditingController();
   final TextEditingController _slidesController = TextEditingController();
+  bool _isDeletingAccount = false;
 
   @override
   void initState() {
@@ -352,6 +353,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: AppTheme.spaceSm),
           _buildGovernanceCard(context, appProvider),
           const SizedBox(height: AppTheme.spaceLg),
+
+          // Section 6.5: Account & Data (Delete Account) -- baseline for
+          // every signed-in account (v0.9 Checkpoint 2 Phase 1); nothing to
+          // delete for a guest viewer who never signed in.
+          if (appProvider.isLoggedInStreamer) ...[
+            _buildSectionHeader(
+              context,
+              title: 'settings.danger_zone'.tr(),
+              icon: Icons.warning_amber_rounded,
+              iconColor: AppTheme.accentRed,
+            ),
+            const SizedBox(height: AppTheme.spaceSm),
+            _buildDeleteAccountCard(context, appProvider),
+            const SizedBox(height: AppTheme.spaceLg),
+          ],
 
           // Section 7: About
           _buildSectionHeader(
@@ -1858,6 +1874,142 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ],
       ),
     );
+  }
+
+  Widget _buildDeleteAccountCard(BuildContext context, AppProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.accentRed.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'settings.delete_account_title'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'settings.delete_account_desc'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 11),
+          ),
+          const SizedBox(height: AppTheme.spaceMd),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: _isDeletingAccount
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.accentRed,
+                      ),
+                    )
+                  : const Icon(Icons.delete_forever_rounded, size: 18),
+              label: Text('settings.delete_account_btn'.tr()),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.accentRed,
+                side: const BorderSide(color: AppTheme.accentRed),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              ),
+              onPressed: _isDeletingAccount
+                  ? null
+                  : () => _showDeleteAccountDialog(context, provider),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAccountDialog(BuildContext context, AppProvider provider) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.darkSurface1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+          ),
+          title: Row(
+            children: [
+              const Icon(Icons.warning_amber_rounded,
+                  color: AppTheme.accentRed, size: 22),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'settings.delete_account_confirm_title'.tr(),
+                  style: const TextStyle(
+                    color: AppTheme.textPrimaryDark,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 16,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            'settings.delete_account_confirm_body'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 13),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'settings.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMutedDark),
+              ),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentRed,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                Navigator.pop(dialogContext);
+                _handleDeleteAccount(context, provider);
+              },
+              child: Text('settings.delete_account_confirm_btn'.tr()),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _handleDeleteAccount(
+      BuildContext context, AppProvider provider) async {
+    setState(() => _isDeletingAccount = true);
+    final success = await provider.deleteOwnAccount();
+    if (!context.mounted) return;
+    setState(() => _isDeletingAccount = false);
+
+    if (success) {
+      context.go('/welcome');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('settings.delete_account_success_toast'.tr())),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('settings.delete_account_error_toast'.tr()),
+          backgroundColor: AppTheme.accentRed,
+        ),
+      );
+    }
   }
 
   Widget _buildNotificationPreferencesCard(
