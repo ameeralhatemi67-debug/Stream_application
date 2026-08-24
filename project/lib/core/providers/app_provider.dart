@@ -1736,6 +1736,55 @@ class AppProvider extends ChangeNotifier {
     await logout();
   }
 
+  /// PDPL data-portability export (v0.9 Checkpoint 3 Phase 2) -- a basic
+  /// export of the requesting user's own stored data: their profile,
+  /// broadcaster/organization applications, and live chat messages they
+  /// sent. profiles_select_own and broadcaster_applications_select_own
+  /// (row_level_security.sql) scope the first two to the caller's own rows;
+  /// chat_messages is filtered client-side by sender_id since its RLS is
+  /// public-read (chat_messages_select_public). Each section fails
+  /// independently so one failed query doesn't blank out the whole export.
+  Future<Map<String, dynamic>> exportMyData() async {
+    final userId = _authService.currentSession?.user.id;
+    final result = <String, dynamic>{
+      'exported_at': DateTime.now().toIso8601String(),
+    };
+    if (userId == null) {
+      result['error'] = 'Not signed in.';
+      return result;
+    }
+
+    final client = Supabase.instance.client;
+
+    try {
+      result['profile'] =
+          await client.from('profiles').select().eq('id', userId).maybeSingle();
+    } catch (e) {
+      debugPrint('Data export: profile fetch failed: $e');
+      result['profile'] = null;
+    }
+
+    try {
+      result['broadcaster_applications'] = await client
+          .from('broadcaster_applications')
+          .select()
+          .eq('applicant_profile_id', userId);
+    } catch (e) {
+      debugPrint('Data export: applications fetch failed: $e');
+      result['broadcaster_applications'] = [];
+    }
+
+    try {
+      result['chat_messages'] =
+          await client.from('chat_messages').select().eq('sender_id', userId);
+    } catch (e) {
+      debugPrint('Data export: chat messages fetch failed: $e');
+      result['chat_messages'] = [];
+    }
+
+    return result;
+  }
+
   /// Self-service account & data deletion (v0.9 Checkpoint 2 Phase 1) --
   /// Apple/Google store-submission requirement. Calls the security-definer
   /// `delete_own_account()` RPC (20260829000000_account_deletion_cascades.sql),

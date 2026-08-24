@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -24,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _venueController = TextEditingController();
   final TextEditingController _slidesController = TextEditingController();
   bool _isDeletingAccount = false;
+  bool _isExportingData = false;
 
   @override
   void initState() {
@@ -365,6 +368,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               iconColor: AppTheme.accentRed,
             ),
             const SizedBox(height: AppTheme.spaceSm),
+            _buildDataExportCard(context, appProvider),
+            const SizedBox(height: AppTheme.spaceMd),
             _buildDeleteAccountCard(context, appProvider),
             const SizedBox(height: AppTheme.spaceLg),
           ],
@@ -1873,6 +1878,173 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildDataExportCard(BuildContext context, AppProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.darkBorderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'settings.data_export_title'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'settings.data_export_desc'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 11),
+          ),
+          const SizedBox(height: AppTheme.spaceMd),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: _isExportingData
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.accentBlue,
+                      ),
+                    )
+                  : const Icon(Icons.download_rounded, size: 18),
+              label: Text('settings.data_export_btn'.tr()),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.accentBlue,
+                side: const BorderSide(color: AppTheme.accentBlue),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              ),
+              onPressed: _isExportingData
+                  ? null
+                  : () => _handleDataExport(context, provider),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleDataExport(
+      BuildContext context, AppProvider provider) async {
+    setState(() => _isExportingData = true);
+    Map<String, dynamic>? data;
+    try {
+      data = await provider.exportMyData();
+    } catch (e) {
+      data = null;
+    }
+    if (!context.mounted) return;
+    setState(() => _isExportingData = false);
+
+    if (data == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('settings.data_export_error_toast'.tr()),
+          backgroundColor: AppTheme.accentRed,
+        ),
+      );
+      return;
+    }
+
+    final pretty = const JsonEncoder.withIndent('  ').convert(data);
+    if (!context.mounted) return;
+    _showDataExportDialog(context, pretty);
+  }
+
+  void _showDataExportDialog(BuildContext context, String jsonText) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: AppTheme.darkSurface1,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+          ),
+          title: Text(
+            'settings.data_export_dialog_title'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontWeight: FontWeight.bold,
+              fontSize: 15,
+            ),
+          ),
+          content: SizedBox(
+            width: 550,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'settings.data_export_dialog_desc'.tr(),
+                  style: const TextStyle(
+                      color: AppTheme.textSecondaryDark, fontSize: 12),
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                Container(
+                  constraints: const BoxConstraints(maxHeight: 360),
+                  padding: const EdgeInsets.all(AppTheme.spaceSm),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface2,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: AppTheme.darkBorderSubtle),
+                  ),
+                  child: SingleChildScrollView(
+                    child: SelectableText(
+                      jsonText,
+                      style: const TextStyle(
+                        color: AppTheme.textSecondaryDark,
+                        fontSize: 11.5,
+                        fontFamily: 'monospace',
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(
+                'common.close'.tr(),
+                style: const TextStyle(color: AppTheme.textMutedDark),
+              ),
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentBlue,
+                foregroundColor: Colors.white,
+              ),
+              icon: const Icon(Icons.copy_rounded, size: 16),
+              label: Text('settings.data_export_copy_btn'.tr()),
+              onPressed: () async {
+                await Clipboard.setData(ClipboardData(text: jsonText));
+                if (!dialogContext.mounted) return;
+                ScaffoldMessenger.of(dialogContext).showSnackBar(
+                  SnackBar(
+                      content: Text('settings.data_export_copied_toast'.tr())),
+                );
+              },
+            ),
+          ],
+        );
+      },
     );
   }
 
