@@ -45,6 +45,9 @@ dependencies:
   # Media Picker
   image_picker: ^1.1.2
 
+  # Native OS share sheet (Private Streaming invite link)
+  share_plus: ^10.1.4
+
   # Phone Camera/Mic Broadcasting (v0.7) -- runtime permission requests for
   # CAMERA/RECORD_AUDIO ahead of the native RootEncoder RTMP publisher.
   permission_handler: ^11.3.1
@@ -63,6 +66,7 @@ flutter:
 
   assets:
     - assets/map/gadm41_SAU_2.svg
+    - assets/Language.svg
     - assets/i18n/en.json
     - assets/i18n/ar.json
     - assets/images/Ahmed_Amer_YouTube_files/

@@ -234,6 +234,10 @@
   },
   "settings": {
     "title": "Settings & Preferences",
+    "viewer_badge": "Viewer / Student",
+    "guest_not_signed_in": "Guest — Not Signed In",
+    "legal_reader_previous": "Previous Document",
+    "legal_reader_next": "Next Document",
     "language": "App Language",
     "streaming": "Streaming Preferences",
     "quality": "Default Video Quality",
@@ -668,6 +672,9 @@
     "error_note_empty": "Please add a brief message introducing your lectures."
   },
   "live_studio": {
+    "director_title": "Broadcaster Studio",
+    "director_subtitle": "Choose how you want to broadcast today",
+    "setup_guide_tooltip": "Setup Guide",
     "dialog_title": "Pitch Director & Broadcast Studio",
     "dialog_tag": "STUDIO",
     "dialog_subtitle": "Stream directly from OBS Studio or YouTube Live",

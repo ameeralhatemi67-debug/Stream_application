@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/models/streamer_models.dart';
+import '../../models/stream_privacy_models.dart';
 import '../../services/rtmp_publish_engine.dart';
 import '../widgets/permission_rationale_dialog.dart';
 import '../widgets/phone_camera_preview.dart';
@@ -15,11 +16,12 @@ import '../widgets/phone_camera_preview.dart';
 /// EventChannel), mirroring the engine/UI split the Checkpoint 1 spike
 /// validated, so v1.1's iOS engine can sit behind this same screen later.
 class PhoneBroadcastScreen extends StatefulWidget {
-  /// Set when this screen is launched from QuickGoLiveSheet, which already
+  /// Set when this screen is launched from the Broadcaster Studio bottom
+  /// sheet's Phone mode (LiveBroadcasterStudioSheet), which already
   /// collected the quality preset (and everything else) up front -- skips
-  /// the picker below and heads straight into camera setup. Null for the
-  /// manual "From Phone" tab in RtmpIpSettingsDialog, which still shows the
-  /// picker since nothing was chosen yet.
+  /// the picker below and heads straight into camera setup. Null only if
+  /// this screen is ever pushed without a preset already chosen, which then
+  /// still shows the picker.
   final BroadcastQualityPreset? quickLaunchPreset;
 
   const PhoneBroadcastScreen({super.key, this.quickLaunchPreset});
@@ -54,11 +56,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     _presetConfirmed = widget.quickLaunchPreset != null;
 
     if (widget.quickLaunchPreset != null) {
-      // AppProvider.startQuickPhoneBroadcast already flipped
-      // isBroadcastingLive before QuickGoLiveSheet navigated here, so this
-      // screen (not _startBroadcast's own "wasn't live yet" check below)
-      // is what owns undoing that if the user backs out before the RTMP
-      // connection ever actually goes through -- see dispose()/_stopBroadcast.
+      // A pre-chosen preset means the Broadcaster Studio sheet's Phone mode
+      // launched this screen as a one-tap flow: this screen (not
+      // _startBroadcast's own "wasn't live yet" check below) owns ending the
+      // broadcast if the user backs out before/after the RTMP connection
+      // actually goes through -- see dispose()/_stopBroadcast.
       _weStartedBroadcast = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _confirmPresetAndSetup();
@@ -91,15 +93,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     try {
       await _engine.initializeCamera(preset: _preset);
       // v0.7 Checkpoint 3 Phase 1 -- reuses the same RTMP pipeline in
-      // mic-only mode when the streamer picked Audio-Only in the target
-      // dialog (rtmp_ip_dialog.dart's _BroadcastFormatSelector), swapping
-      // the encoder's video source to a static branded image.
+      // mic-only mode when the streamer picked Audio-Only in the
+      // Broadcaster Studio sheet's format toggle, swapping the encoder's
+      // video source to a static branded image.
       if (_appProvider.customBroadcastType == BroadcastType.liveAudio) {
         await _engine.setAudioOnly(true);
       }
-      // Quick Go-Live is a one-tap flow -- the streamer already committed
-      // to going live back in QuickGoLiveSheet, so there's no separate
-      // manual "Go Live" tap to wait for here once the camera's ready.
+      // A pre-chosen preset means this is a one-tap flow -- the streamer
+      // already committed to going live back in the Broadcaster Studio
+      // sheet, so there's no separate manual "Go Live" tap to wait for here
+      // once the camera's ready.
       if (widget.quickLaunchPreset != null && mounted) {
         await _startBroadcast();
       }
@@ -196,11 +199,41 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Title/description come from the Broadcaster Studio bottom sheet
+    // (AppProvider.setCustomBroadcastMeta), which always runs immediately
+    // before this screen is pushed -- read via Provider rather than
+    // constructor params so this stays in sync with the same source of
+    // truth PhoneBroadcastScreen already reads phoneBroadcastFullUrl from.
+    final title = _appProvider.customLiveTitle;
+    final description = _appProvider.customLiveDescription;
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
         backgroundColor: AppTheme.darkSurface1,
-        title: const Text('Broadcast From Phone'),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              title.isEmpty ? 'Broadcast From Phone' : title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            ),
+            if (description.isNotEmpty)
+              Text(
+                description,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.normal,
+                  color: AppTheme.textSecondaryDark,
+                ),
+              ),
+          ],
+        ),
       ),
       body: SafeArea(
         child: Column(
@@ -285,8 +318,167 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
             right: AppTheme.spaceMd,
             child: _StatusPill(label: 'AUDIO ONLY', color: AppTheme.accentBlue),
           ),
+        Consumer<AppProvider>(
+          builder: (context, provider, _) {
+            if (provider.pendingKnockRequests.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            final request = provider.pendingKnockRequests.first;
+            return Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _KnockingBanner(
+                request: request,
+                queueLength: provider.pendingKnockRequests.length,
+                onAdmit: () => provider.admitKnockRequest(request.id),
+                onDeny: () => provider.denyKnockRequest(request.id),
+                onAdmitAll: provider.admitAllKnockRequests,
+              ),
+            );
+          },
+        ),
+        Consumer<AppProvider>(
+          builder: (context, provider, _) {
+            if (!provider.isActiveStreamPrivate) return const SizedBox.shrink();
+            return Positioned(
+              bottom: AppTheme.spaceMd,
+              right: AppTheme.spaceMd,
+              child: _AttendeesButton(
+                count: provider.admittedAttendees.length,
+                onTap: () => _showDirectorPanel(context, provider),
+              ),
+            );
+          },
+        ),
       ],
     );
+  }
+
+  void _showDirectorPanel(BuildContext context, AppProvider provider) {
+    final handleController = TextEditingController();
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkSurface1,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
+          child: Consumer<AppProvider>(
+            builder: (context, provider, _) {
+              return Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '🔒 ${provider.admittedAttendees.length} Attendees',
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spaceMd),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: handleController,
+                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          decoration: InputDecoration(
+                            hintText: 'Search or add @username',
+                            hintStyle: const TextStyle(
+                                color: AppTheme.textMutedDark, fontSize: 12),
+                            filled: true,
+                            fillColor: AppTheme.darkSurface2,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                              borderSide:
+                                  const BorderSide(color: AppTheme.darkBorderSubtle),
+                            ),
+                          ),
+                          onSubmitted: (value) {
+                            if (value.trim().isEmpty) return;
+                            provider.admitAttendeeByHandle(value.trim());
+                            handleController.clear();
+                          },
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton(
+                        icon: const Icon(Icons.person_add_alt_1_rounded,
+                            color: AppTheme.accentGreen),
+                        onPressed: () {
+                          final value = handleController.text.trim();
+                          if (value.isEmpty) return;
+                          provider.admitAttendeeByHandle(value);
+                          handleController.clear();
+                        },
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppTheme.spaceMd),
+                  TextButton.icon(
+                    icon: const Icon(Icons.emoji_people_rounded, size: 16),
+                    label: const Text('Simulate Incoming Guest'),
+                    onPressed: provider.simulateIncomingKnock,
+                  ),
+                  const SizedBox(height: AppTheme.spaceSm),
+                  ConstrainedBox(
+                    constraints: const BoxConstraints(maxHeight: 280),
+                    child: provider.admittedAttendees.isEmpty
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+                            child: Text(
+                              'No attendees admitted yet.',
+                              style: TextStyle(
+                                  color: AppTheme.textMutedDark, fontSize: 12),
+                            ),
+                          )
+                        : ListView.builder(
+                            shrinkWrap: true,
+                            itemCount: provider.admittedAttendees.length,
+                            itemBuilder: (context, index) {
+                              final attendee = provider.admittedAttendees[index];
+                              return ListTile(
+                                dense: true,
+                                leading: attendee.isVip
+                                    ? const Icon(Icons.workspace_premium_rounded,
+                                        color: AppTheme.accentAmber, size: 20)
+                                    : const Icon(Icons.person_rounded,
+                                        color: AppTheme.textSecondaryDark, size: 20),
+                                title: Text(
+                                  attendee.displayName,
+                                  style: const TextStyle(
+                                      color: Colors.white, fontSize: 13),
+                                ),
+                                trailing: TextButton.icon(
+                                  icon: const Icon(Icons.block_rounded,
+                                      color: AppTheme.accentRed, size: 16),
+                                  label: const Text(
+                                    'Kick Out',
+                                    style: TextStyle(
+                                        color: AppTheme.accentRed, fontSize: 12),
+                                  ),
+                                  onPressed: () =>
+                                      provider.kickAttendee(attendee.id),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+      ),
+    ).whenComplete(handleController.dispose);
   }
 
   Widget _buildPresetPicker() {
@@ -569,6 +761,114 @@ class _StreamErrorBanner extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Private Streaming host HUD -- slide-down banner shown when a guest has
+/// knocked on a private broadcast, letting the host Admit/Deny (or batch
+/// Admit All) without leaving the camera view.
+class _KnockingBanner extends StatelessWidget {
+  final StreamKnockRequest request;
+  final int queueLength;
+  final VoidCallback onAdmit;
+  final VoidCallback onDeny;
+  final VoidCallback onAdmitAll;
+
+  const _KnockingBanner({
+    required this.request,
+    required this.queueLength,
+    required this.onAdmit,
+    required this.onDeny,
+    required this.onAdmitAll,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceSm,
+      ),
+      color: AppTheme.darkSurface1.withValues(alpha: 0.96),
+      child: Row(
+        children: [
+          const Icon(Icons.person_rounded, color: AppTheme.accentAmber, size: 18),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Text(
+              '👤 ${request.displayName} wants to join',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12.5,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          if (queueLength > 1) ...[
+            TextButton(
+              onPressed: onAdmitAll,
+              child: Text('Admit All ($queueLength)',
+                  style: const TextStyle(color: AppTheme.accentGreen, fontSize: 11)),
+            ),
+            const SizedBox(width: 4),
+          ],
+          IconButton(
+            icon: const Icon(Icons.close_rounded, color: AppTheme.accentRed, size: 20),
+            tooltip: 'Deny',
+            onPressed: onDeny,
+          ),
+          IconButton(
+            icon: const Icon(Icons.check_circle_rounded,
+                color: AppTheme.accentGreen, size: 20),
+            tooltip: 'Admit',
+            onPressed: onAdmit,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Private Streaming host HUD -- floating attendee counter opening the
+/// director panel (search/add @username, kick out).
+class _AttendeesButton extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+
+  const _AttendeesButton({required this.count, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurface1.withValues(alpha: 0.9),
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(color: AppTheme.accentAmber.withValues(alpha: 0.5)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.lock_rounded, color: AppTheme.accentAmber, size: 16),
+            const SizedBox(width: 6),
+            Text(
+              '$count Attendees',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

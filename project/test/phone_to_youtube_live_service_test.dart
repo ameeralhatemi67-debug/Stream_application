@@ -1,73 +1,11 @@
-import 'dart:convert';
-import 'dart:io';
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:easy_localization/easy_localization.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
-import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 import 'package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart';
 import 'package:streamer_app/features/live_stream/services/youtube_live_service.dart';
-import 'package:streamer_app/features/live_stream/presentation/widgets/quick_go_live_sheet.dart';
-
-class DirectJsonAssetLoader extends AssetLoader {
-  final Map<String, dynamic> enData;
-  final Map<String, dynamic> arData;
-
-  const DirectJsonAssetLoader({required this.enData, required this.arData});
-
-  @override
-  Future<Map<String, dynamic>> load(String path, Locale locale) async {
-    return locale.languageCode == 'ar' ? arData : enData;
-  }
-}
-
-late Map<String, dynamic> globalEnData;
-late Map<String, dynamic> globalArData;
-
-Widget createTestWidget({
-  required Widget child,
-  required AppProvider provider,
-}) {
-  return EasyLocalization(
-    supportedLocales: const [Locale('en'), Locale('ar')],
-    path: 'assets/i18n',
-    assetLoader:
-        DirectJsonAssetLoader(enData: globalEnData, arData: globalArData),
-    fallbackLocale: const Locale('en'),
-    startLocale: const Locale('en'),
-    saveLocale: false,
-    useOnlyLangCode: true,
-    child: Builder(
-      builder: (context) {
-        return ChangeNotifierProvider<AppProvider>.value(
-          value: provider,
-          child: MaterialApp(
-            localizationsDelegates: context.localizationDelegates,
-            supportedLocales: context.supportedLocales,
-            locale: context.locale,
-            theme: ThemeData.dark(useMaterial3: true).copyWith(
-              scaffoldBackgroundColor: AppTheme.darkBgBase,
-            ),
-            home: Scaffold(body: child),
-          ),
-        );
-      },
-    ),
-  );
-}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-
-  setUpAll(() async {
-    SharedPreferences.setMockInitialValues({});
-    globalEnData = jsonDecode(await File('assets/i18n/en.json').readAsString());
-    globalArData = jsonDecode(await File('assets/i18n/ar.json').readAsString());
-    await EasyLocalization.ensureInitialized();
-  });
 
   group('Phone-to-YouTube Live: YouTubeLiveService', () {
     test(
@@ -191,146 +129,39 @@ void main() {
     });
   });
 
-  group('Phone-to-YouTube Live: QuickGoLiveSheet widget', () {
-    late AppProvider provider;
+  group('AppProvider: Broadcaster Studio meta (v0.9)', () {
+    test(
+        'TC-STUDIO-META-01: setCustomBroadcastMeta updates title/description/'
+        'category without touching venue', () {
+      final provider = AppProvider();
+      final venueBefore = provider.customLiveVenue;
 
-    setUp(() {
-      provider = AppProvider();
+      provider.setCustomBroadcastMeta(
+        title: 'New Title',
+        description: 'New description text.',
+        category: 'engineering_tech',
+      );
+
+      expect(provider.customLiveTitle, equals('New Title'));
+      expect(provider.customLiveDescription, equals('New description text.'));
+      expect(provider.customLiveCategory, equals('engineering_tech'));
+      expect(provider.customLiveVenue, equals(venueBefore));
     });
 
-    // The sheet's full form (title, category chips, venue, format switch,
-    // quality picker, submit button) is taller than the default 800x600
-    // test surface -- widen it so every field is actually hit-testable
-    // without needing to scroll mid-test.
-    void useTallTestSurface(WidgetTester tester) {
-      tester.view.physicalSize = const Size(800, 1600);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-    }
+    test(
+        'TC-STUDIO-META-02: setCustomAudioOnlyPosterPath stores and clears '
+        'the poster path', () {
+      final provider = AppProvider();
+      expect(provider.customAudioOnlyPosterPath, isNull);
 
-    testWidgets('TC-QGL-UI-01: pre-populates title and venue from AppProvider',
-        (tester) async {
-      useTallTestSurface(tester);
-      await tester.pumpWidget(
-        createTestWidget(child: const QuickGoLiveSheet(), provider: provider),
-      );
-      await tester.pumpAndSettle();
+      provider.setCustomAudioOnlyPosterPath('/tmp/poster.jpg');
+      expect(provider.customAudioOnlyPosterPath, equals('/tmp/poster.jpg'));
 
-      final titleField =
-          find.widgetWithText(TextField, provider.customLiveTitle);
-      expect(titleField, findsOneWidget);
+      provider.setCustomAudioOnlyPosterPath(null);
+      expect(provider.customAudioOnlyPosterPath, isNull);
 
-      final venueField =
-          find.widgetWithText(TextField, provider.customLiveVenue);
-      expect(venueField, findsOneWidget);
-    });
-
-    testWidgets(
-        'TC-QGL-UI-02: format switch toggles Camera <-> Audio-Only label',
-        (tester) async {
-      useTallTestSurface(tester);
-      await tester.pumpWidget(
-        createTestWidget(child: const QuickGoLiveSheet(), provider: provider),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Camera Video + Audio'), findsOneWidget);
-      expect(find.text('Audio-Only (Podcast Mode)'), findsNothing);
-
-      await tester.tap(find.byType(Switch));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Camera Video + Audio'), findsNothing);
-      expect(find.text('Audio-Only (Podcast Mode)'), findsOneWidget);
-    });
-
-    testWidgets('TC-QGL-UI-03: category chips are selectable', (tester) async {
-      useTallTestSurface(tester);
-      await tester.pumpWidget(
-        createTestWidget(child: const QuickGoLiveSheet(), provider: provider),
-      );
-      await tester.pumpAndSettle();
-
-      final medicineChipFinder =
-          find.widgetWithText(ChoiceChip, '🩺 Medicine & Clinical Health');
-      expect(medicineChipFinder, findsOneWidget);
-
-      final beforeTap = tester.widget<ChoiceChip>(medicineChipFinder);
-      expect(beforeTap.selected, isFalse);
-
-      await tester.tap(medicineChipFinder);
-      await tester.pumpAndSettle();
-
-      final afterTap = tester.widget<ChoiceChip>(medicineChipFinder);
-      expect(afterTap.selected, isTrue);
-    });
-
-    testWidgets(
-        'TC-QGL-UI-04: submitting shows a loading state, then reaches '
-        'AppProvider.startQuickPhoneBroadcast and goes live', (tester) async {
-      useTallTestSurface(tester);
-      await tester.pumpWidget(
-        createTestWidget(child: const QuickGoLiveSheet(), provider: provider),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Start Broadcast & Open Camera'), findsOneWidget);
-      expect(provider.isBroadcastingLive, isFalse);
-
-      await tester.tap(find.text('Start Broadcast & Open Camera'));
-      await tester.pump();
-      expect(find.text('Setting up...'), findsOneWidget);
-
-      // Elapse past YouTubeLiveService's simulated network delay so
-      // startQuickPhoneBroadcast actually resolves, which then navigates
-      // into PhoneBroadcastScreen. That screen's camera/permission setup
-      // needs real platform channels this test environment doesn't
-      // provide, so its MissingPluginException is expected here --
-      // consumed via takeException() rather than mocking two native
-      // channels for a screen transition this test isn't asserting on.
-      await tester.pump(const Duration(milliseconds: 600));
-      tester.takeException();
-
-      expect(provider.isBroadcastingLive, isTrue);
-      expect(provider.customYouTubeVideoId, isNotEmpty);
-
-      // Unmount the pushed PhoneBroadcastScreen ourselves so its dispose()
-      // safety net (a Future.microtask calling toggleBroadcasterGoLive(),
-      // since _weStartedBroadcast is true for a quick-launch) runs against
-      // a still-valid provider, instead of racing the manual
-      // provider.dispose() below.
-      await tester.pumpWidget(const SizedBox());
-      await tester.pump();
-      tester.takeException();
-
-      // AppProvider.dispose() cancels the live-viewer-polling Timer --
-      // toggleBroadcasterGoLive() alone doesn't stop it, since that polling
-      // loop keeps running for as long as *any* mock streamer (e.g. the
-      // always-on Quran stream) is live, not just this test's own
-      // broadcast. Called explicitly and synchronously here rather than
-      // via addTearDown, which runs too late: after flutter_test's own
-      // end-of-test "no pending Timer" check.
-      provider.dispose();
-    });
-
-    testWidgets(
-        'TC-QGL-UI-05: an empty title blocks submission before it ever '
-        'reaches AppProvider', (tester) async {
-      useTallTestSurface(tester);
-      await tester.pumpWidget(
-        createTestWidget(child: const QuickGoLiveSheet(), provider: provider),
-      );
-      await tester.pumpAndSettle();
-
-      final titleField =
-          find.widgetWithText(TextField, provider.customLiveTitle);
-      await tester.enterText(titleField, '');
-      await tester.tap(find.text('Start Broadcast & Open Camera'));
-      await tester.pump();
-
-      expect(find.text('Please enter a broadcast title.'), findsOneWidget);
-      expect(provider.isBroadcastingLive, isFalse);
+      provider.setCustomAudioOnlyPosterPath('');
+      expect(provider.customAudioOnlyPosterPath, isNull);
     });
   });
 }

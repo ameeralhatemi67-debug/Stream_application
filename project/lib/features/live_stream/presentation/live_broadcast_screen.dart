@@ -18,8 +18,8 @@ import 'widgets/floating_reactions_overlay.dart';
 import 'widgets/live_player_overlay_controls.dart';
 import 'widgets/live_multi_speaker_overlay.dart';
 import 'widgets/live_audio_stage_multi_speaker.dart';
+import 'widgets/private_stream_viewer_gate.dart';
 import 'widgets/rtmp_ip_dialog.dart';
-import 'widgets/quick_go_live_sheet.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
   final String streamId;
@@ -208,25 +208,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     context.pop();
                   },
                 ),
+                // Broadcaster Studio Access -- single unified entry point
+                // (v0.9) for going live via OBS, phone camera, or local RTMP.
                 if (appProvider.isLoggedInStreamer &&
                     appProvider.isStreamerModeEnabled)
                   IconButton(
                     icon: const Icon(Icons.cell_tower_rounded, size: 20),
                     tooltip: 'live.rtmp_ip_tooltip'.tr(),
-                    onPressed: () => RtmpIpSettingsDialog.show(context),
-                  ),
-                // Quick Go-Live -- automated phone-to-YouTube broadcast,
-                // next to (not replacing) the manual OBS/RTMP settings above.
-                if (appProvider.isLoggedInStreamer &&
-                    appProvider.isStreamerModeEnabled)
-                  IconButton(
-                    icon: const Icon(
-                      Icons.cell_tower_rounded,
-                      size: 20,
-                      color: AppTheme.accentGreen,
-                    ),
-                    tooltip: 'live.quick_go_live_tooltip'.tr(),
-                    onPressed: () => QuickGoLiveSheet.show(context),
+                    onPressed: () => LiveBroadcasterStudioSheet.show(context),
                   ),
                 const LanguageSwitcher(),
                 const SizedBox(width: AppTheme.spaceSm),
@@ -415,6 +404,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             }),
             onRetryConnection: () =>
                 setState(() => _streamState = StreamState.live),
+          ),
+
+          // 6. Private Streaming: viewer's own access state (VIP badge /
+          // waiting room / unauthorized notice). No-op for public streams.
+          PrivateStreamViewerGate(
+            accessState: appProvider.localViewerAccessState,
+            onRequestToJoin: appProvider.requestToJoinActiveStream,
           ),
         ],
       ),

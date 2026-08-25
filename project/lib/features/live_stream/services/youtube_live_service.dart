@@ -37,7 +37,7 @@ class YouTubeLiveService {
     required bool isAudioOnly,
     required BroadcastQualityPreset quality,
   }) async {
-    // Mimics real network latency so QuickGoLiveSheet's loading state reads
+    // Mimics real network latency so a caller's loading state reads
     // naturally rather than flashing instantly.
     await Future<void>.delayed(const Duration(milliseconds: 500));
 

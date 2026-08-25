@@ -7,7 +7,6 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/feature_in_progress_modal.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
-import '../../live_stream/presentation/widgets/quick_go_live_sheet.dart';
 import '../models/streamer_models.dart';
 import '../models/vod_models.dart';
 import 'widgets/vod_grid_tile.dart';
@@ -98,7 +97,9 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
       appBar: AppBar(
         title: Text(streamer.getLocalizedName(lang)),
         actions: [
-          // Streamer Broadcast Studio & Pitch Director Access (Only visible to logged-in streamers)
+          // Broadcaster Studio Access -- single unified entry point (v0.9)
+          // for going live via OBS, phone camera, or local RTMP (Only
+          // visible to logged-in streamers).
           if (appProvider.isLoggedInStreamer &&
               appProvider.isStreamerModeEnabled)
             IconButton(
@@ -109,19 +110,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     : AppTheme.textSecondaryDark,
               ),
               tooltip: 'live.rtmp_ip_tooltip'.tr(),
-              onPressed: () => RtmpIpSettingsDialog.show(context),
-            ),
-          // Quick Go-Live -- automated phone-to-YouTube broadcast, next to
-          // (not replacing) the manual OBS/RTMP settings above.
-          if (appProvider.isLoggedInStreamer &&
-              appProvider.isStreamerModeEnabled)
-            IconButton(
-              icon: const Icon(
-                Icons.cell_tower_rounded,
-                color: AppTheme.accentGreen,
-              ),
-              tooltip: 'live.quick_go_live_tooltip'.tr(),
-              onPressed: () => QuickGoLiveSheet.show(context),
+              onPressed: () => LiveBroadcasterStudioSheet.show(context),
             ),
           const LanguageSwitcher(),
           const SizedBox(width: AppTheme.spaceXs),

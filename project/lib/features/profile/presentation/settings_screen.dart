@@ -6,12 +6,15 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/widgets/language_switcher.dart';
+import '../../../core/widgets/safe_image_provider.dart';
 import '../../profile/models/streamer_models.dart';
 import '../models/user_account_model.dart';
 import '../../admin/models/broadcaster_application_model.dart';
 import '../../admin/models/terms_and_conditions_model.dart';
 import '../../../core/services/notifications/notification_models.dart';
 import 'widgets/broadcaster_application_sheet.dart';
+import 'widgets/legal_document_reader_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -52,137 +55,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.dispose();
   }
 
-  ImageProvider _getImageProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
+  /// Public @handle shown on the streamer profile card. Derived from the
+  /// broadcaster application's youtubeHandle (collected in the verification
+  /// wizard's step 3) rather than a dedicated UserProfileModel field, since
+  /// that data already exists one hop away via provider.myApplication.
+  String _displayHandle(AppProvider provider, UserProfileModel profile) {
+    final fromApp = provider.myApplication?.youtubeHandle.trim();
+    if (fromApp != null && fromApp.isNotEmpty) {
+      return fromApp.startsWith('@') ? fromApp : '@$fromApp';
     }
-    return NetworkImage(url);
-  }
-
-  void _showEditProfileDialog(BuildContext context) {
-    final provider = context.read<AppProvider>();
-    final profile = provider.userProfile;
-
-    final nameController = TextEditingController(text: profile.nameEn);
-    final titleController = TextEditingController(text: profile.titleEn);
-    final orgController = TextEditingController(text: profile.organizationEn);
-    final bioController = TextEditingController(text: profile.bioEn);
-    final youtubeController =
-        TextEditingController(text: profile.youtubeChannelUrl);
-    final avatarController = TextEditingController(text: profile.avatarUrl);
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.darkSurface1,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.darkBorderSubtle),
-          ),
-          title: Text(
-            'settings.edit_profile'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
-                fontWeight: FontWeight.bold,
-                fontSize: 16),
-          ),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
-                  decoration:
-                      InputDecoration(labelText: 'settings.full_name'.tr()),
-                ),
-                const SizedBox(height: AppTheme.spaceSm),
-                TextField(
-                  controller: titleController,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
-                  decoration: InputDecoration(
-                      labelText: 'settings.academic_title'.tr()),
-                ),
-                const SizedBox(height: AppTheme.spaceSm),
-                TextField(
-                  controller: orgController,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
-                  decoration: InputDecoration(
-                      labelText: 'settings.university_org'.tr()),
-                ),
-                const SizedBox(height: AppTheme.spaceSm),
-                TextField(
-                  controller: youtubeController,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
-                  decoration: InputDecoration(
-                      labelText: 'settings.linked_youtube'.tr()),
-                ),
-                const SizedBox(height: AppTheme.spaceSm),
-                TextField(
-                  controller: avatarController,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
-                  decoration: InputDecoration(
-                      labelText: 'settings.profile_pic_url'.tr()),
-                ),
-                const SizedBox(height: AppTheme.spaceSm),
-                TextField(
-                  controller: bioController,
-                  maxLines: 2,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
-                  decoration:
-                      InputDecoration(labelText: 'settings.bio_research'.tr()),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMutedDark),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentRed,
-                foregroundColor: Colors.white,
-              ),
-              onPressed: () {
-                provider.updateUserProfile(
-                  profile.copyWith(
-                    nameEn: nameController.text.trim(),
-                    nameAr: nameController.text.trim(),
-                    titleEn: titleController.text.trim(),
-                    titleAr: titleController.text.trim(),
-                    organizationEn: orgController.text.trim(),
-                    organizationAr: orgController.text.trim(),
-                    youtubeChannelUrl: youtubeController.text.trim(),
-                    avatarUrl: avatarController.text.trim().isNotEmpty
-                        ? avatarController.text.trim()
-                        : profile.avatarUrl,
-                    bioEn: bioController.text.trim(),
-                    bioAr: bioController.text.trim(),
-                  ),
-                );
-                Navigator.pop(dialogContext);
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(content: Text('settings.profile_saved_toast'.tr())),
-                );
-              },
-              child: Text('settings.save_profile'.tr()),
-            ),
-          ],
-        );
-      },
-    );
+    final slug =
+        profile.nameEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
+    return '@${slug.isEmpty ? profile.id : slug}';
   }
 
   @override
@@ -242,6 +126,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
         title: Text('settings.title'.tr()),
         backgroundColor: AppTheme.darkBgBase,
         elevation: 0,
+        actions: const [
+          LanguageSwitcher(showLabel: false),
+          SizedBox(width: AppTheme.spaceSm),
+        ],
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -272,19 +160,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildApplicationSection(context, appProvider),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 📡 Section 2 (Streamer Only): Streamer Go Live Studio & YouTube Linker
-          if (isStreamer) ...[
-            _buildSectionHeader(
-              context,
-              title: 'settings.go_live_studio'.tr(),
-              icon: Icons.videocam_rounded,
-              iconColor: AppTheme.accentRed,
-            ),
-            const SizedBox(height: AppTheme.spaceSm),
-            _buildStreamerStudioCard(context, appProvider),
-            const SizedBox(height: AppTheme.spaceLg),
-          ],
-
           // Section 3: Language Preference
           _buildSectionHeader(
             context,
@@ -295,29 +170,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildLanguageSelectorCard(context, currentLocale),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // Section 3.5: Notification Preferences & Anti-Spam Throttling
-          _buildSectionHeader(
-            context,
+          // Section 3.5: Notification Preferences -- summary row opening a
+          // dedicated modal sheet instead of an always-expanded card.
+          _buildSummaryRow(
+            icon: Icons.notifications_active_rounded,
+            iconColor: AppTheme.accentBlue,
             title: isAr
                 ? 'إعدادات الإشعارات والتنبيهات'
                 : 'Notification Preferences',
-            icon: Icons.notifications_active_rounded,
-            iconColor: AppTheme.accentBlue,
+            subtitle: isAr
+                ? '${appProvider.notificationPreferences.maxPer10Min} إشعارات كل 10 دقائق'
+                : '${appProvider.notificationPreferences.maxPer10Min} alerts / 10min',
+            onTap: () =>
+                _showNotificationPreferencesSheet(context, appProvider),
           ),
-          const SizedBox(height: AppTheme.spaceSm),
-          _buildNotificationPreferencesCard(context, appProvider),
-          const SizedBox(height: AppTheme.spaceLg),
+          const SizedBox(height: AppTheme.spaceMd),
 
-          // Section 4 (Streamer Only): Streaming Quality Defaults
+          // Section 4 (Streamer Only): Broadcaster & Studio Preferences --
+          // summary row opening a dedicated modal sheet (Go Live Studio +
+          // Streaming Quality Defaults, both unchanged, just relocated).
           if (isStreamer) ...[
-            _buildSectionHeader(
-              context,
-              title: 'settings.streaming'.tr(),
-              icon: Icons.tune_rounded,
+            _buildSummaryRow(
+              icon: Icons.movie_creation_rounded,
+              iconColor: AppTheme.accentRed,
+              title: isAr
+                  ? 'تفضيلات الاستوديو والبث'
+                  : 'Broadcaster & Studio Preferences',
+              subtitle: appProvider.isBroadcastingLive
+                  ? 'settings.broadcast_status_live'.tr()
+                  : 'settings.broadcast_status_offline'.tr(),
+              onTap: () =>
+                  _showBroadcasterStudioPreferencesSheet(context, appProvider),
             ),
-            const SizedBox(height: AppTheme.spaceSm),
-            _buildStreamingQualityCard(context, appProvider),
-            const SizedBox(height: AppTheme.spaceLg),
+            const SizedBox(height: AppTheme.spaceMd),
           ],
 
           // Section 4.5 (Org Owner/Co-Owner Only): Organization Management
@@ -390,8 +275,43 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Widget _buildUserProfileHeaderCard(
       BuildContext context, AppProvider provider) {
-    final profile = provider.userProfile;
     final isAr = context.locale.languageCode == 'ar';
+    final isStreamerCard = provider.isApprovedStreamer;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        isStreamerCard
+            ? _buildStreamerProfileCard(context, provider, isAr)
+            : _buildViewerProfileCard(context, provider, isAr),
+        const SizedBox(height: AppTheme.spaceSm),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            icon: const Icon(Icons.edit_outlined, size: 15),
+            label: Text('settings.edit_profile'.tr()),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.textPrimaryDark,
+              side: const BorderSide(color: AppTheme.darkBorderSubtle),
+              padding: const EdgeInsets.symmetric(vertical: 11),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+            ),
+            onPressed: () => BroadcasterApplicationSheet.show(
+              context,
+              application: provider.myApplication,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildViewerProfileCard(
+      BuildContext context, AppProvider provider, bool isAr) {
+    final profile = provider.userProfile;
+    final email = provider.googleUserEmail ?? 'settings.guest_not_signed_in'.tr();
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -403,67 +323,196 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Row(
         children: [
           CircleAvatar(
-            radius: 28,
-            backgroundImage: _getImageProvider(profile.avatarUrl),
+            radius: 24,
+            backgroundImage: buildSafeImageProvider(path: profile.avatarUrl),
           ),
           const SizedBox(width: AppTheme.spaceMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        isAr ? profile.nameAr : profile.nameEn,
-                        style: const TextStyle(
-                          color: AppTheme.textPrimaryDark,
-                          fontSize: 15,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.verified_rounded,
-                        color: AppTheme.accentPurple, size: 15),
-                  ],
-                ),
                 Text(
-                  isAr ? profile.titleAr : profile.titleEn,
+                  isAr ? profile.nameAr : profile.nameEn,
                   style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 11.5),
+                    color: AppTheme.textPrimaryDark,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  isAr ? profile.organizationAr : profile.organizationEn,
+                  email,
                   style: const TextStyle(
-                      color: AppTheme.accentBlue, fontSize: 10.5),
+                      color: AppTheme.textSecondaryDark, fontSize: 11.5),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          ElevatedButton.icon(
-            icon: const Icon(Icons.edit_outlined, size: 14),
-            label: Text('settings.edit_profile'.tr(),
-                style: const TextStyle(fontSize: 11)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.darkSurface2,
-              foregroundColor: AppTheme.textPrimaryDark,
-              elevation: 0,
-              minimumSize: const Size(0, 44),
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                side: const BorderSide(color: AppTheme.darkBorderSubtle),
-              ),
+          Container(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.accentBlue.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border:
+                  Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.4)),
             ),
-            onPressed: () => _showEditProfileDialog(context),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.person_rounded,
+                    color: AppTheme.accentBlue, size: 13),
+                const SizedBox(width: 4),
+                Text(
+                  'settings.viewer_badge'.tr(),
+                  style: const TextStyle(
+                    color: AppTheme.accentBlue,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStreamerProfileCard(
+      BuildContext context, AppProvider provider, bool isAr) {
+    final profile = provider.userProfile;
+    final handle = _displayHandle(provider, profile);
+    final email = provider.googleUserEmail ?? provider.myApplication?.email ?? '';
+    const bannerHeight = 96.0;
+    const avatarRadius = 36.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        border: Border.all(color: AppTheme.darkBorderSubtle),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              Column(
+                children: [
+                  Container(
+                    height: bannerHeight,
+                    decoration: const BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppTheme.accentBlue, AppTheme.accentPurple],
+                      ),
+                    ),
+                    child: Image(
+                      image: buildSafeImageProvider(path: profile.bannerUrl),
+                      height: bannerHeight,
+                      width: double.infinity,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                    ),
+                  ),
+                  const SizedBox(height: avatarRadius),
+                ],
+              ),
+              Positioned(
+                top: bannerHeight - avatarRadius,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.darkSurface1,
+                        shape: BoxShape.circle,
+                      ),
+                      child: CircleAvatar(
+                        radius: avatarRadius,
+                        backgroundImage:
+                            buildSafeImageProvider(path: profile.avatarUrl),
+                      ),
+                    ),
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: const BoxDecoration(
+                          color: AppTheme.darkSurface1,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.verified_rounded,
+                            color: AppTheme.accentGreen, size: 18),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(AppTheme.spaceLg,
+                AppTheme.spaceSm, AppTheme.spaceLg, AppTheme.spaceLg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  isAr ? profile.nameAr : profile.nameEn,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: AppTheme.textPrimaryDark,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  handle,
+                  style: const TextStyle(
+                      color: AppTheme.accentBlue, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  isAr ? profile.organizationAr : profile.organizationEn,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                      color: AppTheme.textSecondaryDark, fontSize: 11.5),
+                ),
+                if (email.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    email,
+                    style: const TextStyle(
+                        color: AppTheme.textMutedDark, fontSize: 11),
+                  ),
+                ],
+                if ((isAr ? profile.bioAr : profile.bioEn).isNotEmpty) ...[
+                  const SizedBox(height: AppTheme.spaceSm),
+                  Text(
+                    isAr ? profile.bioAr : profile.bioEn,
+                    textAlign: TextAlign.center,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        color: AppTheme.textSecondaryDark,
+                        fontSize: 11.5,
+                        height: 1.4),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1749,33 +1798,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'settings.view_terms'.tr(),
             subtitle:
                 '${'settings.terms_version_label'.tr()}: ${terms.version}',
-            onTap: () => _showTermsDialog(
-              context,
-              'settings.view_terms'.tr(),
-              terms.getLocalizedTerms(context.locale.languageCode),
-            ),
+            onTap: () => _openLegalReader(context, terms, 0),
           ),
           const Divider(height: 16, color: AppTheme.darkBorderSubtle),
           _buildGovernanceRow(
             icon: Icons.verified_user_rounded,
             title: 'settings.view_guidelines'.tr(),
             subtitle: 'Academic integrity & broadcast standards',
-            onTap: () => _showTermsDialog(
-              context,
-              'settings.view_guidelines'.tr(),
-              terms.getLocalizedGuidelines(context.locale.languageCode),
-            ),
+            onTap: () => _openLegalReader(context, terms, 1),
           ),
           const Divider(height: 16, color: AppTheme.darkBorderSubtle),
           _buildGovernanceRow(
             icon: Icons.privacy_tip_rounded,
             title: 'settings.view_privacy'.tr(),
             subtitle: 'PDPL KSA Regulatory Compliance',
-            onTap: () => _showTermsDialog(
-              context,
-              'settings.view_privacy'.tr(),
-              terms.getLocalizedPrivacy(context.locale.languageCode),
-            ),
+            onTap: () => _openLegalReader(context, terms, 2),
           ),
         ],
       ),
@@ -1828,55 +1865,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showTermsDialog(BuildContext context, String title, String content) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface1,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.darkBorderSubtle),
+  void _openLegalReader(
+      BuildContext context, TermsAndConditionsModel terms, int index) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => LegalDocumentReaderScreen(
+          terms: terms,
+          initialDocumentIndex: index,
         ),
-        title: Row(
-          children: [
-            const Icon(Icons.gavel_rounded,
-                color: AppTheme.accentBlue, size: 20),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                title,
-                style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: SizedBox(
-          width: 550,
-          child: SingleChildScrollView(
-            child: SelectableText(
-              content,
-              style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
-                fontSize: 13,
-                height: 1.5,
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentBlue,
-              foregroundColor: Colors.white,
-            ),
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Close'),
-          ),
-        ],
       ),
     );
   }
@@ -2426,6 +2423,109 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  /// Tappable summary row that opens a dedicated modal sheet -- styled like
+  /// the existing governance rows, reused for Notification Preferences and
+  /// Broadcaster & Studio Preferences so those sections declutter the flat
+  /// ListView without duplicating any of their (already functional) bodies.
+  Widget _buildSummaryRow({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+    Color iconColor = AppTheme.accentBlue,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+      child: Container(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurface1,
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          border: Border.all(color: AppTheme.darkBorderSubtle),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.15),
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: Icon(icon, color: iconColor, size: 22),
+            ),
+            const SizedBox(width: AppTheme.spaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: const TextStyle(
+                      color: AppTheme.textSecondaryDark,
+                      fontSize: 11,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded,
+                color: AppTheme.textSecondaryDark),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showModalSheet(BuildContext context, Widget child) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkSurface1,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
+          child: child,
+        ),
+      ),
+    );
+  }
+
+  void _showNotificationPreferencesSheet(
+      BuildContext context, AppProvider provider) {
+    _showModalSheet(
+      context,
+      _buildNotificationPreferencesCard(context, provider),
+    );
+  }
+
+  void _showBroadcasterStudioPreferencesSheet(
+      BuildContext context, AppProvider provider) {
+    _showModalSheet(
+      context,
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildStreamerStudioCard(context, provider),
+          const SizedBox(height: AppTheme.spaceMd),
+          _buildStreamingQualityCard(context, provider),
+        ],
+      ),
     );
   }
 }

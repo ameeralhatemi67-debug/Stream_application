@@ -22,6 +22,7 @@ import '../../features/profile/models/vod_models.dart';
 import '../../features/profile/models/user_account_model.dart';
 import '../../features/live_stream/models/ghost_comments.dart';
 import '../../features/live_stream/models/qa_question_model.dart';
+import '../../features/live_stream/models/stream_privacy_models.dart';
 import '../../features/live_stream/services/rtmp_publish_engine.dart'
     show BroadcastQualityPreset;
 import '../../features/live_stream/services/youtube_live_service.dart';
@@ -149,8 +150,30 @@ class AppProvider extends ChangeNotifier {
   String _customLiveCategory = 'computer_science';
   String _customLiveVenue = 'KFUPM Auditorium 21, Dhahran / Al Khobar';
   String _customSlidesUrl = 'https://kfupm.edu.sa/cs/slides/lecture_01.pdf';
+  // v0.9 Broadcaster Studio bottom sheet -- viewer-facing description text
+  // and an optional custom backdrop image path shown while the streamer is
+  // broadcasting Audio-Only (falls back to the default live audio
+  // visualizer when null/empty).
+  String _customLiveDescription = '';
+  String? _customAudioOnlyPosterPath;
   BroadcastType _customBroadcastType = BroadcastType.liveVideo;
   bool _isBroadcastingLive = false;
+
+  // Private & Restricted Streaming (client-simulated -- see
+  // stream_privacy_models.dart; no Supabase table backs this, matching the
+  // rest of the live-streaming subsystem, which is likewise simulated
+  // end-to-end -- see YouTubeLiveService's own class doc).
+  StreamVisibility _streamVisibility = StreamVisibility.public;
+  List<String> _streamWhitelistHandles = [];
+  bool _requireKnockApproval = true;
+  final List<StreamKnockRequest> _pendingKnockRequests = [];
+  final List<StreamAttendee> _admittedAttendees = [];
+  static const List<String> _demoKnockNamePool = [
+    'Khalid Al-Dossary',
+    'Sarah Al-Qahtani',
+    'Omar Al-Harbi',
+    'Fatimah Al-Zahrani',
+  ];
 
   // Streamer Organization Broadcast Selection State
   String? _selectedBroadcastOrgId;
@@ -405,6 +428,164 @@ class AppProvider extends ChangeNotifier {
 
   BroadcasterApplicationModel? _myApplication;
   BroadcasterApplicationModel? get myApplication => _myApplication;
+
+  // ---------------------------------------------------------------------
+  // Private & Restricted Streaming (client-simulated)
+  // ---------------------------------------------------------------------
+
+  StreamVisibility get streamVisibility => _streamVisibility;
+  bool get isActiveStreamPrivate =>
+      _isBroadcastingLive && _streamVisibility == StreamVisibility.private;
+  List<String> get streamWhitelistHandles =>
+      List.unmodifiable(_streamWhitelistHandles);
+  bool get requireKnockApproval => _requireKnockApproval;
+  List<StreamKnockRequest> get pendingKnockRequests =>
+      List.unmodifiable(_pendingKnockRequests);
+  List<StreamAttendee> get admittedAttendees =>
+      List.unmodifiable(_admittedAttendees);
+
+  /// Persists the Public/Private access choice + whitelist + knock-gate
+  /// toggle from the Broadcaster Studio sheet's access section. Purely
+  /// in-memory simulation, mirroring setCustomBroadcastMeta's pattern.
+  void configureStreamPrivacy({
+    required StreamVisibility visibility,
+    List<String>? whitelistHandles,
+    bool? requireKnockApproval,
+  }) {
+    _streamVisibility = visibility;
+    if (whitelistHandles != null) {
+      _streamWhitelistHandles = List.of(whitelistHandles);
+    }
+    if (requireKnockApproval != null) {
+      _requireKnockApproval = requireKnockApproval;
+    }
+    notifyListeners();
+  }
+
+  void addStreamWhitelistHandle(String handle) {
+    final normalized = handle.trim();
+    if (normalized.isEmpty || _streamWhitelistHandles.contains(normalized)) {
+      return;
+    }
+    _streamWhitelistHandles = [..._streamWhitelistHandles, normalized];
+    notifyListeners();
+  }
+
+  void removeStreamWhitelistHandle(String handle) {
+    _streamWhitelistHandles =
+        _streamWhitelistHandles.where((h) => h != handle).toList();
+    notifyListeners();
+  }
+
+  /// Fake, non-cryptographic invite token -- there is no real deep-link
+  /// backend to resolve this against in this simulated app.
+  String generatePrivateInviteLink() {
+    final token = newId().substring(0, 8);
+    final streamId = _activeStreamIdForCurrentUser() ?? 'stream_live_992';
+    return 'https://streamer.app/join/$streamId?t=$token';
+  }
+
+  String? _activeStreamIdForCurrentUser() {
+    final orgId = _selectedBroadcastOrgId;
+    final currentUserId = _authService.currentSession?.user.id;
+    final targetStreamerId = orgId ?? currentUserId ?? 'prof_alghamdi_01';
+    for (final streamer in _streamers) {
+      if (streamer.streamerId == targetStreamerId) {
+        return streamer.activeStreamId;
+      }
+    }
+    return null;
+  }
+
+  /// Demo-only trigger synthesizing a knock from a canned name pool --
+  /// there's no second device/session in this simulated app, so incoming
+  /// knocks need an on-demand trigger to be demonstrable/testable at all
+  /// (mirrors admin_hub_screen.dart's "Simulate Live Push Notification"
+  /// pattern for the same class of problem).
+  void simulateIncomingKnock() {
+    final name = _demoKnockNamePool[
+        _pendingKnockRequests.length % _demoKnockNamePool.length];
+    _pendingKnockRequests.add(StreamKnockRequest(
+      id: newId(),
+      displayName: name,
+      requestedAt: DateTime.now(),
+    ));
+    notifyListeners();
+  }
+
+  void admitKnockRequest(String requestId) {
+    final index =
+        _pendingKnockRequests.indexWhere((r) => r.id == requestId);
+    if (index == -1) return;
+    final req = _pendingKnockRequests.removeAt(index);
+    _admittedAttendees
+        .add(StreamAttendee(id: req.id, displayName: req.displayName));
+    notifyListeners();
+  }
+
+  void denyKnockRequest(String requestId) {
+    _pendingKnockRequests.removeWhere((r) => r.id == requestId);
+    notifyListeners();
+  }
+
+  void admitAllKnockRequests() {
+    _admittedAttendees.addAll(_pendingKnockRequests.map(
+      (r) => StreamAttendee(id: r.id, displayName: r.displayName),
+    ));
+    _pendingKnockRequests.clear();
+    notifyListeners();
+  }
+
+  /// Director-panel "search/add @username" action -- admits a viewer
+  /// directly, distinct from addStreamWhitelistHandle (which only affects
+  /// future streams' pre-approval, not the current live attendee list).
+  void admitAttendeeByHandle(String handle) {
+    final normalized = handle.trim();
+    if (normalized.isEmpty) return;
+    if (_admittedAttendees.any((a) => a.id == normalized)) return;
+    _admittedAttendees.add(StreamAttendee(
+      id: normalized,
+      displayName: normalized,
+      isVip: _streamWhitelistHandles.contains(normalized),
+    ));
+    notifyListeners();
+  }
+
+  void kickAttendee(String attendeeId) {
+    _admittedAttendees.removeWhere((a) => a.id == attendeeId);
+    notifyListeners();
+  }
+
+  String get _localViewerIdentity => _googleUserEmail ?? _userProfile.id;
+
+  /// This viewer's own relationship to the currently-active private stream.
+  ViewerAccessState get localViewerAccessState {
+    if (!isActiveStreamPrivate) return ViewerAccessState.notApplicable;
+    final me = _localViewerIdentity;
+    if (_streamWhitelistHandles.contains(me) ||
+        _streamWhitelistHandles.contains('@$me')) {
+      return ViewerAccessState.vipPreApproved;
+    }
+    if (_admittedAttendees.any((a) => a.id == me)) {
+      return ViewerAccessState.admitted;
+    }
+    if (_pendingKnockRequests.any((r) => r.id == me)) {
+      return ViewerAccessState.knocking;
+    }
+    return ViewerAccessState.denied;
+  }
+
+  void requestToJoinActiveStream() {
+    final me = _localViewerIdentity;
+    if (_pendingKnockRequests.any((r) => r.id == me)) return;
+    final name = _googleUserName ?? _userProfile.nameEn;
+    _pendingKnockRequests.add(StreamKnockRequest(
+      id: me,
+      displayName: name,
+      requestedAt: DateTime.now(),
+    ));
+    notifyListeners();
+  }
 
   Future<void> refreshMyApplicationAndStreamerStatus() async {
     final user = _authService.currentSession?.user;
@@ -1001,6 +1182,8 @@ class AppProvider extends ChangeNotifier {
   String get customLiveCategory => _customLiveCategory;
   String get customLiveVenue => _customLiveVenue;
   String get customSlidesUrl => _customSlidesUrl;
+  String get customLiveDescription => _customLiveDescription;
+  String? get customAudioOnlyPosterPath => _customAudioOnlyPosterPath;
   BroadcastType get customBroadcastType => _customBroadcastType;
   bool get isBroadcastingLive => _isBroadcastingLive;
   String? get selectedBroadcastOrgId => _selectedBroadcastOrgId;
@@ -1942,6 +2125,26 @@ class AppProvider extends ChangeNotifier {
         slidesUrl: slidesUrl,
       );
 
+  /// Persists Title/Description/Category from the Broadcaster Studio bottom
+  /// sheet (v0.9) -- deliberately separate from setCustomBroadcastDetails
+  /// above, which also requires venue/slidesUrl the studio sheet doesn't
+  /// collect.
+  void setCustomBroadcastMeta({
+    required String title,
+    required String description,
+    required String category,
+  }) {
+    _customLiveTitle = title;
+    _customLiveDescription = description;
+    _customLiveCategory = category;
+    notifyListeners();
+  }
+
+  void setCustomAudioOnlyPosterPath(String? path) {
+    _customAudioOnlyPosterPath = (path == null || path.isEmpty) ? null : path;
+    notifyListeners();
+  }
+
   void setBroadcastType(BroadcastType type) {
     _customBroadcastType = type;
     final currentUserId = _authService.currentSession?.user.id;
@@ -1957,11 +2160,13 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// One-tap phone-to-YouTube go-live (Quick Go-Live Sheet, green cell
-  /// tower icon) -- the automated counterpart to the manual "From Phone"
-  /// tab in RtmpIpSettingsDialog, which makes the streamer paste in an RTMP
-  /// URL/stream key they copied out of YouTube Studio by hand.
-  /// YouTubeLiveService creates (simulates, until real OAuth exists -- see
+  /// One-tap phone-to-YouTube go-live using a fully simulated YouTube
+  /// broadcast session -- kept for its test coverage; the Broadcaster
+  /// Studio bottom sheet's Phone mode no longer calls this and instead
+  /// always uses the streamer's real, manually-entered stream key via
+  /// updatePhoneBroadcastTarget (see LiveBroadcasterStudioSheet's class
+  /// doc for why: a simulated key gets rejected by YouTube's real RTMP
+  /// ingest). YouTubeLiveService creates (simulates, until real OAuth exists -- see
   /// its class doc) the YouTube broadcast/stream pair, then this configures
   /// every field PhoneBroadcastScreen and viewers need and flips
   /// isBroadcastingLive, mirroring setCustomBroadcastDetails +
@@ -2108,11 +2313,18 @@ class AppProvider extends ChangeNotifier {
               'speakers': _selectedCoSpeakerIds,
               'broadcast_type': isAudio ? 'audio' : 'video',
               'youtube_id': _customYouTubeVideoId,
+              'description': _customLiveDescription,
             },
           ),
         );
       }
     } else {
+      // Private Streaming: clear the live session's knock/attendee queues --
+      // they're transient per-session state. Visibility/whitelist/knock-gate
+      // stay sticky across sessions (matches customLiveTitle etc.).
+      _pendingKnockRequests.clear();
+      _admittedAttendees.clear();
+
       // Quick Go-Live (Checkpoint: Phone-to-YouTube automation) -- transition
       // the YouTube broadcast to complete so it saves as a VOD, regardless
       // of which UI flipped isBroadcastingLive off.

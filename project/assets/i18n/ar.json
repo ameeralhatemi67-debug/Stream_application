@@ -234,6 +234,10 @@
   },
   "settings": {
     "title": "الإعدادات والتفضيلات",
+    "viewer_badge": "مشاهد / طالب",
+    "guest_not_signed_in": "زائر — لم يسجل الدخول",
+    "legal_reader_previous": "المستند السابق",
+    "legal_reader_next": "المستند التالي",
     "language": "لغة التطبيق",
     "streaming": "تفضيلات البث والتشغيل",
     "quality": "جودة الفيديو الافتراضية",
@@ -668,6 +672,9 @@
     "error_note_empty": "يرجى كتابة رسالة تعريفية موجزة بمحاضراتك."
   },
   "live_studio": {
+    "director_title": "استوديو البث",
+    "director_subtitle": "اختر طريقة البث المباشر",
+    "setup_guide_tooltip": "دليل الإعداد",
     "dialog_title": "استوديو التحكم في البث المباشر",
     "dialog_tag": "الاستوديو",
     "dialog_subtitle": "البث المباشر عبر OBS Studio المحلي أو ربط يوتيوب لايف",

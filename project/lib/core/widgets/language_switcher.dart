@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../theme/app_theme.dart';
 
 class LanguageSwitcher extends StatelessWidget {
@@ -43,10 +44,14 @@ class LanguageSwitcher extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.language_rounded,
-              size: 18,
-              color: AppTheme.accentBlue,
+            SvgPicture.asset(
+              'assets/Language.svg',
+              width: 18,
+              height: 18,
+              colorFilter: const ColorFilter.mode(
+                AppTheme.accentBlue,
+                BlendMode.srcIn,
+              ),
             ),
             if (showLabel) ...[
               const SizedBox(width: AppTheme.spaceXs),

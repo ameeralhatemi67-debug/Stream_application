@@ -35,6 +35,7 @@ class AppTheme {
   static const Color accentBlue = Color(0xFF38BDF8); // Verified scholar badge & map vectors
   static const Color accentPurple = Color(0xFFA78BFA); // VOD archive catalog & lecture slides
   static const Color accentAmber = Color(0xFFFBBF24); // Q&A featured upvotes & notifications
+  static const Color accentPink = Color(0xFFFF2D55); // Broadcaster Studio signature accent (Go Live CTAs)
 
   // Compatibility Aliases
   static const Color darkBackground = darkBgBase;
