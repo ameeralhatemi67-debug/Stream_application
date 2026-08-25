@@ -186,6 +186,7 @@
     "get_directions": "فتح الاتجاهات بالخريطة",
     "mini_player_tooltip": "المشاهدة في مشغل مصغر",
     "rtmp_ip_tooltip": "إعدادات IP لبث RTMP",
+    "quick_go_live_tooltip": "بث سريع (كاميرا الهاتف)",
     "watch_live": "دخول البث المباشر",
     "report_message": "الإبلاغ عن الرسالة",
     "block_user": "حظر المستخدم",

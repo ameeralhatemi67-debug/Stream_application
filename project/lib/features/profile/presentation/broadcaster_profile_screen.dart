@@ -7,6 +7,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/feature_in_progress_modal.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
+import '../../live_stream/presentation/widgets/quick_go_live_sheet.dart';
 import '../models/streamer_models.dart';
 import '../models/vod_models.dart';
 import 'widgets/vod_grid_tile.dart';
@@ -109,6 +110,18 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               ),
               tooltip: 'live.rtmp_ip_tooltip'.tr(),
               onPressed: () => RtmpIpSettingsDialog.show(context),
+            ),
+          // Quick Go-Live -- automated phone-to-YouTube broadcast, next to
+          // (not replacing) the manual OBS/RTMP settings above.
+          if (appProvider.isLoggedInStreamer &&
+              appProvider.isStreamerModeEnabled)
+            IconButton(
+              icon: const Icon(
+                Icons.cell_tower_rounded,
+                color: AppTheme.accentGreen,
+              ),
+              tooltip: 'live.quick_go_live_tooltip'.tr(),
+              onPressed: () => QuickGoLiveSheet.show(context),
             ),
           const LanguageSwitcher(),
           const SizedBox(width: AppTheme.spaceXs),
@@ -405,18 +418,15 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 6, vertical: 2.5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                 decoration: BoxDecoration(
-                  color: appProvider
-                          .isYouTubeLiveSynced(streamer.streamerId)
+                  color: appProvider.isYouTubeLiveSynced(streamer.streamerId)
                       ? AppTheme.accentRed.withValues(alpha: 0.15)
                       : AppTheme.darkSurface2,
-                  borderRadius:
-                      BorderRadius.circular(AppTheme.radiusXs),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   border: Border.all(
-                    color: appProvider
-                            .isYouTubeLiveSynced(streamer.streamerId)
+                    color: appProvider.isYouTubeLiveSynced(streamer.streamerId)
                         ? AppTheme.accentRed
                         : AppTheme.darkBorderSubtle,
                     width: 0.8,
@@ -426,27 +436,25 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      appProvider.isYouTubeLiveSynced(
-                              streamer.streamerId)
+                      appProvider.isYouTubeLiveSynced(streamer.streamerId)
                           ? Icons.sensors_rounded
                           : Icons.ondemand_video_rounded,
                       size: 12,
-                      color: appProvider.isYouTubeLiveSynced(
-                              streamer.streamerId)
-                          ? AppTheme.accentRed
-                          : AppTheme.textSecondaryDark,
+                      color:
+                          appProvider.isYouTubeLiveSynced(streamer.streamerId)
+                              ? AppTheme.accentRed
+                              : AppTheme.textSecondaryDark,
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      appProvider.isYouTubeLiveSynced(
-                              streamer.streamerId)
+                      appProvider.isYouTubeLiveSynced(streamer.streamerId)
                           ? 'profile.live_youtube_sync'.tr()
                           : 'profile.youtube_archive'.tr(),
                       style: TextStyle(
-                        color: appProvider.isYouTubeLiveSynced(
-                                streamer.streamerId)
-                            ? AppTheme.accentRed
-                            : AppTheme.textSecondaryDark,
+                        color:
+                            appProvider.isYouTubeLiveSynced(streamer.streamerId)
+                                ? AppTheme.accentRed
+                                : AppTheme.textSecondaryDark,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -456,27 +464,22 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               ),
 
               // Campus branches trigger for Organizations
-              if (streamer.isOrganization &&
-                  streamer.venues.isNotEmpty)
+              if (streamer.isOrganization && streamer.venues.isNotEmpty)
                 InkWell(
                   onTap: () => OrgBranchesModalSheet.show(
                     context,
                     orgName: streamer.getLocalizedName(lang),
                     venues: streamer.venues,
                   ),
-                  borderRadius:
-                      BorderRadius.circular(AppTheme.radiusXs),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 2.5),
                     decoration: BoxDecoration(
-                      color:
-                          AppTheme.accentBlue.withValues(alpha: 0.12),
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.radiusXs),
+                      color: AppTheme.accentBlue.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                       border: Border.all(
-                        color: AppTheme.accentBlue
-                            .withValues(alpha: 0.5),
+                        color: AppTheme.accentBlue.withValues(alpha: 0.5),
                         width: 0.8,
                       ),
                     ),

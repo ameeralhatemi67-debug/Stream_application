@@ -22,6 +22,9 @@ import '../../features/profile/models/vod_models.dart';
 import '../../features/profile/models/user_account_model.dart';
 import '../../features/live_stream/models/ghost_comments.dart';
 import '../../features/live_stream/models/qa_question_model.dart';
+import '../../features/live_stream/services/rtmp_publish_engine.dart'
+    show BroadcastQualityPreset;
+import '../../features/live_stream/services/youtube_live_service.dart';
 import '../../features/admin/models/broadcaster_application_model.dart';
 import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
@@ -41,6 +44,12 @@ class AppProvider extends ChangeNotifier {
       List.from(LectureQuestionModel.sampleQuestions);
   UserProfileModel _userProfile = UserProfileModel.defaultProfile;
   final YouTubeApiService _youTubeService = YouTubeApiService();
+  final YouTubeLiveService _youTubeLiveService = YouTubeLiveService();
+  // Set only while a broadcast started via startQuickPhoneBroadcast is
+  // live, so toggleBroadcasterGoLive knows to call endBroadcastSession when
+  // it ends -- regardless of which UI actually stops it (PhoneBroadcastScreen's
+  // End Broadcast button, or anything else that flips isBroadcastingLive off).
+  String? _quickGoLiveBroadcastId;
   final SupabaseAuthService _authService = SupabaseAuthService();
   AdminDatabaseService? _adminDbService;
 
@@ -1948,6 +1957,60 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// One-tap phone-to-YouTube go-live (Quick Go-Live Sheet, green cell
+  /// tower icon) -- the automated counterpart to the manual "From Phone"
+  /// tab in RtmpIpSettingsDialog, which makes the streamer paste in an RTMP
+  /// URL/stream key they copied out of YouTube Studio by hand.
+  /// YouTubeLiveService creates (simulates, until real OAuth exists -- see
+  /// its class doc) the YouTube broadcast/stream pair, then this configures
+  /// every field PhoneBroadcastScreen and viewers need and flips
+  /// isBroadcastingLive, mirroring setCustomBroadcastDetails +
+  /// toggleBroadcasterGoLive's combined effect from the manual flow.
+  /// Returns false (leaving state untouched) if session creation fails.
+  Future<bool> startQuickPhoneBroadcast({
+    required String title,
+    required String category,
+    required String venue,
+    required bool isAudioOnly,
+    required BroadcastQualityPreset quality,
+  }) async {
+    final YouTubeBroadcastSession session;
+    try {
+      session = await _youTubeLiveService.createBroadcastSession(
+        title: title,
+        description: 'Live educational broadcast from $venue via $title.',
+        isAudioOnly: isAudioOnly,
+        quality: quality,
+      );
+    } catch (e) {
+      debugPrint('startQuickPhoneBroadcast: session creation failed: $e');
+      return false;
+    }
+
+    _customLiveTitle = title;
+    _customLiveCategory = category;
+    _customLiveVenue = venue;
+    _customBroadcastType =
+        isAudioOnly ? BroadcastType.liveAudio : BroadcastType.liveVideo;
+    _customYouTubeVideoId = session.videoId;
+    _customYouTubeLiveUrl =
+        'https://www.youtube.com/watch?v=${session.videoId}';
+    _phoneBroadcastRtmpUrl = session.rtmpUrl;
+    _phoneBroadcastStreamKey = session.streamKey;
+    _quickGoLiveBroadcastId = session.broadcastId;
+    notifyListeners();
+
+    // No context threaded through here (unlike the manual go-live flow) --
+    // this crosses the createBroadcastSession await above, so any caller's
+    // BuildContext could already be stale by this point. The go-live
+    // notification toast toggleBroadcasterGoLive optionally shows is a
+    // nice-to-have, not essential to actually going live.
+    if (!_isBroadcastingLive) {
+      await toggleBroadcasterGoLive();
+    }
+    return true;
+  }
+
   Future<void> toggleBroadcasterGoLive([BuildContext? context]) async {
     _isBroadcastingLive = !_isBroadcastingLive;
 
@@ -2050,6 +2113,17 @@ class AppProvider extends ChangeNotifier {
         );
       }
     } else {
+      // Quick Go-Live (Checkpoint: Phone-to-YouTube automation) -- transition
+      // the YouTube broadcast to complete so it saves as a VOD, regardless
+      // of which UI flipped isBroadcastingLive off.
+      if (_quickGoLiveBroadcastId != null) {
+        final endingBroadcastId = _quickGoLiveBroadcastId!;
+        _quickGoLiveBroadcastId = null;
+        await _youTubeLiveService.endBroadcastSession(
+          broadcastId: endingBroadcastId,
+        );
+      }
+
       // 🌟 Check and push 1-Hour Watch Milestone Notification if user watched >= 60 min
       WatchSessionTracker.onStreamEnded(
         'stream_live_992',

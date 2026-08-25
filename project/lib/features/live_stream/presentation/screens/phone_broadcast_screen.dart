@@ -15,7 +15,14 @@ import '../widgets/phone_camera_preview.dart';
 /// EventChannel), mirroring the engine/UI split the Checkpoint 1 spike
 /// validated, so v1.1's iOS engine can sit behind this same screen later.
 class PhoneBroadcastScreen extends StatefulWidget {
-  const PhoneBroadcastScreen({super.key});
+  /// Set when this screen is launched from QuickGoLiveSheet, which already
+  /// collected the quality preset (and everything else) up front -- skips
+  /// the picker below and heads straight into camera setup. Null for the
+  /// manual "From Phone" tab in RtmpIpSettingsDialog, which still shows the
+  /// picker since nothing was chosen yet.
+  final BroadcastQualityPreset? quickLaunchPreset;
+
+  const PhoneBroadcastScreen({super.key, this.quickLaunchPreset});
 
   @override
   State<PhoneBroadcastScreen> createState() => _PhoneBroadcastScreenState();
@@ -24,8 +31,8 @@ class PhoneBroadcastScreen extends StatefulWidget {
 class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
   final RtmpPublishEngine _engine = RtmpPublishEngine();
   String? _setupError;
-  BroadcastQualityPreset _preset = BroadcastQualityPreset.medium;
-  bool _presetConfirmed = false;
+  late BroadcastQualityPreset _preset;
+  late bool _presetConfirmed;
 
   late AppProvider _appProvider;
   bool _appProviderCaptured = false;
@@ -43,6 +50,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
   void initState() {
     super.initState();
     _engine.addListener(_onEngineChanged);
+    _preset = widget.quickLaunchPreset ?? BroadcastQualityPreset.medium;
+    _presetConfirmed = widget.quickLaunchPreset != null;
+
+    if (widget.quickLaunchPreset != null) {
+      // AppProvider.startQuickPhoneBroadcast already flipped
+      // isBroadcastingLive before QuickGoLiveSheet navigated here, so this
+      // screen (not _startBroadcast's own "wasn't live yet" check below)
+      // is what owns undoing that if the user backs out before the RTMP
+      // connection ever actually goes through -- see dispose()/_stopBroadcast.
+      _weStartedBroadcast = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _confirmPresetAndSetup();
+      });
+    }
   }
 
   Future<void> _confirmPresetAndSetup() async {
@@ -75,6 +96,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
       // the encoder's video source to a static branded image.
       if (_appProvider.customBroadcastType == BroadcastType.liveAudio) {
         await _engine.setAudioOnly(true);
+      }
+      // Quick Go-Live is a one-tap flow -- the streamer already committed
+      // to going live back in QuickGoLiveSheet, so there's no separate
+      // manual "Go Live" tap to wait for here once the camera's ready.
+      if (widget.quickLaunchPreset != null && mounted) {
+        await _startBroadcast();
       }
     } catch (e) {
       if (!mounted) return;
@@ -244,7 +271,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
               maxAttempts: _engine.maxReconnectAttempts,
             ),
           ),
-        if (_engine.state == RtmpPublishState.error && _engine.lastError != null)
+        if (_engine.state == RtmpPublishState.error &&
+            _engine.lastError != null)
           Positioned(
             top: 0,
             left: 0,
@@ -270,14 +298,18 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
           children: [
             const Text(
               'Choose a broadcast quality',
-              style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             const Text(
               "Higher quality looks better but needs a stronger upload. "
               "You can't change this once you start the camera.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12.5),
+              style:
+                  TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12.5),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             ...BroadcastQualityPreset.values.map(
@@ -300,7 +332,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
                   foregroundColor: Colors.white,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: const Text('Continue', style: TextStyle(fontWeight: FontWeight.bold)),
+                child: const Text('Continue',
+                    style: TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -318,7 +351,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     // broadcast session for control purposes: mic-mute/camera-swap stay
     // available, and End Broadcast lets the user bail out of a stuck
     // reconnect loop rather than being stuck with no way to stop.
-    final broadcastActive = live || _engine.state == RtmpPublishState.reconnecting;
+    final broadcastActive =
+        live || _engine.state == RtmpPublishState.reconnecting;
     // v0.7 Checkpoint 4 Phase 1 -- a connection failure (including a
     // reconnect that ran out of attempts) shouldn't be a dead end: the
     // camera is still prepared, so Go Live can retry a fresh connection
@@ -352,7 +386,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
                     ? (broadcastActive ? _stopBroadcast : _startBroadcast)
                     : null,
             icon: Icon(
-              broadcastActive ? Icons.stop_circle_rounded : Icons.sensors_rounded,
+              broadcastActive
+                  ? Icons.stop_circle_rounded
+                  : Icons.sensors_rounded,
             ),
             label: Text(
               connecting
@@ -363,7 +399,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: broadcastActive ? Colors.red.shade800 : AppTheme.accentGreen,
+              backgroundColor:
+                  broadcastActive ? Colors.red.shade800 : AppTheme.accentGreen,
               foregroundColor: Colors.white,
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
@@ -403,7 +440,9 @@ class _PresetOption extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
-          color: selected ? AppTheme.accentRed.withValues(alpha: 0.15) : AppTheme.darkSurface1,
+          color: selected
+              ? AppTheme.accentRed.withValues(alpha: 0.15)
+              : AppTheme.darkSurface1,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(
             color: selected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
@@ -413,7 +452,9 @@ class _PresetOption extends StatelessWidget {
         child: Row(
           children: [
             Icon(
-              selected ? Icons.radio_button_checked_rounded : Icons.radio_button_unchecked_rounded,
+              selected
+                  ? Icons.radio_button_checked_rounded
+                  : Icons.radio_button_unchecked_rounded,
               color: selected ? AppTheme.accentRed : AppTheme.textMutedDark,
               size: 18,
             ),
@@ -514,7 +555,8 @@ class _StreamErrorBanner extends StatelessWidget {
       color: Colors.red.shade900,
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.white, size: 18),
+          const Icon(Icons.error_outline_rounded,
+              color: Colors.white, size: 18),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
@@ -548,7 +590,8 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+        style: const TextStyle(
+            color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }
