@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/models/streamer_models.dart';
+import '../../models/map_models.dart';
 import 'venue_navigation_sheet.dart';
 
 class StreamerSlidingDrawer extends StatelessWidget {
@@ -126,7 +128,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                     ),
                   ),
                   ...offlineStreamers.map((streamer) =>
-                        _buildStreamerTile(context, streamer, langCode)),
+                      _buildStreamerTile(context, streamer, langCode)),
                 ],
               ),
             ),
@@ -188,7 +190,8 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   bottom: 0,
                   right: 0,
                   child: Container(
-                    padding: isAudio ? const EdgeInsets.all(1.5) : EdgeInsets.zero,
+                    padding:
+                        isAudio ? const EdgeInsets.all(1.5) : EdgeInsets.zero,
                     width: isAudio ? 14 : 10,
                     height: isAudio ? 14 : 10,
                     decoration: BoxDecoration(
@@ -198,7 +201,8 @@ class StreamerSlidingDrawer extends StatelessWidget {
                           Border.all(color: AppTheme.darkSurface1, width: 1.5),
                     ),
                     child: isAudio
-                        ? const Icon(Icons.mic_rounded, size: 8, color: Colors.white)
+                        ? const Icon(Icons.mic_rounded,
+                            size: 8, color: Colors.white)
                         : null,
                   ),
                 ),
@@ -274,18 +278,17 @@ class StreamerSlidingDrawer extends StatelessWidget {
                     VenueNavigationSheet.show(context, streamer: streamer);
                   },
                 ),
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: AppTheme.darkSurface2,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: Border.all(color: AppTheme.darkBorderSubtle),
-                  ),
-                  child: const Icon(
-                    Icons.my_location_rounded,
-                    size: 16,
+                // Task 9 -- one-click external Google Maps launch, distinct
+                // from the button above which opens the in-app
+                // VenueNavigationSheet with full auditorium/distance details.
+                IconButton(
+                  icon: const Icon(
+                    Icons.directions_outlined,
+                    size: 18,
                     color: AppTheme.accentBlue,
                   ),
+                  tooltip: 'venue.open_maps'.tr(),
+                  onPressed: () => _openInGoogleMaps(streamer),
                 ),
               ],
             ),
@@ -293,5 +296,16 @@ class StreamerSlidingDrawer extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// Task 9 -- opens the streamer's venue coordinates directly in Google
+  /// Maps (native app if installed, browser fallback otherwise). Silently
+  /// no-ops if no maps handler exists on the device.
+  static Future<void> _openInGoogleMaps(StreamerModel streamer) async {
+    final url = Uri.parse(
+        buildGoogleMapsSearchUrl(streamer.latitude, streamer.longitude));
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
 }

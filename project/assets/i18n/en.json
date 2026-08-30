@@ -145,6 +145,7 @@
     "listen_live": "Listen Live",
     "active_speakers": "Active Speakers",
     "speaking_now": "Speaking Now",
+    "audio_paused": "Audio Paused",
     "tap_to_view_profile": "Tap to inspect profile",
     "panelists": "Panelists",
     "quality": "Quality",

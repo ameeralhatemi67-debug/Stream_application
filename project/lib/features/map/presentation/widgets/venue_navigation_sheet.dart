@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
@@ -392,49 +393,7 @@ class VenueNavigationSheet extends StatelessWidget {
               width: double.infinity,
               height: 48,
               child: ElevatedButton.icon(
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(text: mapUrl));
-                  Navigator.of(context).pop();
-
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      backgroundColor: AppTheme.darkSurface3,
-                      behavior: SnackBarBehavior.floating,
-                      duration: const Duration(seconds: 4),
-                      content: Row(
-                        children: [
-                          const Icon(Icons.open_in_new_rounded,
-                              color: AppTheme.accentBlue),
-                          const SizedBox(width: AppTheme.spaceMd),
-                          Expanded(
-                            child: Column(
-                              mainAxisSize: MainAxisSize.min,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'venue.navigating_toast'.tr(),
-                                  style: const TextStyle(
-                                    color: AppTheme.textPrimaryDark,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                Text(
-                                  mapUrl,
-                                  style: const TextStyle(
-                                    color: AppTheme.accentBlue,
-                                    fontSize: 11,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                onPressed: () => _openInGoogleMaps(context, streamer, mapUrl),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.accentBlue,
                   foregroundColor: AppTheme.darkBgBase,
@@ -451,6 +410,74 @@ class VenueNavigationSheet extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Task 9 -- one-click Google Maps launch. Replaces the previous
+  /// clipboard-copy-only flow: a signed coordinate query
+  /// (`?api=1&query=lat,lng`) opens directly in the Google Maps app (or its
+  /// web fallback) via [LaunchMode.externalApplication], with the clipboard
+  /// copy kept only as a last resort for a device with no maps handler at
+  /// all.
+  static Future<void> _openInGoogleMaps(
+    BuildContext context,
+    StreamerModel streamer,
+    String fallbackMapUrl,
+  ) async {
+    final googleMapsUrl = Uri.parse(
+        buildGoogleMapsSearchUrl(streamer.latitude, streamer.longitude));
+
+    Navigator.of(context).pop();
+
+    try {
+      if (await canLaunchUrl(googleMapsUrl)) {
+        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
+        return;
+      }
+    } catch (e) {
+      debugPrint('[VenueNavigationSheet] Error launching Google Maps: $e');
+    }
+
+    // No maps handler available on this device -- fall back to the old
+    // clipboard behavior rather than leaving the tap silently do nothing.
+    await Clipboard.setData(ClipboardData(text: fallbackMapUrl));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: AppTheme.darkSurface3,
+        behavior: SnackBarBehavior.floating,
+        duration: const Duration(seconds: 4),
+        content: Row(
+          children: [
+            const Icon(Icons.open_in_new_rounded, color: AppTheme.accentBlue),
+            const SizedBox(width: AppTheme.spaceMd),
+            Expanded(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'venue.navigating_toast'.tr(),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Text(
+                    fallbackMapUrl,
+                    style: const TextStyle(
+                      color: AppTheme.accentBlue,
+                      fontSize: 11,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],

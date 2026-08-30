@@ -53,6 +53,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
   /// honour it do; the rest ignore it. `auto` means "let the engine's own
   /// adaptive logic decide", which is the default.
   final String preferredQuality;
+  final List<String> fallbackUrls;
 
   const AbstractVideoPlayer({
     super.key,
@@ -63,6 +64,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     this.onError,
     this.aspectRatio = 16 / 9,
     this.preferredQuality = 'auto',
+    this.fallbackUrls = const [],
   });
 
   /// Polymorphic factory constructor instantiating concrete player adapters based on [sourceType].
@@ -76,6 +78,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     ValueChanged<String>? onError,
     double aspectRatio = 16 / 9,
     String preferredQuality = 'auto',
+    List<String> fallbackUrls = const [],
   }) {
     switch (sourceType) {
       case StreamSourceType.localRtmp:
@@ -104,6 +107,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
         return YouTubePlayerAdapter(
           key: key,
           streamUrl: streamUrl,
+          fallbackUrls: fallbackUrls,
           autoPlay: autoPlay,
           onPlayerReady: onPlayerReady,
           onStateChanged: onStateChanged,

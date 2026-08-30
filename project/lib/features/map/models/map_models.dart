@@ -72,7 +72,8 @@ class MapMarkerModel {
     this.isOrganization = false,
   });
 
-  bool get isLive => status == MarkerStatus.liveVideo || status == MarkerStatus.liveAudio;
+  bool get isLive =>
+      status == MarkerStatus.liveVideo || status == MarkerStatus.liveAudio;
   bool get isVideoLive => status == MarkerStatus.liveVideo;
   bool get isAudioLive => status == MarkerStatus.liveAudio;
 
@@ -115,7 +116,9 @@ class MapMarkerModel {
       isOrganization: streamer.isOrganization,
     );
   }
-}/// AlSharqia Core Regions & 50% Decimated Clean Geographic Municipal Bounding Coordinates
+}
+
+/// AlSharqia Core Regions & 50% Decimated Clean Geographic Municipal Bounding Coordinates
 const List<MapRegionModel> alSharqiaRegions = [
   MapRegionModel(
     regionId: 'khobar',
@@ -237,6 +240,16 @@ String estimateTravelTime(double distanceKm, String langCode) {
 String generateExternalMapUrl(double lat, double lng, [String? label]) {
   final query = Uri.encodeComponent(label ?? '$lat,$lng');
   return 'https://www.google.com/maps/search/?api=1&query=$lat,$lng&query_place_id=$query';
+}
+
+/// One-click Google Maps deep link for a raw coordinate pair (Task 9). A
+/// coordinate-only query -- no place id, no label -- is what actually opens
+/// the exact venue pin in the Google Maps app; shared by
+/// VenueNavigationSheet, MarkerSummaryCard and StreamerSlidingDrawer so all
+/// three "open in Maps" actions on the Spatial Map stay byte-for-byte
+/// identical rather than three hand-typed copies drifting apart.
+String buildGoogleMapsSearchUrl(double lat, double lng) {
+  return 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';
 }
 
 /// Structured Campus & Auditorium Details for Eastern Province Broadcasters

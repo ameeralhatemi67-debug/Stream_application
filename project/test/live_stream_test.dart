@@ -6,6 +6,7 @@ import 'package:streamer_app/features/live_stream/presentation/abstract_video_pl
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_player_overlay_controls.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/stream_state_placeholder_overlay.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
+import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 void main() {
   group('Live Stream Engine & Ghost Audience Unit Tests', () {
@@ -310,6 +311,25 @@ void main() {
         provider.rejectCustomPlaceholder(card, reason: '   '),
         throwsA(isA<Exception>()),
       );
+    });
+
+    test('TC-FALLBACK-01: Al Quran 4K has active stream and valid fallback streams', () {
+      final quranStreamer = mockStreamers.firstWhere((s) => s.streamerId == 'quran_4k_05');
+      expect(quranStreamer.youtubeVideoId, equals('jjBoecWjAnw'));
+      expect(quranStreamer.fallbackYoutubeVideoIds, isNotEmpty);
+      expect(quranStreamer.fallbackYoutubeVideoIds.length, equals(2));
+      expect(quranStreamer.fallbackYoutubeVideoIds, containsAll(['PLkCnLrKN8Q', 'hPeOq1Dz5xI']));
+    });
+
+    test('TC-FALLBACK-02: AbstractVideoPlayer forwards fallbackUrls to YouTube adapter', () {
+      final player = AbstractVideoPlayer.fromSource(
+        sourceType: StreamSourceType.youtubeEmbed,
+        streamUrl: 'jjBoecWjAnw',
+        fallbackUrls: const ['PLkCnLrKN8Q', 'hPeOq1Dz5xI'],
+      ) as YouTubePlayerAdapter;
+
+      expect(player.streamUrl, equals('jjBoecWjAnw'));
+      expect(player.fallbackUrls, equals(const ['PLkCnLrKN8Q', 'hPeOq1Dz5xI']));
     });
   });
 }

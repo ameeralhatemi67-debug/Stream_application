@@ -15,6 +15,18 @@ import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
 
+/// CartoDB's zero-API-key dark raster basemap. Must include `/rastertiles/`
+/// -- that path segment is where CartoDB actually serves raster tiles from;
+/// omitting it 404s every request and the map renders as blank grey squares
+/// (Task 7). Exposed as a top-level constant so this stays covered by a
+/// regression test rather than only being visible by manually panning the map.
+const String kSpatialMapTileUrlTemplate =
+    'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png';
+
+/// Zero-API-key fallback used when the primary CartoDB tile request fails.
+const String kSpatialMapTileFallbackUrl =
+    'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
+
 class SpatialMapScreen extends StatefulWidget {
   const SpatialMapScreen({super.key});
 
@@ -22,7 +34,8 @@ class SpatialMapScreen extends StatefulWidget {
   State<SpatialMapScreen> createState() => _SpatialMapScreenState();
 }
 
-class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerProviderStateMixin {
+class _SpatialMapScreenState extends State<SpatialMapScreen>
+    with SingleTickerProviderStateMixin {
   late final MapController _mapController;
   late final AnimationController _cameraAnimationController;
 
@@ -68,8 +81,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
     );
 
     void listener() {
-      final lat = startCenter.latitude + (targetCenter.latitude - startCenter.latitude) * curve.value;
-      final lng = startCenter.longitude + (targetCenter.longitude - startCenter.longitude) * curve.value;
+      final lat = startCenter.latitude +
+          (targetCenter.latitude - startCenter.latitude) * curve.value;
+      final lng = startCenter.longitude +
+          (targetCenter.longitude - startCenter.longitude) * curve.value;
       final zoom = startZoom + (targetZoom - startZoom) * curve.value;
 
       _mapController.move(LatLng(lat, lng), zoom);
@@ -102,8 +117,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
     // only rebuilds when the filtered list's actual contents change (streamer
     // added/removed/mutated), not on every unrelated notifyListeners() call
     // elsewhere in the app.
-    final displayedStreamers =
-        context.select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers);
+    final displayedStreamers = context
+        .select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers);
     final currentCategoryFilter =
         context.select<AppProvider, String>((p) => p.currentCategoryFilter);
     final isDesktop = MediaQuery.of(context).size.width >= 900;
@@ -151,22 +166,24 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                   children: [
                     // Fast Dark CartoDB Basemap Tile Layer with Standard Network Provider & Fallback
                     TileLayer(
-                      urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-                      fallbackUrl: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                      urlTemplate: kSpatialMapTileUrlTemplate,
+                      fallbackUrl: kSpatialMapTileFallbackUrl,
                       subdomains: const ['a', 'b', 'c', 'd'],
                       maxZoom: 19,
                       userAgentPackageName: 'com.streamer.app',
                       tileProvider: NetworkTileProvider(),
                       keepBuffer: 6,
                       panBuffer: 2,
-                      tileDisplay: const TileDisplay.fadeIn(duration: Duration(milliseconds: 100)),
+                      tileDisplay: const TileDisplay.fadeIn(
+                          duration: Duration(milliseconds: 100)),
                     ),
 
                     // AlSharqia City Boundaries Outlines
                     RepaintBoundary(
                       child: PolygonLayer<Object>(
                         polygons: alSharqiaRegions.map((region) {
-                          final isSelected = region.regionId == _selectedRegion.regionId;
+                          final isSelected =
+                              region.regionId == _selectedRegion.regionId;
                           return Polygon<Object>(
                             points: region.polygonPoints,
                             color: isSelected
@@ -185,7 +202,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                     ValueListenableBuilder<double>(
                       valueListenable: _zoomNotifier,
                       builder: (context, currentZoom, child) {
-                        final bool showAuditoriumCards = currentZoom >= kAuditoriumCardZoomThreshold;
+                        final bool showAuditoriumCards =
+                            currentZoom >= kAuditoriumCardZoomThreshold;
 
                         // Filter visible streamers:
                         // Live video and audio-only streamers are ALWAYS visible from max zoom out;
@@ -204,15 +222,20 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                         // 2. Live Audio Broadcasters
                         // 3. Live Video Broadcasters
                         // 4. Selected Broadcaster
-                        final sortedStreamers = List<StreamerModel>.from(visibleStreamers)
+                        final sortedStreamers = List<StreamerModel>.from(
+                            visibleStreamers)
                           ..sort((a, b) {
-                            final isASelected = a.streamerId == _selectedStreamer?.streamerId;
-                            final isBSelected = b.streamerId == _selectedStreamer?.streamerId;
+                            final isASelected =
+                                a.streamerId == _selectedStreamer?.streamerId;
+                            final isBSelected =
+                                b.streamerId == _selectedStreamer?.streamerId;
                             if (isASelected && !isBSelected) return 1;
                             if (!isASelected && isBSelected) return -1;
 
-                            int scoreA = a.isVideoLive ? 3 : (a.isAudioLive ? 2 : 1);
-                            int scoreB = b.isVideoLive ? 3 : (b.isAudioLive ? 2 : 1);
+                            int scoreA =
+                                a.isVideoLive ? 3 : (a.isAudioLive ? 2 : 1);
+                            int scoreB =
+                                b.isVideoLive ? 3 : (b.isAudioLive ? 2 : 1);
                             return scoreA.compareTo(scoreB);
                           });
 
@@ -226,8 +249,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                         for (final streamer in sortedStreamers) {
                           final isLive = streamer.isCurrentlyLive;
                           final double radius = (isLive ? 56.0 : 46.0) / 2.0;
-                          final origLatLng = LatLng(streamer.latitude, streamer.longitude);
-                          final math.Point<double> pixelPos = camera.project(origLatLng);
+                          final origLatLng =
+                              LatLng(streamer.latitude, streamer.longitude);
+                          final math.Point<double> pixelPos =
+                              camera.project(origLatLng);
 
                           layoutMarkers.add(_LayoutMarker(
                             streamerId: streamer.streamerId,
@@ -239,7 +264,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
 
                         // Run pairwise collision resolution for 10 iterations (force displacement)
                         const int iterations = 10;
-                        const double gap = 7.0; // Minimum 7px gap between markers
+                        const double gap =
+                            7.0; // Minimum 7px gap between markers
 
                         for (int iter = 0; iter < iterations; iter++) {
                           for (int i = 0; i < layoutMarkers.length; i++) {
@@ -247,10 +273,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                               final m1 = layoutMarkers[i];
                               final m2 = layoutMarkers[j];
 
-                              final double dx = m2.currentPixel.x - m1.currentPixel.x;
-                              final double dy = m2.currentPixel.y - m1.currentPixel.y;
-                              final double distance = math.sqrt(dx * dx + dy * dy);
-                              final double minDistance = m1.radius + m2.radius + gap;
+                              final double dx =
+                                  m2.currentPixel.x - m1.currentPixel.x;
+                              final double dy =
+                                  m2.currentPixel.y - m1.currentPixel.y;
+                              final double distance =
+                                  math.sqrt(dx * dx + dy * dy);
+                              final double minDistance =
+                                  m1.radius + m2.radius + gap;
 
                               if (distance < minDistance) {
                                 final double overlap = minDistance - distance;
@@ -258,7 +288,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                                 double pushX, pushY;
                                 if (distance == 0) {
                                   // Fan out systematically using index-based angle to avoid stacking in the exact same spot
-                                  final double angle = (i + j) * 2.0 * math.pi / layoutMarkers.length;
+                                  final double angle = (i + j) *
+                                      2.0 *
+                                      math.pi /
+                                      layoutMarkers.length;
                                   pushX = math.cos(angle) * (minDistance / 2.0);
                                   pushY = math.sin(angle) * (minDistance / 2.0);
                                 } else {
@@ -266,8 +299,12 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                                   pushY = (dy / distance) * (overlap / 2.0);
                                 }
 
-                                m1.currentPixel = math.Point(m1.currentPixel.x - pushX, m1.currentPixel.y - pushY);
-                                m2.currentPixel = math.Point(m2.currentPixel.x + pushX, m2.currentPixel.y + pushY);
+                                m1.currentPixel = math.Point(
+                                    m1.currentPixel.x - pushX,
+                                    m1.currentPixel.y - pushY);
+                                m2.currentPixel = math.Point(
+                                    m2.currentPixel.x + pushX,
+                                    m2.currentPixel.y + pushY);
                               }
                             }
                           }
@@ -275,12 +312,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
 
                         // Save unprojected adjusted coordinates
                         for (final m in layoutMarkers) {
-                          adjustedPositions[m.streamerId] = camera.unproject(m.currentPixel);
+                          adjustedPositions[m.streamerId] =
+                              camera.unproject(m.currentPixel);
                         }
 
                         // 1. Render all Avatar Markers
                         for (final streamer in sortedStreamers) {
-                          final isSelected = _selectedStreamer?.streamerId == streamer.streamerId;
+                          final isSelected = _selectedStreamer?.streamerId ==
+                              streamer.streamerId;
                           final markerModel = _mapStreamerToMarker(streamer);
                           final isLive = markerModel.isLive;
 
@@ -289,8 +328,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                             continue;
                           }
 
-                          final adjustedPoint = adjustedPositions[streamer.streamerId] ??
-                              LatLng(streamer.latitude, streamer.longitude);
+                          final adjustedPoint =
+                              adjustedPositions[streamer.streamerId] ??
+                                  LatLng(streamer.latitude, streamer.longitude);
 
                           markerList.add(
                             Marker(
@@ -316,18 +356,22 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
 
                         // 2. Render Selected Streamer Summary Card LAST
                         if (_selectedStreamer != null && showAuditoriumCards) {
-                          final adjustedPoint = adjustedPositions[_selectedStreamer!.streamerId] ??
-                              LatLng(_selectedStreamer!.latitude, _selectedStreamer!.longitude);
+                          final adjustedPoint = adjustedPositions[
+                                  _selectedStreamer!.streamerId] ??
+                              LatLng(_selectedStreamer!.latitude,
+                                  _selectedStreamer!.longitude);
                           markerList.add(
                             Marker(
-                              key: ValueKey('card_${_selectedStreamer!.streamerId}'),
+                              key: ValueKey(
+                                  'card_${_selectedStreamer!.streamerId}'),
                               point: adjustedPoint,
                               width: 320.0,
                               height: 175.0,
                               rotate: true,
                               alignment: Alignment.topCenter,
                               child: MarkerSummaryCard(
-                                key: ValueKey('summary_card_${_selectedStreamer!.streamerId}'),
+                                key: ValueKey(
+                                    'summary_card_${_selectedStreamer!.streamerId}'),
                                 streamer: _selectedStreamer!,
                                 onClose: () {
                                   setState(() {
@@ -369,7 +413,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                             children: [
                               Expanded(
                                 child: TopSpatialSearchBar(
-                                  onSearchResultSelected: (coordinates, zoom, label) {
+                                  onSearchResultSelected:
+                                      (coordinates, zoom, label) {
                                     _animateCameraTo(coordinates, zoom);
                                   },
                                 ),
@@ -390,7 +435,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                                     setState(() {
                                       _selectedRegion = region;
                                     });
-                                    _animateCameraTo(region.centerCoordinates, region.zoomLevelTarget);
+                                    _animateCameraTo(region.centerCoordinates,
+                                        region.zoomLevelTarget);
                                   },
                                 ),
                               ),
@@ -399,15 +445,32 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                                 child: TopicSelectorDropdown(
                                   selectedCategoryId: currentCategoryFilter,
                                   onCategorySelected: (categoryId) {
-                                    context.read<AppProvider>().setCategoryFilter(categoryId);
-                                    if (_selectedStreamer != null && categoryId != 'all') {
-                                      final sCat = _selectedStreamer!.categoryId;
-                                      final bool matches = (categoryId == sCat) ||
-                                          (categoryId == 'computer_science' && (sCat == 'cs_tech' || sCat == 'computer_science')) ||
-                                          (categoryId == 'cs_tech' && (sCat == 'cs_tech' || sCat == 'computer_science')) ||
-                                          (categoryId == 'islamic_studies' && (sCat == 'islamic_studies' || sCat == 'sharia')) ||
-                                          (categoryId == 'medicine' && (sCat == 'medicine' || sCat == 'health')) ||
-                                          (categoryId == 'engineering' && (sCat == 'engineering' || sCat == 'innovation'));
+                                    context
+                                        .read<AppProvider>()
+                                        .setCategoryFilter(categoryId);
+                                    if (_selectedStreamer != null &&
+                                        categoryId != 'all') {
+                                      final sCat =
+                                          _selectedStreamer!.categoryId;
+                                      final bool matches = (categoryId ==
+                                              sCat) ||
+                                          (categoryId == 'computer_science' &&
+                                              (sCat == 'cs_tech' ||
+                                                  sCat ==
+                                                      'computer_science')) ||
+                                          (categoryId == 'cs_tech' &&
+                                              (sCat == 'cs_tech' ||
+                                                  sCat ==
+                                                      'computer_science')) ||
+                                          (categoryId == 'islamic_studies' &&
+                                              (sCat == 'islamic_studies' ||
+                                                  sCat == 'sharia')) ||
+                                          (categoryId == 'medicine' &&
+                                              (sCat == 'medicine' ||
+                                                  sCat == 'health')) ||
+                                          (categoryId == 'engineering' &&
+                                              (sCat == 'engineering' ||
+                                                  sCat == 'innovation'));
                                       if (!matches) {
                                         setState(() {
                                           _selectedStreamer = null;
@@ -456,7 +519,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                 ValueListenableBuilder<double>(
                   valueListenable: _zoomNotifier,
                   builder: (context, currentZoom, child) {
-                    if (_selectedStreamer == null || currentZoom >= kAuditoriumCardZoomThreshold) {
+                    if (_selectedStreamer == null ||
+                        currentZoom >= kAuditoriumCardZoomThreshold) {
                       return const SizedBox.shrink();
                     }
                     return Positioned(
@@ -486,7 +550,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
               width: 380,
               decoration: const BoxDecoration(
                 color: AppTheme.darkSurface1,
-                border: Border(left: BorderSide(color: AppTheme.darkBorderSubtle)),
+                border:
+                    Border(left: BorderSide(color: AppTheme.darkBorderSubtle)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -494,11 +559,13 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                   Container(
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     decoration: const BoxDecoration(
-                      border: Border(bottom: BorderSide(color: AppTheme.darkBorderSubtle)),
+                      border: Border(
+                          bottom: BorderSide(color: AppTheme.darkBorderSubtle)),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.hub_rounded, color: AppTheme.accentRed, size: 20),
+                        const Icon(Icons.hub_rounded,
+                            color: AppTheme.accentRed, size: 20),
                         const SizedBox(width: AppTheme.spaceSm),
                         Text(
                           'AlSharqia Venues & Scholars (${displayedStreamers.length})',
@@ -515,25 +582,31 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                     child: ListView.separated(
                       padding: const EdgeInsets.all(AppTheme.spaceMd),
                       itemCount: displayedStreamers.length,
-                      separatorBuilder: (context, index) => const SizedBox(height: AppTheme.spaceSm),
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: AppTheme.spaceSm),
                       itemBuilder: (context, index) {
                         final streamer = displayedStreamers[index];
-                        final isSelected = _selectedStreamer?.streamerId == streamer.streamerId;
+                        final isSelected = _selectedStreamer?.streamerId ==
+                            streamer.streamerId;
 
                         return Material(
                           color: isSelected
                               ? AppTheme.accentRed.withValues(alpha: 0.12)
                               : AppTheme.darkSurface2,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
                             side: BorderSide(
-                              color: isSelected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+                              color: isSelected
+                                  ? AppTheme.accentRed
+                                  : AppTheme.darkBorderSubtle,
                               width: 1,
                             ),
                           ),
                           child: InkWell(
                             onTap: () => _selectStreamer(streamer),
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
                             child: Padding(
                               padding: const EdgeInsets.all(AppTheme.spaceMd),
                               child: Row(
@@ -541,14 +614,17 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                                   CircleAvatar(
                                     radius: 20,
                                     backgroundColor: AppTheme.darkSurface3,
-                                    backgroundImage: streamer.avatarUrl.startsWith('assets/')
-                                        ? AssetImage(streamer.avatarUrl)
-                                        : NetworkImage(streamer.avatarUrl) as ImageProvider,
+                                    backgroundImage:
+                                        streamer.avatarUrl.startsWith('assets/')
+                                            ? AssetImage(streamer.avatarUrl)
+                                            : NetworkImage(streamer.avatarUrl)
+                                                as ImageProvider,
                                   ),
                                   const SizedBox(width: AppTheme.spaceMd),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           streamer.fullNameEn,
@@ -570,7 +646,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen> with SingleTickerPr
                                   ),
                                   if (streamer.isCurrentlyLive)
                                     Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
                                         color: AppTheme.accentRed,
                                         borderRadius: BorderRadius.circular(4),

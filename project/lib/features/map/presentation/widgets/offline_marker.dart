@@ -35,9 +35,11 @@ class OfflineMarker extends StatelessWidget {
           padding: const EdgeInsets.all(2),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: AppTheme.darkSurface1,
+            // Crisp white avatar disc so profile pictures pop against the
+            // dark basemap (Task 8) -- map canvas only.
+            color: Colors.white,
             border: Border.all(
-              color: isSelected ? AppTheme.accentBlue : AppTheme.textMutedDark,
+              color: isSelected ? AppTheme.accentBlue : Colors.white,
               width: isSelected ? 2.5 : 1.5,
             ),
             boxShadow: [

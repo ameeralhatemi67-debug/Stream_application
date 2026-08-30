@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -15,6 +16,7 @@ class YouTubePlayerAdapter extends AbstractVideoPlayer {
   const YouTubePlayerAdapter({
     super.key,
     required super.streamUrl,
+    super.fallbackUrls = const [],
     super.autoPlay = true,
     super.onPlayerReady,
     super.onStateChanged,
@@ -41,6 +43,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
   bool _hasError = false;
   String _errorMessage = '';
   late String _currentVideoId;
+  int _currentFallbackIndex = 0;
 
   @override
   void initState() {
@@ -73,6 +76,15 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
 
     if (!kIsWeb) {
       try {
+        controller.addJavaScriptChannel(
+          'FlutterYouTubeBridge',
+          onMessageReceived: (JavaScriptMessage message) {
+            _handleBridgeMessage(message.message);
+          },
+        );
+      } catch (_) {}
+
+      try {
         controller.setNavigationDelegate(
           NavigationDelegate(
             onPageStarted: (String url) {
@@ -89,21 +101,17 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
                   _isLoading = false;
                 });
                 widget.onPlayerReady?.call();
-                widget.onStateChanged?.call(StreamState.live);
                 // The iframe only exists once the document is parsed, so a
                 // quality chosen before this point is applied here.
                 _applyPreferredQuality();
+                if (widget.autoPlay) {
+                  unMuteAndPlay();
+                }
               }
             },
             onWebResourceError: (WebResourceError error) {
               if (mounted) {
-                setState(() {
-                  _hasError = true;
-                  _errorMessage = error.description;
-                  _isLoading = false;
-                });
-                widget.onError?.call(error.description);
-                widget.onStateChanged?.call(StreamState.fallbackError);
+                _handleStreamFailure(error.description);
               }
             },
             onNavigationRequest: (NavigationRequest request) {
@@ -127,6 +135,69 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
 
     _webViewController = controller;
     _loadVideoEmbed(_currentVideoId);
+  }
+
+  void _handleBridgeMessage(String jsonStr) {
+    try {
+      final Map<String, dynamic> data = jsonDecode(jsonStr);
+      final type = data['type'] as String?;
+      if (type == 'state') {
+        final stateVal = data['value'] as int?;
+        if (stateVal == 1) {
+          // Playing
+          if (mounted) {
+            setState(() {
+              _hasError = false;
+              _isLoading = false;
+            });
+          }
+          widget.onStateChanged?.call(StreamState.live);
+        } else if (stateVal == 2) {
+          // Paused
+          widget.onStateChanged?.call(StreamState.paused);
+        } else if (stateVal == 3) {
+          // Buffering
+          widget.onStateChanged?.call(StreamState.buffering);
+        } else if (stateVal == 0) {
+          // Ended -> Try fallback stream or trigger offline/ended
+          _handleStreamFailure('Stream ended (code 0)');
+        }
+      } else if (type == 'error') {
+        final code = data['code'];
+        _handleStreamFailure('YouTube playback error: $code');
+      }
+    } catch (e) {
+      debugPrint('[YouTubePlayerAdapter] Bridge parse error: $e');
+    }
+  }
+
+  void _handleStreamFailure(String reason) {
+    final fallbacks = widget.fallbackUrls;
+    if (_currentFallbackIndex < fallbacks.length) {
+      final nextId = _extractVideoId(fallbacks[_currentFallbackIndex]);
+      _currentFallbackIndex++;
+      debugPrint('[YouTubePlayerAdapter] Failover to fallback stream ($nextId): $reason');
+      _currentVideoId = nextId;
+      _loadVideoEmbed(_currentVideoId);
+    } else {
+      if (mounted) {
+        setState(() {
+          _hasError = true;
+          _errorMessage = reason;
+          _isLoading = false;
+        });
+        widget.onError?.call(reason);
+        widget.onStateChanged?.call(StreamState.fallbackError);
+      }
+    }
+  }
+
+  void unMuteAndPlay() {
+    try {
+      _webViewController.runJavaScript('forceUnmuteAndPlay();');
+    } catch (e) {
+      debugPrint('[YouTubePlayerAdapter] unMuteAndPlay failed: $e');
+    }
   }
 
   void _loadVideoEmbed(String videoId) {
@@ -164,6 +235,35 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
       allowfullscreen>
     </iframe>
   </div>
+  <script>
+    window.addEventListener('message', function(event) {
+      try {
+        var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+        if (data && data.event === 'onStateChange') {
+          // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: cued
+          if (window.FlutterYouTubeBridge) {
+            FlutterYouTubeBridge.postMessage(JSON.stringify({ type: 'state', value: data.info }));
+          }
+        }
+        if (data && data.event === 'onError') {
+          // 2: invalid param, 5: HTML5 error, 100: not found, 101/150: embed blocked
+          if (window.FlutterYouTubeBridge) {
+            FlutterYouTubeBridge.postMessage(JSON.stringify({ type: 'error', code: data.info }));
+          }
+        }
+      } catch(e) {}
+    });
+
+    function forceUnmuteAndPlay() {
+      try {
+        var frame = document.querySelector('iframe');
+        if (frame && frame.contentWindow) {
+          frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
+          frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
+        }
+      } catch(e) {}
+    }
+  </script>
 </body>
 </html>
 ''';
@@ -352,11 +452,28 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
   /// restrictions, so hand the video off rather than leaving the viewer
   /// staring at a retry button that will keep failing.
   Future<void> _openInYouTubeApp() async {
-    final url = Uri.parse('https://www.youtube.com/watch?v=$_currentVideoId');
+    final videoId = _currentVideoId.trim();
+    if (videoId.isEmpty) return;
+
+    // 1. Try launching native YouTube app via custom scheme
+    final appUri = Uri.parse('vnd.youtube:$videoId');
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      }
+      final launched =
+          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+      if (launched) return;
+    } catch (_) {}
+
+    // 2. Fallback: Launch standard web URL in external browser/app
+    final webUri = Uri.parse('https://www.youtube.com/watch?v=$videoId');
+    try {
+      final launched =
+          await launchUrl(webUri, mode: LaunchMode.externalApplication);
+      if (launched) return;
+    } catch (_) {}
+
+    // 3. Last-resort fallback: platformDefault
+    try {
+      await launchUrl(webUri, mode: LaunchMode.platformDefault);
     } catch (e) {
       debugPrint('[YouTubePlayerAdapter] openInYouTube failed: $e');
     }

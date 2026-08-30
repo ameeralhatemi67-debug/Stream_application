@@ -122,7 +122,11 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
               padding: const EdgeInsets.all(2.0),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: AppTheme.darkSurface1,
+                // Crisp white avatar disc so profile pictures pop against
+                // the dark basemap (Task 8) -- the radar pulse ring above
+                // keeps carrying the live accent color, so the "live" signal
+                // isn't lost.
+                color: Colors.white,
                 border: Border.all(
                   color: widget.isSelected
                       ? AppTheme.accentBlue

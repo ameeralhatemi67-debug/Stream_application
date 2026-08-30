@@ -161,8 +161,8 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
       behavior: HitTestBehavior.opaque,
       child: Stack(
         children: [
-          // Top Header Overlay: Live Badge, Viewer count pill, Quality Selector
-          if (controlsVisible)
+          // Top Header Overlay: Live Badge, Viewer count pill, Quality Selector (Video only)
+          if (controlsVisible && !widget.isAudioOnly)
             Positioned(
               top: 8,
               left: 12,
@@ -223,9 +223,8 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                     ),
                   ),
 
-                  // Quality Selector -- video renditions only, so it is
-                  // absent entirely on audio-only broadcasts (Task 2).
-                  if (!widget.isAudioOnly) _buildQualitySelector(),
+                  // Quality Selector -- video renditions only
+                  _buildQualitySelector(),
                 ],
               ),
             ),
@@ -241,7 +240,7 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
             ),
 
           // Bottom Action Controls Overlay (Play/Pause, Mute/Unmute, Fullscreen)
-          if (controlsVisible)
+          if (controlsVisible && !widget.isAudioOnly)
             Positioned(
               bottom: 8,
               left: 12,

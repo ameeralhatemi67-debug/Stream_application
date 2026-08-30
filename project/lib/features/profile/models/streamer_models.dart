@@ -40,6 +40,7 @@ class StreamerModel {
   final List<String> upcomingScheduleAr;
   final String youtubeHandle;
   final String youtubeVideoId;
+  final List<String> fallbackYoutubeVideoIds;
   final List<OrgVenueBranchModel> venues;
   final List<OrgSpeakerModel> affiliatedSpeakers;
   final List<String> featuredChannelHandles;
@@ -77,6 +78,7 @@ class StreamerModel {
     this.upcomingScheduleAr = const [],
     this.youtubeHandle = 'ahmedamercaller',
     this.youtubeVideoId = 'dQw4w9WgXcQ',
+    this.fallbackYoutubeVideoIds = const [],
     this.venues = const [],
     this.affiliatedSpeakers = const [],
     this.featuredChannelHandles = const [],
@@ -167,6 +169,7 @@ class StreamerModel {
     List<String>? upcomingScheduleAr,
     String? youtubeHandle,
     String? youtubeVideoId,
+    List<String>? fallbackYoutubeVideoIds,
     List<OrgVenueBranchModel>? venues,
     List<OrgSpeakerModel>? affiliatedSpeakers,
     List<String>? featuredChannelHandles,
@@ -204,6 +207,7 @@ class StreamerModel {
       upcomingScheduleAr: upcomingScheduleAr ?? this.upcomingScheduleAr,
       youtubeHandle: youtubeHandle ?? this.youtubeHandle,
       youtubeVideoId: youtubeVideoId ?? this.youtubeVideoId,
+      fallbackYoutubeVideoIds: fallbackYoutubeVideoIds ?? this.fallbackYoutubeVideoIds,
       venues: venues ?? this.venues,
       affiliatedSpeakers: affiliatedSpeakers ?? this.affiliatedSpeakers,
       featuredChannelHandles: featuredChannelHandles ?? this.featuredChannelHandles,
@@ -473,6 +477,7 @@ final List<StreamerModel> mockStreamers = [
       'تلاوات التهجد والتراويح اليومية'
     ],
     youtubeHandle: 'AlQuran4KOfficial',
-    youtubeVideoId: 'kY31f13b-hU',
+    youtubeVideoId: 'jjBoecWjAnw',
+    fallbackYoutubeVideoIds: ['PLkCnLrKN8Q', 'hPeOq1Dz5xI'],
   ),
 ];

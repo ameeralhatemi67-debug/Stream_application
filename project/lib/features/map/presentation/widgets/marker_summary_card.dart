@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/models/streamer_models.dart';
+import '../../models/map_models.dart';
 import 'venue_navigation_sheet.dart';
 
 class MarkerSummaryCard extends StatelessWidget {
@@ -164,7 +166,8 @@ class MarkerSummaryCard extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
                   color: isVideo
                       ? AppTheme.accentRed.withValues(alpha: 0.2)
@@ -204,16 +207,22 @@ class MarkerSummaryCard extends StatelessWidget {
                         height: 5,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isVideo ? AppTheme.accentRed : AppTheme.textMutedDark,
+                          color: isVideo
+                              ? AppTheme.accentRed
+                              : AppTheme.textMutedDark,
                         ),
                       ),
                       const SizedBox(width: 5),
                       Text(
-                        isVideo ? 'map.live_badge'.tr() : 'map.offline_badge'.tr(),
+                        isVideo
+                            ? 'map.live_badge'.tr()
+                            : 'map.offline_badge'.tr(),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: isVideo ? AppTheme.accentRed : AppTheme.textMutedDark,
+                          color: isVideo
+                              ? AppTheme.accentRed
+                              : AppTheme.textMutedDark,
                         ),
                       ),
                     ],
@@ -221,8 +230,20 @@ class MarkerSummaryCard extends StatelessWidget {
                 ),
               ),
               const Spacer(),
+              // Task 9 -- one-click external Google Maps launch, distinct
+              // from the "Visit Venue" button below which opens the in-app
+              // VenueNavigationSheet with full auditorium/distance details.
               IconButton(
                 icon: const Icon(Icons.directions_rounded,
+                    color: AppTheme.accentBlue, size: 20),
+                tooltip: 'venue.open_maps'.tr(),
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                onPressed: () => _openInGoogleMaps(streamer),
+              ),
+              const SizedBox(width: 6),
+              IconButton(
+                icon: const Icon(Icons.info_outline_rounded,
                     color: AppTheme.accentBlue, size: 20),
                 tooltip: 'venue.visit_venue'.tr(),
                 padding: EdgeInsets.zero,
@@ -246,7 +267,8 @@ class MarkerSummaryCard extends StatelessWidget {
                           ? const Color(0xFF3F3F46)
                           : AppTheme.accentBlue,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     side: isAudio
@@ -282,5 +304,19 @@ class MarkerSummaryCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  /// Task 9 -- opens the streamer's venue coordinates directly in Google
+  /// Maps (native app if installed, browser fallback otherwise). Silently
+  /// no-ops if no maps handler exists on the device, same as the plan's
+  /// other two launch sites -- this is a convenience shortcut, not the only
+  /// way to navigate (VenueNavigationSheet's own button remains the
+  /// full-featured path with a clipboard fallback).
+  static Future<void> _openInGoogleMaps(StreamerModel streamer) async {
+    final url = Uri.parse(
+        buildGoogleMapsSearchUrl(streamer.latitude, streamer.longitude));
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+    }
   }
 }

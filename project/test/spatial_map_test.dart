@@ -1,7 +1,23 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
+import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
+import 'package:streamer_app/features/map/presentation/widgets/offline_marker.dart';
+import 'package:streamer_app/features/map/presentation/widgets/pulsing_live_marker.dart';
+import 'package:streamer_app/features/map/presentation/widgets/spatial_streamer_marker.dart';
 import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dropdown.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
+
+/// Finds a Container whose BoxDecoration paints a flat white fill -- the
+/// avatar disc background Task 8 requires on every map marker variant.
+Finder _findWhiteAvatarDiscContainer() {
+  return find.byWidgetPredicate((widget) {
+    if (widget is! Container) return false;
+    final decoration = widget.decoration;
+    if (decoration is! BoxDecoration) return false;
+    return decoration.color == Colors.white;
+  });
+}
 
 void main() {
   group('Spatial Map GIS Data Models Test', () {
@@ -244,6 +260,156 @@ void main() {
       final engTopic = kAcademicTopics.firstWhere((t) => t.id == 'engineering');
       expect(engTopic.getLocalizedTitle('en'), equals('Engineering & Innovation'));
       expect(engTopic.getLocalizedTitle('ar'), equals('الهندسة والابتكار'));
+    });
+  });
+
+  group('Cluster 2 -- Tile Provider, White Markers & Google Maps (Task 7-9)',
+      () {
+    test(
+        'Task 7: CartoDB tile URL includes /rastertiles/ -- the previous '
+        'template omitted it and every tile request failed', () {
+      expect(kSpatialMapTileUrlTemplate, contains('/rastertiles/'));
+      expect(kSpatialMapTileUrlTemplate,
+          startsWith('https://{s}.basemaps.cartocdn.com/'));
+      expect(kSpatialMapTileUrlTemplate, contains('{z}/{x}/{y}.png'));
+    });
+
+    test('Task 7: zero-API-key fallback points at plain OpenStreetMap tiles',
+        () {
+      expect(kSpatialMapTileFallbackUrl,
+          equals('https://tile.openstreetmap.org/{z}/{x}/{y}.png'));
+    });
+
+    test(
+        'Task 9: buildGoogleMapsSearchUrl is a coordinate-only deep link, '
+        'not a text search that could resolve to the wrong venue', () {
+      final url = buildGoogleMapsSearchUrl(26.3042, 50.1462);
+      expect(url,
+          equals('https://www.google.com/maps/search/?api=1&query=26.3042,50.1462'));
+
+      // Every one of the three Spatial Map launch sites (VenueNavigationSheet,
+      // MarkerSummaryCard, StreamerSlidingDrawer) shares this exact builder,
+      // so they can never drift into three subtly different URL shapes.
+      expect(Uri.parse(url).queryParameters['query'], equals('26.3042,50.1462'));
+      expect(Uri.parse(url).queryParameters['api'], equals('1'));
+    });
+
+    const testMarker = MapMarkerModel(
+      markerId: 'marker_test_1',
+      streamerId: 'streamer_test_1',
+      displayNameEn: 'Dr. Test Streamer',
+      displayNameAr: 'د. اختبار',
+      venueNameEn: 'Test Auditorium',
+      venueNameAr: 'قاعة الاختبار',
+      latitude: 26.2871,
+      longitude: 50.2125,
+      cityId: 'khobar',
+      categoryId: 'computer_science',
+      status: MarkerStatus.offline,
+      viewerCount: 0,
+      avatarUrl: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+    );
+
+    testWidgets(
+        'Task 8: SpatialStreamerMarker (offline) renders a white avatar disc',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SpatialStreamerMarker(
+            marker: testMarker,
+            onTap: () {},
+            onDoubleTap: () {},
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
+    });
+
+    testWidgets(
+        'Task 8: SpatialStreamerMarker (live video) keeps a white disc under the pulse ring',
+        (tester) async {
+      final liveMarker = MapMarkerModel(
+        markerId: testMarker.markerId,
+        streamerId: testMarker.streamerId,
+        displayNameEn: testMarker.displayNameEn,
+        displayNameAr: testMarker.displayNameAr,
+        venueNameEn: testMarker.venueNameEn,
+        venueNameAr: testMarker.venueNameAr,
+        latitude: testMarker.latitude,
+        longitude: testMarker.longitude,
+        cityId: testMarker.cityId,
+        categoryId: testMarker.categoryId,
+        status: MarkerStatus.liveVideo,
+        viewerCount: 42,
+        avatarUrl: testMarker.avatarUrl,
+      );
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SpatialStreamerMarker(
+            marker: liveMarker,
+            onTap: () {},
+            onDoubleTap: () {},
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      // The white disc must survive the "isLive" branch too, not just the
+      // offline default -- the pulse ring above it stays accent-colored, so
+      // the live status is not lost.
+      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
+    });
+
+    testWidgets('Task 8: OfflineMarker renders a white avatar disc',
+        (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: OfflineMarker(
+            marker: testMarker,
+            onTap: () {},
+            onDoubleTap: () {},
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
+    });
+
+    testWidgets(
+        'Task 8: PulsingLiveMarker keeps its radar ring while the inner avatar disc is white',
+        (tester) async {
+      final liveMarker = MapMarkerModel(
+        markerId: testMarker.markerId,
+        streamerId: testMarker.streamerId,
+        displayNameEn: testMarker.displayNameEn,
+        displayNameAr: testMarker.displayNameAr,
+        venueNameEn: testMarker.venueNameEn,
+        venueNameAr: testMarker.venueNameAr,
+        latitude: testMarker.latitude,
+        longitude: testMarker.longitude,
+        cityId: testMarker.cityId,
+        categoryId: testMarker.categoryId,
+        status: MarkerStatus.liveVideo,
+        viewerCount: 7,
+        avatarUrl: testMarker.avatarUrl,
+      );
+
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: PulsingLiveMarker(
+            marker: liveMarker,
+            onTap: () {},
+            onDoubleTap: () {},
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
     });
   });
 }

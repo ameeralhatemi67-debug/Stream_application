@@ -84,7 +84,9 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
     } else if (widget.marker.isAudioLive) {
       return const Color(0xFFA1A1AA); // Atmospheric gray
     }
-    return widget.isSelected ? AppTheme.accentBlue : AppTheme.darkBorderHighlight;
+    return widget.isSelected
+        ? AppTheme.accentBlue
+        : AppTheme.darkBorderHighlight;
   }
 
   Widget _buildAvatarImage() {
@@ -129,7 +131,9 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
       color: AppTheme.darkSurface2,
       alignment: Alignment.center,
       child: Icon(
-        widget.marker.isOrganization ? Icons.apartment_rounded : Icons.person_rounded,
+        widget.marker.isOrganization
+            ? Icons.apartment_rounded
+            : Icons.person_rounded,
         size: 20.0,
         color: AppTheme.textSecondaryDark,
       ),
@@ -169,10 +173,13 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                         height: 40.0,
                         decoration: BoxDecoration(
                           shape: isOrg ? BoxShape.rectangle : BoxShape.circle,
-                          borderRadius: isOrg ? BorderRadius.circular(14.0) : null,
-                          color: primaryAccent.withValues(alpha: opacity * 0.35),
+                          borderRadius:
+                              isOrg ? BorderRadius.circular(14.0) : null,
+                          color:
+                              primaryAccent.withValues(alpha: opacity * 0.35),
                           border: Border.all(
-                            color: primaryAccent.withValues(alpha: opacity * 0.75),
+                            color:
+                                primaryAccent.withValues(alpha: opacity * 0.75),
                             width: 1.5,
                           ),
                         ),
@@ -189,11 +196,14 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                 decoration: BoxDecoration(
                   shape: isOrg ? BoxShape.rectangle : BoxShape.circle,
                   borderRadius: isOrg ? BorderRadius.circular(12.0) : null,
-                  color: AppTheme.darkSurface1,
+                  // Crisp white avatar disc so profile pictures pop against
+                  // the dark basemap (Task 8) -- map canvas only, cards
+                  // elsewhere keep their dark graphite theme.
+                  color: Colors.white,
                   border: Border.all(
                     color: widget.isSelected
                         ? AppTheme.accentBlue
-                        : (isLive ? primaryAccent : AppTheme.darkBorderSubtle),
+                        : (isLive ? primaryAccent : Colors.white),
                     width: widget.isSelected ? 2.5 : (isLive ? 2.0 : 1.5),
                   ),
                   boxShadow: [
@@ -214,12 +224,16 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                 Positioned(
                   top: -3,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 5.0, vertical: 1.5),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 5.0, vertical: 1.5),
                     decoration: BoxDecoration(
-                      color: isVideo ? AppTheme.accentRed : const Color(0xFF3F3F46),
+                      color: isVideo
+                          ? AppTheme.accentRed
+                          : const Color(0xFF3F3F46),
                       borderRadius: BorderRadius.circular(8.0),
                       border: isAudio
-                          ? Border.all(color: const Color(0xFFA1A1AA), width: 0.8)
+                          ? Border.all(
+                              color: const Color(0xFFA1A1AA), width: 0.8)
                           : null,
                       boxShadow: const [
                         BoxShadow(

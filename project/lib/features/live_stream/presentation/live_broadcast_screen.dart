@@ -130,7 +130,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       ]);
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     } else {
-      _restorePortraitChrome();
+      // One-way exit action: unlock orientation freedom rather than violently
+      // forcing the physical device back into portrait.
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     }
   }
 
@@ -292,11 +299,26 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   Future<void> _openStreamInYouTube(AppProvider appProvider) async {
     final videoId = _getStreamUrl(appProvider).trim();
     if (videoId.isEmpty) return;
-    final url = Uri.parse('https://www.youtube.com/watch?v=$videoId');
+
+    // 1. Try launching native YouTube app via custom scheme
+    final appUri = Uri.parse('vnd.youtube:$videoId');
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      }
+      final launched =
+          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+      if (launched) return;
+    } catch (_) {}
+
+    // 2. Fallback: Launch standard web URL in external browser/app
+    final webUri = Uri.parse('https://www.youtube.com/watch?v=$videoId');
+    try {
+      final launched =
+          await launchUrl(webUri, mode: LaunchMode.externalApplication);
+      if (launched) return;
+    } catch (_) {}
+
+    // 3. Last-resort fallback: platformDefault
+    try {
+      await launchUrl(webUri, mode: LaunchMode.platformDefault);
     } catch (e) {
       debugPrint('[LiveBroadcastScreen] openInYouTube failed: $e');
     }
@@ -437,6 +459,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 '${_sourceType.name}_${appProvider.rtmpLaptopIp}_${appProvider.streamReloadCount}'),
             sourceType: _sourceType,
             streamUrl: _getStreamUrl(appProvider),
+            fallbackUrls: streamer.fallbackYoutubeVideoIds,
             // Audio-only broadcasts always autoplay: LiveAudioStageMultiSpeaker
             // paints over the player entirely, so there is no visible
             // transport for the viewer to un-pause -- the engine underneath
@@ -467,6 +490,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               viewerCount: viewerCount,
               speakers: streamer.affiliatedSpeakers,
               allVods: MockVodArchivePool.sampleVods,
+              isPlaying: _isPlaying,
+              streamState: _streamState,
               onStageTap: () {
                 if (!_isPlaying) {
                   setState(() {

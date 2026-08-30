@@ -249,11 +249,26 @@ class VodPlayerModalSheet extends StatelessWidget {
   Future<void> _openInYouTube(String videoId) async {
     final id = videoId.trim();
     if (id.isEmpty) return;
-    final url = Uri.parse('https://www.youtube.com/watch?v=$id');
+
+    // 1. Try launching native YouTube app via custom scheme
+    final appUri = Uri.parse('vnd.youtube:$id');
     try {
-      if (await canLaunchUrl(url)) {
-        await launchUrl(url, mode: LaunchMode.externalApplication);
-      }
+      final launched =
+          await launchUrl(appUri, mode: LaunchMode.externalApplication);
+      if (launched) return;
+    } catch (_) {}
+
+    // 2. Fallback: Launch standard web URL in external browser/app
+    final webUri = Uri.parse('https://www.youtube.com/watch?v=$id');
+    try {
+      final launched =
+          await launchUrl(webUri, mode: LaunchMode.externalApplication);
+      if (launched) return;
+    } catch (_) {}
+
+    // 3. Last-resort fallback: platformDefault
+    try {
+      await launchUrl(webUri, mode: LaunchMode.platformDefault);
     } catch (e) {
       debugPrint('[VodPlayerModalSheet] openInYouTube failed: $e');
     }
