@@ -107,6 +107,139 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     );
   }
 
+  /// Cluster 4 Task 14: mute duration picker (10 min / 1 hour / permanent)
+  /// before actually muting the reported sender.
+  Future<void> _showMuteDurationSheet(
+      AppProvider provider, ChatReportModel report) async {
+    final durationHours = await showModalBottomSheet<double?>(
+      context: context,
+      backgroundColor: AppTheme.darkSurface1,
+      shape: const RoundedRectangleBorder(
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(AppTheme.spaceLg),
+              child: Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  'Mute duration',
+                  style: TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13),
+                ),
+              ),
+            ),
+            ListTile(
+              title: const Text('10 minutes',
+                  style: TextStyle(color: AppTheme.textPrimaryDark)),
+              onTap: () => Navigator.pop(sheetContext, 10 / 60),
+            ),
+            ListTile(
+              title: const Text('1 hour',
+                  style: TextStyle(color: AppTheme.textPrimaryDark)),
+              onTap: () => Navigator.pop(sheetContext, 1.0),
+            ),
+            ListTile(
+              title: const Text('Permanent',
+                  style: TextStyle(color: AppTheme.textPrimaryDark)),
+              // 0.0 is a sentinel for "permanent" (translated to a null
+              // muteDurationHours below) -- kept distinct from the sheet's
+              // own null, which means "dismissed without choosing".
+              onTap: () => Navigator.pop(sheetContext, 0.0),
+            ),
+            const SizedBox(height: AppTheme.spaceSm),
+          ],
+        ),
+      ),
+    );
+    if (!mounted || durationHours == null) return;
+    _confirmAndRun(
+      context: context,
+      title: 'Mute Sender?',
+      body:
+          '${report.reportedDisplayName} will not be able to send messages in stream "${report.streamId}" for the selected duration. This is enforced server-side, not just hidden client-side.',
+      confirmLabel: 'Mute',
+      confirmColor: AppTheme.accentAmber,
+      onConfirm: () => _runAction(
+        report,
+        () => provider.muteChatSenderAndResolveReport(report,
+            muteDurationHours: durationHours == 0 ? null : durationHours),
+        '${report.reportedDisplayName} muted from stream "${report.streamId}".',
+      ),
+    );
+  }
+
+  /// Cluster 4 Task 14: bans the reported sender platform-wide and resolves
+  /// the report -- requires a reason (shown to the banned user on
+  /// /account-banned).
+  Future<void> _showBanDialog(
+      AppProvider provider, ChatReportModel report) async {
+    final reasonController = TextEditingController(text: report.reason);
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          side: const BorderSide(color: AppTheme.darkBorderSubtle),
+        ),
+        title: const Text('Ban Account Platform-Wide?',
+            style: TextStyle(
+                color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold)),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              '${report.reportedDisplayName} will be signed out of every device and redirected to a suspension screen platform-wide.',
+              style: const TextStyle(
+                  color: AppTheme.textSecondaryDark, fontSize: 12),
+            ),
+            const SizedBox(height: AppTheme.spaceMd),
+            TextField(
+              controller: reasonController,
+              maxLines: 2,
+              style: const TextStyle(color: AppTheme.textPrimaryDark),
+              decoration: InputDecoration(
+                labelText: 'admin.ban_reason_label'.tr(),
+                labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+                filled: true,
+                fillColor: AppTheme.darkSurface2,
+                border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('settings.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMutedDark)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
+            onPressed: () => Navigator.pop(dialogContext, reasonController.text.trim()),
+            child: const Text('Ban Platform-Wide'),
+          ),
+        ],
+      ),
+    );
+    if (reason == null || reason.isEmpty || !mounted) return;
+    await _runAction(
+      report,
+      () => provider.banChatSenderAndResolveReport(report, reason: reason),
+      '${report.reportedDisplayName} banned platform-wide.',
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
@@ -338,20 +471,19 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                         horizontal: 12, vertical: 8),
                   ),
                   icon: const Icon(Icons.volume_off_rounded, size: 15),
-                  label: const Text('Mute / Ban Sender'),
-                  onPressed: () => _confirmAndRun(
-                    context: context,
-                    title: 'Mute / Ban Sender?',
-                    body:
-                        '${report.reportedDisplayName} will no longer be able to send messages in stream "${report.streamId}". This is enforced server-side, not just hidden client-side.',
-                    confirmLabel: 'Mute / Ban',
-                    confirmColor: AppTheme.accentAmber,
-                    onConfirm: () => _runAction(
-                      report,
-                      () => provider.muteChatSenderAndResolveReport(report),
-                      '${report.reportedDisplayName} muted from stream "${report.streamId}".',
-                    ),
+                  label: const Text('Mute in Stream'),
+                  onPressed: () => _showMuteDurationSheet(provider, report),
+                ),
+                OutlinedButton.icon(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.accentRed,
+                    side: const BorderSide(color: AppTheme.accentRed),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 8),
                   ),
+                  icon: const Icon(Icons.person_off_rounded, size: 15),
+                  label: const Text('Ban Platform-Wide'),
+                  onPressed: () => _showBanDialog(provider, report),
                 ),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(

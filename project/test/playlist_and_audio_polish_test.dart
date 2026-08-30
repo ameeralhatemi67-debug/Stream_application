@@ -12,6 +12,7 @@ import 'package:streamer_app/features/profile/presentation/widgets/playlist_view
 import 'package:streamer_app/features/map/presentation/widgets/top_spatial_search_bar.dart';
 import 'package:streamer_app/features/map/presentation/widgets/city_selector_dropdown.dart';
 import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dropdown.dart';
+import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
 
 void main() {
@@ -128,6 +129,7 @@ void main() {
               ),
               TopicSelectorDropdown(
                 selectedCategoryId: 'all',
+                categories: AcademicCategoryModel.defaultPool,
                 onCategorySelected: (_) {},
               ),
             ],

@@ -47,6 +47,12 @@ class StreamerModel {
   final String? activeLiveVenueId;
   final List<String> activeLiveSpeakerIds;
 
+  /// Cluster 4 Task 18: an admin can temporarily pull this streamer's marker
+  /// off the Spatial Map (moderation action short of a full ban) without
+  /// touching their profile -- it stays reachable by direct link. Mirrors
+  /// profiles.is_temporarily_hidden_from_map / organizations.is_temporarily_hidden_from_map.
+  final bool isTemporarilyHiddenFromMap;
+
   const StreamerModel({
     required this.streamerId,
     required this.fullNameEn,
@@ -84,6 +90,7 @@ class StreamerModel {
     this.featuredChannelHandles = const [],
     this.activeLiveVenueId,
     this.activeLiveSpeakerIds = const [],
+    this.isTemporarilyHiddenFromMap = false,
   });
 
   BroadcastType get activeBroadcastType {
@@ -175,6 +182,7 @@ class StreamerModel {
     List<String>? featuredChannelHandles,
     String? activeLiveVenueId,
     List<String>? activeLiveSpeakerIds,
+    bool? isTemporarilyHiddenFromMap,
   }) {
     return StreamerModel(
       streamerId: streamerId ?? this.streamerId,
@@ -213,6 +221,8 @@ class StreamerModel {
       featuredChannelHandles: featuredChannelHandles ?? this.featuredChannelHandles,
       activeLiveVenueId: activeLiveVenueId ?? this.activeLiveVenueId,
       activeLiveSpeakerIds: activeLiveSpeakerIds ?? this.activeLiveSpeakerIds,
+      isTemporarilyHiddenFromMap:
+          isTemporarilyHiddenFromMap ?? this.isTemporarilyHiddenFromMap,
     );
   }
 }

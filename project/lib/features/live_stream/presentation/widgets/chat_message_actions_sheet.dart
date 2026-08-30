@@ -4,9 +4,11 @@ import '../../../../core/theme/app_theme.dart';
 import '../../models/chat_message_model.dart';
 import '../../services/live_chat_controller.dart';
 
-/// Long-press action sheet for a chat message: "Report Message" and "Block
-/// User" (Checkpoint 3 Phase 1). Only ever shown for someone else's message
-/// -- callers are expected to gate on `!message.isCurrentUser` first.
+/// Long-press action sheet for a chat message (Cluster 4 Task 13). Branches
+/// on `message.isCurrentUser`: the sender gets Edit/Delete on their own
+/// message; anyone else's message offers Report/Hide/Block, plus
+/// Mute/Delete/Appoint-Moderator when the viewer can moderate this stream
+/// (Checkpoint 3 Phase 1 / Cluster 4 Task 15).
 Future<void> showChatMessageActionsSheet(
   BuildContext context, {
   required ChatMessageModel message,
@@ -27,6 +29,25 @@ Future<void> showChatMessageActionsSheet(
   if (action == null || !context.mounted) return;
 
   switch (action) {
+    case _ChatMessageAction.edit:
+      await _handleEdit(context, message: message, controller: controller);
+    case _ChatMessageAction.deleteOwn:
+      final confirmed = await _confirmDelete(
+        context,
+        title: 'live.delete_own_message_confirm_title'.tr(),
+      );
+      if (confirmed != true || !context.mounted) return;
+      await _runModerationAction(
+        context,
+        action: () => controller.deleteMessage(message.id),
+        successToastKey: 'live.message_deleted_toast',
+      );
+    case _ChatMessageAction.hide:
+      await controller.hideChatMessage(message.id);
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('live.message_hidden_toast'.tr())),
+      );
     case _ChatMessageAction.report:
       await _handleReport(context, message: message, controller: controller);
     case _ChatMessageAction.block:
@@ -42,14 +63,88 @@ Future<void> showChatMessageActionsSheet(
         successToastKey: 'live.user_muted_toast',
       );
     case _ChatMessageAction.delete:
-      final confirmed = await _confirmDelete(context);
+      final confirmed = await _confirmDelete(
+        context,
+        title: 'live.delete_message_confirm_title'.tr(),
+      );
       if (confirmed != true || !context.mounted) return;
       await _runModerationAction(
         context,
         action: () => controller.deleteMessage(message.id),
         successToastKey: 'live.message_deleted_toast',
       );
+    case _ChatMessageAction.appointModerator:
+      await _runModerationAction(
+        context,
+        action: () => controller.appointStreamModerator(message.senderId),
+        successToastKey: 'live.moderator_appointed_toast',
+      );
+    case _ChatMessageAction.revokeModerator:
+      await _runModerationAction(
+        context,
+        action: () => controller.revokeStreamModerator(message.senderId),
+        successToastKey: 'live.moderator_revoked_toast',
+      );
   }
+}
+
+Future<void> _handleEdit(
+  BuildContext context, {
+  required ChatMessageModel message,
+  required LiveChatController controller,
+}) async {
+  final textController = TextEditingController(text: message.body);
+  final newBody = await showDialog<String>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: AppTheme.darkSurface1,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+        side: const BorderSide(color: AppTheme.darkBorderSubtle),
+      ),
+      title: Text(
+        'live.edit_message_title'.tr(),
+        style: const TextStyle(
+            color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold),
+      ),
+      content: TextField(
+        controller: textController,
+        autofocus: true,
+        maxLength: 500,
+        maxLines: 3,
+        style: const TextStyle(color: AppTheme.textPrimaryDark),
+        decoration: InputDecoration(
+          hintText: 'live.edit_message_hint'.tr(),
+          hintStyle: const TextStyle(color: AppTheme.textMutedDark),
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(dialogContext).pop(),
+          child: Text('common.cancel'.tr(),
+              style: const TextStyle(color: AppTheme.textMutedDark)),
+        ),
+        ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.accentBlue,
+            foregroundColor: Colors.white,
+          ),
+          onPressed: () =>
+              Navigator.of(dialogContext).pop(textController.text),
+          child: Text('live.save_edit'.tr()),
+        ),
+      ],
+    ),
+  );
+  textController.dispose();
+  if (newBody == null || newBody.trim().isEmpty || !context.mounted) return;
+  if (newBody.trim() == message.body) return;
+
+  await _runModerationAction(
+    context,
+    action: () => controller.editChatMessage(message.id, newBody),
+    successToastKey: 'live.message_updated_toast',
+  );
 }
 
 Future<void> _runModerationAction(
@@ -71,7 +166,7 @@ Future<void> _runModerationAction(
   }
 }
 
-Future<bool?> _confirmDelete(BuildContext context) {
+Future<bool?> _confirmDelete(BuildContext context, {required String title}) {
   return showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
@@ -81,7 +176,7 @@ Future<bool?> _confirmDelete(BuildContext context) {
         side: const BorderSide(color: AppTheme.darkBorderSubtle),
       ),
       title: Text(
-        'live.delete_message_confirm_title'.tr(),
+        title,
         style: const TextStyle(
             color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold),
       ),
@@ -144,7 +239,17 @@ Future<void> _handleReport(
   }
 }
 
-enum _ChatMessageAction { report, block, mute, delete }
+enum _ChatMessageAction {
+  edit,
+  deleteOwn,
+  hide,
+  report,
+  block,
+  mute,
+  delete,
+  appointModerator,
+  revokeModerator,
+}
 
 class _ChatMessageActionsMenu extends StatelessWidget {
   final ChatMessageModel message;
@@ -180,33 +285,15 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               ),
             ),
           ),
-          ListTile(
-            leading:
-                const Icon(Icons.flag_outlined, color: AppTheme.accentAmber),
-            title: Text(
-              'live.report_message'.tr(),
-              style: const TextStyle(color: AppTheme.textPrimaryDark),
-            ),
-            onTap: () => Navigator.of(context).pop(_ChatMessageAction.report),
-          ),
-          ListTile(
-            leading: const Icon(Icons.block_rounded, color: AppTheme.accentRed),
-            title: Text(
-              'live.block_user'.tr(),
-              style: const TextStyle(color: AppTheme.textPrimaryDark),
-            ),
-            onTap: () => Navigator.of(context).pop(_ChatMessageAction.block),
-          ),
-          if (canModerate) ...[
-            const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+          if (message.isCurrentUser) ...[
             ListTile(
-              leading: const Icon(Icons.mic_off_rounded,
-                  color: AppTheme.accentAmber),
+              leading:
+                  const Icon(Icons.edit_outlined, color: AppTheme.accentBlue),
               title: Text(
-                'live.mute_user'.tr(),
+                'live.edit_message'.tr(),
                 style: const TextStyle(color: AppTheme.textPrimaryDark),
               ),
-              onTap: () => Navigator.of(context).pop(_ChatMessageAction.mute),
+              onTap: () => Navigator.of(context).pop(_ChatMessageAction.edit),
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline_rounded,
@@ -215,8 +302,82 @@ class _ChatMessageActionsMenu extends StatelessWidget {
                 'live.delete_message'.tr(),
                 style: const TextStyle(color: AppTheme.textPrimaryDark),
               ),
-              onTap: () => Navigator.of(context).pop(_ChatMessageAction.delete),
+              onTap: () =>
+                  Navigator.of(context).pop(_ChatMessageAction.deleteOwn),
             ),
+          ] else ...[
+            ListTile(
+              leading:
+                  const Icon(Icons.flag_outlined, color: AppTheme.accentAmber),
+              title: Text(
+                'live.report_message'.tr(),
+                style: const TextStyle(color: AppTheme.textPrimaryDark),
+              ),
+              onTap: () => Navigator.of(context).pop(_ChatMessageAction.report),
+            ),
+            ListTile(
+              leading: const Icon(Icons.visibility_off_outlined,
+                  color: AppTheme.textSecondaryDark),
+              title: Text(
+                'live.hide_message'.tr(),
+                style: const TextStyle(color: AppTheme.textPrimaryDark),
+              ),
+              onTap: () => Navigator.of(context).pop(_ChatMessageAction.hide),
+            ),
+            ListTile(
+              leading:
+                  const Icon(Icons.block_rounded, color: AppTheme.accentRed),
+              title: Text(
+                'live.block_user'.tr(),
+                style: const TextStyle(color: AppTheme.textPrimaryDark),
+              ),
+              onTap: () => Navigator.of(context).pop(_ChatMessageAction.block),
+            ),
+            if (canModerate) ...[
+              const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+              ListTile(
+                leading: const Icon(Icons.mic_off_rounded,
+                    color: AppTheme.accentAmber),
+                title: Text(
+                  'live.mute_user'.tr(),
+                  style: const TextStyle(color: AppTheme.textPrimaryDark),
+                ),
+                onTap: () =>
+                    Navigator.of(context).pop(_ChatMessageAction.mute),
+              ),
+              ListTile(
+                leading: const Icon(Icons.delete_outline_rounded,
+                    color: AppTheme.accentRed),
+                title: Text(
+                  'live.delete_message'.tr(),
+                  style: const TextStyle(color: AppTheme.textPrimaryDark),
+                ),
+                onTap: () =>
+                    Navigator.of(context).pop(_ChatMessageAction.delete),
+              ),
+              if (message.isStreamModerator)
+                ListTile(
+                  leading: const Icon(Icons.remove_moderator_outlined,
+                      color: AppTheme.accentRed),
+                  title: Text(
+                    'live.revoke_moderator'.tr(),
+                    style: const TextStyle(color: AppTheme.textPrimaryDark),
+                  ),
+                  onTap: () => Navigator.of(context)
+                      .pop(_ChatMessageAction.revokeModerator),
+                )
+              else
+                ListTile(
+                  leading: const Icon(Icons.add_moderator_outlined,
+                      color: AppTheme.accentGreen),
+                  title: Text(
+                    'live.appoint_moderator'.tr(),
+                    style: const TextStyle(color: AppTheme.textPrimaryDark),
+                  ),
+                  onTap: () => Navigator.of(context)
+                      .pop(_ChatMessageAction.appointModerator),
+                ),
+            ],
           ],
           const SizedBox(height: AppTheme.spaceSm),
         ],

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/admin_role_assignment_model.dart';
+import '../../models/stream_moderator_model.dart';
 
 /// Master-Admin-only Role & Permission Management tab (v0.8 Checkpoint 2
 /// Phase 3). Lets a Master Admin view every user_roles grant, promote a
@@ -193,8 +195,115 @@ class _RolePermissionManagementViewState
             _buildEmptyRow('No organization owners yet.')
           else
             ...permittedAdmins.map((a) => _buildAssignmentCard(provider, a)),
+
+          const SizedBox(height: AppTheme.spaceXl),
+          _buildModeratorDelegationSection(provider),
         ],
       ),
+    );
+  }
+
+  /// Cluster 4 Task 15: audit table of every chat moderator delegation --
+  /// who appointed whom, at what scope, and when -- with a revoke action.
+  /// Delegation itself happens from a live chat user's profile (see
+  /// LiveChatController.appointStreamModerator); this is read/audit +
+  /// revoke only.
+  Widget _buildModeratorDelegationSection(AppProvider provider) {
+    final moderators = context.select<AppProvider, List<StreamModeratorModel>>(
+        (p) => p.streamModerators);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionHeader(
+            'admin.moderator_delegation_title'.tr(), moderators.length),
+        const SizedBox(height: AppTheme.spaceSm),
+        Text(
+          'admin.moderator_delegation_desc'.tr(),
+          style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+        ),
+        const SizedBox(height: AppTheme.spaceMd),
+        if (moderators.isEmpty)
+          _buildEmptyRow('admin.no_moderators'.tr())
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface1,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(color: AppTheme.darkBorderSubtle),
+            ),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                headingRowColor:
+                    WidgetStateProperty.all(AppTheme.darkSurface2),
+                columns: [
+                  DataColumn(
+                      label: Text('admin.moderator_col_user'.tr(),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                  DataColumn(
+                      label: Text('admin.moderator_col_assigned_by'.tr(),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                  DataColumn(
+                      label: Text('admin.moderator_col_scope'.tr(),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                  DataColumn(
+                      label: Text('admin.moderator_col_date'.tr(),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                  DataColumn(
+                      label: Text('admin.moderator_col_revoke'.tr(),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                ],
+                rows: moderators.map((m) {
+                  return DataRow(cells: [
+                    DataCell(Text(
+                      m.moderatorEmail ?? m.moderatorDisplayName,
+                      style: const TextStyle(
+                          color: AppTheme.textPrimaryDark, fontSize: 12),
+                    )),
+                    DataCell(Text(
+                      m.assignedByDisplayName,
+                      style: const TextStyle(
+                          color: AppTheme.textSecondaryDark, fontSize: 12),
+                    )),
+                    DataCell(Text(
+                      m.scopeLabel,
+                      style: const TextStyle(
+                          color: AppTheme.textSecondaryDark, fontSize: 12),
+                    )),
+                    DataCell(Text(
+                      DateFormat('yyyy-MM-dd').format(m.grantedAt),
+                      style: const TextStyle(
+                          color: AppTheme.textMutedDark, fontSize: 11),
+                    )),
+                    DataCell(IconButton(
+                      icon: const Icon(Icons.remove_circle_outline_rounded,
+                          size: 18, color: AppTheme.accentRed),
+                      tooltip: 'admin.moderator_col_revoke'.tr(),
+                      onPressed: () async {
+                        try {
+                          await provider.revokeStreamModeratorById(m.id);
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                                content: Text('$e'),
+                                backgroundColor: AppTheme.accentRed),
+                          );
+                        }
+                      },
+                    )),
+                  ]);
+                }).toList(),
+              ),
+            ),
+          ),
+      ],
     );
   }
 

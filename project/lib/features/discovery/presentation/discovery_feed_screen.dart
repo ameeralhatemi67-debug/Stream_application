@@ -387,28 +387,36 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             ),
           ),
           const SizedBox(height: AppTheme.spaceSm),
-          SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: Row(
-              children: [
-                _buildCategoryFilterChip(
-                    context, selectedCategory, 'all', 'category_all'),
-                const SizedBox(width: AppTheme.spaceSm),
-                _buildCategoryFilterChip(
-                    context, selectedCategory, 'computer_science', 'cat_cs'),
-                const SizedBox(width: AppTheme.spaceSm),
-                _buildCategoryFilterChip(
-                    context, selectedCategory, 'islamic_studies', 'cat_sharia'),
-                const SizedBox(width: AppTheme.spaceSm),
-                _buildCategoryFilterChip(
-                    context, selectedCategory, 'medicine', 'cat_med'),
-                const SizedBox(width: AppTheme.spaceSm),
-                _buildCategoryFilterChip(
-                    context, selectedCategory, 'engineering', 'cat_eng'),
-              ],
-            ),
-          ),
+          Builder(builder: (context) {
+            // Cluster 3 Task 10: category chips are driven by the live
+            // AppProvider.academicCategories list (admin-managed, Task 11)
+            // instead of a hardcoded id/i18n-key pair per chip.
+            final categories =
+                context.watch<AppProvider>().academicCategories;
+            final langCode = context.locale.languageCode;
+            return SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+              child: Row(
+                children: [
+                  _buildCategoryFilterChip(
+                      context, selectedCategory, 'all', 'feed.category_all'.tr()),
+                  for (final category in categories.where((c) => c.isActive))
+                    Padding(
+                      padding:
+                          const EdgeInsets.only(left: AppTheme.spaceSm),
+                      child: _buildCategoryFilterChip(
+                        context,
+                        selectedCategory,
+                        category.id,
+                        category.getLocalizedName(langCode),
+                      ),
+                    ),
+                ],
+              ),
+            );
+          }),
           const SizedBox(height: AppTheme.spaceXl),
 
           // 🎙️ "Streamers" Grid Section (Replacing old Lecture Archive)
@@ -466,11 +474,11 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     BuildContext context,
     String selectedCategory,
     String categoryKey,
-    String localizationKey,
+    String label,
   ) {
     final isSelected = selectedCategory == categoryKey;
     return ChoiceChip(
-      label: Text('feed.$localizationKey'.tr()),
+      label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
         context

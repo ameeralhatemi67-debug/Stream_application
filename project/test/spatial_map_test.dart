@@ -6,6 +6,7 @@ import 'package:streamer_app/features/map/presentation/widgets/offline_marker.da
 import 'package:streamer_app/features/map/presentation/widgets/pulsing_live_marker.dart';
 import 'package:streamer_app/features/map/presentation/widgets/spatial_streamer_marker.dart';
 import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dropdown.dart';
+import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 /// Finds a Container whose BoxDecoration paints a flat white fill -- the
@@ -238,28 +239,28 @@ void main() {
       expect(timeAr, equals('حوالي 3 دقائق بالسيارة'));
     });
 
-    test('Verify Academic Topics Configuration and Localization', () {
-      expect(kAcademicTopics.length, equals(5));
+    test(
+        'Cluster 3 Task 10: TopicSelectorDropdown maps icon names from '
+        'AcademicCategoryModel.defaultPool instead of a hardcoded topic list',
+        () {
+      expect(AcademicCategoryModel.defaultPool.length, equals(8));
 
-      final allTopic = kAcademicTopics.firstWhere((t) => t.id == 'all');
-      expect(allTopic.getLocalizedTitle('en'), equals('All Topics'));
-      expect(allTopic.getLocalizedTitle('ar'), equals('جميع المواضيع'));
+      final cs = AcademicCategoryModel.defaultPool
+          .firstWhere((c) => c.id == 'computer_science');
+      expect(cs.getLocalizedName('en'), equals('Computer Science'));
+      expect(cs.getLocalizedName('ar'), equals('علوم الحاسب'));
+      expect(iconForCategoryIconName(cs.iconName), equals(Icons.memory_rounded));
 
-      final csTopic = kAcademicTopics.firstWhere((t) => t.id == 'computer_science');
-      expect(csTopic.getLocalizedTitle('en'), equals('Computer Science & AI'));
-      expect(csTopic.getLocalizedTitle('ar'), equals('الحاسب والذكاء الاصطناعي'));
+      final islamic = AcademicCategoryModel.defaultPool
+          .firstWhere((c) => c.id == 'islamic_studies');
+      expect(islamic.getLocalizedName('en'), equals('Islamic Studies'));
+      expect(iconForCategoryIconName(islamic.iconName),
+          equals(Icons.mosque_rounded));
 
-      final islamicTopic = kAcademicTopics.firstWhere((t) => t.id == 'islamic_studies');
-      expect(islamicTopic.getLocalizedTitle('en'), equals('Islamic Studies & Sharia'));
-      expect(islamicTopic.getLocalizedTitle('ar'), equals('الدراسات الإسلامية والشريعة'));
-
-      final medTopic = kAcademicTopics.firstWhere((t) => t.id == 'medicine');
-      expect(medTopic.getLocalizedTitle('en'), equals('Medicine & Health'));
-      expect(medTopic.getLocalizedTitle('ar'), equals('الطب والعلوم الصحية'));
-
-      final engTopic = kAcademicTopics.firstWhere((t) => t.id == 'engineering');
-      expect(engTopic.getLocalizedTitle('en'), equals('Engineering & Innovation'));
-      expect(engTopic.getLocalizedTitle('ar'), equals('الهندسة والابتكار'));
+      // An unknown icon name (e.g. a category an admin created without a
+      // recognized icon) degrades to a generic icon instead of throwing.
+      expect(iconForCategoryIconName('not_a_real_icon'),
+          equals(Icons.school_rounded));
     });
   });
 

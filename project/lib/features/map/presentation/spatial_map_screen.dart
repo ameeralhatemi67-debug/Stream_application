@@ -444,6 +444,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                               Expanded(
                                 child: TopicSelectorDropdown(
                                   selectedCategoryId: currentCategoryFilter,
+                                  categories: context.watch<AppProvider>()
+                                      .academicCategories,
                                   onCategorySelected: (categoryId) {
                                     context
                                         .read<AppProvider>()

@@ -18,6 +18,7 @@ import '../../features/live_stream/presentation/live_broadcast_screen.dart';
 import '../../features/admin/presentation/admin_hub_screen.dart';
 import '../../features/admin/presentation/org_admin_screen.dart';
 import '../../features/splash/presentation/app_splash_screen.dart';
+import '../../features/auth/presentation/screens/account_banned_screen.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -53,6 +54,16 @@ class AppRouter {
     redirect: (context, state) {
       final path = state.matchedLocation;
       final isLoggedIn = provider.isLoggedInStreamer;
+
+      // Cluster 4 Task 16: a platform-banned account is locked out of the
+      // entire app (not just guarded paths) until they sign out -- checked
+      // ahead of the guarded-paths block so it also covers /feed and /map.
+      if (isLoggedIn && provider.isCurrentUserBanned && path != '/account-banned') {
+        return '/account-banned';
+      }
+      if (path == '/account-banned' && !provider.isCurrentUserBanned) {
+        return isLoggedIn ? '/feed' : '/welcome';
+      }
 
       if (_authGuardedPaths.contains(path)) {
         if (!isLoggedIn) return '/welcome';
@@ -208,6 +219,12 @@ class AppRouter {
         path: '/org-admin',
         name: 'orgAdmin',
         builder: (context, state) => const OrgAdminScreen(),
+      ),
+      GoRoute(
+        parentNavigatorKey: _rootNavigatorKey,
+        path: '/account-banned',
+        name: 'accountBanned',
+        builder: (context, state) => const AccountBannedScreen(),
       ),
     ],
   );

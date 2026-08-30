@@ -9,6 +9,10 @@ import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/admin/models/chat_report_model.dart';
 import '../../features/admin/models/streamer_custom_placeholder_model.dart';
+import '../../features/admin/models/banned_user_model.dart';
+import '../../features/admin/models/stream_moderator_model.dart';
+import '../../features/admin/models/tag_moderation_model.dart';
+import '../../features/discovery/models/academic_category_model.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -1444,6 +1448,8 @@ class AdminDatabaseService {
             isOrganization: false,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
+            isTemporarilyHiddenFromMap:
+                (row['is_temporarily_hidden_from_map'] as bool?) ?? false,
           ),
         );
       }
@@ -1502,6 +1508,8 @@ class AdminDatabaseService {
             isOrganization: true,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
+            isTemporarilyHiddenFromMap:
+                (row['is_temporarily_hidden_from_map'] as bool?) ?? false,
           ),
         );
       }
@@ -1510,6 +1518,23 @@ class AdminDatabaseService {
     }
 
     return results;
+  }
+
+  /// Toggles Cluster 4 Task 18's "Hide from Map" flag for a streamer or
+  /// organization -- admin-tier only at the RLS layer (profiles_update_admin
+  /// / organizations_update_owner_or_admin, both already existing). Which
+  /// table to update depends on whether this streamer id is an organization
+  /// or an individual profile.
+  Future<void> setStreamerHiddenFromMap({
+    required String streamerId,
+    required bool isOrganization,
+    required bool hidden,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final table = isOrganization ? 'organizations' : 'profiles';
+    await _client
+        .from(table)
+        .update({'is_temporarily_hidden_from_map': hidden}).eq('id', streamerId);
   }
 
   // ==========================================
@@ -1761,25 +1786,290 @@ class AdminDatabaseService {
   /// rejects muted senders, not just a client-side gate) and resolves this
   /// report. A duplicate mute (sender already muted on this stream) is
   /// swallowed as a success -- the desired end state ("sender can't post
-  /// here") already holds.
+  /// here") already holds. [muteDurationHours] null means permanent
+  /// (Cluster 4 Task 14's 10 min / 1 hour / permanent options).
   Future<void> muteChatSenderAndResolveReport({
     required String streamId,
     required String senderId,
     required String reportId,
+    double? muteDurationHours,
   }) async {
     if (!_useSupabase) throw Exception('Supabase not available');
     final mutedBy = _client.auth.currentUser?.id;
     if (mutedBy == null) throw Exception('Not signed in.');
+    final expiresAt = muteDurationHours == null
+        ? null
+        : DateTime.now()
+            .add(Duration(minutes: (muteDurationHours * 60).round()))
+            .toIso8601String();
     try {
       await _client.from('chat_muted_users').insert({
         'stream_id': streamId,
         'muted_profile_id': senderId,
         'muted_by': mutedBy,
+        'expires_at': expiresAt,
       });
     } on PostgrestException catch (e) {
       if (e.code != '23505') rethrow; // 23505 = unique_violation
     }
     await _client.from('chat_reports').delete().eq('id', reportId);
+  }
+
+  // ==========================================
+  // Academic Categories Taxonomy (Cluster 3 Task 10/11)
+  //
+  // Real-backend-only, same contract as chat moderation above --
+  // academic_categories is a public-read/admin-write table (RLS in
+  // 20260830130000) with no SharedPreferences shape; an offline caller falls
+  // back to AcademicCategoryModel.defaultPool at the AppProvider layer.
+  // ==========================================
+
+  Future<List<AcademicCategoryModel>> loadAcademicCategories() async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('academic_categories')
+        .select()
+        .order('sort_order');
+    return rows.map((r) => AcademicCategoryModel.fromJson(r)).toList();
+  }
+
+  Future<void> saveAcademicCategory(AcademicCategoryModel category) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('academic_categories').upsert(category.toJson());
+  }
+
+  Future<void> deleteAcademicCategory(String id) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('academic_categories').delete().eq('id', id);
+  }
+
+  // ==========================================
+  // Tag Moderation (Cluster 3 Task 12)
+  //
+  // Real-backend-only -- public.tags (RLS in 20260830140000): anyone reads
+  // approved rows, any authenticated user may submit a new pending tag,
+  // only admin tiers may approve/rename/blacklist/delete.
+  // ==========================================
+
+  /// Every tag row, admin-tier only at the RLS layer (a non-admin caller
+  /// only ever sees status='approved' rows here, per tags_select_approved_public).
+  Future<List<TagModerationModel>> loadAllTags() async {
+    if (!_useSupabase) return const [];
+    final rows =
+        await _client.from('tags').select().order('created_at', ascending: false);
+    return rows.map((r) => TagModerationModel.fromRow(r)).toList();
+  }
+
+  /// Public-safe: only ever returns approved tag names, per RLS.
+  Future<List<String>> loadApprovedTagNames() async {
+    if (!_useSupabase) return const [];
+    final rows =
+        await _client.from('tags').select('name').eq('status', 'approved');
+    return rows.map((r) => r['name'] as String).toList();
+  }
+
+  /// Submits a brand-new tag as pending review -- idempotent if the tag
+  /// already exists in any status (tags_insert_pending_self only allows
+  /// status='pending' + created_by=self, so this swallows the unique-
+  /// violation rather than erroring on a tag someone already submitted).
+  Future<void> submitPendingTag(String name) async {
+    if (!_useSupabase) return;
+    final normalized = name.trim();
+    if (normalized.isEmpty) return;
+    final createdBy = _client.auth.currentUser?.id;
+    try {
+      await _client.from('tags').insert({
+        'name': normalized,
+        'status': 'pending',
+        'created_by': createdBy,
+      });
+    } on PostgrestException catch (e) {
+      if (e.code != '23505') rethrow;
+    }
+  }
+
+  Future<void> setTagStatus(String name, TagStatus status) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client
+        .from('tags')
+        .update({'status': status.dbValue}).eq('name', name);
+  }
+
+  Future<void> deleteTag(String name) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('tags').delete().eq('name', name);
+  }
+
+  /// Merges/renames a tag: creates (or approves) the new name and removes
+  /// the old row. Not a single atomic rename because `name` is the primary
+  /// key -- this is the same two-step "insert new, delete old" shape a
+  /// primary-key rename always needs.
+  Future<void> mergeRenameTag({
+    required String oldName,
+    required String newName,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final normalized = newName.trim();
+    if (normalized.isEmpty) throw Exception('New tag name cannot be empty.');
+    await _client.from('tags').upsert({
+      'name': normalized,
+      'status': 'approved',
+      'created_by': _client.auth.currentUser?.id,
+    });
+    if (normalized != oldName) {
+      await _client.from('tags').delete().eq('name', oldName);
+    }
+  }
+
+  // ==========================================
+  // Banned Accounts (Cluster 4 Task 16)
+  //
+  // Real-backend-only -- public.banned_users (RLS in 20260830170000). Row
+  // presence = banned; unbanning deletes the row, same pattern as
+  // chat_muted_users.
+  // ==========================================
+
+  Future<List<BannedUserModel>> loadBannedUsers() async {
+    if (!_useSupabase) return const [];
+    final rows =
+        await _client.from('banned_users').select().order('banned_at', ascending: false);
+    if (rows.isEmpty) return const [];
+
+    final profileIds = rows.map((r) => r['profile_id'] as String).toSet();
+    final profiles = await _resolveProfileSummaries(profileIds);
+
+    return rows.map<BannedUserModel>((row) {
+      final profile = profiles[row['profile_id'] as String];
+      return BannedUserModel(
+        id: row['id'] as String,
+        profileId: row['profile_id'] as String,
+        email: row['email'] as String,
+        reason: row['reason'] as String,
+        bannedBy: row['banned_by'] as String?,
+        bannedAt: DateTime.parse(row['banned_at'] as String),
+        expiresAt: row['expires_at'] != null
+            ? DateTime.parse(row['expires_at'] as String)
+            : null,
+        displayName: profile?['display_name_en'] as String?,
+        avatarUrl: profile?['avatar_url'] as String?,
+      );
+    }).toList();
+  }
+
+  /// Bans a platform account by profile id. Idempotent: re-banning an
+  /// already-banned account (unique on profile_id) updates the existing row
+  /// instead of erroring, so an admin can tighten a reason/duration without
+  /// unbanning first.
+  Future<void> banAccountPlatformWide({
+    required String profileId,
+    required String email,
+    required String reason,
+    DateTime? expiresAt,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final bannedBy = _client.auth.currentUser?.id;
+    if (bannedBy == null) throw Exception('Not signed in.');
+    await _client.from('banned_users').upsert(
+      {
+        'profile_id': profileId,
+        'email': email,
+        'reason': reason,
+        'banned_by': bannedBy,
+        'expires_at': expiresAt?.toIso8601String(),
+      },
+      onConflict: 'profile_id',
+    );
+  }
+
+  Future<void> unbanAccount(String profileId) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('banned_users').delete().eq('profile_id', profileId);
+  }
+
+  // ==========================================
+  // Stream Moderator Delegation (Cluster 4 Task 15)
+  // ==========================================
+
+  Future<List<StreamModeratorModel>> loadStreamModerators() async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('stream_moderators')
+        .select()
+        .order('granted_at', ascending: false);
+    if (rows.isEmpty) return const [];
+
+    final profileIds = <String>{};
+    for (final r in rows) {
+      profileIds.add(r['profile_id'] as String);
+      profileIds.add(r['assigned_by'] as String);
+    }
+    final profiles = await _resolveProfileSummaries(profileIds);
+
+    return rows.map<StreamModeratorModel>((row) {
+      final moderator = profiles[row['profile_id'] as String];
+      final assignedBy = profiles[row['assigned_by'] as String];
+      return StreamModeratorModel(
+        id: row['id'] as String,
+        profileId: row['profile_id'] as String,
+        assignedBy: row['assigned_by'] as String,
+        scope: ModeratorScopeInfo.fromDbValue(row['scope'] as String),
+        streamId: row['stream_id'] as String?,
+        organizationId: row['organization_id'] as String?,
+        grantedAt: DateTime.parse(row['granted_at'] as String),
+        moderatorDisplayName: moderator?['display_name_en'] as String? ??
+            moderator?['email'] as String? ??
+            'Unknown user',
+        moderatorEmail: moderator?['email'] as String?,
+        assignedByDisplayName: assignedBy?['display_name_en'] as String? ??
+            assignedBy?['email'] as String? ??
+            'Unknown user',
+      );
+    }).toList();
+  }
+
+  Future<void> revokeStreamModeratorById(String id) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('stream_moderators').delete().eq('id', id);
+  }
+
+  // ==========================================
+  // Chat History Deletion (Cluster 4 Task 17)
+  //
+  // Self-service only -- relies on chat_messages_delete_self (sender_id =
+  // auth.uid()), added alongside chat_messages_update_self in
+  // 20260830150000. No admin bypass needed here since a signed-in caller
+  // can only ever delete their own rows regardless of what id is passed.
+  // ==========================================
+
+  Future<void> deleteAllMyMessages() async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('Not signed in.');
+    await _client.from('chat_messages').delete().eq('sender_id', userId);
+  }
+
+  Future<void> deleteMyMessagesForStream(String streamId) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) throw Exception('Not signed in.');
+    await _client
+        .from('chat_messages')
+        .delete()
+        .eq('sender_id', userId)
+        .eq('stream_id', streamId);
+  }
+
+  /// The distinct stream ids this user has ever sent a message in, for the
+  /// "Clear Messages by Broadcast" stream picker.
+  Future<List<String>> loadMyMessageStreamIds() async {
+    if (!_useSupabase) return const [];
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return const [];
+    final rows = await _client
+        .from('chat_messages')
+        .select('stream_id')
+        .eq('sender_id', userId);
+    return rows.map((r) => r['stream_id'] as String).toSet().toList();
   }
 
   // ==========================================

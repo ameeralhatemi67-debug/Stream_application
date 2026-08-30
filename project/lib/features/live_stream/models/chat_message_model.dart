@@ -8,6 +8,7 @@ enum ChatSenderBadge {
   speaker('🎙️'),
   organization('🏛️'),
   admin('🛡️'),
+  moderator('🛡️ MOD'),
   verified('✅');
 
   final String emoji;
@@ -38,6 +39,16 @@ class ChatMessageModel {
   /// real postgres_changes event.
   final bool isPending;
 
+  /// Set once this message has been edited by its sender (Cluster 4 Task
+  /// 13) -- drives the "(edited)" indicator. Mirrors chat_messages.edited_at.
+  final DateTime? editedAt;
+
+  /// True when `badges` contains ChatSenderBadge.moderator for this stream
+  /// (resolved server-side via chat_sender_info's is_moderator column).
+  bool get isStreamModerator => badges.contains(ChatSenderBadge.moderator);
+
+  bool get isEdited => editedAt != null;
+
   const ChatMessageModel({
     required this.id,
     required this.streamId,
@@ -49,14 +60,17 @@ class ChatMessageModel {
     this.isCurrentUser = false,
     this.badges = const {},
     this.isPending = false,
+    this.editedAt,
   });
 
   ChatMessageModel copyWith({
     String? id,
     String? senderName,
     String? senderAvatarUrl,
+    String? body,
     Set<ChatSenderBadge>? badges,
     bool? isPending,
+    DateTime? editedAt,
   }) {
     return ChatMessageModel(
       id: id ?? this.id,
@@ -64,11 +78,12 @@ class ChatMessageModel {
       senderId: senderId,
       senderName: senderName ?? this.senderName,
       senderAvatarUrl: senderAvatarUrl ?? this.senderAvatarUrl,
-      body: body,
+      body: body ?? this.body,
       createdAt: createdAt,
       isCurrentUser: isCurrentUser,
       badges: badges ?? this.badges,
       isPending: isPending ?? this.isPending,
+      editedAt: editedAt ?? this.editedAt,
     );
   }
 }

@@ -40,11 +40,20 @@ class LiveChatController extends ChangeNotifier {
   /// filtered here rather than server-side.
   final Set<String> _blockedSenderIds = {};
 
+  /// Messages the current viewer has hidden (Cluster 4 Task 13) -- like
+  /// blocking, this is a per-viewer client-side preference with no server
+  /// component: hiding one message from someone you otherwise still see is
+  /// not a moderation action, just a personal "don't show me this" toggle.
+  final Set<String> _hiddenMessageIds = {};
+
   List<ChatMessageModel> get messages => List.unmodifiable(
-        _messages.where((m) => !_blockedSenderIds.contains(m.senderId)),
+        _messages.where((m) =>
+            !_blockedSenderIds.contains(m.senderId) &&
+            !_hiddenMessageIds.contains(m.id)),
       );
 
   bool isBlocked(String senderId) => _blockedSenderIds.contains(senderId);
+  bool isHidden(String messageId) => _hiddenMessageIds.contains(messageId);
 
   /// Whether the current viewer is this stream's owner or an admin tier --
   /// resolved once via chat_can_moderate (see supabase/migrations/
@@ -68,6 +77,7 @@ class LiveChatController extends ChangeNotifier {
 
   Future<void> start() async {
     await _loadBlockedUsers();
+    await _loadHiddenMessages();
     await _loadCanModerate();
     await _loadRecentMessages();
     _subscribe();
@@ -119,6 +129,40 @@ class LiveChatController extends ChangeNotifier {
     }
   }
 
+  static const _hiddenMessagesPrefsPrefix = 'chat_hidden_messages_';
+
+  Future<void> _loadHiddenMessages() async {
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getStringList('$_hiddenMessagesPrefsPrefix$userId');
+      if (stored != null) _hiddenMessageIds.addAll(stored);
+    } catch (e) {
+      debugPrint('LiveChatController: failed to load hidden messages: $e');
+    }
+  }
+
+  /// Hides one message from the current viewer only (Cluster 4 Task 13) --
+  /// persisted per-viewer so it stays hidden across sessions, but never
+  /// touches the message for anyone else.
+  Future<void> hideChatMessage(String messageId) async {
+    if (!_hiddenMessageIds.add(messageId)) return;
+    notifyListeners();
+
+    final userId = _client.auth.currentUser?.id;
+    if (userId == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        '$_hiddenMessagesPrefsPrefix$userId',
+        _hiddenMessageIds.toList(),
+      );
+    } catch (e) {
+      debugPrint('LiveChatController: failed to persist hidden messages: $e');
+    }
+  }
+
   /// Reports a message to admin tiers (chat_reports, RLS-gated -- see
   /// supabase/migrations/20260824090000_chat_reports.sql). Throws if the
   /// viewer already reported this same message (unique constraint) or isn't
@@ -163,14 +207,73 @@ class LiveChatController extends ChangeNotifier {
         .eq('muted_profile_id', senderId);
   }
 
-  /// Deletes a message (Checkpoint 3 Phase 2) -- server-enforced via
-  /// chat_messages' delete RLS policy (owner/admin only). The local removal
-  /// here is just for the caller's own optimistic UI; every other viewer
-  /// removes it on the postgres_changes DELETE event (_handleDelete).
+  /// Deletes a message -- server-enforced via chat_messages' delete RLS,
+  /// which now covers two independent cases (Checkpoint 3 Phase 2's
+  /// owner/admin moderation policy, and Cluster 4 Task 13's self-delete
+  /// policy for the sender's own message): this one client call works for
+  /// both, since RLS decides which policy actually applies to the caller.
+  /// The local removal here is just for the caller's own optimistic UI;
+  /// every other viewer removes it on the postgres_changes DELETE event
+  /// (_handleDelete).
   Future<void> deleteMessage(String messageId) async {
     await _client.from('chat_messages').delete().eq('id', messageId);
     _messages.removeWhere((m) => m.id == messageId);
     notifyListeners();
+  }
+
+  /// Edits the sender's own message (Cluster 4 Task 13) -- server-enforced
+  /// via chat_messages_update_self (sender_id = auth.uid() in both `using`
+  /// and `with check`), so this throws for anyone else's message rather
+  /// than silently no-op'ing. Every viewer (including this one) picks up
+  /// the new body/editedAt via the realtime UPDATE event (_handleUpdate);
+  /// the local mutate below is just this caller's optimistic echo.
+  Future<void> editChatMessage(String messageId, String newBody) async {
+    final trimmed = newBody.trim();
+    if (trimmed.isEmpty) return;
+    final editedAt = DateTime.now();
+    await _client.from('chat_messages').update({
+      'body': trimmed,
+      'edited_at': editedAt.toIso8601String(),
+    }).eq('id', messageId);
+
+    final idx = _messages.indexWhere((m) => m.id == messageId);
+    if (idx != -1) {
+      _messages[idx] =
+          _messages[idx].copyWith(body: trimmed, editedAt: editedAt);
+      notifyListeners();
+    }
+  }
+
+  /// Appoints [profileId] as this stream's chat moderator (Cluster 4 Task
+  /// 15) -- server-enforced via stream_moderators' RLS (only this stream's
+  /// owner/admin may insert a scope='stream' row for it, see
+  /// supabase/migrations/20260830160000_stream_moderators.sql). Idempotent:
+  /// re-appointing an existing moderator is swallowed rather than surfaced
+  /// as an error.
+  Future<void> appointStreamModerator(String profileId) async {
+    final assignedBy = _client.auth.currentUser?.id;
+    if (assignedBy == null) throw Exception('Sign in to appoint moderators.');
+    try {
+      await _client.from('stream_moderators').insert({
+        'profile_id': profileId,
+        'assigned_by': assignedBy,
+        'scope': 'stream',
+        'stream_id': streamId,
+      });
+    } on PostgrestException catch (e) {
+      if (e.code != '23505') rethrow; // 23505 = unique_violation, already a moderator
+    }
+    _profileCache.remove(profileId); // force badge re-resolution on next fetch
+  }
+
+  Future<void> revokeStreamModerator(String profileId) async {
+    await _client
+        .from('stream_moderators')
+        .delete()
+        .eq('stream_id', streamId)
+        .eq('profile_id', profileId)
+        .eq('scope', 'stream');
+    _profileCache.remove(profileId);
   }
 
   Future<void> _loadRecentMessages() async {
@@ -216,6 +319,19 @@ class LiveChatController extends ChangeNotifier {
           schema: 'public',
           table: 'chat_messages',
           callback: (payload) => _handleDelete(payload.oldRecord),
+        )
+        // Edits (Cluster 4 Task 13) -- reuses _handleInsert's shape since it
+        // already replaces-if-exists rather than only appending.
+        ..onPostgresChanges(
+          event: PostgresChangeEvent.update,
+          schema: 'public',
+          table: 'chat_messages',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'stream_id',
+            value: streamId,
+          ),
+          callback: (payload) => _handleInsert(payload.newRecord),
         )
         ..onBroadcast(
           event: 'reaction',
@@ -284,12 +400,14 @@ class LiveChatController extends ChangeNotifier {
       try {
         final senderRows = await _client.rpc('chat_sender_info', params: {
           'p_profile_ids': unresolvedIds.toList(),
+          'p_stream_id': streamId,
         });
         for (final p in (senderRows as List).cast<Map<String, dynamic>>()) {
           final badges = <ChatSenderBadge>{
             if (p['is_speaker'] == true) ChatSenderBadge.speaker,
             if (p['is_org_owner'] == true) ChatSenderBadge.organization,
             if (p['is_admin'] == true) ChatSenderBadge.admin,
+            if (p['is_moderator'] == true) ChatSenderBadge.moderator,
             if (p['is_verified'] == true) ChatSenderBadge.verified,
           };
           _profileCache[p['profile_id'] as String] = (
@@ -316,6 +434,9 @@ class LiveChatController extends ChangeNotifier {
         body: r['body'] as String,
         createdAt: DateTime.parse(r['created_at'] as String),
         isCurrentUser: senderId == currentUserId,
+        editedAt: r['edited_at'] != null
+            ? DateTime.parse(r['edited_at'] as String)
+            : null,
       );
     }).toList();
   }

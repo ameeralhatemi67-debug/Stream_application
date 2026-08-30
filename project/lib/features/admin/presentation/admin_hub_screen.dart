@@ -11,10 +11,14 @@ import '../models/broadcaster_application_model.dart';
 import '../models/terms_and_conditions_model.dart';
 import '../models/viewer_analytics_model.dart';
 import '../models/chat_report_model.dart';
+import '../models/tag_moderation_model.dart';
 import '../../profile/models/streamer_models.dart';
 import 'widgets/role_permission_management_view.dart';
 import 'widgets/chat_moderation_view.dart';
 import 'widgets/custom_placeholder_review_view.dart';
+import 'widgets/academic_categories_view.dart';
+import 'widgets/tag_moderation_view.dart';
+import 'widgets/banned_accounts_view.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
@@ -68,18 +72,24 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     // +1 for the always-present Chat Moderation tab (Checkpoint 4 Phase 1,
     // any admin-tier viewer), +1 for the always-present Testing Tools tab
     // (v0.9 Checkpoint 1 Phase 1), +1 for the always-present Custom Cards
-    // review queue (Cluster 1 Task 4b), +1 more for Roles & Permissions when
-    // this viewer is also a Master Admin (Checkpoint 2 Phase 3).
+    // review queue (Cluster 1 Task 4b), +3 for the always-present Academic
+    // Categories / Tag Moderation / Banned Accounts tabs (Cluster 3 Task
+    // 11/12, Cluster 4 Task 16), +1 more for Roles & Permissions when this
+    // viewer is also a Master Admin (Checkpoint 2 Phase 3).
     _tabController =
-        TabController(length: _isMasterAdminForTabs ? 10 : 9, vsync: this);
+        TabController(length: _isMasterAdminForTabs ? 13 : 12, vsync: this);
     if (_isMasterAdminForTabs) {
       provider.ensureRoleManagementDataLoaded();
+      provider.ensureStreamModeratorsLoaded();
     }
     provider.ensureChatReportsLoaded();
     // Loaded here rather than only inside CustomPlaceholderReviewView so the
     // tab's pending-count badge is right before anyone opens that tab --
     // TabBarView builds its children lazily.
     provider.ensureCustomPlaceholdersLoaded();
+    provider.ensureAcademicCategoriesLoaded();
+    provider.ensureTagsLoaded();
+    provider.ensureBannedUsersLoaded();
     provider.refreshAdminData();
 
     final terms = provider.termsAndConditions;
@@ -216,6 +226,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           List<ChatReportModel> chatReports,
           bool isPitchDirectorModeEnabled,
           String rtmpLaptopIp,
+          List<TagModerationModel> allTagsForModeration,
+          int bannedUsersCount,
         })>((p) => (
           isAdminUser: p.isAdminUser,
           isMasterAdmin: p.isMasterAdmin,
@@ -229,6 +241,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           chatReports: p.chatReports,
           isPitchDirectorModeEnabled: p.isPitchDirectorModeEnabled,
           rtmpLaptopIp: p.rtmpLaptopIp,
+          allTagsForModeration: p.allTagsForModeration,
+          bannedUsersCount: p.bannedUsers.length,
         ));
     final isAr = context.locale.languageCode == 'ar';
     final isDesktop = MediaQuery.of(context).size.width >= 900;
@@ -320,6 +334,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 _buildTermsGovernanceTab(context, provider, isAr),
                 const ChatModerationView(),
                 const CustomPlaceholderReviewView(),
+                const AcademicCategoriesView(),
+                const TagModerationView(),
+                const BannedAccountsView(),
                 _buildTestingToolsTab(context, provider),
                 if (_isMasterAdminForTabs) const RolePermissionManagementView(),
               ],
@@ -473,6 +490,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     final pendingCount = provider.pendingApplications.length;
     final chatReportsCount = provider.chatReports.length;
     final customCardsCount = provider.pendingCustomPlaceholders.length;
+    final pendingTagsCount = provider.allTagsForModeration
+        .where((t) => t.status == TagStatus.pending)
+        .length;
+    final bannedCount = provider.bannedUsers.length;
 
     return Container(
       decoration: const BoxDecoration(
@@ -593,6 +614,66 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ],
             ),
             text: 'admin.tab_custom_cards'.tr(),
+          ),
+          Tab(
+            icon: const Icon(Icons.category_rounded, size: 18),
+            text: 'admin.tab_categories'.tr(),
+          ),
+          Tab(
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.sell_rounded, size: 18),
+                if (pendingTagsCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentAmber,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$pendingTagsCount',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            text: 'admin.tab_tags'.tr(),
+          ),
+          Tab(
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.person_off_rounded, size: 18),
+                if (bannedCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface2,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$bannedCount',
+                      style: const TextStyle(
+                        color: AppTheme.textSecondaryDark,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            text: 'admin.tab_banned_accounts'.tr(),
           ),
           Tab(
             icon: const Icon(Icons.science_rounded, size: 18),
@@ -2238,6 +2319,75 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             _tabController.animateTo(3);
                           },
                         ),
+
+                      // Hide from Map Toggle (Cluster 4 Task 18) -- a
+                      // moderation action short of a full ban; the profile
+                      // stays reachable by direct link.
+                      Tooltip(
+                        message: 'admin.hide_from_map_toggle'.tr(),
+                        child: Switch(
+                          value: s.isTemporarilyHiddenFromMap,
+                          activeThumbColor: AppTheme.accentAmber,
+                          onChanged: (hidden) async {
+                            if (hidden) {
+                              final confirmed = await showDialog<bool>(
+                                context: context,
+                                builder: (dialogContext) => AlertDialog(
+                                  backgroundColor: AppTheme.darkSurface1,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusMd),
+                                    side: const BorderSide(
+                                        color: AppTheme.darkBorderSubtle),
+                                  ),
+                                  title: Text(
+                                    'admin.hide_from_map_confirm_title'.tr(),
+                                    style: const TextStyle(
+                                        color: AppTheme.textPrimaryDark,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                  content: Text(
+                                    'admin.hide_from_map_confirm_body'.tr(),
+                                    style: const TextStyle(
+                                        color: AppTheme.textSecondaryDark,
+                                        fontSize: 12),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext, false),
+                                      child: Text('common.cancel'.tr(),
+                                          style: const TextStyle(
+                                              color: AppTheme.textMutedDark)),
+                                    ),
+                                    ElevatedButton(
+                                      style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              AppTheme.accentAmber),
+                                      onPressed: () =>
+                                          Navigator.pop(dialogContext, true),
+                                      child: Text('admin.hide_from_map_toggle'
+                                          .tr()),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirmed != true) return;
+                            }
+                            final success = await provider
+                                .setStreamerHiddenFromMap(
+                                    streamerId: s.streamerId, hidden: hidden);
+                            if (!success) {
+                              _showErrorNotification(
+                                  'Failed to update map visibility.');
+                              return;
+                            }
+                            _showSuccessNotification(hidden
+                                ? 'admin.streamer_hidden_from_map_toast'.tr()
+                                : 'admin.streamer_shown_on_map_toast'.tr());
+                          },
+                        ),
+                      ),
 
                       // Edit Button
                       IconButton(

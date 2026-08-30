@@ -1043,13 +1043,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   Widget _buildChatMessageTile(ChatMessageModel message) {
     return GestureDetector(
-      onLongPress: message.isCurrentUser
-          ? null
-          : () => showChatMessageActionsSheet(
-                context,
-                message: message,
-                controller: _chatController,
-              ),
+      // Cluster 4 Task 13: long-press now opens the actions sheet for every
+      // message, own or not -- showChatMessageActionsSheet itself branches
+      // on message.isCurrentUser to offer Edit/Delete vs. Report/Hide/Block.
+      onLongPress: () => showChatMessageActionsSheet(
+        context,
+        message: message,
+        controller: _chatController,
+      ),
       child: Padding(
         padding: const EdgeInsets.only(bottom: 6),
         child: Row(
@@ -1090,6 +1091,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       style: const TextStyle(
                           color: AppTheme.textPrimaryDark, fontSize: 12),
                     ),
+                    if (message.isEdited)
+                      TextSpan(
+                        text: ' ${'live.message_edited_badge'.tr()}',
+                        style: const TextStyle(
+                            color: AppTheme.textMutedDark, fontSize: 11),
+                      ),
                   ],
                 ),
               ),

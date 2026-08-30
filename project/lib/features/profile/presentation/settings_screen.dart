@@ -31,6 +31,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _slidesController = TextEditingController();
   bool _isDeletingAccount = false;
   bool _isExportingData = false;
+  bool _isDeletingAllMessages = false;
+  bool _isDeletingStreamMessages = false;
 
   @override
   void initState() {
@@ -255,6 +257,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             const SizedBox(height: AppTheme.spaceSm),
             _buildDataExportCard(context, appProvider),
+            const SizedBox(height: AppTheme.spaceMd),
+            _buildChatHistoryCard(context, appProvider),
             const SizedBox(height: AppTheme.spaceMd),
             _buildDeleteAccountCard(context, appProvider),
             const SizedBox(height: AppTheme.spaceLg),
@@ -2180,6 +2184,221 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       );
     }
+  }
+
+  // ==========================================
+  // Chat History & Privacy (Cluster 4 Task 17)
+  // ==========================================
+
+  Widget _buildChatHistoryCard(BuildContext context, AppProvider provider) {
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.darkBorderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'settings.chat_history_title'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'settings.chat_history_desc'.tr(),
+            style:
+                const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+          ),
+          const SizedBox(height: AppTheme.spaceMd),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: _isDeletingStreamMessages
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppTheme.accentBlue),
+                    )
+                  : const Icon(Icons.forum_outlined, size: 18),
+              label: Text('settings.delete_messages_by_stream_btn'.tr()),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.accentBlue,
+                side: const BorderSide(color: AppTheme.accentBlue),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              ),
+              onPressed: _isDeletingStreamMessages
+                  ? null
+                  : () => _showSelectStreamDialog(context, provider),
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              icon: _isDeletingAllMessages
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppTheme.accentRed),
+                    )
+                  : const Icon(Icons.delete_sweep_outlined, size: 18),
+              label: Text('settings.delete_all_messages_btn'.tr()),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.accentRed,
+                side: const BorderSide(color: AppTheme.accentRed),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              ),
+              onPressed: _isDeletingAllMessages
+                  ? null
+                  : () => _showDeleteAllMessagesDialog(context, provider),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showDeleteAllMessagesDialog(BuildContext context, AppProvider provider) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          side: const BorderSide(color: AppTheme.darkBorderSubtle),
+        ),
+        title: Row(
+          children: [
+            const Icon(Icons.warning_amber_rounded,
+                color: AppTheme.accentRed, size: 22),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'settings.delete_all_messages_confirm_title'.tr(),
+                style: const TextStyle(
+                  color: AppTheme.textPrimaryDark,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          'settings.delete_all_messages_confirm_body'.tr(),
+          style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 13),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('settings.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMutedDark)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
+            onPressed: () {
+              Navigator.pop(dialogContext);
+              _handleDeleteAllMessages(context, provider);
+            },
+            child: Text('settings.delete_all_messages_btn'.tr()),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _handleDeleteAllMessages(
+      BuildContext context, AppProvider provider) async {
+    setState(() => _isDeletingAllMessages = true);
+    final success = await provider.deleteAllMyMessages();
+    if (!context.mounted) return;
+    setState(() => _isDeletingAllMessages = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success
+            ? 'settings.delete_all_messages_success_toast'.tr()
+            : 'settings.delete_all_messages_error_toast'.tr()),
+        backgroundColor: success ? null : AppTheme.accentRed,
+      ),
+    );
+  }
+
+  Future<void> _showSelectStreamDialog(
+      BuildContext context, AppProvider provider) async {
+    final streamIds = await provider.loadMyMessageStreamIds();
+    if (!context.mounted) return;
+
+    final selectedStreamId = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppTheme.darkSurface1,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          side: const BorderSide(color: AppTheme.darkBorderSubtle),
+        ),
+        title: Text('settings.select_stream_dialog_title'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold)),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: streamIds.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  child: Text(
+                    'settings.select_stream_dialog_empty'.tr(),
+                    style: const TextStyle(color: AppTheme.textSecondaryDark),
+                  ),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: streamIds.length,
+                  itemBuilder: (context, index) {
+                    final id = streamIds[index];
+                    return ListTile(
+                      leading: const Icon(Icons.forum_outlined,
+                          color: AppTheme.accentBlue),
+                      title: Text(id,
+                          style: const TextStyle(color: AppTheme.textPrimaryDark)),
+                      onTap: () => Navigator.pop(dialogContext, id),
+                    );
+                  },
+                ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text('settings.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMutedDark)),
+          ),
+        ],
+      ),
+    );
+    if (selectedStreamId == null || !context.mounted) return;
+    setState(() => _isDeletingStreamMessages = true);
+    final success = await provider.deleteMyMessagesForStream(selectedStreamId);
+    if (!context.mounted) return;
+    setState(() => _isDeletingStreamMessages = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(success
+            ? 'settings.delete_messages_by_stream_success_toast'.tr()
+            : 'settings.delete_all_messages_error_toast'.tr()),
+        backgroundColor: success ? null : AppTheme.accentRed,
+      ),
+    );
   }
 
   Widget _buildNotificationPreferencesCard(

@@ -9,10 +9,11 @@ class LiveChatWidget extends StatefulWidget {
   final ChatConnectionState connectionState;
   final Function(String messageText) onSendTextMessage;
 
-  /// Long-press on someone else's message (Checkpoint 3 Phase 1) -- never
-  /// called for the viewer's own message. This widget stays a "dumb" one
-  /// that only reports the gesture; showing the report/block action sheet is
-  /// the caller's job, same shape as onSendTextMessage.
+  /// Long-press on any message tile, own or someone else's (Cluster 4 Task
+  /// 13 widened this from the Checkpoint 3 Phase 1 original, which only
+  /// fired for someone else's message). This widget stays a "dumb" one that
+  /// only reports the gesture; the caller decides which action sheet to
+  /// show based on `message.isCurrentUser`, same shape as onSendTextMessage.
   final void Function(ChatMessageModel message)? onMessageLongPress;
 
   const LiveChatWidget({
@@ -122,11 +123,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     widget.messages[widget.messages.length - 1 - index];
                 return _ChatTile(
                   message: message,
-                  onLongPress: message.isCurrentUser
+                  onLongPress: widget.onMessageLongPress == null
                       ? null
-                      : widget.onMessageLongPress == null
-                          ? null
-                          : () => widget.onMessageLongPress!(message),
+                      : () => widget.onMessageLongPress!(message),
                 );
               },
             ),
@@ -317,8 +316,18 @@ class _ChatTile extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text(
-                    message.body,
+                  Text.rich(
+                    TextSpan(
+                      children: [
+                        TextSpan(text: message.body),
+                        if (message.isEdited)
+                          TextSpan(
+                            text: ' ${'live.message_edited_badge'.tr()}',
+                            style:
+                                const TextStyle(color: AppTheme.textMutedDark),
+                          ),
+                      ],
+                    ),
                     style: const TextStyle(
                       fontSize: 12,
                       color: AppTheme.textSecondaryDark,

@@ -77,23 +77,11 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     'general_edu': 'Culture & General Education',
   };
 
-  static const List<String> availableTags = [
-    '#AI',
-    '#IELTS',
-    '#English',
-    '#Quran',
-    '#Podcast',
-    '#Software',
-    '#Medicine',
-    '#Engineering',
-    '#Academy',
-    '#Youth',
-  ];
-
   late List<String> _customCategories;
   YoutubeVerificationState _ytState = YoutubeVerificationState.unverified;
   String _ytFeedbackMessage = '';
   Timer? _debounceTimer;
+  final TextEditingController _customTagController = TextEditingController();
 
   @override
   void initState() {
@@ -107,7 +95,23 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
   @override
   void dispose() {
     _debounceTimer?.cancel();
+    _customTagController.dispose();
     super.dispose();
+  }
+
+  /// Submits a brand-new tag as pending review (Cluster 3 Task 12) and
+  /// selects it locally right away -- the applicant sees it applied to
+  /// their form immediately, even though it won't appear in anyone else's
+  /// approved-tag list until an admin approves it.
+  void _submitCustomTag() {
+    final tag = _customTagController.text.trim();
+    if (tag.isEmpty) return;
+    context.read<AppProvider>().submitPendingTag(tag);
+    widget.onTagToggled(tag);
+    _customTagController.clear();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('wizard_steps.step3_tag_pending_notice'.tr())),
+    );
   }
 
   void _scheduleYoutubeVerification(String val) {
@@ -511,31 +515,99 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
             ),
           ),
           const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: availableTags.map((tag) {
-              final isSelected = widget.selectedTags.contains(tag);
-              return FilterChip(
-                label: Text(tag),
-                selected: isSelected,
-                selectedColor: AppTheme.accentBlue.withValues(alpha: 0.25),
-                checkmarkColor: AppTheme.accentBlue,
-                labelStyle: TextStyle(
-                  color: isSelected ? AppTheme.accentBlue : AppTheme.textSecondaryDark,
-                  fontSize: 12,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-                backgroundColor: AppTheme.darkSurface1,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  side: BorderSide(
-                    color: isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
+          Builder(builder: (context) {
+            // Cluster 3 Task 12: suggests only admin-approved tags instead
+            // of a hardcoded pool.
+            final approvedTags = context.watch<AppProvider>().approvedTags;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: approvedTags.map((tag) {
+                final isSelected = widget.selectedTags.contains(tag);
+                return FilterChip(
+                  label: Text(tag),
+                  selected: isSelected,
+                  selectedColor: AppTheme.accentBlue.withValues(alpha: 0.25),
+                  checkmarkColor: AppTheme.accentBlue,
+                  labelStyle: TextStyle(
+                    color: isSelected
+                        ? AppTheme.accentBlue
+                        : AppTheme.textSecondaryDark,
+                    fontSize: 12,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  backgroundColor: AppTheme.darkSurface1,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    side: BorderSide(
+                      color:
+                          isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
+                    ),
+                  ),
+                  onSelected: (_) => widget.onTagToggled(tag),
+                );
+              }).toList(),
+            );
+          }),
+          if (widget.selectedTags
+              .any((t) => !context.watch<AppProvider>().approvedTags.contains(t)))
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: widget.selectedTags
+                    .where((t) =>
+                        !context.watch<AppProvider>().approvedTags.contains(t))
+                    .map((tag) => Chip(
+                          label: Text(tag),
+                          avatar: const Icon(Icons.hourglass_top_rounded,
+                              size: 14, color: AppTheme.accentAmber),
+                          backgroundColor:
+                              AppTheme.accentAmber.withValues(alpha: 0.15),
+                          labelStyle:
+                              const TextStyle(color: AppTheme.accentAmber, fontSize: 11),
+                          onDeleted: () => widget.onTagToggled(tag),
+                        ))
+                    .toList(),
+              ),
+            ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _customTagController,
+                  style: const TextStyle(
+                      color: AppTheme.textPrimaryDark, fontSize: 12),
+                  onSubmitted: (_) => _submitCustomTag(),
+                  decoration: InputDecoration(
+                    hintText: 'wizard_steps.step3_custom_tag_hint'.tr(),
+                    hintStyle: const TextStyle(
+                        color: AppTheme.textMutedDark, fontSize: 12),
+                    isDense: true,
+                    filled: true,
+                    fillColor: AppTheme.darkSurface1,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 12, vertical: 10),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      borderSide:
+                          const BorderSide(color: AppTheme.darkBorderSubtle),
+                    ),
                   ),
                 ),
-                onSelected: (_) => widget.onTagToggled(tag),
-              );
-            }).toList(),
+              ),
+              const SizedBox(width: 8),
+              IconButton.filled(
+                onPressed: _submitCustomTag,
+                icon: const Icon(Icons.add_rounded, size: 18),
+                style: IconButton.styleFrom(
+                  backgroundColor: AppTheme.accentBlue,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ],
           ),
         ],
       ),

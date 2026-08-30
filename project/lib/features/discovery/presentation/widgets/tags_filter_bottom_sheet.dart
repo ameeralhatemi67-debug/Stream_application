@@ -7,27 +7,6 @@ import '../../../../core/providers/app_provider.dart';
 class TagsFilterBottomSheet extends StatelessWidget {
   const TagsFilterBottomSheet({super.key});
 
-  static const List<String> allTags = [
-    'all',
-    '#AI',
-    '#Cloud',
-    '#Dev',
-    '#Software',
-    '#Sharia',
-    '#Podcast',
-    '#Quran',
-    '#Seerah',
-    '#Culture',
-    '#Dialogue',
-    '#History',
-    '#Solar',
-    '#CleanEnergy',
-    '#Innovation',
-    '#Cybersecurity',
-    '#ZeroTrust',
-    '#Networks',
-  ];
-
   static void show(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -46,6 +25,9 @@ class TagsFilterBottomSheet extends StatelessWidget {
     final selectedTag = appProvider.selectedTagFilter;
     final selectedCat = appProvider.currentCategoryFilter;
     final screenHeight = MediaQuery.of(context).size.height;
+    final langCode = context.locale.languageCode;
+    // Cluster 3 Task 12: only approved tags are ever offered here.
+    final allTags = ['all', ...appProvider.approvedTags];
 
     return Container(
       constraints: BoxConstraints(
@@ -108,10 +90,17 @@ class TagsFilterBottomSheet extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: [
-                      _buildCatChip(context, appProvider, 'all', 'feed.cat_all'.tr(), selectedCat),
-                      _buildCatChip(context, appProvider, 'computer_science', 'feed.cat_cs'.tr(), selectedCat),
-                      _buildCatChip(context, appProvider, 'islamic_studies', 'feed.cat_sharia'.tr(), selectedCat),
-                      _buildCatChip(context, appProvider, 'engineering', 'feed.cat_eng'.tr(), selectedCat),
+                      _buildCatChip(context, appProvider, 'all',
+                          'feed.cat_all'.tr(), selectedCat),
+                      for (final category in appProvider.academicCategories
+                          .where((c) => c.isActive))
+                        _buildCatChip(
+                          context,
+                          appProvider,
+                          category.id,
+                          category.getLocalizedName(langCode),
+                          selectedCat,
+                        ),
                     ],
                   ),
                   const SizedBox(height: 20),

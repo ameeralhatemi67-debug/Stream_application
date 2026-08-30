@@ -20,7 +20,7 @@ flutter run -d chrome --dart-define-from-file=dart_define.local.json
 * **Option B: Android Emulator:** Run `flutter emulators --launch rtmp_spike_x86_64`.
 ```powershell
 cd project
-flutter run -d <phone-or-emulator-device-id> --dart-define-from-file=dart_define.local.json
+flutter run R5CY42JAW4E --dart-define-from-file=dart_define.local.json
 ```
 
 ---
@@ -135,22 +135,22 @@ Use the checkboxes below `[ ]` to log your manual testing results.
 
 ### Section 9: Offline Resilience & Demo Mode (`v0.6 CP4`)
 
-| # | Test Scenario | Steps to Perform | Expected Result | Pass / Fail |
-|---|---|---|---|---|
-| 9.1 | **Ghost Chat Offline Fallback** | Disconnect internet / turn on Airplane mode while watching a stream. | Chat tab shows persistent amber **"Demo Mode / Offline"** banner. | [ ] |
-| 9.2 | **Ghost Comment Stream** | Observe chat in Demo Mode. | Simulated commentary (`ghost_comments.dart`) injects periodically with dimmed colors. | [ ] |
-| 9.3 | **Offline Send Prevention** | Attempt typing and sending chat in Demo Mode. | Send button disabled; tapping shows *"You are offline"* toast without crashing. | [ ] |
-| 9.4 | **Seamless Reconnection** | Turn WiFi back on. | Demo messages clear automatically; real Supabase Realtime chat reconnects and syncs. | [ ] |
+| #   | Test Scenario                   | Steps to Perform                                                     | Expected Result                                                                       | Pass / Fail |
+| --- | ------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ----------- |
+| 9.1 | **Ghost Chat Offline Fallback** | Disconnect internet / turn on Airplane mode while watching a stream. | Chat tab shows persistent amber **"Demo Mode / Offline"** banner.                     | [ ]         |
+| 9.2 | **Ghost Comment Stream**        | Observe chat in Demo Mode.                                           | Simulated commentary (`ghost_comments.dart`) injects periodically with dimmed colors. | [ ]         |
+| 9.3 | **Offline Send Prevention**     | Attempt typing and sending chat in Demo Mode.                        | Send button disabled; tapping shows *"You are offline"* toast without crashing.       | [ ]         |
+| 9.4 | **Seamless Reconnection**       | Turn WiFi back on.                                                   | Demo messages clear automatically; real Supabase Realtime chat reconnects and syncs.  | [ ]         |
 
 ---
 
 ### Section 10: Localization & Bilingual RTL/LTR (`ADR-003`)
 
-| # | Test Scenario | Steps to Perform | Expected Result | Pass / Fail |
-|---|---|---|---|---|
-| 10.1 | **Language Switch (EN ➔ AR)** | Go to Settings ➔ switch language to Arabic (العربية). | Entire app flips to native RTL (Right-to-Left) with Tajawal Arabic typography. | [ ] |
-| 10.2 | **Key Symmetry Verification** | Check all screens (Chat, Map, Admin Hub, Go Live, Org Profile) in Arabic. | Zero missing translation keys (no raw `[key.name]` strings displayed). | [ ] |
-| 10.3 | **RTL Layout Mirroring** | Inspect back buttons, action bars, drawer navigation, and chat timestamps in Arabic. | Icons and directional elements mirror correctly without visual text clipping. | [ ] |
+| #    | Test Scenario                 | Steps to Perform                                                                     | Expected Result                                                                | Pass / Fail |
+| ---- | ----------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ | ----------- |
+| 10.1 | **Language Switch (EN ➔ AR)** | Go to Settings ➔ switch language to Arabic (العربية).                                | Entire app flips to native RTL (Right-to-Left) with Tajawal Arabic typography. | [ ]         |
+| 10.2 | **Key Symmetry Verification** | Check all screens (Chat, Map, Admin Hub, Go Live, Org Profile) in Arabic.            | Zero missing translation keys (no raw `[key.name]` strings displayed).         | [ ]         |
+| 10.3 | **RTL Layout Mirroring**      | Inspect back buttons, action bars, drawer navigation, and chat timestamps in Arabic. | Icons and directional elements mirror correctly without visual text clipping.  | [ ]         |
 
 ---
 

@@ -32,6 +32,10 @@ import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/admin/models/chat_report_model.dart';
 import '../../features/admin/models/streamer_custom_placeholder_model.dart';
+import '../../features/admin/models/banned_user_model.dart';
+import '../../features/admin/models/stream_moderator_model.dart';
+import '../../features/admin/models/tag_moderation_model.dart';
+import '../../features/discovery/models/academic_category_model.dart';
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -106,6 +110,29 @@ class AppProvider extends ChangeNotifier {
   // see ensureChatReportsLoaded/chatReports.
   List<ChatReportModel> _chatReports = [];
   bool _chatReportsLoaded = false;
+
+  // Academic Categories Taxonomy (Cluster 3 Task 10/11) -- see
+  // ensureAcademicCategoriesLoaded/academicCategories. Empty list falls back
+  // to AcademicCategoryModel.defaultPool via the getter, covering both
+  // "not loaded yet" and "Supabase unreachable".
+  List<AcademicCategoryModel> _academicCategories = [];
+  bool _academicCategoriesLoaded = false;
+
+  // Tag Moderation (Cluster 3 Task 12) -- see ensureTagsLoaded/approvedTags.
+  List<String> _approvedTags = [];
+  List<TagModerationModel> _allTagsForModeration = [];
+  bool _tagsLoaded = false;
+
+  // Banned Accounts (Cluster 4 Task 16) -- see isCurrentUserBanned/bannedUsers.
+  bool _isCurrentUserBanned = false;
+  String? _currentUserBanReason;
+  List<BannedUserModel> _bannedUsers = [];
+  bool _bannedUsersLoaded = false;
+
+  // Stream Moderator Delegation (Cluster 4 Task 15) -- see
+  // ensureStreamModeratorsLoaded/streamModerators.
+  List<StreamModeratorModel> _streamModerators = [];
+  bool _streamModeratorsLoaded = false;
 
   // Streamer Custom Stream-State Cards (Cluster 1 Task 4b). Three separate
   // slices, because they answer three different questions:
@@ -287,6 +314,7 @@ class AppProvider extends ChangeNotifier {
     await _flushPendingConsentIfAny(user.id);
     await _refreshAdminRoleFromBackend();
     await _refreshPermittedAdminOrgsFromBackend();
+    await _refreshCurrentUserBanStatus();
     await refreshMyApplicationAndStreamerStatus();
     if (_isAdminFromRoles) {
       await refreshAdminData();
@@ -1004,6 +1032,8 @@ class AppProvider extends ChangeNotifier {
     _isAdminFromRoles = false;
     _isMasterAdminFromRoles = false;
     _permittedAdminOrgIds = [];
+    _isCurrentUserBanned = false;
+    _currentUserBanReason = null;
     notifyListeners();
   }
 
@@ -1036,6 +1066,10 @@ class AppProvider extends ChangeNotifier {
     _subscribeToPublicStreamerChanges();
     await loadVerifiedStreamersFromBackend();
     await refreshAdminData();
+    // Categories/approved-tags are public data (Cluster 3 Tasks 10/12) --
+    // loaded for every viewer, including guests, not just admin tiers.
+    await ensureAcademicCategoriesLoaded();
+    await ensureTagsLoaded();
   }
 
   /// Reloads all admin-tier data (applications, audit logs, analytics, affiliation requests)
@@ -2603,7 +2637,14 @@ class AppProvider extends ChangeNotifier {
           s.titleAr.contains(query) ||
           s.tags.any((t) => t.toLowerCase().contains(query));
 
-      return matchesCategory && matchesTag && matchesSearch;
+      // Cluster 4 Task 18: a temporarily-hidden streamer never appears in
+      // this filtered list (Discovery feed or Spatial Map), regardless of
+      // category/tag/search match -- their profile stays reachable by
+      // direct link (BroadcasterProfileScreen doesn't read this getter).
+      return matchesCategory &&
+          matchesTag &&
+          matchesSearch &&
+          !s.isTemporarilyHiddenFromMap;
     }).toList();
   }
 
@@ -3232,14 +3273,311 @@ class AppProvider extends ChangeNotifier {
     await _refreshChatReports();
   }
 
-  Future<void> muteChatSenderAndResolveReport(ChatReportModel report) async {
+  /// [muteDurationHours] null means permanent (Cluster 4 Task 14's 10 min /
+  /// 1 hour / permanent mute-duration picker in the moderation queue).
+  Future<void> muteChatSenderAndResolveReport(
+    ChatReportModel report, {
+    double? muteDurationHours,
+  }) async {
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.muteChatSenderAndResolveReport(
       streamId: report.streamId,
       senderId: report.reportedSenderId,
       reportId: report.id,
+      muteDurationHours: muteDurationHours,
     );
     await _refreshChatReports();
+  }
+
+  /// Bans the reported sender platform-wide (Cluster 4 Task 14's "Ban
+  /// Platform-Wide" queue action) and resolves this report. Needs the
+  /// sender's email, which chat_reports doesn't carry directly -- resolved
+  /// via reportedEmail on the joined ChatReportModel row.
+  Future<void> banChatSenderAndResolveReport(
+    ChatReportModel report, {
+    required String reason,
+    DateTime? expiresAt,
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.banAccountPlatformWide(
+      profileId: report.reportedSenderId,
+      email: report.reportedEmail ?? report.reportedDisplayName,
+      reason: reason,
+      expiresAt: expiresAt,
+    );
+    await _adminDbService!.dismissChatReport(report.id);
+    await _refreshChatReports();
+  }
+
+  // ==========================================
+  // Academic Categories Taxonomy (Cluster 3 Task 10/11)
+  // ==========================================
+
+  List<AcademicCategoryModel> get academicCategories =>
+      _academicCategories.isEmpty
+          ? AcademicCategoryModel.defaultPool
+          : List.unmodifiable(_academicCategories);
+
+  String? get selectedCategoryId =>
+      _currentCategoryFilter == 'all' ? null : _currentCategoryFilter;
+
+  /// Loads the live category list. Call from Discovery/Map/Admin
+  /// initState; safe to call repeatedly (only hits the backend once per app
+  /// session, same caching shape as ensureChatReportsLoaded). Falls back to
+  /// AcademicCategoryModel.defaultPool (via the getter above) when empty --
+  /// covers both "not loaded yet" and "Supabase unreachable".
+  Future<void> ensureAcademicCategoriesLoaded() async {
+    if (_academicCategoriesLoaded) return;
+    _academicCategoriesLoaded = true;
+    await _refreshAcademicCategories();
+  }
+
+  Future<void> _refreshAcademicCategories() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _academicCategories = await _adminDbService!.loadAcademicCategories();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('_refreshAcademicCategories failed: $e');
+    }
+  }
+
+  Future<void> saveAcademicCategory(AcademicCategoryModel category) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.saveAcademicCategory(category);
+    await _refreshAcademicCategories();
+  }
+
+  Future<void> deleteAcademicCategory(String id) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.deleteAcademicCategory(id);
+    await _refreshAcademicCategories();
+  }
+
+  // ==========================================
+  // Tag Moderation (Cluster 3 Task 12)
+  // ==========================================
+
+  /// Public-safe: approved tag names only, for discovery filters and the
+  /// application form's autocomplete.
+  List<String> get approvedTags => List.unmodifiable(_approvedTags);
+
+  /// Admin-only: every tag row regardless of status, for the Tag
+  /// Moderation Manager.
+  List<TagModerationModel> get allTagsForModeration =>
+      List.unmodifiable(_allTagsForModeration);
+
+  Future<void> ensureTagsLoaded() async {
+    if (_tagsLoaded) return;
+    _tagsLoaded = true;
+    await _refreshTags();
+  }
+
+  Future<void> _refreshTags() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _approvedTags = await _adminDbService!.loadApprovedTagNames();
+      if (isAdminUser) {
+        _allTagsForModeration = await _adminDbService!.loadAllTags();
+      }
+      notifyListeners();
+    } catch (e) {
+      debugPrint('_refreshTags failed: $e');
+    }
+  }
+
+  /// Submits a new tag from the streamer application form as pending review
+  /// (Task 12) -- a no-op if it already exists in any status.
+  Future<void> submitPendingTag(String tag) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.submitPendingTag(tag);
+  }
+
+  Future<void> approveTag(String name) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.setTagStatus(name, TagStatus.approved);
+    await _refreshTags();
+  }
+
+  Future<void> blacklistTag(String name) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.setTagStatus(name, TagStatus.blacklisted);
+    await _refreshTags();
+  }
+
+  Future<void> mergeRenameTag({
+    required String oldName,
+    required String newName,
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.mergeRenameTag(oldName: oldName, newName: newName);
+    await _refreshTags();
+  }
+
+  // ==========================================
+  // Banned Accounts (Cluster 4 Task 16)
+  // ==========================================
+
+  bool get isCurrentUserBanned => _isCurrentUserBanned;
+  String? get currentUserBanReason => _currentUserBanReason;
+
+  List<BannedUserModel> get bannedUsers => List.unmodifiable(_bannedUsers);
+
+  Future<void> _refreshCurrentUserBanStatus() async {
+    try {
+      if (!Supabase.instance.isInitialized) return;
+      final userId = _authService.currentSession?.user.id;
+      if (userId == null) {
+        _isCurrentUserBanned = false;
+        _currentUserBanReason = null;
+        return;
+      }
+      final row = await Supabase.instance.client
+          .from('banned_users')
+          .select('reason, expires_at')
+          .eq('profile_id', userId)
+          .maybeSingle();
+      final expiresAtRaw = row?['expires_at'] as String?;
+      final expiresAt = expiresAtRaw != null ? DateTime.parse(expiresAtRaw) : null;
+      final isBanned =
+          row != null && (expiresAt == null || expiresAt.isAfter(DateTime.now()));
+      _isCurrentUserBanned = isBanned;
+      _currentUserBanReason = isBanned ? row['reason'] as String? : null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('_refreshCurrentUserBanStatus failed: $e');
+    }
+  }
+
+  Future<void> ensureBannedUsersLoaded() async {
+    if (_bannedUsersLoaded) return;
+    _bannedUsersLoaded = true;
+    await _refreshBannedUsers();
+  }
+
+  Future<void> _refreshBannedUsers() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _bannedUsers = await _adminDbService!.loadBannedUsers();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('_refreshBannedUsers failed: $e');
+    }
+  }
+
+  Future<void> banAccountByEmail({
+    required String email,
+    required String reason,
+    DateTime? expiresAt,
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    final profile = await _adminDbService!.findProfileByEmail(email);
+    if (profile == null) {
+      throw Exception('No account found for "$email".');
+    }
+    await _adminDbService!.banAccountPlatformWide(
+      profileId: profile['id'] as String,
+      email: email,
+      reason: reason,
+      expiresAt: expiresAt,
+    );
+    await _refreshBannedUsers();
+  }
+
+  Future<void> unbanAccount(String profileId) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.unbanAccount(profileId);
+    await _refreshBannedUsers();
+  }
+
+  // ==========================================
+  // Stream Moderator Delegation (Cluster 4 Task 15)
+  // ==========================================
+
+  List<StreamModeratorModel> get streamModerators =>
+      List.unmodifiable(_streamModerators);
+
+  Future<void> ensureStreamModeratorsLoaded() async {
+    if (_streamModeratorsLoaded) return;
+    _streamModeratorsLoaded = true;
+    await _refreshStreamModerators();
+  }
+
+  Future<void> _refreshStreamModerators() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _streamModerators = await _adminDbService!.loadStreamModerators();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('_refreshStreamModerators failed: $e');
+    }
+  }
+
+  Future<void> revokeStreamModeratorById(String id) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.revokeStreamModeratorById(id);
+    await _refreshStreamModerators();
+  }
+
+  // ==========================================
+  // Chat History Deletion (Cluster 4 Task 17)
+  // ==========================================
+
+  Future<bool> deleteAllMyMessages() async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.deleteAllMyMessages();
+      return true;
+    } catch (e) {
+      debugPrint('deleteAllMyMessages failed: $e');
+      return false;
+    }
+  }
+
+  Future<bool> deleteMyMessagesForStream(String streamId) async {
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.deleteMyMessagesForStream(streamId);
+      return true;
+    } catch (e) {
+      debugPrint('deleteMyMessagesForStream failed: $e');
+      return false;
+    }
+  }
+
+  Future<List<String>> loadMyMessageStreamIds() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    return _adminDbService!.loadMyMessageStreamIds();
+  }
+
+  // ==========================================
+  // Temporary Map Visibility (Cluster 4 Task 18)
+  // ==========================================
+
+  Future<bool> setStreamerHiddenFromMap({
+    required String streamerId,
+    required bool hidden,
+  }) async {
+    final streamer = getStreamerById(streamerId);
+    if (streamer == null) return false;
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.setStreamerHiddenFromMap(
+        streamerId: streamerId,
+        isOrganization: streamer.isOrganization,
+        hidden: hidden,
+      );
+      _streamers = _streamers.map((s) {
+        return s.streamerId == streamerId
+            ? s.copyWith(isTemporarilyHiddenFromMap: hidden)
+            : s;
+      }).toList();
+      notifyListeners();
+      return true;
+    } catch (e) {
+      debugPrint('setStreamerHiddenFromMap failed: $e');
+      return false;
+    }
   }
 
   // ==========================================
