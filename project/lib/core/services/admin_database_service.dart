@@ -8,6 +8,7 @@ import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/admin/models/chat_report_model.dart';
+import '../../features/admin/models/streamer_custom_placeholder_model.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -136,11 +137,12 @@ class AdminDatabaseService {
     required String fileName,
     required Uint8List fileBytes,
     String contentType = 'image/jpeg',
+    String folder = 'applications',
   }) async {
     if (!_useSupabase) return null;
     try {
       final safeName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
-      final path = 'applications/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+      final path = '$folder/${DateTime.now().millisecondsSinceEpoch}_$safeName';
       await _client.storage.from('streamer-assets').uploadBinary(
         path,
         fileBytes,
@@ -1778,5 +1780,149 @@ class AdminDatabaseService {
       if (e.code != '23505') rethrow; // 23505 = unique_violation
     }
     await _client.from('chat_reports').delete().eq('id', reportId);
+  }
+
+  // ==========================================
+  // Streamer Custom Stream-State Cards (Cluster 1 Task 4b)
+  //
+  // Real-backend-only, same contract as the chat moderation section above:
+  // streamer_custom_placeholders is an RLS-gated moderation queue with no
+  // SharedPreferences shape, and the whole point of the feature is that an
+  // upload stays inert until a real admin approves it. With no Supabase the
+  // methods report "nothing uploaded", which is exactly the state that makes
+  // StreamStatePlaceholderOverlay fall back to the system default.
+  // ==========================================
+
+  /// Uploads one card image and records it as a *pending* submission.
+  /// Returns the created row, or null when there is no backend to record it
+  /// in (widget tests / offline).
+  Future<StreamerCustomPlaceholderModel?> submitCustomPlaceholder({
+    required StreamPlaceholderType placeholderType,
+    required String fileName,
+    required Uint8List fileBytes,
+    String contentType = 'image/jpeg',
+  }) async {
+    if (!_useSupabase) return null;
+    final streamerId = _client.auth.currentUser?.id;
+    if (streamerId == null) {
+      throw Exception('Cannot upload a stream card while signed out.');
+    }
+
+    final imageUrl = await uploadStreamerAsset(
+      fileName: fileName,
+      fileBytes: fileBytes,
+      contentType: contentType,
+      folder: 'custom_placeholders',
+    );
+    if (imageUrl == null) return null;
+
+    // status is left to the column default rather than sent explicitly --
+    // the insert policy only admits status = 'pending', so this cannot
+    // become a self-approval path even if a caller passed something else.
+    final row = await _client
+        .from('streamer_custom_placeholders')
+        .insert({
+          'streamer_id': streamerId,
+          'placeholder_type': placeholderType.dbValue,
+          'image_url': imageUrl,
+        })
+        .select()
+        .single();
+
+    return StreamerCustomPlaceholderModel.fromRow(row);
+  }
+
+  /// Every card this signed-in streamer has submitted, newest first, in any
+  /// status -- what the editor sheet needs to show Pending/Approved/Rejected.
+  Future<List<StreamerCustomPlaceholderModel>> loadMyCustomPlaceholders() async {
+    if (!_useSupabase) return const [];
+    final streamerId = _client.auth.currentUser?.id;
+    if (streamerId == null) return const [];
+    final rows = await _client
+        .from('streamer_custom_placeholders')
+        .select()
+        .eq('streamer_id', streamerId)
+        .order('created_at', ascending: false);
+    return rows
+        .map<StreamerCustomPlaceholderModel>(
+            (r) => StreamerCustomPlaceholderModel.fromRow(r))
+        .toList();
+  }
+
+  /// The admin review queue: every card still awaiting a decision, with the
+  /// submitting streamer's display name resolved for the queue card.
+  Future<List<StreamerCustomPlaceholderModel>>
+      loadPendingCustomPlaceholders() async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('streamer_custom_placeholders')
+        .select()
+        .eq('status', 'pending')
+        .order('created_at', ascending: false);
+    if (rows.isEmpty) return const [];
+
+    final profiles = await _resolveProfileSummaries(
+      rows.map((r) => r['streamer_id'] as String?).toSet(),
+    );
+
+    return rows.map<StreamerCustomPlaceholderModel>((row) {
+      final profile = profiles[row['streamer_id'] as String];
+      return StreamerCustomPlaceholderModel.fromRow(
+        row,
+        streamerDisplayName: profile?['display_name_en'] as String? ??
+            profile?['email'] as String? ??
+            'Unknown streamer',
+      );
+    }).toList();
+  }
+
+  /// The approved card for one streamer/type pair, or null when they have
+  /// none -- the direct question StreamStatePlaceholderOverlay asks before
+  /// falling back to the system default.
+  Future<String?> loadApprovedPlaceholderUrl({
+    required String streamerId,
+    required StreamPlaceholderType placeholderType,
+  }) async {
+    if (!_useSupabase) return null;
+    if (!_looksLikeUuid(streamerId)) return null;
+    final rows = await _client
+        .from('streamer_custom_placeholders')
+        .select('image_url')
+        .eq('streamer_id', streamerId)
+        .eq('placeholder_type', placeholderType.dbValue)
+        .eq('status', 'approved')
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return rows.first['image_url'] as String?;
+  }
+
+  Future<void> approveCustomPlaceholder(String placeholderId) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    await _client.from('streamer_custom_placeholders').update({
+      'status': 'approved',
+      'rejection_reason': null,
+      'reviewed_at': DateTime.now().toUtc().toIso8601String(),
+      'reviewed_by': _client.auth.currentUser?.id,
+    }).eq('id', placeholderId);
+  }
+
+  /// Rejection always carries a reason -- the DB check constraint rejects a
+  /// blank one, so this guard fails fast with a message a UI can show
+  /// instead of surfacing a raw constraint violation.
+  Future<void> rejectCustomPlaceholder({
+    required String placeholderId,
+    required String reason,
+  }) async {
+    if (!_useSupabase) throw Exception('Supabase not available');
+    final trimmed = reason.trim();
+    if (trimmed.isEmpty) {
+      throw Exception('A rejection reason is required.');
+    }
+    await _client.from('streamer_custom_placeholders').update({
+      'status': 'rejected',
+      'rejection_reason': trimmed,
+      'reviewed_at': DateTime.now().toUtc().toIso8601String(),
+      'reviewed_by': _client.auth.currentUser?.id,
+    }).eq('id', placeholderId);
   }
 }

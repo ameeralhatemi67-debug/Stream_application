@@ -14,6 +14,7 @@ class VlcPlayerAdapter extends AbstractVideoPlayer {
     super.onStateChanged,
     super.onError,
     super.aspectRatio = 16 / 9,
+    super.preferredQuality = 'auto',
   });
 
   @override

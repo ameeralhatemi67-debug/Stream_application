@@ -1,8 +1,8 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import '../../../../core/theme/app_theme.dart';
 import '../abstract_video_player.dart';
+import '../widgets/stream_state_placeholder_overlay.dart';
 
 /// Concrete player adapter using an embedded WebViewController to render
 /// MediaMTX's working HLS live stream player (http://IP:8888/live/demo/).
@@ -15,6 +15,7 @@ class WebLivePlayerAdapter extends AbstractVideoPlayer {
     super.onStateChanged,
     super.onError,
     super.aspectRatio = 16 / 9,
+    super.preferredQuality = 'auto',
   });
 
   @override
@@ -112,71 +113,32 @@ class _WebLivePlayerAdapterState extends State<WebLivePlayerAdapter> {
             if (!_hasError)
               WebViewWidget(controller: _webViewController),
 
-            if (_isLoading)
-              const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: AppTheme.accentBlue),
-                    SizedBox(height: AppTheme.spaceMd),
-                    Text(
-                      'Loading Live Stream Viewport...',
-                      style: TextStyle(color: Colors.white70, fontSize: 13),
-                    ),
-                  ],
-                ),
-              ),
-
-            if (_hasError)
-              Container(
-                color: Colors.black87,
-                padding: const EdgeInsets.all(AppTheme.spaceLg),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Icon(Icons.wifi_off_rounded,
-                        color: AppTheme.accentRed, size: 44),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'Unable to Connect to Web Stream',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _errorMessage.isNotEmpty
-                          ? _errorMessage
-                          : widget.streamUrl,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                          color: AppTheme.accentBlue, fontSize: 12),
-                    ),
-                    const SizedBox(height: 16),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        setState(() {
-                          _hasError = false;
-                          _isLoading = true;
-                        });
-                        _webViewController
-                            .loadRequest(Uri.parse(widget.streamUrl));
-                      },
-                      icon: const Icon(Icons.refresh, size: 16),
-                      label: const Text('Reload Live Player'),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentRed,
-                        foregroundColor: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
+            // Cluster 1 Task 4a -- loading and error share the one
+            // placeholder surface every adapter now uses, instead of this
+            // adapter's own hardcoded-English spinner and error card.
+            if (_isLoading || _hasError)
+              StreamStatePlaceholderOverlay(
+                streamState: _hasError
+                    ? StreamState.fallbackError
+                    : StreamState.initializing,
+                errorDetail: _hasError
+                    ? (_errorMessage.isNotEmpty
+                        ? _errorMessage
+                        : widget.streamUrl)
+                    : null,
+                onRetry: _hasError ? _reloadStream : null,
               ),
           ],
         ),
       ),
     );
+  }
+
+  void _reloadStream() {
+    setState(() {
+      _hasError = false;
+      _isLoading = true;
+    });
+    _webViewController.loadRequest(Uri.parse(widget.streamUrl));
   }
 }

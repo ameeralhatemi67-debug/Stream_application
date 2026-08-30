@@ -337,4 +337,63 @@ void main() {
       expect(engine.maxReconnectAttempts, isNull);
     },
   );
+
+  // ==========================================
+  // Cluster 1 Task 1 -- Mic Silence / Mute Detection
+  // ==========================================
+
+  test('isMicSilent flips with an explicit mute and clears on unmute',
+      () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
+
+    final engine = RtmpPublishEngine();
+    final observed = <bool>[];
+    engine.isMicSilent.addListener(() => observed.add(engine.isMicSilent.value));
+
+    expect(engine.isMicSilent.value, isFalse);
+
+    // A muted MicrophoneSource stops producing frames entirely, so mute has
+    // to flip this immediately rather than waiting on a level sample that
+    // will never arrive.
+    await engine.setMuted(true);
+    expect(engine.isMuted, isTrue);
+    expect(engine.isMicSilent.value, isTrue);
+
+    await engine.setMuted(false);
+    expect(engine.isMicSilent.value, isFalse);
+
+    expect(observed, [true, false]);
+  });
+
+  test('a failed setMuted leaves the silence flag untouched', () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      throw PlatformException(code: 'MUTE_FAILED', message: 'no mic source');
+    });
+
+    final engine = RtmpPublishEngine();
+    await engine.setMuted(true);
+
+    // The mic was never actually muted, so telling viewers it was would be a
+    // lie -- the badge must track the real device state, not the intent.
+    expect(engine.isMuted, isFalse);
+    expect(engine.isMicSilent.value, isFalse);
+    expect(engine.lastError, 'no mic source');
+  });
+
+  test('stopPublishing clears a lingering mute so the badge does not stick',
+      () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
+
+    final engine = RtmpPublishEngine();
+    await engine.setMuted(true);
+    expect(engine.isMicSilent.value, isTrue);
+
+    await engine.stopPublishing();
+
+    // The broadcast is over; a "Streamer Microphone Muted" badge left
+    // standing on an ended stream is worse than no badge at all.
+    expect(engine.state, RtmpPublishState.stopped);
+    expect(engine.isMicSilent.value, isFalse);
+    expect(engine.lastMicRms, isNull);
+  });
 }

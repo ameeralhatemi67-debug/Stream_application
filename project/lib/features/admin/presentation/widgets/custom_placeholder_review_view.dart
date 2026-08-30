@@ -1,0 +1,322 @@
+import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/theme/app_theme.dart';
+import '../../../../core/providers/app_provider.dart';
+import '../../models/streamer_custom_placeholder_model.dart';
+
+/// Streamer Custom Stream-Card Review Queue (Cluster 1 Task 4b).
+///
+/// Admin-tier surface for the artwork streamers upload to replace the
+/// "Starting Soon" / "Break" / "Ended" placeholders. Approving activates the
+/// card for every viewer of that streamer; rejecting requires a reason,
+/// which is dispatched to the streamer as an
+/// [NotificationType.adminCardEditRequestStreamer] notification so they know
+/// what to fix.
+///
+/// The queue is UX for an admin-tier account, not the security boundary: the
+/// streamer_custom_placeholders RLS policies (20260830120000) already make
+/// the update path admin-only and make unapproved cards unreadable by
+/// viewers, so an unmoderated upload is inert regardless of this screen.
+class CustomPlaceholderReviewView extends StatefulWidget {
+  const CustomPlaceholderReviewView({super.key});
+
+  @override
+  State<CustomPlaceholderReviewView> createState() =>
+      _CustomPlaceholderReviewViewState();
+}
+
+class _CustomPlaceholderReviewViewState
+    extends State<CustomPlaceholderReviewView> {
+  final Set<String> _actingOnIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    context.read<AppProvider>().ensureCustomPlaceholdersLoaded();
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? AppTheme.accentRed : AppTheme.accentGreen,
+      ),
+    );
+  }
+
+  Future<void> _runAction(
+    StreamerCustomPlaceholderModel card,
+    Future<void> Function() action,
+    String successMessage,
+  ) async {
+    setState(() => _actingOnIds.add(card.id));
+    try {
+      await action();
+      _showToast(successMessage);
+    } catch (e) {
+      _showToast('Action failed: $e', isError: true);
+    } finally {
+      if (mounted) setState(() => _actingOnIds.remove(card.id));
+    }
+  }
+
+  Future<void> _approve(
+      AppProvider provider, StreamerCustomPlaceholderModel card) {
+    return _runAction(
+      card,
+      () => provider.approveCustomPlaceholder(card),
+      'admin.custom_card_approve_toast'.tr(),
+    );
+  }
+
+  /// Rejection is gated on a non-empty reason at three layers -- this
+  /// dialog's validator, AppProvider.rejectCustomPlaceholder, and the
+  /// table's own check constraint. The streamer's notification body *is*
+  /// this text, so "rejected, no reason given" is not a reachable state.
+  Future<void> _promptRejectionReason(
+      AppProvider provider, StreamerCustomPlaceholderModel card) async {
+    final controller = TextEditingController();
+    String? errorText;
+
+    final reason = await showDialog<String>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          backgroundColor: AppTheme.darkSurface2,
+          title: Text(
+            'admin.custom_card_reject_title'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textPrimaryDark,
+                fontSize: 15,
+                fontWeight: FontWeight.bold),
+          ),
+          content: TextField(
+            controller: controller,
+            autofocus: true,
+            maxLines: 3,
+            style: const TextStyle(
+                color: AppTheme.textPrimaryDark, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'admin.custom_card_reject_hint'.tr(),
+              errorText: errorText,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('common.cancel'.tr()),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.accentRed,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () {
+                final text = controller.text.trim();
+                if (text.isEmpty) {
+                  setDialogState(() => errorText =
+                      'admin.custom_card_reject_reason_required'.tr());
+                  return;
+                }
+                Navigator.of(dialogContext).pop(text);
+              },
+              child: Text('admin.btn_reject'.tr()),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    controller.dispose();
+    if (reason == null || !mounted) return;
+
+    await _runAction(
+      card,
+      () => provider.rejectCustomPlaceholder(
+        card,
+        reason: reason,
+        context: mounted ? context : null,
+      ),
+      'admin.custom_card_reject_toast'.tr(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.watch<AppProvider>();
+    final queue = provider.pendingCustomPlaceholders;
+
+    return RefreshIndicator(
+      onRefresh: provider.refreshCustomPlaceholders,
+      color: AppTheme.accentBlue,
+      backgroundColor: AppTheme.darkSurface2,
+      child: ListView(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: [
+          Text(
+            'admin.custom_cards_title'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontSize: 17,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceXs),
+          Text(
+            'admin.custom_cards_desc'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 12, height: 1.4),
+          ),
+          const SizedBox(height: AppTheme.spaceLg),
+          if (queue.isEmpty)
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurface1,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                border: Border.all(color: AppTheme.darkBorderSubtle),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.inbox_rounded,
+                      color: AppTheme.textMutedDark, size: 22),
+                  const SizedBox(width: AppTheme.spaceMd),
+                  Expanded(
+                    child: Text(
+                      'admin.custom_cards_empty'.tr(),
+                      style: const TextStyle(
+                          color: AppTheme.textSecondaryDark, fontSize: 12.5),
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...queue.map((card) => _buildQueueCard(provider, card)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQueueCard(
+      AppProvider provider, StreamerCustomPlaceholderModel card) {
+    final isBusy = _actingOnIds.contains(card.id);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.darkBorderSubtle),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The artwork itself, at the aspect ratio viewers will see it in.
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(AppTheme.radiusMd)),
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: Image.network(
+                card.imageUrl,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const ColoredBox(
+                  color: AppTheme.darkSurface3,
+                  child: Center(
+                    child: Icon(Icons.broken_image_outlined,
+                        color: AppTheme.textMutedDark, size: 28),
+                  ),
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceMd),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentBlue.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                      ),
+                      child: Text(
+                        card.placeholderType.labelKey.tr(),
+                        style: const TextStyle(
+                          color: AppTheme.accentBlue,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spaceSm),
+                    Expanded(
+                      child: Text(
+                        card.streamerDisplayName ?? card.streamerId,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppTheme.textPrimaryDark,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton.icon(
+                        onPressed: isBusy
+                            ? null
+                            : () => _promptRejectionReason(provider, card),
+                        icon: const Icon(Icons.block_rounded, size: 16),
+                        label: Text('admin.btn_reject'.tr()),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.accentRed,
+                          side: const BorderSide(color: AppTheme.accentRed),
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spaceMd),
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            isBusy ? null : () => _approve(provider, card),
+                        icon: isBusy
+                            ? const SizedBox(
+                                width: 14,
+                                height: 14,
+                                child: CircularProgressIndicator(
+                                    strokeWidth: 2, color: Colors.white),
+                              )
+                            : const Icon(Icons.check_circle_rounded, size: 16),
+                        label: Text('admin.btn_approve'.tr()),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.accentGreen,
+                          foregroundColor: AppTheme.darkBgBase,
+                          padding: const EdgeInsets.symmetric(vertical: 10),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

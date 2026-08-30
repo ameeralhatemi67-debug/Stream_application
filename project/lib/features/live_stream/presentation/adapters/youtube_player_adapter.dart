@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'package:webview_flutter_android/webview_flutter_android.dart';
 import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../abstract_video_player.dart';
+import '../widgets/stream_state_placeholder_overlay.dart';
 
 /// Concrete player adapter using an optimized [WebViewController] with
 /// Strategy 1 (strict-origin-when-cross-origin + youtube-nocookie.com)
@@ -18,11 +20,20 @@ class YouTubePlayerAdapter extends AbstractVideoPlayer {
     super.onStateChanged,
     super.onError,
     super.aspectRatio = 16 / 9,
+    super.preferredQuality = 'auto',
   });
 
   @override
   State<YouTubePlayerAdapter> createState() => _YouTubePlayerAdapterState();
 }
+
+/// The one origin this adapter ever loads from. ADR-006: the embed base URL
+/// and the referrer policy are load-bearing (they are what keeps YouTube from
+/// rejecting the embed with Error 150/152/153), so the `origin` query param
+/// below is derived from this constant rather than written out separately --
+/// an origin that disagrees with the document's own base URL is worse than
+/// no origin at all.
+const String _embedBaseUrl = 'https://www.youtube-nocookie.com';
 
 class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
   late final WebViewController _webViewController;
@@ -79,6 +90,9 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
                 });
                 widget.onPlayerReady?.call();
                 widget.onStateChanged?.call(StreamState.live);
+                // The iframe only exists once the document is parsed, so a
+                // quality chosen before this point is applied here.
+                _applyPreferredQuality();
               }
             },
             onWebResourceError: (WebResourceError error) {
@@ -117,6 +131,9 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
 
   void _loadVideoEmbed(String videoId) {
     if (kIsWeb) {
+      // No `origin` on web: the real origin there is the host page, which
+      // this adapter cannot know, and a mismatched origin is exactly what
+      // ADR-006's Error 150/153 work was about.
       final embedUrl =
           'https://www.youtube-nocookie.com/embed/$videoId?autoplay=${widget.autoPlay ? 1 : 0}&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1';
       try {
@@ -141,7 +158,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
 <body>
   <div class="video-container">
     <iframe
-      src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=${widget.autoPlay ? 1 : 0}&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1"
+      src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=${widget.autoPlay ? 1 : 0}&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&origin=$_embedBaseUrl"
       referrerpolicy="strict-origin-when-cross-origin"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
       allowfullscreen>
@@ -153,7 +170,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
 
       _webViewController.loadHtmlString(
         html,
-        baseUrl: 'https://www.youtube-nocookie.com',
+        baseUrl: _embedBaseUrl,
       );
     }
   }
@@ -167,6 +184,52 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
         _currentVideoId = newVideoId;
         _loadVideoEmbed(_currentVideoId);
       }
+    }
+    if (widget.preferredQuality != oldWidget.preferredQuality) {
+      _applyPreferredQuality();
+    }
+  }
+
+  /// YouTube's rendition names for the resolutions the overlay selector
+  /// offers. `auto` maps to `default`, which hands control back to
+  /// YouTube's own adaptive logic.
+  static const Map<String, String> _youtubeQualityNames = {
+    'auto': 'default',
+    '1080': 'hd1080',
+    '720': 'hd720',
+    '480': 'large',
+    '360': 'medium',
+  };
+
+  /// Pushes the viewer's chosen rendition to the embedded player over the
+  /// `enablejsapi=1` postMessage channel -- the same protocol the IFrame
+  /// Player API itself uses, so it needs no extra script in the page and,
+  /// crucially, does not reload the embed (which would interrupt a live
+  /// broadcast every time someone touched the selector).
+  ///
+  /// YouTube treats `setPlaybackQuality` as a *request*: it will refuse a
+  /// rendition the current stream does not publish, or override it when
+  /// bandwidth drops. That is the documented behaviour of the platform, not
+  /// a gap here -- the selector expresses a preference, it does not promise
+  /// a bitrate.
+  void _applyPreferredQuality() {
+    final quality = _youtubeQualityNames[widget.preferredQuality];
+    if (quality == null) return;
+    final js = '''
+(function() {
+  var frame = document.querySelector('iframe');
+  if (!frame || !frame.contentWindow) return;
+  frame.contentWindow.postMessage(JSON.stringify({
+    event: 'command',
+    func: 'setPlaybackQuality',
+    args: ['$quality']
+  }), '*');
+})();
+''';
+    try {
+      _webViewController.runJavaScript(js);
+    } catch (e) {
+      debugPrint('[YouTubePlayerAdapter] setPlaybackQuality failed: $e');
     }
   }
 
@@ -218,27 +281,22 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
             if (!_hasError)
               WebViewWidget(controller: _webViewController),
 
-            if (_isLoading)
-              const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(color: AppTheme.accentRed),
-                    SizedBox(height: AppTheme.spaceMd),
-                    Text(
-                      'Connecting to YouTube Feed...',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
+            // Task 4a: loading and error no longer get bespoke views here --
+            // both route through the one placeholder surface every adapter
+            // and the broadcast screen share.
+            if (_isLoading || _hasError)
+              StreamStatePlaceholderOverlay(
+                streamState: _hasError
+                    ? StreamState.fallbackError
+                    : StreamState.initializing,
+                errorDetail: _hasError
+                    ? (_errorMessage.isNotEmpty
+                        ? _errorMessage
+                        : 'Video ID: $_currentVideoId')
+                    : null,
+                onRetry: _hasError ? _retryPlayback : null,
+                onOpenInYouTube: _hasError ? _openInYouTubeApp : null,
               ),
-
-            if (_hasError)
-              _buildErrorView(),
 
             // Engine badge overlay
             Positioned(
@@ -280,50 +338,27 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
     );
   }
 
-  Widget _buildErrorView() {
-    return Container(
-      color: Colors.black87,
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.live_tv_rounded,
-              color: AppTheme.accentRed, size: 44),
-          const SizedBox(height: 12),
-          const Text(
-            'Live Stream Offline or Connecting',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            _errorMessage.isNotEmpty
-                ? _errorMessage
-                : 'Video ID: $_currentVideoId',
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: AppTheme.accentBlue, fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              setState(() {
-                _hasError = false;
-                _isLoading = true;
-              });
-              _loadVideoEmbed(_currentVideoId);
-            },
-            icon: const Icon(Icons.refresh, size: 16),
-            label: const Text('Retry Playback'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentRed,
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
+  void _retryPlayback() {
+    setState(() {
+      _hasError = false;
+      _isLoading = true;
+    });
+    _loadVideoEmbed(_currentVideoId);
+  }
+
+  /// Task 5 -- the escape hatch for an embed YouTube refuses to serve in a
+  /// WebView at all (age-gated, embedding-disabled, or a device whose
+  /// WebView is too old). The native YouTube app has none of those
+  /// restrictions, so hand the video off rather than leaving the viewer
+  /// staring at a retry button that will keep failing.
+  Future<void> _openInYouTubeApp() async {
+    final url = Uri.parse('https://www.youtube.com/watch?v=$_currentVideoId');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('[YouTubePlayerAdapter] openInYouTube failed: $e');
+    }
   }
 }

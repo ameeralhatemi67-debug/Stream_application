@@ -52,6 +52,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
   void initState() {
     super.initState();
     _engine.addListener(_onEngineChanged);
+    _engine.isMicSilent.addListener(_onMicSilenceChanged);
     _preset = widget.quickLaunchPreset ?? BroadcastQualityPreset.medium;
     _presetConfirmed = widget.quickLaunchPreset != null;
 
@@ -178,9 +179,22 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
 
   void _onEngineChanged() => setState(() {});
 
+  /// Cluster 1 Task 1 -- publishes the broadcaster's mute/silence state so
+  /// the viewer-facing player overlay can show the "Streamer Microphone
+  /// Muted" badge instead of leaving viewers to guess whether their own
+  /// audio broke. AppProvider is the seam here; a future Realtime
+  /// stream-metadata channel replaces this local hop without either the
+  /// engine or the overlay changing.
+  void _onMicSilenceChanged() {
+    if (!_appProviderCaptured) return;
+    _appProvider.setStreamerMicMuted(_engine.isMicSilent.value);
+  }
+
   @override
   void dispose() {
     _engine.removeListener(_onEngineChanged);
+    _engine.isMicSilent.removeListener(_onMicSilenceChanged);
+    if (_appProviderCaptured) _appProvider.setStreamerMicMuted(false);
     if (_weStartedBroadcast && _appProvider.isBroadcastingLive) {
       // Deferred to a microtask: AppRouter is built with
       // refreshListenable: provider (ADR-001), so toggleBroadcasterGoLive's

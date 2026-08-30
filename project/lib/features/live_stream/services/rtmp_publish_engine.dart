@@ -94,6 +94,39 @@ class RtmpPublishEngine extends ChangeNotifier {
   bool _isMuted = false;
   bool get isMuted => _isMuted;
 
+  /// Cluster 1 Task 1 -- "viewers are hearing nothing, and it is the
+  /// broadcaster's doing", exposed as a [ValueNotifier] so the viewer-facing
+  /// badge can rebuild on its own without dragging the whole broadcast
+  /// screen through a setState on every RMS sample.
+  ///
+  /// Two independent sources feed it:
+  ///  * [setMuted] -- an explicit mute, true the instant the streamer taps
+  ///    it (no waiting on an audio sample that will never arrive, since a
+  ///    muted MicrophoneSource stops producing frames entirely); and
+  ///  * the native `audioLevel` event -- an unmuted mic that has been below
+  ///    [_silenceRmsThreshold] continuously for [_silenceGracePeriod].
+  ///
+  /// The grace period is what keeps this from flickering on every natural
+  /// pause between sentences.
+  final ValueNotifier<bool> isMicSilent = ValueNotifier<bool>(false);
+
+  /// Most recent normalised (0.0-1.0) microphone RMS reported by the native
+  /// encoder, or null when the platform has not reported one yet.
+  double? _lastMicRms;
+  double? get lastMicRms => _lastMicRms;
+
+  /// Below this normalised RMS the mic is treated as producing silence
+  /// rather than quiet speech -- roughly -40 dBFS, comfortably under normal
+  /// room tone but above a truly dead input.
+  static const double _silenceRmsThreshold = 0.01;
+
+  /// How long the level has to stay under the threshold before viewers are
+  /// told the broadcaster is silent.
+  static const Duration _silenceGracePeriod = Duration(seconds: 3);
+
+  Timer? _silenceTimer;
+  bool _silentByLevel = false;
+
   bool _isAudioOnly = false;
   bool get isAudioOnly => _isAudioOnly;
 
@@ -203,6 +236,15 @@ class RtmpPublishEngine extends ChangeNotifier {
       _lastBitrateBps = null;
       _reconnectAttempt = null;
       _maxReconnectAttempts = null;
+      _silenceTimer?.cancel();
+      _silenceTimer = null;
+      _lastMicRms = null;
+      // Mute is a property of a *live* MicrophoneSource, and stopping tears
+      // that source down -- carrying the flag over would both strand a
+      // "Streamer Microphone Muted" badge on an ended broadcast and make a
+      // restarted one report a mute the native encoder no longer holds.
+      _isMuted = false;
+      _applySilenceState(levelIsSilent: false);
       _setState(RtmpPublishState.stopped);
     }
   }
@@ -211,11 +253,39 @@ class RtmpPublishEngine extends ChangeNotifier {
     try {
       await _channel.invokeMethod<void>('setMuted', {'muted': muted});
       _isMuted = muted;
+      _applySilenceState();
       notifyListeners();
     } on PlatformException catch (e) {
       _lastError = e.message ?? e.code;
       notifyListeners();
     }
+  }
+
+  /// Folds an incoming microphone level into [isMicSilent].
+  ///
+  /// A level at or above the threshold clears silence immediately (the
+  /// broadcaster started talking again -- no reason to make viewers wait);
+  /// a level below it only arms a timer, so the flag flips on sustained
+  /// silence rather than on the gaps between words.
+  void _handleMicLevel(double rms) {
+    _lastMicRms = rms;
+    if (rms >= _silenceRmsThreshold) {
+      _silenceTimer?.cancel();
+      _silenceTimer = null;
+      _applySilenceState(levelIsSilent: false);
+      return;
+    }
+    if (isMicSilent.value || _silenceTimer != null) return;
+    _silenceTimer = Timer(_silenceGracePeriod, () {
+      _silenceTimer = null;
+      _applySilenceState(levelIsSilent: true);
+    });
+  }
+
+  void _applySilenceState({bool? levelIsSilent}) {
+    final silentByLevel = levelIsSilent ?? _silentByLevel;
+    _silentByLevel = silentByLevel;
+    isMicSilent.value = _isMuted || silentByLevel;
   }
 
   void _onEvent(dynamic event) {
@@ -247,6 +317,18 @@ class RtmpPublishEngine extends ChangeNotifier {
       case 'bitrate':
         _lastBitrateBps = (event['value'] as num?)?.toInt();
         notifyListeners();
+        break;
+      case 'audioLevel':
+        // Normalised 0.0-1.0 RMS from the native encoder. The Android
+        // bridge does not emit this yet (v0.7 shipped mute-only), so on
+        // today's devices isMicSilent is driven purely by setMuted -- this
+        // arm is the Dart half of the level pipeline, ready for the encoder
+        // to start reporting without another Dart-side change.
+        final rms = (event['rms'] as num?)?.toDouble();
+        if (rms != null) {
+          _handleMicLevel(rms.clamp(0.0, 1.0));
+          notifyListeners();
+        }
         break;
       case 'error':
         _reconnectAttempt = null;
@@ -303,6 +385,8 @@ class RtmpPublishEngine extends ChangeNotifier {
   @override
   void dispose() {
     _watchdogTimer?.cancel();
+    _silenceTimer?.cancel();
+    isMicSilent.dispose();
     _eventSub?.cancel();
     _channel.invokeMethod<void>('dispose').catchError((_) {});
     super.dispose();

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/feature_in_progress_modal.dart';
 import '../../../live_stream/presentation/adapters/youtube_player_adapter.dart';
@@ -177,6 +178,28 @@ class VodPlayerModalSheet extends StatelessWidget {
 
                     const SizedBox(height: AppTheme.spaceLg),
 
+                    // Cluster 1 Task 5 -- the escape hatch for a VOD the
+                    // in-app WebView cannot play (embedding disabled by the
+                    // uploader, age-gated, or an outdated system WebView).
+                    // Always offered, not only after a visible failure: by
+                    // the time a viewer decides the embed is broken they
+                    // have usually already given up on this sheet.
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => _openInYouTube(vod.youtubeVideoId),
+                        icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                        label: Text('live.open_in_youtube'.tr()),
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.accentRed,
+                          side: const BorderSide(color: AppTheme.accentRed),
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: AppTheme.spaceMd),
+
                     // Interactive Action Buttons Bar
                     Row(
                       children: [
@@ -221,6 +244,19 @@ class VodPlayerModalSheet extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _openInYouTube(String videoId) async {
+    final id = videoId.trim();
+    if (id.isEmpty) return;
+    final url = Uri.parse('https://www.youtube.com/watch?v=$id');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('[VodPlayerModalSheet] openInYouTube failed: $e');
+    }
   }
 
   Widget _buildStatChip({

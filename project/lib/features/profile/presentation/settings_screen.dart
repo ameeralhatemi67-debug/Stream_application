@@ -14,6 +14,7 @@ import '../../admin/models/broadcaster_application_model.dart';
 import '../../admin/models/terms_and_conditions_model.dart';
 import '../../../core/services/notifications/notification_models.dart';
 import 'widgets/broadcaster_application_sheet.dart';
+import 'widgets/custom_stream_cards_section.dart';
 import 'widgets/legal_document_reader_screen.dart';
 
 class SettingsScreen extends StatefulWidget {
@@ -2524,7 +2525,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildStreamerStudioCard(context, provider),
           const SizedBox(height: AppTheme.spaceMd),
           _buildStreamingQualityCard(context, provider),
+          const SizedBox(height: AppTheme.spaceMd),
+          _buildCustomStreamCardsEntry(context),
         ],
+      ),
+    );
+  }
+
+  /// Cluster 1 Task 4b -- the streamer's own way into the custom stream-card
+  /// slots. StreamerEditorSheet also hosts them, but that sheet is only
+  /// reachable from the Admin Hub, so without this entry point a broadcaster
+  /// who is not also an admin could never upload a card.
+  Widget _buildCustomStreamCardsEntry(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.darkBorderSubtle),
+      ),
+      child: ListTile(
+        leading: const Icon(Icons.photo_library_rounded,
+            color: AppTheme.accentBlue, size: 20),
+        title: Text(
+          'settings.custom_cards_section'.tr(),
+          style: const TextStyle(
+            color: AppTheme.textPrimaryDark,
+            fontSize: 13,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        subtitle: Text(
+          'settings.custom_cards_desc'.tr(),
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: const TextStyle(
+              color: AppTheme.textSecondaryDark, fontSize: 11),
+        ),
+        trailing: const Icon(Icons.chevron_right_rounded,
+            color: AppTheme.textMutedDark, size: 20),
+        onTap: () => CustomStreamCardsSection.show(context),
       ),
     );
   }

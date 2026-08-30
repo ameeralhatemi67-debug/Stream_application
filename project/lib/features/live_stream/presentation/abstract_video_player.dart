@@ -17,13 +17,22 @@ enum StreamSourceType {
 }
 
 /// Lifecycle states of a video stream playback session.
+///
+/// Cluster 1 Task 4a added [startingSoon], [reconnecting] and [noAudioToken]
+/// so `StreamStatePlaceholderOverlay` can distinguish "the broadcast hasn't
+/// begun yet", "we lost the feed and are retrying" and "the audio token
+/// couldn't be synced" from the generic [offline]/[fallbackError] pair the
+/// player adapters used to collapse all three into.
 enum StreamState {
   initializing,
+  startingSoon,
   live,
   paused,
   buffering,
+  reconnecting,
   ended,
   offline,
+  noAudioToken,
   fallbackError,
 }
 
@@ -39,6 +48,12 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
   final ValueChanged<String>? onError;
   final double aspectRatio;
 
+  /// The rendition the viewer pinned in the overlay's quality selector --
+  /// `auto | 1080 | 720 | 480 | 360` (Cluster 1 Task 2). Adapters that can
+  /// honour it do; the rest ignore it. `auto` means "let the engine's own
+  /// adaptive logic decide", which is the default.
+  final String preferredQuality;
+
   const AbstractVideoPlayer({
     super.key,
     required this.streamUrl,
@@ -47,6 +62,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     this.onStateChanged,
     this.onError,
     this.aspectRatio = 16 / 9,
+    this.preferredQuality = 'auto',
   });
 
   /// Polymorphic factory constructor instantiating concrete player adapters based on [sourceType].
@@ -59,6 +75,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     ValueChanged<StreamState>? onStateChanged,
     ValueChanged<String>? onError,
     double aspectRatio = 16 / 9,
+    String preferredQuality = 'auto',
   }) {
     switch (sourceType) {
       case StreamSourceType.localRtmp:
@@ -70,6 +87,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
           onStateChanged: onStateChanged,
           onError: onError,
           aspectRatio: aspectRatio,
+          preferredQuality: preferredQuality,
         );
       case StreamSourceType.awsIvsHls:
         return AwsIvsPlayerAdapter(
@@ -80,6 +98,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
           onStateChanged: onStateChanged,
           onError: onError,
           aspectRatio: aspectRatio,
+          preferredQuality: preferredQuality,
         );
       case StreamSourceType.youtubeEmbed:
         return YouTubePlayerAdapter(
@@ -90,6 +109,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
           onStateChanged: onStateChanged,
           onError: onError,
           aspectRatio: aspectRatio,
+          preferredQuality: preferredQuality,
         );
     }
   }

@@ -31,6 +31,7 @@ import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/admin/models/chat_report_model.dart';
+import '../../features/admin/models/streamer_custom_placeholder_model.dart';
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -106,6 +107,24 @@ class AppProvider extends ChangeNotifier {
   List<ChatReportModel> _chatReports = [];
   bool _chatReportsLoaded = false;
 
+  // Streamer Custom Stream-State Cards (Cluster 1 Task 4b). Three separate
+  // slices, because they answer three different questions:
+  //  * _pendingCustomPlaceholders -- the admin review queue;
+  //  * _myCustomPlaceholders -- what the signed-in streamer has submitted,
+  //    in any status, for the editor sheet's Pending/Rejected chips;
+  //  * _approvedPlaceholderUrls -- the playback-time lookup, keyed
+  //    'streamerId::placeholder_type', holding only approved artwork.
+  List<StreamerCustomPlaceholderModel> _pendingCustomPlaceholders = [];
+  List<StreamerCustomPlaceholderModel> _myCustomPlaceholders = [];
+  final Map<String, String> _approvedPlaceholderUrls = {};
+  bool _customPlaceholdersLoaded = false;
+
+  // Streamer Silence / Mic Mute (Cluster 1 Task 1) -- set by the broadcaster
+  // side (PhoneBroadcastScreen, from RtmpPublishEngine.isMicSilent), read by
+  // the viewer side to decide whether to show the "Streamer Microphone
+  // Muted" badge.
+  bool _isStreamerMicMuted = false;
+
   bool _isStreamerModeEnabled =
       false; // Toggle between Streamer and Viewer modes
   bool _isPitchDirectorModeEnabled = false;
@@ -141,6 +160,7 @@ class AppProvider extends ChangeNotifier {
   String _miniPlayerTitle = 'Advanced Artificial Intelligence Lecture';
   String _miniPlayerStreamerName = 'Amir Al-Hatemi';
   String? _miniPlayerStreamId;
+  bool _isMiniPlayerAudioOnly = false;
 
   // Streamer Custom YouTube Broadcast Studio State
   String _customYouTubeLiveUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
@@ -1174,6 +1194,7 @@ class AppProvider extends ChangeNotifier {
   String get miniPlayerTitle => _miniPlayerTitle;
   String get miniPlayerStreamerName => _miniPlayerStreamerName;
   String? get miniPlayerStreamId => _miniPlayerStreamId;
+  bool get isMiniPlayerAudioOnly => _isMiniPlayerAudioOnly;
 
   // Streamer Custom Broadcast Studio Getters
   String get customYouTubeLiveUrl => _customYouTubeLiveUrl;
@@ -2015,6 +2036,7 @@ class AppProvider extends ChangeNotifier {
     required String title,
     required String streamerName,
     String? streamId,
+    bool isAudioOnly = false,
   }) {
     _isMiniPlayerActive = true;
     _isMiniPlayerPlaying = true;
@@ -2022,8 +2044,26 @@ class AppProvider extends ChangeNotifier {
     _miniPlayerTitle = title;
     _miniPlayerStreamerName = streamerName;
     _miniPlayerStreamId = streamId;
+    _isMiniPlayerAudioOnly = isAudioOnly;
     notifyListeners();
   }
+
+  /// Alias kept for the Cluster 1 Task 6 call site naming; identical
+  /// behaviour to [launchMiniPlayer].
+  void openMiniPlayer({
+    required String videoId,
+    required String title,
+    required String streamerName,
+    String? streamId,
+    bool isAudioOnly = false,
+  }) =>
+      launchMiniPlayer(
+        videoId: videoId,
+        title: title,
+        streamerName: streamerName,
+        streamId: streamId,
+        isAudioOnly: isAudioOnly,
+      );
 
   void closeMiniPlayer() {
     _isMiniPlayerActive = false;
@@ -3200,6 +3240,172 @@ class AppProvider extends ChangeNotifier {
       reportId: report.id,
     );
     await _refreshChatReports();
+  }
+
+  // ==========================================
+  // Streamer Silence / Mic Mute (Cluster 1 Task 1)
+  // ==========================================
+
+  bool get isStreamerMicMuted => _isStreamerMicMuted;
+
+  /// Called from the broadcaster side whenever RtmpPublishEngine.isMicSilent
+  /// changes -- either an explicit mute or sustained silence. Viewers read
+  /// [isStreamerMicMuted] to decide whether to show the badge, so this is
+  /// the seam a future Realtime stream-metadata channel plugs into without
+  /// touching either the engine or the player overlay.
+  void setStreamerMicMuted(bool muted) {
+    if (_isStreamerMicMuted == muted) return;
+    _isStreamerMicMuted = muted;
+    notifyListeners();
+  }
+
+  // ==========================================
+  // Streamer Custom Stream-State Cards (Cluster 1 Task 4b)
+  // ==========================================
+
+  List<StreamerCustomPlaceholderModel> get pendingCustomPlaceholders =>
+      List.unmodifiable(_pendingCustomPlaceholders);
+
+  List<StreamerCustomPlaceholderModel> get myCustomPlaceholders =>
+      List.unmodifiable(_myCustomPlaceholders);
+
+  /// The most recent submission of [type] by the signed-in streamer, or null
+  /// if they have never uploaded one. Drives the editor sheet's per-slot
+  /// preview and status chip.
+  StreamerCustomPlaceholderModel? myPlaceholderFor(StreamPlaceholderType type) {
+    for (final p in _myCustomPlaceholders) {
+      if (p.placeholderType == type) return p;
+    }
+    return null;
+  }
+
+  static String _placeholderCacheKey(
+          String streamerId, StreamPlaceholderType type) =>
+      '$streamerId::${type.dbValue}';
+
+  /// The approved custom card for a streamer/state pair, or null -- in which
+  /// case StreamStatePlaceholderOverlay renders the default system
+  /// placeholder. Reads the local cache only; call
+  /// [ensureApprovedPlaceholderLoaded] to populate it.
+  String? approvedPlaceholderImageUrl(
+    String streamerId,
+    StreamPlaceholderType type,
+  ) =>
+      _approvedPlaceholderUrls[_placeholderCacheKey(streamerId, type)];
+
+  /// Fetches (once per streamer/type per session) the approved card for a
+  /// stream about to render a placeholder. A miss is cached as "no custom
+  /// card" by simply leaving the key absent, so a streamer with no artwork
+  /// does not re-query on every state change.
+  Future<void> ensureApprovedPlaceholderLoaded(
+    String streamerId,
+    StreamPlaceholderType type,
+  ) async {
+    final key = _placeholderCacheKey(streamerId, type);
+    if (_approvedPlaceholderUrls.containsKey(key)) return;
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      final url = await _adminDbService!.loadApprovedPlaceholderUrl(
+        streamerId: streamerId,
+        placeholderType: type,
+      );
+      if (url == null || url.isEmpty) return;
+      _approvedPlaceholderUrls[key] = url;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('ensureApprovedPlaceholderLoaded failed: $e');
+    }
+  }
+
+  /// Loads the admin review queue plus this streamer's own submissions.
+  /// Safe to call repeatedly (same one-shot caching shape as
+  /// ensureChatReportsLoaded).
+  Future<void> ensureCustomPlaceholdersLoaded() async {
+    if (_customPlaceholdersLoaded) return;
+    _customPlaceholdersLoaded = true;
+    await refreshCustomPlaceholders();
+  }
+
+  Future<void> refreshCustomPlaceholders() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _pendingCustomPlaceholders =
+          await _adminDbService!.loadPendingCustomPlaceholders();
+      _myCustomPlaceholders =
+          await _adminDbService!.loadMyCustomPlaceholders();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshCustomPlaceholders failed: $e');
+    }
+  }
+
+  /// Streamer-side upload. Returns the created submission, or null when
+  /// there is no backend to record it in -- the caller shows the "upload
+  /// failed" toast in that case rather than pretending it queued.
+  Future<StreamerCustomPlaceholderModel?> submitCustomPlaceholder({
+    required StreamPlaceholderType placeholderType,
+    required String fileName,
+    required Uint8List fileBytes,
+    String contentType = 'image/jpeg',
+  }) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    final created = await _adminDbService!.submitCustomPlaceholder(
+      placeholderType: placeholderType,
+      fileName: fileName,
+      fileBytes: fileBytes,
+      contentType: contentType,
+    );
+    if (created != null) {
+      _myCustomPlaceholders = [
+        created,
+        ..._myCustomPlaceholders
+            .where((p) => p.placeholderType != placeholderType),
+      ];
+      notifyListeners();
+    }
+    return created;
+  }
+
+  Future<void> approveCustomPlaceholder(
+      StreamerCustomPlaceholderModel placeholder) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.approveCustomPlaceholder(placeholder.id);
+    // The approved artwork becomes live immediately, so refresh the playback
+    // cache entry rather than leaving a stale "no custom card" miss behind.
+    _approvedPlaceholderUrls[_placeholderCacheKey(
+        placeholder.streamerId, placeholder.placeholderType)] =
+        placeholder.imageUrl;
+    await refreshCustomPlaceholders();
+  }
+
+  /// Rejection is the only path that notifies the streamer, and it always
+  /// carries the admin's reason -- Trigger 10's card-edit-request
+  /// notification is what tells them what to fix.
+  Future<void> rejectCustomPlaceholder(
+    StreamerCustomPlaceholderModel placeholder, {
+    required String reason,
+    BuildContext? context,
+  }) async {
+    final trimmed = reason.trim();
+    if (trimmed.isEmpty) {
+      throw Exception('A rejection reason is required.');
+    }
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.rejectCustomPlaceholder(
+      placeholderId: placeholder.id,
+      reason: trimmed,
+    );
+    _approvedPlaceholderUrls.remove(_placeholderCacheKey(
+        placeholder.streamerId, placeholder.placeholderType));
+    // The notification itself is unconditional -- a rejection the streamer
+    // never hears about is the failure mode this pipeline exists to avoid.
+    // Only the optional in-app toast overlay needs a still-mounted context.
+    notifyAdminCardEditRequestStreamer(
+      fieldsEn: trimmed,
+      fieldsAr: trimmed,
+      context: (context != null && context.mounted) ? context : null,
+    );
+    await refreshCustomPlaceholders();
   }
 
   /// Best-effort Supabase write-through for org venue/speaker mutations --

@@ -5,6 +5,7 @@ import 'package:top_snackbar_flutter/top_snack_bar.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/streamer_models.dart';
+import 'custom_stream_cards_section.dart';
 
 class StreamerEditorSheet extends StatefulWidget {
   final StreamerModel? existingStreamer;
@@ -79,24 +80,20 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
     if (s != null && supportedCities.contains(s.cityEn)) {
       _selectedCity = s.cityEn;
     }
+
   }
 
-  @override
-  void dispose() {
-    _scrollController.dispose();
-    _nameEnController.dispose();
-    _nameArController.dispose();
-    _titleEnController.dispose();
-    _titleArController.dispose();
-    _orgController.dispose();
-    _bioController.dispose();
-    _avatarUrlController.dispose();
-    _bannerUrlController.dispose();
-    _venueController.dispose();
-    _tagsController.dispose();
-    _youtubeController.dispose();
-    _streamKeyController.dispose();
-    super.dispose();
+  /// True when the signed-in account is editing its own broadcaster
+  /// profile, rather than an admin editing someone else's registry entry.
+  bool get _isEditingOwnProfile {
+    final provider = context.read<AppProvider>();
+    if (!provider.isLoggedInStreamer) return false;
+    final editedId = widget.existingStreamer?.streamerId;
+    if (editedId == null) return false;
+    // Streamer registry ids are the profile uuid for backend-backed
+    // broadcasters (see AdminDatabaseService.loadVerifiedStreamersFromBackend),
+    // so this is the same identity RLS will file the upload under.
+    return editedId == provider.currentUserId;
   }
 
   void _scrollToKey(GlobalKey key) {
@@ -557,6 +554,23 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                       prefixIcon: const Icon(Icons.key_rounded, size: 18, color: AppTheme.textMutedDark),
                     ),
                   ),
+                  // 12. Custom Stream Cards (Cluster 1 Task 4b).
+                  //
+                  // Only offered when the signed-in account is uploading its
+                  // own artwork. Cards are filed against auth.uid() by RLS,
+                  // so showing this while an admin edits somebody else's
+                  // registry entry would quietly file the streamer's card
+                  // under the admin's profile -- a wrong result is worse
+                  // than an absent control. Streamers reach the same slots
+                  // from Settings > Broadcaster Studio.
+                  if (_isEditingOwnProfile) ...[
+                    const SizedBox(height: 16),
+                    _buildSectionHeader(
+                        '12. ${'settings.custom_cards_section'.tr()}'),
+                    const SizedBox(height: 6),
+                    const CustomStreamCardsSection(showHeader: false),
+                  ],
+
                   const SizedBox(height: 24),
                 ],
               ),

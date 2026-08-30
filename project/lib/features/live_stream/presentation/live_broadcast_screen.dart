@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../models/chat_message_model.dart';
@@ -19,6 +22,8 @@ import 'widgets/live_player_overlay_controls.dart';
 import 'widgets/live_multi_speaker_overlay.dart';
 import 'widgets/live_audio_stage_multi_speaker.dart';
 import 'widgets/private_stream_viewer_gate.dart';
+import 'widgets/stream_state_placeholder_overlay.dart';
+import '../../admin/models/streamer_custom_placeholder_model.dart';
 import 'widgets/rtmp_ip_dialog.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
@@ -40,13 +45,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   late final GhostChatFallbackController _ghostChatController;
 
   late TabController _tabController;
-  StreamSourceType _sourceType = StreamSourceType.youtubeEmbed;
+  // Fixed to the YouTube embed engine (ADR-002). The overlay's selector no
+  // longer switches engines -- as of Cluster 1 Task 2 it picks a *resolution*
+  // (StreamQualityLevel), which is what its "1080p/720p/480p" labels always
+  // claimed to do.
+  final StreamSourceType _sourceType = StreamSourceType.youtubeEmbed;
   StreamState _streamState = StreamState.live;
   bool _isPlaying = true;
   bool _isMuted = false;
   bool _isFullscreen = false;
   bool _isHandRaised = false;
   bool _isReactionMenuOpen = false;
+  StreamQualityLevel _selectedQuality = StreamQualityLevel.auto;
 
   @override
   void initState() {
@@ -60,10 +70,38 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _ghostChatController =
         GhostChatFallbackController(streamId: widget.streamId);
     _chatController.addListener(_handleChatConnectionChange);
+    _setWakelock(true);
+  }
+
+  /// Cluster 1 Task 1 -- the audio-dropping fix. When the screen dims and
+  /// the OS suspends, Android throttles the WebView hosting the YouTube
+  /// embed and the audio track dies with it; holding a wakelock for the
+  /// lifetime of this screen is what keeps a lecture playing while the
+  /// viewer is not touching the phone.
+  ///
+  /// Best-effort by design: wakelock_plus has no implementation on some
+  /// desktop/test targets, and failing to hold a wakelock must never take
+  /// the broadcast screen down with it.
+  void _setWakelock(bool enable) {
+    try {
+      final future =
+          enable ? WakelockPlus.enable() : WakelockPlus.disable();
+      future.catchError((Object e) {
+        debugPrint('[LiveBroadcastScreen] wakelock unavailable: $e');
+      });
+    } catch (e) {
+      debugPrint('[LiveBroadcastScreen] wakelock unavailable: $e');
+    }
   }
 
   @override
   void dispose() {
+    _setWakelock(false);
+    // Always restore portrait + the normal system chrome, even if the user
+    // backed out of the room while still in fullscreen landscape -- leaving
+    // the app locked to landscape after this screen is gone would strand
+    // every other screen sideways.
+    _restorePortraitChrome();
     _tabController.dispose();
     _chatTextController.dispose();
     _chatScrollController.dispose();
@@ -71,6 +109,50 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _chatController.dispose();
     _ghostChatController.dispose();
     super.dispose();
+  }
+
+  void _restorePortraitChrome() {
+    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
+
+  /// Cluster 1 Task 3 -- the expand button is a *viewport* control, not just
+  /// a layout toggle: it rotates the device into landscape and hides the
+  /// system bars, then puts both back on exit.
+  void _handleToggleFullscreen() {
+    final entering = !_isFullscreen;
+    setState(() => _isFullscreen = entering);
+
+    if (entering) {
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      _restorePortraitChrome();
+    }
+  }
+
+  /// Cluster 1 Task 6 -- hand the running stream to the floating mini-player
+  /// and drop back to whichever tab (Feed or Map) the viewer came from.
+  /// Popping rather than pushing is what keeps the audio going: the
+  /// mini-player lives in the app shell above the navigator, so it survives
+  /// the route change.
+  void _minimizeToMiniPlayer(
+      AppProvider appProvider, StreamerModel streamer, String langCode) {
+    appProvider.openMiniPlayer(
+      videoId: _getStreamUrl(appProvider),
+      title: streamer.getLocalizedTitle(langCode),
+      streamerName: streamer.getLocalizedName(langCode),
+      streamId: widget.streamId,
+      isAudioOnly: streamer.isAudioLive,
+    );
+    if (context.canPop()) {
+      context.pop();
+    } else {
+      context.go('/');
+    }
   }
 
   /// Switches the chat tab to the simulated ghost-chat fallback the moment
@@ -149,6 +231,77 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         );
   }
 
+  /// Which of the three streamer-brandable states (Task 4b) the current
+  /// [_streamState] maps to, or null for the failure states -- a custom card
+  /// must never paper over "offline" or "playback failed", since hiding a
+  /// real fault behind branded artwork is worse than the plain default.
+  StreamPlaceholderType? get _brandablePlaceholderType {
+    switch (_streamState) {
+      case StreamState.startingSoon:
+        return StreamPlaceholderType.startingSoon;
+      case StreamState.paused:
+        return StreamPlaceholderType.intermission;
+      case StreamState.ended:
+        return StreamPlaceholderType.ending;
+      case StreamState.initializing:
+      case StreamState.live:
+      case StreamState.buffering:
+      case StreamState.reconnecting:
+      case StreamState.offline:
+      case StreamState.noAudioToken:
+      case StreamState.fallbackError:
+        return null;
+    }
+  }
+
+  /// The streamer's approved artwork for the state on screen, or null to let
+  /// StreamStatePlaceholderOverlay use the default system placeholder.
+  /// Nothing is shown until an admin has approved it -- pending and rejected
+  /// cards are not even readable by a viewer at the RLS layer.
+  String? _customPlaceholderUrl(
+      AppProvider appProvider, StreamerModel streamer) {
+    final type = _brandablePlaceholderType;
+    if (type == null) return null;
+    final url =
+        appProvider.approvedPlaceholderImageUrl(streamer.streamerId, type);
+    if (url == null) {
+      // Fire-and-forget: populates the cache and notifies, so the next build
+      // paints the custom card. Deferred past this build to avoid mutating
+      // provider state mid-frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        appProvider.ensureApprovedPlaceholderLoaded(streamer.streamerId, type);
+      });
+    }
+    return url;
+  }
+
+  void _retryStream() {
+    setState(() {
+      _streamState = StreamState.live;
+      _isPlaying = true;
+    });
+  }
+
+  bool _hasYouTubeId(AppProvider appProvider) =>
+      _getStreamUrl(appProvider).trim().isNotEmpty;
+
+  /// Task 5 -- same escape hatch the YouTube adapter offers inside its own
+  /// error view, surfaced here too so it is reachable from the unified
+  /// placeholder regardless of which layer noticed the failure.
+  Future<void> _openStreamInYouTube(AppProvider appProvider) async {
+    final videoId = _getStreamUrl(appProvider).trim();
+    if (videoId.isEmpty) return;
+    final url = Uri.parse('https://www.youtube.com/watch?v=$videoId');
+    try {
+      if (await canLaunchUrl(url)) {
+        await launchUrl(url, mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint('[LiveBroadcastScreen] openInYouTube failed: $e');
+    }
+  }
+
   String _getStreamUrl(AppProvider appProvider) {
     final streamer = _resolveStreamer(appProvider);
 
@@ -193,20 +346,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 overflow: TextOverflow.ellipsis,
               ),
               actions: [
-                // Floating Picture-in-Picture Mini-Player Button
+                // Minimize to the floating in-app PiP mini-player (Task 6)
                 IconButton(
                   icon: const Icon(Icons.picture_in_picture_alt_rounded,
                       size: 20),
-                  tooltip: 'live.mini_player_tooltip'.tr(),
-                  onPressed: () {
-                    appProvider.launchMiniPlayer(
-                      videoId: _getStreamUrl(appProvider),
-                      title: streamer.getLocalizedTitle(langCode),
-                      streamerName: streamer.getLocalizedName(langCode),
-                      streamId: widget.streamId,
-                    );
-                    context.pop();
-                  },
+                  tooltip: 'live.minimize_tooltip'.tr(),
+                  onPressed: () =>
+                      _minimizeToMiniPlayer(appProvider, streamer, langCode),
                 ),
                 // Broadcaster Studio Access -- single unified entry point
                 // (v0.9) for going live via OBS, phone camera, or local RTMP.
@@ -291,7 +437,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 '${_sourceType.name}_${appProvider.rtmpLaptopIp}_${appProvider.streamReloadCount}'),
             sourceType: _sourceType,
             streamUrl: _getStreamUrl(appProvider),
-            autoPlay: _isPlaying,
+            // Audio-only broadcasts always autoplay: LiveAudioStageMultiSpeaker
+            // paints over the player entirely, so there is no visible
+            // transport for the viewer to un-pause -- the engine underneath
+            // has to start (and stay) playing on its own (Task 1).
+            autoPlay: isAudioLive || _isPlaying,
+            preferredQuality: _selectedQuality.value,
             onStateChanged: (state) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (mounted && _streamState != state) {
@@ -382,12 +533,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
           // 5. Controls Overlay
           LivePlayerOverlayControls(
-            currentSource: _sourceType,
             streamState: _streamState,
             viewerCount: viewerCount,
             isPlaying: _isPlaying,
             isMuted: _isMuted,
             isFullscreen: _isFullscreen,
+            isAudioOnly: isAudioLive,
+            isStreamerMicMuted: appProvider.isStreamerMicMuted,
+            selectedQuality: _selectedQuality,
             onTogglePlayPause: () {
               setState(() {
                 _isPlaying = !_isPlaying;
@@ -396,17 +549,30 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               });
             },
             onToggleMute: () => setState(() => _isMuted = !_isMuted),
-            onToggleFullscreen: () =>
-                setState(() => _isFullscreen = !_isFullscreen),
-            onSelectSource: (source) => setState(() {
-              _sourceType = source;
-              _streamState = StreamState.live;
-            }),
-            onRetryConnection: () =>
-                setState(() => _streamState = StreamState.live),
+            onToggleFullscreen: _handleToggleFullscreen,
+            onSelectQuality: (quality) =>
+                setState(() => _selectedQuality = quality),
+            onRetryConnection: _retryStream,
           ),
 
-          // 6. Private Streaming: viewer's own access state (VIP badge /
+          // 6. Default / Custom Stream State Placeholder (Task 4a).
+          // Deliberately stacked *above* the controls overlay: that overlay
+          // is an opaque, full-bleed GestureDetector, so a placeholder
+          // underneath it would render its Retry / Open in YouTube buttons
+          // untappable. The controls hide themselves for exactly these
+          // states, so nothing is lost by covering them. Renders nothing at
+          // all while the feed is playing.
+          StreamStatePlaceholderOverlay(
+            streamState: _streamState,
+            customImageUrl: _customPlaceholderUrl(appProvider, streamer),
+            onRetry: _retryStream,
+            onOpenInYouTube: _sourceType == StreamSourceType.youtubeEmbed &&
+                    _hasYouTubeId(appProvider)
+                ? () => _openStreamInYouTube(appProvider)
+                : null,
+          ),
+
+          // 7. Private Streaming: viewer's own access state (VIP badge /
           // waiting room / unauthorized notice). No-op for public streams.
           PrivateStreamViewerGate(
             accessState: appProvider.localViewerAccessState,

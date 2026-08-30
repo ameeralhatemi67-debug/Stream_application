@@ -14,6 +14,7 @@ import '../models/chat_report_model.dart';
 import '../../profile/models/streamer_models.dart';
 import 'widgets/role_permission_management_view.dart';
 import 'widgets/chat_moderation_view.dart';
+import 'widgets/custom_placeholder_review_view.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
@@ -66,14 +67,19 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     _isMasterAdminForTabs = provider.isMasterAdmin;
     // +1 for the always-present Chat Moderation tab (Checkpoint 4 Phase 1,
     // any admin-tier viewer), +1 for the always-present Testing Tools tab
-    // (v0.9 Checkpoint 1 Phase 1), +1 more for Roles & Permissions when this
-    // viewer is also a Master Admin (Checkpoint 2 Phase 3).
+    // (v0.9 Checkpoint 1 Phase 1), +1 for the always-present Custom Cards
+    // review queue (Cluster 1 Task 4b), +1 more for Roles & Permissions when
+    // this viewer is also a Master Admin (Checkpoint 2 Phase 3).
     _tabController =
-        TabController(length: _isMasterAdminForTabs ? 9 : 8, vsync: this);
+        TabController(length: _isMasterAdminForTabs ? 10 : 9, vsync: this);
     if (_isMasterAdminForTabs) {
       provider.ensureRoleManagementDataLoaded();
     }
     provider.ensureChatReportsLoaded();
+    // Loaded here rather than only inside CustomPlaceholderReviewView so the
+    // tab's pending-count badge is right before anyone opens that tab --
+    // TabBarView builds its children lazily.
+    provider.ensureCustomPlaceholdersLoaded();
     provider.refreshAdminData();
 
     final terms = provider.termsAndConditions;
@@ -313,6 +319,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 _buildViewerAnalyticsTab(context, provider, isAr),
                 _buildTermsGovernanceTab(context, provider, isAr),
                 const ChatModerationView(),
+                const CustomPlaceholderReviewView(),
                 _buildTestingToolsTab(context, provider),
                 if (_isMasterAdminForTabs) const RolePermissionManagementView(),
               ],
@@ -465,6 +472,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   Widget _buildTabBar(AppProvider provider) {
     final pendingCount = provider.pendingApplications.length;
     final chatReportsCount = provider.chatReports.length;
+    final customCardsCount = provider.pendingCustomPlaceholders.length;
 
     return Container(
       decoration: const BoxDecoration(
@@ -557,6 +565,34 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ],
             ),
             text: 'admin.tab_chat_moderation'.tr(),
+          ),
+          Tab(
+            icon: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.image_rounded, size: 18),
+                if (customCardsCount > 0) ...[
+                  const SizedBox(width: 6),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentAmber,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: Text(
+                      '$customCardsCount',
+                      style: const TextStyle(
+                        color: Colors.black87,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            text: 'admin.tab_custom_cards'.tr(),
           ),
           Tab(
             icon: const Icon(Icons.science_rounded, size: 18),

@@ -15,6 +15,28 @@ class FloatingStreamMiniPlayer extends StatefulWidget {
 class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
   Offset _position = const Offset(20, 100);
 
+  // Insets the card is kept inside: clear of the status bar at the top and
+  // of the bottom navigation bar / gesture area at the bottom.
+  static const double _edgeInset = 12.0;
+  static const double _topInset = 60.0;
+  static const double _bottomInset = 90.0;
+
+  /// Cluster 1 Task 6 -- clamping has to happen when the drag is *recorded*,
+  /// not only when it is rendered. Accumulating the raw delta and clamping
+  /// at paint time let `_position` drift arbitrarily far off-screen while
+  /// the card sat pinned at the edge, so the viewer then had to drag all the
+  /// way back through that dead travel before it moved again.
+  Offset _clampToScreen(Offset position, Size screen, double width, double height) {
+    // On a viewport too small to hold the card within its insets the clamp
+    // bounds invert; falling back to the inset keeps `clamp` from throwing.
+    final maxDx = screen.width - width - _edgeInset;
+    final maxDy = screen.height - height - _bottomInset;
+    return Offset(
+      maxDx <= _edgeInset ? _edgeInset : position.dx.clamp(_edgeInset, maxDx),
+      maxDy <= _topInset ? _topInset : position.dy.clamp(_topInset, maxDy),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
@@ -25,13 +47,18 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
     final playerWidth = isDesktop ? 340.0 : 280.0;
     final playerHeight = isDesktop ? 96.0 : 84.0;
 
+    // Re-clamp on every build so a rotation or window resize can never
+    // strand the card outside the new viewport.
+    final position = _clampToScreen(_position, size, playerWidth, playerHeight);
+
     return Positioned(
-      left: _position.dx.clamp(12.0, size.width - playerWidth - 12.0),
-      top: _position.dy.clamp(60.0, size.height - playerHeight - 90.0),
+      left: position.dx,
+      top: position.dy,
       child: GestureDetector(
         onPanUpdate: (details) {
           setState(() {
-            _position += details.delta;
+            _position = _clampToScreen(
+                position + details.delta, size, playerWidth, playerHeight);
           });
         },
         child: Material(
@@ -84,16 +111,30 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentRed,
+                          color: provider.isMiniPlayerAudioOnly
+                              ? AppTheme.accentPurple
+                              : AppTheme.accentRed,
                           borderRadius: BorderRadius.circular(3),
                         ),
-                        child: Text(
-                          'live.live_indicator'.tr(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 9,
-                            fontWeight: FontWeight.bold,
-                          ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (provider.isMiniPlayerAudioOnly) ...[
+                              const Icon(Icons.headphones_rounded,
+                                  size: 9, color: Colors.white),
+                              const SizedBox(width: 3),
+                            ],
+                            Text(
+                              provider.isMiniPlayerAudioOnly
+                                  ? 'live.audio_live_indicator'.tr()
+                                  : 'live.live_indicator'.tr(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),

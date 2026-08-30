@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../abstract_video_player.dart';
+import '../widgets/stream_state_placeholder_overlay.dart';
 
 /// Concrete player adapter stub for AWS IVS (Interactive Video Service) HLS Low-Latency streams.
 class AwsIvsPlayerAdapter extends AbstractVideoPlayer {
@@ -12,6 +13,7 @@ class AwsIvsPlayerAdapter extends AbstractVideoPlayer {
     super.onStateChanged,
     super.onError,
     super.aspectRatio = 16 / 9,
+    super.preferredQuality = 'auto',
   });
 
   @override
@@ -93,15 +95,17 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
               ),
             ),
 
-            if (_isLoading)
-              Container(
-                color: Colors.black54,
-                child: const Center(
-                  child: CircularProgressIndicator(color: AppTheme.accentBlue),
-                ),
+            // Cluster 1 Task 4a -- one placeholder surface for every
+            // adapter, replacing this one's bare spinner and its own
+            // hardcoded-English error card.
+            if (_isLoading || _hasError)
+              StreamStatePlaceholderOverlay(
+                streamState: _hasError
+                    ? StreamState.fallbackError
+                    : StreamState.initializing,
+                errorDetail: _hasError ? widget.streamUrl : null,
+                onRetry: _hasError ? _connectIvsStream : null,
               ),
-
-            if (_hasError) _buildErrorView(),
 
             // Controls & Engine badge overlay
             Positioned(
@@ -163,32 +167,6 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
               ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildErrorView() {
-    return Container(
-      color: Colors.black87,
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline_rounded,
-              color: AppTheme.accentRed, size: 44),
-          const SizedBox(height: AppTheme.spaceSm),
-          const Text(
-            'AWS IVS Playback Error',
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-          ElevatedButton(
-            onPressed: _connectIvsStream,
-            style:
-                ElevatedButton.styleFrom(backgroundColor: AppTheme.accentTeal),
-            child: const Text('Reload Stream'),
-          ),
-        ],
       ),
     );
   }

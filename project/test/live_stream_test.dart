@@ -1,7 +1,10 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/features/live_stream/models/ghost_comments.dart';
+import 'package:streamer_app/features/admin/models/streamer_custom_placeholder_model.dart';
 import 'package:streamer_app/features/live_stream/presentation/abstract_video_player.dart';
+import 'package:streamer_app/features/live_stream/presentation/widgets/live_player_overlay_controls.dart';
+import 'package:streamer_app/features/live_stream/presentation/widgets/stream_state_placeholder_overlay.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
 
 void main() {
@@ -90,6 +93,10 @@ void main() {
             StreamState.ended,
             StreamState.offline,
             StreamState.fallbackError,
+            // Cluster 1 Task 4a placeholder states
+            StreamState.startingSoon,
+            StreamState.reconnecting,
+            StreamState.noAudioToken,
           ]));
     });
 
@@ -145,6 +152,164 @@ void main() {
       expect(appProvider.rtmpLaptopIp, equals('192.168.0.105'));
       expect(appProvider.rtmpStreamUrl,
           equals('http://192.168.0.105:8888/live/demo/'));
+    });
+  });
+
+  group('Cluster 1 -- Player Quality, Placeholders & Mini-Player', () {
+    test(
+        'TC-QUALITY-01: Selector offers real resolutions, not playback engines',
+        () {
+      // The old selector was a StreamSourceType switcher wearing invented
+      // resolution labels; these are resolutions and nothing else.
+      expect(
+        StreamQualityLevel.values.map((q) => q.value).toList(),
+        equals(['auto', '1080', '720', '480', '360']),
+      );
+
+      expect(StreamQualityLevelInfo.fromValue('720'),
+          equals(StreamQualityLevel.p720));
+      expect(StreamQualityLevelInfo.fromValue('1080'),
+          equals(StreamQualityLevel.p1080));
+
+      // An unknown/legacy stored value degrades to adaptive rather than
+      // throwing or pinning the viewer to a rendition they never chose.
+      expect(StreamQualityLevelInfo.fromValue('1080p60 Local RTMP Loopback'),
+          equals(StreamQualityLevel.auto));
+
+      // Every level carries a distinct bilingual catalog key.
+      final keys = StreamQualityLevel.values.map((q) => q.labelKey).toSet();
+      expect(keys.length, equals(StreamQualityLevel.values.length));
+    });
+
+    test(
+        'TC-PLACEHOLDER-01: Overlay covers every non-playing state and no playing one',
+        () {
+      // Playing states must leave the viewport alone -- the overlay is
+      // permanently mounted in the player Stack.
+      for (final playing in [
+        StreamState.live,
+        StreamState.paused,
+        StreamState.buffering,
+      ]) {
+        expect(StreamStatePlaceholderOverlay.coversState(playing), isFalse,
+            reason: '$playing should not be covered');
+      }
+
+      for (final blocked in [
+        StreamState.initializing,
+        StreamState.startingSoon,
+        StreamState.reconnecting,
+        StreamState.ended,
+        StreamState.offline,
+        StreamState.noAudioToken,
+        StreamState.fallbackError,
+      ]) {
+        expect(StreamStatePlaceholderOverlay.coversState(blocked), isTrue,
+            reason: '$blocked should be covered');
+      }
+    });
+
+    test(
+        'TC-CUSTOM-CARD-01: Placeholder model round-trips through its DB row shape',
+        () {
+      final created = DateTime.utc(2026, 8, 30, 12);
+      final card = StreamerCustomPlaceholderModel(
+        id: 'card_1',
+        streamerId: 'streamer_1',
+        placeholderType: StreamPlaceholderType.intermission,
+        imageUrl: 'https://cdn.example/card.png',
+        status: StreamPlaceholderStatus.pending,
+        createdAt: created,
+      );
+
+      final row = card.toRow();
+      expect(row['placeholder_type'], equals('intermission'));
+      expect(row['status'], equals('pending'));
+
+      final restored = StreamerCustomPlaceholderModel.fromRow(row);
+      expect(restored.id, equals('card_1'));
+      expect(
+          restored.placeholderType, equals(StreamPlaceholderType.intermission));
+      expect(restored.status, equals(StreamPlaceholderStatus.pending));
+      expect(restored.isApproved, isFalse);
+      expect(restored.createdAt, equals(created));
+
+      // Only 'approved' artwork is ever shown to viewers.
+      final approved = card.copyWith(status: StreamPlaceholderStatus.approved);
+      expect(approved.isApproved, isTrue);
+      expect(approved.isPending, isFalse);
+    });
+
+    test('TC-MIC-01: Streamer mic-mute state is published for viewers', () {
+      final provider = AppProvider();
+      expect(provider.isStreamerMicMuted, isFalse);
+
+      var notifications = 0;
+      provider.addListener(() => notifications++);
+
+      provider.setStreamerMicMuted(true);
+      expect(provider.isStreamerMicMuted, isTrue);
+      expect(notifications, equals(1));
+
+      // Re-publishing the same value must not churn every viewer's overlay.
+      provider.setStreamerMicMuted(true);
+      expect(notifications, equals(1));
+
+      provider.setStreamerMicMuted(false);
+      expect(provider.isStreamerMicMuted, isFalse);
+      expect(notifications, equals(2));
+    });
+
+    test('TC-PIP-01: Minimizing carries the audio-only flag across', () {
+      final provider = AppProvider();
+      expect(provider.isMiniPlayerActive, isFalse);
+
+      provider.openMiniPlayer(
+        videoId: '8Y1RaecJ-mo',
+        title: 'Autonomous Agents',
+        streamerName: 'Dr. Al-Ghamdi',
+        streamId: 'stream_live_992',
+        isAudioOnly: true,
+      );
+
+      expect(provider.isMiniPlayerActive, isTrue);
+      expect(provider.isMiniPlayerPlaying, isTrue);
+      expect(provider.miniPlayerStreamId, equals('stream_live_992'));
+      expect(provider.miniPlayerVideoId, equals('8Y1RaecJ-mo'));
+      expect(provider.isMiniPlayerAudioOnly, isTrue);
+
+      provider.closeMiniPlayer();
+      expect(provider.isMiniPlayerActive, isFalse);
+
+      // A video broadcast minimizes without inheriting the audio-only badge.
+      provider.openMiniPlayer(
+        videoId: 'M7lc1UVf-VE',
+        title: 'Cloud Streaming',
+        streamerName: 'Dr. Al-Ghamdi',
+        streamId: 'stream_live_993',
+      );
+      expect(provider.isMiniPlayerAudioOnly, isFalse);
+    });
+
+    test(
+        'TC-CUSTOM-CARD-02: Rejection with a blank reason is refused before it reaches the backend',
+        () async {
+      final provider = AppProvider();
+      final card = StreamerCustomPlaceholderModel(
+        id: 'card_2',
+        streamerId: 'streamer_2',
+        placeholderType: StreamPlaceholderType.startingSoon,
+        imageUrl: 'https://cdn.example/soon.png',
+        status: StreamPlaceholderStatus.pending,
+        createdAt: DateTime.utc(2026, 8, 30),
+      );
+
+      // The rejection reason *is* the body of the notification the streamer
+      // receives, so "rejected, no reason given" is not a reachable state.
+      await expectLater(
+        provider.rejectCustomPlaceholder(card, reason: '   '),
+        throwsA(isA<Exception>()),
+      );
     });
   });
 }
