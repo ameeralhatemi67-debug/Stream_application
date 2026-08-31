@@ -99,9 +99,12 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         actions: [
           // Broadcaster Studio Access -- single unified entry point (v0.9)
           // for going live via OBS, phone camera, or local RTMP (Only
-          // visible to logged-in streamers).
+          // visible on the broadcaster's own profile page, or to platform/org admins).
           if (appProvider.isLoggedInStreamer &&
-              appProvider.isStreamerModeEnabled)
+              appProvider.isApprovedStreamer &&
+              (appProvider.isOwnStreamerProfile(streamer.streamerId) ||
+                  appProvider.isAdminUser ||
+                  appProvider.isPermittedAdminFor(streamer.streamerId)))
             IconButton(
               icon: Icon(
                 Icons.cell_tower_rounded,

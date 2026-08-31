@@ -69,7 +69,7 @@ class RoleSelectScreen extends StatelessWidget {
                     description: 'role_select.viewer_desc'.tr(),
                     buttonText: 'role_select.viewer_btn'.tr(),
                     onTap: () {
-                      provider.selectViewerMode();
+                      provider.selectViewerRole();
                       context.go('/feed');
                     },
                   ),
@@ -85,6 +85,7 @@ class RoleSelectScreen extends StatelessWidget {
                     description: 'role_select.streamer_desc'.tr(),
                     buttonText: 'role_select.streamer_btn'.tr(),
                     onTap: () {
+                      provider.selectBroadcasterRole();
                       context.go('/streamer-apply');
                     },
                   ),

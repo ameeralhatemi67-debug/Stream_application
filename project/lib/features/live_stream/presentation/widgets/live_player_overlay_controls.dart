@@ -240,7 +240,7 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
             ),
 
           // Bottom Action Controls Overlay (Play/Pause, Mute/Unmute, Fullscreen)
-          if (controlsVisible && !widget.isAudioOnly)
+          if (controlsVisible)
             Positioned(
               bottom: 8,
               left: 12,
@@ -248,55 +248,58 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
-                    children: [
-                      // Play / Pause Button
-                      InkWell(
-                        onTap: () {
-                          FocusScope.of(context).unfocus();
-                          widget.onTogglePlayPause();
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                            color: Colors.white,
-                            size: 20,
+                  if (!widget.isAudioOnly)
+                    Row(
+                      children: [
+                        // Play / Pause Button
+                        InkWell(
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+                            widget.onTogglePlayPause();
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
+                        const SizedBox(width: 8),
 
-                      // Mute / Unmute Button
-                      InkWell(
-                        onTap: () {
-                          FocusScope.of(context).unfocus();
-                          widget.onToggleMute();
-                        },
-                        borderRadius: BorderRadius.circular(20),
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.6),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            widget.isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                            color: Colors.white,
-                            size: 20,
+                        // Mute / Unmute Button
+                        InkWell(
+                          onTap: () {
+                            FocusScope.of(context).unfocus();
+                            widget.onToggleMute();
+                          },
+                          borderRadius: BorderRadius.circular(20),
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.6),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              widget.isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
+                              color: Colors.white,
+                              size: 20,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    )
+                  else
+                    const SizedBox.shrink(),
 
                   // Fullscreen Toggle Button -- rotates the device into
-                  // landscape immersive mode (Task 3).
+                  // landscape immersive mode (available on all streams).
                   InkWell(
                     onTap: () {
                       FocusScope.of(context).unfocus();

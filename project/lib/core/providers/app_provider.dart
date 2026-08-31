@@ -36,6 +36,9 @@ import '../../features/admin/models/banned_user_model.dart';
 import '../../features/admin/models/stream_moderator_model.dart';
 import '../../features/admin/models/tag_moderation_model.dart';
 import '../../features/discovery/models/academic_category_model.dart';
+import '../models/device_session_model.dart';
+import '../../features/live_stream/services/stream_decay_engine.dart';
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -183,6 +186,7 @@ class AppProvider extends ChangeNotifier {
   // Floating Mini-Player State
   bool _isMiniPlayerActive = false;
   bool _isMiniPlayerPlaying = true;
+  bool _isMiniPlayerMuted = false;
   String _miniPlayerVideoId = 'dQw4w9WgXcQ';
   String _miniPlayerTitle = 'Advanced Artificial Intelligence Lecture';
   String _miniPlayerStreamerName = 'Amir Al-Hatemi';
@@ -476,6 +480,149 @@ class AppProvider extends ChangeNotifier {
 
   BroadcasterApplicationModel? _myApplication;
   BroadcasterApplicationModel? get myApplication => _myApplication;
+
+  // ---------------------------------------------------------------------
+  // Multi-Device Session Management (issue_log.md QF-06)
+  // ---------------------------------------------------------------------
+  DeviceSessionModel? _currentDeviceSession;
+  DeviceSessionModel? get currentDeviceSession => _currentDeviceSession;
+  DeviceSessionModel? _remoteBroadcasterSession;
+  DeviceSessionModel? get remoteBroadcasterSession => _remoteBroadcasterSession;
+  bool _hasCompletedRoleSelection = false;
+  bool get hasCompletedRoleSelection => _hasCompletedRoleSelection;
+
+  Future<void> initDeviceSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      var deviceId = prefs.getString('local_device_id');
+      if (deviceId == null || deviceId.isEmpty) {
+        deviceId = newId();
+        await prefs.setString('local_device_id', deviceId);
+      }
+      final platform = defaultTargetPlatform.name.toLowerCase();
+      final deviceName = '$platform Device';
+      _currentDeviceSession = DeviceSessionModel(
+        deviceId: deviceId,
+        deviceName: deviceName,
+        platform: platform,
+        lastActiveAt: DateTime.now(),
+        isPrimaryBroadcaster: true,
+      );
+    } catch (e) {
+      debugPrint('initDeviceSession failed: $e');
+    }
+  }
+
+  void setRemoteBroadcasterSession(DeviceSessionModel remote) {
+    _remoteBroadcasterSession = remote;
+    notifyListeners();
+  }
+
+  void transferBroadcasterToCurrentDevice() {
+    if (_currentDeviceSession != null) {
+      _currentDeviceSession =
+          _currentDeviceSession!.copyWith(isPrimaryBroadcaster: true);
+    }
+    _remoteBroadcasterSession = null;
+    _isStreamerModeEnabled = _isAdminFromRoles || _isApprovedStreamer;
+    notifyListeners();
+  }
+
+  void continueAsViewerOnCurrentDevice() {
+    if (_currentDeviceSession != null) {
+      _currentDeviceSession =
+          _currentDeviceSession!.copyWith(isPrimaryBroadcaster: false);
+    }
+    _isStreamerModeEnabled = false;
+    notifyListeners();
+  }
+
+  void selectViewerRole() {
+    _hasCompletedRoleSelection = true;
+    _isStreamerModeEnabled = false;
+    notifyListeners();
+  }
+
+  void selectBroadcasterRole() {
+    _hasCompletedRoleSelection = true;
+    notifyListeners();
+  }
+
+  /// Checks if the given streamerId represents the currently signed-in user/streamer
+  bool isOwnStreamerProfile(String streamerId) {
+    if (streamerId.isEmpty) return false;
+    final currentUserId = _authService.currentSession?.user.id;
+    if (currentUserId != null && streamerId == currentUserId) return true;
+    if (_myApplication != null &&
+        _myApplication!.applicantProfileId == streamerId) {
+      return true;
+    }
+    if (_myApplication != null &&
+        _myApplication!.youtubeHandle.replaceAll('@', '').toLowerCase() ==
+            streamerId.toLowerCase()) {
+      return true;
+    }
+    if (_selectedBroadcastOrgId != null &&
+        _selectedBroadcastOrgId == streamerId) {
+      return true;
+    }
+    if ((_isLoggedInStreamer || _isApprovedStreamer || _isStreamerModeEnabled) &&
+        streamerId == 'prof_alghamdi_01') {
+      return true;
+    }
+    return false;
+  }
+
+  @visibleForTesting
+  void setBroadcasterStatusForTesting({
+    bool isLoggedIn = true,
+    bool isApproved = true,
+  }) {
+    _isLoggedInStreamer = isLoggedIn;
+    _isApprovedStreamer = isApproved;
+    _isStreamerModeEnabled = isApproved;
+    notifyListeners();
+  }
+
+  bool isPermittedAdminFor(String streamerId) {
+    if (streamerId.isEmpty) return false;
+    if (_isAdminFromRoles || _isMasterAdminFromRoles) return true;
+    return _permittedAdminOrgIds.contains(streamerId);
+  }
+
+  String get currentUserHandle {
+    final fromApp = _myApplication?.youtubeHandle.trim();
+    if (fromApp != null && fromApp.isNotEmpty) {
+      return fromApp.replaceFirst('@', '');
+    }
+    final email = _googleUserEmail ?? _userProfile.id;
+    return email.split('@').first.toLowerCase();
+  }
+
+  String get currentUserStreamerId {
+    return _selectedBroadcastOrgId ??
+        _myApplication?.applicantProfileId ??
+        _myApplication?.id ??
+        _authService.currentSession?.user.id ??
+        'prof_alghamdi_01';
+  }
+
+  // ---------------------------------------------------------------------
+  // Stream Decay Engine (issue_log.md QF-11)
+  // ---------------------------------------------------------------------
+  late final StreamDecayEngine _streamDecayEngine = StreamDecayEngine(
+    onStreamDecayed: () {
+      debugPrint('[AppProvider] Broadcast decayed due to inactivity.');
+      if (_isBroadcastingLive) {
+        toggleBroadcasterGoLive();
+      }
+    },
+  );
+  StreamDecayEngine get streamDecayEngine => _streamDecayEngine;
+
+  void recordStreamHeartbeat() {
+    _streamDecayEngine.recordHeartbeat();
+  }
 
   // ---------------------------------------------------------------------
   // Private & Restricted Streaming (client-simulated)
@@ -1224,6 +1371,7 @@ class AppProvider extends ChangeNotifier {
   // Mini Player Getters
   bool get isMiniPlayerActive => _isMiniPlayerActive;
   bool get isMiniPlayerPlaying => _isMiniPlayerPlaying;
+  bool get isMiniPlayerMuted => _isMiniPlayerMuted;
   String get miniPlayerVideoId => _miniPlayerVideoId;
   String get miniPlayerTitle => _miniPlayerTitle;
   String get miniPlayerStreamerName => _miniPlayerStreamerName;
@@ -2109,6 +2257,11 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  void toggleMiniPlayerMute() {
+    _isMiniPlayerMuted = !_isMiniPlayerMuted;
+    notifyListeners();
+  }
+
   // Streamer Go Live Studio Methods
   void setCustomStreamerYouTubeUrl(String url) {
     _customYouTubeLiveUrl = url.trim();
@@ -2636,6 +2789,24 @@ class AppProvider extends ChangeNotifier {
           s.titleEn.toLowerCase().contains(query) ||
           s.titleAr.contains(query) ||
           s.tags.any((t) => t.toLowerCase().contains(query));
+
+      // Private stream filtering (issue_log.md QF-12): if streamer's active broadcast is private,
+      // it is visible to the broadcaster, whitelisted handles, or admitted attendees.
+      if (s.isCurrentlyLive &&
+          s.streamerId == currentUserStreamerId &&
+          _streamVisibility == StreamVisibility.private) {
+        final currentHandle = currentUserHandle;
+        final isBroadcaster = isOwnStreamerProfile(s.streamerId);
+        final isWhitelisted = _streamWhitelistHandles.contains(currentHandle) ||
+            _streamWhitelistHandles.contains('@$currentHandle');
+        final isAdmitted = _admittedAttendees.any((a) =>
+            a.displayName.toLowerCase() == currentHandle.toLowerCase() ||
+            a.displayName.toLowerCase() == '@${currentHandle.toLowerCase()}' ||
+            a.id == currentHandle);
+        if (!isBroadcaster && !isWhitelisted && !isAdmitted) {
+          return false;
+        }
+      }
 
       // Cluster 4 Task 18: a temporarily-hidden streamer never appears in
       // this filtered list (Discovery feed or Spatial Map), regardless of

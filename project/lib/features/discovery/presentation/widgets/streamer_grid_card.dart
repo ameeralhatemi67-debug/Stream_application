@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/providers/app_provider.dart';
 import '../../../profile/models/streamer_models.dart';
 
 class StreamerGridCard extends StatelessWidget {
@@ -23,17 +25,29 @@ class StreamerGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appProvider = context.watch<AppProvider?>();
+    final isOwnCard = appProvider != null &&
+        (appProvider.isLoggedInStreamer || appProvider.isStreamerModeEnabled) &&
+        appProvider.isOwnStreamerProfile(streamer.streamerId);
+
     final isLive = streamer.isCurrentlyLive;
     final isAudio = streamer.isAudioLive;
     final isVideo = streamer.isVideoLive;
 
     Color borderColor;
-    if (isVideo) {
+    double borderWidth;
+    if (isOwnCard) {
+      borderColor = Colors.white;
+      borderWidth = 1.8;
+    } else if (isVideo) {
       borderColor = AppTheme.accentRed.withValues(alpha: 0.8);
+      borderWidth = 1.5;
     } else if (isAudio) {
       borderColor = const Color(0xFFA1A1AA);
+      borderWidth = 1.5;
     } else {
       borderColor = AppTheme.darkBorderSubtle;
+      borderWidth = 1.0;
     }
 
     return Material(
@@ -53,25 +67,32 @@ class StreamerGridCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
               color: borderColor,
-              width: isLive ? 1.5 : 1.0,
+              width: borderWidth,
             ),
             boxShadow: [
-              BoxShadow(
-                color: isVideo
-                    ? AppTheme.accentRed.withValues(alpha: 0.18)
-                    : isAudio
-                        ? const Color(0xFFA1A1AA).withValues(alpha: 0.15)
-                        : Colors.black26,
-                blurRadius: isLive ? 10 : 4,
-                offset: const Offset(0, 3),
-              ),
+              if (isOwnCard)
+                BoxShadow(
+                  color: Colors.white.withValues(alpha: 0.3),
+                  blurRadius: 10,
+                  spreadRadius: 1,
+                )
+              else
+                BoxShadow(
+                  color: isVideo
+                      ? AppTheme.accentRed.withValues(alpha: 0.18)
+                      : isAudio
+                          ? const Color(0xFFA1A1AA).withValues(alpha: 0.15)
+                          : Colors.black26,
+                  blurRadius: isLive ? 10 : 4,
+                  offset: const Offset(0, 3),
+                ),
             ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🖼️ Top Banner: Flexible 38% height (BoxFit.cover cut-to-fit, NO morphing)
+              // 🖼️ Top Banner: Flexible 45% height (BoxFit.cover cut-to-fit, NO morphing)
               Expanded(
                 flex: 45,
                 child: Stack(
@@ -108,52 +129,65 @@ class StreamerGridCard extends StatelessWidget {
                               horizontal: 6, vertical: 2.5),
                           decoration: BoxDecoration(
                             color: isVideo ? AppTheme.accentRed : const Color(0xFF3F3F46),
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusXs),
-                            border: isAudio
-                                ? Border.all(color: const Color(0xFFA1A1AA), width: 0.8)
-                                : null,
-                            boxShadow: const [
-                              BoxShadow(color: Colors.black45, blurRadius: 4),
-                            ],
+                            borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                            border: Border.all(
+                              color: isVideo
+                                  ? AppTheme.accentRed.withValues(alpha: 0.6)
+                                  : AppTheme.darkBorderSubtle,
+                              width: 0.8,
+                            ),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              if (isAudio) ...[
-                                const Icon(
-                                  Icons.mic_rounded,
-                                  size: 10,
-                                  color: Color(0xFFE4E4E7),
+                              Icon(
+                                isVideo ? Icons.videocam_rounded : Icons.mic_rounded,
+                                size: 10,
+                                color: Colors.white,
+                              ),
+                              const SizedBox(width: 3.5),
+                              Text(
+                                isVideo
+                                    ? 'feed.badge_live'.tr()
+                                    : 'live.audio_live_indicator'.tr(),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
                                 ),
-                                const SizedBox(width: 3.5),
-                                Text(
-                                  'feed.audio_live_badge'.tr(),
-                                  style: const TextStyle(
-                                    color: Color(0xFFE4E4E7),
-                                    fontSize: 9.0,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    // ✨ "Your Channel / قناتك" Badge at top right
+                    if (isOwnCard)
+                      Positioned(
+                        top: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2.5),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.8),
+                            borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+                            border: Border.all(color: Colors.white, width: 1.0),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const Icon(Icons.star_rounded,
+                                  color: Colors.amber, size: 11),
+                              const SizedBox(width: 3),
+                              Text(
+                                langCode == 'ar' ? 'قناتك' : 'Your Channel',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.bold,
                                 ),
-                              ] else ...[
-                                Container(
-                                  width: 5,
-                                  height: 5,
-                                  decoration: const BoxDecoration(
-                                    color: Colors.white,
-                                    shape: BoxShape.circle,
-                                  ),
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'feed.live_badge'.tr(),
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ],
                           ),
                         ),

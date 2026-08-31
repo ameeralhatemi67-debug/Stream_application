@@ -72,11 +72,14 @@ class AppRouter {
         return null;
       }
 
-      // Once a session exists, leave the auth landing screen behind. Needed
-      // because the Google sign-in button (welcome_screen.dart) only
-      // launches the OAuth browser flow and can't navigate synchronously
-      // after it -- this is what actually completes that flow.
-      if (path == '/welcome' && isLoggedIn) return '/feed';
+      // Once a session exists, route users who haven't selected a role or applied
+      // to the Role Select screen; otherwise route to Discovery feed.
+      if (path == '/welcome' && isLoggedIn) {
+        if (!provider.hasCompletedRoleSelection && !provider.isApprovedStreamer) {
+          return '/role-select';
+        }
+        return '/feed';
+      }
 
       // Handle OAuth callback deep link redirects (e.g. com.example.streamerapp://login-callback)
       // gracefully without ever falling through to "Route Not Found".
@@ -333,12 +336,14 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                         isSelected: navigationShell.currentIndex == 1,
                         onTap: () => navigationShell.goBranch(1),
                       ),
-                      _DesktopNavItem(
-                        icon: Icons.person_rounded,
-                        label: isStreamerModeEnabled ? 'Studio Profile' : 'My Profile',
-                        isSelected: false,
-                        onTap: () => context.push('/profile/prof_alghamdi_01'),
-                      ),
+                      if (isStreamerModeEnabled) ...[
+                        _DesktopNavItem(
+                          icon: Icons.person_rounded,
+                          label: 'Studio Profile',
+                          isSelected: false,
+                          onTap: () => context.push('/profile/prof_alghamdi_01'),
+                        ),
+                      ],
                       _DesktopNavItem(
                         icon: Icons.settings_rounded,
                         label: 'Settings',

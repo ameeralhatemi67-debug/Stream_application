@@ -1826,21 +1826,39 @@ class AdminDatabaseService {
 
   Future<List<AcademicCategoryModel>> loadAcademicCategories() async {
     if (!_useSupabase) return const [];
-    final rows = await _client
-        .from('academic_categories')
-        .select()
-        .order('sort_order');
-    return rows.map((r) => AcademicCategoryModel.fromJson(r)).toList();
+    try {
+      final rows = await _client
+          .from('academic_categories')
+          .select()
+          .order('sort_order');
+      return rows.map((r) => AcademicCategoryModel.fromJson(r)).toList();
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.loadAcademicCategories PostgrestException: ${e.code} ${e.message}');
+      return const [];
+    } catch (e) {
+      debugPrint('AdminDatabaseService.loadAcademicCategories error: $e');
+      return const [];
+    }
   }
 
   Future<void> saveAcademicCategory(AcademicCategoryModel category) async {
     if (!_useSupabase) throw Exception('Supabase not available');
-    await _client.from('academic_categories').upsert(category.toJson());
+    try {
+      await _client.from('academic_categories').upsert(category.toJson());
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.saveAcademicCategory PostgrestException: ${e.code} ${e.message}');
+      rethrow;
+    }
   }
 
   Future<void> deleteAcademicCategory(String id) async {
     if (!_useSupabase) throw Exception('Supabase not available');
-    await _client.from('academic_categories').delete().eq('id', id);
+    try {
+      await _client.from('academic_categories').delete().eq('id', id);
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.deleteAcademicCategory PostgrestException: ${e.code} ${e.message}');
+      rethrow;
+    }
   }
 
   // ==========================================
@@ -1855,17 +1873,33 @@ class AdminDatabaseService {
   /// only ever sees status='approved' rows here, per tags_select_approved_public).
   Future<List<TagModerationModel>> loadAllTags() async {
     if (!_useSupabase) return const [];
-    final rows =
-        await _client.from('tags').select().order('created_at', ascending: false);
-    return rows.map((r) => TagModerationModel.fromRow(r)).toList();
+    try {
+      final rows =
+          await _client.from('tags').select().order('created_at', ascending: false);
+      return rows.map((r) => TagModerationModel.fromRow(r)).toList();
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.loadAllTags PostgrestException: ${e.code} ${e.message}');
+      return const [];
+    } catch (e) {
+      debugPrint('AdminDatabaseService.loadAllTags error: $e');
+      return const [];
+    }
   }
 
   /// Public-safe: only ever returns approved tag names, per RLS.
   Future<List<String>> loadApprovedTagNames() async {
     if (!_useSupabase) return const [];
-    final rows =
-        await _client.from('tags').select('name').eq('status', 'approved');
-    return rows.map((r) => r['name'] as String).toList();
+    try {
+      final rows =
+          await _client.from('tags').select('name').eq('status', 'approved');
+      return rows.map((r) => r['name'] as String).toList();
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.loadApprovedTagNames PostgrestException: ${e.code} ${e.message}');
+      return const [];
+    } catch (e) {
+      debugPrint('AdminDatabaseService.loadApprovedTagNames error: $e');
+      return const [];
+    }
   }
 
   /// Submits a brand-new tag as pending review -- idempotent if the tag
@@ -1931,29 +1965,37 @@ class AdminDatabaseService {
 
   Future<List<BannedUserModel>> loadBannedUsers() async {
     if (!_useSupabase) return const [];
-    final rows =
-        await _client.from('banned_users').select().order('banned_at', ascending: false);
-    if (rows.isEmpty) return const [];
+    try {
+      final rows =
+          await _client.from('banned_users').select().order('banned_at', ascending: false);
+      if (rows.isEmpty) return const [];
 
-    final profileIds = rows.map((r) => r['profile_id'] as String).toSet();
-    final profiles = await _resolveProfileSummaries(profileIds);
+      final profileIds = rows.map((r) => r['profile_id'] as String).toSet();
+      final profiles = await _resolveProfileSummaries(profileIds);
 
-    return rows.map<BannedUserModel>((row) {
-      final profile = profiles[row['profile_id'] as String];
-      return BannedUserModel(
-        id: row['id'] as String,
-        profileId: row['profile_id'] as String,
-        email: row['email'] as String,
-        reason: row['reason'] as String,
-        bannedBy: row['banned_by'] as String?,
-        bannedAt: DateTime.parse(row['banned_at'] as String),
-        expiresAt: row['expires_at'] != null
-            ? DateTime.parse(row['expires_at'] as String)
-            : null,
-        displayName: profile?['display_name_en'] as String?,
-        avatarUrl: profile?['avatar_url'] as String?,
-      );
-    }).toList();
+      return rows.map<BannedUserModel>((row) {
+        final profile = profiles[row['profile_id'] as String];
+        return BannedUserModel(
+          id: row['id'] as String,
+          profileId: row['profile_id'] as String,
+          email: row['email'] as String,
+          reason: row['reason'] as String,
+          bannedBy: row['banned_by'] as String?,
+          bannedAt: DateTime.parse(row['banned_at'] as String),
+          expiresAt: row['expires_at'] != null
+              ? DateTime.parse(row['expires_at'] as String)
+              : null,
+          displayName: profile?['display_name_en'] as String?,
+          avatarUrl: profile?['avatar_url'] as String?,
+        );
+      }).toList();
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.loadBannedUsers PostgrestException: ${e.code} ${e.message}');
+      return const [];
+    } catch (e) {
+      debugPrint('AdminDatabaseService.loadBannedUsers error: $e');
+      return const [];
+    }
   }
 
   /// Bans a platform account by profile id. Idempotent: re-banning an
@@ -1969,21 +2011,31 @@ class AdminDatabaseService {
     if (!_useSupabase) throw Exception('Supabase not available');
     final bannedBy = _client.auth.currentUser?.id;
     if (bannedBy == null) throw Exception('Not signed in.');
-    await _client.from('banned_users').upsert(
-      {
-        'profile_id': profileId,
-        'email': email,
-        'reason': reason,
-        'banned_by': bannedBy,
-        'expires_at': expiresAt?.toIso8601String(),
-      },
-      onConflict: 'profile_id',
-    );
+    try {
+      await _client.from('banned_users').upsert(
+        {
+          'profile_id': profileId,
+          'email': email,
+          'reason': reason,
+          'banned_by': bannedBy,
+          'expires_at': expiresAt?.toIso8601String(),
+        },
+        onConflict: 'profile_id',
+      );
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.banAccountPlatformWide PostgrestException: ${e.code} ${e.message}');
+      rethrow;
+    }
   }
 
   Future<void> unbanAccount(String profileId) async {
     if (!_useSupabase) throw Exception('Supabase not available');
-    await _client.from('banned_users').delete().eq('profile_id', profileId);
+    try {
+      await _client.from('banned_users').delete().eq('profile_id', profileId);
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.unbanAccount PostgrestException: ${e.code} ${e.message}');
+      rethrow;
+    }
   }
 
   // ==========================================
@@ -1992,39 +2044,47 @@ class AdminDatabaseService {
 
   Future<List<StreamModeratorModel>> loadStreamModerators() async {
     if (!_useSupabase) return const [];
-    final rows = await _client
-        .from('stream_moderators')
-        .select()
-        .order('granted_at', ascending: false);
-    if (rows.isEmpty) return const [];
+    try {
+      final rows = await _client
+          .from('stream_moderators')
+          .select()
+          .order('granted_at', ascending: false);
+      if (rows.isEmpty) return const [];
 
-    final profileIds = <String>{};
-    for (final r in rows) {
-      profileIds.add(r['profile_id'] as String);
-      profileIds.add(r['assigned_by'] as String);
+      final profileIds = <String>{};
+      for (final r in rows) {
+        profileIds.add(r['profile_id'] as String);
+        profileIds.add(r['assigned_by'] as String);
+      }
+      final profiles = await _resolveProfileSummaries(profileIds);
+
+      return rows.map<StreamModeratorModel>((row) {
+        final moderator = profiles[row['profile_id'] as String];
+        final assignedBy = profiles[row['assigned_by'] as String];
+        return StreamModeratorModel(
+          id: row['id'] as String,
+          profileId: row['profile_id'] as String,
+          assignedBy: row['assigned_by'] as String,
+          scope: ModeratorScopeInfo.fromDbValue(row['scope'] as String),
+          streamId: row['stream_id'] as String?,
+          organizationId: row['organization_id'] as String?,
+          grantedAt: DateTime.parse(row['granted_at'] as String),
+          moderatorDisplayName: moderator?['display_name_en'] as String? ??
+              moderator?['email'] as String? ??
+              'Unknown user',
+          moderatorEmail: moderator?['email'] as String?,
+          assignedByDisplayName: assignedBy?['display_name_en'] as String? ??
+              assignedBy?['email'] as String? ??
+              'Unknown user',
+        );
+      }).toList();
+    } on PostgrestException catch (e) {
+      debugPrint('AdminDatabaseService.loadStreamModerators PostgrestException: ${e.code} ${e.message}');
+      return const [];
+    } catch (e) {
+      debugPrint('AdminDatabaseService.loadStreamModerators error: $e');
+      return const [];
     }
-    final profiles = await _resolveProfileSummaries(profileIds);
-
-    return rows.map<StreamModeratorModel>((row) {
-      final moderator = profiles[row['profile_id'] as String];
-      final assignedBy = profiles[row['assigned_by'] as String];
-      return StreamModeratorModel(
-        id: row['id'] as String,
-        profileId: row['profile_id'] as String,
-        assignedBy: row['assigned_by'] as String,
-        scope: ModeratorScopeInfo.fromDbValue(row['scope'] as String),
-        streamId: row['stream_id'] as String?,
-        organizationId: row['organization_id'] as String?,
-        grantedAt: DateTime.parse(row['granted_at'] as String),
-        moderatorDisplayName: moderator?['display_name_en'] as String? ??
-            moderator?['email'] as String? ??
-            'Unknown user',
-        moderatorEmail: moderator?['email'] as String?,
-        assignedByDisplayName: assignedBy?['display_name_en'] as String? ??
-            assignedBy?['email'] as String? ??
-            'Unknown user',
-      );
-    }).toList();
   }
 
   Future<void> revokeStreamModeratorById(String id) async {

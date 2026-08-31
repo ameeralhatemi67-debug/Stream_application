@@ -23,31 +23,31 @@ status: active
 
 - [ ] **Task 1: Audio Playback Stability & Streamer Silence / Mic Muted Indicator**
 	- **Description:** Join an Audio-Only broadcast (e.g. Al Quran 4K). Verify audio starts automatically (`autoPlay: true`) and continues in the background. When the broadcaster mutes mic or stays silent for >3s, verify the animated amber badge *"Streamer Microphone Muted / Silent Mode"* appears. Verify voice ripples pause when silent.
-	- **Comments:** 
+	- **Comments:** have the same issue in [[issue_log]] where I can't inter as a viwer to see my current signed in account live. so I can't verify the "Mic Muted Indicator". but the other Audio Playback Stability is good. 
 
 - [ ] **Task 2: Real Resolution Quality Selector (Auto, 1080p, 720p, 480p, 360p)**
 	- **Description:** Open a video stream and tap the quality gear button. Verify it offers actual resolution presets (`Auto`, `1080p`, `720p`, `480p`, `360p`) instead of internal engine strings. Open an Audio-Only stream: verify the quality button is completely hidden.
-	- **Comments:** 
+	- **Comments:** can't inter other account to test this feature du to issues in [[issue_log]]
 
-- [ ] **Task 3: Auto-Rotate to Fullscreen Landscape (One-Way Exit)**
+- [x] **Task 3: Auto-Rotate to Fullscreen Landscape (One-Way Exit)**
 	- **Description:** Tap the fullscreen button in portrait mode. Verify it rotates to landscape and enters sticky immersive mode. Tap exit fullscreen: verify orientation unlocks freedom (`portraitUp`, `landscapeLeft`, `landscapeRight`) without forcefully snapping back to portrait.
-	- **Comments:** 
+	- **Comments:** working. 
 
 - [ ] **Task 4a: Branded Default Stream State Placeholders & Diagnostics**
 	- **Description:** Check non-live states: Initializing, Starting Soon, Concluded, Offline, Reconnecting. Verify `StreamStatePlaceholderOverlay` displays branded illustrations with localized status text and diagnostic retry actions instead of raw error screens.
-	- **Comments:** 
+	- **Comments:** can't inter other account to test this feature du to issues in [[issue_log]]
 
 - [ ] **Task 4b: Custom Streamer Placeholders & Admin Moderation Pipeline**
 	- **Description:** As a streamer: upload custom broadcast cards (Starting Soon, Intermission, Ending) in profile editor. As an admin: open Admin Hub $\rightarrow$ Placeholder Approval Queue, test approving or rejecting with a required feedback reason. As streamer: verify receiving notification feedback.
-	- **Comments:** 
+	- **Comments:** can't inter other account to test this feature du to issues in [[issue_log]]. but add the ability to have this as a fixed action, meaning its approved once, then if the same image is used, no need for the admin to approve. 
 
-- [ ] **Task 5: Resilient "Open in YouTube" Fallback Button**
+- [x] **Task 5: Resilient "Open in YouTube" Fallback Button**
 	- **Description:** In live broadcast room or VOD player, tap "Open in YouTube". Verify it launches the native YouTube app (or browser fallback) directly using multi-tier URL schemes (`vnd.youtube` $\rightarrow$ `https://www.youtube.com/watch?v=...`).
-	- **Comments:** 
+	- **Comments:** works.
 
-- [ ] **Task 6: In-App Picture-in-Picture (PiP) Floating Mini-Player**
+- [x] **Task 6: In-App Picture-in-Picture (PiP) Floating Mini-Player**
 	- **Description:** Tap minimize in `LiveBroadcastScreen`. Verify floating mini-player displays 16:9 thumbnail preview, single-line truncated title (0px overflow), and Play/Pause + Close buttons. Audio continues playing. Tap mini-bar to expand back to full room.
-	- **Comments:** 
+	- **Comments:** working, maybe we can add a feature to make it bigger and samller window. but later
 
 ---
 
@@ -100,15 +100,15 @@ status: active
 
 - [ ] **Task 16: Admin Power to Block User from Application (Email/Account Ban)**
 	- **Description:** In Admin Hub $\rightarrow$ Banned Accounts tab, ban a test user with a reason. Sign in with that user: verify `AppRouter` immediately redirects them to `/account-banned` and blocks navigation to other screens.
-	- **Comments:** 
+	- **Comments:** need to add a massage to that use when he try's inteing using that same email. 
 
-- [ ] **Task 17: Option in Settings to Delete Past Messages (All or by Stream)**
+- [x] **Task 17: Option in Settings to Delete Past Messages (All or by Stream)**
 	- **Description:** Go to Settings $\rightarrow$ Chat History & Privacy. Test "Delete All My Messages" (purges all user messages across all broadcasts). Test "Clear Messages by Stream" (purges messages only for a chosen broadcast room).
 	- **Comments:** 
 
 - [ ] **Task 18: Temporary Removal of Streamer from Map by Moderation**
 	- **Description:** In Admin Hub $\rightarrow$ Streamers Registry, toggle "Hide from Map" on a streamer. Open Spatial Map: verify their marker is hidden from the map. Verify their profile remains accessible via direct link or Discovery Feed.
-	- **Comments:** 
+	- **Comments:** "Failed to update map visibility" this is what I get when I try hiding an account. 
 
 ---
 
