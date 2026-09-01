@@ -15,15 +15,12 @@ import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
 
-/// CartoDB's zero-API-key dark raster basemap. Must include `/rastertiles/`
-/// -- that path segment is where CartoDB actually serves raster tiles from;
-/// omitting it 404s every request and the map renders as blank grey squares
-/// (Task 7). Exposed as a top-level constant so this stays covered by a
-/// regression test rather than only being visible by manually panning the map.
+/// Free Dark GIS Basemap (Esri World Dark Gray Canvas & OpenStreetMap fallback)
+/// Completely free of watermarks or API key requirements.
 const String kSpatialMapTileUrlTemplate =
-    'https://{s}.basemaps.cartocdn.com/rastertiles/dark_all/{z}/{x}/{y}.png';
+    'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 
-/// Zero-API-key fallback used when the primary CartoDB tile request fails.
+/// Zero-API-key fallback used when the primary dark tile request fails.
 const String kSpatialMapTileFallbackUrl =
     'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
@@ -164,11 +161,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     },
                   ),
                   children: [
-                    // Fast Dark CartoDB Basemap Tile Layer with Standard Network Provider & Fallback
+                    // Fast Dark GIS Basemap Tile Layer with Zero Watermark & Fallback
                     TileLayer(
                       urlTemplate: kSpatialMapTileUrlTemplate,
                       fallbackUrl: kSpatialMapTileFallbackUrl,
-                      subdomains: const ['a', 'b', 'c', 'd'],
+                      subdomains: const ['server', 'services'],
                       maxZoom: 19,
                       userAgentPackageName: 'com.streamer.app',
                       tileProvider: NetworkTileProvider(),

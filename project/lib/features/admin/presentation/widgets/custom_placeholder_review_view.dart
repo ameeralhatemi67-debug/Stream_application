@@ -196,8 +196,95 @@ class _CustomPlaceholderReviewViewState
             )
           else
             ...queue.map((card) => _buildQueueCard(provider, card)),
+
+          const SizedBox(height: AppTheme.spaceXl),
+          _buildApprovedPresetsSection(provider),
         ],
       ),
+    );
+  }
+
+  /// Task 4b: alongside the pending queue above, show what's already
+  /// approved and live -- an already-approved image reused for a different
+  /// slot is auto-fast-tracked client-side (see
+  /// AppProvider.submitCustomPlaceholder) and never reaches this queue, so
+  /// this section is the only place admins can see it happened.
+  Widget _buildApprovedPresetsSection(AppProvider provider) {
+    final approved = provider.approvedCustomPlaceholders;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.verified_rounded,
+                color: AppTheme.accentGreen, size: 18),
+            const SizedBox(width: AppTheme.spaceSm),
+            Text(
+              'admin.custom_cards_approved_title'.tr(),
+              style: const TextStyle(
+                color: AppTheme.textPrimaryDark,
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spaceSm),
+        if (approved.isEmpty)
+          Text(
+            'admin.custom_cards_approved_empty'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 12),
+          )
+        else
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 3,
+              crossAxisSpacing: AppTheme.spaceSm,
+              mainAxisSpacing: AppTheme.spaceSm,
+              childAspectRatio: 16 / 9,
+            ),
+            itemCount: approved.length,
+            itemBuilder: (context, index) {
+              final card = approved[index];
+              return ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.network(
+                      card.imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const ColoredBox(
+                        color: AppTheme.darkSurface3,
+                        child: Icon(Icons.broken_image_outlined,
+                            color: AppTheme.textMutedDark, size: 20),
+                      ),
+                    ),
+                    Positioned(
+                      left: 4,
+                      bottom: 4,
+                      right: 4,
+                      child: Text(
+                        card.streamerDisplayName ?? card.streamerId,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 9.5,
+                          fontWeight: FontWeight.bold,
+                          shadows: [Shadow(blurRadius: 4, color: Colors.black)],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+      ],
     );
   }
 

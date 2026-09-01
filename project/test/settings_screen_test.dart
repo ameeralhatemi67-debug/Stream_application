@@ -10,6 +10,7 @@ import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/profile/presentation/settings_screen.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/broadcaster_application_sheet.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/legal_document_reader_screen.dart';
+import 'package:streamer_app/features/profile/presentation/widgets/viewer_profile_editor_dialog.dart';
 
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;
@@ -117,13 +118,38 @@ void main() {
     });
 
     testWidgets(
-        'TC-SET-03: Edit Account Profile opens BroadcasterApplicationSheet '
-        'for both a viewer and a streamer', (tester) async {
+        'TC-SET-03: Edit Account Profile opens ViewerProfileEditorDialog for '
+        'a viewer and BroadcasterApplicationSheet for an approved streamer',
+        (tester) async {
       useTallTestSurface(tester);
-      final provider = AppProvider();
+      final viewerProvider = AppProvider();
 
       await tester.pumpWidget(
-        createTestWidget(child: const SettingsScreen(), provider: provider),
+        createTestWidget(
+            child: const SettingsScreen(), provider: viewerProvider),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Edit Account Profile'));
+      await tester.pumpAndSettle();
+
+      // issue_log.md: a non-verified viewer's "Edit Profile" action must
+      // never open the broadcaster onboarding flow.
+      expect(find.byType(ViewerProfileEditorDialog), findsOneWidget);
+      expect(find.byType(BroadcasterApplicationSheet), findsNothing);
+
+      Navigator.of(tester.element(find.byType(ViewerProfileEditorDialog)))
+          .pop();
+      await tester.pumpAndSettle();
+
+      final streamerProvider = AppProvider();
+      streamerProvider.debugSetSignedInForTests(
+        email: 'amir@test.com',
+        isStreamer: true,
+      );
+      await tester.pumpWidget(
+        createTestWidget(
+            child: const SettingsScreen(), provider: streamerProvider),
       );
       await tester.pumpAndSettle();
 
@@ -131,6 +157,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(BroadcasterApplicationSheet), findsOneWidget);
+      expect(find.byType(ViewerProfileEditorDialog), findsNothing);
     });
 
     testWidgets(

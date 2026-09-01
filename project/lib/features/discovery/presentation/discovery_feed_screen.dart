@@ -9,6 +9,7 @@ import '../../profile/models/streamer_models.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
 import 'widgets/streamer_grid_card.dart';
 import 'widgets/tags_filter_bottom_sheet.dart';
+import '../../../core/widgets/duplicate_channel_resolution_dialog.dart';
 
 class DiscoveryFeedScreen extends StatefulWidget {
   const DiscoveryFeedScreen({super.key});
@@ -25,6 +26,24 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     super.initState();
     final appProvider = context.read<AppProvider>();
     _searchController.text = appProvider.searchQuery;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkDuplicateChannelsIfNeeded();
+    });
+  }
+
+  void _checkDuplicateChannelsIfNeeded() async {
+    if (!mounted) return;
+    final provider = context.read<AppProvider>();
+    final duplicates = provider.detectDuplicateChannels();
+    if (duplicates.length > 1) {
+      final chosen = await DuplicateChannelResolutionDialog.show(
+        context: context,
+        duplicateChannels: duplicates,
+      );
+      if (chosen != null && mounted) {
+        provider.resolveDuplicateChannels(keptStreamerId: chosen.streamerId);
+      }
+    }
   }
 
   @override

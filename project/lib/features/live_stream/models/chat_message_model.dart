@@ -5,14 +5,19 @@ import 'package:flutter/foundation.dart';
 /// (see supabase/migrations/20260823140000_chat_sender_info.sql -- a regular
 /// viewer can't read those tables cross-user directly under their RLS).
 enum ChatSenderBadge {
-  speaker('🎙️'),
-  organization('🏛️'),
-  admin('🛡️'),
-  moderator('🛡️ MOD'),
-  verified('✅');
+  speaker('🎙️', 'Speaker', 'متحدث'),
+  organization('🏛️', 'Org', 'مؤسسة'),
+  // Gold ADMIN / cyan MOD pill styling lives in live_chat_widget.dart --
+  // these two carry the exact bilingual labels Tasks 13 & 15 ask for
+  // ("👑 ADMIN / المشرف العام", "🛡️ MOD / مشرف البث").
+  admin('👑', 'ADMIN', 'المشرف العام'),
+  moderator('🛡️', 'MOD', 'مشرف البث'),
+  verified('✅', 'Verified', 'موثّق');
 
   final String emoji;
-  const ChatSenderBadge(this.emoji);
+  final String labelEn;
+  final String labelAr;
+  const ChatSenderBadge(this.emoji, this.labelEn, this.labelAr);
 }
 
 /// A real, Supabase-backed live chat message. Port of a `chat_messages` row,

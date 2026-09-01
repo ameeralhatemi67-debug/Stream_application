@@ -16,6 +16,7 @@ import '../../../core/services/notifications/notification_models.dart';
 import 'widgets/broadcaster_application_sheet.dart';
 import 'widgets/custom_stream_cards_section.dart';
 import 'widgets/legal_document_reader_screen.dart';
+import 'widgets/viewer_profile_editor_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -303,10 +304,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
             ),
-            onPressed: () => BroadcasterApplicationSheet.show(
-              context,
-              application: provider.myApplication,
-            ),
+            onPressed: () {
+              // "Edit Profile" must never open the broadcaster onboarding
+              // flow for a non-verified viewer -- issue_log.md: "clicking
+              // 'Edit account Profile' as a non verified streamer should
+              // not be an option, as it opened the streamer onboarding."
+              // The broadcaster application flow stays reachable strictly
+              // via the dedicated "Apply for Verification" card/button.
+              if (provider.isApprovedStreamer) {
+                BroadcasterApplicationSheet.show(
+                  context,
+                  application: provider.myApplication,
+                );
+              } else {
+                ViewerProfileEditorDialog.show(context);
+              }
+            },
           ),
         ),
       ],
@@ -995,44 +1008,28 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.accentBlue,
-                    side: const BorderSide(color: AppTheme.darkBorderSubtle),
-                    padding: const EdgeInsets.symmetric(vertical: 9),
-                  ),
-                  icon: const Icon(Icons.edit_note_rounded, size: 16),
-                  label: Text(
-                    app.status == ApplicationStatus.rejected
-                        ? 'application.reapply_btn'.tr()
-                        : 'Edit Application',
-                    style: const TextStyle(fontSize: 11.5),
-                  ),
-                  onPressed: () => context.push('/streamer-apply'),
-                ),
+          // A single "Edit"/"Reapply" action only -- no parallel "New
+          // Application" button. An account is strictly limited to one
+          // personal broadcaster channel (issue_log.md: "I should not have
+          // the ability to own two channels"); an existing application
+          // (pending, approved, or rejected) is always edited in place.
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.accentBlue,
+                side: const BorderSide(color: AppTheme.darkBorderSubtle),
+                padding: const EdgeInsets.symmetric(vertical: 9),
               ),
-              const SizedBox(width: AppTheme.spaceSm),
-              Expanded(
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.darkSurface2,
-                    foregroundColor: AppTheme.textPrimaryDark,
-                    elevation: 0,
-                    side: const BorderSide(color: AppTheme.darkBorderSubtle),
-                    padding: const EdgeInsets.symmetric(vertical: 9),
-                  ),
-                  icon: const Icon(Icons.add_task_rounded, size: 16),
-                  label: const Text(
-                    'New Application',
-                    style: TextStyle(fontSize: 11.5),
-                  ),
-                  onPressed: () => BroadcasterApplicationSheet.show(context),
-                ),
+              icon: const Icon(Icons.edit_note_rounded, size: 16),
+              label: Text(
+                app.status == ApplicationStatus.rejected
+                    ? 'application.reapply_btn'.tr()
+                    : 'Edit Application',
+                style: const TextStyle(fontSize: 11.5),
               ),
-            ],
+              onPressed: () => context.push('/streamer-apply'),
+            ),
           ),
         ],
       ),

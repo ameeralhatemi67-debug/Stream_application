@@ -99,6 +99,7 @@ class RtmpPublisherBridge(
             "startStream" -> handleStartStream(call, result)
             "stopStream" -> handleStopStream(result)
             "setMuted" -> handleSetMuted(call, result)
+            "setOrientation" -> handleSetOrientation(call, result)
             "dispose" -> {
                 detach()
                 result.success(null)
@@ -216,6 +217,16 @@ class RtmpPublisherBridge(
             stopForegroundService()
         }
         result.success(null)
+    }
+
+    private fun handleSetOrientation(call: MethodCall, result: MethodChannel.Result) {
+        val orientation = call.argument<Int>("orientation") ?: 0
+        try {
+            stream.setOrientation(orientation)
+            result.success(null)
+        } catch (e: Exception) {
+            result.error("ORIENTATION_FAILED", e.message, null)
+        }
     }
 
     private fun handleSetMuted(call: MethodCall, result: MethodChannel.Result) {

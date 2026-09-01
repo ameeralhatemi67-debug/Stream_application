@@ -3,6 +3,7 @@ package com.example.streamer_app.streaming
 import android.content.Context
 import android.view.SurfaceHolder
 import android.widget.FrameLayout
+import com.pedro.encoder.utils.gl.AspectRatioMode
 import com.pedro.library.view.OpenGlView
 import io.flutter.plugin.platform.PlatformView
 
@@ -25,6 +26,8 @@ class RtmpPublisherView(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
         )
+        // Maintain aspect ratio without stretching the camera image
+        openGlView.setAspectRatioMode(AspectRatioMode.Adjust)
         container.addView(openGlView)
         openGlView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {

@@ -8,6 +8,7 @@ import 'core/config/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
+import 'core/widgets/device_session_conflict_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,6 +47,7 @@ class StreamerApp extends StatefulWidget {
 class _StreamerAppState extends State<StreamerApp> {
   late final AppProvider _appProvider;
   late final GoRouter _router;
+  bool _deviceConflictDialogShown = false;
 
   @override
   void initState() {
@@ -60,10 +62,42 @@ class _StreamerAppState extends State<StreamerApp> {
     // app_router.dart) can react to auth state changes via refreshListenable
     // -- GoRouter must not be rebuilt on every frame.
     _router = AppRouter.build(_appProvider);
+    _appProvider.addListener(_maybeShowDeviceConflictDialog);
+  }
+
+  /// Shows DeviceSessionConflictDialog once per detected conflict --
+  /// AppProvider.initDeviceSession() populates remoteBroadcasterSession when
+  /// another device already holds broadcaster rights on this account
+  /// (issue_log.md multi-device collision). Global (root navigator) so it
+  /// fires regardless of which screen the user lands on after sign-in.
+  void _maybeShowDeviceConflictDialog() {
+    final remote = _appProvider.remoteBroadcasterSession;
+    final current = _appProvider.currentDeviceSession;
+    if (remote == null || current == null) {
+      _deviceConflictDialogShown = false;
+      return;
+    }
+    if (_deviceConflictDialogShown) return;
+    _deviceConflictDialogShown = true;
+
+    final context = AppRouter.rootNavigatorKey.currentContext;
+    if (context == null) return;
+    DeviceSessionConflictDialog.show(
+      context: context,
+      currentDevice: current,
+      existingDevice: remote,
+    ).then((choice) {
+      if (choice == DeviceSessionChoice.transferBroadcaster) {
+        _appProvider.transferBroadcasterToCurrentDevice();
+      } else if (choice == DeviceSessionChoice.continueAsViewer) {
+        _appProvider.continueAsViewerOnCurrentDevice();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _appProvider.removeListener(_maybeShowDeviceConflictDialog);
     _appProvider.dispose();
     super.dispose();
   }

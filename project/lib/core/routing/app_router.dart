@@ -82,11 +82,20 @@ class AppRouter {
       }
 
       // Handle OAuth callback deep link redirects (e.g. com.example.streamerapp://login-callback)
-      // gracefully without ever falling through to "Route Not Found".
+      // gracefully without ever falling through to "Route Not Found". Must
+      // mirror the '/welcome' branch's role-select gate above -- routing
+      // straight to '/feed' here skipped the broadcaster onboarding prompt
+      // entirely on every fresh Google sign-in (issue_log.md: "I did not
+      // get a prompt to start the onboarding to be a streamer, it just
+      // opened the Discovery tab").
       if (state.uri.host == 'login-callback' ||
           path == '/login-callback' ||
           state.uri.path == '/login-callback') {
-        return isLoggedIn ? '/feed' : '/welcome';
+        if (!isLoggedIn) return '/welcome';
+        if (!provider.hasCompletedRoleSelection && !provider.isApprovedStreamer) {
+          return '/role-select';
+        }
+        return '/feed';
       }
 
       return null;
@@ -341,7 +350,8 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                           icon: Icons.person_rounded,
                           label: 'Studio Profile',
                           isSelected: false,
-                          onTap: () => context.push('/profile/prof_alghamdi_01'),
+                          onTap: () => context.push(
+                              '/profile/${context.read<AppProvider>().currentUserStreamerId}'),
                         ),
                       ],
                       _DesktopNavItem(

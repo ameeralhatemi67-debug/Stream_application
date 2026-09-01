@@ -30,17 +30,15 @@ class OfflineMarker extends StatelessWidget {
         onTap: onTap,
         onDoubleTap: onDoubleTap,
         child: Container(
-          width: 38,
-          height: 38,
-          padding: const EdgeInsets.all(2),
+          width: 42,
+          height: 42,
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            // Crisp white avatar disc so profile pictures pop against the
-            // dark basemap (Task 8) -- map canvas only.
-            color: Colors.white,
+            color: Colors.transparent,
             border: Border.all(
               color: isSelected ? AppTheme.accentBlue : Colors.white,
-              width: isSelected ? 2.5 : 1.5,
+              width: isSelected ? 2.2 : 1.8,
             ),
             boxShadow: [
               BoxShadow(
@@ -55,7 +53,7 @@ class OfflineMarker extends StatelessWidget {
               BlendMode.saturation,
             ),
             child: CircleAvatar(
-              radius: 16,
+              radius: 14,
               backgroundColor: AppTheme.darkSurface2,
               backgroundImage: _getAvatarProvider(marker.avatarUrl),
               onBackgroundImageError: (_, __) {},

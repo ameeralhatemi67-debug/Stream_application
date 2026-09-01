@@ -1,27 +1,31 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/language_switcher.dart';
 import '../../../profile/models/streamer_models.dart';
+import '../../../map/models/map_models.dart';
+import '../../models/chat_message_model.dart';
 import '../../models/stream_privacy_models.dart';
+import '../../services/ghost_chat_fallback_controller.dart';
+import '../../services/live_chat_controller.dart';
 import '../../services/rtmp_publish_engine.dart';
+import '../widgets/chat_message_actions_sheet.dart';
+import '../widgets/floating_reactions_overlay.dart';
+import '../widgets/live_chat_widget.dart';
 import '../widgets/permission_rationale_dialog.dart';
 import '../widgets/phone_camera_preview.dart';
 
-/// v0.7 Checkpoint 2 -- lets a streamer broadcast using this phone's own
-/// camera/mic instead of relying on OBS. Only ever talks to the native
-/// RootEncoder wrapper through [RtmpPublishEngine] (MethodChannel/
-/// EventChannel), mirroring the engine/UI split the Checkpoint 1 spike
-/// validated, so v1.1's iOS engine can sit behind this same screen later.
+/// Full-featured Stream Page for Phone Broadcasters:
+/// Unifies the broadcaster's phone camera stream with the exact same
+/// rich stream page interface (16:9 player viewport, live chat, lecture slides,
+/// venue info, viewer reactions, and integrated broadcaster studio controls).
 class PhoneBroadcastScreen extends StatefulWidget {
-  /// Set when this screen is launched from the Broadcaster Studio bottom
-  /// sheet's Phone mode (LiveBroadcasterStudioSheet), which already
-  /// collected the quality preset (and everything else) up front -- skips
-  /// the picker below and heads straight into camera setup. Null only if
-  /// this screen is ever pushed without a preset already chosen, which then
-  /// still shows the picker.
   final BroadcastQualityPreset? quickLaunchPreset;
 
   const PhoneBroadcastScreen({super.key, this.quickLaunchPreset});
@@ -30,14 +34,27 @@ class PhoneBroadcastScreen extends StatefulWidget {
   State<PhoneBroadcastScreen> createState() => _PhoneBroadcastScreenState();
 }
 
-class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
+class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
+    with SingleTickerProviderStateMixin {
   final RtmpPublishEngine _engine = RtmpPublishEngine();
+  final FloatingReactionsOverlayController _reactionsController =
+      FloatingReactionsOverlayController();
+  final TextEditingController _chatTextController = TextEditingController();
+  final ScrollController _chatScrollController = ScrollController();
+
+  late final LiveChatController _chatController;
+  late final GhostChatFallbackController _ghostChatController;
+  late TabController _tabController;
+
   String? _setupError;
   late BroadcastQualityPreset _preset;
   late bool _presetConfirmed;
+  bool _isFullscreen = false;
+  bool _isSideChatOpen = false;
 
   late AppProvider _appProvider;
   bool _appProviderCaptured = false;
+  bool _weStartedBroadcast = false;
 
   @override
   void didChangeDependencies() {
@@ -56,16 +73,44 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     _preset = widget.quickLaunchPreset ?? BroadcastQualityPreset.medium;
     _presetConfirmed = widget.quickLaunchPreset != null;
 
+    _tabController = TabController(length: 3, vsync: this);
+    _chatController = LiveChatController(
+      streamId: 'phone_broadcast_${DateTime.now().millisecondsSinceEpoch}',
+      onReaction: (type) => _reactionsController.spawnReaction(type),
+    )..start();
+    _ghostChatController = GhostChatFallbackController(
+        streamId: 'phone_broadcast_stream');
+    _chatController.addListener(_handleChatConnectionChange);
+
+    _setWakelock(true);
+
     if (widget.quickLaunchPreset != null) {
-      // A pre-chosen preset means the Broadcaster Studio sheet's Phone mode
-      // launched this screen as a one-tap flow: this screen (not
-      // _startBroadcast's own "wasn't live yet" check below) owns ending the
-      // broadcast if the user backs out before/after the RTMP connection
-      // actually goes through -- see dispose()/_stopBroadcast.
       _weStartedBroadcast = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _confirmPresetAndSetup();
       });
+    }
+  }
+
+  void _setWakelock(bool enable) {
+    try {
+      final future =
+          enable ? WakelockPlus.enable() : WakelockPlus.disable();
+      future.catchError((Object e) {
+        debugPrint('[PhoneBroadcastScreen] wakelock unavailable: $e');
+      });
+    } catch (e) {
+      debugPrint('[PhoneBroadcastScreen] wakelock unavailable: $e');
+    }
+  }
+
+  void _handleChatConnectionChange() {
+    final disconnected =
+        _chatController.connectionState == ChatConnectionState.reconnecting;
+    if (disconnected && !_ghostChatController.isActive) {
+      _ghostChatController.start();
+    } else if (!disconnected && _ghostChatController.isActive) {
+      _ghostChatController.stop();
     }
   }
 
@@ -84,26 +129,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     );
     if (!micGranted) return;
 
-    // v0.7 Checkpoint 3 Phase 2 -- best-effort only: RtmpForegroundService
-    // keeps the broadcast running in the background even without this (API
-    // < 33 doesn't need it at all; confirmed on-device), but on API 33+ its
-    // ongoing-broadcast notification is silently invisible without it. Not
-    // worth a rationale dialog or gating the broadcast on the answer.
     await Permission.notification.request();
 
     try {
       await _engine.initializeCamera(preset: _preset);
-      // v0.7 Checkpoint 3 Phase 1 -- reuses the same RTMP pipeline in
-      // mic-only mode when the streamer picked Audio-Only in the
-      // Broadcaster Studio sheet's format toggle, swapping the encoder's
-      // video source to a static branded image.
       if (_appProvider.customBroadcastType == BroadcastType.liveAudio) {
         await _engine.setAudioOnly(true);
       }
-      // A pre-chosen preset means this is a one-tap flow -- the streamer
-      // already committed to going live back in the Broadcaster Studio
-      // sheet, so there's no separate manual "Go Live" tap to wait for here
-      // once the camera's ready.
       if (widget.quickLaunchPreset != null && mounted) {
         await _startBroadcast();
       }
@@ -121,40 +153,50 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     if (status.isGranted) return true;
 
     if (!mounted) return false;
-    final continueRequested =
-        await PermissionRationaleDialog.show(context, kind);
-    if (!continueRequested) {
-      _showDenied(kind);
-      return false;
-    }
+    final rationaleGranted = await PermissionRationaleDialog.show(
+      context,
+      kind,
+    );
+    if (!rationaleGranted) return false;
 
     status = await permission.request();
-    if (!status.isGranted) {
-      _showDenied(kind);
-      return false;
+    if (status.isGranted) return true;
+
+    if (status.isPermanentlyDenied && mounted) {
+      final openSettings = await showDialog<bool>(
+            context: context,
+            builder: (dialogContext) => AlertDialog(
+              backgroundColor: AppTheme.darkSurface1,
+              title: const Text(
+                'Permission required',
+                style: TextStyle(color: Colors.white),
+              ),
+              content: Text(
+                'The app needs ${kind == BroadcastPermissionKind.camera ? 'camera' : 'microphone'} access to broadcast. Please enable it in Settings.',
+                style: const TextStyle(color: AppTheme.textSecondaryDark),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext, false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.pop(dialogContext, true),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.accentBlue,
+                  ),
+                  child: const Text('Open Settings'),
+                ),
+              ],
+            ),
+          ) ??
+          false;
+      if (openSettings) {
+        await openAppSettings();
+      }
     }
-    return true;
+    return false;
   }
-
-  void _showDenied(BroadcastPermissionKind kind) {
-    if (!mounted) return;
-    final isCamera = kind == BroadcastPermissionKind.camera;
-    setState(() {
-      _setupError = isCamera
-          ? 'Camera access is required to broadcast from this phone. '
-              'Enable it in system settings to continue.'
-          : 'Microphone access is required to broadcast from this phone. '
-              'Enable it in system settings to continue.';
-    });
-  }
-
-  // Tracks whether *this screen* was the one that flipped
-  // AppProvider.isBroadcastingLive on -- not just whether it's currently
-  // true, since a broadcast could already be live via OBS/YouTube-video-ID
-  // before this screen ever opened. Only undoes what it did: started here,
-  // stopped here (including on dispose, e.g. the user backing out mid-
-  // "connecting" rather than tapping End Broadcast first).
-  bool _weStartedBroadcast = false;
 
   Future<void> _startBroadcast() async {
     try {
@@ -165,7 +207,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
         _weStartedBroadcast = true;
       }
     } on Exception {
-      // The engine's own error state already drives the UI here.
+      // The engine's error state drives the UI.
     }
   }
 
@@ -179,31 +221,53 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
 
   void _onEngineChanged() => setState(() {});
 
-  /// Cluster 1 Task 1 -- publishes the broadcaster's mute/silence state so
-  /// the viewer-facing player overlay can show the "Streamer Microphone
-  /// Muted" badge instead of leaving viewers to guess whether their own
-  /// audio broke. AppProvider is the seam here; a future Realtime
-  /// stream-metadata channel replaces this local hop without either the
-  /// engine or the overlay changing.
   void _onMicSilenceChanged() {
     if (!_appProviderCaptured) return;
     _appProvider.setStreamerMicMuted(_engine.isMicSilent.value);
   }
 
+  void _handleToggleFullscreen() {
+    final entering = !_isFullscreen;
+    setState(() => _isFullscreen = entering);
+
+    if (entering) {
+      _engine.setOrientation(90);
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+    } else {
+      _engine.setOrientation(0);
+      SystemChrome.setPreferredOrientations(const [
+        DeviceOrientation.portraitUp,
+        DeviceOrientation.landscapeLeft,
+        DeviceOrientation.landscapeRight,
+      ]);
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    }
+  }
+
+  void _restorePortraitChrome() {
+    _engine.setOrientation(0);
+    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  }
+
   @override
   void dispose() {
+    _setWakelock(false);
+    _restorePortraitChrome();
+    _tabController.dispose();
+    _chatTextController.dispose();
+    _chatScrollController.dispose();
+    _chatController.removeListener(_handleChatConnectionChange);
+    _chatController.dispose();
+    _ghostChatController.dispose();
     _engine.removeListener(_onEngineChanged);
     _engine.isMicSilent.removeListener(_onMicSilenceChanged);
     if (_appProviderCaptured) _appProvider.setStreamerMicMuted(false);
     if (_weStartedBroadcast && _appProvider.isBroadcastingLive) {
-      // Deferred to a microtask: AppRouter is built with
-      // refreshListenable: provider (ADR-001), so toggleBroadcasterGoLive's
-      // notifyListeners() re-enters GoRouter's own rebuild if called
-      // synchronously from dispose() while the Router is still mid-rebuild
-      // from the very pop that's disposing this screen -- observed on
-      // device as "setState() or markNeedsBuild() called when widget tree
-      // was locked" inside _RouterState._rebuild. Running it after the
-      // current frame finishes avoids the re-entrancy.
       final provider = _appProvider;
       Future.microtask(() => provider.toggleBroadcasterGoLive());
     }
@@ -211,18 +275,64 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
     super.dispose();
   }
 
+  void _handleSendChatMessage(String text) {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return;
+    _chatController.sendMessage(trimmed).then((_) {
+      if (!mounted || !_chatScrollController.hasClients) return;
+      _chatScrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }).catchError((Object e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: AppTheme.accentRed),
+      );
+    });
+  }
+
+  ImageProvider _getAvatarProvider(String url) {
+    if (url.startsWith('assets/')) {
+      return AssetImage(url);
+    }
+    return NetworkImage(url);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Title/description come from the Broadcaster Studio bottom sheet
-    // (AppProvider.setCustomBroadcastMeta), which always runs immediately
-    // before this screen is pushed -- read via Provider rather than
-    // constructor params so this stays in sync with the same source of
-    // truth PhoneBroadcastScreen already reads phoneBroadcastFullUrl from.
-    final title = _appProvider.customLiveTitle;
+    final title = _appProvider.customLiveTitle.isEmpty
+        ? 'live.phone_broadcast_default_title'.tr()
+        : _appProvider.customLiveTitle;
     final description = _appProvider.customLiveDescription;
+    final langCode = context.locale.languageCode;
+    final mediaQuery = MediaQuery.of(context);
+    final isDesktop = mediaQuery.size.width >= 900;
+    final isLandscape = mediaQuery.orientation == Orientation.landscape;
+    final isSideBySide = isDesktop || (isLandscape && !_isFullscreen);
+
+    if (!_presetConfirmed) {
+      return Scaffold(
+        backgroundColor: AppTheme.darkBgBase,
+        appBar: AppBar(
+          backgroundColor: AppTheme.darkSurface1,
+          title: Text('live.broadcast_from_phone'.tr()),
+        ),
+        body: _buildPresetPicker(),
+      );
+    }
+
+    if (_isFullscreen || isLandscape) {
+      return Scaffold(
+        backgroundColor: Colors.black,
+        body: _buildFullscreenLandscapeLayout(title, langCode),
+      );
+    }
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppTheme.darkBgBase,
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: AppTheme.darkSurface1,
         title: Column(
@@ -230,10 +340,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              title.isEmpty ? 'Broadcast From Phone' : title,
+              title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
             ),
             if (description.isNotEmpty)
               Text(
@@ -248,122 +358,814 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
               ),
           ],
         ),
+        actions: const [
+          LanguageSwitcher(),
+          SizedBox(width: AppTheme.spaceSm),
+        ],
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(child: _buildBody()),
-            if (_presetConfirmed) _buildControls(),
-          ],
-        ),
+        child: isSideBySide
+            ? Row(
+                children: [
+                  Expanded(
+                    flex: isDesktop ? 65 : 58,
+                    child: Column(
+                      children: [
+                        Expanded(child: _buildVideoViewport(isSideBySide: true)),
+                        _buildBroadcasterControlsStrip(),
+                        _buildBroadcasterHeader(title, description, langCode),
+                      ],
+                    ),
+                  ),
+                  const VerticalDivider(
+                      width: 1, color: AppTheme.darkBorderSubtle),
+                  Expanded(
+                    flex: isDesktop ? 35 : 42,
+                    child: _buildCinemaTabPanel(langCode),
+                  ),
+                ],
+              )
+            : Column(
+                children: [
+                  _buildVideoViewport(isSideBySide: false),
+                  _buildBroadcasterControlsStrip(),
+                  _buildBroadcasterHeader(title, description, langCode),
+                  Expanded(child: _buildCinemaTabPanel(langCode)),
+                ],
+              ),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildVideoViewport({required bool isSideBySide}) {
     if (_setupError != null) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceLg),
-          child: Text(
-            _setupError!,
-            textAlign: TextAlign.center,
-            style: const TextStyle(color: Colors.redAccent),
-          ),
+      return Container(
+        color: Colors.black,
+        alignment: Alignment.center,
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Text(
+          _setupError!,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Colors.redAccent),
         ),
       );
     }
 
-    if (!_presetConfirmed) {
-      return _buildPresetPicker();
-    }
-
-    // The native OpenGlView (and RtmpPublisherBridge.attach()) only exists
-    // once this PlatformView is actually mounted -- so it has to be in the
-    // tree *before* RtmpPublishEngine.initializeCamera()'s "prepare" call,
-    // not gated behind it, or "prepare" reaches an unattached bridge (see
-    // NOT_READY in RtmpPublisherBridge). A loading spinner overlays it until
-    // the engine reports ready.
     final loading = _engine.state == RtmpPublishState.idle ||
         _engine.state == RtmpPublishState.initializingCamera;
-    return Stack(
-      children: [
-        const PhoneCameraPreview(),
-        if (loading)
-          const ColoredBox(
-            color: Colors.black,
-            child: Center(
-              child: CircularProgressIndicator(color: AppTheme.accentRed),
+
+    final videoContent = Container(
+      color: Colors.black,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // 1. Camera Platform View (properly clipped with 0 distortion)
+          const ClipRect(
+            child: SizedBox.expand(
+              child: PhoneCameraPreview(),
             ),
           ),
-        if (_engine.state == RtmpPublishState.live)
+
+          // 2. Loading indicator
+          if (loading)
+            const ColoredBox(
+              color: Colors.black,
+              child: Center(
+                child: CircularProgressIndicator(color: AppTheme.accentRed),
+              ),
+            ),
+
+          // 3. Live Bitrate Badge (Top Left)
+          if (_engine.state == RtmpPublishState.live)
+            Positioned(
+              top: AppTheme.spaceSm,
+              left: AppTheme.spaceSm,
+              child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
+            ),
+
+          if (_engine.state == RtmpPublishState.connecting)
+            const Positioned(
+              top: AppTheme.spaceSm,
+              left: AppTheme.spaceSm,
+              child: _StatusPill(label: 'Connecting...', color: Colors.amber),
+            ),
+
+          // 4. Fullscreen Button (Bottom Right of player)
           Positioned(
-            top: AppTheme.spaceMd,
-            left: AppTheme.spaceMd,
-            child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
-          ),
-        if (_engine.state == RtmpPublishState.connecting)
-          const Positioned(
-            top: AppTheme.spaceMd,
-            left: AppTheme.spaceMd,
-            child: _StatusPill(label: 'Connecting...', color: Colors.amber),
-          ),
-        if (_engine.state == RtmpPublishState.reconnecting)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _ReconnectingBanner(
-              attempt: _engine.reconnectAttempt,
-              maxAttempts: _engine.maxReconnectAttempts,
+            bottom: AppTheme.spaceSm,
+            right: AppTheme.spaceSm,
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              ),
+              child: IconButton(
+                icon: const Icon(Icons.fullscreen_rounded,
+                    color: Colors.white, size: 20),
+                tooltip: 'Fullscreen',
+                onPressed: _handleToggleFullscreen,
+              ),
             ),
           ),
-        if (_engine.state == RtmpPublishState.error &&
-            _engine.lastError != null)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: _StreamErrorBanner(message: _engine.lastError!),
-          ),
-        if (_engine.isAudioOnly)
-          const Positioned(
-            top: AppTheme.spaceMd,
-            right: AppTheme.spaceMd,
-            child: _StatusPill(label: 'AUDIO ONLY', color: AppTheme.accentBlue),
-          ),
-        Consumer<AppProvider>(
-          builder: (context, provider, _) {
-            if (provider.pendingKnockRequests.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            final request = provider.pendingKnockRequests.first;
-            return Positioned(
+
+          // 5. Audio Only Pill
+          if (_engine.isAudioOnly)
+            const Positioned(
+              top: AppTheme.spaceSm,
+              right: AppTheme.spaceSm,
+              child: _StatusPill(label: 'AUDIO ONLY', color: AppTheme.accentBlue),
+            ),
+
+          // 6. Reconnecting Banner
+          if (_engine.state == RtmpPublishState.reconnecting)
+            Positioned(
               top: 0,
               left: 0,
               right: 0,
-              child: _KnockingBanner(
-                request: request,
-                queueLength: provider.pendingKnockRequests.length,
-                onAdmit: () => provider.admitKnockRequest(request.id),
-                onDeny: () => provider.denyKnockRequest(request.id),
-                onAdmitAll: provider.admitAllKnockRequests,
+              child: _ReconnectingBanner(
+                attempt: _engine.reconnectAttempt,
+                maxAttempts: _engine.maxReconnectAttempts,
               ),
-            );
-          },
+            ),
+
+          // 7. Error Banner
+          if (_engine.state == RtmpPublishState.error &&
+              _engine.lastError != null)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: _StreamErrorBanner(message: _engine.lastError!),
+            ),
+
+          // 8. Floating Reaction Hearts Overlay
+          FloatingReactionsOverlay(controller: _reactionsController),
+
+          // 9. Knocking Requests (Private Stream)
+          Consumer<AppProvider>(
+            builder: (context, provider, _) {
+              if (provider.pendingKnockRequests.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              final request = provider.pendingKnockRequests.first;
+              return Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: _KnockingBanner(
+                  request: request,
+                  queueLength: provider.pendingKnockRequests.length,
+                  onAdmit: () => provider.admitKnockRequest(request.id),
+                  onDeny: () => provider.denyKnockRequest(request.id),
+                  onAdmitAll: provider.admitAllKnockRequests,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+
+    if (isSideBySide) return videoContent;
+
+    return AspectRatio(
+      aspectRatio: 16 / 9,
+      child: videoContent,
+    );
+  }
+
+  Widget _buildBroadcasterControlsStrip() {
+    final ready = _engine.state == RtmpPublishState.ready ||
+        _engine.state == RtmpPublishState.stopped;
+    final live = _engine.state == RtmpPublishState.live;
+    final connecting = _engine.state == RtmpPublishState.connecting;
+    final broadcastActive =
+        live || _engine.state == RtmpPublishState.reconnecting;
+    final canToggleGoLive =
+        ready || broadcastActive || _engine.state == RtmpPublishState.error;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceLg,
+        vertical: 8.0,
+      ),
+      decoration: const BoxDecoration(
+        color: AppTheme.darkSurface1,
+        border: Border(
+          bottom: BorderSide(color: AppTheme.darkBorderSubtle, width: 1),
         ),
-        Consumer<AppProvider>(
-          builder: (context, provider, _) {
-            if (!provider.isActiveStreamPrivate) return const SizedBox.shrink();
-            return Positioned(
-              bottom: AppTheme.spaceMd,
-              right: AppTheme.spaceMd,
-              child: _AttendeesButton(
-                count: provider.admittedAttendees.length,
-                onTap: () => _showDirectorPanel(context, provider),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // 🎤 Mic Mute Toggle
+          Container(
+            decoration: BoxDecoration(
+              color: _engine.isMuted
+                  ? AppTheme.accentRed.withValues(alpha: 0.2)
+                  : AppTheme.darkSurface2,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border: Border.all(
+                color: _engine.isMuted
+                    ? AppTheme.accentRed
+                    : AppTheme.darkBorderSubtle,
               ),
+            ),
+            child: IconButton(
+              iconSize: 20,
+              onPressed: broadcastActive || ready
+                  ? () => _engine.setMuted(!_engine.isMuted)
+                  : null,
+              icon: Icon(
+                _engine.isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                color: _engine.isMuted ? AppTheme.accentRed : Colors.white,
+              ),
+              tooltip:
+                  _engine.isMuted ? 'Unmute microphone' : 'Mute microphone',
+            ),
+          ),
+
+          // 🛑 Go Live / End Broadcast Button
+          ElevatedButton.icon(
+            onPressed: connecting
+                ? null
+                : canToggleGoLive
+                    ? (broadcastActive ? _stopBroadcast : _startBroadcast)
+                    : null,
+            icon: Icon(
+              broadcastActive
+                  ? Icons.stop_circle_rounded
+                  : Icons.sensors_rounded,
+              size: 18,
+            ),
+            label: Text(
+              connecting
+                  ? 'Connecting...'
+                  : broadcastActive
+                      ? 'End Broadcast'
+                      : 'Go Live',
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: broadcastActive
+                  ? Colors.red.shade800
+                  : AppTheme.accentGreen,
+              foregroundColor: Colors.white,
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              ),
+            ),
+          ),
+
+          // 🔄 Flip Camera Button
+          Container(
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface2,
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border: Border.all(color: AppTheme.darkBorderSubtle),
+            ),
+            child: IconButton(
+              iconSize: 20,
+              onPressed: (ready || broadcastActive) && !_engine.isAudioOnly
+                  ? _engine.switchCamera
+                  : null,
+              icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
+              tooltip: _engine.isAudioOnly
+                  ? 'Not available in audio-only'
+                  : 'Flip camera',
+            ),
+          ),
+
+          // 🔒 Private Stream Attendees Button (if active)
+          Consumer<AppProvider>(
+            builder: (context, provider, _) {
+              if (!provider.isActiveStreamPrivate) {
+                return const SizedBox.shrink();
+              }
+              return Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface2,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  border: Border.all(
+                      color: AppTheme.accentAmber.withValues(alpha: 0.5)),
+                ),
+                child: IconButton(
+                  iconSize: 20,
+                  icon: const Icon(Icons.lock_rounded,
+                      color: AppTheme.accentAmber),
+                  tooltip: '${provider.admittedAttendees.length} Attendees',
+                  onPressed: () => _showDirectorPanel(context, provider),
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBroadcasterHeader(
+      String title, String description, String langCode) {
+    final streamer = _appProvider.activeStreamer ?? _appProvider.streamers.first;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppTheme.spaceMd,
+        vertical: AppTheme.spaceSm,
+      ),
+      decoration: const BoxDecoration(
+        color: AppTheme.darkSurface1,
+        border: Border(
+            bottom: BorderSide(color: AppTheme.darkBorderSubtle, width: 1)),
+      ),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 18,
+            backgroundColor: AppTheme.darkSurface3,
+            backgroundImage: _getAvatarProvider(streamer.avatarUrl),
+          ),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  children: [
+                    Flexible(
+                      child: Text(
+                        streamer.getLocalizedName(langCode),
+                        style: const TextStyle(
+                          color: AppTheme.textPrimaryDark,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.verified_rounded,
+                        color: AppTheme.accentBlue, size: 14),
+                  ],
+                ),
+                Text(
+                  streamer.getLocalizedOrganization(langCode),
+                  style: const TextStyle(
+                      color: AppTheme.textSecondaryDark, fontSize: 11),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: AppTheme.accentRed.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              border: Border.all(
+                  color: AppTheme.accentRed.withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.videocam_rounded,
+                    color: AppTheme.accentRed, size: 13),
+                const SizedBox(width: 4),
+                Text(
+                  'live.broadcaster_mode'.tr(),
+                  style: const TextStyle(
+                    color: AppTheme.accentRed,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCinemaTabPanel(String langCode) {
+    final streamer = _appProvider.activeStreamer ?? _appProvider.streamers.first;
+
+    return Container(
+      color: AppTheme.darkBgBase,
+      child: Column(
+        children: [
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                // Tab 1: Live Chat
+                _buildLiveChatTab(),
+                // Tab 2: Slides
+                _buildSlidesTab(streamer, langCode),
+                // Tab 3: Venue Info
+                _buildVenueTab(streamer, langCode),
+              ],
+            ),
+          ),
+          Container(
+            height: 45,
+            decoration: const BoxDecoration(
+              color: AppTheme.darkSurface1,
+              border: Border(
+                top: BorderSide(color: AppTheme.darkBorderSubtle, width: 0.8),
+              ),
+            ),
+            child: TabBar(
+              controller: _tabController,
+              indicatorColor: AppTheme.accentRed,
+              labelColor: AppTheme.accentRed,
+              unselectedLabelColor: AppTheme.textMutedDark,
+              indicatorWeight: 2.0,
+              tabs: [
+                Tab(
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.chat_bubble_outline_rounded, size: 14),
+                      const SizedBox(width: 5),
+                      Text('live.tab_chat'.tr(),
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.picture_as_pdf_outlined, size: 14),
+                      const SizedBox(width: 5),
+                      Text('live.tab_sources'.tr(),
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+                Tab(
+                  height: 40,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 14),
+                      const SizedBox(width: 5),
+                      Text('live.tab_venue'.tr(),
+                          style: const TextStyle(
+                              fontSize: 11, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLiveChatTab() {
+    final langCode = context.locale.languageCode;
+    return ListenableBuilder(
+      listenable: _chatController,
+      builder: (context, _) {
+        final messages = _chatController.messages.isNotEmpty
+            ? _chatController.messages
+            : _ghostChatController.messages
+                .map((m) => ChatMessageModel(
+                      id: m.messageId,
+                      streamId: m.streamId,
+                      senderId: 'ghost_${m.messageId}',
+                      senderName: m.getLocalizedSender(langCode),
+                      senderAvatarUrl: m.senderAvatar,
+                      body: m.getLocalizedMessage(langCode),
+                      createdAt: DateTime.tryParse(m.timestamp) ??
+                          DateTime.now(),
+                      isCurrentUser: m.isCurrentUser,
+                      badges: const {},
+                      isPending: false,
+                    ))
+                .toList();
+
+        return LiveChatWidget(
+          messages: messages,
+          connectionState: _chatController.connectionState,
+          onSendTextMessage: _handleSendChatMessage,
+          onMessageLongPress: (msg) {
+            showChatMessageActionsSheet(
+              context,
+              message: msg,
+              controller: _chatController,
             );
           },
+        );
+      },
+    );
+  }
+
+  Widget _buildSlidesTab(StreamerModel streamer, String langCode) {
+    return Container(
+      color: AppTheme.darkBgBase,
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'live.slides_attached_title'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimaryDark,
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+          Text(
+            'live.slides_attached_subtitle'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 12),
+          ),
+          const SizedBox(height: AppTheme.spaceLg),
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppTheme.darkSurface1,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                border: Border.all(color: AppTheme.darkBorderSubtle),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.slideshow_rounded,
+                      size: 48, color: AppTheme.accentBlue),
+                  const SizedBox(height: AppTheme.spaceMd),
+                  Text(
+                    streamer.getLocalizedTitle(langCode),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      color: AppTheme.textPrimaryDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
+                    'Presentation Deck (PDF Attached)',
+                    style: TextStyle(
+                        color: AppTheme.textMutedDark, fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildVenueTab(StreamerModel streamer, String langCode) {
+    final venueInfo = getAuditoriumInfoForStreamer(streamer);
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.account_balance_rounded,
+                  color: AppTheme.accentBlue, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'live.venue_details_title'.tr(),
+                style: const TextStyle(
+                  color: AppTheme.textPrimaryDark,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceMd),
+          Container(
+            padding: const EdgeInsets.all(AppTheme.spaceMd),
+            decoration: BoxDecoration(
+              color: AppTheme.darkSurface1,
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              border: Border.all(color: AppTheme.darkBorderSubtle),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  venueInfo.getLocalizedAddress(langCode),
+                  style: const TextStyle(
+                      color: AppTheme.textPrimaryDark, fontSize: 12.5),
+                ),
+                const Divider(color: AppTheme.darkBorderSubtle, height: 16),
+                Text(
+                  'Hall: ${venueInfo.getLocalizedAuditorium(langCode)}',
+                  style: const TextStyle(
+                      color: AppTheme.textSecondaryDark, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Gate: ${venueInfo.getLocalizedGate(langCode)}',
+                  style: const TextStyle(
+                      color: AppTheme.textSecondaryDark, fontSize: 12),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Capacity: ${venueInfo.seatingCapacity} Seats',
+                  style: const TextStyle(
+                      color: AppTheme.accentGreen, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFullscreenLandscapeLayout(String title, String langCode) {
+    final live = _engine.state == RtmpPublishState.live;
+    final broadcastActive =
+        live || _engine.state == RtmpPublishState.reconnecting;
+
+    return Stack(
+      children: [
+        // 1. Fullscreen Camera Preview
+        const SizedBox.expand(
+          child: PhoneCameraPreview(),
+        ),
+
+        // 2. Reactions Overlay
+        FloatingReactionsOverlay(controller: _reactionsController),
+
+        // 3. Top Translucent Overlay Bar
+        Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: Container(
+            padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spaceLg, vertical: 12),
+            decoration: const BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.black87, Colors.transparent],
+              ),
+            ),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.fullscreen_exit_rounded,
+                      color: Colors.white, size: 24),
+                  tooltip: 'Exit Fullscreen',
+                  onPressed: _handleToggleFullscreen,
+                ),
+                const SizedBox(width: AppTheme.spaceSm),
+                if (_engine.state == RtmpPublishState.live)
+                  _LiveBadge(bitrateBps: _engine.lastBitrateBps),
+                const SizedBox(width: AppTheme.spaceMd),
+                Expanded(
+                  child: Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    _isSideChatOpen
+                        ? Icons.chat_bubble_rounded
+                        : Icons.chat_bubble_outline_rounded,
+                    color: _isSideChatOpen
+                        ? AppTheme.accentRed
+                        : Colors.white,
+                    size: 22,
+                  ),
+                  tooltip: 'Toggle Live Chat',
+                  onPressed: () {
+                    setState(() => _isSideChatOpen = !_isSideChatOpen);
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+
+        // 4. Side Chat Drawer Overlay (when active in fullscreen)
+        if (_isSideChatOpen)
+          Positioned(
+            top: 60,
+            bottom: 80,
+            right: 16,
+            width: 320,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.darkBgBase.withValues(alpha: 0.88),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                border: Border.all(color: AppTheme.darkBorderSubtle),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                child: _buildLiveChatTab(),
+              ),
+            ),
+          ),
+
+        // 5. Floating Bottom Control Capsule
+        Positioned(
+          bottom: 16,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.75),
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.2), width: 1),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black54,
+                    blurRadius: 16,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    iconSize: 22,
+                    onPressed: () => _engine.setMuted(!_engine.isMuted),
+                    icon: Icon(
+                      _engine.isMuted
+                          ? Icons.mic_off_rounded
+                          : Icons.mic_rounded,
+                      color: _engine.isMuted
+                          ? AppTheme.accentRed
+                          : Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  ElevatedButton.icon(
+                    onPressed: broadcastActive
+                        ? _stopBroadcast
+                        : _startBroadcast,
+                    icon: Icon(
+                      broadcastActive
+                          ? Icons.stop_circle_rounded
+                          : Icons.sensors_rounded,
+                      size: 18,
+                    ),
+                    label: Text(
+                      broadcastActive ? 'End' : 'Go Live',
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: broadcastActive
+                          ? Colors.red.shade800
+                          : AppTheme.accentGreen,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  IconButton(
+                    iconSize: 22,
+                    onPressed: !_engine.isAudioOnly
+                        ? _engine.switchCamera
+                        : null,
+                    icon: const Icon(Icons.cameraswitch_rounded,
+                        color: Colors.white),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ),
       ],
     );
@@ -376,7 +1178,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
       backgroundColor: AppTheme.darkSurface1,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
@@ -401,7 +1204,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
                       Expanded(
                         child: TextField(
                           controller: handleController,
-                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          style: const TextStyle(
+                              color: Colors.white, fontSize: 13),
                           decoration: InputDecoration(
                             hintText: 'Search or add @username',
                             hintStyle: const TextStyle(
@@ -411,9 +1215,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 10),
                             border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                              borderSide:
-                                  const BorderSide(color: AppTheme.darkBorderSubtle),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
+                              borderSide: const BorderSide(
+                                  color: AppTheme.darkBorderSubtle),
                             ),
                           ),
                           onSubmitted: (value) {
@@ -436,36 +1241,36 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  TextButton.icon(
-                    icon: const Icon(Icons.emoji_people_rounded, size: 16),
-                    label: const Text('Simulate Incoming Guest'),
-                    onPressed: provider.simulateIncomingKnock,
-                  ),
                   const SizedBox(height: AppTheme.spaceSm),
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 280),
                     child: provider.admittedAttendees.isEmpty
                         ? const Padding(
-                            padding: EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+                            padding: EdgeInsets.symmetric(
+                                vertical: AppTheme.spaceMd),
                             child: Text(
                               'No attendees admitted yet.',
                               style: TextStyle(
-                                  color: AppTheme.textMutedDark, fontSize: 12),
+                                  color: AppTheme.textMutedDark,
+                                  fontSize: 12),
                             ),
                           )
                         : ListView.builder(
                             shrinkWrap: true,
                             itemCount: provider.admittedAttendees.length,
                             itemBuilder: (context, index) {
-                              final attendee = provider.admittedAttendees[index];
+                              final attendee =
+                                  provider.admittedAttendees[index];
                               return ListTile(
                                 dense: true,
                                 leading: attendee.isVip
-                                    ? const Icon(Icons.workspace_premium_rounded,
-                                        color: AppTheme.accentAmber, size: 20)
+                                    ? const Icon(
+                                        Icons.workspace_premium_rounded,
+                                        color: AppTheme.accentAmber,
+                                        size: 20)
                                     : const Icon(Icons.person_rounded,
-                                        color: AppTheme.textSecondaryDark, size: 20),
+                                        color: AppTheme.textSecondaryDark,
+                                        size: 20),
                                 title: Text(
                                   attendee.displayName,
                                   style: const TextStyle(
@@ -477,7 +1282,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
                                   label: const Text(
                                     'Kick Out',
                                     style: TextStyle(
-                                        color: AppTheme.accentRed, fontSize: 12),
+                                        color: AppTheme.accentRed,
+                                        fontSize: 12),
                                   ),
                                   onPressed: () =>
                                       provider.kickAttendee(attendee.id),
@@ -514,8 +1320,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
               "Higher quality looks better but needs a stronger upload. "
               "You can't change this once you start the camera.",
               textAlign: TextAlign.center,
-              style:
-                  TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12.5),
+              style: TextStyle(
+                  color: AppTheme.textSecondaryDark, fontSize: 12.5),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             ...BroadcastQualityPreset.values.map(
@@ -544,83 +1350,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen> {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildControls() {
-    final ready = _engine.state == RtmpPublishState.ready ||
-        _engine.state == RtmpPublishState.stopped;
-    final live = _engine.state == RtmpPublishState.live;
-    final connecting = _engine.state == RtmpPublishState.connecting;
-    // v0.7 Checkpoint 4 Phase 1 -- reconnecting still counts as an active
-    // broadcast session for control purposes: mic-mute/camera-swap stay
-    // available, and End Broadcast lets the user bail out of a stuck
-    // reconnect loop rather than being stuck with no way to stop.
-    final broadcastActive =
-        live || _engine.state == RtmpPublishState.reconnecting;
-    // v0.7 Checkpoint 4 Phase 1 -- a connection failure (including a
-    // reconnect that ran out of attempts) shouldn't be a dead end: the
-    // camera is still prepared, so Go Live can retry a fresh connection
-    // attempt rather than leaving the broadcaster stuck.
-    final canToggleGoLive =
-        ready || broadcastActive || _engine.state == RtmpPublishState.error;
-
-    return Container(
-      color: AppTheme.darkSurface1,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceMd,
-        vertical: AppTheme.spaceSm,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-        children: [
-          IconButton(
-            onPressed: broadcastActive || ready
-                ? () => _engine.setMuted(!_engine.isMuted)
-                : null,
-            icon: Icon(
-              _engine.isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-              color: Colors.white,
-            ),
-            tooltip: _engine.isMuted ? 'Unmute microphone' : 'Mute microphone',
-          ),
-          ElevatedButton.icon(
-            onPressed: connecting
-                ? null
-                : canToggleGoLive
-                    ? (broadcastActive ? _stopBroadcast : _startBroadcast)
-                    : null,
-            icon: Icon(
-              broadcastActive
-                  ? Icons.stop_circle_rounded
-                  : Icons.sensors_rounded,
-            ),
-            label: Text(
-              connecting
-                  ? 'Connecting...'
-                  : broadcastActive
-                      ? 'End Broadcast'
-                      : 'Go Live',
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  broadcastActive ? Colors.red.shade800 : AppTheme.accentGreen,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            ),
-          ),
-          IconButton(
-            onPressed: (ready || broadcastActive) && !_engine.isAudioOnly
-                ? _engine.switchCamera
-                : null,
-            icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
-            tooltip: _engine.isAudioOnly
-                ? 'Not available in audio-only mode'
-                : 'Swap camera',
-          ),
-        ],
       ),
     );
   }
@@ -698,10 +1427,6 @@ class _LiveBadge extends StatelessWidget {
   }
 }
 
-/// v0.7 Checkpoint 4 Phase 1 -- shown full-width when the RTMP connection
-/// drops mid-broadcast and RootEncoder is retrying with backoff, so the
-/// broadcaster sees a clear "stream interrupted" state instead of a silent
-/// freeze while the connection is down.
 class _ReconnectingBanner extends StatelessWidget {
   final int? attempt;
   final int? maxAttempts;
@@ -740,11 +1465,6 @@ class _ReconnectingBanner extends StatelessWidget {
   }
 }
 
-/// v0.7 Checkpoint 4 Phase 1 -- shown when a broadcast ends in a real
-/// failure (reconnect attempts exhausted, or a native-side connection
-/// timeout with no further recovery). The camera stays prepared, so Go
-/// Live in the controls below retries a fresh connection rather than
-/// leaving the broadcaster stuck looking at this with no way forward.
 class _StreamErrorBanner extends StatelessWidget {
   final String message;
 
@@ -780,9 +1500,6 @@ class _StreamErrorBanner extends StatelessWidget {
   }
 }
 
-/// Private Streaming host HUD -- slide-down banner shown when a guest has
-/// knocked on a private broadcast, letting the host Admit/Deny (or batch
-/// Admit All) without leaving the camera view.
 class _KnockingBanner extends StatelessWidget {
   final StreamKnockRequest request;
   final int queueLength;
@@ -809,7 +1526,8 @@ class _KnockingBanner extends StatelessWidget {
       color: AppTheme.darkSurface1.withValues(alpha: 0.96),
       child: Row(
         children: [
-          const Icon(Icons.person_rounded, color: AppTheme.accentAmber, size: 18),
+          const Icon(Icons.person_rounded,
+              color: AppTheme.accentAmber, size: 18),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
@@ -827,12 +1545,14 @@ class _KnockingBanner extends StatelessWidget {
             TextButton(
               onPressed: onAdmitAll,
               child: Text('Admit All ($queueLength)',
-                  style: const TextStyle(color: AppTheme.accentGreen, fontSize: 11)),
+                  style: const TextStyle(
+                      color: AppTheme.accentGreen, fontSize: 11)),
             ),
             const SizedBox(width: 4),
           ],
           IconButton(
-            icon: const Icon(Icons.close_rounded, color: AppTheme.accentRed, size: 20),
+            icon: const Icon(Icons.close_rounded,
+                color: AppTheme.accentRed, size: 20),
             tooltip: 'Deny',
             onPressed: onDeny,
           ),
@@ -843,46 +1563,6 @@ class _KnockingBanner extends StatelessWidget {
             onPressed: onAdmit,
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Private Streaming host HUD -- floating attendee counter opening the
-/// director panel (search/add @username, kick out).
-class _AttendeesButton extends StatelessWidget {
-  final int count;
-  final VoidCallback onTap;
-
-  const _AttendeesButton({required this.count, required this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: AppTheme.darkSurface1.withValues(alpha: 0.9),
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.accentAmber.withValues(alpha: 0.5)),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.lock_rounded, color: AppTheme.accentAmber, size: 16),
-            const SizedBox(width: 6),
-            Text(
-              '$count Attendees',
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }

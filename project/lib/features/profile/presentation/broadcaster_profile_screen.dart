@@ -98,13 +98,15 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         title: Text(streamer.getLocalizedName(lang)),
         actions: [
           // Broadcaster Studio Access -- single unified entry point (v0.9)
-          // for going live via OBS, phone camera, or local RTMP (Only
-          // visible on the broadcaster's own profile page, or to platform/org admins).
+          // for going live via OBS, phone camera, or local RTMP. Strictly
+          // the broadcaster's own profile page, zero admin override --
+          // issue_log.md: "an admin account does not give ability to see
+          // and use others accounts cell tower", "no one other than the
+          // streamer himself should have the ability to see their cell
+          // tower."
           if (appProvider.isLoggedInStreamer &&
               appProvider.isApprovedStreamer &&
-              (appProvider.isOwnStreamerProfile(streamer.streamerId) ||
-                  appProvider.isAdminUser ||
-                  appProvider.isPermittedAdminFor(streamer.streamerId)))
+              appProvider.isOwnStreamerProfile(streamer.streamerId))
             IconButton(
               icon: Icon(
                 Icons.cell_tower_rounded,

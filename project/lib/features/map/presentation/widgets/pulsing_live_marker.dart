@@ -117,21 +117,18 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
 
             // Core Marker Pin Body
             Container(
-              width: 44,
-              height: 44,
-              padding: const EdgeInsets.all(2.0),
+              width: 48,
+              height: 48,
+              padding: const EdgeInsets.all(4.0),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                // Crisp white avatar disc so profile pictures pop against
-                // the dark basemap (Task 8) -- the radar pulse ring above
-                // keeps carrying the live accent color, so the "live" signal
-                // isn't lost.
-                color: Colors.white,
+                // Transparent background with outer stroke ring (floating avatar gap)
+                color: Colors.transparent,
                 border: Border.all(
                   color: widget.isSelected
                       ? AppTheme.accentBlue
                       : AppTheme.accentRed,
-                  width: widget.isSelected ? 2.5 : 2.0,
+                  width: widget.isSelected ? 2.2 : 1.8,
                 ),
                 boxShadow: [
                   BoxShadow(
@@ -141,11 +138,13 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                   ),
                 ],
               ),
-              child: CircleAvatar(
-                radius: 18,
-                backgroundColor: AppTheme.darkSurface2,
-                backgroundImage: _getAvatarProvider(widget.marker.avatarUrl),
-                onBackgroundImageError: (_, __) {},
+              child: Center(
+                child: CircleAvatar(
+                  radius: 17,
+                  backgroundColor: AppTheme.darkSurface2,
+                  backgroundImage: _getAvatarProvider(widget.marker.avatarUrl),
+                  onBackgroundImageError: (_, __) {},
+                ),
               ),
             ),
 

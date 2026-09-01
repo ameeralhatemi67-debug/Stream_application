@@ -46,6 +46,22 @@ class LiveChatController extends ChangeNotifier {
   /// not a moderation action, just a personal "don't show me this" toggle.
   final Set<String> _hiddenMessageIds = {};
 
+  final Map<String, ({String senderId, String senderName, int count})>
+      _moderationAlerts = {};
+  List<({String senderId, String senderName, int count})> get moderationAlerts =>
+      _moderationAlerts.values.toList();
+
+  void dismissModerationAlert(String senderId) {
+    if (_moderationAlerts.remove(senderId) != null) {
+      notifyListeners();
+    }
+  }
+
+  Future<void> quickMuteFromAlert(String senderId) async {
+    dismissModerationAlert(senderId);
+    await muteUser(senderId);
+  }
+
   List<ChatMessageModel> get messages => List.unmodifiable(
         _messages.where((m) =>
             !_blockedSenderIds.contains(m.senderId) &&
@@ -76,6 +92,13 @@ class LiveChatController extends ChangeNotifier {
       _profileCache = {};
 
   Future<void> start() async {
+    try {
+      Supabase.instance;
+    } catch (_) {
+      _connectionState = ChatConnectionState.reconnecting;
+      notifyListeners();
+      return;
+    }
     await _loadBlockedUsers();
     await _loadHiddenMessages();
     await _loadCanModerate();
@@ -513,7 +536,9 @@ class LiveChatController extends ChangeNotifier {
     _disposed = true;
     final channel = _channel;
     if (channel != null) {
-      _client.removeChannel(channel);
+      try {
+        _client.removeChannel(channel);
+      } catch (_) {}
     }
     super.dispose();
   }

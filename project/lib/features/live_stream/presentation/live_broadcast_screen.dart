@@ -853,6 +853,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           children: [
             _buildChatConnectionIndicator(),
             if (isOffline) _buildDemoModeBanner(),
+            if (_chatController.canModerate &&
+                _chatController.moderationAlerts.isNotEmpty)
+              ..._chatController.moderationAlerts
+                  .map((alert) => _buildModerationAlertBanner(alert)),
 
             // Chat Stream List (Starts from bottom with newest messages, scroll up for older)
             Expanded(
@@ -1035,6 +1039,60 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// In-stream moderator alert banner (Tasks 13 & 15): a chatter crossed
+  /// the 3+ report threshold. Strictly for moderators/admins in the room --
+  /// this only ever renders when _chatController.canModerate.
+  Widget _buildModerationAlertBanner(
+      ({String senderId, String senderName, int count}) alert) {
+    return Container(
+      width: double.infinity,
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 8),
+      color: AppTheme.accentRed.withValues(alpha: 0.18),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded,
+              size: 16, color: AppTheme.accentRed),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              'live.moderation_alert_message'.tr(namedArgs: {
+                'name': alert.senderName,
+                'count': '${alert.count}',
+              }),
+              style: const TextStyle(
+                color: AppTheme.accentRed,
+                fontSize: 11,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _chatController.quickMuteFromAlert(alert.senderId),
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.accentRed,
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text('live.moderation_alert_quick_mute'.tr(),
+                style: const TextStyle(fontSize: 10.5, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(width: 6),
+          IconButton(
+            icon: const Icon(Icons.close_rounded,
+                size: 16, color: AppTheme.accentRed),
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
+            onPressed: () =>
+                _chatController.dismissModerationAlert(alert.senderId),
           ),
         ],
       ),

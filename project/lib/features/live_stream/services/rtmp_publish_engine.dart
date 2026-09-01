@@ -216,6 +216,14 @@ class RtmpPublishEngine extends ChangeNotifier {
     }
   }
 
+  Future<void> setOrientation(int orientation) async {
+    try {
+      await _channel.invokeMethod<void>('setOrientation', {'orientation': orientation});
+    } on PlatformException catch (e) {
+      debugPrint('[RtmpPublishEngine] setOrientation failed: $e');
+    }
+  }
+
   Future<void> startPublishing(String url) async {
     _setState(RtmpPublishState.connecting);
     try {

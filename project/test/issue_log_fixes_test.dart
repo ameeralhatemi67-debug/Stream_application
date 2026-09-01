@@ -129,7 +129,12 @@ void main() {
     testWidgets('StreamerGridCard renders white border and Your Channel badge for own profile',
         (WidgetTester tester) async {
       final provider = AppProvider();
-      provider.setBroadcasterStatusForTesting(isLoggedIn: true, isApproved: true);
+      // prof_alghamdi_01 is owned strictly by polkgvd2@gmail.com -- see
+      // Cluster 2 Task 10 fix in isOwnStreamerProfile().
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isStreamer: true,
+      );
 
       final ownStreamer = mockStreamers.firstWhere((s) => s.streamerId == 'prof_alghamdi_01');
 
@@ -190,7 +195,10 @@ void main() {
   group('Issue Log Fix QF-10: Cell Tower Permission Boundaries', () {
     test('isOwnStreamerProfile correctly identifies own channel vs other channels', () {
       final provider = AppProvider();
-      provider.setBroadcasterStatusForTesting(isLoggedIn: true, isApproved: true);
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isStreamer: true,
+      );
 
       // Own profile in sample dataset
       expect(provider.isOwnStreamerProfile('prof_alghamdi_01'), isTrue);
@@ -198,6 +206,37 @@ void main() {
       // Other streamer channel
       expect(provider.isOwnStreamerProfile('dr_alshammari_02'), isFalse);
       expect(provider.isOwnStreamerProfile('quran_live_01'), isFalse);
+    });
+
+    test('arbitrary email logins do not inherit prof_alghamdi_01 (Cluster 2 Task 10)', () {
+      final provider = AppProvider();
+      provider.debugSetSignedInForTests(
+        email: 'some.random.viewer@gmail.com',
+        isStreamer: true,
+      );
+
+      // Being an approved streamer alone must NOT grant ownership of the
+      // demo channel -- previously any signed-in approved streamer
+      // inherited 'prof_alghamdi_01' (issue_log.md: "I signed in using 3
+      // different accounts, all of them have the streamer account 'Amir
+      // Al-Hatemi' as their channel").
+      expect(provider.isOwnStreamerProfile('prof_alghamdi_01'), isFalse);
+    });
+
+    test('admin status alone does not grant ownership of another channel', () {
+      final provider = AppProvider();
+      provider.debugSetSignedInForTests(
+        email: 'admin@streamer.app',
+        isAdmin: true,
+      );
+
+      // The cell tower guard in broadcaster_profile_screen.dart is driven
+      // solely by isOwnStreamerProfile -- being platform admin must not
+      // make it return true for someone else's channel (issue_log.md: "an
+      // admin account does not give ability to see and use others accounts
+      // cell tower").
+      expect(provider.isOwnStreamerProfile('prof_alghamdi_01'), isFalse);
+      expect(provider.isOwnStreamerProfile('dr_alshammari_02'), isFalse);
     });
   });
 
@@ -244,6 +283,35 @@ void main() {
       // Streamers list contains public and private broadcasts
       expect(provider.streamVisibility, equals(StreamVisibility.private));
       expect(provider.streamWhitelistHandles, contains('vip_student_1'));
+    });
+  });
+
+  group('Issue Log Fix: Single Channel Ownership & Duplicate Resolution', () {
+    test('detectDuplicateChannels and resolveDuplicateChannels keeps chosen channel only', () {
+      final provider = AppProvider();
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isStreamer: true,
+      );
+
+      // Add a duplicate applied channel
+      final duplicateApplied = provider.streamers.first.copyWith(
+        streamerId: 'streamer_applied_amir',
+        fullNameEn: 'Amir Alhatemi (Applied)',
+      );
+      provider.addStreamerForTests(duplicateApplied);
+
+      // Detect duplicates
+      final duplicates = provider.detectDuplicateChannels();
+      expect(duplicates.length, greaterThanOrEqualTo(2));
+
+      // Resolve duplicates by keeping prof_alghamdi_01
+      provider.resolveDuplicateChannels(keptStreamerId: 'prof_alghamdi_01');
+
+      // Verify only single channel remains
+      expect(provider.isOwnStreamerProfile('prof_alghamdi_01'), isTrue);
+      final remaining = provider.detectDuplicateChannels();
+      expect(remaining.length, lessThanOrEqualTo(1));
     });
   });
 }

@@ -109,3 +109,41 @@ status: completed
 	- **Problem:** Clarify and ensure that while Public streams are visible to all users, Private streams with whitelists/knock-gates are strictly hidden from unauthorized guest viewers across devices.
 	- **Solution:** Enforce privacy filtering in `AppProvider` and feeds.
 	- **Comments:** Implementation Plan: [[doc/Vault/Implementation_Plan_Issue_Log_Fixes.md]]. Verified via `test/issue_log_fixes_test.dart`.
+
+---
+
+## 📱 Mobile Camera Broadcasting & Spatial Map Visual Polish
+
+- [x] **Task QF-13: Single Channel Ownership Rule & Duplicate Disambiguation Dialog**
+	- **Target Files:** `lib/core/widgets/duplicate_channel_resolution_dialog.dart`, `lib/core/providers/app_provider.dart`, `lib/features/discovery/presentation/discovery_feed_screen.dart`
+	- **Problem:** A single user/email could end up owning multiple streamer channels, creating confusion over which channel is primary.
+	- **Solution:** Enforced strict single primary channel ownership per account (`primaryOwnedStreamerId`), built `DuplicateChannelResolutionDialog` prompting the broadcaster to choose which channel to keep, and permanently purged obsolete duplicate records.
+	- **Comments:** Verified via `test/issue_log_fixes_test.dart`.
+
+- [x] **Task QF-14: Spatial Map Basemap Zero-Watermark Migration (Esri Dark Gray Canvas)**
+	- **Target Files:** `lib/features/map/presentation/spatial_map_screen.dart`, `test/spatial_map_test.dart`
+	- **Problem:** The spatial GIS map showed an intrusive "API KEY REQUIRED carto.com/basemaps/apikey" watermark.
+	- **Solution:** Switched the basemap to **Esri World Dark Gray Canvas** (`server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}`) with standard OSM fallback, completely eliminating the watermark while preserving the dark aesthetic.
+	- **Comments:** Verified via `test/spatial_map_test.dart`.
+
+- [x] **Task QF-15: Spatial Map Marker Stroke Ring & Transparent Gap**
+	- **Target Files:** `lib/features/map/presentation/widgets/spatial_streamer_marker.dart`, `lib/features/map/presentation/widgets/offline_marker.dart`, `lib/features/map/presentation/widgets/pulsing_live_marker.dart`
+	- **Problem:** Markers had a solid opaque fill behind the avatar.
+	- **Solution:** Replaced solid white disc with a transparent interior gap (`color: Colors.transparent`) and a sleek outer stroke ring (`width: 1.8` - `2.2`) around the profile picture.
+	- **Comments:** Verified via `test/spatial_map_test.dart`.
+
+- [x] **Task QF-16: Unified Phone Camera Stream Page & Fixed Sensor Rotation / Aspect Ratio Stretching**
+	- **Target Files:** `lib/features/live_stream/presentation/screens/phone_broadcast_screen.dart`, `android/app/src/main/kotlin/com/example/streamer_app/streaming/RtmpPublisherView.kt`, `android/app/src/main/kotlin/com/example/streamer_app/streaming/RtmpPublisherBridge.kt`, `lib/features/live_stream/services/rtmp_publish_engine.dart`
+	- **Problem:** When broadcasting from the phone camera, the interface was an empty black screen missing the standard stream page features (chat, slides, venue, streamer header, viewer count). Additionally, the camera preview in portrait had letterbox voids, and in landscape it rotated 90 degrees sideways and stretched into a distorted box.
+	- **Solution:**
+		1. Rebuilt `PhoneBroadcastScreen` to share the exact same rich, unified architecture as `LiveBroadcastScreen` (16:9 player viewport in portrait, full landscape view in fullscreen, broadcaster header, tabs for Live Chat with ghost audience, lecture slides, venue details, and floating viewer reactions).
+		2. Added integrated Broadcaster Control Bar directly below/over the player with **Mic Mute Toggle**, **Flip Camera (Front/Back)**, and **End Broadcast** red button.
+		3. Fixed sensor rotation and texture stretching by setting `OpenGlView.setAspectRatioMode(AspectRatioMode.ADJUST)` in `RtmpPublisherView.kt`, and added `setOrientation` bridge calls forwarding rotation degrees to RootEncoder's `stream.setOrientation(degrees)` on orientation changes.
+	- **Comments:** Verified via `flutter analyze` (0 issues) and full test suite `flutter test` (263/263 passing 100%).
+
+
+notifications are most important. 
+youtube cleaning 
+
+
+

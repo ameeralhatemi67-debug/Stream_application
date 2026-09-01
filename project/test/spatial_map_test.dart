@@ -9,14 +9,16 @@ import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dr
 import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
-/// Finds a Container whose BoxDecoration paints a flat white fill -- the
-/// avatar disc background Task 8 requires on every map marker variant.
-Finder _findWhiteAvatarDiscContainer() {
+/// Finds a Container whose BoxDecoration paints a transparent fill with outer stroke border
+/// and padding gap -- the stroke ring marker styling with empty avatar space.
+Finder _findStrokeRingMarkerContainer() {
   return find.byWidgetPredicate((widget) {
     if (widget is! Container) return false;
     final decoration = widget.decoration;
     if (decoration is! BoxDecoration) return false;
-    return decoration.color == Colors.white;
+    return decoration.color == Colors.transparent &&
+        decoration.border != null &&
+        widget.padding != null;
   });
 }
 
@@ -267,12 +269,10 @@ void main() {
   group('Cluster 2 -- Tile Provider, White Markers & Google Maps (Task 7-9)',
       () {
     test(
-        'Task 7: CartoDB tile URL includes /rastertiles/ -- the previous '
-        'template omitted it and every tile request failed', () {
-      expect(kSpatialMapTileUrlTemplate, contains('/rastertiles/'));
-      expect(kSpatialMapTileUrlTemplate,
-          startsWith('https://{s}.basemaps.cartocdn.com/'));
-      expect(kSpatialMapTileUrlTemplate, contains('{z}/{x}/{y}.png'));
+        'Task 7: Free dark basemap tile URL has zero watermark and zero API key requirement', () {
+      expect(kSpatialMapTileUrlTemplate, contains('server.arcgisonline.com'));
+      expect(kSpatialMapTileUrlTemplate, contains('World_Dark_Gray_Base'));
+      expect(kSpatialMapTileUrlTemplate, contains('{z}/{y}/{x}'));
     });
 
     test('Task 7: zero-API-key fallback points at plain OpenStreetMap tiles',
@@ -325,11 +325,11 @@ void main() {
       ));
       await tester.pump();
 
-      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
+      expect(_findStrokeRingMarkerContainer(), findsWidgets);
     });
 
     testWidgets(
-        'Task 8: SpatialStreamerMarker (live video) keeps a white disc under the pulse ring',
+        'Task 8: SpatialStreamerMarker (live video) keeps a stroke ring with transparent gap',
         (tester) async {
       final liveMarker = MapMarkerModel(
         markerId: testMarker.markerId,
@@ -358,13 +358,10 @@ void main() {
       ));
       await tester.pump();
 
-      // The white disc must survive the "isLive" branch too, not just the
-      // offline default -- the pulse ring above it stays accent-colored, so
-      // the live status is not lost.
-      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
+      expect(_findStrokeRingMarkerContainer(), findsWidgets);
     });
 
-    testWidgets('Task 8: OfflineMarker renders a white avatar disc',
+    testWidgets('Task 8: OfflineMarker renders a stroke ring with transparent gap',
         (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -377,11 +374,11 @@ void main() {
       ));
       await tester.pump();
 
-      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
+      expect(_findStrokeRingMarkerContainer(), findsWidgets);
     });
 
     testWidgets(
-        'Task 8: PulsingLiveMarker keeps its radar ring while the inner avatar disc is white',
+        'Task 8: PulsingLiveMarker keeps its radar ring while the marker has a stroke ring',
         (tester) async {
       final liveMarker = MapMarkerModel(
         markerId: testMarker.markerId,
@@ -410,7 +407,7 @@ void main() {
       ));
       await tester.pump();
 
-      expect(_findWhiteAvatarDiscContainer(), findsWidgets);
+      expect(_findStrokeRingMarkerContainer(), findsWidgets);
     });
   });
 }

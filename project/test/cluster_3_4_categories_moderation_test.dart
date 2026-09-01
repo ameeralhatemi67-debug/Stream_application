@@ -113,8 +113,18 @@ void main() {
   });
 
   group('Cluster 4 Task 13/15: Chat Message Actions & Moderator Badges', () {
-    test('ChatSenderBadge.moderator carries the shield+MOD label', () {
-      expect(ChatSenderBadge.moderator.emoji, equals('🛡️ MOD'));
+    test('ChatSenderBadge.moderator carries the shield+MOD bilingual label',
+        () {
+      // Cluster 2 Tasks 13 & 15: the "MOD" text moved out of the emoji
+      // field into labelEn/labelAr so live_chat_widget.dart can render the
+      // gold ADMIN / cyan MOD pill with a proper bilingual label instead of
+      // a hardcoded English string baked into the emoji.
+      expect(ChatSenderBadge.moderator.emoji, equals('🛡️'));
+      expect(ChatSenderBadge.moderator.labelEn, equals('MOD'));
+      expect(ChatSenderBadge.moderator.labelAr, equals('مشرف البث'));
+      expect(ChatSenderBadge.admin.emoji, equals('👑'));
+      expect(ChatSenderBadge.admin.labelEn, equals('ADMIN'));
+      expect(ChatSenderBadge.admin.labelAr, equals('المشرف العام'));
     });
 
     test('ChatMessageModel.isStreamModerator reflects the moderator badge',

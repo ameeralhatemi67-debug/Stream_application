@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/chat_report_model.dart';
+import '../../models/chat_mute_audit_entry.dart';
 
 /// Platform-Wide Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1).
 /// Admin-tier surface (any AdminHubScreen viewer, not Master-Admin-only like
@@ -29,6 +30,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
   void initState() {
     super.initState();
     context.read<AppProvider>().ensureChatReportsLoaded();
+    context.read<AppProvider>().ensureMutedChattersAuditLoaded();
   }
 
   @override
@@ -321,6 +323,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
             ),
           ),
           const SizedBox(height: AppTheme.spaceLg),
+          _buildMutedChattersAuditSection(context),
+          const SizedBox(height: AppTheme.spaceLg),
 
           Expanded(
             child: filtered.isEmpty
@@ -350,6 +354,138 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// Cluster 4 Tasks 13 & 15: "Muted Chatters Audit Log" -- collapsed by
+  /// default (it's secondary to the live reports queue above), showing
+  /// every muted profile's name, how many streams they've been muted in,
+  /// the triggering reason, and their last messages before the mute.
+  Widget _buildMutedChattersAuditSection(BuildContext context) {
+    final entries = context.select<AppProvider, List<ChatMuteAuditEntry>>(
+        (p) => p.mutedChattersAuditLog);
+
+    return Container(
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface1,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.darkBorderSubtle),
+      ),
+      child: Theme(
+        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+        child: ExpansionTile(
+          initiallyExpanded: false,
+          leading: const Icon(Icons.volume_off_rounded,
+              color: AppTheme.accentAmber, size: 20),
+          title: Row(
+            children: [
+              const Text(
+                'Muted Chatters Audit Log',
+                style: TextStyle(
+                  color: AppTheme.textPrimaryDark,
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface2,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text('${entries.length}',
+                    style: const TextStyle(
+                        color: AppTheme.textSecondaryDark,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+          childrenPadding: const EdgeInsets.fromLTRB(
+              AppTheme.spaceMd, 0, AppTheme.spaceMd, AppTheme.spaceMd),
+          children: [
+            if (entries.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+                child: Text(
+                  'No chatters have been muted yet.',
+                  style: TextStyle(
+                      color: AppTheme.textSecondaryDark, fontSize: 12),
+                ),
+              )
+            else
+              ...entries.map((e) => Container(
+                    margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
+                    padding: const EdgeInsets.all(AppTheme.spaceMd),
+                    decoration: BoxDecoration(
+                      color: AppTheme.darkSurface2,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                e.email != null
+                                    ? '${e.displayName} (${e.email})'
+                                    : e.displayName,
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimaryDark,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 6, vertical: 2),
+                              decoration: BoxDecoration(
+                                color: AppTheme.accentAmber.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                '${e.streamsMutedCount} streams',
+                                style: const TextStyle(
+                                    color: AppTheme.accentAmber,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          e.lastReason,
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 11),
+                        ),
+                        if (e.lastMessages.isNotEmpty) ...[
+                          const SizedBox(height: 6),
+                          ...e.lastMessages.map((m) => Padding(
+                                padding: const EdgeInsets.only(bottom: 2),
+                                child: Text(
+                                  '"$m"',
+                                  style: const TextStyle(
+                                    color: AppTheme.textMutedDark,
+                                    fontSize: 10.5,
+                                    fontStyle: FontStyle.italic,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              )),
+                        ],
+                      ],
+                    ),
+                  )),
+          ],
+        ),
       ),
     );
   }

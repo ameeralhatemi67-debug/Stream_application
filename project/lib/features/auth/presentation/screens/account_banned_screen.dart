@@ -10,14 +10,46 @@ import '../../../../core/providers/app_provider.dart';
 /// sends every guarded path here; this screen itself only offers the ban
 /// reason, a support contact, and sign-out (there is nothing else a banned
 /// account can do).
-class AccountBannedScreen extends StatelessWidget {
+class AccountBannedScreen extends StatefulWidget {
   const AccountBannedScreen({super.key});
+
+  @override
+  State<AccountBannedScreen> createState() => _AccountBannedScreenState();
+}
+
+class _AccountBannedScreenState extends State<AccountBannedScreen> {
+  bool _toastShown = false;
 
   @override
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final reason = provider.currentUserBanReason;
     final isDesktop = MediaQuery.of(context).size.width >= 900;
+
+    // Explicit toast on top of the full reason page below -- Task 16 asks
+    // for an unmissable alert the moment a banned account tries to sign in,
+    // not just a static page (testing_check_list.md: "need to add a
+    // message to that user when he try's inteing using that same email").
+    if (!_toastShown) {
+      _toastShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            backgroundColor: AppTheme.accentRed,
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 6),
+            content: Text(
+              reason != null && reason.trim().isNotEmpty
+                  ? '${'account_banned.title'.tr()}: $reason'
+                  : 'account_banned.title'.tr(),
+              style: const TextStyle(
+                  color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+          ),
+        );
+      });
+    }
 
     return Scaffold(
       backgroundColor: AppTheme.darkBgBase,

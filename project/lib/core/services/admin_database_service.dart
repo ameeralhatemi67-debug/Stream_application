@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/widgets.dart';
@@ -8,11 +9,13 @@ import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/admin/models/chat_report_model.dart';
+import '../../features/admin/models/chat_mute_audit_entry.dart';
 import '../../features/admin/models/streamer_custom_placeholder_model.dart';
 import '../../features/admin/models/banned_user_model.dart';
 import '../../features/admin/models/stream_moderator_model.dart';
 import '../../features/admin/models/tag_moderation_model.dart';
 import '../../features/discovery/models/academic_category_model.dart';
+import '../models/device_session_model.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -387,6 +390,9 @@ class AdminDatabaseService {
 
         _cachedApplications.removeWhere((a) => a.id == id);
         await _saveApplicationsToPrefs();
+        if (applicantId != null) {
+          await _broadcastStreamerDeleted(applicantId);
+        }
         return true;
       } catch (e) {
         debugPrint('Supabase deleteApplication failed, falling back: $e');
@@ -1813,6 +1819,87 @@ class AdminDatabaseService {
       if (e.code != '23505') rethrow; // 23505 = unique_violation
     }
     await _client.from('chat_reports').delete().eq('id', reportId);
+    await recordChatMuteAudit(
+      profileId: senderId,
+      streamId: streamId,
+      reason: 'Viewer report reviewed by moderator',
+    );
+  }
+
+  /// Appends one row to the append-only mute history (Tasks 13 & 15) --
+  /// called alongside every mute action, both from the admin dashboard
+  /// above and from LiveChatController's in-stream Quick Mute. Best-effort:
+  /// a failure here must never block the mute itself from taking effect.
+  Future<void> recordChatMuteAudit({
+    required String profileId,
+    required String streamId,
+    required String reason,
+    List<String> lastMessages = const [],
+  }) async {
+    if (!_useSupabase) return;
+    final mutedBy = _client.auth.currentUser?.id;
+    if (mutedBy == null) return;
+    try {
+      await _client.from('chat_mute_audit_log').insert({
+        'profile_id': profileId,
+        'stream_id': streamId,
+        'muted_by': mutedBy,
+        'reason': reason,
+        'last_messages': lastMessages,
+      });
+    } catch (e) {
+      debugPrint('recordChatMuteAudit failed: $e');
+    }
+  }
+
+  /// One aggregated entry per muted profile, newest mute first -- the
+  /// "Muted Chatters Audit Log" section of the admin Chat Moderation tab.
+  Future<List<ChatMuteAuditEntry>> loadMutedChattersAuditLog() async {
+    if (!_useSupabase) return const [];
+    try {
+      final rows = await _client
+          .from('chat_mute_audit_log')
+          .select()
+          .order('created_at', ascending: false);
+      if (rows.isEmpty) return const [];
+
+      final profiles = await _resolveProfileSummaries(
+        rows.map((r) => r['profile_id'] as String?).toSet(),
+      );
+
+      final byProfile = <String, List<Map<String, dynamic>>>{};
+      for (final row in rows) {
+        final id = row['profile_id'] as String;
+        (byProfile[id] ??= []).add(row);
+      }
+
+      return byProfile.entries.map((entry) {
+        final profileId = entry.key;
+        final entries = entry.value; // already newest-first
+        final latest = entries.first;
+        final profile = profiles[profileId];
+        return ChatMuteAuditEntry(
+          profileId: profileId,
+          displayName: profile?['display_name_en'] as String? ??
+              profile?['email'] as String? ??
+              'Unknown user',
+          email: profile?['email'] as String?,
+          streamsMutedCount:
+              entries.map((r) => r['stream_id'] as String).toSet().length,
+          lastReason: latest['reason'] as String? ?? 'Manual moderator action',
+          lastMessages:
+              List<String>.from(latest['last_messages'] as List? ?? const []),
+          lastMutedAt: DateTime.parse(latest['created_at'] as String),
+        );
+      }).toList()
+        ..sort((a, b) => b.lastMutedAt.compareTo(a.lastMutedAt));
+    } on PostgrestException catch (e) {
+      debugPrint('loadMutedChattersAuditLog PostgrestException: ${e.code} ${e.message}');
+      return const [];
+    } catch (e) {
+      debugPrint('loadMutedChattersAuditLog error: $e');
+      return const [];
+    }
   }
 
   // ==========================================
@@ -1934,10 +2021,13 @@ class AdminDatabaseService {
     await _client.from('tags').delete().eq('name', name);
   }
 
-  /// Merges/renames a tag: creates (or approves) the new name and removes
-  /// the old row. Not a single atomic rename because `name` is the primary
-  /// key -- this is the same two-step "insert new, delete old" shape a
-  /// primary-key rename always needs.
+  /// Merges/renames a tag: creates (or approves) the new name, rewrites the
+  /// tag on every broadcaster currently carrying the old name, and removes
+  /// the old taxonomy row. Not a single atomic rename because `name` is the
+  /// primary key -- this is the same two-step "insert new, delete old"
+  /// shape a primary-key rename always needs. Cascading to profiles/
+  /// organizations is what makes this an actual merge rather than orphaning
+  /// every broadcaster who had the old tag (Cluster 3 Task 12).
   Future<void> mergeRenameTag({
     required String oldName,
     required String newName,
@@ -1951,7 +2041,96 @@ class AdminDatabaseService {
       'created_by': _client.auth.currentUser?.id,
     });
     if (normalized != oldName) {
+      await _cascadeTagRename(
+          table: 'profiles', oldName: oldName, newName: normalized);
+      await _cascadeTagRename(
+          table: 'organizations', oldName: oldName, newName: normalized);
       await _client.from('tags').delete().eq('name', oldName);
+    }
+  }
+
+  Future<void> _cascadeTagRename({
+    required String table,
+    required String oldName,
+    required String newName,
+  }) async {
+    try {
+      final rows = await _client
+          .from(table)
+          .select('id, tags')
+          .contains('tags', [oldName]);
+      for (final row in rows) {
+        final currentTags =
+            List<String>.from(row['tags'] as List? ?? const []);
+        final updatedTags = currentTags
+            .map((t) => t == oldName ? newName : t)
+            .toSet()
+            .toList();
+        await _client
+            .from(table)
+            .update({'tags': updatedTags}).eq('id', row['id'] as String);
+      }
+    } catch (e) {
+      debugPrint('_cascadeTagRename($table) failed: $e');
+    }
+  }
+
+  /// How many broadcasters (individual profiles + organizations) currently
+  /// carry [tagName] -- the usage-count badge next to each approved tag
+  /// chip (Cluster 3 Task 12).
+  Future<int> countBroadcastersForTag(String tagName) async {
+    if (!_useSupabase) return 0;
+    try {
+      final profileRows = await _client
+          .from('profiles')
+          .select('id')
+          .contains('tags', [tagName]);
+      final orgRows = await _client
+          .from('organizations')
+          .select('id')
+          .contains('tags', [tagName]);
+      return profileRows.length + orgRows.length;
+    } catch (e) {
+      debugPrint('countBroadcastersForTag failed: $e');
+      return 0;
+    }
+  }
+
+  /// Every broadcaster currently carrying [tagName], for the "Inspect
+  /// Broadcasters" drill-down (Cluster 3 Task 12).
+  Future<List<TaggedBroadcasterSummary>> loadBroadcastersForTag(
+      String tagName) async {
+    if (!_useSupabase) return const [];
+    try {
+      final profileRows = await _client
+          .from('profiles')
+          .select('id, display_name_en, display_name_ar, avatar_url')
+          .contains('tags', [tagName]);
+      final orgRows = await _client
+          .from('organizations')
+          .select('id, name_en, name_ar, avatar_url')
+          .contains('tags', [tagName]);
+
+      final result = <TaggedBroadcasterSummary>[
+        ...profileRows.map((r) => TaggedBroadcasterSummary(
+              id: r['id'] as String,
+              nameEn: r['display_name_en'] as String? ?? 'Unknown',
+              nameAr: r['display_name_ar'] as String? ?? 'غير معروف',
+              avatarUrl: r['avatar_url'] as String? ?? '',
+              isOrganization: false,
+            )),
+        ...orgRows.map((r) => TaggedBroadcasterSummary(
+              id: r['id'] as String,
+              nameEn: r['name_en'] as String? ?? 'Unknown Organization',
+              nameAr: r['name_ar'] as String? ?? 'منظمة غير معروفة',
+              avatarUrl: r['avatar_url'] as String? ?? '',
+              isOrganization: true,
+            )),
+      ];
+      return result;
+    } catch (e) {
+      debugPrint('loadBroadcastersForTag failed: $e');
+      return const [];
     }
   }
 
@@ -2226,6 +2405,34 @@ class AdminDatabaseService {
     }).toList();
   }
 
+  /// Every currently-approved card, newest first -- Task 4b: the review
+  /// queue also shows already-approved presets so admins have visibility
+  /// into what's live, not just what's still pending.
+  Future<List<StreamerCustomPlaceholderModel>>
+      loadApprovedCustomPlaceholders() async {
+    if (!_useSupabase) return const [];
+    final rows = await _client
+        .from('streamer_custom_placeholders')
+        .select()
+        .eq('status', 'approved')
+        .order('reviewed_at', ascending: false);
+    if (rows.isEmpty) return const [];
+
+    final profiles = await _resolveProfileSummaries(
+      rows.map((r) => r['streamer_id'] as String?).toSet(),
+    );
+
+    return rows.map<StreamerCustomPlaceholderModel>((row) {
+      final profile = profiles[row['streamer_id'] as String];
+      return StreamerCustomPlaceholderModel.fromRow(
+        row,
+        streamerDisplayName: profile?['display_name_en'] as String? ??
+            profile?['email'] as String? ??
+            'Unknown streamer',
+      );
+    }).toList();
+  }
+
   /// The approved card for one streamer/type pair, or null when they have
   /// none -- the direct question StreamStatePlaceholderOverlay asks before
   /// falling back to the system default.
@@ -2274,5 +2481,110 @@ class AdminDatabaseService {
       'reviewed_at': DateTime.now().toUtc().toIso8601String(),
       'reviewed_by': _client.auth.currentUser?.id,
     }).eq('id', placeholderId);
+  }
+
+  /// Fires a one-shot Realtime broadcast so every connected client (mobile,
+  /// web, desktop) removes this streamer from local state immediately,
+  /// independent of postgres_changes replication timing (issue_log.md:
+  /// account deletion not propagating to other devices). Uses the same
+  /// topic ('public_streamers_discovery') that AppProvider's long-lived
+  /// subscription already listens on.
+  Future<void> _broadcastStreamerDeleted(String streamerId) async {
+    try {
+      final channel = _client.channel('public_streamers_discovery');
+      final joined = Completer<void>();
+      channel.subscribe((status, error) {
+        if (status == RealtimeSubscribeStatus.subscribed &&
+            !joined.isCompleted) {
+          joined.complete();
+        }
+      });
+      await joined.future.timeout(const Duration(seconds: 3),
+          onTimeout: () {});
+      await channel.sendBroadcastMessage(
+        event: 'streamer_deleted',
+        payload: {'streamerId': streamerId},
+      );
+      await _client.removeChannel(channel);
+    } catch (e) {
+      debugPrint('broadcastStreamerDeleted failed: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Multi-Device Session Governance (issue_log.md)
+  // ---------------------------------------------------------------------
+
+  /// Registers/refreshes this device's row so other devices signing into
+  /// the same account can see it. Silently no-ops if the table isn't
+  /// reachable (PGRST205 / offline) -- device-session tracking degrades
+  /// gracefully, it never blocks sign-in.
+  Future<void> upsertDeviceSession({
+    required String userId,
+    required DeviceSessionModel session,
+  }) async {
+    if (!_useSupabase) return;
+    try {
+      await _client.from('device_sessions').upsert({
+        'user_id': userId,
+        'device_id': session.deviceId,
+        'device_name': session.deviceName,
+        'platform': session.platform,
+        'is_primary_broadcaster': session.isPrimaryBroadcaster,
+        'last_active_at': session.lastActiveAt.toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      debugPrint('upsertDeviceSession failed: $e');
+    }
+  }
+
+  /// The other device currently holding broadcaster rights on this
+  /// account, if any -- what DeviceSessionConflictDialog is shown for.
+  Future<DeviceSessionModel?> findActiveRemoteBroadcasterSession({
+    required String userId,
+    required String currentDeviceId,
+  }) async {
+    if (!_useSupabase) return null;
+    try {
+      final rows = await _client
+          .from('device_sessions')
+          .select()
+          .eq('user_id', userId)
+          .eq('is_primary_broadcaster', true)
+          .neq('device_id', currentDeviceId)
+          .limit(1);
+      if (rows.isEmpty) return null;
+      final row = rows.first;
+      return DeviceSessionModel(
+        deviceId: row['device_id'] as String,
+        deviceName: row['device_name'] as String? ?? 'Unknown Device',
+        platform: row['platform'] as String? ?? 'unknown',
+        lastActiveAt: DateTime.tryParse(row['last_active_at'] as String? ?? '') ??
+            DateTime.now(),
+        isPrimaryBroadcaster: true,
+      );
+    } catch (e) {
+      debugPrint('findActiveRemoteBroadcasterSession failed: $e');
+      return null;
+    }
+  }
+
+  /// Demotes every other device row for this account off primary-broadcaster
+  /// status -- called once the user picks "Transfer Broadcaster to This
+  /// Device" so the losing device's own next check reflects the handoff.
+  Future<void> demoteOtherDeviceSessions({
+    required String userId,
+    required String keepDeviceId,
+  }) async {
+    if (!_useSupabase) return;
+    try {
+      await _client
+          .from('device_sessions')
+          .update({'is_primary_broadcaster': false})
+          .eq('user_id', userId)
+          .neq('device_id', keepDeviceId);
+    } catch (e) {
+      debugPrint('demoteOtherDeviceSessions failed: $e');
+    }
   }
 }

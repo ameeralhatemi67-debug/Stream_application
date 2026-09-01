@@ -68,6 +68,37 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   void initState() {
     super.initState();
     final provider = context.read<AppProvider>();
+    final existing = provider.myApplication;
+
+    // Editing an existing application (any status) must load its data into
+    // the wizard rather than starting blank -- otherwise a genuine edit
+    // silently wipes real data with defaults, and submit() below would have
+    // nothing to key an upsert against, producing a second channel instead
+    // of updating the first (issue_log.md: "I should not have the ability
+    // to own two channels").
+    if (existing != null) {
+      _nameController.text = existing.isOrganization
+          ? existing.applicantNameEn
+          : existing.applicantNameEn;
+      _handleController.text = existing.youtubeHandle;
+      _bioController.text = existing.bioEn;
+      _avatarPath = existing.avatarUrl;
+      _bannerPath = existing.bannerUrl;
+      _affiliationController.text = existing.institutionEn ?? '';
+      _youtubeController.text = existing.youtubeChannelUrl;
+      _orgNameController.text = existing.isOrganization ? existing.applicantNameEn : '';
+      _selectedCategories = [existing.categoryId];
+      _isOrganization = existing.isOrganization;
+      _selectedTags.clear();
+      _selectedTags.addAll(existing.tags);
+      _venueController.text = existing.venueNameEn;
+      _phoneController.text = existing.phone;
+      if (existing.latitude != 0.0 || existing.longitude != 0.0) {
+        _selectedCoordinates = LatLng(existing.latitude, existing.longitude);
+      }
+      return;
+    }
+
     final defaultName = provider.googleUserName ?? provider.userProfile.nameEn;
     if (defaultName.isNotEmpty) {
       _nameController.text = defaultName;
@@ -253,7 +284,10 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       );
 
       final app = BroadcasterApplicationModel(
-        id: newId(),
+        // Reuse the existing application's id when editing so the upsert in
+        // AdminDatabaseService.submitApplication() (keyed on `id`) updates
+        // the same row instead of inserting a second channel.
+        id: provider.myApplication?.id ?? newId(),
         applicantProfileId: provider.currentUserSessionId,
         accountType: _isOrganization
             ? ApplicationAccountType.organizationVenue

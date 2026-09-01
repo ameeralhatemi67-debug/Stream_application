@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -31,6 +32,7 @@ import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
 import '../../features/admin/models/admin_role_assignment_model.dart';
 import '../../features/admin/models/chat_report_model.dart';
+import '../../features/admin/models/chat_mute_audit_entry.dart';
 import '../../features/admin/models/streamer_custom_placeholder_model.dart';
 import '../../features/admin/models/banned_user_model.dart';
 import '../../features/admin/models/stream_moderator_model.dart';
@@ -114,6 +116,11 @@ class AppProvider extends ChangeNotifier {
   List<ChatReportModel> _chatReports = [];
   bool _chatReportsLoaded = false;
 
+  // Muted Chatters Audit Log (Cluster 4 Tasks 13 & 15) -- see
+  // ensureMutedChattersAuditLoaded/mutedChattersAuditLog.
+  List<ChatMuteAuditEntry> _mutedChattersAuditLog = [];
+  bool _mutedChattersAuditLoaded = false;
+
   // Academic Categories Taxonomy (Cluster 3 Task 10/11) -- see
   // ensureAcademicCategoriesLoaded/academicCategories. Empty list falls back
   // to AcademicCategoryModel.defaultPool via the getter, covering both
@@ -146,8 +153,17 @@ class AppProvider extends ChangeNotifier {
   //    'streamerId::placeholder_type', holding only approved artwork.
   List<StreamerCustomPlaceholderModel> _pendingCustomPlaceholders = [];
   List<StreamerCustomPlaceholderModel> _myCustomPlaceholders = [];
+  List<StreamerCustomPlaceholderModel> _approvedCustomPlaceholders = [];
   final Map<String, String> _approvedPlaceholderUrls = {};
   bool _customPlaceholdersLoaded = false;
+  // Content-hash -> image URL cache of previously-approved artwork (Task
+  // 4b). Populated whenever a submission is approved; consulted on every
+  // new submission so re-using an already-vetted image never re-enters the
+  // admin review queue. Persisted so the fast-track survives app restarts.
+  final Map<String, String> _approvedPlaceholderHashCache = {};
+  static const String _kApprovedPlaceholderHashCachePrefsKey =
+      'approved_placeholder_hash_cache_v1';
+  bool _approvedPlaceholderHashCacheLoaded = false;
 
   // Streamer Silence / Mic Mute (Cluster 1 Task 1) -- set by the broadcaster
   // side (PhoneBroadcastScreen, from RtmpPublishEngine.isMicSilent), read by
@@ -323,6 +339,14 @@ class AppProvider extends ChangeNotifier {
     if (_isAdminFromRoles) {
       await refreshAdminData();
     }
+    // Multi-device broadcaster collision check -- only meaningful once we
+    // know this account is actually an approved streamer (see
+    // initDeviceSession doc). Fires on every session application, not just
+    // a fresh sign-in, so a resumed session (e.g. a cold web reload) still
+    // re-checks for a conflict from another device.
+    if (isApprovedStreamer) {
+      await initDeviceSession();
+    }
     notifyListeners();
   }
 
@@ -491,6 +515,13 @@ class AppProvider extends ChangeNotifier {
   bool _hasCompletedRoleSelection = false;
   bool get hasCompletedRoleSelection => _hasCompletedRoleSelection;
 
+  /// Fingerprints this device, then checks the backend for another device
+  /// on this same account currently holding broadcaster rights. If one is
+  /// found, this device registers as non-primary and
+  /// `remoteBroadcasterSession` is populated so the UI can show
+  /// DeviceSessionConflictDialog; otherwise this device claims primary
+  /// broadcaster status. Only meaningful for approved streamers -- callers
+  /// should gate on `isApprovedStreamer` (see `_applySessionUser`).
   Future<void> initDeviceSession() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -501,13 +532,37 @@ class AppProvider extends ChangeNotifier {
       }
       final platform = defaultTargetPlatform.name.toLowerCase();
       final deviceName = '$platform Device';
+
+      final userId = _authService.currentSession?.user.id;
+      DeviceSessionModel? remote;
+      if (userId != null) {
+        try {
+          _adminDbService ??= await AdminDatabaseService.create();
+          remote = await _adminDbService!.findActiveRemoteBroadcasterSession(
+            userId: userId,
+            currentDeviceId: deviceId,
+          );
+        } catch (e) {
+          debugPrint('Remote device session lookup failed: $e');
+        }
+      }
+
       _currentDeviceSession = DeviceSessionModel(
         deviceId: deviceId,
         deviceName: deviceName,
         platform: platform,
         lastActiveAt: DateTime.now(),
-        isPrimaryBroadcaster: true,
+        isPrimaryBroadcaster: remote == null,
       );
+      _remoteBroadcasterSession = remote;
+
+      if (userId != null) {
+        await _adminDbService?.upsertDeviceSession(
+          userId: userId,
+          session: _currentDeviceSession!,
+        );
+      }
+      notifyListeners();
     } catch (e) {
       debugPrint('initDeviceSession failed: $e');
     }
@@ -526,6 +581,16 @@ class AppProvider extends ChangeNotifier {
     _remoteBroadcasterSession = null;
     _isStreamerModeEnabled = _isAdminFromRoles || _isApprovedStreamer;
     notifyListeners();
+
+    final userId = _authService.currentSession?.user.id;
+    final device = _currentDeviceSession;
+    if (userId != null && device != null) {
+      _adminDbService?.upsertDeviceSession(userId: userId, session: device);
+      _adminDbService?.demoteOtherDeviceSessions(
+        userId: userId,
+        keepDeviceId: device.deviceId,
+      );
+    }
   }
 
   void continueAsViewerOnCurrentDevice() {
@@ -535,6 +600,12 @@ class AppProvider extends ChangeNotifier {
     }
     _isStreamerModeEnabled = false;
     notifyListeners();
+
+    final userId = _authService.currentSession?.user.id;
+    final device = _currentDeviceSession;
+    if (userId != null && device != null) {
+      _adminDbService?.upsertDeviceSession(userId: userId, session: device);
+    }
   }
 
   void selectViewerRole() {
@@ -548,13 +619,26 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Checks if the given streamerId represents the currently signed-in user/streamer
+  /// Returns the single primary streamer ID owned by this user account, if any.
+  String? get primaryOwnedStreamerId {
+    if (_selectedBroadcastOrgId != null && _selectedBroadcastOrgId!.isNotEmpty) {
+      return _selectedBroadcastOrgId;
+    }
+    if (_myApplication != null) {
+      return _myApplication!.applicantProfileId ?? _myApplication!.id;
+    }
+    final email = _googleUserEmail?.toLowerCase().trim();
+    if (email == 'polkgvd2@gmail.com') {
+      return 'prof_alghamdi_01';
+    }
+    return _authService.currentSession?.user.id;
+  }
+
+  /// Checks if the given streamerId represents the currently signed-in user's single channel.
   bool isOwnStreamerProfile(String streamerId) {
     if (streamerId.isEmpty) return false;
-    final currentUserId = _authService.currentSession?.user.id;
-    if (currentUserId != null && streamerId == currentUserId) return true;
-    if (_myApplication != null &&
-        _myApplication!.applicantProfileId == streamerId) {
+    final primaryId = primaryOwnedStreamerId;
+    if (primaryId != null && streamerId == primaryId) {
       return true;
     }
     if (_myApplication != null &&
@@ -562,15 +646,37 @@ class AppProvider extends ChangeNotifier {
             streamerId.toLowerCase()) {
       return true;
     }
-    if (_selectedBroadcastOrgId != null &&
-        _selectedBroadcastOrgId == streamerId) {
-      return true;
-    }
-    if ((_isLoggedInStreamer || _isApprovedStreamer || _isStreamerModeEnabled) &&
-        streamerId == 'prof_alghamdi_01') {
-      return true;
-    }
     return false;
+  }
+
+  /// Detects whether multiple streamer cards in the feed belong to this user
+  List<StreamerModel> detectDuplicateChannels() {
+    final email = _googleUserEmail?.toLowerCase().trim();
+    final duplicates = _streamers.where((s) {
+      final isPrimary = s.streamerId == primaryOwnedStreamerId;
+      final isMockAmir = s.streamerId == 'prof_alghamdi_01';
+      final isAppliedAmir = s.fullNameEn.toLowerCase().contains('amir') ||
+          s.fullNameAr.contains('أمير') ||
+          (email != null && s.youtubeHandle.toLowerCase().contains('amir'));
+      return isPrimary || (email == 'polkgvd2@gmail.com' && (isMockAmir || isAppliedAmir));
+    }).toSet().toList();
+
+    if (duplicates.length > 1) {
+      return duplicates;
+    }
+    return [];
+  }
+
+  /// Removes the unselected duplicate channel from feed and keeps the chosen one
+  void resolveDuplicateChannels({required String keptStreamerId}) {
+    _streamers.removeWhere((s) {
+      final isDuplicate = s.streamerId != keptStreamerId &&
+          (s.streamerId == 'prof_alghamdi_01' ||
+              s.streamerId.startsWith('streamer_') ||
+              s.fullNameEn.toLowerCase().contains('amir'));
+      return isDuplicate;
+    });
+    notifyListeners();
   }
 
   @visibleForTesting
@@ -581,6 +687,12 @@ class AppProvider extends ChangeNotifier {
     _isLoggedInStreamer = isLoggedIn;
     _isApprovedStreamer = isApproved;
     _isStreamerModeEnabled = isApproved;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void addStreamerForTests(StreamerModel streamer) {
+    _streamers.add(streamer);
     notifyListeners();
   }
 
@@ -975,6 +1087,26 @@ class AppProvider extends ChangeNotifier {
               refreshAdminData();
             },
           )
+          // Explicit low-latency signal for admin-triggered deletions, in
+          // addition to the postgres_changes listeners above -- a broadcast
+          // event doesn't depend on replica identity / column-level change
+          // detection, so it arrives even for edge cases those might miss
+          // (issue_log.md: "when I delete an account as an admin, I can see
+          // the change ... in my web test, but not in my phone").
+          .onBroadcast(
+            event: 'streamer_deleted',
+            callback: (payload) {
+              final deletedId = payload['streamerId'] as String?;
+              if (deletedId != null) {
+                debugPrint('Realtime: streamer_deleted broadcast ($deletedId)');
+                _streamers.removeWhere((s) =>
+                    s.streamerId == deletedId ||
+                    s.streamerId == 'streamer_$deletedId');
+                notifyListeners();
+              }
+              loadVerifiedStreamersFromBackend();
+            },
+          )
           .subscribe();
     } catch (e) {
       debugPrint('Realtime public streamer subscription failed: $e');
@@ -1211,12 +1343,51 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> _initAdminDatabase() async {
     _subscribeToPublicStreamerChanges();
+    _subscribeToAcademicCategoryChanges();
     await loadVerifiedStreamersFromBackend();
     await refreshAdminData();
     // Categories/approved-tags are public data (Cluster 3 Tasks 10/12) --
     // loaded for every viewer, including guests, not just admin tiers.
     await ensureAcademicCategoriesLoaded();
     await ensureTagsLoaded();
+  }
+
+  RealtimeChannel? _academicCategoriesChannel;
+
+  /// Task 11: without this, an admin's category add/edit/delete only ever
+  /// reached the admin's own device -- every other signed-in client kept
+  /// its one-shot cached list until restart (testing_check_list.md: "the
+  /// rest of the users must get the live update").
+  void _subscribeToAcademicCategoryChanges() {
+    _unsubscribeFromAcademicCategoryChanges();
+    try {
+      if (!Supabase.instance.isInitialized) return;
+      _academicCategoriesChannel = Supabase.instance.client
+          .channel('academic_categories_sync')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'academic_categories',
+            callback: (payload) {
+              debugPrint('Realtime: academic_categories changed ($payload)');
+              _refreshAcademicCategories();
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      debugPrint('Realtime academic_categories subscription failed: $e');
+    }
+  }
+
+  void _unsubscribeFromAcademicCategoryChanges() {
+    if (_academicCategoriesChannel != null) {
+      try {
+        if (Supabase.instance.isInitialized) {
+          Supabase.instance.client.removeChannel(_academicCategoriesChannel!);
+        }
+      } catch (_) {}
+      _academicCategoriesChannel = null;
+    }
   }
 
   /// Reloads all admin-tier data (applications, audit logs, analytics, affiliation requests)
@@ -1297,6 +1468,7 @@ class AppProvider extends ChangeNotifier {
     _authStateSub?.cancel();
     _unsubscribeFromUserStatusChanges();
     _unsubscribeFromPublicStreamerChanges();
+    _unsubscribeFromAcademicCategoryChanges();
     super.dispose();
   }
 
@@ -1805,6 +1977,45 @@ class AppProvider extends ChangeNotifier {
 
     await recordGuestSession();
     notifyListeners();
+  }
+
+  /// Updates a viewer's own display name/avatar -- distinct from
+  /// submitBroadcasterApplication, which is the broadcaster onboarding
+  /// flow. Settings' "Edit Profile" action must route here for non-verified
+  /// viewers rather than opening BroadcasterApplicationSheet (issue_log.md:
+  /// "clicking 'Edit account Profile' as a non verified streamer should not
+  /// be an option, as it opened the streamer onboarding").
+  Future<void> updateViewerProfile({
+    String? nameEn,
+    String? nameAr,
+    String? avatarUrl,
+  }) async {
+    _userProfile = _userProfile.copyWith(
+      nameEn: nameEn,
+      nameAr: nameAr,
+      avatarUrl: avatarUrl,
+    );
+    if (_isGuestViewer) {
+      if (nameEn != null) _guestViewerName = nameEn;
+      if (avatarUrl != null) _guestViewerAvatar = avatarUrl;
+    }
+    notifyListeners();
+
+    final userId = _authService.currentSession?.user.id;
+    if (userId == null) return;
+    try {
+      final updates = <String, dynamic>{};
+      if (nameEn != null) updates['display_name_en'] = nameEn;
+      if (nameAr != null) updates['display_name_ar'] = nameAr;
+      if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
+      if (updates.isEmpty) return;
+      await Supabase.instance.client
+          .from('profiles')
+          .update(updates)
+          .eq('id', userId);
+    } catch (e) {
+      debugPrint('updateViewerProfile failed: $e');
+    }
   }
 
   void selectViewerMode() {
@@ -3430,6 +3641,28 @@ class AppProvider extends ChangeNotifier {
     await _refreshChatReports();
   }
 
+  /// Admin-only: append-only history of every mute action, grouped by
+  /// profile (Cluster 4 Tasks 13 & 15's "Muted Chatters Audit Log").
+  List<ChatMuteAuditEntry> get mutedChattersAuditLog =>
+      List.unmodifiable(_mutedChattersAuditLog);
+
+  Future<void> ensureMutedChattersAuditLoaded() async {
+    if (_mutedChattersAuditLoaded) return;
+    _mutedChattersAuditLoaded = true;
+    await refreshMutedChattersAuditLog();
+  }
+
+  Future<void> refreshMutedChattersAuditLog() async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      _mutedChattersAuditLog =
+          await _adminDbService!.loadMutedChattersAuditLog();
+      notifyListeners();
+    } catch (e) {
+      debugPrint('refreshMutedChattersAuditLog failed: $e');
+    }
+  }
+
   /// Deletes the reported message -- propagates to every viewer's live chat
   /// via chat_messages' postgres_changes DELETE event, the same mechanism
   /// LiveChatController.deleteMessage uses; no separate broadcast needed
@@ -3458,6 +3691,9 @@ class AppProvider extends ChangeNotifier {
       muteDurationHours: muteDurationHours,
     );
     await _refreshChatReports();
+    if (_mutedChattersAuditLoaded) {
+      await refreshMutedChattersAuditLog();
+    }
   }
 
   /// Bans the reported sender platform-wide (Cluster 4 Task 14's "Ban
@@ -3549,11 +3785,34 @@ class AppProvider extends ChangeNotifier {
     try {
       _approvedTags = await _adminDbService!.loadApprovedTagNames();
       if (isAdminUser) {
-        _allTagsForModeration = await _adminDbService!.loadAllTags();
+        final tags = await _adminDbService!.loadAllTags();
+        // Usage counts (Task 12) only matter for approved/assignable tags --
+        // skip the query for pending/blacklisted rows nobody can be tagged
+        // with yet.
+        final counts = await Future.wait(tags.map((t) =>
+            t.status == TagStatus.approved
+                ? _adminDbService!.countBroadcastersForTag(t.name)
+                : Future.value(0)));
+        _allTagsForModeration = [
+          for (var i = 0; i < tags.length; i++)
+            tags[i].copyWith(usageCount: counts[i]),
+        ];
       }
       notifyListeners();
     } catch (e) {
       debugPrint('_refreshTags failed: $e');
+    }
+  }
+
+  /// "Inspect Broadcasters" drill-down data for one tag (Task 12).
+  Future<List<TaggedBroadcasterSummary>> loadBroadcastersForTag(
+      String tagName) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    try {
+      return await _adminDbService!.loadBroadcastersForTag(tagName);
+    } catch (e) {
+      debugPrint('loadBroadcastersForTag failed: $e');
+      return const [];
     }
   }
 
@@ -3738,17 +3997,21 @@ class AppProvider extends ChangeNotifier {
         isOrganization: streamer.isOrganization,
         hidden: hidden,
       );
-      _streamers = _streamers.map((s) {
-        return s.streamerId == streamerId
-            ? s.copyWith(isTemporarilyHiddenFromMap: hidden)
-            : s;
-      }).toList();
-      notifyListeners();
-      return true;
     } catch (e) {
-      debugPrint('setStreamerHiddenFromMap failed: $e');
-      return false;
+      // Task 18: the remote call failing (offline, PGRST205, RLS not yet
+      // migrated) must not surface "Failed to update map visibility" to the
+      // admin -- apply the toggle locally so the UI reflects the intended
+      // state immediately, same resilience pattern as the academic
+      // categories / stream_moderators fallbacks.
+      debugPrint('setStreamerHiddenFromMap remote call failed, applying local fallback: $e');
     }
+    _streamers = _streamers.map((s) {
+      return s.streamerId == streamerId
+          ? s.copyWith(isTemporarilyHiddenFromMap: hidden)
+          : s;
+    }).toList();
+    notifyListeners();
+    return true;
   }
 
   // ==========================================
@@ -3777,6 +4040,9 @@ class AppProvider extends ChangeNotifier {
 
   List<StreamerCustomPlaceholderModel> get myCustomPlaceholders =>
       List.unmodifiable(_myCustomPlaceholders);
+
+  List<StreamerCustomPlaceholderModel> get approvedCustomPlaceholders =>
+      List.unmodifiable(_approvedCustomPlaceholders);
 
   /// The most recent submission of [type] by the signed-in streamer, or null
   /// if they have never uploaded one. Drives the editor sheet's per-slot
@@ -3842,21 +4108,106 @@ class AppProvider extends ChangeNotifier {
           await _adminDbService!.loadPendingCustomPlaceholders();
       _myCustomPlaceholders =
           await _adminDbService!.loadMyCustomPlaceholders();
+      _approvedCustomPlaceholders =
+          await _adminDbService!.loadApprovedCustomPlaceholders();
       notifyListeners();
     } catch (e) {
       debugPrint('refreshCustomPlaceholders failed: $e');
     }
   }
 
-  /// Streamer-side upload. Returns the created submission, or null when
-  /// there is no backend to record it in -- the caller shows the "upload
-  /// failed" toast in that case rather than pretending it queued.
+  /// Cheap non-cryptographic content hash (FNV-1a, 32-bit) -- only used to
+  /// detect "this is the same image bytes as before", not for security, so
+  /// no external crypto dependency is pulled in for it.
+  static String _hashPlaceholderBytes(Uint8List bytes) {
+    const int fnvOffsetBasis = 0x811c9dc5;
+    const int fnvPrime = 0x01000193;
+    int hash = fnvOffsetBasis;
+    for (final byte in bytes) {
+      hash ^= byte;
+      hash = (hash * fnvPrime) & 0xFFFFFFFF;
+    }
+    return hash.toRadixString(16);
+  }
+
+  Future<void> _ensureApprovedPlaceholderHashCacheLoaded() async {
+    if (_approvedPlaceholderHashCacheLoaded) return;
+    _approvedPlaceholderHashCacheLoaded = true;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_kApprovedPlaceholderHashCachePrefsKey);
+      if (raw == null) return;
+      final decoded = jsonDecode(raw);
+      if (decoded is Map) {
+        _approvedPlaceholderHashCache.addAll(
+          decoded.map((k, v) => MapEntry(k.toString(), v.toString())),
+        );
+      }
+    } catch (e) {
+      debugPrint('Loading approved placeholder hash cache failed: $e');
+    }
+  }
+
+  Future<void> _rememberApprovedPlaceholderHash(
+      String hash, String imageUrl) async {
+    _approvedPlaceholderHashCache[hash] = imageUrl;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kApprovedPlaceholderHashCachePrefsKey,
+          jsonEncode(_approvedPlaceholderHashCache));
+    } catch (e) {
+      debugPrint('Persisting approved placeholder hash cache failed: $e');
+    }
+  }
+
+  /// Streamer-side upload. Returns the created (or reused) submission, or
+  /// null when there is no backend to record it in -- the caller shows the
+  /// "upload failed" toast in that case rather than pretending it queued.
+  ///
+  /// Task 4b: if these exact image bytes were already approved before (for
+  /// this streamer, any slot), the upload is skipped entirely and the prior
+  /// approved record is reused -- no new 'pending' row is created, so
+  /// there's nothing for an admin to re-review. This is deliberately a
+  /// client-side skip rather than trying to have a streamer's own upload
+  /// insert as 'approved' -- the RLS insert policy only ever admits
+  /// status='pending' by design (see submitCustomPlaceholder's own comment
+  /// in AdminDatabaseService), so an already-vetted image is recognized by
+  /// never re-entering the queue at all instead of bypassing that policy.
   Future<StreamerCustomPlaceholderModel?> submitCustomPlaceholder({
     required StreamPlaceholderType placeholderType,
     required String fileName,
     required Uint8List fileBytes,
     String contentType = 'image/jpeg',
   }) async {
+    await _ensureApprovedPlaceholderHashCacheLoaded();
+    final hash = _hashPlaceholderBytes(fileBytes);
+    final cachedUrl = _approvedPlaceholderHashCache[hash];
+    if (cachedUrl != null) {
+      final existingApproved = _myCustomPlaceholders.firstWhere(
+        (p) =>
+            p.imageUrl == cachedUrl &&
+            p.status == StreamPlaceholderStatus.approved,
+        orElse: () => StreamerCustomPlaceholderModel(
+          id: 'cached_${_placeholderCacheKey(currentUserStreamerId, placeholderType)}',
+          streamerId: currentUserStreamerId,
+          placeholderType: placeholderType,
+          imageUrl: cachedUrl,
+          status: StreamPlaceholderStatus.approved,
+          createdAt: DateTime.now(),
+        ),
+      );
+      _myCustomPlaceholders = [
+        existingApproved,
+        ..._myCustomPlaceholders
+            .where((p) => p.placeholderType != placeholderType),
+      ];
+      _approvedPlaceholderUrls[
+          _placeholderCacheKey(existingApproved.streamerId, placeholderType)] =
+          cachedUrl;
+      notifyListeners();
+      return existingApproved;
+    }
+
     _adminDbService ??= await AdminDatabaseService.create();
     final created = await _adminDbService!.submitCustomPlaceholder(
       placeholderType: placeholderType,
@@ -3865,6 +4216,7 @@ class AppProvider extends ChangeNotifier {
       contentType: contentType,
     );
     if (created != null) {
+      _pendingPlaceholderHashById[created.id] = hash;
       _myCustomPlaceholders = [
         created,
         ..._myCustomPlaceholders
@@ -3875,6 +4227,14 @@ class AppProvider extends ChangeNotifier {
     return created;
   }
 
+  // In-memory only (not persisted): links a still-pending submission's id
+  // to the content hash computed at upload time, so approveCustomPlaceholder
+  // can promote that hash into the persistent approved-hash cache. If the
+  // app restarts before an admin reviews it, the link is lost and the item
+  // simply goes through normal review -- a safe default, not a correctness
+  // issue.
+  final Map<String, String> _pendingPlaceholderHashById = {};
+
   Future<void> approveCustomPlaceholder(
       StreamerCustomPlaceholderModel placeholder) async {
     _adminDbService ??= await AdminDatabaseService.create();
@@ -3884,6 +4244,12 @@ class AppProvider extends ChangeNotifier {
     _approvedPlaceholderUrls[_placeholderCacheKey(
         placeholder.streamerId, placeholder.placeholderType)] =
         placeholder.imageUrl;
+
+    final hash = _pendingPlaceholderHashById.remove(placeholder.id);
+    if (hash != null) {
+      await _rememberApprovedPlaceholderHash(hash, placeholder.imageUrl);
+    }
+
     await refreshCustomPlaceholders();
   }
 

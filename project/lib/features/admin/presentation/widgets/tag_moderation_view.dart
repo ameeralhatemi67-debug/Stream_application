@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
 import '../../models/tag_moderation_model.dart';
 
 /// Admin Tag Moderation manager (Cluster 3 Task 12): approve, merge/rename,
@@ -202,6 +203,106 @@ class _TagModerationViewState extends State<TagModerationView> {
     );
   }
 
+  /// Task 12: modal bottom sheet listing every broadcaster currently
+  /// tagged with [tag] -- the "Inspect Broadcasters" drill-down.
+  void _showInspectBroadcastersSheet(AppProvider provider, String tag) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.darkSurface1,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetContext) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.6,
+          minChildSize: 0.3,
+          maxChildSize: 0.9,
+          expand: false,
+          builder: (context, scrollController) {
+            return FutureBuilder<List<TaggedBroadcasterSummary>>(
+              future: provider.loadBroadcastersForTag(tag),
+              builder: (context, snapshot) {
+                final items = snapshot.data ?? const [];
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(AppTheme.spaceLg),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.groups_rounded,
+                              color: AppTheme.accentBlue, size: 20),
+                          const SizedBox(width: AppTheme.spaceSm),
+                          Expanded(
+                            child: Text(
+                              '#$tag',
+                              style: const TextStyle(
+                                color: AppTheme.textPrimaryDark,
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (snapshot.connectionState == ConnectionState.waiting)
+                      const Padding(
+                        padding: EdgeInsets.all(AppTheme.spaceXl),
+                        child: Center(
+                            child: CircularProgressIndicator(
+                                color: AppTheme.accentBlue)),
+                      )
+                    else if (items.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.all(AppTheme.spaceLg),
+                        child: Text(
+                          'admin.tag_no_broadcasters'.tr(),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 12),
+                        ),
+                      )
+                    else
+                      Expanded(
+                        child: ListView.separated(
+                          controller: scrollController,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spaceLg),
+                          itemCount: items.length,
+                          separatorBuilder: (_, __) => const Divider(
+                              color: AppTheme.darkBorderSubtle, height: 1),
+                          itemBuilder: (context, index) {
+                            final b = items[index];
+                            return ListTile(
+                              leading: CircleAvatar(
+                                backgroundColor: AppTheme.darkSurface2,
+                                backgroundImage:
+                                    buildSafeImageProvider(path: b.avatarUrl),
+                              ),
+                              title: Text(b.nameEn,
+                                  style: const TextStyle(
+                                      color: AppTheme.textPrimaryDark,
+                                      fontSize: 13)),
+                              trailing: b.isOrganization
+                                  ? const Icon(Icons.apartment_rounded,
+                                      color: AppTheme.accentAmber, size: 16)
+                                  : const Icon(Icons.person_rounded,
+                                      color: AppTheme.accentBlue, size: 16),
+                            );
+                          },
+                        ),
+                      ),
+                  ],
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildTagChip(AppProvider provider, TagModerationModel tag) {
     final isActing = _actingOnNames.contains(tag.name);
     return Container(
@@ -217,6 +318,28 @@ class _TagModerationViewState extends State<TagModerationView> {
           Text(tag.name,
               style:
                   const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 12)),
+          if (tag.status == TagStatus.approved) ...[
+            const SizedBox(width: 5),
+            InkWell(
+              onTap: () => _showInspectBroadcastersSheet(provider, tag.name),
+              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                decoration: BoxDecoration(
+                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                ),
+                child: Text(
+                  'admin.tag_broadcaster_count'
+                      .tr(namedArgs: {'count': '${tag.usageCount}'}),
+                  style: const TextStyle(
+                      color: AppTheme.accentBlue,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(width: 6),
           if (isActing)
             const SizedBox(

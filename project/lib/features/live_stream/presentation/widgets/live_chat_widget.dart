@@ -271,11 +271,8 @@ class _ChatTile extends StatelessWidget {
                               : AppTheme.textPrimaryDark,
                         ),
                       ),
-                      if (message.badges.isNotEmpty)
-                        Text(
-                          message.badges.map((b) => b.emoji).join(),
-                          style: const TextStyle(fontSize: 11),
-                        ),
+                      ...message.badges
+                          .map((badge) => _buildSenderBadge(context, badge)),
                       if (message.isCurrentUser)
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -342,6 +339,38 @@ class _ChatTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Chat governance badges (Tasks 13 & 15): Admin gets a gold pill, Moderator
+/// a cyan one, both bilingual ("👑 ADMIN / المشرف العام", "🛡️ MOD / مشرف
+/// البث"). Other badge kinds (speaker/org/verified) stay a plain emoji --
+/// only admin/mod need to visibly stand out in a busy live chat.
+Widget _buildSenderBadge(BuildContext context, ChatSenderBadge badge) {
+  final isAr = context.locale.languageCode == 'ar';
+  if (badge != ChatSenderBadge.admin && badge != ChatSenderBadge.moderator) {
+    return Text(badge.emoji, style: const TextStyle(fontSize: 11));
+  }
+
+  final isAdminBadge = badge == ChatSenderBadge.admin;
+  final accentColor =
+      isAdminBadge ? const Color(0xFFD4AF37) : const Color(0xFF22D3EE);
+
+  return Container(
+    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+    decoration: BoxDecoration(
+      color: accentColor.withValues(alpha: 0.15),
+      borderRadius: BorderRadius.circular(AppTheme.radiusXs),
+      border: Border.all(color: accentColor, width: 0.8),
+    ),
+    child: Text(
+      '${badge.emoji} ${isAr ? badge.labelAr : badge.labelEn}',
+      style: TextStyle(
+        color: accentColor,
+        fontSize: 9.5,
+        fontWeight: FontWeight.bold,
+      ),
+    ),
+  );
 }
 
 class _ConnectionStatusChip extends StatelessWidget {

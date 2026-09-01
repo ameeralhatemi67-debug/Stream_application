@@ -186,7 +186,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                   color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold),
             ),
             content: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 520),
+              constraints: const BoxConstraints(maxWidth: 580),
               child: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,

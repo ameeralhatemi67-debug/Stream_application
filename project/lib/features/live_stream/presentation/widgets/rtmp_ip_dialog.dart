@@ -1327,6 +1327,79 @@ class _LiveBroadcasterStudioSheetState
   }
 
   Widget _buildCtaButton() {
+    final provider = context.watch<AppProvider>();
+    final isLive = provider.isBroadcastingLive;
+
+    if (isLive) {
+      return SizedBox(
+        width: double.infinity,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: _isSubmitting
+                ? null
+                : () async {
+                    setState(() => _isSubmitting = true);
+                    await provider.toggleBroadcasterGoLive(context);
+                    if (!mounted) return;
+                    setState(() => _isSubmitting = false);
+                    Navigator.of(context).pop();
+                    InteractiveToastOverlay.show(
+                      context,
+                      title: 'Broadcast Ended',
+                      message: 'Your live stream has ended.',
+                      icon: Icons.stop_circle_rounded,
+                      accentColor: AppTheme.accentRed,
+                    );
+                  },
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFFE53935), Color(0xFFC62828)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppTheme.accentRed.withValues(alpha: 0.38),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  if (_isSubmitting)
+                    const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: Colors.white),
+                    )
+                  else
+                    const Icon(Icons.stop_circle_rounded,
+                        size: 18, color: Colors.white),
+                  const SizedBox(width: 8),
+                  const Text(
+                    'End Stream',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
     final (label, icon) = switch (_mode) {
       StudioMode.obs => ('Go Live', Icons.sensors_rounded),
       StudioMode.phone => ('Open Camera', Icons.photo_camera_rounded),

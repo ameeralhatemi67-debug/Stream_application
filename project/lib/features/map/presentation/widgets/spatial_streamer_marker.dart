@@ -188,35 +188,39 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                   },
                 ),
 
-              // 2. Main Avatar Body Container
+              // 2. Main Avatar Body Container with Outer Stroke Ring & Transparent Gap
               Container(
-                width: isLive ? 44.0 : 38.0,
-                height: isLive ? 44.0 : 38.0,
-                padding: const EdgeInsets.all(2.0),
+                width: isLive ? 48.0 : 42.0,
+                height: isLive ? 48.0 : 42.0,
+                padding: const EdgeInsets.all(4.0),
                 decoration: BoxDecoration(
                   shape: isOrg ? BoxShape.rectangle : BoxShape.circle,
-                  borderRadius: isOrg ? BorderRadius.circular(12.0) : null,
-                  // Crisp white avatar disc so profile pictures pop against
-                  // the dark basemap (Task 8) -- map canvas only, cards
-                  // elsewhere keep their dark graphite theme.
-                  color: Colors.white,
+                  borderRadius: isOrg ? BorderRadius.circular(14.0) : null,
+                  // Transparent background with outer stroke ring (floating avatar gap)
+                  color: Colors.transparent,
                   border: Border.all(
                     color: widget.isSelected
                         ? AppTheme.accentBlue
                         : (isLive ? primaryAccent : Colors.white),
-                    width: widget.isSelected ? 2.5 : (isLive ? 2.0 : 1.5),
+                    width: widget.isSelected ? 2.2 : 1.8,
                   ),
                   boxShadow: [
                     BoxShadow(
                       color: isLive
                           ? primaryAccent.withValues(alpha: 0.45)
-                          : Colors.black.withValues(alpha: 0.5),
+                          : Colors.black.withValues(alpha: 0.4),
                       blurRadius: widget.isSelected ? 10 : (isLive ? 8 : 4),
                       spreadRadius: isLive ? 1 : 0,
                     ),
                   ],
                 ),
-                child: _buildAvatarImage(),
+                child: Center(
+                  child: SizedBox(
+                    width: isLive ? 36.0 : 30.0,
+                    height: isLive ? 36.0 : 30.0,
+                    child: _buildAvatarImage(),
+                  ),
+                ),
               ),
 
               // 3. Status Badge Pill at Top (Live Video vs Live Audio)
