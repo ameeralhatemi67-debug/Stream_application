@@ -2,104 +2,80 @@ package com.example.streamer_app.streaming
 
 import android.content.Context
 import android.content.Intent
-import android.graphics.BitmapFactory
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
-import android.view.SurfaceView
-import com.example.streamer_app.R
 import com.pedro.common.ConnectChecker
-import com.pedro.encoder.input.sources.audio.MicrophoneSource
-import com.pedro.encoder.input.sources.video.BitmapSource
-import com.pedro.encoder.input.sources.video.Camera2Source
-import com.pedro.library.rtmp.RtmpStream
+import com.pedro.library.rtmp.RtmpCamera2
+import com.pedro.library.view.OpenGlView
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 
 /**
- * Owns the [RtmpStream] lifecycle end to end. Built on RootEncoder's generic
- * pluggable-source architecture (not the camera-only RtmpCamera2 used by the
- * v0.7 Checkpoint 1 spike and Checkpoint 2 Phase 1) specifically so
- * Checkpoint 3 can swap the video source between the live camera and a
- * static [BitmapSource] for audio-only broadcasts, without needing two
- * separate encoder pipelines. [RtmpPublisherView] only ever hands this
- * bridge the [SurfaceView] it renders into; Dart's RtmpPublishEngine only
- * ever talks to this bridge over MethodChannel/EventChannel, never to
- * RootEncoder directly -- the same engine/UI split validated by the
- * Checkpoint 1 spike, so v1.1's iOS engine can sit behind the exact same
- * Dart-facing surface.
+ * Owns the [RtmpCamera2] lifecycle end to end. Uses RootEncoder's dedicated
+ * camera pipeline so sensor orientation, aspect ratios, and OpenGL preview
+ * are calculated naturally without compression.
  */
 class RtmpPublisherBridge(
     private val appContext: Context
 ) : MethodChannel.MethodCallHandler, EventChannel.StreamHandler, ConnectChecker {
 
-    private val cameraSource = Camera2Source(appContext)
-    private val microphoneSource = MicrophoneSource()
-    private val stream = RtmpStream(appContext, this, cameraSource, microphoneSource)
+    private var openGlView: OpenGlView? = null
+    private var camera: RtmpCamera2? = null
 
-    private var surfaceView: SurfaceView? = null
     private var eventSink: EventChannel.EventSink? = null
     private val mainHandler = Handler(Looper.getMainLooper())
 
-    // v0.7 Checkpoint 4 Phase 1 -- connection-drop detection & reconnect.
-    // isStoppingIntentionally distinguishes "the user tapped End Broadcast"
-    // (handleStopStream) from "the connection actually dropped"
-    // (onDisconnect firing on its own) -- RootEncoder's ConnectChecker
-    // can't tell those apart itself, since it's the same callback either way.
     private var isStoppingIntentionally = false
     private var reconnectAttempt = 0
     private val maxReconnectAttempts = 6
 
-    fun attach(view: SurfaceView) {
-        // Only stores the view -- RtmpStream rejects prepareVideo/
-        // prepareAudio once a preview is already running ("Stream, record
-        // and preview must be stopped before prepareVideo"), so startPreview
-        // has to happen *after* handlePrepare's prepareVideo/prepareAudio,
-        // not as soon as the surface exists.
-        surfaceView = view
-        // Resuming from background/screen-lock (v0.7 Checkpoint 3 Phase 2):
-        // Android recreates a new Surface for the PlatformView, but the
-        // broadcast itself never stopped (see onSurfaceLost) -- just
-        // reattach the preview so the on-screen view comes back.
-        if (stream.isStreaming && !stream.isOnPreview) {
-            stream.startPreview(view)
+    fun attach(view: OpenGlView) {
+        openGlView = view
+        if (camera == null) {
+            camera = RtmpCamera2(view, this)
+        } else {
+            camera?.replaceView(view)
+        }
+        if (camera?.isStreaming == true && camera?.isOnPreview != true) {
+            camera?.startPreview()
         }
     }
 
-    /**
-     * The OS tore down the PlatformView's Surface -- app backgrounded,
-     * screen locked, etc. Only drops the on-screen preview binding; the
-     * broadcast itself (RtmpForegroundService keeping the process alive)
-     * keeps running. Only [detach] (the screen actually being disposed)
-     * stops the stream for real -- conflating the two here previously meant
-     * every background/lock silently ended the broadcast.
-     */
     fun onSurfaceLost() {
-        if (stream.isOnPreview) stream.stopPreview()
-        surfaceView = null
+        openGlView = null
     }
 
     fun detach() {
-        if (stream.isStreaming) stream.stopStream()
-        if (stream.isOnPreview) stream.stopPreview()
-        surfaceView = null
+        val cam = camera
+        if (cam != null) {
+            if (cam.isStreaming) cam.stopStream()
+            if (cam.isOnPreview) cam.stopPreview()
+        }
+        camera = null
+        openGlView = null
         stopForegroundService()
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
-        if (surfaceView == null) {
+        val view = openGlView
+        if (view == null) {
             result.error("NOT_READY", "Camera preview is not attached yet.", null)
             return
         }
+        if (camera == null) {
+            camera = RtmpCamera2(view, this)
+        }
+        val cam = camera!!
         when (call.method) {
-            "prepare" -> handlePrepare(call, result)
-            "switchCamera" -> handleSwitchCamera(result)
-            "setAudioOnly" -> handleSetAudioOnly(call, result)
-            "startStream" -> handleStartStream(call, result)
-            "stopStream" -> handleStopStream(result)
-            "setMuted" -> handleSetMuted(call, result)
-            "setOrientation" -> handleSetOrientation(call, result)
+            "prepare" -> handlePrepare(call, result, cam, view)
+            "switchCamera" -> handleSwitchCamera(result, cam)
+            "setAudioOnly" -> handleSetAudioOnly(call, result, cam)
+            "startStream" -> handleStartStream(call, result, cam)
+            "stopStream" -> handleStopStream(result, cam)
+            "setMuted" -> handleSetMuted(call, result, cam)
+            "setOrientation" -> handleSetOrientation(call, result, cam)
             "dispose" -> {
                 detach()
                 result.success(null)
@@ -108,29 +84,28 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handlePrepare(call: MethodCall, result: MethodChannel.Result) {
-        // Resolution/bitrate preset (v0.7 Checkpoint 2 Phase 3 -- see
-        // BroadcastQualityPreset in rtmp_publish_engine.dart). Falls back to
-        // the medium preset's values if Dart ever calls prepare() without
-        // arguments.
+    private fun handlePrepare(
+        call: MethodCall,
+        result: MethodChannel.Result,
+        cam: RtmpCamera2,
+        view: OpenGlView
+    ) {
         val width = call.argument<Int>("width") ?: 1280
         val height = call.argument<Int>("height") ?: 720
         val videoBitrate = call.argument<Int>("videoBitrate") ?: 2_500_000
-        val view = surfaceView
-        if (view == null) {
-            result.error("NOT_READY", "Camera preview is not attached yet.", null)
-            return
-        }
         try {
-            val prepared = stream.prepareVideo(width, height, videoBitrate) &&
-                stream.prepareAudio(44100, true, 128_000)
-            if (prepared) {
-                if (!stream.isOnPreview) stream.startPreview(view)
+            if (cam.isOnPreview) {
+                cam.stopPreview()
+            }
+            val videoPrepared = cam.prepareVideo(width, height, videoBitrate)
+            val audioPrepared = cam.prepareAudio(128_000, 44100, true)
+            if (videoPrepared && audioPrepared) {
+                cam.startPreview()
                 result.success(null)
             } else {
                 result.error(
                     "PREPARE_FAILED",
-                    "This device does not support the requested encoder configuration.",
+                    "This device does not support the requested encoder configuration ($width x $height).",
                     null
                 )
             }
@@ -139,31 +114,26 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handleSwitchCamera(result: MethodChannel.Result) {
+    private fun handleSwitchCamera(result: MethodChannel.Result, cam: RtmpCamera2) {
         try {
-            cameraSource.switchCamera()
+            cam.switchCamera()
             result.success(null)
         } catch (e: Exception) {
             result.error("SWITCH_FAILED", e.message, null)
         }
     }
 
-    private fun handleSetAudioOnly(call: MethodCall, result: MethodChannel.Result) {
+    private fun handleSetAudioOnly(
+        call: MethodCall,
+        result: MethodChannel.Result,
+        cam: RtmpCamera2
+    ) {
         val audioOnly = call.argument<Boolean>("audioOnly") ?: false
         try {
             if (audioOnly) {
-                // v0.7 Checkpoint 3 Phase 1 -- YouTube's RTMP ingest requires
-                // a video track even for an audio-only broadcast, so a
-                // static branded image stands in for the camera feed rather
-                // than dropping video entirely (RtmpOnlyAudio would send no
-                // video track at all).
-                val bitmap = BitmapFactory.decodeResource(
-                    appContext.resources,
-                    R.mipmap.ic_launcher
-                )
-                stream.changeVideoSource(BitmapSource(bitmap))
+                cam.glInterface?.muteVideo()
             } else {
-                stream.changeVideoSource(cameraSource)
+                cam.glInterface?.unMuteVideo()
             }
             result.success(null)
         } catch (e: Exception) {
@@ -171,7 +141,11 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handleStartStream(call: MethodCall, result: MethodChannel.Result) {
+    private fun handleStartStream(
+        call: MethodCall,
+        result: MethodChannel.Result,
+        cam: RtmpCamera2
+    ) {
         val url = call.argument<String>("url")
         if (url.isNullOrBlank()) {
             result.error("INVALID_URL", "No RTMP URL was provided.", null)
@@ -181,27 +155,11 @@ class RtmpPublisherBridge(
             isStoppingIntentionally = false
             reconnectAttempt = 0
             startForegroundService()
-            // Without these, RootEncoder is slow (sometimes minutes) to
-            // notice a dropped connection: a TCP socket can stay reported as
-            // "connected" long after the network is actually gone (weak
-            // signal, network switch). setCheckServerAlive proactively
-            // checks reachability every read loop instead of waiting on a
-            // stall; shouldFailOnRead makes a failed read actually surface
-            // as onConnectionFailed instead of being swallowed silently.
-            //
-            // shouldSendPings deliberately NOT enabled: confirmed on-device
-            // (killed a local test RTMP server mid-broadcast) that it
-            // crashes the whole app -- CommandsManager.sendPing's
-            // SocketException("Broken pipe") on a dead connection is thrown
-            // from RtmpClient's own coroutine, uncaught, outside the
-            // read-loop's runCatching that normally turns failures into
-            // onConnectionFailed/onDisconnect. Reachability + read-failure
-            // detection alone is what this app relies on for drop detection.
-            stream.getStreamClient().apply {
+            cam.getStreamClient().apply {
                 setCheckServerAlive(true)
                 shouldFailOnRead(true)
             }
-            stream.startStream(url)
+            cam.startStream(url)
             result.success(null)
         } catch (e: Exception) {
             stopForegroundService()
@@ -209,32 +167,36 @@ class RtmpPublisherBridge(
         }
     }
 
-    private fun handleStopStream(result: MethodChannel.Result) {
+    private fun handleStopStream(result: MethodChannel.Result, cam: RtmpCamera2) {
         try {
             isStoppingIntentionally = true
-            stream.stopStream()
+            cam.stopStream()
         } finally {
             stopForegroundService()
         }
         result.success(null)
     }
 
-    private fun handleSetOrientation(call: MethodCall, result: MethodChannel.Result) {
+    private fun handleSetOrientation(
+        call: MethodCall,
+        result: MethodChannel.Result,
+        cam: RtmpCamera2
+    ) {
         val orientation = call.argument<Int>("orientation") ?: 0
         try {
-            stream.setOrientation(orientation)
             result.success(null)
         } catch (e: Exception) {
             result.error("ORIENTATION_FAILED", e.message, null)
         }
     }
 
-    private fun handleSetMuted(call: MethodCall, result: MethodChannel.Result) {
+    private fun handleSetMuted(
+        call: MethodCall,
+        result: MethodChannel.Result,
+        cam: RtmpCamera2
+    ) {
         val muted = call.argument<Boolean>("muted") ?: false
-        // RtmpStream (unlike the camera-specific RtmpCamera2) has no
-        // disableAudio()/enableAudio() of its own -- mute lives on the
-        // MicrophoneSource instance itself.
-        if (muted) microphoneSource.mute() else microphoneSource.unMute()
+        if (muted) cam.disableAudio() else cam.enableAudio()
         result.success(null)
     }
 
@@ -335,7 +297,7 @@ class RtmpPublisherBridge(
         // internals don't tolerate that. Posting keeps this consistent with
         // emit() regardless of which thread attemptReconnect was entered on.
         mainHandler.post {
-            val initiated = stream.getStreamClient().reTry(delayMs, reason)
+            val initiated = camera?.getStreamClient()?.reTry(delayMs, reason) ?: false
             if (!initiated) {
                 // reTry() declined to schedule anything (e.g. the stream
                 // isn't in a retryable state) -- give up for real instead of

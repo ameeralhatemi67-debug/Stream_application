@@ -209,11 +209,20 @@ class RtmpPublishEngine extends ChangeNotifier {
     try {
       await _channel.invokeMethod<void>('setAudioOnly', {'audioOnly': audioOnly});
       _isAudioOnly = audioOnly;
+      _isCameraOff = audioOnly;
       notifyListeners();
     } on PlatformException catch (e) {
       _lastError = e.message ?? e.code;
       notifyListeners();
     }
+  }
+
+  bool _isCameraOff = false;
+  bool get isCameraOff => _isCameraOff || _isAudioOnly;
+
+  Future<void> toggleCamera([bool? forceOff]) async {
+    final nextOff = forceOff ?? !isCameraOff;
+    await setAudioOnly(nextOff);
   }
 
   Future<void> setOrientation(int orientation) async {

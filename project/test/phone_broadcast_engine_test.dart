@@ -396,4 +396,25 @@ void main() {
     expect(engine.isMicSilent.value, isFalse);
     expect(engine.lastMicRms, isNull);
   });
+
+  test('toggleCamera and isCameraOff state changes seamlessly', () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      if (call.method == 'setAudioOnly') return null;
+      return null;
+    });
+
+    final engine = RtmpPublishEngine();
+    expect(engine.isCameraOff, isFalse);
+
+    await engine.toggleCamera(true);
+    expect(engine.isCameraOff, isTrue);
+    expect(engine.isAudioOnly, isTrue);
+
+    await engine.toggleCamera(false);
+    expect(engine.isCameraOff, isFalse);
+    expect(engine.isAudioOnly, isFalse);
+
+    await engine.toggleCamera();
+    expect(engine.isCameraOff, isTrue);
+  });
 }

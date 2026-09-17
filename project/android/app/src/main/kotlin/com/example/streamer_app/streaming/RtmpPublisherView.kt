@@ -26,8 +26,8 @@ class RtmpPublisherView(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
         )
-        // Maintain aspect ratio without stretching the camera image
-        openGlView.setAspectRatioMode(AspectRatioMode.Adjust)
+        // Maintain aspect ratio and fill viewport without squashing/stretching
+        openGlView.setAspectRatioMode(AspectRatioMode.Fill)
         container.addView(openGlView)
         openGlView.holder.addCallback(object : SurfaceHolder.Callback {
             override fun surfaceCreated(holder: SurfaceHolder) {

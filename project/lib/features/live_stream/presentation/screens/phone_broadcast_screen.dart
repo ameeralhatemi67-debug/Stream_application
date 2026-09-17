@@ -7,7 +7,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/language_switcher.dart';
+import '../../../discovery/models/academic_category_model.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../../map/models/map_models.dart';
 import '../../models/chat_message_model.dart';
@@ -20,6 +20,7 @@ import '../widgets/floating_reactions_overlay.dart';
 import '../widgets/live_chat_widget.dart';
 import '../widgets/permission_rationale_dialog.dart';
 import '../widgets/phone_camera_preview.dart';
+import '../widgets/rtmp_ip_dialog.dart';
 
 /// Full-featured Stream Page for Phone Broadcasters:
 /// Unifies the broadcaster's phone camera stream with the exact same
@@ -51,6 +52,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   late bool _presetConfirmed;
   bool _isFullscreen = false;
   bool _isSideChatOpen = false;
+  bool _controlsVisible = true;
+  bool _isDescriptionExpanded = false;
 
   late AppProvider _appProvider;
   bool _appProviderCaptured = false;
@@ -258,6 +261,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   void dispose() {
     _setWakelock(false);
     _restorePortraitChrome();
+    if (_weStartedBroadcast) {
+      _stopBroadcast();
+    }
     _tabController.dispose();
     _chatTextController.dispose();
     _chatScrollController.dispose();
@@ -311,6 +317,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     final isDesktop = mediaQuery.size.width >= 900;
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
     final isSideBySide = isDesktop || (isLandscape && !_isFullscreen);
+    final streamer = _appProvider.currentBroadcasterStreamer;
 
     if (!_presetConfirmed) {
       return Scaffold(
@@ -326,7 +333,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (_isFullscreen || isLandscape) {
       return Scaffold(
         backgroundColor: Colors.black,
-        body: _buildFullscreenLandscapeLayout(title, langCode),
+        body: _buildFullscreenLandscapeLayout(title, streamer, langCode),
       );
     }
 
@@ -335,32 +342,124 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
         backgroundColor: AppTheme.darkSurface1,
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
+          tooltip: 'Back',
+          onPressed: () => Navigator.of(context).pop(),
+        ),
+        titleSpacing: 0,
+        title: Row(
           children: [
-            Text(
-              title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+            CircleAvatar(
+              radius: 17,
+              backgroundColor: AppTheme.darkSurface3,
+              backgroundImage: _getAvatarProvider(streamer.avatarUrl),
             ),
-            if (description.isNotEmpty)
-              Text(
-                description,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.normal,
-                  color: AppTheme.textSecondaryDark,
-                ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Flexible(
+                        child: Text(
+                          streamer.getLocalizedName(langCode),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      if (streamer.isVerified) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.verified_rounded,
+                            size: 14, color: AppTheme.accentBlue),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 1),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding:
+                            const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentRed.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(
+                            color: AppTheme.accentRed.withValues(alpha: 0.6),
+                            width: 0.8,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 5,
+                              height: 5,
+                              decoration: const BoxDecoration(
+                                color: AppTheme.accentRed,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            const Text(
+                              'LIVE',
+                              style: TextStyle(
+                                color: AppTheme.accentRed,
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Flexible(
+                        child: Text(
+                          streamer.getLocalizedOrganization(langCode),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppTheme.textSecondaryDark,
+                            fontSize: 10.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
+            ),
           ],
         ),
-        actions: const [
-          LanguageSwitcher(),
-          SizedBox(width: AppTheme.spaceSm),
+        actions: [
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppTheme.accentRed.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: AppTheme.accentRed.withValues(alpha: 0.5),
+                width: 1.2,
+              ),
+            ),
+            child: IconButton(
+              icon: const Icon(Icons.cell_tower_rounded,
+                  color: AppTheme.accentRed, size: 20),
+              tooltip: 'Broadcaster Studio & End Stream',
+              onPressed: () => LiveBroadcasterStudioSheet.show(context),
+            ),
+          ),
         ],
       ),
       body: SafeArea(
@@ -371,9 +470,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     flex: isDesktop ? 65 : 58,
                     child: Column(
                       children: [
-                        Expanded(child: _buildVideoViewport(isSideBySide: true)),
-                        _buildBroadcasterControlsStrip(),
-                        _buildBroadcasterHeader(title, description, langCode),
+                        Expanded(
+                          child: _buildVideoViewport(
+                            isSideBySide: true,
+                            streamer: streamer,
+                          ),
+                        ),
+                        _buildTitleAndDescriptionStrip(
+                            title, description, streamer, langCode),
                       ],
                     ),
                   ),
@@ -387,9 +491,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               )
             : Column(
                 children: [
-                  _buildVideoViewport(isSideBySide: false),
-                  _buildBroadcasterControlsStrip(),
-                  _buildBroadcasterHeader(title, description, langCode),
+                  _buildVideoViewport(
+                    isSideBySide: false,
+                    streamer: streamer,
+                  ),
+                  _buildTitleAndDescriptionStrip(
+                      title, description, streamer, langCode),
                   Expanded(child: _buildCinemaTabPanel(langCode)),
                 ],
               ),
@@ -397,7 +504,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
-  Widget _buildVideoViewport({required bool isSideBySide}) {
+  Widget _buildVideoViewport({
+    required bool isSideBySide,
+    required StreamerModel streamer,
+  }) {
     if (_setupError != null) {
       return Container(
         color: Colors.black,
@@ -414,115 +524,215 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     final loading = _engine.state == RtmpPublishState.idle ||
         _engine.state == RtmpPublishState.initializingCamera;
 
-    final videoContent = Container(
-      color: Colors.black,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          // 1. Camera Platform View (properly clipped with 0 distortion)
-          const ClipRect(
-            child: SizedBox.expand(
-              child: PhoneCameraPreview(),
-            ),
-          ),
+    final videoContent = GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _controlsVisible = !_controlsVisible),
+      child: Container(
+        color: Colors.black,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            // 1. Camera Platform View (or Camera Off Audio Poster)
+            if (_engine.isCameraOff)
+              Container(
+                color: AppTheme.darkBgBase,
+                alignment: Alignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    CircleAvatar(
+                      radius: 34,
+                      backgroundColor: AppTheme.darkSurface3,
+                      backgroundImage: _getAvatarProvider(streamer.avatarUrl),
+                    ),
+                    const SizedBox(height: 10),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppTheme.accentAmber.withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        border: Border.all(
+                            color: AppTheme.accentAmber.withValues(alpha: 0.5)),
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.videocam_off_rounded,
+                              size: 14, color: AppTheme.accentAmber),
+                          SizedBox(width: 6),
+                          Text(
+                            'Camera is Off • Audio Only',
+                            style: TextStyle(
+                              color: AppTheme.accentAmber,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextButton.icon(
+                      onPressed: () => _engine.toggleCamera(false),
+                      icon: const Icon(Icons.videocam_rounded, size: 16),
+                      label: const Text('Turn On Camera',
+                          style: TextStyle(
+                              fontSize: 12, fontWeight: FontWeight.bold)),
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.darkSurface2,
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              const ClipRect(
+                child: SizedBox.expand(
+                  child: PhoneCameraPreview(),
+                ),
+              ),
 
-          // 2. Loading indicator
-          if (loading)
-            const ColoredBox(
-              color: Colors.black,
-              child: Center(
-                child: CircularProgressIndicator(color: AppTheme.accentRed),
+            // 2. Loading indicator
+            if (loading && !_engine.isCameraOff)
+              const ColoredBox(
+                color: Colors.black,
+                child: Center(
+                  child: CircularProgressIndicator(color: AppTheme.accentRed),
+                ),
+              ),
+
+            // 3. Overlay Controls (Tap to hide for clean video)
+            AnimatedOpacity(
+              opacity: _controlsVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 240),
+              child: IgnorePointer(
+                ignoring: !_controlsVisible,
+                child: Stack(
+                  children: [
+                    // Top Left: Live Bitrate Badge
+                    if (_engine.state == RtmpPublishState.live)
+                      Positioned(
+                        top: AppTheme.spaceSm,
+                        left: AppTheme.spaceSm,
+                        child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
+                      ),
+
+                    if (_engine.state == RtmpPublishState.connecting)
+                      const Positioned(
+                        top: AppTheme.spaceSm,
+                        left: AppTheme.spaceSm,
+                        child: _StatusPill(
+                            label: 'Connecting...', color: Colors.amber),
+                      ),
+
+                    // Top Right: 3-Dots Streamer Controls Menu
+                    Positioned(
+                      top: AppTheme.spaceSm,
+                      right: AppTheme.spaceSm,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          border: Border.all(color: Colors.white24, width: 0.8),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.more_vert_rounded,
+                              color: Colors.white, size: 20),
+                          tooltip: 'Streamer Controls',
+                          onPressed: () =>
+                              _showStreamerControlsSheet(streamer),
+                        ),
+                      ),
+                    ),
+
+                    // Bottom Right: Fullscreen Button
+                    Positioned(
+                      bottom: AppTheme.spaceSm,
+                      right: AppTheme.spaceSm,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.black.withValues(alpha: 0.65),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          border: Border.all(color: Colors.white24, width: 0.8),
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.fullscreen_rounded,
+                              color: Colors.white, size: 20),
+                          tooltip: 'Fullscreen',
+                          onPressed: _handleToggleFullscreen,
+                        ),
+                      ),
+                    ),
+
+                    // Mic Muted Pill
+                    if (_engine.isMuted)
+                      const Positioned(
+                        bottom: AppTheme.spaceSm,
+                        left: AppTheme.spaceSm,
+                        child: _StatusPill(
+                          label: 'MIC MUTED',
+                          color: AppTheme.accentRed,
+                        ),
+                      ),
+                  ],
+                ),
               ),
             ),
 
-          // 3. Live Bitrate Badge (Top Left)
-          if (_engine.state == RtmpPublishState.live)
-            Positioned(
-              top: AppTheme.spaceSm,
-              left: AppTheme.spaceSm,
-              child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
-            ),
-
-          if (_engine.state == RtmpPublishState.connecting)
-            const Positioned(
-              top: AppTheme.spaceSm,
-              left: AppTheme.spaceSm,
-              child: _StatusPill(label: 'Connecting...', color: Colors.amber),
-            ),
-
-          // 4. Fullscreen Button (Bottom Right of player)
-          Positioned(
-            bottom: AppTheme.spaceSm,
-            right: AppTheme.spaceSm,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.black45,
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              ),
-              child: IconButton(
-                icon: const Icon(Icons.fullscreen_rounded,
-                    color: Colors.white, size: 20),
-                tooltip: 'Fullscreen',
-                onPressed: _handleToggleFullscreen,
-              ),
-            ),
-          ),
-
-          // 5. Audio Only Pill
-          if (_engine.isAudioOnly)
-            const Positioned(
-              top: AppTheme.spaceSm,
-              right: AppTheme.spaceSm,
-              child: _StatusPill(label: 'AUDIO ONLY', color: AppTheme.accentBlue),
-            ),
-
-          // 6. Reconnecting Banner
-          if (_engine.state == RtmpPublishState.reconnecting)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _ReconnectingBanner(
-                attempt: _engine.reconnectAttempt,
-                maxAttempts: _engine.maxReconnectAttempts,
-              ),
-            ),
-
-          // 7. Error Banner
-          if (_engine.state == RtmpPublishState.error &&
-              _engine.lastError != null)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: _StreamErrorBanner(message: _engine.lastError!),
-            ),
-
-          // 8. Floating Reaction Hearts Overlay
-          FloatingReactionsOverlay(controller: _reactionsController),
-
-          // 9. Knocking Requests (Private Stream)
-          Consumer<AppProvider>(
-            builder: (context, provider, _) {
-              if (provider.pendingKnockRequests.isEmpty) {
-                return const SizedBox.shrink();
-              }
-              final request = provider.pendingKnockRequests.first;
-              return Positioned(
+            // 4. Reconnecting Banner
+            if (_engine.state == RtmpPublishState.reconnecting)
+              Positioned(
                 top: 0,
                 left: 0,
                 right: 0,
-                child: _KnockingBanner(
-                  request: request,
-                  queueLength: provider.pendingKnockRequests.length,
-                  onAdmit: () => provider.admitKnockRequest(request.id),
-                  onDeny: () => provider.denyKnockRequest(request.id),
-                  onAdmitAll: provider.admitAllKnockRequests,
+                child: _ReconnectingBanner(
+                  attempt: _engine.reconnectAttempt,
+                  maxAttempts: _engine.maxReconnectAttempts,
                 ),
-              );
-            },
-          ),
-        ],
+              ),
+
+            // 5. Error Banner
+            if (_engine.state == RtmpPublishState.error &&
+                _engine.lastError != null)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: _StreamErrorBanner(message: _engine.lastError!),
+              ),
+
+            // 6. Floating Reaction Hearts Overlay
+            FloatingReactionsOverlay(controller: _reactionsController),
+
+            // 7. Knocking Requests (Private Stream)
+            Consumer<AppProvider>(
+              builder: (context, provider, _) {
+                if (provider.pendingKnockRequests.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                final request = provider.pendingKnockRequests.first;
+                return Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: _KnockingBanner(
+                    request: request,
+                    queueLength: provider.pendingKnockRequests.length,
+                    onAdmit: () => provider.admitKnockRequest(request.id),
+                    onDeny: () => provider.denyKnockRequest(request.id),
+                    onAdmitAll: provider.admitAllKnockRequests,
+                  ),
+                );
+              },
+            ),
+          ],
+        ),
       ),
     );
 
@@ -534,20 +744,292 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
-  Widget _buildBroadcasterControlsStrip() {
-    final ready = _engine.state == RtmpPublishState.ready ||
-        _engine.state == RtmpPublishState.stopped;
-    final live = _engine.state == RtmpPublishState.live;
-    final connecting = _engine.state == RtmpPublishState.connecting;
-    final broadcastActive =
-        live || _engine.state == RtmpPublishState.reconnecting;
-    final canToggleGoLive =
-        ready || broadcastActive || _engine.state == RtmpPublishState.error;
+  void _showStreamerControlsSheet(StreamerModel streamer) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (sheetContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final isMuted = _engine.isMuted;
+            final isCameraOff = _engine.isCameraOff;
+            final isFrontCamera = _engine.isFrontCamera;
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: AppTheme.darkSurface1,
+                borderRadius: BorderRadius.vertical(
+                    top: Radius.circular(AppTheme.radiusLg)),
+                border: Border(
+                  top:
+                      BorderSide(color: AppTheme.darkBorderHighlight, width: 1),
+                ),
+              ),
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceMd),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 36,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppTheme.darkBorderHighlight,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: AppTheme.spaceMd),
+                    const Row(
+                      children: [
+                        Icon(Icons.tune_rounded,
+                            color: AppTheme.accentRed, size: 20),
+                        SizedBox(width: 8),
+                        Text(
+                          'Streamer Quick Controls',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: AppTheme.spaceMd),
+
+                    // 1. 🎤 Microphone Mute Toggle
+                    ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      tileColor: isMuted
+                          ? AppTheme.accentRed.withValues(alpha: 0.15)
+                          : AppTheme.darkSurface2,
+                      leading: Icon(
+                        isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                        color: isMuted
+                            ? AppTheme.accentRed
+                            : AppTheme.accentGreen,
+                      ),
+                      title: Text(
+                        isMuted ? 'Unmute Microphone' : 'Mute Microphone',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5),
+                      ),
+                      subtitle: Text(
+                        isMuted
+                            ? 'Your mic is currently silent'
+                            : 'Live audio input active',
+                        style: const TextStyle(
+                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                      ),
+                      trailing: Switch(
+                        value: !isMuted,
+                        activeThumbColor: AppTheme.accentGreen,
+                        onChanged: (val) async {
+                          await _engine.setMuted(!val);
+                          setModalState(() {});
+                          setState(() {});
+                        },
+                      ),
+                      onTap: () async {
+                        await _engine.setMuted(!isMuted);
+                        setModalState(() {});
+                        setState(() {});
+                      },
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 2. 🔄 Flip Camera Toggle
+                    ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      tileColor: AppTheme.darkSurface2,
+                      leading: const Icon(Icons.flip_camera_ios_rounded,
+                          color: AppTheme.accentBlue),
+                      title: Text(
+                        isFrontCamera
+                            ? 'Switch to Back Camera'
+                            : 'Switch to Front Camera',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5),
+                      ),
+                      subtitle: Text(
+                        isFrontCamera
+                            ? 'Front selfie camera active'
+                            : 'Rear environment camera active',
+                        style: const TextStyle(
+                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                      ),
+                      trailing: const Icon(Icons.sync_rounded,
+                          color: AppTheme.textSecondaryDark, size: 18),
+                      onTap: isCameraOff
+                          ? null
+                          : () async {
+                              await _engine.switchCamera();
+                              setModalState(() {});
+                              setState(() {});
+                            },
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 3. 📷 Close Camera (Video / Audio-Only Toggle)
+                    ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      tileColor: isCameraOff
+                          ? AppTheme.accentAmber.withValues(alpha: 0.15)
+                          : AppTheme.darkSurface2,
+                      leading: Icon(
+                        isCameraOff
+                            ? Icons.videocam_off_rounded
+                            : Icons.videocam_rounded,
+                        color: isCameraOff
+                            ? AppTheme.accentAmber
+                            : AppTheme.accentBlue,
+                      ),
+                      title: Text(
+                        isCameraOff
+                            ? 'Turn On Camera'
+                            : 'Close Camera (Audio-Only)',
+                        style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
+                            fontSize: 13.5),
+                      ),
+                      subtitle: Text(
+                        isCameraOff
+                            ? 'Displaying profile poster to viewers'
+                            : 'Live camera video stream active',
+                        style: const TextStyle(
+                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                      ),
+                      trailing: Switch(
+                        value: !isCameraOff,
+                        activeThumbColor: AppTheme.accentBlue,
+                        onChanged: (val) async {
+                          await _engine.toggleCamera(!val);
+                          setModalState(() {});
+                          setState(() {});
+                        },
+                      ),
+                      onTap: () async {
+                        await _engine.toggleCamera(!isCameraOff);
+                        setModalState(() {});
+                        setState(() {});
+                      },
+                    ),
+                    const SizedBox(height: 8),
+
+                    // 4. 🔒 Private Attendees Admission (if private)
+                    if (_appProvider.isActiveStreamPrivate) ...[
+                      ListTile(
+                        shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
+                        ),
+                        tileColor: AppTheme.darkSurface2,
+                        leading: const Icon(Icons.people_alt_rounded,
+                            color: AppTheme.accentAmber),
+                        title: Text(
+                          'Manage Attendees (${_appProvider.admittedAttendees.length})',
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 13.5),
+                        ),
+                        subtitle: Text(
+                          '${_appProvider.pendingKnockRequests.length} waiting in admission queue',
+                          style: const TextStyle(
+                              color: AppTheme.textSecondaryDark, fontSize: 11),
+                        ),
+                        trailing: const Icon(Icons.chevron_right_rounded,
+                            color: AppTheme.textSecondaryDark),
+                        onTap: () {
+                          Navigator.of(sheetContext).pop();
+                          _showDirectorPanel(context, _appProvider);
+                        },
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+
+                    // 5. 🗼 Studio & End Stream Shortcut
+                    ListTile(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                      tileColor: AppTheme.accentRed.withValues(alpha: 0.1),
+                      leading: const Icon(Icons.cell_tower_rounded,
+                          color: AppTheme.accentRed),
+                      title: const Text(
+                        'Broadcaster Studio & End Stream',
+                        style: TextStyle(
+                            color: AppTheme.accentRed,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 13.5),
+                      ),
+                      subtitle: const Text(
+                        'Adjust stream settings or end broadcast session',
+                        style: TextStyle(
+                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                      ),
+                      trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                          color: AppTheme.accentRed, size: 14),
+                      onTap: () {
+                        Navigator.of(sheetContext).pop();
+                        LiveBroadcasterStudioSheet.show(context);
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  String get _presetCompactLabel {
+    switch (_preset) {
+      case BroadcastQualityPreset.low:
+        return '480p SD';
+      case BroadcastQualityPreset.medium:
+        return '720p HD';
+      case BroadcastQualityPreset.high:
+        return '1080p FHD';
+    }
+  }
+
+  Widget _buildTitleAndDescriptionStrip(String title, String description,
+      StreamerModel streamer, String langCode) {
+    final effectiveTitle =
+        title.isNotEmpty ? title : streamer.getLocalizedTitle(langCode);
+    final categoryModel = _appProvider.academicCategories.firstWhere(
+      (c) => c.id == streamer.categoryId,
+      orElse: () => _appProvider.academicCategories.isNotEmpty
+          ? _appProvider.academicCategories.first
+          : const AcademicCategoryModel(
+              id: 'cat_cs',
+              nameEn: 'Computer Science',
+              nameAr: 'علوم الحاسب',
+            ),
+    );
 
     return Container(
       padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceLg,
-        vertical: 8.0,
+        horizontal: AppTheme.spaceMd,
+        vertical: 10.0,
       ),
       decoration: const BoxDecoration(
         color: AppTheme.darkSurface1,
@@ -555,206 +1037,138 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           bottom: BorderSide(color: AppTheme.darkBorderSubtle, width: 1),
         ),
       ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // 🎤 Mic Mute Toggle
-          Container(
-            decoration: BoxDecoration(
-              color: _engine.isMuted
-                  ? AppTheme.accentRed.withValues(alpha: 0.2)
-                  : AppTheme.darkSurface2,
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              border: Border.all(
-                color: _engine.isMuted
-                    ? AppTheme.accentRed
-                    : AppTheme.darkBorderSubtle,
-              ),
-            ),
-            child: IconButton(
-              iconSize: 20,
-              onPressed: broadcastActive || ready
-                  ? () => _engine.setMuted(!_engine.isMuted)
-                  : null,
-              icon: Icon(
-                _engine.isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                color: _engine.isMuted ? AppTheme.accentRed : Colors.white,
-              ),
-              tooltip:
-                  _engine.isMuted ? 'Unmute microphone' : 'Mute microphone',
-            ),
-          ),
-
-          // 🛑 Go Live / End Broadcast Button
-          ElevatedButton.icon(
-            onPressed: connecting
-                ? null
-                : canToggleGoLive
-                    ? (broadcastActive ? _stopBroadcast : _startBroadcast)
-                    : null,
-            icon: Icon(
-              broadcastActive
-                  ? Icons.stop_circle_rounded
-                  : Icons.sensors_rounded,
-              size: 18,
-            ),
-            label: Text(
-              connecting
-                  ? 'Connecting...'
-                  : broadcastActive
-                      ? 'End Broadcast'
-                      : 'Go Live',
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold, fontSize: 13),
-            ),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: broadcastActive
-                  ? Colors.red.shade800
-                  : AppTheme.accentGreen,
-              foregroundColor: Colors.white,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              ),
-            ),
-          ),
-
-          // 🔄 Flip Camera Button
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.darkSurface2,
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              border: Border.all(color: AppTheme.darkBorderSubtle),
-            ),
-            child: IconButton(
-              iconSize: 20,
-              onPressed: (ready || broadcastActive) && !_engine.isAudioOnly
-                  ? _engine.switchCamera
-                  : null,
-              icon: const Icon(Icons.cameraswitch_rounded, color: Colors.white),
-              tooltip: _engine.isAudioOnly
-                  ? 'Not available in audio-only'
-                  : 'Flip camera',
-            ),
-          ),
-
-          // 🔒 Private Stream Attendees Button (if active)
-          Consumer<AppProvider>(
-            builder: (context, provider, _) {
-              if (!provider.isActiveStreamPrivate) {
-                return const SizedBox.shrink();
-              }
-              return Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.darkSurface2,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(
-                      color: AppTheme.accentAmber.withValues(alpha: 0.5)),
-                ),
-                child: IconButton(
-                  iconSize: 20,
-                  icon: const Icon(Icons.lock_rounded,
-                      color: AppTheme.accentAmber),
-                  tooltip: '${provider.admittedAttendees.length} Attendees',
-                  onPressed: () => _showDirectorPanel(context, provider),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBroadcasterHeader(
-      String title, String description, String langCode) {
-    final streamer = _appProvider.activeStreamer ?? _appProvider.streamers.first;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceMd,
-        vertical: AppTheme.spaceSm,
-      ),
-      decoration: const BoxDecoration(
-        color: AppTheme.darkSurface1,
-        border: Border(
-            bottom: BorderSide(color: AppTheme.darkBorderSubtle, width: 1)),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 18,
-            backgroundColor: AppTheme.darkSurface3,
-            backgroundImage: _getAvatarProvider(streamer.avatarUrl),
-          ),
-          const SizedBox(width: AppTheme.spaceSm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
+          // Row 1: Title + Chevron Expand Button
+          InkWell(
+            onTap: () => setState(
+                () => _isDescriptionExpanded = !_isDescriptionExpanded),
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        streamer.getLocalizedName(langCode),
-                        style: const TextStyle(
-                          color: AppTheme.textPrimaryDark,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
+                Expanded(
+                  child: Text(
+                    effectiveTitle,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.bold,
                     ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.verified_rounded,
-                        color: AppTheme.accentBlue, size: 14),
-                  ],
+                    maxLines: _isDescriptionExpanded ? null : 1,
+                    overflow:
+                        _isDescriptionExpanded ? null : TextOverflow.ellipsis,
+                  ),
                 ),
-                Text(
-                  streamer.getLocalizedOrganization(langCode),
-                  style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 11),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                Icon(
+                  _isDescriptionExpanded
+                      ? Icons.keyboard_arrow_up_rounded
+                      : Icons.keyboard_arrow_down_rounded,
+                  color: AppTheme.textSecondaryDark,
+                  size: 22,
                 ),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: AppTheme.accentRed.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              border: Border.all(
-                  color: AppTheme.accentRed.withValues(alpha: 0.4)),
+          const SizedBox(height: 6),
+
+          // Row 2: Metadata Badges (Category, Quality, Viewers)
+          Row(
+            children: [
+              Flexible(
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.darkSurface2,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: AppTheme.darkBorderSubtle),
+                  ),
+                  child: Text(
+                    categoryModel.getLocalizedName(langCode),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.accentBlue,
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 6),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppTheme.darkSurface2,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                ),
+                child: Text(
+                  _presetCompactLabel,
+                  style: const TextStyle(
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              const Icon(Icons.remove_red_eye_rounded,
+                  size: 14, color: AppTheme.accentGreen),
+              const SizedBox(width: 4),
+              Text(
+                '${streamer.activeViewerCount} viewers',
+                style: const TextStyle(
+                  color: AppTheme.textSecondaryDark,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+
+          // Row 3: Expanded Description & Organization (when expanded)
+          if (_isDescriptionExpanded) ...[
+            const SizedBox(height: 10),
+            const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+            const SizedBox(height: 8),
+            Text(
+              description.isNotEmpty
+                  ? description
+                  : 'No description provided.',
+              style: const TextStyle(
+                color: AppTheme.textPrimaryDark,
+                fontSize: 12,
+                height: 1.4,
+              ),
             ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+            const SizedBox(height: 6),
+            Row(
               children: [
-                const Icon(Icons.videocam_rounded,
-                    color: AppTheme.accentRed, size: 13),
+                const Icon(Icons.account_balance_rounded,
+                    size: 13, color: AppTheme.textMutedDark),
                 const SizedBox(width: 4),
                 Text(
-                  'live.broadcaster_mode'.tr(),
+                  streamer.getLocalizedOrganization(langCode),
                   style: const TextStyle(
-                    color: AppTheme.accentRed,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textSecondaryDark,
+                    fontSize: 11,
                   ),
                 ),
               ],
             ),
-          ),
+          ],
         ],
       ),
     );
   }
 
   Widget _buildCinemaTabPanel(String langCode) {
-    final streamer = _appProvider.activeStreamer ?? _appProvider.streamers.first;
+    final streamer = _appProvider.currentBroadcasterStreamer;
 
     return Container(
       color: AppTheme.darkBgBase,
@@ -999,175 +1413,151 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
-  Widget _buildFullscreenLandscapeLayout(String title, String langCode) {
-    final live = _engine.state == RtmpPublishState.live;
-    final broadcastActive =
-        live || _engine.state == RtmpPublishState.reconnecting;
-
-    return Stack(
-      children: [
-        // 1. Fullscreen Camera Preview
-        const SizedBox.expand(
-          child: PhoneCameraPreview(),
-        ),
-
-        // 2. Reactions Overlay
-        FloatingReactionsOverlay(controller: _reactionsController),
-
-        // 3. Top Translucent Overlay Bar
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: Container(
-            padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spaceLg, vertical: 12),
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Colors.black87, Colors.transparent],
-              ),
-            ),
-            child: Row(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.fullscreen_exit_rounded,
-                      color: Colors.white, size: 24),
-                  tooltip: 'Exit Fullscreen',
-                  onPressed: _handleToggleFullscreen,
-                ),
-                const SizedBox(width: AppTheme.spaceSm),
-                if (_engine.state == RtmpPublishState.live)
-                  _LiveBadge(bitrateBps: _engine.lastBitrateBps),
-                const SizedBox(width: AppTheme.spaceMd),
-                Expanded(
-                  child: Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isSideChatOpen
-                        ? Icons.chat_bubble_rounded
-                        : Icons.chat_bubble_outline_rounded,
-                    color: _isSideChatOpen
-                        ? AppTheme.accentRed
-                        : Colors.white,
-                    size: 22,
-                  ),
-                  tooltip: 'Toggle Live Chat',
-                  onPressed: () {
-                    setState(() => _isSideChatOpen = !_isSideChatOpen);
-                  },
-                ),
-              ],
-            ),
-          ),
-        ),
-
-        // 4. Side Chat Drawer Overlay (when active in fullscreen)
-        if (_isSideChatOpen)
-          Positioned(
-            top: 60,
-            bottom: 80,
-            right: 16,
-            width: 320,
-            child: Container(
-              decoration: BoxDecoration(
-                color: AppTheme.darkBgBase.withValues(alpha: 0.88),
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.darkBorderSubtle),
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                child: _buildLiveChatTab(),
-              ),
-            ),
-          ),
-
-        // 5. Floating Bottom Control Capsule
-        Positioned(
-          bottom: 16,
-          left: 0,
-          right: 0,
-          child: Center(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.75),
-                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.2), width: 1),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black54,
-                    blurRadius: 16,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
+  Widget _buildFullscreenLandscapeLayout(
+      String title, StreamerModel streamer, String langCode) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => setState(() => _controlsVisible = !_controlsVisible),
+      child: Stack(
+        children: [
+          // 1. Fullscreen Camera Preview / Audio Poster
+          if (_engine.isCameraOff)
+            Container(
+              color: AppTheme.darkBgBase,
+              alignment: Alignment.center,
+              child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  IconButton(
-                    iconSize: 22,
-                    onPressed: () => _engine.setMuted(!_engine.isMuted),
-                    icon: Icon(
-                      _engine.isMuted
-                          ? Icons.mic_off_rounded
-                          : Icons.mic_rounded,
-                      color: _engine.isMuted
-                          ? AppTheme.accentRed
-                          : Colors.white,
-                    ),
+                  CircleAvatar(
+                    radius: 40,
+                    backgroundColor: AppTheme.darkSurface3,
+                    backgroundImage: _getAvatarProvider(streamer.avatarUrl),
                   ),
-                  const SizedBox(width: 12),
-                  ElevatedButton.icon(
-                    onPressed: broadcastActive
-                        ? _stopBroadcast
-                        : _startBroadcast,
-                    icon: Icon(
-                      broadcastActive
-                          ? Icons.stop_circle_rounded
-                          : Icons.sensors_rounded,
-                      size: 18,
+                  const SizedBox(height: 12),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentAmber.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      border: Border.all(
+                          color: AppTheme.accentAmber.withValues(alpha: 0.5)),
                     ),
-                    label: Text(
-                      broadcastActive ? 'End' : 'Go Live',
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    child: const Text(
+                      'Camera is Off • Audio Only',
+                      style: TextStyle(
+                        color: AppTheme.accentAmber,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: broadcastActive
-                          ? Colors.red.shade800
-                          : AppTheme.accentGreen,
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 16, vertical: 8),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  IconButton(
-                    iconSize: 22,
-                    onPressed: !_engine.isAudioOnly
-                        ? _engine.switchCamera
-                        : null,
-                    icon: const Icon(Icons.cameraswitch_rounded,
-                        color: Colors.white),
                   ),
                 ],
               ),
+            )
+          else
+            const SizedBox.expand(
+              child: PhoneCameraPreview(),
+            ),
+
+          // 2. Reactions Overlay
+          FloatingReactionsOverlay(controller: _reactionsController),
+
+          // 3. Top Translucent Overlay Bar
+          AnimatedOpacity(
+            opacity: _controlsVisible ? 1.0 : 0.0,
+            duration: const Duration(milliseconds: 240),
+            child: IgnorePointer(
+              ignoring: !_controlsVisible,
+              child: Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceLg, vertical: 12),
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [Colors.black87, Colors.transparent],
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.fullscreen_exit_rounded,
+                            color: Colors.white, size: 24),
+                        tooltip: 'Exit Fullscreen',
+                        onPressed: _handleToggleFullscreen,
+                      ),
+                      const SizedBox(width: AppTheme.spaceSm),
+                      if (_engine.state == RtmpPublishState.live)
+                        _LiveBadge(bitrateBps: _engine.lastBitrateBps),
+                      const SizedBox(width: AppTheme.spaceMd),
+                      Expanded(
+                        child: Text(
+                          title.isNotEmpty
+                              ? title
+                              : streamer.getLocalizedTitle(langCode),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.more_vert_rounded,
+                            color: Colors.white, size: 22),
+                        tooltip: 'Streamer Controls',
+                        onPressed: () => _showStreamerControlsSheet(streamer),
+                      ),
+                      IconButton(
+                        icon: Icon(
+                          _isSideChatOpen
+                              ? Icons.chat_bubble_rounded
+                              : Icons.chat_bubble_outline_rounded,
+                          color: _isSideChatOpen
+                              ? AppTheme.accentRed
+                              : Colors.white,
+                          size: 22,
+                        ),
+                        tooltip: 'Toggle Live Chat',
+                        onPressed: () {
+                          setState(() => _isSideChatOpen = !_isSideChatOpen);
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ),
           ),
-        ),
-      ],
+
+          // 4. Side Chat Drawer Overlay (when active in fullscreen)
+          if (_isSideChatOpen)
+            Positioned(
+              top: 60,
+              bottom: 80,
+              right: 16,
+              width: 320,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: AppTheme.darkBgBase.withValues(alpha: 0.88),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  child: _buildLiveChatTab(),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 

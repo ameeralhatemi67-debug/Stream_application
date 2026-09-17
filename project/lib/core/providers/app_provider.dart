@@ -3062,6 +3062,47 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  /// Resolves the logged-in broadcaster's actual streamer profile (prioritizing
+  /// their own owned streamer ID / user profile over any sample stream).
+  StreamerModel get currentBroadcasterStreamer {
+    final currentId = currentUserId ?? _userProfile.id;
+    final matched = _streamers.where((s) =>
+        s.streamerId == currentId ||
+        s.streamerId == 'streamer_$currentId' ||
+        (primaryOwnedStreamerId != null && s.streamerId == primaryOwnedStreamerId) ||
+        s.streamerId == _userProfile.id);
+    if (matched.isNotEmpty) return matched.first;
+
+    return StreamerModel(
+      streamerId: currentId,
+      fullNameEn: _googleUserName ?? _userProfile.nameEn,
+      fullNameAr: _googleUserName ?? _userProfile.nameAr,
+      titleEn:
+          _customLiveTitle.isNotEmpty ? _customLiveTitle : 'Live Broadcast',
+      titleAr: _customLiveTitle.isNotEmpty ? _customLiveTitle : 'بث مباشر',
+      organizationEn: _userProfile.nameEn,
+      organizationAr: _userProfile.nameAr,
+      avatarUrl: _googleUserAvatar ?? _userProfile.avatarUrl,
+      bannerUrl: _userProfile.bannerUrl,
+      bioEn: _userProfile.bioEn,
+      bioAr: _userProfile.bioAr,
+      isVerified: true,
+      followerCount: 1240,
+      categoryId:
+          _currentCategoryFilter == 'all' ? 'cat_cs' : _currentCategoryFilter,
+      cityEn: 'Riyadh',
+      cityAr: 'الرياض',
+      venueNameEn: 'Main Campus',
+      venueNameAr: 'المقر الرئيسي',
+      latitude: 24.7136,
+      longitude: 46.6753,
+      isCurrentlyLive: _isBroadcastingLive,
+      broadcastType:
+          _isBroadcastingLive ? _customBroadcastType : BroadcastType.offline,
+      activeViewerCount: _isBroadcastingLive ? 0 : 0,
+    );
+  }
+
   void activatePitchDirectorMode() {
     setPitchDirectorMode(true);
   }

@@ -21,3 +21,6 @@ node_modules/
 # Local dart-define values (real Supabase keys) — never commit, see dart_define.example.json
 project/dart_define.local.json
 
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
