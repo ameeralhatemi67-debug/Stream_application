@@ -56,8 +56,8 @@ void main() {
 
       provider.updateRtmpLaptopIp('10.0.0.55');
       expect(provider.rtmpLaptopIp, equals('10.0.0.55'));
-      expect(provider.rtmpStreamUrl,
-          equals('http://10.0.0.55:8888/live/demo/'));
+      expect(
+          provider.rtmpStreamUrl, equals('http://10.0.0.55:8888/live/demo/'));
     });
 
     test(
@@ -85,13 +85,15 @@ void main() {
       expect(enNav.keys.toSet(), equals(arNav.keys.toSet()));
     });
 
-    test('TC-V04-SET-05: Streamer CRUD and Protected Original 5 Verification', () async {
+    test('TC-V04-SET-05: Streamer CRUD and Protected Original 5 Verification',
+        () async {
       expect(provider.streamers.length, equals(5));
       expect(provider.isProtectedStreamer('prof_alghamdi_01'), isTrue);
       expect(provider.isProtectedStreamer('prof_otaibi_02'), isTrue);
 
       // Cannot delete original protected streamers
-      final deleteProtectedResult = await provider.deleteStreamer('prof_alghamdi_01');
+      final deleteProtectedResult =
+          await provider.deleteStreamer('prof_alghamdi_01');
       expect(deleteProtectedResult, isFalse);
       expect(provider.streamers.length, equals(5));
 
@@ -127,7 +129,8 @@ void main() {
       expect(provider.isProtectedStreamer('custom_dr_fahad'), isFalse);
 
       // Update custom streamer
-      provider.updateStreamer(customStreamer.copyWith(fullNameEn: 'Dr. Fahad M. Al-Mutairi'));
+      provider.updateStreamer(
+          customStreamer.copyWith(fullNameEn: 'Dr. Fahad M. Al-Mutairi'));
       final updated = provider.getStreamerById('custom_dr_fahad');
       expect(updated?.fullNameEn, equals('Dr. Fahad M. Al-Mutairi'));
 
@@ -137,7 +140,8 @@ void main() {
       expect(provider.streamers.length, equals(5));
     });
 
-    test('TC-V04-SET-06: Broadcast Type & Audio-Only Live State Management', () {
+    test('TC-V04-SET-06: Broadcast Type & Audio-Only Live State Management',
+        () {
       expect(provider.customBroadcastType, equals(BroadcastType.liveVideo));
 
       // Toggle broadcast type to liveAudio
@@ -146,6 +150,10 @@ void main() {
 
       // Toggle Amir Go Live with Audio-Only mode
       provider.toggleBroadcasterGoLive();
+      expect(provider.isBroadcastingLive, isFalse);
+      expect(provider.broadcastSessionError, 'broadcast_primary_required');
+      // Keep audio/video marker coverage using the explicit local fixture tool.
+      provider.setPitchDirectorMode(true);
       final amir = provider.getStreamerById('prof_alghamdi_01');
       expect(amir, isNotNull);
       expect(amir!.isCurrentlyLive, isTrue);
@@ -172,7 +180,7 @@ void main() {
       expect(markerVideo.isAudioLive, isFalse);
 
       // Stop broadcasting
-      provider.toggleBroadcasterGoLive();
+      provider.setPitchDirectorMode(false);
       final amirOffline = provider.getStreamerById('prof_alghamdi_01');
       expect(amirOffline!.isCurrentlyLive, isFalse);
 
@@ -190,7 +198,9 @@ void main() {
       expect(markerPitch.isAudioLive, isTrue);
     });
 
-    test('TC-V04-AUTH-01: Onboarding Role Selection & Google Auth State Management', () async {
+    test(
+        'TC-V04-AUTH-01: Onboarding Role Selection & Google Auth State Management',
+        () async {
       expect(provider.hasCompletedOnboarding, isFalse);
       expect(provider.isLoggedInStreamer, isFalse);
       expect(provider.isStreamerModeEnabled, isFalse);
@@ -224,7 +234,9 @@ void main() {
       expect(provider.hasCompletedOnboarding, isFalse);
     });
 
-    test('TC-V04-MAP-01: Live Streamer Max Zoom Visibility & Z-Index Prioritization', () {
+    test(
+        'TC-V04-MAP-01: Live Streamer Max Zoom Visibility & Z-Index Prioritization',
+        () {
       final allStreamers = provider.streamers;
       expect(allStreamers.length, equals(5));
 
@@ -243,7 +255,9 @@ void main() {
 
       // Only live streamers visible at regional zoom
       expect(visibleAtRegionalZoom.length, greaterThanOrEqualTo(1));
-      expect(visibleAtRegionalZoom.any((s) => s.streamerId == 'prof_alghamdi_01'), isTrue);
+      expect(
+          visibleAtRegionalZoom.any((s) => s.streamerId == 'prof_alghamdi_01'),
+          isTrue);
       expect(visibleAtRegionalZoom.every((s) => s.isCurrentlyLive), isTrue);
 
       // Test Z-index sorting score

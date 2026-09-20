@@ -65,7 +65,8 @@ Widget createTestWidget({
   );
 }
 
-Future<void> pumpTestApp(WidgetTester tester, Widget child, AppProvider provider) async {
+Future<void> pumpTestApp(
+    WidgetTester tester, Widget child, AppProvider provider) async {
   await tester.pumpWidget(createTestWidget(child: child, provider: provider));
   await tester.pump();
   await tester.pump();
@@ -91,7 +92,9 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
     });
 
-    test('TC-ORG-GOLIVE-01: Broadcast identity and branch selection state updates correctly', () {
+    test(
+        'TC-ORG-GOLIVE-01: Broadcast identity and branch selection state updates correctly',
+        () {
       expect(provider.selectedBroadcastOrgId, isNull);
       expect(provider.selectedVenueBranchId, isNull);
       expect(provider.selectedCoSpeakerIds, isEmpty);
@@ -108,14 +111,17 @@ void main() {
 
       // Toggle additional co-speakers
       provider.toggleCoSpeaker('spk_sarah');
-      expect(provider.selectedCoSpeakerIds, containsAll(['spk_abdulrahman', 'spk_sarah']));
+      expect(provider.selectedCoSpeakerIds,
+          containsAll(['spk_abdulrahman', 'spk_sarah']));
 
       // Toggle off
       provider.toggleCoSpeaker('spk_abdulrahman');
       expect(provider.selectedCoSpeakerIds, equals(['spk_sarah']));
     });
 
-    test('TC-ORG-GOLIVE-02: Starting Org Live updates active venue coordinates and records audit log', () async {
+    test(
+        'TC-ORG-GOLIVE-02: Org Live without a primary backend session is denied',
+        () async {
       provider.setSelectedBroadcastOrgId('org_dalilk_04');
       provider.setSelectedVenueBranchId('dalilk_branch_dhahran');
       provider.setBroadcastType(BroadcastType.liveVideo);
@@ -124,31 +130,25 @@ void main() {
 
       // Go live as organization
       await provider.toggleBroadcasterGoLive();
-      expect(provider.isBroadcastingLive, isTrue);
+      expect(provider.isBroadcastingLive, isFalse);
+      expect(provider.broadcastSessionError, 'broadcast_primary_required');
 
       final org = provider.getStreamerById('org_dalilk_04');
       expect(org, isNotNull);
-      expect(org!.isCurrentlyLive, isTrue);
-      expect(org.activeLiveVenueId, equals('dalilk_branch_dhahran'));
-      expect(org.latitude, closeTo(26.3050, 0.001));
-      expect(org.longitude, closeTo(50.1450, 0.001));
-      expect(org.venueNameEn, contains('Dhahran'));
+      expect(provider.selectedVenueBranchId, 'dalilk_branch_dhahran');
 
       // Verify audit log for startLiveBroadcast
-      expect(provider.auditLogs.length, equals(initialLogsCount + 1));
-      final startLog = provider.auditLogs.first;
-      expect(startLog.action, equals(OrgAuditAction.startLiveBroadcast));
-      expect(startLog.organizationId, equals('org_dalilk_04'));
+      expect(provider.auditLogs.length, equals(initialLogsCount));
 
       // End broadcast
       await provider.toggleBroadcasterGoLive();
       expect(provider.isBroadcastingLive, isFalse);
-      expect(provider.auditLogs.length, equals(initialLogsCount + 2));
-      final endLog = provider.auditLogs.first;
-      expect(endLog.action, equals(OrgAuditAction.endLiveBroadcast));
+      expect(provider.auditLogs.length, equals(initialLogsCount));
     });
 
-    test('TC-ORG-ADMIN-01: Branch CRUD operations update organization venues and audit trail', () async {
+    test(
+        'TC-ORG-ADMIN-01: Branch CRUD operations update organization venues and audit trail',
+        () async {
       final initialBranches = provider.getOrganizationVenues('org_dalilk_04');
       expect(initialBranches.length, equals(3));
 
@@ -168,25 +168,37 @@ void main() {
       await provider.addOrganizationBranch('org_dalilk_04', newBranch);
       final branchesAfterAdd = provider.getOrganizationVenues('org_dalilk_04');
       expect(branchesAfterAdd.length, equals(4));
-      expect(branchesAfterAdd.any((b) => b.venueId == 'branch_jubail_04'), isTrue);
-      expect(provider.auditLogs.first.action, equals(OrgAuditAction.addVenueBranch));
+      expect(
+          branchesAfterAdd.any((b) => b.venueId == 'branch_jubail_04'), isTrue);
+      expect(provider.auditLogs.first.action,
+          equals(OrgAuditAction.addVenueBranch));
 
       // 2. Update branch
       final updatedBranch = newBranch.copyWith(seatingCapacity: 150);
       await provider.updateOrganizationBranch('org_dalilk_04', updatedBranch);
       final branchesAfterUpd = provider.getOrganizationVenues('org_dalilk_04');
-      expect(branchesAfterUpd.firstWhere((b) => b.venueId == 'branch_jubail_04').seatingCapacity, equals(150));
-      expect(provider.auditLogs.first.action, equals(OrgAuditAction.updateVenueBranch));
+      expect(
+          branchesAfterUpd
+              .firstWhere((b) => b.venueId == 'branch_jubail_04')
+              .seatingCapacity,
+          equals(150));
+      expect(provider.auditLogs.first.action,
+          equals(OrgAuditAction.updateVenueBranch));
 
       // 3. Delete branch
-      await provider.deleteOrganizationBranch('org_dalilk_04', 'branch_jubail_04');
+      await provider.deleteOrganizationBranch(
+          'org_dalilk_04', 'branch_jubail_04');
       final branchesAfterDel = provider.getOrganizationVenues('org_dalilk_04');
       expect(branchesAfterDel.length, equals(3));
-      expect(branchesAfterDel.any((b) => b.venueId == 'branch_jubail_04'), isFalse);
-      expect(provider.auditLogs.first.action, equals(OrgAuditAction.removeVenueBranch));
+      expect(branchesAfterDel.any((b) => b.venueId == 'branch_jubail_04'),
+          isFalse);
+      expect(provider.auditLogs.first.action,
+          equals(OrgAuditAction.removeVenueBranch));
     });
 
-    test('TC-ORG-ADMIN-02: Speaker CRUD operations update organization roster and audit trail', () async {
+    test(
+        'TC-ORG-ADMIN-02: Speaker CRUD operations update organization roster and audit trail',
+        () async {
       final initialSpeakers = provider.getOrganizationSpeakers('org_dalilk_04');
       expect(initialSpeakers.length, equals(3));
 
@@ -208,35 +220,55 @@ void main() {
       );
 
       await provider.addOrganizationSpeaker('org_dalilk_04', newSpeaker);
-      final speakersAfterAdd = provider.getOrganizationSpeakers('org_dalilk_04');
+      final speakersAfterAdd =
+          provider.getOrganizationSpeakers('org_dalilk_04');
       expect(speakersAfterAdd.length, equals(4));
-      expect(speakersAfterAdd.any((s) => s.speakerId == 'spk_nasser_04'), isTrue);
-      expect(provider.auditLogs.first.action, equals(OrgAuditAction.addSpeakerToRoster));
+      expect(
+          speakersAfterAdd.any((s) => s.speakerId == 'spk_nasser_04'), isTrue);
+      expect(provider.auditLogs.first.action,
+          equals(OrgAuditAction.addSpeakerToRoster));
 
       // 2. Update speaker
-      final updatedSpeaker = newSpeaker.copyWith(roleOrTitleEn: 'Head of IELTS Writing');
+      final updatedSpeaker =
+          newSpeaker.copyWith(roleOrTitleEn: 'Head of IELTS Writing');
       await provider.updateOrganizationSpeaker('org_dalilk_04', updatedSpeaker);
-      final speakersAfterUpd = provider.getOrganizationSpeakers('org_dalilk_04');
-      expect(speakersAfterUpd.firstWhere((s) => s.speakerId == 'spk_nasser_04').roleOrTitleEn, equals('Head of IELTS Writing'));
-      expect(provider.auditLogs.first.action, equals(OrgAuditAction.updateSpeakerDetails));
+      final speakersAfterUpd =
+          provider.getOrganizationSpeakers('org_dalilk_04');
+      expect(
+          speakersAfterUpd
+              .firstWhere((s) => s.speakerId == 'spk_nasser_04')
+              .roleOrTitleEn,
+          equals('Head of IELTS Writing'));
+      expect(provider.auditLogs.first.action,
+          equals(OrgAuditAction.updateSpeakerDetails));
 
       // 3. Delete speaker
-      await provider.deleteOrganizationSpeaker('org_dalilk_04', 'spk_nasser_04');
-      final speakersAfterDel = provider.getOrganizationSpeakers('org_dalilk_04');
+      await provider.deleteOrganizationSpeaker(
+          'org_dalilk_04', 'spk_nasser_04');
+      final speakersAfterDel =
+          provider.getOrganizationSpeakers('org_dalilk_04');
       expect(speakersAfterDel.length, equals(3));
-      expect(speakersAfterDel.any((s) => s.speakerId == 'spk_nasser_04'), isFalse);
-      expect(provider.auditLogs.first.action, equals(OrgAuditAction.removeSpeakerFromRoster));
+      expect(
+          speakersAfterDel.any((s) => s.speakerId == 'spk_nasser_04'), isFalse);
+      expect(provider.auditLogs.first.action,
+          equals(OrgAuditAction.removeSpeakerFromRoster));
     });
 
-    test('TC-ORG-ADMIN-03: RBAC permission adjustment updates speaker permissions and records audit entry', () async {
+    test(
+        'TC-ORG-ADMIN-03: RBAC permission adjustment updates speaker permissions and records audit entry',
+        () async {
       final speaker = provider.getOrganizationSpeakers('org_dalilk_04').first;
       expect(speaker.permissions.canChangeLocation, isFalse);
 
       // Grant location change permission
-      final updatedPerms = speaker.permissions.copyWith(canChangeLocation: true);
-      await provider.updateSpeakerPermissions('org_dalilk_04', speaker.speakerId, updatedPerms);
+      final updatedPerms =
+          speaker.permissions.copyWith(canChangeLocation: true);
+      await provider.updateSpeakerPermissions(
+          'org_dalilk_04', speaker.speakerId, updatedPerms);
 
-      final updatedSpeaker = provider.getOrganizationSpeakers('org_dalilk_04').firstWhere((s) => s.speakerId == speaker.speakerId);
+      final updatedSpeaker = provider
+          .getOrganizationSpeakers('org_dalilk_04')
+          .firstWhere((s) => s.speakerId == speaker.speakerId);
       expect(updatedSpeaker.permissions.canChangeLocation, isTrue);
 
       final auditLog = provider.auditLogs.first;
@@ -245,7 +277,9 @@ void main() {
       expect(auditLog.descriptionEn, contains(speaker.nameEn));
     });
 
-    testWidgets('TC-ORG-ADMIN-04: OrgManagementView widget renders tabs, branch cards, and speaker roster', (tester) async {
+    testWidgets(
+        'TC-ORG-ADMIN-04: OrgManagementView widget renders tabs, branch cards, and speaker roster',
+        (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);

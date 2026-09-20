@@ -44,4 +44,8 @@ class SupabaseAuthService {
       debugPrint('Supabase sign-out failed: $e');
     }
   }
+
+  Future<void> signOutOthers() async {
+    await _client.auth.signOut(scope: SignOutScope.others);
+  }
 }

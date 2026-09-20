@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -77,7 +78,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     // 11/12, Cluster 4 Task 16), +1 more for Roles & Permissions when this
     // viewer is also a Master Admin (Checkpoint 2 Phase 3).
     _tabController =
-        TabController(length: _isMasterAdminForTabs ? 13 : 12, vsync: this);
+        TabController(length: (_isMasterAdminForTabs ? 12 : 11) + (kDebugMode ? 1 : 0), vsync: this);
     if (_isMasterAdminForTabs) {
       provider.ensureRoleManagementDataLoaded();
       provider.ensureStreamModeratorsLoaded();
@@ -337,7 +338,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 const AcademicCategoriesView(),
                 const TagModerationView(),
                 const BannedAccountsView(),
-                _buildTestingToolsTab(context, provider),
+                if (kDebugMode) _buildTestingToolsTab(context, provider),
                 if (_isMasterAdminForTabs) const RolePermissionManagementView(),
               ],
             ),
@@ -675,7 +676,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             ),
             text: 'admin.tab_banned_accounts'.tr(),
           ),
-          Tab(
+          if (kDebugMode) Tab(
             icon: const Icon(Icons.science_rounded, size: 18),
             text: 'admin.tab_testing'.tr(),
           ),

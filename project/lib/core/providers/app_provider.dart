@@ -39,8 +39,9 @@ import '../../features/admin/models/stream_moderator_model.dart';
 import '../../features/admin/models/tag_moderation_model.dart';
 import '../../features/discovery/models/academic_category_model.dart';
 import '../models/device_session_model.dart';
+import '../config/feature_flags.dart';
 import '../../features/live_stream/services/stream_decay_engine.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform;
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, kDebugMode;
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -344,9 +345,7 @@ class AppProvider extends ChangeNotifier {
     // initDeviceSession doc). Fires on every session application, not just
     // a fresh sign-in, so a resumed session (e.g. a cold web reload) still
     // re-checks for a conflict from another device.
-    if (isApprovedStreamer) {
-      await initDeviceSession();
-    }
+    await initDeviceSession();
     notifyListeners();
   }
 
@@ -509,6 +508,13 @@ class AppProvider extends ChangeNotifier {
   // Multi-Device Session Management (issue_log.md QF-06)
   // ---------------------------------------------------------------------
   DeviceSessionModel? _currentDeviceSession;
+  StreamSubscription<List<DeviceSessionModel>>? _deviceSubscription;
+  Timer? _deviceHeartbeatTimer;
+  bool _deviceHeartbeatBusy = false;
+  int _deviceGeneration = 0;
+  bool _liveStateBusy = false;
+  String? _broadcastSessionError;
+  String? get broadcastSessionError => _broadcastSessionError;
   DeviceSessionModel? get currentDeviceSession => _currentDeviceSession;
   DeviceSessionModel? _remoteBroadcasterSession;
   DeviceSessionModel? get remoteBroadcasterSession => _remoteBroadcasterSession;
@@ -523,8 +529,12 @@ class AppProvider extends ChangeNotifier {
   /// broadcaster status. Only meaningful for approved streamers -- callers
   /// should gate on `isApprovedStreamer` (see `_applySessionUser`).
   Future<void> initDeviceSession() async {
+    final generation = ++_deviceGeneration;
+    _deviceHeartbeatTimer?.cancel();
+    await _deviceSubscription?.cancel();
     try {
       final prefs = await SharedPreferences.getInstance();
+      if (generation != _deviceGeneration) return;
       var deviceId = prefs.getString('local_device_id');
       if (deviceId == null || deviceId.isEmpty) {
         deviceId = newId();
@@ -547,20 +557,32 @@ class AppProvider extends ChangeNotifier {
         }
       }
 
+      if (generation != _deviceGeneration) return;
       _currentDeviceSession = DeviceSessionModel(
         deviceId: deviceId,
         deviceName: deviceName,
         platform: platform,
         lastActiveAt: DateTime.now(),
-        isPrimaryBroadcaster: remote == null,
+        isPrimaryBroadcaster: false,
       );
       _remoteBroadcasterSession = remote;
 
       if (userId != null) {
-        await _adminDbService?.upsertDeviceSession(
-          userId: userId,
-          session: _currentDeviceSession!,
-        );
+        final claimed = remote == null &&
+            await _adminDbService!.claimDevice(_currentDeviceSession!);
+        if (generation != _deviceGeneration) return;
+        _currentDeviceSession =
+            _currentDeviceSession!.copyWith(isPrimaryBroadcaster: claimed);
+        await _deviceSubscription?.cancel();
+        _deviceSubscription =
+            _adminDbService!.watchDevices(userId).listen((sessions) {
+          if (generation == _deviceGeneration) applyDeviceSessions(sessions);
+        }, onError: (Object error) {
+          if (generation == _deviceGeneration) _loseBroadcastDevice();
+        });
+        _deviceHeartbeatTimer?.cancel();
+        _deviceHeartbeatTimer = Timer.periodic(
+            const Duration(seconds: 20), (_) => _heartbeatDevice());
       }
       notifyListeners();
     } catch (e) {
@@ -573,23 +595,75 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void transferBroadcasterToCurrentDevice() {
-    if (_currentDeviceSession != null) {
-      _currentDeviceSession =
-          _currentDeviceSession!.copyWith(isPrimaryBroadcaster: true);
-    }
-    _remoteBroadcasterSession = null;
-    _isStreamerModeEnabled = _isAdminFromRoles || _isApprovedStreamer;
-    notifyListeners();
-
-    final userId = _authService.currentSession?.user.id;
+  Future<void> transferBroadcasterToCurrentDevice() async {
     final device = _currentDeviceSession;
-    if (userId != null && device != null) {
-      _adminDbService?.upsertDeviceSession(userId: userId, session: device);
-      _adminDbService?.demoteOtherDeviceSessions(
-        userId: userId,
-        keepDeviceId: device.deviceId,
-      );
+    final generation = _deviceGeneration;
+    if (device == null || _adminDbService == null) return;
+    try {
+      if (!await _adminDbService!.claimDevice(device, force: true)) return;
+      if (generation != _deviceGeneration) return;
+      _currentDeviceSession = device.copyWith(isPrimaryBroadcaster: true);
+      _remoteBroadcasterSession = null;
+      _broadcastSessionError = null;
+      _isStreamerModeEnabled = true;
+      notifyListeners();
+    } catch (_) {
+      if (generation == _deviceGeneration) _loseBroadcastDevice();
+    }
+  }
+
+  Future<void> _heartbeatDevice() async {
+    final device = _currentDeviceSession;
+    final generation = _deviceGeneration;
+    if (_deviceHeartbeatBusy ||
+        device == null ||
+        !device.isPrimaryBroadcaster ||
+        _adminDbService == null) {
+      return;
+    }
+    _deviceHeartbeatBusy = true;
+    try {
+      final primary = await _adminDbService!.heartbeatDevice(device.deviceId);
+      if (generation == _deviceGeneration && !primary) _loseBroadcastDevice();
+    } catch (_) {
+      if (generation == _deviceGeneration) _loseBroadcastDevice();
+    } finally {
+      _deviceHeartbeatBusy = false;
+    }
+  }
+
+  @visibleForTesting
+  void applyDeviceSessions(List<DeviceSessionModel> sessions) {
+    final device = _currentDeviceSession;
+    if (device == null) return;
+    final primary = sessions.where((s) => s.isPrimaryBroadcaster).firstOrNull;
+    _remoteBroadcasterSession =
+        primary?.deviceId == device.deviceId ? null : primary;
+    if (primary?.deviceId == device.deviceId) {
+      _currentDeviceSession = device.copyWith(isPrimaryBroadcaster: true);
+    } else if (device.isPrimaryBroadcaster || _isBroadcastingLive) {
+      _loseBroadcastDevice();
+    }
+  }
+
+  void _loseBroadcastDevice() {
+    if (_currentDeviceSession == null) return;
+    final changed = _currentDeviceSession!.isPrimaryBroadcaster ||
+        _isBroadcastingLive ||
+        _broadcastSessionError != 'broadcast_session_lost';
+    _currentDeviceSession =
+        _currentDeviceSession!.copyWith(isPrimaryBroadcaster: false);
+    _broadcastSessionError = 'broadcast_session_lost';
+    _isBroadcastingLive = false;
+    _isStreamerModeEnabled = false;
+    _stopLiveViewerPolling();
+    if (changed) notifyListeners();
+  }
+
+  Future<void> signOutOtherDevices() async {
+    await _authService.signOutOthers();
+    if (_currentDeviceSession != null && _isApprovedStreamer) {
+      await transferBroadcasterToCurrentDevice();
     }
   }
 
@@ -621,7 +695,8 @@ class AppProvider extends ChangeNotifier {
 
   /// Returns the single primary streamer ID owned by this user account, if any.
   String? get primaryOwnedStreamerId {
-    if (_selectedBroadcastOrgId != null && _selectedBroadcastOrgId!.isNotEmpty) {
+    if (_selectedBroadcastOrgId != null &&
+        _selectedBroadcastOrgId!.isNotEmpty) {
       return _selectedBroadcastOrgId;
     }
     if (_myApplication != null) {
@@ -652,14 +727,18 @@ class AppProvider extends ChangeNotifier {
   /// Detects whether multiple streamer cards in the feed belong to this user
   List<StreamerModel> detectDuplicateChannels() {
     final email = _googleUserEmail?.toLowerCase().trim();
-    final duplicates = _streamers.where((s) {
-      final isPrimary = s.streamerId == primaryOwnedStreamerId;
-      final isMockAmir = s.streamerId == 'prof_alghamdi_01';
-      final isAppliedAmir = s.fullNameEn.toLowerCase().contains('amir') ||
-          s.fullNameAr.contains('أمير') ||
-          (email != null && s.youtubeHandle.toLowerCase().contains('amir'));
-      return isPrimary || (email == 'polkgvd2@gmail.com' && (isMockAmir || isAppliedAmir));
-    }).toSet().toList();
+    final duplicates = _streamers
+        .where((s) {
+          final isPrimary = s.streamerId == primaryOwnedStreamerId;
+          final isMockAmir = s.streamerId == 'prof_alghamdi_01';
+          final isAppliedAmir = s.fullNameEn.toLowerCase().contains('amir') ||
+              s.fullNameAr.contains('أمير') ||
+              (email != null && s.youtubeHandle.toLowerCase().contains('amir'));
+          return isPrimary ||
+              (email == 'polkgvd2@gmail.com' && (isMockAmir || isAppliedAmir));
+        })
+        .toSet()
+        .toList();
 
     if (duplicates.length > 1) {
       return duplicates;
@@ -742,7 +821,7 @@ class AppProvider extends ChangeNotifier {
 
   StreamVisibility get streamVisibility => _streamVisibility;
   bool get isActiveStreamPrivate =>
-      _isBroadcastingLive && _streamVisibility == StreamVisibility.private;
+      kPrivateStreamingEnabled && _isBroadcastingLive && _streamVisibility == StreamVisibility.private;
   List<String> get streamWhitelistHandles =>
       List.unmodifiable(_streamWhitelistHandles);
   bool get requireKnockApproval => _requireKnockApproval;
@@ -759,7 +838,7 @@ class AppProvider extends ChangeNotifier {
     List<String>? whitelistHandles,
     bool? requireKnockApproval,
   }) {
-    _streamVisibility = visibility;
+    _streamVisibility = kPrivateStreamingEnabled ? visibility : StreamVisibility.public;
     if (whitelistHandles != null) {
       _streamWhitelistHandles = List.of(whitelistHandles);
     }
@@ -787,6 +866,7 @@ class AppProvider extends ChangeNotifier {
   /// Fake, non-cryptographic invite token -- there is no real deep-link
   /// backend to resolve this against in this simulated app.
   String generatePrivateInviteLink() {
+    if (!kPrivateStreamingEnabled) return '';
     final token = newId().substring(0, 8);
     final streamId = _activeStreamIdForCurrentUser() ?? 'stream_live_992';
     return 'https://streamer.app/join/$streamId?t=$token';
@@ -810,6 +890,7 @@ class AppProvider extends ChangeNotifier {
   /// (mirrors admin_hub_screen.dart's "Simulate Live Push Notification"
   /// pattern for the same class of problem).
   void simulateIncomingKnock() {
+    if (!kDebugMode || !kPrivateStreamingEnabled) return;
     final name = _demoKnockNamePool[
         _pendingKnockRequests.length % _demoKnockNamePool.length];
     _pendingKnockRequests.add(StreamKnockRequest(
@@ -821,8 +902,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   void admitKnockRequest(String requestId) {
-    final index =
-        _pendingKnockRequests.indexWhere((r) => r.id == requestId);
+    final index = _pendingKnockRequests.indexWhere((r) => r.id == requestId);
     if (index == -1) return;
     final req = _pendingKnockRequests.removeAt(index);
     _admittedAttendees
@@ -1295,6 +1375,12 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _clearAuthState() {
+    _deviceGeneration++;
+    _deviceHeartbeatTimer?.cancel();
+    _deviceSubscription?.cancel();
+    _currentDeviceSession = null;
+    _remoteBroadcasterSession = null;
+    _isBroadcastingLive = false;
     _unsubscribeFromUserStatusChanges();
     final userId = _authService.currentSession?.user.id;
     if (userId != null) {
@@ -1464,6 +1550,10 @@ class AppProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _deviceGeneration++;
+    _deviceHeartbeatTimer?.cancel();
+    _deviceSubscription?.cancel();
+    _currentDeviceSession = null;
     _stopLiveViewerPolling();
     _authStateSub?.cancel();
     _unsubscribeFromUserStatusChanges();
@@ -2314,6 +2404,13 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> logout() async {
+    final device = _currentDeviceSession;
+    if (device != null) {
+      await _adminDbService?.upsertDeviceSession(
+          userId: _authService.currentSession?.user.id ?? '',
+          session: device.copyWith(isPrimaryBroadcaster: false));
+    }
+    _clearAuthState();
     try {
       await _authService.signOut();
     } catch (e) {
@@ -2651,10 +2748,57 @@ class AppProvider extends ChangeNotifier {
     if (!_isBroadcastingLive) {
       await toggleBroadcasterGoLive();
     }
-    return true;
+    return _isBroadcastingLive;
   }
 
   Future<void> toggleBroadcasterGoLive([BuildContext? context]) async {
+    if (_liveStateBusy) return;
+    final generation = _deviceGeneration;
+    final device = _currentDeviceSession;
+    if (_authService.currentSession == null ||
+        device == null ||
+        !device.isPrimaryBroadcaster ||
+        _adminDbService == null) {
+      _broadcastSessionError = 'broadcast_primary_required';
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('broadcast_primary_required'.tr())));
+      }
+      notifyListeners();
+      return;
+    }
+    final nextLive = !_isBroadcastingLive;
+    final previousLive = _isBroadcastingLive;
+    _liveStateBusy = true;
+    _isBroadcastingLive = nextLive;
+    notifyListeners();
+    try {
+      await _adminDbService!.setLiveState(
+          live: nextLive,
+          type: _customBroadcastType.name,
+          streamId: nextLive ? _customYouTubeVideoId : null,
+          deviceId: device.deviceId,
+          orgId: _selectedBroadcastOrgId);
+      if (generation != _deviceGeneration ||
+          _currentDeviceSession?.isPrimaryBroadcaster != true) {
+        return;
+      }
+      _broadcastSessionError = null;
+    } catch (_) {
+      if (generation != _deviceGeneration) return;
+      _isBroadcastingLive =
+          previousLive && _currentDeviceSession?.isPrimaryBroadcaster == true;
+      _broadcastSessionError = 'broadcast_state_failed';
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('broadcast_state_failed'.tr())));
+      }
+      notifyListeners();
+      return;
+    } finally {
+      _liveStateBusy = false;
+    }
+    _isBroadcastingLive = previousLive;
     _isBroadcastingLive = !_isBroadcastingLive;
 
     final currentUserId = _authService.currentSession?.user.id;
@@ -2679,7 +2823,7 @@ class AppProvider extends ChangeNotifier {
           broadcastType: _isBroadcastingLive
               ? _customBroadcastType
               : BroadcastType.offline,
-          activeStreamId: _isBroadcastingLive ? 'stream_live_992' : null,
+          activeStreamId: _isBroadcastingLive ? _customYouTubeVideoId : null,
           activeViewerCount: _isBroadcastingLive ? 0 : 0,
           titleEn: _customLiveTitle,
           titleAr: _customLiveTitle,
@@ -2728,9 +2872,9 @@ class AppProvider extends ChangeNotifier {
               ? '🎙️ مساحة صوتية مباشرة مع $streamerNameAr: «$_customLiveTitle».. استمع وشارك برأيك'
               : '🔴 $streamerNameAr بدأ بثاً مباشراً الآن: «$_customLiveTitle».. حيّاك شاركنا وتفاعل!',
           timestamp: DateTime.now(),
-          streamId: 'stream_live_992',
+          streamId: _customYouTubeVideoId,
         ),
-        context: context,
+        context: context != null && context.mounted ? context : null,
       );
 
       if (orgId != null) {
@@ -3069,7 +3213,8 @@ class AppProvider extends ChangeNotifier {
     final matched = _streamers.where((s) =>
         s.streamerId == currentId ||
         s.streamerId == 'streamer_$currentId' ||
-        (primaryOwnedStreamerId != null && s.streamerId == primaryOwnedStreamerId) ||
+        (primaryOwnedStreamerId != null &&
+            s.streamerId == primaryOwnedStreamerId) ||
         s.streamerId == _userProfile.id);
     if (matched.isNotEmpty) return matched.first;
 
@@ -3112,6 +3257,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   void setPitchDirectorMode(bool enabled) {
+    if (!kDebugMode) return;
     _isPitchDirectorModeEnabled = enabled;
     _isBroadcastingLive = enabled;
     _streamers = _streamers.map((s) {
@@ -3909,9 +4055,10 @@ class AppProvider extends ChangeNotifier {
           .eq('profile_id', userId)
           .maybeSingle();
       final expiresAtRaw = row?['expires_at'] as String?;
-      final expiresAt = expiresAtRaw != null ? DateTime.parse(expiresAtRaw) : null;
-      final isBanned =
-          row != null && (expiresAt == null || expiresAt.isAfter(DateTime.now()));
+      final expiresAt =
+          expiresAtRaw != null ? DateTime.parse(expiresAtRaw) : null;
+      final isBanned = row != null &&
+          (expiresAt == null || expiresAt.isAfter(DateTime.now()));
       _isCurrentUserBanned = isBanned;
       _currentUserBanReason = isBanned ? row['reason'] as String? : null;
       notifyListeners();
@@ -4044,7 +4191,8 @@ class AppProvider extends ChangeNotifier {
       // admin -- apply the toggle locally so the UI reflects the intended
       // state immediately, same resilience pattern as the academic
       // categories / stream_moderators fallbacks.
-      debugPrint('setStreamerHiddenFromMap remote call failed, applying local fallback: $e');
+      debugPrint(
+          'setStreamerHiddenFromMap remote call failed, applying local fallback: $e');
     }
     _streamers = _streamers.map((s) {
       return s.streamerId == streamerId
@@ -4147,8 +4295,7 @@ class AppProvider extends ChangeNotifier {
     try {
       _pendingCustomPlaceholders =
           await _adminDbService!.loadPendingCustomPlaceholders();
-      _myCustomPlaceholders =
-          await _adminDbService!.loadMyCustomPlaceholders();
+      _myCustomPlaceholders = await _adminDbService!.loadMyCustomPlaceholders();
       _approvedCustomPlaceholders =
           await _adminDbService!.loadApprovedCustomPlaceholders();
       notifyListeners();
@@ -4242,9 +4389,8 @@ class AppProvider extends ChangeNotifier {
         ..._myCustomPlaceholders
             .where((p) => p.placeholderType != placeholderType),
       ];
-      _approvedPlaceholderUrls[
-          _placeholderCacheKey(existingApproved.streamerId, placeholderType)] =
-          cachedUrl;
+      _approvedPlaceholderUrls[_placeholderCacheKey(
+          existingApproved.streamerId, placeholderType)] = cachedUrl;
       notifyListeners();
       return existingApproved;
     }
@@ -4283,7 +4429,7 @@ class AppProvider extends ChangeNotifier {
     // The approved artwork becomes live immediately, so refresh the playback
     // cache entry rather than leaving a stale "no custom card" miss behind.
     _approvedPlaceholderUrls[_placeholderCacheKey(
-        placeholder.streamerId, placeholder.placeholderType)] =
+            placeholder.streamerId, placeholder.placeholderType)] =
         placeholder.imageUrl;
 
     final hash = _pendingPlaceholderHashById.remove(placeholder.id);

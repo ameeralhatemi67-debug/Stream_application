@@ -1,4 +1,8 @@
 {
+  "broadcast_session_lost": "Broadcasting stopped because this device lost its primary session. Reconnect or transfer broadcasting to this device.",
+  "broadcast_primary_required": "Claim the primary broadcaster device before going live.",
+  "broadcast_state_failed": "The broadcast session could not be updated. Check your connection and try again.",
+  "sign_out_other_devices": "Sign out other devices",
   "app": {
     "title": "Educational Streamer",
     "region": "AlSharqia - Al Khobar",

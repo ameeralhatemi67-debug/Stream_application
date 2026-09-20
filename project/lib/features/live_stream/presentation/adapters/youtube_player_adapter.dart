@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'youtube_navigation_policy.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -115,7 +116,9 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
               }
             },
             onNavigationRequest: (NavigationRequest request) {
-              return NavigationDecision.navigate;
+              return isAllowedYouTubeNavigation(request.url)
+                  ? NavigationDecision.navigate
+                  : NavigationDecision.prevent;
             },
           ),
         );

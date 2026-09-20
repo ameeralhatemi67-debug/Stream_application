@@ -39,3 +39,8 @@ Claude Code appends specifics under each item (exact commands, file names, value
 - [ ] P1 database runtime verification: execute broadcaster_columns.test.sql, streamer_assets.test.sql and application_and_ban_guards.test.sql using local Supabase tests. Docker was unavailable; all new SQL remains UNVERIFIED-STATIC.
 - [ ] Legacy streamer-assets objects remain publicly readable. New uploads use UID prefixes. Existing flat paths require an admin to replace/delete; review and migrate legacy assets if needed.
 - [ ] Do not apply this partial P1 set as a finished release: guarded live-state/device RPCs and remaining access-control work are still outstanding. Review the ledger before any production migration.
+
+## Window 2 checkpoint, 2026-09-20
+- Review 20260920120000_guarded_broadcast_sessions.sql before deployment: it intentionally ends all existing live sessions and primary claims because their old ownership flags were untrusted. Clients must claim again. No production command ran here.
+- SQL/device acceptance remains UNVERIFIED-STATIC. Run broadcast_sessions.test.sql on the local Supabase stack. Then test two physical devices: A live; B sees conflict; explicit transfer to B stops A; A cannot restart; silent primary over 90 seconds is claimable; viewers receive no conflict; repeat with an audio-only org member and verify video denial. Test owner/non-owner chat moderation. Realtime/background RTMP and WebView navigation need real-device verification.
+- Sign out other devices revokes refresh sessions; existing access JWTs remain usable until expiry. Review auth expiry settings before release. Restrict the YouTube API key to the final Android package, signing certificates and intended API.

@@ -36,3 +36,16 @@ All pending work and the corrected window2 resume instructions remain in LEDGER.
 
 ## Supervisor note (Claude, 2026-09-20 after the stale-meter stops)
 Checked against the repo: commits 3ba0eb7 and 95b97fc, the 4 migrations and the 27 pgTAP assertions (9+7+11) match the report; the tree was clean; both stashes are historical (their files are contained in HEAD). Not re-run by the supervisor: analyzer, the 266 tests, SQL (no Docker). The stale-reading STOP reproduces with synthetic logs on the old `budget_check.mjs` (weekly guard ran before the staleness check); the meter is now fixed (04 §I, `--live-*`, `--cap`). Whether the real Codex log lags is still unverified. Window 1 is over; the next session is split window 2 with `OWNER_CAP=90`.
+
+## Window 2 forecast stop, 2026-09-20
+Completed source steps P1.2/1.7 and P1.8/1.9; P1 remains partial. Final verification: analyzer0, full268 passed, gates16 versus17 at entry, G7/G9/G10a-e/G11a-g0, diff-check clean. SQL22 new assertions and physical-device scenarios are UNVERIFIED-STATIC. No production deployment, release build or push.
+Meter at closing: plan=split window=2 used_5h=83 cap=90 cap_source=owner soft=84 weekly=23. Two windows used. Early closing began at70; remaining identity/RPC/RLS work requires25-40 points versus14 to soft. No third window is allowed.
+| Phase slice | Estimate | Actual delta | Ratio |
+|---|---|---|---|
+| Baseline | not estimated | 14 (3-17) | n/a |
+| P1.2/1.7 |25-35|37 (17-54)|1.06-1.48x|
+| P1.8/1.9 |8-15|16 (54-70)|1.07-2x|
+| Closing/checkpoint |6 reserve|13 (70-83)|2.17x|
+Largest consumers: paired RPC/client lifecycle implementation37; private/debug/navigation cleanup16; baseline recovery14. Closing cost13 included full-suite discovery of simulation expectations missed by focused searches and test updates. These are account-wide observations, not isolated command charges.
+Remaining priority: P1.6/RPC-ban audit/P1.10 estimated25-40; then P2 6-8, P3 4-6, P4 24-30, P8A6-9, P6 9-12, P5 10-14, P7 9-12, P8B4-6, P9 3-4. Later estimates remain uncalibrated. Safe source checkpoint is one local commit; both owner stashes are retained. See LEDGER RESUME and OWNER_ACTIONS for commands and runtime probes. Owner authorization for a new run is required; this split run cannot resume into window3.
+- Final meter: BUDGET status=SOFT harness=codex plan=split window=2 used_5h=85.0 cap=90 cap_source=owner soft=84 headroom=5.0 weekly=23.0 reason=used>=soft(84). Closing delta15 including bookkeeping, total window2 session delta82. Post-commit status clean; both historical stashes unchanged. These final numbers supersede the pre-commit83 reading above.

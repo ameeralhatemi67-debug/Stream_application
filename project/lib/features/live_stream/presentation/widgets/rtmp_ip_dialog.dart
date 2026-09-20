@@ -1,4 +1,5 @@
 import 'dart:ui';
+import '../../../../core/config/feature_flags.dart';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -1057,6 +1058,7 @@ class _LiveBroadcasterStudioSheetState
   // ---------------------------------------------------------------------
 
   Widget _buildStreamAccessSection(bool isAr) {
+    if (!kPrivateStreamingEnabled) return const SizedBox.shrink();
     return AnimatedSize(
       duration: const Duration(milliseconds: 260),
       curve: Curves.easeInOut,
@@ -1526,6 +1528,7 @@ class _LiveBroadcasterStudioSheetState
 
     if (!mounted) return;
     setState(() => _isSubmitting = false);
+    if (!provider.isBroadcastingLive) return;
     Navigator.of(context).pop();
 
     final videoId = AppProvider.extractYouTubeId(rawYoutube.isEmpty ? provider.customYouTubeLiveUrl : rawYoutube);
@@ -1686,4 +1689,3 @@ class _PulseGlowState extends State<_PulseGlow>
     );
   }
 }
-

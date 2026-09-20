@@ -17,7 +17,7 @@ void main() {
       expect(provider.isActiveStreamPrivate, isFalse);
     });
 
-    test('configureStreamPrivacy persists visibility and whitelist', () {
+    test('configureStreamPrivacy retains the whitelist but forces public mode', () {
       final provider = AppProvider();
       provider.configureStreamPrivacy(
         visibility: StreamVisibility.private,
@@ -25,7 +25,7 @@ void main() {
         requireKnockApproval: false,
       );
 
-      expect(provider.streamVisibility, equals(StreamVisibility.private));
+      expect(provider.streamVisibility, equals(StreamVisibility.public));
       expect(provider.streamWhitelistHandles,
           containsAll(['@sarah', '@khalid']));
       expect(provider.requireKnockApproval, isFalse);
@@ -42,31 +42,29 @@ void main() {
       expect(provider.streamWhitelistHandles, isEmpty);
     });
 
-    test('simulateIncomingKnock enqueues a pending request', () {
+    test('simulateIncomingKnock is disabled with private mode', () {
       final provider = AppProvider();
       expect(provider.pendingKnockRequests, isEmpty);
 
       provider.simulateIncomingKnock();
-      expect(provider.pendingKnockRequests.length, equals(1));
-      expect(provider.pendingKnockRequests.first.displayName, isNotEmpty);
+      expect(provider.pendingKnockRequests, isEmpty);
     });
 
-    test('admitKnockRequest moves a request from pending to admitted', () {
+    test('admitKnockRequest cannot admit a disabled simulated request', () {
       final provider = AppProvider();
       provider.simulateIncomingKnock();
-      final id = provider.pendingKnockRequests.first.id;
+      const id = 'disabled-request';
 
       provider.admitKnockRequest(id);
 
       expect(provider.pendingKnockRequests, isEmpty);
-      expect(provider.admittedAttendees.length, equals(1));
-      expect(provider.admittedAttendees.first.id, equals(id));
+      expect(provider.admittedAttendees, isEmpty);
     });
 
-    test('denyKnockRequest drops a request without admitting it', () {
+    test('denyKnockRequest handles the disabled empty queue', () {
       final provider = AppProvider();
       provider.simulateIncomingKnock();
-      final id = provider.pendingKnockRequests.first.id;
+      const id = 'disabled-request';
 
       provider.denyKnockRequest(id);
 
@@ -74,7 +72,7 @@ void main() {
       expect(provider.admittedAttendees, isEmpty);
     });
 
-    test('admitAllKnockRequests clears the whole queue into attendees', () {
+    test('admitAllKnockRequests cannot admit disabled simulated requests', () {
       final provider = AppProvider();
       provider.simulateIncomingKnock();
       provider.simulateIncomingKnock();
@@ -83,7 +81,7 @@ void main() {
       provider.admitAllKnockRequests();
 
       expect(provider.pendingKnockRequests, isEmpty);
-      expect(provider.admittedAttendees.length, equals(3));
+      expect(provider.admittedAttendees, isEmpty);
     });
 
     test('admitAttendeeByHandle adds a VIP attendee when the handle is '
@@ -107,10 +105,10 @@ void main() {
       expect(provider.admittedAttendees, isEmpty);
     });
 
-    test('generatePrivateInviteLink returns a shareable join link', () {
+    test('generatePrivateInviteLink does not share a fake private link', () {
       final provider = AppProvider();
       final link = provider.generatePrivateInviteLink();
-      expect(link, startsWith('https://streamer.app/join/'));
+      expect(link, isEmpty);
     });
 
     test('localViewerAccessState is notApplicable when no stream is live',

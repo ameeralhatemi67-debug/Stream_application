@@ -60,3 +60,23 @@
 - Meter (fixed 2026-09-20, see 04 §I): first command `node brief/tools/budget_check.mjs --plan split --cap 90` (never `--new-run`), expect window=2 cap=90 soft=84; pass `--cap 90` on every check. A stale log reading is UNKNOWN, not STOP: read usage from the Codex display and add `--live-used N --live-weekly W --live-resets-in-min R`.
 - Baseline (Astra-reported, not re-run by the supervisor): analyzer 0, 266 tests, gates 17 failing vs 18 baseline. New SQL is UNVERIFIED-STATIC.
 - Bookkeeping: append short rows, do not rewrite documents; leave at least 6 points under the cap for the closing pass.
+
+## Window 2 checkpoint, 2026-09-20
+| Step | Estimate | Observed usage | Delta | Result |
+|---|---|---|---|---|
+| Resume baseline | unestimated | 3 to 17 | 14 | analyzer0; 265 pass/1 timing failure; gates17 |
+| P1.2 + P1.7 | 25-35 | 17 to 54 | 37 | source checkpoint; SQL/device runtime unverified |
+| P1.8 + P1.9 | 8-15 | 54 to 70 | 16 | private disabled; debug tools; navigation allowlist |
+| Closing verification | reserve | 70 to 83 | 13 | analyzer0; full268 passed; gates16; diff-check clean |
+- Fresh account readings override lagging logs. Window2, cap90 owner, soft84, weekly23 at used83. No meter/cap edits, no push, no stash changes. Initial stale UNKNOWN recovered from the Codex usage tool.
+- Decisions: canonical live ownership is the caller profile, mirrored to the selected verified org; one global transaction lock serializes claims/live changes. Migration clears untrusted prior live/primary flags. Optional org ID and explicit force flag support org permission checks and confirmed transfer. Non-primary/unconfigured clients fail closed; prior simulation-success tests now assert denial. SQL has22 new pgTAP assertions, UNVERIFIED-STATIC without Docker. YouTube embed base/referrer unchanged; blank initialization plus HTTPS YouTube hosts allowed.
+- Baseline timing failure: issue_log_fixes_test.dart, StreamDecayEngine monitors heartbeats and decays on timeout. Passed focused and final full runs. Startup stalled until --no-version-check --suppress-analytics and --no-pub; Flutter/Dart needed SDK/cache access. One late meter call used project/ incorrectly and failed to locate the script; immediately reran from repo root. No reading inferred from that failure.
+- Final evidence: flutter --no-version-check --suppress-analytics analyze --no-pub:0 issues; test --no-pub --reporter compact:268 pass; gates.mjs --history:16 failures, G7/G9/G10a-e/G11a-g0; git diff --check clean. New native/realtime behavior and local SQL remain unverified. Test logs in the OS temp directory. No release build.
+- Forecast stop: remaining P1.6 + RPC-ban audit + P1.10 now estimated25-40 points, exceeding14 points to soft at closing start70. P2 onward retains prior uncalibrated estimates. P1 is NOT complete.
+
+## RESUME block
+- Next: P1.6 dev-identity removal, then RPC-ban audit and P1.10 policy matrix/catalog/privilege review; P1.11 release artifact scan remains deferred to P8A. Then P2, P3, P4, P8A, P6, P5, P7, P8B, P9 in plan order. P1.2/1.7 source changes and P1.8/1.9 are checkpointed; do not claim runtime acceptance until local SQL and real-device probes pass.
+- SPLIT window2 used83 at closing checkpoint, cap90 owner, soft84; never enter window3. This run is stopping, not waiting. Owner must authorize any subsequent run; CONTINUE_SPLIT cannot grant a third window. No --new-run in this run.
+- Files in flight: none after the single local checkpoint commit. Both historical owner stashes remain untouched. No production Supabase operations or push.
+- Re-run baseline from project/: flutter --no-version-check --suppress-analytics analyze --no-pub; flutter --no-version-check --suppress-analytics test --no-pub --reporter compact. From root: node brief/tools/gates.mjs --history. Use SDK/cache permissions if needed; meter checks always from root with --plan split --cap90 spelled as --cap 90.
+- Post-commit meter: SOFT plan=split window=2 used_5h=85 cap=90 cap_source=owner soft=84 weekly=23. Tree clean; both owner stashes unchanged. Closing delta15 (70-85); total session delta82 (3-85). No further work.

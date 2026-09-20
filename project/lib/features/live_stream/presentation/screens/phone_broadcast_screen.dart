@@ -65,6 +65,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (!_appProviderCaptured) {
       _appProvider = Provider.of<AppProvider>(context, listen: false);
       _appProviderCaptured = true;
+      _appProvider.addListener(_onBroadcastSessionChanged);
     }
   }
 
@@ -81,8 +82,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       streamId: 'phone_broadcast_${DateTime.now().millisecondsSinceEpoch}',
       onReaction: (type) => _reactionsController.spawnReaction(type),
     )..start();
-    _ghostChatController = GhostChatFallbackController(
-        streamId: 'phone_broadcast_stream');
+    _ghostChatController =
+        GhostChatFallbackController(streamId: 'phone_broadcast_stream');
     _chatController.addListener(_handleChatConnectionChange);
 
     _setWakelock(true);
@@ -97,8 +98,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   void _setWakelock(bool enable) {
     try {
-      final future =
-          enable ? WakelockPlus.enable() : WakelockPlus.disable();
+      final future = enable ? WakelockPlus.enable() : WakelockPlus.disable();
       future.catchError((Object e) {
         debugPrint('[PhoneBroadcastScreen] wakelock unavailable: $e');
       });
@@ -203,15 +203,32 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   Future<void> _startBroadcast() async {
     try {
-      await _engine.startPublishing(_appProvider.phoneBroadcastFullUrl);
-      if (!mounted) return;
       if (!_appProvider.isBroadcastingLive) {
         await _appProvider.toggleBroadcasterGoLive(context);
-        _weStartedBroadcast = true;
       }
+      if (!mounted ||
+          !_appProvider.isBroadcastingLive ||
+          _appProvider.currentDeviceSession?.isPrimaryBroadcaster != true) {
+        return;
+      }
+      _weStartedBroadcast = true;
+      await _engine.startPublishing(_appProvider.phoneBroadcastFullUrl);
     } on Exception {
+      await _stopBroadcast();
       // The engine's error state drives the UI.
     }
+  }
+
+  void _onBroadcastSessionChanged() {
+    if (!mounted ||
+        _appProvider.broadcastSessionError != 'broadcast_session_lost') {
+      return;
+    }
+    _weStartedBroadcast = false;
+    _engine.stopPublishing();
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('broadcast_session_lost'.tr())));
   }
 
   Future<void> _stopBroadcast() async {
@@ -259,6 +276,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   @override
   void dispose() {
+    if (_appProviderCaptured) {
+      _appProvider.removeListener(_onBroadcastSessionChanged);
+    }
     _setWakelock(false);
     _restorePortraitChrome();
     if (_weStartedBroadcast) {
@@ -344,7 +364,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         backgroundColor: AppTheme.darkSurface1,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white, size: 22),
+          icon: const Icon(Icons.arrow_back_rounded,
+              color: Colors.white, size: 22),
           tooltip: 'Back',
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -389,8 +410,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Container(
-                        padding:
-                            const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
                           color: AppTheme.accentRed.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
@@ -444,7 +465,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         ),
         actions: [
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm, vertical: 8),
+            margin: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spaceSm, vertical: 8),
             decoration: BoxDecoration(
               color: AppTheme.accentRed.withValues(alpha: 0.15),
               shape: BoxShape.circle,
@@ -644,8 +666,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           icon: const Icon(Icons.more_vert_rounded,
                               color: Colors.white, size: 20),
                           tooltip: 'Streamer Controls',
-                          onPressed: () =>
-                              _showStreamerControlsSheet(streamer),
+                          onPressed: () => _showStreamerControlsSheet(streamer),
                         ),
                       ),
                     ),
@@ -811,9 +832,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           : AppTheme.darkSurface2,
                       leading: Icon(
                         isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                        color: isMuted
-                            ? AppTheme.accentRed
-                            : AppTheme.accentGreen,
+                        color:
+                            isMuted ? AppTheme.accentRed : AppTheme.accentGreen,
                       ),
                       title: Text(
                         isMuted ? 'Unmute Microphone' : 'Mute Microphone',
@@ -1100,8 +1120,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               ),
               const SizedBox(width: 6),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppTheme.darkSurface2,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -1137,9 +1156,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             const Divider(color: AppTheme.darkBorderSubtle, height: 1),
             const SizedBox(height: 8),
             Text(
-              description.isNotEmpty
-                  ? description
-                  : 'No description provided.',
+              description.isNotEmpty ? description : 'No description provided.',
               style: const TextStyle(
                 color: AppTheme.textPrimaryDark,
                 fontSize: 12,
@@ -1264,8 +1281,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       senderName: m.getLocalizedSender(langCode),
                       senderAvatarUrl: m.senderAvatar,
                       body: m.getLocalizedMessage(langCode),
-                      createdAt: DateTime.tryParse(m.timestamp) ??
-                          DateTime.now(),
+                      createdAt:
+                          DateTime.tryParse(m.timestamp) ?? DateTime.now(),
                       isCurrentUser: m.isCurrentUser,
                       badges: const {},
                       isPending: false,
@@ -1336,8 +1353,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   const SizedBox(height: 4),
                   const Text(
                     'Presentation Deck (PDF Attached)',
-                    style: TextStyle(
-                        color: AppTheme.textMutedDark, fontSize: 11),
+                    style:
+                        TextStyle(color: AppTheme.textMutedDark, fontSize: 11),
                   ),
                 ],
               ),
@@ -1641,8 +1658,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             child: Text(
                               'No attendees admitted yet.',
                               style: TextStyle(
-                                  color: AppTheme.textMutedDark,
-                                  fontSize: 12),
+                                  color: AppTheme.textMutedDark, fontSize: 12),
                             ),
                           )
                         : ListView.builder(
@@ -1710,8 +1726,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               "Higher quality looks better but needs a stronger upload. "
               "You can't change this once you start the camera.",
               textAlign: TextAlign.center,
-              style: TextStyle(
-                  color: AppTheme.textSecondaryDark, fontSize: 12.5),
+              style:
+                  TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12.5),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             ...BroadcastQualityPreset.values.map(

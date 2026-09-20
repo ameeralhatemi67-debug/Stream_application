@@ -18,7 +18,9 @@ void main() {
   });
 
   group('Issue Log Fix QF-06: Multi-Device Session Conflict Management', () {
-    test('DeviceSessionModel round-trips through JSON serialization and copyWith', () {
+    test(
+        'DeviceSessionModel round-trips through JSON serialization and copyWith',
+        () {
       final now = DateTime.now();
       final session = DeviceSessionModel(
         deviceId: 'device_win_123',
@@ -43,12 +45,13 @@ void main() {
       expect(updated.deviceId, equals('device_win_123'));
     });
 
-    test('AppProvider transfers and demotes multi-device broadcaster sessions', () async {
+    test('AppProvider cannot claim a broadcaster session without a backend',
+        () async {
       final provider = AppProvider();
       await provider.initDeviceSession();
 
       expect(provider.currentDeviceSession, isNotNull);
-      expect(provider.currentDeviceSession!.isPrimaryBroadcaster, isTrue);
+      expect(provider.currentDeviceSession!.isPrimaryBroadcaster, isFalse);
 
       // Simulate remote device holding broadcaster session
       final remoteDevice = DeviceSessionModel(
@@ -67,12 +70,20 @@ void main() {
       expect(provider.isStreamerModeEnabled, isFalse);
 
       // User chooses to transfer broadcaster to current device
-      provider.transferBroadcasterToCurrentDevice();
-      expect(provider.currentDeviceSession!.isPrimaryBroadcaster, isTrue);
-      expect(provider.remoteBroadcasterSession, isNull);
+      await provider.transferBroadcasterToCurrentDevice();
+      expect(provider.currentDeviceSession!.isPrimaryBroadcaster, isFalse);
+      expect(provider.remoteBroadcasterSession, isNotNull);
+      provider.applyDeviceSessions([
+        provider.currentDeviceSession!.copyWith(isPrimaryBroadcaster: true)
+      ]);
+      provider.applyDeviceSessions([remoteDevice]);
+      expect(provider.broadcastSessionError, 'broadcast_session_lost');
+      expect(provider.isBroadcastingLive, isFalse);
+      provider.dispose();
     });
 
-    testWidgets('DeviceSessionConflictDialog renders device options and returns choice',
+    testWidgets(
+        'DeviceSessionConflictDialog renders device options and returns choice',
         (WidgetTester tester) async {
       final currentDevice = DeviceSessionModel(
         deviceId: 'cur_dev',
@@ -126,7 +137,8 @@ void main() {
   });
 
   group('Issue Log Fix QF-09: Discovery Feed Own-Card Highlight', () {
-    testWidgets('StreamerGridCard renders white border and Your Channel badge for own profile',
+    testWidgets(
+        'StreamerGridCard renders white border and Your Channel badge for own profile',
         (WidgetTester tester) async {
       final provider = AppProvider();
       // prof_alghamdi_01 is owned strictly by polkgvd2@gmail.com -- see
@@ -136,7 +148,8 @@ void main() {
         isStreamer: true,
       );
 
-      final ownStreamer = mockStreamers.firstWhere((s) => s.streamerId == 'prof_alghamdi_01');
+      final ownStreamer =
+          mockStreamers.firstWhere((s) => s.streamerId == 'prof_alghamdi_01');
 
       await tester.pumpWidget(
         ChangeNotifierProvider<AppProvider>.value(
@@ -162,12 +175,15 @@ void main() {
       expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     });
 
-    testWidgets('StreamerGridCard does NOT render Your Channel badge for other streamers',
+    testWidgets(
+        'StreamerGridCard does NOT render Your Channel badge for other streamers',
         (WidgetTester tester) async {
       final provider = AppProvider();
-      provider.setBroadcasterStatusForTesting(isLoggedIn: true, isApproved: true);
+      provider.setBroadcasterStatusForTesting(
+          isLoggedIn: true, isApproved: true);
 
-      final otherStreamer = mockStreamers.firstWhere((s) => s.streamerId != 'prof_alghamdi_01');
+      final otherStreamer =
+          mockStreamers.firstWhere((s) => s.streamerId != 'prof_alghamdi_01');
 
       await tester.pumpWidget(
         ChangeNotifierProvider<AppProvider>.value(
@@ -193,7 +209,9 @@ void main() {
   });
 
   group('Issue Log Fix QF-10: Cell Tower Permission Boundaries', () {
-    test('isOwnStreamerProfile correctly identifies own channel vs other channels', () {
+    test(
+        'isOwnStreamerProfile correctly identifies own channel vs other channels',
+        () {
       final provider = AppProvider();
       provider.debugSetSignedInForTests(
         email: 'polkgvd2@gmail.com',
@@ -208,7 +226,9 @@ void main() {
       expect(provider.isOwnStreamerProfile('quran_live_01'), isFalse);
     });
 
-    test('arbitrary email logins do not inherit prof_alghamdi_01 (Cluster 2 Task 10)', () {
+    test(
+        'arbitrary email logins do not inherit prof_alghamdi_01 (Cluster 2 Task 10)',
+        () {
       final provider = AppProvider();
       provider.debugSetSignedInForTests(
         email: 'some.random.viewer@gmail.com',
@@ -241,7 +261,8 @@ void main() {
   });
 
   group('Issue Log Fix QF-11: Stream Decay Engine', () {
-    test('StreamDecayEngine monitors heartbeats and decays on timeout', () async {
+    test('StreamDecayEngine monitors heartbeats and decays on timeout',
+        () async {
       bool decayed = false;
 
       final engine = StreamDecayEngine(
@@ -271,7 +292,9 @@ void main() {
   });
 
   group('Issue Log Fix QF-12: Private Stream Access & Feed Filtering', () {
-    test('filteredStreamers hides private broadcasts from non-whitelisted users', () {
+    test(
+        'private mode remains public until server entitlements exist',
+        () {
       final provider = AppProvider();
 
       // Configure a private stream with specific whitelist
@@ -281,13 +304,17 @@ void main() {
       );
 
       // Streamers list contains public and private broadcasts
-      expect(provider.streamVisibility, equals(StreamVisibility.private));
+      expect(provider.streamVisibility, equals(StreamVisibility.public));
+      expect(provider.generatePrivateInviteLink(), isEmpty);
+      expect(provider.isActiveStreamPrivate, isFalse);
       expect(provider.streamWhitelistHandles, contains('vip_student_1'));
     });
   });
 
   group('Issue Log Fix: Single Channel Ownership & Duplicate Resolution', () {
-    test('detectDuplicateChannels and resolveDuplicateChannels keeps chosen channel only', () {
+    test(
+        'detectDuplicateChannels and resolveDuplicateChannels keeps chosen channel only',
+        () {
       final provider = AppProvider();
       provider.debugSetSignedInForTests(
         email: 'polkgvd2@gmail.com',

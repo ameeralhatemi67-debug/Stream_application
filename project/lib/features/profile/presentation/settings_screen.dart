@@ -329,7 +329,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildViewerProfileCard(
       BuildContext context, AppProvider provider, bool isAr) {
     final profile = provider.userProfile;
-    final email = provider.googleUserEmail ?? 'settings.guest_not_signed_in'.tr();
+    final email =
+        provider.googleUserEmail ?? 'settings.guest_not_signed_in'.tr();
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -371,8 +372,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppTheme.accentBlue.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -405,7 +405,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       BuildContext context, AppProvider provider, bool isAr) {
     final profile = provider.userProfile;
     final handle = _displayHandle(provider, profile);
-    final email = provider.googleUserEmail ?? provider.myApplication?.email ?? '';
+    final email =
+        provider.googleUserEmail ?? provider.myApplication?.email ?? '';
     const bannerHeight = 96.0;
     const avatarRadius = 36.0;
 
@@ -498,8 +499,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 2),
                 Text(
                   handle,
-                  style: const TextStyle(
-                      color: AppTheme.accentBlue, fontSize: 12),
+                  style:
+                      const TextStyle(color: AppTheme.accentBlue, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -716,6 +717,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 },
               ),
+            ),
+            TextButton.icon(
+              icon: const Icon(Icons.devices_other),
+              label: Text('sign_out_other_devices'.tr()),
+              onPressed: () async {
+                try {
+                  await provider.signOutOtherDevices();
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('broadcast_state_failed'.tr())));
+                  }
+                }
+              },
             ),
           ] else ...[
             SizedBox(
@@ -2209,8 +2224,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 6),
           Text(
             'settings.chat_history_desc'.tr(),
-            style:
-                const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+            style: const TextStyle(
+                color: AppTheme.textSecondaryDark, fontSize: 11),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
@@ -2267,7 +2282,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showDeleteAllMessagesDialog(BuildContext context, AppProvider provider) {
+  void _showDeleteAllMessagesDialog(
+      BuildContext context, AppProvider provider) {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -2295,7 +2311,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         content: Text(
           'settings.delete_all_messages_confirm_body'.tr(),
-          style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 13),
+          style:
+              const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 13),
         ),
         actions: [
           TextButton(
@@ -2305,7 +2322,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
+                backgroundColor: AppTheme.accentRed,
+                foregroundColor: Colors.white),
             onPressed: () {
               Navigator.pop(dialogContext);
               _handleDeleteAllMessages(context, provider);
@@ -2368,7 +2386,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       leading: const Icon(Icons.forum_outlined,
                           color: AppTheme.accentBlue),
                       title: Text(id,
-                          style: const TextStyle(color: AppTheme.textPrimaryDark)),
+                          style:
+                              const TextStyle(color: AppTheme.textPrimaryDark)),
                       onTap: () => Navigator.pop(dialogContext, id),
                     );
                   },
@@ -2712,7 +2731,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       backgroundColor: AppTheme.darkSurface1,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       builder: (ctx) => SafeArea(
         child: SingleChildScrollView(
@@ -2774,8 +2794,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'settings.custom_cards_desc'.tr(),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-              color: AppTheme.textSecondaryDark, fontSize: 11),
+          style:
+              const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
         ),
         trailing: const Icon(Icons.chevron_right_rounded,
             color: AppTheme.textMutedDark, size: 20),

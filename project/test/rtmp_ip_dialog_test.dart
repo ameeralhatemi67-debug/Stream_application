@@ -399,7 +399,7 @@ void main() {
 
     testWidgets(
         'TC-STUDIO-11: OBS Go Live persists title/description/category and '
-        'goes live', (tester) async {
+        'denies going live without a primary session', (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -421,7 +421,8 @@ void main() {
 
       expect(provider.customLiveTitle, equals('OBS Lecture Title'));
       expect(provider.customLiveDescription, equals('A short OBS description.'));
-      expect(provider.isBroadcastingLive, isTrue);
+      expect(provider.isBroadcastingLive, isFalse);
+      expect(provider.broadcastSessionError, 'broadcast_primary_required');
 
       // See TC-STUDIO-06 -- cancel the "YouTube Live Target Updated" toast's
       // own pending Timer before tearing the provider down.
@@ -516,9 +517,7 @@ void main() {
     });
 
     testWidgets(
-        'TC-STUDIO-15: Public/Private pills are visible in OBS mode; '
-        'tapping Private reveals the whitelist, knock-approval switch, and '
-        'share button', (tester) async {
+        'TC-STUDIO-15: private controls are hidden without server entitlements', (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -526,23 +525,17 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('🌐 Public'), findsOneWidget);
-      expect(find.text('🔒 Private'), findsOneWidget);
+      expect(find.text('🌐 Public'), findsNothing);
+      expect(find.text('🔒 Private'), findsNothing);
       expect(find.text('Share Private Invite Link'), findsNothing);
-
-      await tester.tap(find.text('🔒 Private'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Share Private Invite Link'), findsOneWidget);
       expect(
         find.text('Require Host Knock Approval for new guests'),
-        findsOneWidget,
+        findsNothing,
       );
     });
 
     testWidgets(
-        'TC-STUDIO-16: adding a whitelist handle produces a Chip; deleting '
-        'it removes it', (tester) async {
+        'TC-STUDIO-16: saved whitelist remains editable as data but has no private UI', (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -550,28 +543,16 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('🔒 Private'));
-      await tester.pumpAndSettle();
-
-      final whitelistField = findByHint('@sarah, @khalid');
-      await tester.enterText(whitelistField, 'sarah');
-      await tester.tap(find.byIcon(Icons.add_circle_rounded));
-      await tester.pumpAndSettle();
-
-      expect(find.widgetWithText(Chip, '@sarah'), findsOneWidget);
-
-      await tester.tap(find.descendant(
-        of: find.widgetWithText(Chip, '@sarah'),
-        matching: find.byIcon(Icons.close_rounded),
-      ));
-      await tester.pumpAndSettle();
-
+      provider.addStreamWhitelistHandle('@sarah');
+      expect(provider.streamWhitelistHandles, contains('@sarah'));
+      provider.removeStreamWhitelistHandle('@sarah');
+      expect(provider.streamWhitelistHandles, isNot(contains('@sarah')));
+      expect(findByHint('@sarah, @khalid'), findsNothing);
       expect(find.widgetWithText(Chip, '@sarah'), findsNothing);
     });
 
     testWidgets(
-        'TC-STUDIO-17: OBS Go Live with Private selected persists '
-        'streamVisibility and the whitelist onto AppProvider', (tester) async {
+        'TC-STUDIO-17: OBS Go Live cannot enable private mode through provider state', (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -579,27 +560,19 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('🔒 Private'));
-      await tester.pumpAndSettle();
-
-      final whitelistField = findByHint('@sarah, @khalid');
-      await tester.enterText(whitelistField, 'khalid');
-      await tester.tap(find.byIcon(Icons.add_circle_rounded));
-      await tester.pumpAndSettle();
+      provider.configureStreamPrivacy(visibility: StreamVisibility.private);
 
       await tester.tap(find.text('Go Live'));
       await tester.pumpAndSettle();
 
-      expect(provider.streamVisibility, equals(StreamVisibility.private));
-      expect(provider.streamWhitelistHandles, contains('@khalid'));
+      expect(provider.streamVisibility, equals(StreamVisibility.public));
 
       InteractiveToastOverlay.dismiss();
       provider.dispose();
     });
 
     testWidgets(
-        'TC-STUDIO-18: Local mode Stream with Private selected persists '
-        'streamVisibility via its own configureStreamPrivacy call',
+        'TC-STUDIO-18: Local mode cannot enable private streaming',
         (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
@@ -613,13 +586,13 @@ void main() {
 
       final ipField = findByHint('e.g. 192.168.1.100');
       await tester.enterText(ipField, '10.0.0.42');
-      await tester.tap(find.text('🔒 Private'));
+      expect(find.text('🔒 Private'), findsNothing);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Stream'));
       await tester.pumpAndSettle();
 
-      expect(provider.streamVisibility, equals(StreamVisibility.private));
+      expect(provider.streamVisibility, equals(StreamVisibility.public));
 
       InteractiveToastOverlay.dismiss();
     });

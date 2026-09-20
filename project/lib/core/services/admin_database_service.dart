@@ -27,7 +27,8 @@ import '../../features/profile/models/streamer_models.dart';
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
 );
-bool _looksLikeUuid(String? value) => value != null && _uuidPattern.hasMatch(value);
+bool _looksLikeUuid(String? value) =>
+    value != null && _uuidPattern.hasMatch(value);
 
 /// Core Database & Persistence Service for Admin Moderation, Broadcaster Applications,
 /// Dynamic Platform Governance, Viewer Analytics, and Organization Audit Logs.
@@ -103,9 +104,8 @@ class AdminDatabaseService {
         final reviewerNames = await _resolveDisplayNames(
           rows.map((r) => r['reviewed_by'] as String?),
         );
-        _cachedApplications = rows
-            .map((r) => _applicationFromRow(r, reviewerNames))
-            .toList();
+        _cachedApplications =
+            rows.map((r) => _applicationFromRow(r, reviewerNames)).toList();
         return List.unmodifiable(_cachedApplications);
       } catch (e) {
         debugPrint('Supabase loadApplications failed, falling back: $e');
@@ -124,8 +124,8 @@ class AdminDatabaseService {
       try {
         final List<dynamic> decoded = jsonDecode(rawJson);
         _cachedApplications = decoded
-            .map((item) =>
-                BroadcasterApplicationModel.fromJson(item as Map<String, dynamic>))
+            .map((item) => BroadcasterApplicationModel.fromJson(
+                item as Map<String, dynamic>))
             .toList();
         return List.unmodifiable(_cachedApplications);
       } catch (e) {
@@ -158,11 +158,12 @@ class AdminDatabaseService {
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
       await _client.storage.from('streamer-assets').uploadBinary(
-        path,
-        fileBytes,
-        fileOptions: FileOptions(contentType: contentType, upsert: true),
-      );
-      final publicUrl = _client.storage.from('streamer-assets').getPublicUrl(path);
+            path,
+            fileBytes,
+            fileOptions: FileOptions(contentType: contentType, upsert: true),
+          );
+      final publicUrl =
+          _client.storage.from('streamer-assets').getPublicUrl(path);
       return publicUrl;
     } catch (e) {
       debugPrint('uploadStreamerAsset failed: $e');
@@ -170,7 +171,8 @@ class AdminDatabaseService {
     }
   }
 
-  Future<void> submitApplication(BroadcasterApplicationModel application) async {
+  Future<void> submitApplication(
+      BroadcasterApplicationModel application) async {
     if (_useSupabase) {
       try {
         final applicantId = _client.auth.currentUser?.id;
@@ -236,7 +238,8 @@ class AdminDatabaseService {
           }
         }
 
-        final reviewerNames = await _resolveDisplayNames([row['reviewed_by'] as String?]);
+        final reviewerNames =
+            await _resolveDisplayNames([row['reviewed_by'] as String?]);
         final updated = _applicationFromRow(row, reviewerNames);
         final idx = _cachedApplications.indexWhere((a) => a.id == id);
         if (idx != -1) {
@@ -264,7 +267,8 @@ class AdminDatabaseService {
     return updated;
   }
 
-  Future<BroadcasterApplicationModel?> loadMyApplication(String profileId) async {
+  Future<BroadcasterApplicationModel?> loadMyApplication(
+      String profileId) async {
     if (!_useSupabase || !_looksLikeUuid(profileId)) return null;
     try {
       final rows = await _client
@@ -333,7 +337,8 @@ class AdminDatabaseService {
           final applicantProfileId = appRow?['applicant_profile_id'] as String?;
           final actualAppId = appRow?['id'] as String? ?? cleanId;
 
-          if (applicantProfileId != null && _looksLikeUuid(applicantProfileId)) {
+          if (applicantProfileId != null &&
+              _looksLikeUuid(applicantProfileId)) {
             await _client.from('profiles').update({
               'is_streamer': false,
               'is_verified': false,
@@ -391,7 +396,10 @@ class AdminDatabaseService {
           }).eq('id', applicantId);
 
           try {
-            await _client.from('organizations').delete().eq('owner_profile_id', applicantId);
+            await _client
+                .from('organizations')
+                .delete()
+                .eq('owner_profile_id', applicantId);
           } catch (_) {}
         }
 
@@ -500,7 +508,8 @@ class AdminDatabaseService {
   /// Batch-resolves profile ids to a display string ("Name" or the email if
   /// no display name is set), used for reviewed_by (a uuid FK server-side,
   /// but a display string in BroadcasterApplicationModel).
-  Future<Map<String, String>> _resolveDisplayNames(Iterable<String?> ids) async {
+  Future<Map<String, String>> _resolveDisplayNames(
+      Iterable<String?> ids) async {
     final uniqueIds = ids.whereType<String>().toSet();
     if (uniqueIds.isEmpty) return {};
     try {
@@ -533,8 +542,9 @@ class AdminDatabaseService {
           query = query.eq('organization_id', organizationId as Object);
         }
         final rows = await query.order('created_at', ascending: false);
-        _cachedAuditLogs =
-            (rows as List).map((r) => _auditLogFromRow(r as Map<String, dynamic>)).toList();
+        _cachedAuditLogs = (rows as List)
+            .map((r) => _auditLogFromRow(r as Map<String, dynamic>))
+            .toList();
         return List.unmodifiable(_cachedAuditLogs);
       } catch (e) {
         debugPrint('Supabase loadAuditLogs failed, falling back: $e');
@@ -580,8 +590,9 @@ class AdminDatabaseService {
     if (_useSupabase) {
       try {
         await _client.rpc('log_audit_event', params: {
-          'p_organization_id':
-              _looksLikeUuid(entry.organizationId) ? entry.organizationId : null,
+          'p_organization_id': _looksLikeUuid(entry.organizationId)
+              ? entry.organizationId
+              : null,
           'p_action': entry.action.name,
           'p_description_en': entry.descriptionEn,
           'p_description_ar': entry.descriptionAr,
@@ -721,8 +732,10 @@ class AdminDatabaseService {
       lastUpdated: DateTime.parse(row['last_updated'] as String),
       termsOfServiceEn: row['terms_of_service_en'] as String? ?? '',
       termsOfServiceAr: row['terms_of_service_ar'] as String? ?? '',
-      broadcasterGuidelinesEn: row['broadcaster_guidelines_en'] as String? ?? '',
-      broadcasterGuidelinesAr: row['broadcaster_guidelines_ar'] as String? ?? '',
+      broadcasterGuidelinesEn:
+          row['broadcaster_guidelines_en'] as String? ?? '',
+      broadcasterGuidelinesAr:
+          row['broadcaster_guidelines_ar'] as String? ?? '',
       privacyPolicyEn: row['privacy_policy_en'] as String? ?? '',
       privacyPolicyAr: row['privacy_policy_ar'] as String? ?? '',
     );
@@ -817,7 +830,8 @@ class AdminDatabaseService {
           (row['total_registered_google_users'] as num?)?.toInt() ?? 0,
       totalLectureBookmarks:
           (row['total_lecture_bookmarks'] as num?)?.toInt() ?? 0,
-      totalAuditoriumRsvps: (row['total_auditorium_rsvps'] as num?)?.toInt() ?? 0,
+      totalAuditoriumRsvps:
+          (row['total_auditorium_rsvps'] as num?)?.toInt() ?? 0,
       totalBroadcastHours:
           (row['total_broadcast_hours'] as num?)?.toDouble() ?? 0,
       activeViewersLive: (row['active_viewers_live'] as num?)?.toInt() ?? 0,
@@ -843,14 +857,15 @@ class AdminDatabaseService {
           query = query.eq('streamer_profile_id', streamerId as Object);
         }
         final rows = await query.order('created_at', ascending: false);
-        _cachedAffiliationRequests =
-            await _affiliationsFromRows((rows as List).cast<Map<String, dynamic>>());
+        _cachedAffiliationRequests = await _affiliationsFromRows(
+            (rows as List).cast<Map<String, dynamic>>());
         return List.unmodifiable(_cachedAffiliationRequests);
       } catch (e) {
         debugPrint('Supabase loadAffiliationRequests failed, falling back: $e');
       }
     }
-    return _loadAffiliationRequestsFallback(orgId: orgId, streamerId: streamerId);
+    return _loadAffiliationRequestsFallback(
+        orgId: orgId, streamerId: streamerId);
   }
 
   Future<List<OrgAffiliationRequestModel>> _loadAffiliationRequestsFallback({
@@ -878,9 +893,8 @@ class AdminDatabaseService {
     }
 
     if (orgId != null && orgId.isNotEmpty) {
-      return List.unmodifiable(_cachedAffiliationRequests
-          .where((r) => r.orgId == orgId)
-          .toList());
+      return List.unmodifiable(
+          _cachedAffiliationRequests.where((r) => r.orgId == orgId).toList());
     }
 
     if (streamerId != null && streamerId.isNotEmpty) {
@@ -912,7 +926,8 @@ class AdminDatabaseService {
         _upsertCachedAffiliation(request);
         return;
       } catch (e) {
-        debugPrint('Supabase submitAffiliationRequest failed, falling back: $e');
+        debugPrint(
+            'Supabase submitAffiliationRequest failed, falling back: $e');
       }
     }
     _upsertCachedAffiliation(request);
@@ -948,7 +963,8 @@ class AdminDatabaseService {
         _upsertCachedAffiliation(updated);
         return updated;
       } catch (e) {
-        debugPrint('Supabase updateAffiliationRequestStatus failed, falling back: $e');
+        debugPrint(
+            'Supabase updateAffiliationRequestStatus failed, falling back: $e');
       }
     }
 
@@ -986,7 +1002,8 @@ class AdminDatabaseService {
     if (rows.isEmpty) return [];
 
     final orgIds = rows.map((r) => r['organization_id'] as String).toSet();
-    final streamerIds = rows.map((r) => r['streamer_profile_id'] as String).toSet();
+    final streamerIds =
+        rows.map((r) => r['streamer_profile_id'] as String).toSet();
 
     Map<String, Map<String, dynamic>> orgs = {};
     Map<String, Map<String, dynamic>> streamers = {};
@@ -1028,7 +1045,8 @@ class AdminDatabaseService {
         proposedRoleEn: row['proposed_role_en'] as String?,
         proposedRoleAr: row['proposed_role_ar'] as String?,
         note: row['note'] as String? ?? '',
-        direction: AffiliationDirection.values.byName(row['direction'] as String),
+        direction:
+            AffiliationDirection.values.byName(row['direction'] as String),
         status: AffiliationStatus.values.byName(row['status'] as String),
         permissions: row['permissions'] != null
             ? OrgBroadcasterPermissions.fromJson(
@@ -1057,7 +1075,8 @@ class AdminDatabaseService {
         streamerEmail: 'amir.alhatemi@gmail.com',
         proposedRoleEn: 'AI & Educational Technology Guest Lecturer',
         proposedRoleAr: 'محاضر زائر في الذكاء الاصطناعي والتقنيات التعليمية',
-        note: 'Honored to collaborate on IELTS technology seminars and digital speaking workshops.',
+        note:
+            'Honored to collaborate on IELTS technology seminars and digital speaking workshops.',
         direction: AffiliationDirection.streamerToOrg,
         status: AffiliationStatus.pending,
         createdAt: DateTime.now().subtract(const Duration(hours: 5)),
@@ -1075,7 +1094,8 @@ class AdminDatabaseService {
         id: 'app_kfupm_ai_01',
         accountType: ApplicationAccountType.organizationVenue,
         applicantNameEn: 'KFUPM AI & Robotics Research Center',
-        applicantNameAr: 'مركز بحوث الذكاء الاصطناعي والروبوتات بجامعة الملك فهد',
+        applicantNameAr:
+            'مركز بحوث الذكاء الاصطناعي والروبوتات بجامعة الملك فهد',
         email: 'ai.center@kfupm.edu.sa',
         phone: '+966 13 860 0000',
         academicTitleEn: 'Research Institution & Venue',
@@ -1142,8 +1162,10 @@ class AdminDatabaseService {
         actorEmail: 'amir.alhatemi@gmail.com',
         actorName: 'Amir Al-Hatemi (Super Admin)',
         action: OrgAuditAction.createOrganization,
-        descriptionEn: 'Verified and approved Dalilk 4 IELTS academic organization workspace.',
-        descriptionAr: 'تم اعتماد وتوثيق مساحة عمل أكاديمية دليل الآيلتس التعليمية.',
+        descriptionEn:
+            'Verified and approved Dalilk 4 IELTS academic organization workspace.',
+        descriptionAr:
+            'تم اعتماد وتوثيق مساحة عمل أكاديمية دليل الآيلتس التعليمية.',
         metadata: const {
           'org_id': 'org_dalilk_04',
           'youtube_handle': 'dalilk4ielts',
@@ -1156,8 +1178,10 @@ class AdminDatabaseService {
         actorEmail: 'abdulrahman@dalilk.com',
         actorName: 'Abdulrahman Hejazi (Owner)',
         action: OrgAuditAction.addSpeakerToRoster,
-        descriptionEn: 'Added Dr. Sarah Al-Dosari to Dalilk 4 IELTS speaker roster with broadcast permissions.',
-        descriptionAr: 'تمت إضافة د. سارة الدوسري إلى قائمة مدربي دليل الآيلتس مع صلاحيات البث المباشر.',
+        descriptionEn:
+            'Added Dr. Sarah Al-Dosari to Dalilk 4 IELTS speaker roster with broadcast permissions.',
+        descriptionAr:
+            'تمت إضافة د. سارة الدوسري إلى قائمة مدربي دليل الآيلتس مع صلاحيات البث المباشر.',
         metadata: const {
           'speaker_id': 'spk_sarah',
           'role': 'Senior IELTS Speaking & Writing Specialist',
@@ -1170,8 +1194,10 @@ class AdminDatabaseService {
         actorEmail: 'abdulrahman@dalilk.com',
         actorName: 'Abdulrahman Hejazi (Owner)',
         action: OrgAuditAction.addVenueBranch,
-        descriptionEn: 'Added Dhahran Tech Innovation Hall and Dammam Executive Training Suite campus branches.',
-        descriptionAr: 'تمت إضافة فرعي قاعة الابتكار بالظهران وجناح التدريب التنفيذي بالدمام.',
+        descriptionEn:
+            'Added Dhahran Tech Innovation Hall and Dammam Executive Training Suite campus branches.',
+        descriptionAr:
+            'تمت إضافة فرعي قاعة الابتكار بالظهران وجناح التدريب التنفيذي بالدمام.',
         metadata: const {
           'branches': ['dalilk_branch_dhahran', 'dalilk_branch_dammam'],
         },
@@ -1354,20 +1380,24 @@ class AdminDatabaseService {
     String ownerProfileId,
   ) async {
     if (!_useSupabase) throw Exception('Supabase not available');
-    final row = await _client.from('organizations').insert({
-      'owner_profile_id': ownerProfileId,
-      'name_en': app.applicantNameEn,
-      'name_ar': app.applicantNameAr,
-      'avatar_url': app.avatarUrl,
-      'banner_url': app.bannerUrl,
-      'bio_en': app.bioEn,
-      'bio_ar': app.bioAr,
-      'category_id': app.categoryId,
-      'tags': app.tags,
-      'official_website_url': app.officialWebsiteUrl,
-      'youtube_handle': app.youtubeHandle,
-      'is_verified': true,
-    }).select('id').single();
+    final row = await _client
+        .from('organizations')
+        .insert({
+          'owner_profile_id': ownerProfileId,
+          'name_en': app.applicantNameEn,
+          'name_ar': app.applicantNameAr,
+          'avatar_url': app.avatarUrl,
+          'banner_url': app.bannerUrl,
+          'bio_en': app.bioEn,
+          'bio_ar': app.bioAr,
+          'category_id': app.categoryId,
+          'tags': app.tags,
+          'official_website_url': app.officialWebsiteUrl,
+          'youtube_handle': app.youtubeHandle,
+          'is_verified': true,
+        })
+        .select('id')
+        .single();
     return row['id'] as String;
   }
 
@@ -1411,23 +1441,31 @@ class AdminDatabaseService {
 
       for (final row in streamerRows) {
         final id = row['id'] as String;
-        final nameEn = (row['display_name_en'] as String?) ?? 'Academic Scholar';
+        final nameEn =
+            (row['display_name_en'] as String?) ?? 'Academic Scholar';
         final nameAr = (row['display_name_ar'] as String?) ?? nameEn;
-        final avatar = (row['avatar_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
-        final banner = (row['banner_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        final avatar = (row['avatar_url'] as String?) ??
+            'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
+        final banner = (row['banner_url'] as String?) ??
+            'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
         final bioEn = (row['bio_en'] as String?) ?? '';
         final bioAr = (row['bio_ar'] as String?) ?? '';
         final titleEn = (row['title_en'] as String?) ?? 'Academic Scholar';
         final titleAr = (row['title_ar'] as String?) ?? 'محاضر وباحث أكاديمي';
         final categoryId = (row['category_id'] as String?) ?? 'general_edu';
-        final tagsList = (row['tags'] as List<dynamic>?)?.map((t) => t.toString()).toList() ?? const <String>[];
+        final tagsList = (row['tags'] as List<dynamic>?)
+                ?.map((t) => t.toString())
+                .toList() ??
+            const <String>[];
         final cityEn = (row['city_en'] as String?) ?? 'Al Khobar';
         final cityAr = (row['city_ar'] as String?) ?? 'الخبر';
-        final venueEn = (row['venue_name_en'] as String?) ?? 'Academic Auditorium';
+        final venueEn =
+            (row['venue_name_en'] as String?) ?? 'Academic Auditorium';
         final venueAr = (row['venue_name_ar'] as String?) ?? 'قاعة المحاضرات';
         final lat = (row['latitude'] as num?)?.toDouble() ?? 26.2871;
         final lng = (row['longitude'] as num?)?.toDouble() ?? 50.2125;
-        final ytHandle = (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
+        final ytHandle =
+            (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
         final ytVideoId = (row['youtube_video_id'] as String?) ?? 'dQw4w9WgXcQ';
         final isLive = (row['is_currently_live'] as bool?) ?? false;
         final isVerified = (row['is_verified'] as bool?) ?? true;
@@ -1457,7 +1495,8 @@ class AdminDatabaseService {
             latitude: lat,
             longitude: lng,
             isCurrentlyLive: isLive,
-            broadcastType: isLive ? BroadcastType.liveAudio : BroadcastType.offline,
+            broadcastType:
+                isLive ? BroadcastType.liveAudio : BroadcastType.offline,
             isOrganization: false,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
@@ -1479,15 +1518,22 @@ class AdminDatabaseService {
 
       for (final row in orgRows) {
         final id = row['id'] as String;
-        final nameEn = (row['name_en'] as String?) ?? 'Educational Organization';
+        final nameEn =
+            (row['name_en'] as String?) ?? 'Educational Organization';
         final nameAr = (row['name_ar'] as String?) ?? nameEn;
-        final avatar = (row['avatar_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
-        final banner = (row['banner_url'] as String?) ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        final avatar = (row['avatar_url'] as String?) ??
+            'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        final banner = (row['banner_url'] as String?) ??
+            'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
         final bioEn = (row['bio_en'] as String?) ?? '';
         final bioAr = (row['bio_ar'] as String?) ?? '';
         final categoryId = (row['category_id'] as String?) ?? 'general_edu';
-        final tagsList = (row['tags'] as List<dynamic>?)?.map((t) => t.toString()).toList() ?? const <String>[];
-        final ytHandle = (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
+        final tagsList = (row['tags'] as List<dynamic>?)
+                ?.map((t) => t.toString())
+                .toList() ??
+            const <String>[];
+        final ytHandle =
+            (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
         final ytVideoId = (row['youtube_video_id'] as String?) ?? 'dQw4w9WgXcQ';
         final isLive = (row['is_currently_live'] as bool?) ?? false;
         final isVerified = (row['is_verified'] as bool?) ?? true;
@@ -1517,7 +1563,8 @@ class AdminDatabaseService {
             latitude: 26.2871,
             longitude: 50.2125,
             isCurrentlyLive: isLive,
-            broadcastType: isLive ? BroadcastType.liveAudio : BroadcastType.offline,
+            broadcastType:
+                isLive ? BroadcastType.liveAudio : BroadcastType.offline,
             isOrganization: true,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
@@ -1545,9 +1592,8 @@ class AdminDatabaseService {
   }) async {
     if (!_useSupabase) throw Exception('Supabase not available');
     final table = isOrganization ? 'organizations' : 'profiles';
-    await _client
-        .from(table)
-        .update({'is_temporarily_hidden_from_map': hidden}).eq('id', streamerId);
+    await _client.from(table).update(
+        {'is_temporarily_hidden_from_map': hidden}).eq('id', streamerId);
   }
 
   // ==========================================
@@ -1901,7 +1947,8 @@ class AdminDatabaseService {
       }).toList()
         ..sort((a, b) => b.lastMutedAt.compareTo(a.lastMutedAt));
     } on PostgrestException catch (e) {
-      debugPrint('loadMutedChattersAuditLog PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'loadMutedChattersAuditLog PostgrestException: ${e.code} ${e.message}');
       return const [];
     } catch (e) {
       debugPrint('loadMutedChattersAuditLog error: $e');
@@ -1927,7 +1974,8 @@ class AdminDatabaseService {
           .order('sort_order');
       return rows.map((r) => AcademicCategoryModel.fromJson(r)).toList();
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.loadAcademicCategories PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.loadAcademicCategories PostgrestException: ${e.code} ${e.message}');
       return const [];
     } catch (e) {
       debugPrint('AdminDatabaseService.loadAcademicCategories error: $e');
@@ -1940,7 +1988,8 @@ class AdminDatabaseService {
     try {
       await _client.from('academic_categories').upsert(category.toJson());
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.saveAcademicCategory PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.saveAcademicCategory PostgrestException: ${e.code} ${e.message}');
       rethrow;
     }
   }
@@ -1950,7 +1999,8 @@ class AdminDatabaseService {
     try {
       await _client.from('academic_categories').delete().eq('id', id);
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.deleteAcademicCategory PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.deleteAcademicCategory PostgrestException: ${e.code} ${e.message}');
       rethrow;
     }
   }
@@ -1968,11 +2018,14 @@ class AdminDatabaseService {
   Future<List<TagModerationModel>> loadAllTags() async {
     if (!_useSupabase) return const [];
     try {
-      final rows =
-          await _client.from('tags').select().order('created_at', ascending: false);
+      final rows = await _client
+          .from('tags')
+          .select()
+          .order('created_at', ascending: false);
       return rows.map((r) => TagModerationModel.fromRow(r)).toList();
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.loadAllTags PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.loadAllTags PostgrestException: ${e.code} ${e.message}');
       return const [];
     } catch (e) {
       debugPrint('AdminDatabaseService.loadAllTags error: $e');
@@ -1988,7 +2041,8 @@ class AdminDatabaseService {
           await _client.from('tags').select('name').eq('status', 'approved');
       return rows.map((r) => r['name'] as String).toList();
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.loadApprovedTagNames PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.loadApprovedTagNames PostgrestException: ${e.code} ${e.message}');
       return const [];
     } catch (e) {
       debugPrint('AdminDatabaseService.loadApprovedTagNames error: $e');
@@ -2067,12 +2121,9 @@ class AdminDatabaseService {
           .select('id, tags')
           .contains('tags', [oldName]);
       for (final row in rows) {
-        final currentTags =
-            List<String>.from(row['tags'] as List? ?? const []);
-        final updatedTags = currentTags
-            .map((t) => t == oldName ? newName : t)
-            .toSet()
-            .toList();
+        final currentTags = List<String>.from(row['tags'] as List? ?? const []);
+        final updatedTags =
+            currentTags.map((t) => t == oldName ? newName : t).toSet().toList();
         await _client
             .from(table)
             .update({'tags': updatedTags}).eq('id', row['id'] as String);
@@ -2152,8 +2203,10 @@ class AdminDatabaseService {
   Future<List<BannedUserModel>> loadBannedUsers() async {
     if (!_useSupabase) return const [];
     try {
-      final rows =
-          await _client.from('banned_users').select().order('banned_at', ascending: false);
+      final rows = await _client
+          .from('banned_users')
+          .select()
+          .order('banned_at', ascending: false);
       if (rows.isEmpty) return const [];
 
       final profileIds = rows.map((r) => r['profile_id'] as String).toSet();
@@ -2176,7 +2229,8 @@ class AdminDatabaseService {
         );
       }).toList();
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.loadBannedUsers PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.loadBannedUsers PostgrestException: ${e.code} ${e.message}');
       return const [];
     } catch (e) {
       debugPrint('AdminDatabaseService.loadBannedUsers error: $e');
@@ -2209,7 +2263,8 @@ class AdminDatabaseService {
         onConflict: 'profile_id',
       );
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.banAccountPlatformWide PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.banAccountPlatformWide PostgrestException: ${e.code} ${e.message}');
       rethrow;
     }
   }
@@ -2219,7 +2274,8 @@ class AdminDatabaseService {
     try {
       await _client.from('banned_users').delete().eq('profile_id', profileId);
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.unbanAccount PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.unbanAccount PostgrestException: ${e.code} ${e.message}');
       rethrow;
     }
   }
@@ -2265,7 +2321,8 @@ class AdminDatabaseService {
         );
       }).toList();
     } on PostgrestException catch (e) {
-      debugPrint('AdminDatabaseService.loadStreamModerators PostgrestException: ${e.code} ${e.message}');
+      debugPrint(
+          'AdminDatabaseService.loadStreamModerators PostgrestException: ${e.code} ${e.message}');
       return const [];
     } catch (e) {
       debugPrint('AdminDatabaseService.loadStreamModerators error: $e');
@@ -2370,7 +2427,8 @@ class AdminDatabaseService {
 
   /// Every card this signed-in streamer has submitted, newest first, in any
   /// status -- what the editor sheet needs to show Pending/Approved/Rejected.
-  Future<List<StreamerCustomPlaceholderModel>> loadMyCustomPlaceholders() async {
+  Future<List<StreamerCustomPlaceholderModel>>
+      loadMyCustomPlaceholders() async {
     if (!_useSupabase) return const [];
     final streamerId = _client.auth.currentUser?.id;
     if (streamerId == null) return const [];
@@ -2506,8 +2564,7 @@ class AdminDatabaseService {
           joined.complete();
         }
       });
-      await joined.future.timeout(const Duration(seconds: 3),
-          onTimeout: () {});
+      await joined.future.timeout(const Duration(seconds: 3), onTimeout: () {});
       await channel.sendBroadcastMessage(
         event: 'streamer_deleted',
         payload: {'streamerId': streamerId},
@@ -2532,14 +2589,13 @@ class AdminDatabaseService {
   }) async {
     if (!_useSupabase) return;
     try {
-      await _client.from('device_sessions').upsert({
-        'user_id': userId,
-        'device_id': session.deviceId,
-        'device_name': session.deviceName,
-        'platform': session.platform,
-        'is_primary_broadcaster': session.isPrimaryBroadcaster,
-        'last_active_at': session.lastActiveAt.toUtc().toIso8601String(),
-      });
+      if (!session.isPrimaryBroadcaster) {
+        await _client.rpc('release_broadcaster_device', params: {
+          'p_device_id': session.deviceId,
+        });
+      } else {
+        await heartbeatDevice(session.deviceId);
+      }
     } catch (e) {
       debugPrint('upsertDeviceSession failed: $e');
     }
@@ -2559,6 +2615,12 @@ class AdminDatabaseService {
           .eq('user_id', userId)
           .eq('is_primary_broadcaster', true)
           .neq('device_id', currentDeviceId)
+          .gt(
+              'last_active_at',
+              DateTime.now()
+                  .toUtc()
+                  .subtract(const Duration(seconds: 90))
+                  .toIso8601String())
           .limit(1);
       if (rows.isEmpty) return null;
       final row = rows.first;
@@ -2566,8 +2628,9 @@ class AdminDatabaseService {
         deviceId: row['device_id'] as String,
         deviceName: row['device_name'] as String? ?? 'Unknown Device',
         platform: row['platform'] as String? ?? 'unknown',
-        lastActiveAt: DateTime.tryParse(row['last_active_at'] as String? ?? '') ??
-            DateTime.now(),
+        lastActiveAt:
+            DateTime.tryParse(row['last_active_at'] as String? ?? '') ??
+                DateTime.now(),
         isPrimaryBroadcaster: true,
       );
     } catch (e) {
@@ -2576,22 +2639,44 @@ class AdminDatabaseService {
     }
   }
 
-  /// Demotes every other device row for this account off primary-broadcaster
-  /// status -- called once the user picks "Transfer Broadcaster to This
-  /// Device" so the losing device's own next check reflects the handoff.
-  Future<void> demoteOtherDeviceSessions({
-    required String userId,
-    required String keepDeviceId,
-  }) async {
-    if (!_useSupabase) return;
-    try {
-      await _client
-          .from('device_sessions')
-          .update({'is_primary_broadcaster': false})
-          .eq('user_id', userId)
-          .neq('device_id', keepDeviceId);
-    } catch (e) {
-      debugPrint('demoteOtherDeviceSessions failed: $e');
-    }
+  Future<bool> claimDevice(DeviceSessionModel device,
+      {bool force = false}) async {
+    if (!_useSupabase) return false;
+    return await _client.rpc('claim_broadcaster_device', params: {
+          'p_device_id': device.deviceId,
+          'p_name': device.deviceName,
+          'p_platform': device.platform,
+          'p_force': force,
+        }) ==
+        true;
+  }
+
+  Future<bool> heartbeatDevice(String deviceId) async {
+    if (!_useSupabase) return false;
+    return await _client
+            .rpc('device_heartbeat', params: {'p_device_id': deviceId}) ==
+        true;
+  }
+
+  Stream<List<DeviceSessionModel>> watchDevices(String userId) => _client
+      .from('device_sessions')
+      .stream(primaryKey: ['user_id', 'device_id'])
+      .eq('user_id', userId)
+      .map((rows) => rows.map(DeviceSessionModel.fromJson).toList());
+
+  Future<void> setLiveState(
+      {required bool live,
+      required String type,
+      required String? streamId,
+      required String deviceId,
+      String? orgId}) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    await _client.rpc('set_live_state', params: {
+      'p_live': live,
+      'p_type': type,
+      'p_stream_id': streamId,
+      'p_device_id': deviceId,
+      'p_org_id': orgId,
+    });
   }
 }

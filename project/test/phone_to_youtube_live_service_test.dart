@@ -57,7 +57,9 @@ void main() {
   });
 
   group('Phone-to-YouTube Live: AppProvider.startQuickPhoneBroadcast', () {
-    test('TC-QGL-01: configures every broadcast field and goes live', () async {
+    test(
+        'TC-QGL-01: configures fields but cannot go live without a primary session',
+        () async {
       final provider = AppProvider();
       expect(provider.isBroadcastingLive, isFalse);
 
@@ -69,7 +71,7 @@ void main() {
         quality: BroadcastQualityPreset.high,
       );
 
-      expect(success, isTrue);
+      expect(success, isFalse);
       expect(provider.customLiveTitle, equals('AI & Machine Learning Lecture'));
       expect(provider.customLiveCategory, equals('cs_tech'));
       expect(provider.customLiveVenue, equals('KFUPM Auditorium 21'));
@@ -80,7 +82,8 @@ void main() {
       expect(provider.phoneBroadcastRtmpUrl,
           equals('rtmp://a.rtmp.youtube.com/live2'));
       expect(provider.phoneBroadcastStreamKey, isNotEmpty);
-      expect(provider.isBroadcastingLive, isTrue);
+      expect(provider.isBroadcastingLive, isFalse);
+      expect(provider.broadcastSessionError, 'broadcast_primary_required');
     });
 
     test(
@@ -97,12 +100,11 @@ void main() {
       );
 
       expect(provider.customBroadcastType, equals(BroadcastType.liveAudio));
-      expect(provider.isBroadcastingLive, isTrue);
+      expect(provider.isBroadcastingLive, isFalse);
     });
 
-    test(
-        'TC-QGL-03: ending a quick-live broadcast flips isBroadcastingLive '
-        'back off cleanly (endBroadcastSession hook)', () async {
+    test('TC-QGL-03: denied quick-live remains offline on a second toggle',
+        () async {
       final provider = AppProvider();
       await provider.startQuickPhoneBroadcast(
         title: 'Test Lecture',
@@ -111,7 +113,7 @@ void main() {
         isAudioOnly: false,
         quality: BroadcastQualityPreset.low,
       );
-      expect(provider.isBroadcastingLive, isTrue);
+      expect(provider.isBroadcastingLive, isFalse);
 
       await provider.toggleBroadcasterGoLive();
       expect(provider.isBroadcastingLive, isFalse);
