@@ -1,0 +1,27 @@
+# OPUS PROMPT: one Claude Code session at 85 % of the 5-hour limit
+
+Owner checklist (3 minutes, before pasting)
+1. Wait until your Claude 5-hour window has reset, so `used_5h` starts near 0. This account-wide meter also counts chats such as Cowork, so avoid heavy side chats while the run is going.
+2. From the repo root: `claude --model opus --permission-mode acceptEdits --settings brief/claude_settings.json`. If your version shows an effort setting, pick high (05 D-23); otherwise leave the default. Do not change model or effort afterwards.
+3. Send one throw-away message ("hi") and check the status line reads like `5h nn% (reset nnm) | 7d nn% | cache 1h warm`. `5h n/a` means the meter is unreadable: stop and see 04 section A. If the weekly `7d` value is 90 or more, do not start.
+4. Keep the terminal open and answer permission prompts (the 1-hour cache only stays warm while requests keep flowing). One agent at a time on the repo: do not start Astra until this session has stopped and left the tree clean.
+5. Optional but valuable: install Docker Desktop first. Then the run can execute the 49 SQL assertions (`npx supabase start`, `npx supabase test db`) instead of leaving them unverified.
+
+--- paste from here ---
+MODE: NEW_BUDGET   (Claude Code, Opus, one fresh 5-hour window)
+OWNER_CAP=85
+
+You are Claude Code resuming an autonomous hardening run on Streamer_app (Flutter + Supabase, Arabic/English RTL, Android). Nobody will answer questions mid-run: decide with `brief/05_DECISIONS.md`, log one line in the ledger, continue.
+
+1. BUDGET (binding, outranks finishing). Read `brief/04_BUDGET_PROTOCOL.md` sections B, C, E and I first. Step 0: `node brief/tools/budget_check.mjs --plan single --new-run --cap 85 --source claude` (once). It must report `window=1 cap=85 cap_source=owner soft=79`. If `used_5h` is already above 25, stop and tell the owner there is not enough room. Then run `node brief/tools/budget_check.mjs --plan single --cap 85 --source claude` at every phase start, every 10-15 tool calls, after any command over 2 minutes and before a full test run. OK: continue. SOFT: finish only the step in progress, checkpoint, start nothing new. STOP: start nothing, reach a safe state. UNKNOWN: make one cheap call, retry once, then use the status line's numbers with `--live-used N --live-weekly W --live-resets-in-min R` (04 section I); still UNKNOWN: stop. Never wait or nap, never edit the meter, its caps or `.runtime`. Weekly 90 or more stops.
+2. Session hygiene: no model, effort, plugin or MCP change, no manual `/compact`, no subagents (one read-only Explore at most, for a repo-wide question the docs cannot answer).
+3. Read only: the last RESUME block in `brief/LEDGER.md`, the two supervisor notes and the window-2 section in `brief/OVERRUN_REPORT.md`, the current phase in `brief/03_WORK_PLAN.md`, `brief/05_DECISIONS.md`. Open `01`, `02`, `06` only when a step needs them.
+4. Git: `git --no-optional-locks status` and `git stash list`. The two owner stashes are historical: never apply, pop or drop them. Never push. Stage by explicit path, never `git add -A`; never stage `.serena/`, `.claude/`, `.codex/`, `_to_delete/`, `brief/.runtime/`, `dart_define.local.json` or `key.properties`.
+5. Baseline: do not re-run the full suite at entry. The evidence at commit b61b3f7 (analyzer 0, 268 tests, gates 16 failing) is the baseline; the RESUME block lists Astra's flutter flags if plain `flutter` stalls. Run analyze plus the tests you touch, and the full suite plus gates at each phase checkpoint.
+6. Docker: run `docker ps` once. If it works: `npx supabase start`, then `npx supabase test db`. This runs the 49 pgTAP assertions written so far (broadcaster_columns 9, streamer_assets 7, application_and_ban_guards 11, broadcast_sessions 22), so fix any failure before new work, then run `npx supabase db advisors --local --type security`. Otherwise SQL stays UNVERIFIED-STATIC and you say so.
+7. Work order: P1c first (P1.6 remove dev identity, the RPC ban audit, P1.10 RLS policy matrix and quality, plus the live-flag expiry follow-up written in the RESUME block), then P2, then P3, then later phases in plan order only if the forecast fits (a step must fit in headroom minus 3; measure your own burn after the first item, Opus does not burn like the Astra-based estimates). One commit per phase; checkpoint order: analyze, tests, gates, meter, commit, ledger.
+8. Same rules as before: local Supabase only, new migrations only (never edit old ones), ADR-006 embed and referrer untouched, the real custom placeholder cards feature stays, evidence tiers from 06 section 0 (never write "fixed" above the tier reached), owner-only steps go to `brief/OWNER_ACTIONS.md`, no secret or service key anywhere, Grep and line-range reads (use `graft` only if installed), never read a whole file over about 1,000 lines.
+9. Finish: begin the closing pass at SOFT (79) so it ends before 85. Tree clean; append short rows to `brief/LEDGER.md` (budget log, phase log, evidence, NOT DONE) and rewrite the RESUME block (15 lines at most; say harness = Claude Code Opus and that the next session may be Astra with `--source codex`); append a short section to `brief/OVERRUN_REPORT.md`. Never rewrite whole documents. Final chat message at most 12 lines.
+
+Begin with 04 Step 0.
+--- end ---

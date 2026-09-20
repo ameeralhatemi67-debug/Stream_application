@@ -10,52 +10,110 @@
 
 ## 📅 Roadmap Overview & Version Progression
 
+*Updated 2026-09-20. Sources: git history for the built versions, `brief/LEDGER.md` (agent-reported) and a re-run of `node brief/tools/gates.mjs` for the hardening run. Future dates are estimates, not promises: they assume one 5-hour agent window per day at 85-90 % of the limit and no rework.*
+
 ```mermaid
 gantt
-    title Streamer App Master Version & Checkpoint Timeline
+    title 1. Built so far (v0.1 to v0.95) and the pause before the audit
     dateFormat  YYYY-MM-DD
-    section Version 0.1 (Prototype)
-    CP 0.1: Spatial Discovery & Audio Stage   :done, 2026-07-25, 2026-07-31
-    section Version 0.2 (RTL & Audits)
-    CP 0.2: Arabic i18n & Security Audits    :done, 2026-08-01, 2026-08-08
-    section Version 0.3 (Sensory Polish)
-    CP 0.3: Equalizers & Notification Engine :done, 2026-08-09, 2026-08-15
-    section Version 0.4 (Zero-Crash Fallback)
-    CP 0.4: Viewport & Stream Hardening      :done, 2026-08-16, 2026-08-19
-    section Version 0.5 (Backend & RLS)
-    CP 0.5.1: Supabase Provision & Auth      :done, 2026-08-20, 2026-08-21
-    CP 0.5.2: Database Migration & RLS       :done, 2026-08-21, 2026-08-22
-    CP 0.5.3: AppProvider State Optimization :done, 2026-08-22, 2026-08-22
-    section Version 0.6 (Live Chat)
-    CP 0.6.1: Realtime Chat & Floating Emojis:done, 2026-08-22, 2026-08-23
-    CP 0.6.2: Moderation & Ghost Fallback    :done, 2026-08-23, 2026-08-23
-    section Version 0.7 (Mobile Streaming)
-    CP 0.7.1: Camera/Mic RTMP Ingest         :done, 2026-08-23, 2026-08-23
-    CP 0.7.2: Audio-Only & Foreground Service:done, 2026-08-23, 2026-08-24
-    section Version 0.8 (Admin Upgrade)
-    CP 0.8.1: Tiered RBAC & Granular Grants  :done, 2026-08-24, 2026-08-24
-    CP 0.8.2: Admin Hub & Chat Triage Queue  :done, 2026-08-24, 2026-08-25
-    section Version 0.9 (Settings & Legal)
-    CP 0.9.1: Role-Aware Settings & PDPL Deletion :done, 2026-08-25, 2026-08-27
-    CP 0.9.2: Go-Live Studio & Private Stream:done, 2026-08-27, 2026-08-28
-    section Version 0.95 (Deep Polish)
-    CP 0.95.1: Clusters 1 & 2 Viewport & GIS :done, 2026-08-29, 2026-08-30
-    CP 0.95.2: Clusters 3 & 4 Taxonomy & Mod :done, 2026-08-30, 2026-08-30
-    section Version 1.0 (Store Release)
-    CP 1.0.1: Cluster 5 Telemetry & DB Logs  :active, 2026-08-31, 2026-09-03
-    CP 1.0.2: Cluster 6 Mobile UI & Harmonize:2026-09-03, 2026-09-07
-    CP 1.0.3: First-Run Onboarding Tour      :2026-09-07, 2026-09-09
-    CP 1.0.4: Multi-Device & Role Governance :2026-09-09, 2026-09-12
-    CP 1.0.5: Tag Discovery & Chat Alerts    :2026-09-12, 2026-09-14
-    CP 1.0.6: Google Play Store Release      :2026-09-14, 2026-09-18
-    section Version 1.1 (iOS Integration)
-    CP 1.1.1: iOS Platform & Apple Sign-In   :2026-09-19, 2026-09-24
-    CP 1.1.2: iOS RTMP Broadcast & App Store :2026-09-24, 2026-09-30
+    axisFormat  %b %d
+    tickInterval 1week
+    section v0.1 to v0.4
+    CP 0.1 Spatial discovery and audio stage    :done, cp01, 2026-07-25, 2026-07-31
+    CP 0.2 Arabic i18n and audits               :done, cp02, 2026-08-01, 2026-08-08
+    CP 0.3 Equalizers and notifications         :done, cp03, 2026-08-09, 2026-08-15
+    CP 0.4 Viewport and stream hardening        :done, cp04, 2026-08-16, 2026-08-19
+    section v0.5 to v0.9
+    CP 0.5 Supabase auth, schema, RLS           :done, cp05, 2026-08-20, 2026-08-22
+    CP 0.6 Realtime chat and moderation         :done, cp06, 2026-08-22, 1d
+    CP 0.7 Phone RTMP and audio only            :done, cp07, 2026-08-22, 1d
+    CP 0.8 Tiered RBAC and admin hub            :done, cp08, 2026-08-23, 1d
+    CP 0.9 Settings, PDPL deletion, studio      :done, cp09, 2026-08-24, 2d
+    section v0.95 and pause
+    CP 0.95 Clusters 1 to 4 polish              :done, cp095, 2026-08-30, 2d
+    Multi-device and RTMP architecture commits  :done, arch, 2026-08-31, 2d
+    No commits (pause)                          :gap, 2026-09-02, 2026-09-16
+    Reality audit of the whole app              :done, audit, 2026-09-17, 3d
 ```
 
+```mermaid
+gantt
+    title 2. Hardening run: done, in progress, planned (estimate, one window per day)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+    tickInterval 1day
+    section Done (SQL and devices unverified)
+    Briefing framework and budget tooling       :done, brief, 2026-09-19, 2026-09-20
+    P0 Preflight and baseline                   :done, p0, 2026-09-20, 1d
+    P1a Guards, uploads, applications, bans     :done, p1a, 2026-09-20, 1d
+    P1b Live state and multi-device             :done, p1b, 2026-09-20, 1d
+    section Next
+    P1c Dev identity, ban audit, RLS review     :active, p1c, 2026-09-20, 2026-09-21
+    P2 Remove placeholders and simulations      :p2, 2026-09-21, 1d
+    P3 True viewer count                        :p3, 2026-09-21, 1d
+    section Planned
+    P4 White theme, emoji, responsive, i18n     :p4, 2026-09-21, 2026-09-23
+    P8A Android release blockers and identity   :p8a, 2026-09-22, 1d
+    P6 Chat, moderation, admin                  :p6, 2026-09-22, 2026-09-23
+    P5 Map and offline experience               :p5, 2026-09-23, 1d
+    P7 Organizations                            :p7, 2026-09-23, 2026-09-24
+    P8B Store and compliance package            :p8b, 2026-09-24, 1d
+    P9 Closeout and final gates                 :p9, 2026-09-24, 2026-09-25
+    section Owner only
+    Docker install and local SQL tests          :crit, own1, 2026-09-20, 2026-09-22
+    Pick design scheme A B or C                 :crit, own2, 2026-09-20, 2026-09-21
+```
+
+```mermaid
+gantt
+    title 3. Road to release (rough estimate, depends on owner steps)
+    dateFormat  YYYY-MM-DD
+    axisFormat  %b %d
+    tickInterval 1week
+    section Owner only
+    Two-phone tests and fixes                   :crit, r1, 2026-09-25, 2026-09-30
+    Keystore, Play Console, store listing       :crit, r2, 2026-09-25, 2026-10-02
+    Lawyer review and real Supabase push        :crit, r3, 2026-09-25, 2026-10-05
+    section Release
+    Version 1.0 Play Store submission           :r4, 2026-10-05, 2026-10-10
+    section Later
+    Version 1.1 iOS integration                 :r5, 2026-10-10, 2026-10-24
+```
+
+### Where the hardening run stands (2026-09-20)
+
+| Phase | Status | Evidence | Roadmap link |
+|---|---|---|---|
+| P0 Preflight | Done | analyzer 0 issues, tests 264 to 268 passing (agent-reported) | none |
+| P1a-b Guards, uploads, applications, bans, live state, multi-device | Done in source, SQL and phones unverified | commits 95b97fc, b61b3f7; 49 pgTAP assertions written, not run (no Docker) | CP 1.0.4, RLS follow-up to CP 0.5 |
+| P1c Dev identity, RPC ban audit, RLS policy review, live-flag expiry | Next | gate G1c = 26 dev-identity hits | CP 1.0.4 |
+| P2 Placeholders and simulations | Not started | G1a 25, G1b 3, G1e 16 | undoes simulated parts of CP 0.6.2.2 and 0.9.2.1 |
+| P3 True viewer count | Not started | G1d 3 | CP 1.0.1 |
+| P4 White theme, emoji, responsive, i18n | Not started, design scheme not chosen | G2a 1549, G3 244, G6 476 | CP 1.0.2 |
+| P8A Android release blockers | Not started | G4a 14, G4b 5, G8 1 | CP 1.0.6 |
+| P6 Chat, moderation, admin | Not started | none | CP 1.0.5 (part) |
+| P5 Map and offline | Not started | none | new (not in the old roadmap) |
+| P7 Organizations | Not started | none | new (not in the old roadmap) |
+| P8B Store and compliance package | Not started | none | CP 1.0.6 (part); not legal certification |
+| P9 Closeout | Not started | none | none |
+
+Not in the hardening plan and still open from this roadmap: CP 1.0.3 (first-run onboarding tour) and the tag explorer and alert thresholds of CP 1.0.5. Gate numbers are from the supervisor's re-run; analyzer and test counts were not re-run by the supervisor.
 ---
 
 ## 📝 Modification
+
+### 2026-09-20 — Hardening Run Reconciliation and Gantt Refresh
+
+**Finding:** A full reality audit (2026-09-17) showed that several roadmap items marked complete still rest on simulated data, client-writable privileged columns and hard-coded dev identities. A staged hardening run (phases P0 to P9 in `brief/03_WORK_PLAN.md`) began on 2026-09-20. P0 and most of P1 are committed; the new SQL has not been run because Docker is unavailable, and nothing has been tested on physical devices.
+
+**Effect:** The version gantt was split into three charts (built, hardening run, road to release) and given real dates from git. Version 1.0 checkpoints are not ticked until the matching hardening phase has evidence. The Play Store submission date moved from 2026-09-18 to an estimate of early October.
+
+**Changes Applied:**
+- Rebuilt the Overview charts and added a phase status table with gate numbers.
+- Corrected the CP 0.7, 0.8, 0.9 and 0.95 dates to the git history.
+- Added a status note under Version 1.0.
+
+---
 
 ### 2026-08-31 — Live Testing Feedback, Multi-Device Governance & Chat Alert Enhancements
 
@@ -429,6 +487,8 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 ---
 
 ## 🚀 Version 1.0 — Stream Telemetry, Mobile Harmony & Store Submission *(Active Sprint)*
+
+> Status note (2026-09-20): most tasks below map onto hardening phases P1 to P9 (see the Overview table). Boxes stay unticked until a phase has verified evidence; the multi-device SQL and the two-phone tests are still pending.
 
 ### Checkpoint 1.0.1: Stream Telemetry & Database Session Logging (Cluster 5) `[Backend & Security Track]`
 *Rule: Upon completion of Checkpoint 1.0.1, push snapshot to GitHub.*
