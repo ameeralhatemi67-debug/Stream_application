@@ -55,8 +55,8 @@
 - NOT DONE unchanged: P1.8,1.9,1.6,RPC ban audit,1.10 and P1.2/1.7 remain pending. Analyzer0/full266 passing are prior-checkpoint evidence only; no tests, gates or builds rerun in this retry.
 
 ## RESUME block
-- Next: P1.2 together with1.7, then remaining P1, in a FRESH session after reset using brief/RESUME_PROMPT.md with MODE: CONTINUE_SPLIT. Window2 cap60/soft54, never a third window.
-- Owner settings are committed. No application files in flight. Do not apply, pop or drop either historical owner stash.
-- First command: node brief/tools/budget_check.mjs --plan split, without --new-run. Cross-check live usage; STOP/UNKNOWN means start nothing. Stale-source selection remains unresolved and must not be mistaken for actual weekly exhaustion.
-- Latest bonus check: STOP, stale snapshot17657s, used1%, weekly98%, cap41; fresh live reading64%/10%. Only5min to reset, leaving1min before the mandatory4min buffer.
-- No application changes in this retry. Prior analyzer0/tests266 baseline retained; runtime SQL and release acceptance remain UNVERIFIED.
+- Next: P1.2 together with 1.7 (live-state + multi-device RPCs and client), then P1.8, 1.9, 1.6, the RPC ban audit, 1.10; then P2, P3, then later phases in plan order only if the forecast fits. FRESH session with `brief/RESUME_PROMPT.md`, `MODE: CONTINUE_SPLIT`, `OWNER_CAP=90` (owner-approved for window 2: cap 90, soft 84; never a third window; weekly >= 90 stops).
+- Window 1 is over. Tree is clean at the latest commit. The two owner stashes are historical (content already committed): never apply, pop or drop them.
+- Meter (fixed 2026-09-20, see 04 §I): first command `node brief/tools/budget_check.mjs --plan split --cap 90` (never `--new-run`), expect window=2 cap=90 soft=84; pass `--cap 90` on every check. A stale log reading is UNKNOWN, not STOP: read usage from the Codex display and add `--live-used N --live-weekly W --live-resets-in-min R`.
+- Baseline (Astra-reported, not re-run by the supervisor): analyzer 0, 266 tests, gates 17 failing vs 18 baseline. New SQL is UNVERIFIED-STATIC.
+- Bookkeeping: append short rows, do not rewrite documents; leave at least 6 points under the cap for the closing pass.

@@ -18,6 +18,16 @@
 //            soft = cap - 6; STOP when the window resets or fewer than 4 minutes remain (never cross the reset:
 //            the fresh window belongs to the split plan's window 2). Does not touch the split window counter.
 //   --new-run : forget earlier windows (use ONLY at Step 0 of a brand-new budget, never mid-run).
+//   --cap N   : owner-approved cap for the CURRENT window instead of the plan's default (max 90, soft = cap - 6).
+//            The owner sets it in the prompt (OWNER_CAP=N); the agent never picks it. Ignored by --plan bonus.
+//   --live-used N [--live-weekly W] [--live-resets-in-min R] : the agent's own reading of the harness usage display
+//            (Codex status line or /status), for when the log file lags. If a FRESH file reading exists the higher
+//            used% / weekly% wins; if the file is stale, all three are required and the live reading is used alone.
+//
+// Freshness rule (added 2026-09-20 after two false STOPs): a reading older than 15 min, or belonging to a window that has
+// already reset, is NOT a reading. It never produces STOP, never initialises a bonus, and never touches
+// brief/.runtime/budget_state.json; the answer is UNKNOWN plus how to re-run with --live-*. Window bookkeeping also refuses
+// a reading whose reset time is older than the recorded window, or a "new" window before the recorded one has ended.
 //
 // Plans (caps are ABSOLUTE account-wide 5-hour used_percentage, so they already include
 // anything else the user spent in the same window):
@@ -51,6 +61,11 @@ const bonusExtra = Math.min(40, Math.max(1, Number(arg('--extra', '40')) || 40))
 let plan = (arg('--plan', process.env.BUDGET_PLAN || 'single') || 'single').toLowerCase();
 const asJson = argv.includes('--json');
 const nap = Math.min(540, Math.max(0, Number(arg('--nap', '0')) || 0));
+const capRaw = arg('--cap', null);
+const liveUsedRaw = arg('--live-used', null);
+const liveWeeklyRaw = arg('--live-weekly', null);
+const liveResetsRaw = arg('--live-resets-in-min', null);
+const OWNER_CAP_MAX = 90;
 
 let CAPS = plan === 'split' ? [70, 60] : plan === 'bonus' ? [94, 94] : [80];
 const SOFT_MARGIN = 6;
@@ -207,12 +222,61 @@ function readClaudeSnapshot() {
     return;
   }
 
+  // --- optional live reading + argument checks (see header) ---
+  const fileFive = (s) => s && s.five_hour && Number.isFinite(s.five_hour.used_percentage) && Number.isFinite(s.five_hour.resets_at);
+  const fmt1 = (v) => (Number.isFinite(v) ? Number(v).toFixed(1) : '');
+  const staleInfo = fileFive(snap)
+    ? { stale_file_used_5h: fmt1(snap.five_hour.used_percentage), stale_file_weekly: snap.seven_day ? fmt1(snap.seven_day.used_percentage) : '' }
+    : {};
+  const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
+  const liveUsed = num(liveUsedRaw);
+  const liveWeekly = num(liveWeeklyRaw);
+  const liveResets = num(liveResetsRaw);
+  const inRange = (v, lo, hi) => v === null || (Number.isFinite(v) && v >= lo && v <= hi);
+  const brokenFlag = (name, v) => argv.includes(name) && v === null;
+  if (brokenFlag('--cap', capRaw) || (capRaw !== null && !(Number.isFinite(Number(capRaw)) && Number(capRaw) >= 20))) {
+    emit({ status: 'UNKNOWN', reason: 'bad_cap_argument', action: `--cap needs a number from 20 to ${OWNER_CAP_MAX} (the owner's OWNER_CAP). Start nothing until it is stated correctly.` });
+    return;
+  }
+  if (brokenFlag('--live-used', liveUsedRaw) || brokenFlag('--live-weekly', liveWeeklyRaw) || brokenFlag('--live-resets-in-min', liveResetsRaw)
+    || !inRange(liveUsed, 0, 100) || !inRange(liveWeekly, 0, 100) || !inRange(liveResets, 0, 300)) {
+    emit({ status: 'UNKNOWN', reason: 'bad_live_reading', action: 'Re-run with numbers read from the Codex usage display: --live-used 0-100 --live-weekly 0-100 --live-resets-in-min 0-300.' });
+    return;
+  }
+  let reading = 'file';
+  const fileFresh = fileFive(snap) && (now - (snap.written_at || 0)) <= STALE_SNAPSHOT_S && snap.five_hour.resets_at >= now - 60;
+  if (liveUsed !== null) {
+    if (fileFresh) {
+      // Fresh file: the higher of the two used% (and weekly%) governs; the reset time stays the file's.
+      const fw = snap.seven_day && Number.isFinite(snap.seven_day.used_percentage) ? snap.seven_day.used_percentage : null;
+      const w = fw === null ? liveWeekly : liveWeekly === null ? fw : Math.max(fw, liveWeekly);
+      snap = {
+        ...snap,
+        five_hour: { ...snap.five_hour, used_percentage: Math.max(snap.five_hour.used_percentage, liveUsed) },
+        seven_day: w === null ? snap.seven_day : { ...(snap.seven_day || {}), used_percentage: w },
+      };
+      reading = 'file+live';
+    } else if (liveWeekly !== null && liveResets !== null) {
+      snap = {
+        harness: 'codex',
+        written_at: now,
+        five_hour: { used_percentage: liveUsed, resets_at: now + Math.round(liveResets * 60) },
+        seven_day: { used_percentage: liveWeekly, resets_at: null },
+        prompt_cache: null,
+      };
+      reading = 'live';
+    } else {
+      emit({ status: 'UNKNOWN', reason: 'live_reading_incomplete', ...staleInfo, action: 'The log file is stale, so --live-used must come with --live-weekly and --live-resets-in-min (all three read from the Codex usage display).' });
+      return;
+    }
+  }
+
   if (!snap) {
     emit({
       status: 'UNKNOWN',
       reason: 'no_snapshot',
       codex_note: codexNote || '',
-      action: 'STOP_NEW_WORK: no usage meter. Claude Code: restart from the repo root with `claude --permission-mode acceptEdits --settings brief/claude_settings.json` (brief/04 section A). Codex: send one message first, then run `node brief/tools/budget_check.mjs --probe` and see brief/04 section G.',
+      action: 'STOP_NEW_WORK: no usage meter. Claude Code: restart from the repo root with `claude --permission-mode acceptEdits --settings brief/claude_settings.json` (brief/04 section A). Codex: send one message first, then run `node brief/tools/budget_check.mjs --probe` and see brief/04 section G; or, if the Codex display shows your usage, re-run with --live-used N --live-weekly W --live-resets-in-min R (all three).',
     });
     return;
   }
@@ -228,8 +292,39 @@ function readClaudeSnapshot() {
     return;
   }
 
+  // --- fail closed on stale / dead-window readings BEFORE anything is compared or recorded ---
+  const staleHint = 'These numbers are NOT usage; ignore them (no STOP is derived from them, nothing was recorded). Read your usage from the Codex display (status line or /status) and re-run with --live-used N --live-weekly W --live-resets-in-min R (all three). No live reading possible: start nothing, keep the tree clean, tell the owner.';
+  if (fh.resets_at < now - 60) {
+    emit({ status: 'UNKNOWN', reason: 'window_reset_passed_no_new_reading', snapshot_age_s: age, ...staleInfo, action: staleHint });
+    return;
+  }
+  if (age > STALE_SNAPSHOT_S) {
+    emit({ status: 'UNKNOWN', reason: 'stale_snapshot', snapshot_age_s: age, ...staleInfo, action: staleHint });
+    return;
+  }
+
   // --- window tracking (detect roll-over between windows) ---
   const state = newRun ? { plan, windows: [] } : readJson(statePath, { plan, windows: [] });
+  if (!Array.isArray(state.windows)) state.windows = [];
+  const lastW = state.windows[state.windows.length - 1];
+  let resetsNote = '';
+  if (lastW && reading === 'live' && lastW.resets_at > now + 60 && Math.abs(lastW.resets_at - fh.resets_at) > 1800) {
+    // The recorded window is still running, so its reset time is known exactly; a live "resets in N min" is only a
+    // coarse hint (it also shrinks as time passes). Keep the recorded window instead of guessing a new one.
+    fh.resets_at = lastW.resets_at;
+    resetsNote = 'recorded_window_kept';
+  }
+  if (lastW) {
+    const dReset = fh.resets_at - lastW.resets_at;
+    if (dReset < -1800) {
+      emit({ status: 'UNKNOWN', reason: 'reading_from_earlier_window', reading, action: 'This reading belongs to a window older than the recorded one. Nothing was recorded. Use --live-used/--live-weekly/--live-resets-in-min from the Codex display, or start nothing.' });
+      return;
+    }
+    if (dReset > 1800 && lastW.resets_at > now + 60) {
+      emit({ status: 'UNKNOWN', reason: 'inconsistent_reset_time', reading, recorded_resets_in_min: Math.round((lastW.resets_at - now) / 60), reading_resets_in_min: Math.round((fh.resets_at - now) / 60), action: 'The recorded window has not ended yet, so a new window cannot have started. Nothing was recorded. Re-read the reset time from the Codex display (--live-resets-in-min) or start nothing.' });
+      return;
+    }
+  }
   if (plan !== 'bonus') state.plan = plan;
   const wins = state.windows;
   const last = wins[wins.length - 1];
@@ -249,6 +344,11 @@ function readClaudeSnapshot() {
 
   let cap = CAPS[Math.min(windowIndex, CAPS.length) - 1];
   if (bonusInfo) cap = Math.min(94, Math.round(bonusInfo.start_used + bonusInfo.extra));
+  let capSource = 'plan';
+  if (capRaw !== null && !bonusInfo) {
+    cap = Math.min(OWNER_CAP_MAX, Math.round(Number(capRaw)));
+    capSource = Number(capRaw) > OWNER_CAP_MAX ? `owner(clamped_from_${Math.round(Number(capRaw))})` : 'owner';
+  }
   const soft = cap - SOFT_MARGIN;
   const used = fh.used_percentage;
   const resetsInMin = Math.round((fh.resets_at - now) / 60);
@@ -306,7 +406,10 @@ function readClaudeSnapshot() {
     window: windowIndex,
     used_5h: used.toFixed(1),
     cap,
+    cap_source: capSource === 'plan' ? '' : capSource,
     soft,
+    reading,
+    resets_note: resetsNote,
     headroom: (cap - used).toFixed(1),
     started_window_at_used: Number(cur.first_seen_used).toFixed(1),
     ...(bonusInfo ? { bonus_start_used: Number(bonusInfo.start_used).toFixed(1), bonus_spent: (used - bonusInfo.start_used).toFixed(1) } : {}),

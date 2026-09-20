@@ -59,3 +59,11 @@ Facts as researched on 2026-09-20 (sources in the chat reply; confirm with `/sta
 
 ## §H Bonus session (owner-approved spend of a leftover window)
 If a split run stops early and the same window still has unused points, `BONUS_PROMPT.md` may spend them: `budget_check.mjs --plan bonus --bonus-start` records the used % at the start (S); cap = min(94, S + 40), soft = cap - 6. It never crosses the window reset (STOP when fewer than 4 minutes remain; SOFT at 6), does not touch the split window counter, and leaves the fresh window as window 2 (cap 60) for `RESUME_PROMPT.md` `MODE: CONTINUE_SPLIT`. The owner, not the agent, decides to run it.
+
+## §I Meter freshness, live readings and the owner cap (added 2026-09-20)
+Why the meter gave two false STOPs (reproduced with synthetic logs; not yet checked against a real Codex install): it took an old Codex log line (17,000+ s old, 1 % five-hour, 98 % weekly) as current, its weekly guard fired before the staleness check, and the bonus start recorded that 1 % as the starting point. Rules now:
+1. A reading older than 15 min, or from a window that has already reset, is UNKNOWN. It never yields STOP, never initialises a bonus and never writes `brief/.runtime/budget_state.json`. The printed `stale_file_*` numbers are diagnostics, not usage.
+2. When the log lags, read your usage from Codex's own display (status line or `/status`) and pass it: `--live-used N --live-weekly W --live-resets-in-min R`. With a fresh log the higher number wins; with a stale log all three are required. Never invent a number: if you cannot read the display, the answer is UNKNOWN, so start nothing.
+3. Once a window is recorded its reset time is kept; a live "resets in" only matters on the first call of a new window. A "new" window before the recorded one has ended, or a log reading older than the recorded window, is UNKNOWN.
+4. `--cap N` (max 90, soft N-6) is the owner's one-off cap for the current window, given in the paste as `OWNER_CAP=N`. The agent never chooses it. Pass it on EVERY check of that session (otherwise the plan's cap applies). The third-window STOP and the weekly guard (>= 90) still apply.
+5. Closing bookkeeping costs points (about 10 last time because documents were rewritten). Append short rows to the ledger, never rewrite documents, and leave at least 6 points under the cap for it.
