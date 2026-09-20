@@ -16,6 +16,7 @@ import '../../features/admin/models/stream_moderator_model.dart';
 import '../../features/admin/models/tag_moderation_model.dart';
 import '../../features/discovery/models/academic_category_model.dart';
 import '../models/device_session_model.dart';
+import 'streamer_asset_path.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -148,8 +149,14 @@ class AdminDatabaseService {
   }) async {
     if (!_useSupabase) return null;
     try {
-      final safeName = fileName.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '_');
-      final path = '$folder/${DateTime.now().millisecondsSinceEpoch}_$safeName';
+      final userId = _client.auth.currentUser?.id;
+      if (userId == null) return null;
+      final path = streamerAssetPath(
+        userId: userId,
+        folder: folder,
+        fileName: fileName,
+        timestamp: DateTime.now().millisecondsSinceEpoch,
+      );
       await _client.storage.from('streamer-assets').uploadBinary(
         path,
         fileBytes,

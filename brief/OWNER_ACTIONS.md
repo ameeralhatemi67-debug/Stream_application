@@ -35,3 +35,7 @@ Claude Code appends specifics under each item (exact commands, file names, value
 
 ## Added by Claude Code during the run
 (append below: item · exact command or value · why it must be the owner)
+
+- [ ] P1 database runtime verification: execute broadcaster_columns.test.sql, streamer_assets.test.sql and application_and_ban_guards.test.sql using local Supabase tests. Docker was unavailable; all new SQL remains UNVERIFIED-STATIC.
+- [ ] Legacy streamer-assets objects remain publicly readable. New uploads use UID prefixes. Existing flat paths require an admin to replace/delete; review and migrate legacy assets if needed.
+- [ ] Do not apply this partial P1 set as a finished release: guarded live-state/device RPCs and remaining access-control work are still outstanding. Review the ledger before any production migration.

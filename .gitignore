@@ -21,6 +21,17 @@ node_modules/
 # Local dart-define values (real Supabase keys) — never commit, see dart_define.example.json
 project/dart_define.local.json
 
+# Credentials and Android signing material stay outside version control.
+.env
+.env.*
+!.env.example
+!*.example
+supabase/.env
+**/dart_define.local.json
+*.jks
+*.keystore
+key.properties
+
 
 # graft's local graph cache — regenerable, not committed (run `graft build`).
 /graft/

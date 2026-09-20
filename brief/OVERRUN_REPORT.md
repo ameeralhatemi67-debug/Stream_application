@@ -1,29 +1,22 @@
-# Budget stop report
+# Budget forecast stop: release work incomplete
 
-The first mandatory check returned STOP. No implementation phase started and release readiness is UNVERIFIED.
+P0 completed. P1 has a partial source checkpoint: privileged-column guards, owner-scoped asset writes, application/affiliation review guards, direct-write ban policies and secret-file ignores. No production changes were made. The app is not release-ready.
 
-```text
-BUDGET status=STOP harness=codex plan=split window=1 used_5h=1.0 cap=70 soft=64 headroom=69.0 started_window_at_used=1.0 resets_in_min=38 weekly=98.0 cache_ttl=30m(assumed) cache_warm=false cache_expires_in_s=-13890 snapshot_age_s=15690 reason=weekly_limit_guard action=SAFE_STOP now.
-```
+Last meter: `OK plan=split window=1 used_5h=44 cap=70 soft=64 headroom=26 weekly=7 resets_in_min=20 snapshot_age_s=71`. This is an early forecast stop, not a meter STOP. The next coupled live-state/device step needs an estimated25-35 points, exceeding the26-point hard margin minus3 reserve and20-point soft margin. One window used; no waiting or second-window work. Phase measurements exclude closing bookkeeping.
 
-One window entered, no second window used. Last observed five-hour usage was 1.0%; weekly usage 98.0% exceeds the 90% guard by 8 points. The snapshot was 15,690 seconds old; STOP was obeyed despite uncertain freshness. Closing documentation consumption is unmeasured.
+| Phase | Estimate | Actual account delta | Ratio / status |
+|---|---:|---:|---|
+| P0 | 1-2 | 13, from9 to22 | 6.5-13x; complete |
+| P1 | 12-16 full phase | 22, from22 to44 | 1.4-1.8x; partial |
+| P2/P3 | 6-8 / 4-6 | Not started | Pending |
+| P4/P8A | 24-30 / 6-9 | Not started | Pending |
+| P6/P5/P7 | 9-12 / 10-14 / 9-12 | Not started | Pending |
+| P8B/P9 | 4-6 / 3-4 | Not started | Pending |
 
-| Phase, in execution order | Estimate, % window | Actual phase delta | Ratio |
-|---|---:|---|---|
-| P0 | 1-2 | Not measured; preflight blocked | N/A |
-| P1 | 12-16 | Not started | N/A |
-| P2 | 6-8 | Not started | N/A |
-| P3 | 4-6 | Not started | N/A |
-| P4 | 24-30 | Not started | N/A |
-| P8A | 6-9 | Not started | N/A |
-| P6 | 9-12 | Not started | N/A |
-| P5 | 10-14 | Not started | N/A |
-| P7 | 9-12 | Not started | N/A |
-| P8B | 4-6 | Not started | N/A |
-| P9 | 3-4 | Not started | N/A |
+The three largest measured intervals were P1 implementation/checkpoint22 points, P0 baseline/tooling11 points, and meter/settings restoration2 points. P1 involved four migrations,27 SQL assertions, upload-path code/tests and security documentation. P0 required SDK permission recovery and baseline tests. These are account-wide intervals, not exact per-command costs. The file meter lagged at22 while live account usage reached37/40/44; the higher live reading governed work, and the file meter later caught up. No meter code or caps were changed.
 
-All phases remain, totaling the original estimate of 88-119 percentage points. There is no measured phase burn to justify a new estimate. The three biggest consumers cannot be ranked from one sample. The only activities were the meter check, stop-context reads, and safe-stop bookkeeping; none has an attributable measured delta.
+Evidence: final analyzer0 issues; full suite266 passed, up from264 baseline; import-lint correction followed by analyzer and focused2/2 tests. Static gates17 failing versus18 baseline; G10a-e and G11a-g all0, including history scan. All new SQL is UNVERIFIED-STATIC because Docker is unavailable. No runtime RLS proof, release AAB scan, hardware scenario or store/legal acceptance is claimed. Existing caught provider-disposal warnings remain in test logs.
 
-Initial HEAD was 817f6ad. `git status --short` showed five pre-existing brief changes only. They were saved with `git stash push` using explicit paths in stash `preexisting-before-budget-stop-2026-09-20`. No app code or migration changed. Analyze, tests, gates, tooling and baseline health were not run after STOP and remain UNVERIFIED; the full tested-safe-state criterion could not be established. No push, Supabase operation, keystore or release build occurred.
+Remaining order: finish P1.2/1.7 together25-35 points, then P1.6/1.8/1.9/1.10 and RPC ban audit10-15 more; then P2,P3,P4,P8A,P6,P5,P7,P8B,P9. Later phases retain their uncalibrated75-101-point estimate, so remaining total is110-151. P0-P3/P9 are pending where unfinished, not cut. Owner-only actions and legacy-asset handling are in OWNER_ACTIONS.md.
 
-Resume by restoring the named stash first: it includes the owner's meter and protocol updates. Then run `node brief/tools/budget_check.mjs --plan split` without `--new-run`, and obey its result. A five-hour reset alone is insufficient while weekly usage is at least 90%. Use `brief/RESUME_PROMPT.md` and the ledger RESUME block in a fresh session when permitted. Start at P0 step 2 only after OK.
+Safe checkpoint: application changes and each migration are complete files; git diff --check passed. P0 commit is3ba0eb7; the following local P1 commit holds the partial implementation and this report. Original owner changes are preserved in named stash `owner-brief-settings-before-window2-2026-09-20`; restore it before using the meter, because it contains the owner's split-meter updates. Then run `node brief/tools/budget_check.mjs --plan split` without --new-run. Resume from the LEDGER RESUME block in a fresh window2 session, cap60/soft54, never a third window.
