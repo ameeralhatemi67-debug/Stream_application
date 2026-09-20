@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/feature_in_progress_modal.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
 import '../models/streamer_models.dart';
@@ -119,14 +119,19 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             ),
           const LanguageSwitcher(),
           const SizedBox(width: AppTheme.spaceXs),
-          IconButton(
-            icon: const Icon(Icons.share_outlined),
-            tooltip: 'profile.share_btn'.tr(),
-            onPressed: () => FeatureInProgressModal.show(
-              context,
-              featureName: 'profile.share_btn'.tr(),
+          // Shares the channel's real YouTube URL. The button is absent when
+          // the channel has no handle yet -- there is nothing truthful to
+          // share, and a share sheet holding a made-up link is worse than no
+          // button (05 D-03).
+          if (streamer.youtubeHandle.trim().isNotEmpty)
+            IconButton(
+              icon: const Icon(Icons.share_outlined),
+              tooltip: 'profile.share_btn'.tr(),
+              onPressed: () => Share.share(
+                'https://www.youtube.com/@${streamer.youtubeHandle.trim().replaceFirst('@', '')}',
+                subject: streamer.getLocalizedName(lang),
+              ),
             ),
-          ),
           const SizedBox(width: AppTheme.spaceSm),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/config/feature_flags.dart';
 import '../models/chat_message_model.dart';
 import '../services/live_chat_controller.dart';
 import '../../../core/theme/app_theme.dart';
@@ -205,10 +206,16 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   void _toggleRaiseHand() {
-    // Pure video overlay toggle (no snackbar or chat message spam)
-    setState(() {
-      _isHandRaised = !_isHandRaised;
-    });
+    final raising = !_isHandRaised;
+    setState(() => _isHandRaised = raising);
+    // Raising a hand now actually reaches the room: it travels the same
+    // Realtime reaction channel every other reaction uses, so the broadcaster
+    // and other viewers see it. It used to toggle a local icon only, which
+    // told the viewer their hand was up when nobody could see it (05 D-03).
+    if (raising) {
+      _reactionsController.spawnReaction('raise_hand');
+      _chatController.sendReaction('raise_hand');
+    }
   }
 
   StreamerModel _resolveStreamer(AppProvider appProvider) {
@@ -1305,6 +1312,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       AppProvider appProvider, StreamerModel streamer, String langCode) {
     final isAttending = appProvider.isAttendingInPerson(widget.streamId);
     final availableSeats = appProvider.getAvailableSeats(widget.streamId);
+    // Venue seating and RSVP have no backend: no table records an attendance,
+    // and the seat numbers were invented on the device. The venue address
+    // below is real (it comes from the channel's own fields), so the tab
+    // stays and only the unbacked parts are hidden (05 D-03, D-11 pattern).
+    const showRsvp = kVenueRsvpEnabled;
 
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
@@ -1345,8 +1357,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   ),
                 ],
               ),
-              const SizedBox(height: AppTheme.spaceSm),
-              Container(
+              if (showRsvp) const SizedBox(height: AppTheme.spaceSm),
+              if (showRsvp)
+                Container(
                 padding: const EdgeInsets.all(AppTheme.spaceSm),
                 decoration: BoxDecoration(
                   color: AppTheme.darkSurface2,
@@ -1379,8 +1392,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   ],
                 ),
               ),
-              const SizedBox(height: AppTheme.spaceSm),
-              SizedBox(
+              if (showRsvp) const SizedBox(height: AppTheme.spaceSm),
+              if (showRsvp)
+                SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(

@@ -1531,13 +1531,23 @@ class _LiveBroadcasterStudioSheetState
     if (!provider.isBroadcastingLive) return;
     Navigator.of(context).pop();
 
-    final videoId = AppProvider.extractYouTubeId(rawYoutube.isEmpty ? provider.customYouTubeLiveUrl : rawYoutube);
+    final videoId = AppProvider.extractYouTubeId(
+        rawYoutube.isEmpty ? provider.customYouTubeLiveUrl : rawYoutube);
+    // An unparseable URL yields an empty id now instead of a hardcoded video
+    // (P2): say so, rather than reporting a target that was never set. The
+    // server's set_live_state rejects an invalid id in any case.
     InteractiveToastOverlay.show(
       context,
-      title: 'YouTube Live Target Updated',
-      message: 'Active Video ID: $videoId',
-      icon: Icons.sensors_rounded,
-      accentColor: _modeColor,
+      title: videoId.isEmpty
+          ? 'No YouTube Video Detected'
+          : 'YouTube Live Target Updated',
+      message: videoId.isEmpty
+          ? 'Paste the watch or live URL from YouTube Studio.'
+          : 'Active Video ID: $videoId',
+      icon: videoId.isEmpty
+          ? Icons.error_outline_rounded
+          : Icons.sensors_rounded,
+      accentColor: videoId.isEmpty ? AppTheme.accentRed : _modeColor,
     );
   }
 

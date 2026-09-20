@@ -1290,31 +1290,32 @@ class AdminDatabaseService {
         final nameEn =
             (row['display_name_en'] as String?) ?? 'Academic Scholar';
         final nameAr = (row['display_name_ar'] as String?) ?? nameEn;
-        final avatar = (row['avatar_url'] as String?) ??
-            'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
-        final banner = (row['banner_url'] as String?) ??
-            'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        // Backend nulls stay empty: a missing field is a missing field, not
+        // a borrowed photo, a borrowed channel or an assumed verification
+        // (P2 truthful data). The UI renders placeholders for empty values.
+        final avatar = (row['avatar_url'] as String?) ?? '';
+        final banner = (row['banner_url'] as String?) ?? '';
         final bioEn = (row['bio_en'] as String?) ?? '';
         final bioAr = (row['bio_ar'] as String?) ?? '';
-        final titleEn = (row['title_en'] as String?) ?? 'Academic Scholar';
-        final titleAr = (row['title_ar'] as String?) ?? 'محاضر وباحث أكاديمي';
+        final titleEn = (row['title_en'] as String?) ?? '';
+        final titleAr = (row['title_ar'] as String?) ?? '';
         final categoryId = (row['category_id'] as String?) ?? 'general_edu';
         final tagsList = (row['tags'] as List<dynamic>?)
                 ?.map((t) => t.toString())
                 .toList() ??
             const <String>[];
-        final cityEn = (row['city_en'] as String?) ?? 'Al Khobar';
-        final cityAr = (row['city_ar'] as String?) ?? 'الخبر';
-        final venueEn =
-            (row['venue_name_en'] as String?) ?? 'Academic Auditorium';
-        final venueAr = (row['venue_name_ar'] as String?) ?? 'قاعة المحاضرات';
-        final lat = (row['latitude'] as num?)?.toDouble() ?? 26.2871;
-        final lng = (row['longitude'] as num?)?.toDouble() ?? 50.2125;
-        final ytHandle =
-            (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
-        final ytVideoId = (row['youtube_video_id'] as String?) ?? 'dQw4w9WgXcQ';
+        final cityEn = (row['city_en'] as String?) ?? '';
+        final cityAr = (row['city_ar'] as String?) ?? '';
+        final venueEn = (row['venue_name_en'] as String?) ?? '';
+        final venueAr = (row['venue_name_ar'] as String?) ?? '';
+        // 0/0 means "no venue coordinates"; the map skips those markers
+        // rather than dropping a pin on a location nobody gave us.
+        final lat = (row['latitude'] as num?)?.toDouble() ?? 0;
+        final lng = (row['longitude'] as num?)?.toDouble() ?? 0;
+        final ytHandle = (row['youtube_handle'] as String?) ?? '';
+        final ytVideoId = (row['youtube_video_id'] as String?) ?? '';
         final isLive = (row['is_currently_live'] as bool?) ?? false;
-        final isVerified = (row['is_verified'] as bool?) ?? true;
+        final isVerified = (row['is_verified'] as bool?) ?? false;
         final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
 
         results.add(
@@ -1367,10 +1368,8 @@ class AdminDatabaseService {
         final nameEn =
             (row['name_en'] as String?) ?? 'Educational Organization';
         final nameAr = (row['name_ar'] as String?) ?? nameEn;
-        final avatar = (row['avatar_url'] as String?) ??
-            'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
-        final banner = (row['banner_url'] as String?) ??
-            'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+        final avatar = (row['avatar_url'] as String?) ?? '';
+        final banner = (row['banner_url'] as String?) ?? '';
         final bioEn = (row['bio_en'] as String?) ?? '';
         final bioAr = (row['bio_ar'] as String?) ?? '';
         final categoryId = (row['category_id'] as String?) ?? 'general_edu';
@@ -1378,11 +1377,10 @@ class AdminDatabaseService {
                 ?.map((t) => t.toString())
                 .toList() ??
             const <String>[];
-        final ytHandle =
-            (row['youtube_handle'] as String?) ?? 'ahmedamercaller';
-        final ytVideoId = (row['youtube_video_id'] as String?) ?? 'dQw4w9WgXcQ';
+        final ytHandle = (row['youtube_handle'] as String?) ?? '';
+        final ytVideoId = (row['youtube_video_id'] as String?) ?? '';
         final isLive = (row['is_currently_live'] as bool?) ?? false;
-        final isVerified = (row['is_verified'] as bool?) ?? true;
+        final isVerified = (row['is_verified'] as bool?) ?? false;
         final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
 
         results.add(
@@ -2495,6 +2493,116 @@ class AdminDatabaseService {
           'p_force': force,
         }) ==
         true;
+  }
+
+  // -------------------------------------------------------------------------
+  // Follows & bookmarks (05 D-07). Own-row RLS does the authorization: every
+  // statement below is scoped to the signed-in account by policy, so a failure
+  // here means "not signed in" or "offline", never "someone else's rows".
+  // -------------------------------------------------------------------------
+
+  /// Channel ids the signed-in account follows. Empty when signed out or
+  /// unreachable -- the caller keeps whatever local state it had.
+  Future<Set<String>> loadFollowedTargetIds() async {
+    if (!_useSupabase) return {};
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return {};
+    try {
+      final rows = await _client
+          .from('follows')
+          .select('target_id')
+          .eq('follower_profile_id', uid);
+      return (rows as List)
+          .map((r) => (r as Map<String, dynamic>)['target_id'] as String)
+          .toSet();
+    } catch (e) {
+      debugPrint('loadFollowedTargetIds failed: $e');
+      return {};
+    }
+  }
+
+  /// Returns true when the row reached the backend. False means the caller's
+  /// optimistic local change is not persisted (signed out, offline, banned).
+  Future<bool> addFollow(String targetId) async {
+    if (!_useSupabase) return false;
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null || targetId.isEmpty) return false;
+    try {
+      await _client.from('follows').upsert(
+        {'follower_profile_id': uid, 'target_id': targetId},
+        onConflict: 'follower_profile_id,target_id',
+      );
+      return true;
+    } catch (e) {
+      debugPrint('addFollow failed: $e');
+      return false;
+    }
+  }
+
+  Future<bool> removeFollow(String targetId) async {
+    if (!_useSupabase) return false;
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null || targetId.isEmpty) return false;
+    try {
+      await _client
+          .from('follows')
+          .delete()
+          .eq('follower_profile_id', uid)
+          .eq('target_id', targetId);
+      return true;
+    } catch (e) {
+      debugPrint('removeFollow failed: $e');
+      return false;
+    }
+  }
+
+  Future<Set<String>> loadBookmarkedVodIds() async {
+    if (!_useSupabase) return {};
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null) return {};
+    try {
+      final rows =
+          await _client.from('bookmarks').select('vod_id').eq('profile_id', uid);
+      return (rows as List)
+          .map((r) => (r as Map<String, dynamic>)['vod_id'] as String)
+          .toSet();
+    } catch (e) {
+      debugPrint('loadBookmarkedVodIds failed: $e');
+      return {};
+    }
+  }
+
+  Future<bool> addBookmark(String vodId, {String streamerId = ''}) async {
+    if (!_useSupabase) return false;
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null || vodId.isEmpty) return false;
+    try {
+      await _client.from('bookmarks').upsert(
+        {'profile_id': uid, 'vod_id': vodId, 'streamer_id': streamerId},
+        onConflict: 'profile_id,vod_id',
+      );
+      return true;
+    } catch (e) {
+      debugPrint('addBookmark failed: $e');
+      return false;
+    }
+  }
+
+  Future<bool> removeBookmark(String vodId) async {
+    if (!_useSupabase) return false;
+    final uid = _client.auth.currentUser?.id;
+    if (uid == null || vodId.isEmpty) return false;
+    try {
+      await _client
+          .from('bookmarks')
+          .delete()
+          .eq('profile_id', uid)
+          .eq('vod_id', vodId);
+      return true;
+    } catch (e) {
+      debugPrint('removeBookmark failed: $e');
+      return false;
+    }
   }
 
   /// Clears live flags whose broadcaster's primary device stopped sending

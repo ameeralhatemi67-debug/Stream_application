@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/feature_in_progress_modal.dart';
 import '../../../live_stream/presentation/adapters/youtube_player_adapter.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
@@ -38,6 +40,8 @@ class VodPlayerModalSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
     final title = vod.getLocalizedTitle(lang);
+    final isSaved = context.select<AppProvider, bool>(
+        (p) => p.isBookmarked(vod.vodId));
     final description = vod.getLocalizedDescription(lang);
     final broadcasterName = streamer != null
         ? streamer!.getLocalizedName(lang)
@@ -205,12 +209,20 @@ class VodPlayerModalSheet extends StatelessWidget {
                       children: [
                         Expanded(
                           child: OutlinedButton.icon(
-                            onPressed: () => FeatureInProgressModal.show(
-                              context,
-                              featureName: 'profile.save_lecture'.tr(),
-                            ),
-                            icon: const Icon(Icons.bookmark_add_outlined, size: 18),
-                            label: Text('profile.save_lecture'.tr()),
+                            // Real bookmark (05 D-07): persisted per account
+                            // for signed-in viewers, local for guests.
+                            onPressed: () => context
+                                .read<AppProvider>()
+                                .toggleBookmark(vod.vodId,
+                                    streamerId: vod.streamerId),
+                            icon: Icon(
+                                isSaved
+                                    ? Icons.bookmark_rounded
+                                    : Icons.bookmark_add_outlined,
+                                size: 18),
+                            label: Text(isSaved
+                                ? 'profile.saved_lecture'.tr()
+                                : 'profile.save_lecture'.tr()),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: Colors.white,
                               side: const BorderSide(color: AppTheme.darkBorderHighlight),
@@ -221,9 +233,10 @@ class VodPlayerModalSheet extends StatelessWidget {
                         const SizedBox(width: AppTheme.spaceMd),
                         Expanded(
                           child: ElevatedButton.icon(
-                            onPressed: () => FeatureInProgressModal.show(
-                              context,
-                              featureName: 'profile.share_vod'.tr(),
+                            // Shares the recording's real watch URL.
+                            onPressed: () => Share.share(
+                              'https://www.youtube.com/watch?v=${vod.youtubeVideoId}',
+                              subject: title,
                             ),
                             icon: const Icon(Icons.share_outlined, size: 18),
                             label: Text('profile.share_vod'.tr()),

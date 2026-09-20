@@ -23,9 +23,6 @@ import '../../features/profile/models/vod_models.dart';
 import '../../features/profile/models/user_account_model.dart';
 import '../../features/live_stream/models/qa_question_model.dart';
 import '../../features/live_stream/models/stream_privacy_models.dart';
-import '../../features/live_stream/services/rtmp_publish_engine.dart'
-    show BroadcastQualityPreset;
-import '../../features/live_stream/services/youtube_live_service.dart';
 import '../../features/admin/models/broadcaster_application_model.dart';
 import '../../features/admin/models/terms_and_conditions_model.dart';
 import '../../features/admin/models/viewer_analytics_model.dart';
@@ -60,12 +57,6 @@ class AppProvider extends ChangeNotifier {
   final List<LectureQuestionModel> _questions = [];
   UserProfileModel _userProfile = UserProfileModel.defaultProfile;
   final YouTubeApiService _youTubeService = YouTubeApiService();
-  final YouTubeLiveService _youTubeLiveService = YouTubeLiveService();
-  // Set only while a broadcast started via startQuickPhoneBroadcast is
-  // live, so toggleBroadcasterGoLive knows to call endBroadcastSession when
-  // it ends -- regardless of which UI actually stops it (PhoneBroadcastScreen's
-  // End Broadcast button, or anything else that flips isBroadcastingLive off).
-  String? _quickGoLiveBroadcastId;
   final SupabaseAuthService _authService = SupabaseAuthService();
   AdminDatabaseService? _adminDbService;
 
@@ -208,17 +199,22 @@ class AppProvider extends ChangeNotifier {
   bool _isMiniPlayerActive = false;
   bool _isMiniPlayerPlaying = true;
   bool _isMiniPlayerMuted = false;
-  String _miniPlayerVideoId = 'dQw4w9WgXcQ';
-  String _miniPlayerTitle = 'Advanced Artificial Intelligence Lecture';
-  String _miniPlayerStreamerName = 'Amir Al-Hatemi';
+  // Empty until a real stream is minimized into the mini-player: it used to
+  // start holding an unrelated YouTube video, an invented lecture title and a
+  // real person's name (P2 truthful data).
+  String _miniPlayerVideoId = '';
+  String _miniPlayerTitle = '';
+  String _miniPlayerStreamerName = '';
   String? _miniPlayerStreamId;
   bool _isMiniPlayerAudioOnly = false;
 
   // Streamer Custom YouTube Broadcast Studio State
-  String _customYouTubeLiveUrl = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
-  String _customYouTubeVideoId = 'dQw4w9WgXcQ';
-  String _customLiveTitle =
-      'Building Autonomous Agent Systems & Cloud Streaming';
+  // The studio starts empty; the broadcaster supplies the stream URL and
+  // title. These used to default to an unrelated video and an invented
+  // lecture title, which then travelled into go-live state.
+  String _customYouTubeLiveUrl = '';
+  String _customYouTubeVideoId = '';
+  String _customLiveTitle = '';
   String _customLiveCategory = 'computer_science';
   String _customLiveVenue = 'KFUPM Auditorium 21, Dhahran / Al Khobar';
   String _customSlidesUrl = 'https://kfupm.edu.sa/cs/slides/lecture_01.pdf';
@@ -255,13 +251,14 @@ class AppProvider extends ChangeNotifier {
   // Bookmarks, Reminders & RSVP Attendance
   final Set<String> _followedStreamerIds = {};
   final Set<String> _reminderStreamerIds = {};
-  final Set<String> _bookmarkedLectureIds = {'vod_ai_01', 'vod_cs_02'};
+  // Starts empty and is filled from the backend for a signed-in account
+  // (05 D-07). It used to ship with two sample recordings already saved.
+  final Set<String> _bookmarkedLectureIds = {};
+  // RSVP / venue seating is local-only and hidden in the UI behind
+  // kVenueRsvpEnabled (05 D-03): no table records an attendance. The seat map
+  // used to ship with counts for three sample streams.
   final Map<String, bool> _inPersonRsvpMap = {};
-  final Map<String, int> _venueAvailableSeats = {
-    'stream_live_992': 34,
-    'stream_live_dr_alshammari_02': 18,
-    'stream_live_prof_alotaibi_03': 0,
-  };
+  final Map<String, int> _venueAvailableSeats = {};
 
   // Enhanced Notifications & Anti-Spam Throttling Preferences
   final List<AppNotificationModel> _enhancedNotifications = [];
@@ -340,6 +337,7 @@ class AppProvider extends ChangeNotifier {
     await _refreshAdminRoleFromBackend();
     await _refreshPermittedAdminOrgsFromBackend();
     await _refreshCurrentUserBanStatus();
+    await loadViewerLibrary();
     await refreshMyApplicationAndStreamerStatus();
     if (_isAdminFromRoles) {
       await refreshAdminData();
@@ -1410,6 +1408,10 @@ class AppProvider extends ChangeNotifier {
     _permittedAdminOrgIds = [];
     _isCurrentUserBanned = false;
     _currentUserBanReason = null;
+    // The signed-in account's library goes with the session (05 D-07); the
+    // next account must not inherit its follows and saved recordings.
+    _followedStreamerIds.clear();
+    _bookmarkedLectureIds.clear();
     notifyListeners();
   }
 
@@ -2720,62 +2722,6 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// One-tap phone-to-YouTube go-live using a fully simulated YouTube
-  /// broadcast session -- kept for its test coverage; the Broadcaster
-  /// Studio bottom sheet's Phone mode no longer calls this and instead
-  /// always uses the streamer's real, manually-entered stream key via
-  /// updatePhoneBroadcastTarget (see LiveBroadcasterStudioSheet's class
-  /// doc for why: a simulated key gets rejected by YouTube's real RTMP
-  /// ingest). YouTubeLiveService creates (simulates, until real OAuth exists -- see
-  /// its class doc) the YouTube broadcast/stream pair, then this configures
-  /// every field PhoneBroadcastScreen and viewers need and flips
-  /// isBroadcastingLive, mirroring setCustomBroadcastDetails +
-  /// toggleBroadcasterGoLive's combined effect from the manual flow.
-  /// Returns false (leaving state untouched) if session creation fails.
-  Future<bool> startQuickPhoneBroadcast({
-    required String title,
-    required String category,
-    required String venue,
-    required bool isAudioOnly,
-    required BroadcastQualityPreset quality,
-  }) async {
-    final YouTubeBroadcastSession session;
-    try {
-      session = await _youTubeLiveService.createBroadcastSession(
-        title: title,
-        description: 'Live educational broadcast from $venue via $title.',
-        isAudioOnly: isAudioOnly,
-        quality: quality,
-      );
-    } catch (e) {
-      debugPrint('startQuickPhoneBroadcast: session creation failed: $e');
-      return false;
-    }
-
-    _customLiveTitle = title;
-    _customLiveCategory = category;
-    _customLiveVenue = venue;
-    _customBroadcastType =
-        isAudioOnly ? BroadcastType.liveAudio : BroadcastType.liveVideo;
-    _customYouTubeVideoId = session.videoId;
-    _customYouTubeLiveUrl =
-        'https://www.youtube.com/watch?v=${session.videoId}';
-    _phoneBroadcastRtmpUrl = session.rtmpUrl;
-    _phoneBroadcastStreamKey = session.streamKey;
-    _quickGoLiveBroadcastId = session.broadcastId;
-    notifyListeners();
-
-    // No context threaded through here (unlike the manual go-live flow) --
-    // this crosses the createBroadcastSession await above, so any caller's
-    // BuildContext could already be stale by this point. The go-live
-    // notification toast toggleBroadcasterGoLive optionally shows is a
-    // nice-to-have, not essential to actually going live.
-    if (!_isBroadcastingLive) {
-      await toggleBroadcasterGoLive();
-    }
-    return _isBroadcastingLive;
-  }
-
   Future<void> toggleBroadcasterGoLive([BuildContext? context]) async {
     if (_liveStateBusy) return;
     final generation = _deviceGeneration;
@@ -2939,17 +2885,6 @@ class AppProvider extends ChangeNotifier {
       _pendingKnockRequests.clear();
       _admittedAttendees.clear();
 
-      // Quick Go-Live (Checkpoint: Phone-to-YouTube automation) -- transition
-      // the YouTube broadcast to complete so it saves as a VOD, regardless
-      // of which UI flipped isBroadcastingLive off.
-      if (_quickGoLiveBroadcastId != null) {
-        final endingBroadcastId = _quickGoLiveBroadcastId!;
-        _quickGoLiveBroadcastId = null;
-        await _youTubeLiveService.endBroadcastSession(
-          broadcastId: endingBroadcastId,
-        );
-      }
-
       // 🌟 Check and push 1-Hour Watch Milestone Notification if user watched >= 60 min
       WatchSessionTracker.onStreamEnded(
         'stream_live_992',
@@ -3016,9 +2951,12 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Returns the 11-character YouTube id in [url], or an empty string when
+  /// there is none. It used to fall back to a hardcoded video id, so a typo in
+  /// the studio silently pointed the broadcast at someone else's video.
   static String extractYouTubeId(String url) {
     final trimmed = url.trim();
-    if (trimmed.isEmpty) return 'dQw4w9WgXcQ';
+    if (trimmed.isEmpty) return '';
 
     // Support youtube.com/live/VIDEO_ID format
     final liveMatch =
@@ -3034,7 +2972,7 @@ class AppProvider extends ChangeNotifier {
     if (match != null && match.groupCount >= 1) {
       return match.group(1)!;
     }
-    return trimmed.length == 11 ? trimmed : 'dQw4w9WgXcQ';
+    return trimmed.length == 11 ? trimmed : '';
   }
 
   // Q&A Interaction Methods
@@ -3082,13 +3020,15 @@ class AppProvider extends ChangeNotifier {
   // RSVP / Physical Attendance
   bool isAttendingInPerson(String lectureId) =>
       _inPersonRsvpMap[lectureId] ?? false;
+  /// Seats left at the venue. 0 while no venue capacity is known -- the UI
+  /// that would show it is hidden behind kVenueRsvpEnabled.
   int getAvailableSeats(String lectureId) =>
-      _venueAvailableSeats[lectureId] ?? 25;
+      _venueAvailableSeats[lectureId] ?? 0;
 
   void toggleInPersonAttendance(String lectureId) {
     final current = _inPersonRsvpMap[lectureId] ?? false;
     _inPersonRsvpMap[lectureId] = !current;
-    final seats = _venueAvailableSeats[lectureId] ?? 25;
+    final seats = _venueAvailableSeats[lectureId] ?? 0;
     if (!current) {
       _venueAvailableSeats[lectureId] = (seats - 1).clamp(0, 500);
     } else {
@@ -3097,14 +3037,43 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Bookmarks
+  // Bookmarks (05 D-07): persisted per account for signed-in viewers, local
+  // to the device for guests. The UI updates optimistically and the backend
+  // write follows; a failed write leaves the local state as the user set it
+  // and the next loadViewerLibrary() reconciles from the server.
   bool isBookmarked(String id) => _bookmarkedLectureIds.contains(id);
-  void toggleBookmark(String id) {
-    if (_bookmarkedLectureIds.contains(id)) {
+
+  Future<void> toggleBookmark(String id, {String streamerId = ''}) async {
+    if (id.isEmpty) return;
+    final wasBookmarked = _bookmarkedLectureIds.contains(id);
+    if (wasBookmarked) {
       _bookmarkedLectureIds.remove(id);
     } else {
       _bookmarkedLectureIds.add(id);
     }
+    notifyListeners();
+    if (_authService.currentSession == null) return;
+    _adminDbService ??= await AdminDatabaseService.create();
+    if (wasBookmarked) {
+      await _adminDbService!.removeBookmark(id);
+    } else {
+      await _adminDbService!.addBookmark(id, streamerId: streamerId);
+    }
+  }
+
+  /// Loads the signed-in account's follows and bookmarks. A guest keeps
+  /// whatever it collected locally; signing out clears both (_clearAuthState).
+  Future<void> loadViewerLibrary() async {
+    if (_authService.currentSession == null) return;
+    _adminDbService ??= await AdminDatabaseService.create();
+    final follows = await _adminDbService!.loadFollowedTargetIds();
+    final bookmarks = await _adminDbService!.loadBookmarkedVodIds();
+    _followedStreamerIds
+      ..clear()
+      ..addAll(follows);
+    _bookmarkedLectureIds
+      ..clear()
+      ..addAll(bookmarks);
     notifyListeners();
   }
 
@@ -3190,13 +3159,25 @@ class AppProvider extends ChangeNotifier {
 
   bool isFollowing(String streamerId) =>
       _followedStreamerIds.contains(streamerId);
-  void toggleFollow(String streamerId) {
-    if (_followedStreamerIds.contains(streamerId)) {
+
+  /// Persisted per account for signed-in viewers, local-only for guests
+  /// (05 D-07). Optimistic locally, then written through.
+  Future<void> toggleFollow(String streamerId) async {
+    if (streamerId.isEmpty) return;
+    final wasFollowing = _followedStreamerIds.contains(streamerId);
+    if (wasFollowing) {
       _followedStreamerIds.remove(streamerId);
     } else {
       _followedStreamerIds.add(streamerId);
     }
     notifyListeners();
+    if (_authService.currentSession == null) return;
+    _adminDbService ??= await AdminDatabaseService.create();
+    if (wasFollowing) {
+      await _adminDbService!.removeFollow(streamerId);
+    } else {
+      await _adminDbService!.addFollow(streamerId);
+    }
   }
 
   bool hasReminder(String streamerId) =>

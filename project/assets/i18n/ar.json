@@ -92,6 +92,9 @@
     "following_btn": "مُتابَع",
     "reminder_btn": "تفعيل التنبيهات",
     "share_btn": "مشاركة الملف",
+    "save_lecture": "حفظ المحاضرة",
+    "saved_lecture": "محفوظة",
+    "share_vod": "مشاركة المحاضرة",
     "verified_scholar": "محاضر معتمد",
     "university": "الجامعة / مقر المحاضرة",
     "about": "السيرة الذاتية",
@@ -249,11 +252,6 @@
     "revoke_moderator": "إلغاء صلاحية المشرف",
     "moderator_appointed_toast": "تم التعيين كمشرف على البث.",
     "moderator_revoked_toast": "تم إلغاء صلاحية المشرف."
-  },
-  "safety": {
-    "modal_title": "الميزة قيد التطوير",
-    "modal_body": "هذه الخاصية مجدولة للإطلاق في الإصدار القادم.",
-    "got_it": "حسناً، فهمت"
   },
   "language": {
     "en": "English",

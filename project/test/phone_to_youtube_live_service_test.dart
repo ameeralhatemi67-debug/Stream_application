@@ -1,135 +1,17 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
-import 'package:streamer_app/features/profile/models/streamer_models.dart';
-import 'package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart';
-import 'package:streamer_app/features/live_stream/services/youtube_live_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  group('Phone-to-YouTube Live: YouTubeLiveService', () {
-    test(
-        'TC-YTLIVE-01: createBroadcastSession returns a usable session '
-        'without any live Google API key (simulation fallback)', () async {
-      final service = YouTubeLiveService();
-
-      final session = await service.createBroadcastSession(
-        title: 'AI & Machine Learning Lecture',
-        description: 'Live educational broadcast.',
-        isAudioOnly: false,
-        quality: BroadcastQualityPreset.high,
-      );
-
-      expect(session.broadcastId, isNotEmpty);
-      expect(session.videoId, isNotEmpty);
-      expect(session.rtmpUrl, equals('rtmp://a.rtmp.youtube.com/live2'));
-      expect(session.streamKey, isNotEmpty);
-    });
-
-    test('TC-YTLIVE-02: two sessions created back-to-back get distinct ids',
-        () async {
-      final service = YouTubeLiveService();
-      final first = await service.createBroadcastSession(
-        title: 'Lecture 1',
-        description: '',
-        isAudioOnly: false,
-        quality: BroadcastQualityPreset.medium,
-      );
-      final second = await service.createBroadcastSession(
-        title: 'Lecture 2',
-        description: '',
-        isAudioOnly: true,
-        quality: BroadcastQualityPreset.low,
-      );
-
-      expect(first.broadcastId, isNot(equals(second.broadcastId)));
-      expect(first.videoId, isNot(equals(second.videoId)));
-    });
-
-    test('TC-YTLIVE-03: endBroadcastSession completes without throwing',
-        () async {
-      final service = YouTubeLiveService();
-      await expectLater(
-        service.endBroadcastSession(broadcastId: 'bcast_test_01'),
-        completes,
-      );
-    });
-  });
-
-  group('Phone-to-YouTube Live: AppProvider.startQuickPhoneBroadcast', () {
-    test(
-        'TC-QGL-01: configures fields but cannot go live without a primary session',
-        () async {
-      final provider = AppProvider();
-      expect(provider.isBroadcastingLive, isFalse);
-
-      final success = await provider.startQuickPhoneBroadcast(
-        title: 'AI & Machine Learning Lecture',
-        category: 'cs_tech',
-        venue: 'KFUPM Auditorium 21',
-        isAudioOnly: false,
-        quality: BroadcastQualityPreset.high,
-      );
-
-      expect(success, isFalse);
-      expect(provider.customLiveTitle, equals('AI & Machine Learning Lecture'));
-      expect(provider.customLiveCategory, equals('cs_tech'));
-      expect(provider.customLiveVenue, equals('KFUPM Auditorium 21'));
-      expect(provider.customBroadcastType, equals(BroadcastType.liveVideo));
-      expect(provider.customYouTubeVideoId, isNotEmpty);
-      expect(provider.customYouTubeLiveUrl,
-          contains(provider.customYouTubeVideoId));
-      expect(provider.phoneBroadcastRtmpUrl,
-          equals('rtmp://a.rtmp.youtube.com/live2'));
-      expect(provider.phoneBroadcastStreamKey, isNotEmpty);
-      expect(provider.isBroadcastingLive, isFalse);
-      expect(provider.broadcastSessionError, 'broadcast_primary_required');
-    });
-
-    test(
-        'TC-QGL-02: format switching -- Audio-Only sets BroadcastType.liveAudio',
-        () async {
-      final provider = AppProvider();
-
-      await provider.startQuickPhoneBroadcast(
-        title: 'Live Audio Stage',
-        category: 'general_edu',
-        venue: 'Remote',
-        isAudioOnly: true,
-        quality: BroadcastQualityPreset.medium,
-      );
-
-      expect(provider.customBroadcastType, equals(BroadcastType.liveAudio));
-      expect(provider.isBroadcastingLive, isFalse);
-    });
-
-    test('TC-QGL-03: denied quick-live remains offline on a second toggle',
-        () async {
-      final provider = AppProvider();
-      await provider.startQuickPhoneBroadcast(
-        title: 'Test Lecture',
-        category: 'islamic_studies',
-        venue: 'Test Hall',
-        isAudioOnly: false,
-        quality: BroadcastQualityPreset.low,
-      );
-      expect(provider.isBroadcastingLive, isFalse);
-
-      await provider.toggleBroadcasterGoLive();
-      expect(provider.isBroadcastingLive, isFalse);
-    });
-
-    test('TC-QGL-04: does not touch state if session creation fails', () {
-      // createBroadcastSession never throws in its current simulated form,
-      // so this documents the contract: a failed session creation must
-      // leave isBroadcastingLive/custom* fields untouched and return false,
-      // exercised at the unit level by the try/catch in
-      // AppProvider.startQuickPhoneBroadcast itself.
-      final provider = AppProvider();
-      expect(provider.isBroadcastingLive, isFalse);
-      expect(provider.customLiveTitle, isNotEmpty);
-    });
-  });
+  // The YouTubeLiveService and startQuickPhoneBroadcast groups that used to
+  // live here were deleted with the code they covered (P2 / 05 D-03): the
+  // service never called YouTube -- it minted deterministic fake broadcast
+  // ids, RTMP URLs and stream keys, and no production screen called it (the
+  // Broadcaster Studio sheet has used the streamer's real, manually entered
+  // stream key since v0.9, because a simulated key is rejected by YouTube's
+  // real ingest). Real phone broadcasting is covered by
+  // rtmp_publish_engine/phone broadcast tests.
 
   group('AppProvider: Broadcaster Studio meta (v0.9)', () {
     test(

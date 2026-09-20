@@ -77,6 +77,14 @@ void main() {
 
     setUp(() {
       provider = AppProvider();
+      // The studio starts with an empty title now (P2: it used to be
+      // pre-filled with an invented lecture title). Tests that locate the
+      // title field by its current text seed one explicitly.
+      provider.setCustomBroadcastMeta(
+        title: 'Seeded Studio Title',
+        description: '',
+        category: provider.customLiveCategory,
+      );
     });
 
     // InteractiveToastOverlay's auto-dismiss Timer is a static field that

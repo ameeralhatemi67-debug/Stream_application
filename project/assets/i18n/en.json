@@ -92,6 +92,9 @@
     "following_btn": "Following",
     "reminder_btn": "Set Reminder",
     "share_btn": "Share Profile",
+    "save_lecture": "Save lecture",
+    "saved_lecture": "Saved",
+    "share_vod": "Share lecture",
     "verified_scholar": "Verified Scholar",
     "university": "University / Venue",
     "about": "Biography",
@@ -249,11 +252,6 @@
     "revoke_moderator": "Revoke Moderator",
     "moderator_appointed_toast": "Appointed as stream moderator.",
     "moderator_revoked_toast": "Moderator role revoked."
-  },
-  "safety": {
-    "modal_title": "Feature In Development",
-    "modal_body": "This feature is scheduled for full release in the upcoming version.",
-    "got_it": "Understood"
   },
   "language": {
     "en": "English",

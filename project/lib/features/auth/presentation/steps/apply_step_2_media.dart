@@ -34,19 +34,10 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
   String? _avatarError;
   String? _bannerError;
 
-  final List<String> _avatarPresets = [
-    'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-    'assets/images/Dalilak/profile1.jpg',
-    'assets/images/Dalilak/profile2.jpg',
-    'assets/images/Dalilak/profile3.jpg',
-    'assets/images/quran/Quran_profile.jpg',
-  ];
-
-  final List<String> _bannerPresets = [
-    'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
-    'assets/images/Dalilak/banner.jpg',
-    'assets/images/quran/Quran_banner.jpg',
-  ];
+  // The avatar/banner preset strips offered real people's photographs
+  // (a named broadcaster and two organizations) as pictures an applicant
+  // could adopt as their own. Applicants upload their own image instead
+  // (_pickAvatar/_pickBanner below) -- P2 truthful data.
 
   Future<void> _pickAvatar() async {
     try {
@@ -281,28 +272,6 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
           ),
           const SizedBox(height: 10),
 
-          // Banner Preset Chips
-          Wrap(
-            spacing: 8,
-            children: _bannerPresets.map((preset) {
-              final isSelected = widget.bannerPath == preset && widget.bannerBytes == null;
-              return ChoiceChip(
-                label: Text(
-                  preset.split('/').last.replaceAll('.jpg', ''),
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: isSelected ? Colors.white : AppTheme.textSecondaryDark,
-                  ),
-                ),
-                selected: isSelected,
-                selectedColor: AppTheme.accentRed,
-                backgroundColor: AppTheme.darkSurface1,
-                onSelected: (sel) {
-                  if (sel) widget.onBannerSelected(preset, null);
-                },
-              );
-            }).toList(),
-          ),
           const SizedBox(height: AppTheme.spaceLg),
 
           // 👤 Avatar Section
@@ -389,31 +358,6 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
           ),
           const SizedBox(height: 12),
 
-          // Avatar Presets
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _avatarPresets.map((preset) {
-              final isSelected = widget.avatarPath == preset && widget.avatarBytes == null;
-              return GestureDetector(
-                onTap: () => widget.onAvatarSelected(preset, null),
-                child: Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: isSelected ? AppTheme.accentRed : Colors.transparent,
-                      width: 2.5,
-                    ),
-                  ),
-                  child: CircleAvatar(
-                    radius: 20,
-                    backgroundImage: AssetImage(preset),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
         ],
       ),
     );
