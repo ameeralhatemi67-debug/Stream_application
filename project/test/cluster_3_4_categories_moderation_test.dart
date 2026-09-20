@@ -5,7 +5,8 @@ import 'package:streamer_app/features/admin/models/tag_moderation_model.dart';
 import 'package:streamer_app/features/admin/models/banned_user_model.dart';
 import 'package:streamer_app/features/admin/models/stream_moderator_model.dart';
 import 'package:streamer_app/features/live_stream/models/chat_message_model.dart';
-import 'package:streamer_app/features/profile/models/streamer_models.dart';
+
+import 'fixtures/streamer_fixtures.dart';
 
 void main() {
   group('Cluster 3 Task 10/11: Academic Categories', () {
@@ -52,6 +53,7 @@ void main() {
         'AppProvider.academicCategories falls back to defaultPool when the '
         'backend list is empty (offline / not loaded yet)', () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       // No Supabase in the test environment -> _academicCategories stays
       // empty -> the getter must degrade to the seeded default pool rather
       // than leaving Discovery/Map with zero category chips.
@@ -64,6 +66,7 @@ void main() {
         'both filteredStreamers (shared by Discovery Feed and Spatial Map) '
         'and the selectedCategoryId getter', () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       expect(provider.selectedCategoryId, isNull); // 'all' -> null
 
       provider.setCategoryFilter('islamic_studies');
@@ -107,6 +110,7 @@ void main() {
         'the tags filter sheet degrades to just the "all" chip rather than '
         'crashing when there is no backend to read from', () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       expect(provider.approvedTags, isEmpty);
       expect(provider.allTagsForModeration, isEmpty);
     });
@@ -234,6 +238,7 @@ void main() {
         'this is the state AppRouter\'s redirect guard reads to decide '
         'whether to send a signed-in user to /account-banned', () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       expect(provider.isCurrentUserBanned, isFalse);
       expect(provider.currentUserBanReason, isNull);
     });
@@ -256,6 +261,7 @@ void main() {
         'isTemporarilyHiddenFromMap is set, but the full streamers list still '
         'has them (profile stays reachable by direct link)', () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       const targetId = 'prof_alghamdi_01';
       final target = provider.streamers.firstWhere((s) => s.streamerId == targetId);
 

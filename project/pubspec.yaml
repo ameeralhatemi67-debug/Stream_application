@@ -31,7 +31,6 @@ dependencies:
   vector_math: ^2.1.4
 
   # Media Streaming & Video Viewports
-  flutter_vlc_player: ^7.4.1
   youtube_player_iframe: ^5.2.1
   wakelock_plus: ^1.2.8
   webview_flutter: ^4.8.0

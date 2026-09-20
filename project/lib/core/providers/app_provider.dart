@@ -50,7 +50,11 @@ bool _looksLikeUuid(String? value) =>
     value != null && _uuidPattern.hasMatch(value);
 
 class AppProvider extends ChangeNotifier {
-  List<StreamerModel> _streamers = List.from(mockStreamers);
+  // Starts empty: the catalog comes from the backend
+  // (loadVerifiedStreamersFromBackend). Sample broadcasters used to be
+  // compiled in and merged with real data, so an offline or empty backend
+  // still showed five fictional channels (P2 truthful data).
+  List<StreamerModel> _streamers = [];
   List<GhostComment> _chatMessages = [];
   final List<LectureQuestionModel> _questions =
       List.from(LectureQuestionModel.sampleQuestions);

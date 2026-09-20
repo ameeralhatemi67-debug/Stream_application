@@ -14,6 +14,8 @@ import 'package:streamer_app/features/auth/presentation/streamer_apply_screen.da
 import 'package:streamer_app/features/auth/presentation/application_pending_screen.dart';
 import 'package:streamer_app/features/auth/presentation/steps/apply_step_3_professional.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;
   final Map<String, dynamic> arData;
@@ -87,6 +89,7 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       provider = AppProvider();
+      seedStreamerFixtures(provider);
       await Future.delayed(const Duration(milliseconds: 80));
     });
 

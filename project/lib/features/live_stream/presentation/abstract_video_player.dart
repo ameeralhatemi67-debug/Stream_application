@@ -5,7 +5,6 @@ import 'adapters/web_live_player_adapter.dart';
 import 'adapters/youtube_player_adapter.dart';
 
 export 'adapters/aws_ivs_player_adapter.dart';
-export 'adapters/vlc_player_adapter.dart';
 export 'adapters/web_live_player_adapter.dart';
 export 'adapters/youtube_player_adapter.dart';
 
@@ -38,7 +37,7 @@ enum StreamState {
 
 /// Polymorphic abstract video player interface widget for educational broadcasts.
 ///
-/// Implementations (`WebLivePlayerAdapter`, `VlcPlayerAdapter`, `AwsIvsPlayerAdapter`, `YouTubePlayerAdapter`)
+/// Implementations (`WebLivePlayerAdapter`, `AwsIvsPlayerAdapter`, `YouTubePlayerAdapter`)
 /// standardize video playback, loading states, error handling, and lifecycle disposal.
 abstract class AbstractVideoPlayer extends StatefulWidget {
   final String streamUrl;

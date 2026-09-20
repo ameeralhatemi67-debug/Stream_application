@@ -12,6 +12,8 @@ import 'package:streamer_app/features/profile/presentation/broadcaster_profile_s
 import 'package:streamer_app/features/profile/presentation/widgets/org_branches_modal_sheet.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/org_speaker_inspection_sheet.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;
   final Map<String, dynamic> arData;
@@ -87,7 +89,7 @@ void main() {
 
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
-
+      seedStreamerFixtures(provider);
       await pumpTestApp(
         tester,
         const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
@@ -108,7 +110,7 @@ void main() {
 
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
-
+      seedStreamerFixtures(provider);
       await pumpTestApp(
         tester,
         const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
@@ -133,7 +135,7 @@ void main() {
 
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
-
+      seedStreamerFixtures(provider);
       await pumpTestApp(
         tester,
         const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
@@ -153,6 +155,7 @@ void main() {
     testWidgets('TC-ORG-UI-04: OrgBranchesModalSheet renders all 3 campus locations', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
       final venues = provider.getOrganizationVenues('org_dalilk_04');
 
       await pumpTestApp(
@@ -187,6 +190,7 @@ void main() {
     testWidgets('TC-ORG-UI-05: OrgSpeakerInspectionSheet displays instructor details & bio', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
       final speakers = provider.getOrganizationSpeakers('org_dalilk_04');
       final speaker = speakers.first; // Abdulrahman Hejazi
 

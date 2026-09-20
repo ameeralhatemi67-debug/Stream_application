@@ -6,8 +6,9 @@ import 'package:streamer_app/features/organization/models/org_venue_branch_model
 import 'package:streamer_app/features/organization/models/org_speaker_model.dart';
 import 'package:streamer_app/features/organization/models/org_broadcaster_permissions.dart';
 import 'package:streamer_app/features/organization/models/org_audit_log_entry.dart';
-import 'package:streamer_app/features/profile/models/streamer_models.dart';
 import 'package:streamer_app/features/profile/models/vod_models.dart';
+
+import 'fixtures/streamer_fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -134,7 +135,7 @@ void main() {
     test('TC-ORG-05: AppProvider RBAC and Organization helpers', () async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
-
+      seedStreamerFixtures(provider);
       // Verify venues and speakers getters
       final venues = provider.getOrganizationVenues('org_dalilk_04');
       final speakers = provider.getOrganizationSpeakers('org_dalilk_04');

@@ -5,12 +5,15 @@ import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 void main() {
   group('Version 0.4 Core Architect Settings & State Unit Tests', () {
     late AppProvider provider;
 
     setUp(() {
       provider = AppProvider();
+      seedStreamerFixtures(provider);
     });
 
     test('TC-V04-SET-01: Streaming Quality Preference State Management', () {

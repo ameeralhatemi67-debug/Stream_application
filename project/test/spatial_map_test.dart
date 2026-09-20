@@ -9,6 +9,8 @@ import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dr
 import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 /// Finds a Container whose BoxDecoration paints a transparent fill with outer stroke border
 /// and padding gap -- the stroke ring marker styling with empty avatar space.
 Finder _findStrokeRingMarkerContainer() {

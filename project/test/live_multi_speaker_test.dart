@@ -13,6 +13,8 @@ import 'package:streamer_app/features/profile/models/vod_models.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_multi_speaker_overlay.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_audio_stage_multi_speaker.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;
   final Map<String, dynamic> arData;
@@ -83,6 +85,7 @@ void main() {
     testWidgets('TC-LIVE-SPK-01: Multi-speaker video overlay renders avatars for active instructors', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
       final speakers = provider.getOrganizationSpeakers('org_dalilk_04');
 
       await pumpTestApp(
@@ -106,7 +109,7 @@ void main() {
     testWidgets('TC-LIVE-SPK-02: Overlay supports horizontal scrolling when > 5 speakers', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
-
+      seedStreamerFixtures(provider);
       // Create a list of 7 mock speakers
       final sevenSpeakers = List<OrgSpeakerModel>.generate(
         7,
@@ -142,6 +145,7 @@ void main() {
     testWidgets('TC-LIVE-SPK-03: Tapping an avatar in LiveMultiSpeakerOverlay triggers callback', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
       final speakers = provider.getOrganizationSpeakers('org_dalilk_04');
 
       OrgSpeakerModel? tappedSpeaker;
@@ -174,6 +178,7 @@ void main() {
     testWidgets('TC-LIVE-SPK-04: LiveAudioStageMultiSpeaker renders kinetic multi-speaker roster', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
       final streamer = provider.getStreamerById('org_dalilk_04')!;
 
       await pumpTestApp(
@@ -202,6 +207,7 @@ void main() {
     testWidgets('TC-LIVE-SPK-05: Tapping speaker in LiveAudioStageMultiSpeaker triggers inspection', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
       final streamer = provider.getStreamerById('org_dalilk_04')!;
 
       OrgSpeakerModel? inspectedSpeaker;
@@ -235,6 +241,7 @@ void main() {
     testWidgets('TC-LIVE-SPK-06: Integrated video viewport stack correctly renders LiveMultiSpeakerOverlay for organizations', (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
       final streamer = provider.getStreamerById('org_dalilk_04')!;
 
       await pumpTestApp(

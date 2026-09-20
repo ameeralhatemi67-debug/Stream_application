@@ -2,7 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/features/auth/presentation/steps/apply_step_3_professional.dart';
-import 'package:streamer_app/features/profile/models/streamer_models.dart';
+
+import 'fixtures/streamer_fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -13,6 +14,7 @@ void main() {
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
       provider = AppProvider();
+      seedStreamerFixtures(provider);
     });
 
     test('TC-YT-PARSER-01: Correctly extracts clean handle from various URL formats', () {

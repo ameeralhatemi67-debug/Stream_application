@@ -1,11 +1,5 @@
 include: package:flutter_lints/flutter.yaml
 
-analyzer:
-  exclude:
-    # v0.7 Checkpoint 1 spike (doc/Roadmap/v0.7_Mobile_Streaming_Android.md):
-    # kept as reference for the engine/UI split Checkpoint 2 should copy, but
-    # rtmp_streaming doesn't build on this project's current Android
-    # toolchain (AGP 8.11.1 / Kotlin 2.2.20 / compileSdk 36) -- see the spike
-    # commit body -- so the package isn't in pubspec.yaml and this code
-    # can't type-check against it. Not run, not shipped.
-    - lib/spike_rtmp/**
+# lib/spike_rtmp/ (the v0.7 Checkpoint 1 RTMP spike) was deleted in P2: it was
+# superseded by lib/features/live_stream/services/rtmp_publish_engine.dart,
+# never built, and excluded from analysis. Its history is in git.

@@ -8,7 +8,8 @@ import 'package:streamer_app/core/widgets/device_session_conflict_dialog.dart';
 import 'package:streamer_app/features/discovery/presentation/widgets/streamer_grid_card.dart';
 import 'package:streamer_app/features/live_stream/models/stream_privacy_models.dart';
 import 'package:streamer_app/features/live_stream/services/stream_decay_engine.dart';
-import 'package:streamer_app/features/profile/models/streamer_models.dart';
+
+import 'fixtures/streamer_fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -48,6 +49,7 @@ void main() {
     test('AppProvider cannot claim a broadcaster session without a backend',
         () async {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       await provider.initDeviceSession();
 
       expect(provider.currentDeviceSession, isNotNull);
@@ -141,6 +143,7 @@ void main() {
         'StreamerGridCard renders white border and Your Channel badge for own profile',
         (WidgetTester tester) async {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       // Ownership comes from an approved application for that channel, never
       // from the signed-in email (P1.6).
       provider.debugSetSignedInForTests(
@@ -180,6 +183,7 @@ void main() {
         'StreamerGridCard does NOT render Your Channel badge for other streamers',
         (WidgetTester tester) async {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       provider.setBroadcasterStatusForTesting(
           isLoggedIn: true, isApproved: true);
 
@@ -214,6 +218,7 @@ void main() {
         'isOwnStreamerProfile correctly identifies own channel vs other channels',
         () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       provider.debugSetSignedInForTests(
         email: 'owner@example.com',
         isStreamer: true,
@@ -232,6 +237,7 @@ void main() {
         'arbitrary email logins do not inherit prof_alghamdi_01 (Cluster 2 Task 10)',
         () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       provider.debugSetSignedInForTests(
         email: 'some.random.viewer@gmail.com',
         isStreamer: true,
@@ -248,6 +254,7 @@ void main() {
     test('no email grants ownership of a channel (P1.6 dev identity removed)',
         () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       // The developer account that used to be hardcoded into
       // primaryOwnedStreamerId gets no special treatment any more.
       provider.debugSetSignedInForTests(
@@ -263,6 +270,7 @@ void main() {
 
     test('admin status alone does not grant ownership of another channel', () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       provider.debugSetSignedInForTests(
         email: 'admin@streamer.app',
         isAdmin: true,
@@ -314,7 +322,7 @@ void main() {
         'private mode remains public until server entitlements exist',
         () {
       final provider = AppProvider();
-
+      seedStreamerFixtures(provider);
       // Configure a private stream with specific whitelist
       provider.configureStreamPrivacy(
         visibility: StreamVisibility.private,
@@ -334,6 +342,7 @@ void main() {
         'detectDuplicateChannels and resolveDuplicateChannels keeps chosen channel only',
         () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       // The account owns 'prof_alghamdi_01' through its approved application
       // and also still has a card under the application's YouTube handle --
       // the real duplicate case (P1.6: ownership decides, not a name match).

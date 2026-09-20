@@ -5,6 +5,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -79,6 +81,7 @@ void main() {
     test('TC-PITCH-01: Pitch Director Mode Activation & Live State Forcing',
         () {
       final provider = AppProvider();
+      seedStreamerFixtures(provider);
       // Pitch Director mode marks the caller's OWN channel live (P1.6).
       provider.debugSetSignedInForTests(
         email: 'owner@example.com',
@@ -101,7 +104,7 @@ void main() {
 
     test('TC-PITCH-02: Category Filtering and Search Operations', () {
       final provider = AppProvider();
-
+      seedStreamerFixtures(provider);
       provider.setCategoryFilter('cs_tech');
       expect(provider.currentCategoryFilter, equals('cs_tech'));
       expect(provider.filteredStreamers.every((s) => s.categoryId == 'cs_tech'),

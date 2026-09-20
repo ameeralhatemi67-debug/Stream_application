@@ -15,6 +15,8 @@ import 'package:streamer_app/features/organization/models/org_audit_log_entry.da
 import 'package:streamer_app/features/organization/models/org_broadcaster_permissions.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;
   final Map<String, dynamic> arData;
@@ -89,6 +91,7 @@ void main() {
     setUp(() async {
       final dbService = await AdminDatabaseService.create();
       provider = AppProvider(dbService);
+      seedStreamerFixtures(provider);
       await Future.delayed(const Duration(milliseconds: 50));
     });
 
@@ -286,6 +289,7 @@ void main() {
 
       final db = await AdminDatabaseService.create();
       final freshProvider = AppProvider(db);
+      seedStreamerFixtures(freshProvider);
 
       await pumpTestApp(
         tester,
@@ -330,6 +334,7 @@ void main() {
 
       final db = await AdminDatabaseService.create();
       final freshProvider = AppProvider(db);
+      seedStreamerFixtures(freshProvider);
 
       await pumpTestApp(
         tester,

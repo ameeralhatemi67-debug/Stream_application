@@ -3,7 +3,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
-import 'package:streamer_app/features/profile/models/streamer_models.dart';
 import 'package:streamer_app/features/profile/models/vod_models.dart';
 import 'package:streamer_app/features/organization/models/org_speaker_model.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_audio_stage_multi_speaker.dart';
@@ -14,6 +13,8 @@ import 'package:streamer_app/features/map/presentation/widgets/city_selector_dro
 import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dropdown.dart';
 import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
+
+import 'fixtures/streamer_fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

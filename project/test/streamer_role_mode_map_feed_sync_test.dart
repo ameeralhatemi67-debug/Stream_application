@@ -1,6 +1,8 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 
+import 'fixtures/streamer_fixtures.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -9,6 +11,7 @@ void main() {
 
     setUp(() {
       provider = AppProvider();
+      seedStreamerFixtures(provider);
     });
 
     test('TC-STREAMER-SYNC-01: Approved Streamer appears on Discovery and Map when Streamer Mode is ON', () {

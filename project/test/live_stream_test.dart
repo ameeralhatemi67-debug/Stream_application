@@ -6,7 +6,8 @@ import 'package:streamer_app/features/live_stream/presentation/abstract_video_pl
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_player_overlay_controls.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/stream_state_placeholder_overlay.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
-import 'package:streamer_app/features/profile/models/streamer_models.dart';
+
+import 'fixtures/streamer_fixtures.dart';
 
 void main() {
   group('Live Stream Engine & Ghost Audience Unit Tests', () {

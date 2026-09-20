@@ -1,8 +1,9 @@
 ﻿import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
 
 class SearchResultItem {
@@ -71,8 +72,9 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
       }
     }
 
-    // Search Streamers & Venues
-    for (final streamer in mockStreamers) {
+    // Search Streamers & Venues -- the live catalog the provider holds, not a
+    // compiled-in sample list (P2 truthful data).
+    for (final streamer in context.read<AppProvider>().streamers) {
       final name = streamer.getLocalizedName(langCode);
       final venue = streamer.getLocalizedVenue(langCode);
 
