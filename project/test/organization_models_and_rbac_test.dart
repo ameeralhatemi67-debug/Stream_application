@@ -6,9 +6,10 @@ import 'package:streamer_app/features/organization/models/org_venue_branch_model
 import 'package:streamer_app/features/organization/models/org_speaker_model.dart';
 import 'package:streamer_app/features/organization/models/org_broadcaster_permissions.dart';
 import 'package:streamer_app/features/organization/models/org_audit_log_entry.dart';
-import 'package:streamer_app/features/profile/models/vod_models.dart';
 
 import 'fixtures/streamer_fixtures.dart';
+
+import 'fixtures/vod_fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

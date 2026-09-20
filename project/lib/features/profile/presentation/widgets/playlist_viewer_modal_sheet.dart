@@ -78,7 +78,9 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
           return;
         }
 
-        // Fallback Resolution: Find matching streamer lectures from mock/cached pool
+        // Fallback resolution: the streamer's own cached recordings. There is
+        // no sample pool behind this any more -- an empty result stays empty
+        // and the sheet shows its empty state (P2 truthful data).
         final allStreamerVods =
             provider.getVodsForStreamer(widget.streamer.streamerId);
         List<VodModel> fallbackList = allStreamerVods
@@ -91,22 +93,14 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
         }
 
         setState(() {
-          _videos = fallbackList.isNotEmpty
-              ? fallbackList
-              : MockVodArchivePool.sampleVods
-                  .where((v) => v.streamerId == widget.streamer.streamerId)
-                  .toList();
+          _videos = fallbackList;
           _isLoading = false;
         });
       }
     } catch (_) {
       if (mounted) {
-        final fallbackList = provider
-            .getVodsForStreamer(widget.streamer.streamerId);
         setState(() {
-          _videos = fallbackList.isNotEmpty
-              ? fallbackList
-              : MockVodArchivePool.sampleVods;
+          _videos = provider.getVodsForStreamer(widget.streamer.streamerId);
           _isLoading = false;
         });
       }

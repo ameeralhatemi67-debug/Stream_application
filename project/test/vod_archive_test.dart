@@ -2,6 +2,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/features/profile/models/vod_models.dart';
 
+import 'fixtures/vod_fixtures.dart';
+
 void main() {
   group('VOD Archive & RTMP Configuration Unit Tests', () {
     test('TC-VOD-01 & TC-VOD-02: Localized Title & Description Selection', () {

@@ -6,14 +6,11 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../models/chat_message_model.dart';
-import '../models/ghost_comments.dart';
-import '../services/ghost_chat_fallback_controller.dart';
 import '../services/live_chat_controller.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
-import '../../profile/models/vod_models.dart';
 import '../../map/presentation/widgets/venue_navigation_sheet.dart';
 import 'abstract_video_player.dart';
 import 'widgets/chat_message_actions_sheet.dart';
@@ -42,7 +39,6 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   final TextEditingController _chatTextController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
   late final LiveChatController _chatController;
-  late final GhostChatFallbackController _ghostChatController;
 
   late TabController _tabController;
   // Fixed to the YouTube embed engine (ADR-002). The overlay's selector no
@@ -67,8 +63,6 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       streamId: widget.streamId,
       onReaction: (type) => _reactionsController.spawnReaction(type),
     )..start();
-    _ghostChatController =
-        GhostChatFallbackController(streamId: widget.streamId);
     _chatController.addListener(_handleChatConnectionChange);
     _setWakelock(true);
   }
@@ -107,7 +101,6 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _chatScrollController.dispose();
     _chatController.removeListener(_handleChatConnectionChange);
     _chatController.dispose();
-    _ghostChatController.dispose();
     super.dispose();
   }
 
@@ -162,19 +155,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
   }
 
-  /// Switches the chat tab to the simulated ghost-chat fallback the moment
-  /// Realtime drops (Checkpoint 4), and back to real messages the moment it
-  /// recovers -- reusing LiveChatController's existing "reconnecting" state
-  /// rather than adding a new one, since that's already exactly "Realtime is
-  /// unreachable."
+  /// Keeps the chat tab in step with the Realtime connection: a drop shows
+  /// the "chat unavailable" banner over the real (possibly empty) message
+  /// list. It used to swap in simulated comments instead (05 D-03).
   void _handleChatConnectionChange() {
-    final disconnected =
-        _chatController.connectionState == ChatConnectionState.reconnecting;
-    if (disconnected && !_ghostChatController.isActive) {
-      _ghostChatController.start();
-    } else if (!disconnected && _ghostChatController.isActive) {
-      _ghostChatController.stop();
-    }
+    if (mounted) setState(() {});
   }
 
   ImageProvider _getImageProvider(String url) {
@@ -352,8 +337,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final langCode = context.locale.languageCode;
 
     final streamer = _resolveStreamer(appProvider);
-    final viewerCount =
-        streamer.activeViewerCount > 0 ? streamer.activeViewerCount : 1240;
+    // The real count, or 0 when nobody is counted yet -- never a stand-in
+    // number (P2 truthful data; P3 replaces 0 with a proper unknown state).
+    final viewerCount = streamer.activeViewerCount;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBgBase,
@@ -491,7 +477,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               langCode: langCode,
               viewerCount: viewerCount,
               speakers: streamer.affiliatedSpeakers,
-              allVods: MockVodArchivePool.sampleVods,
+              allVods: appProvider.getVodsForStreamer(streamer.streamerId),
               isPlaying: _isPlaying,
               streamState: _streamState,
               onStageTap: () {
@@ -514,7 +500,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               child: LiveMultiSpeakerOverlay(
                 speakers: streamer.affiliatedSpeakers,
                 orgName: streamer.getLocalizedName(langCode),
-                allVods: MockVodArchivePool.sampleVods,
+                allVods: appProvider.getVodsForStreamer(streamer.streamerId),
               ),
             ),
 
@@ -786,7 +772,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   // 💬 Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
   Widget _buildChatTabView() {
     return ListenableBuilder(
-      listenable: Listenable.merge([_chatController, _ghostChatController]),
+      listenable: _chatController,
       builder: (context, _) => _buildChatTabViewContent(),
     );
   }
@@ -846,15 +832,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     // Both lists are oldest-first; the reversed ListView wants newest-first
     // at index 0.
     final messages = _chatController.messages.reversed.toList();
-    final ghostMessages = _ghostChatController.messages.reversed.toList();
-    final langCode = context.locale.languageCode;
 
     return Stack(
       children: [
         Column(
           children: [
             _buildChatConnectionIndicator(),
-            if (isOffline) _buildDemoModeBanner(),
+            if (isOffline) _buildChatUnavailableBanner(),
             if (_chatController.canModerate &&
                 _chatController.moderationAlerts.isNotEmpty)
               ..._chatController.moderationAlerts
@@ -862,20 +846,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
             // Chat Stream List (Starts from bottom with newest messages, scroll up for older)
             Expanded(
-              child: isOffline
-                  ? ListView.builder(
-                      controller: _chatScrollController,
-                      physics: const AlwaysScrollableScrollPhysics(
-                        parent: BouncingScrollPhysics(),
-                      ),
-                      reverse: true,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spaceMd, vertical: 4),
-                      itemCount: ghostMessages.length,
-                      itemBuilder: (context, index) =>
-                          _buildGhostChatTile(ghostMessages[index], langCode),
-                    )
-                  : ListView.builder(
+              child: ListView.builder(
                       controller: _chatScrollController,
                       physics: const AlwaysScrollableScrollPhysics(
                         parent: BouncingScrollPhysics(),
@@ -1021,7 +992,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
-  Widget _buildDemoModeBanner() {
+  /// Shown while Realtime is unreachable. The room used to fill the chat with
+  /// simulated comments behind a "Demo Mode" banner (05 D-03); it now says
+  /// plainly that chat is unavailable and shows no invented traffic.
+  Widget _buildChatUnavailableBanner() {
     return Container(
       width: double.infinity,
       padding:
@@ -1034,7 +1008,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           const SizedBox(width: 6),
           Expanded(
             child: Text(
-              'live.demo_mode_banner'.tr(),
+              'live.chat_unavailable_banner'.tr(),
               style: const TextStyle(
                 color: AppTheme.accentAmber,
                 fontSize: 11,
@@ -1164,64 +1138,6 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             Text(
               TimeOfDay.fromDateTime(message.createdAt.toLocal())
                   .format(context),
-              style:
-                  const TextStyle(color: AppTheme.textMutedDark, fontSize: 10),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// Simulated fallback message tile (Checkpoint 4) -- deliberately styled
-  /// dimmer than _buildChatMessageTile (muted sender-name color, reduced
-  /// opacity) and not long-press-actionable, so demo content stays visually
-  /// distinct from real chat beyond just the banner above it.
-  Widget _buildGhostChatTile(GhostComment comment, String langCode) {
-    return Opacity(
-      opacity: 0.8,
-      child: Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 12,
-              backgroundColor: AppTheme.darkSurface3,
-              child: Text(
-                comment.getLocalizedSender(langCode).isNotEmpty
-                    ? comment.getLocalizedSender(langCode)[0].toUpperCase()
-                    : '?',
-                style: const TextStyle(
-                    color: AppTheme.textMutedDark,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spaceSm),
-            Expanded(
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: '${comment.getLocalizedSender(langCode)}: ',
-                      style: const TextStyle(
-                        color: AppTheme.textMutedDark,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    TextSpan(
-                      text: comment.getLocalizedMessage(langCode),
-                      style: const TextStyle(
-                          color: AppTheme.textSecondaryDark, fontSize: 12),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Text(
-              comment.timestamp,
               style:
                   const TextStyle(color: AppTheme.textMutedDark, fontSize: 10),
             ),

@@ -283,78 +283,13 @@ class VenueAuditoriumInfo {
 }
 
 /// Preset Auditorium Data for AlSharqia Universities & Public Venues
+/// Venue details for a streamer's card and navigation sheet, derived from the
+/// streamer's own venue/city fields. The per-streamer presets that used to sit
+/// here described the five sample broadcasters that shipped inside lib/ (P2);
+/// the remaining capacity/gate wording is still generic and is replaced with
+/// real venue data in P5.
 VenueAuditoriumInfo getAuditoriumInfoForStreamer(StreamerModel streamer) {
   switch (streamer.streamerId) {
-    case 'prof_alghamdi_01':
-      return const VenueAuditoriumInfo(
-        addressEn: 'KFUPM Academic Belt, Building 24, Dhahran 31261, KSA',
-        addressAr:
-            'حزام جامعة الملك فهد الأكاديمي، مبنى 24، الظهران 31261، المملكة العربية السعودية',
-        auditoriumDetailsEn:
-            'Main Conference Hall 101 (450 Seats, Dual Laser Projectors, Live Stream Console)',
-        auditoriumDetailsAr:
-            'قاعة المؤتمرات الكبرى 101 (سعة 450 مقعداً، أجهزة عرض ليزرية، وحدة بث مباشر)',
-        gateInfoEn: 'Gate 3 (Faculty & Guest Access) - Parking Lot B',
-        gateInfoAr:
-            'بوابة 3 (بوابة أعضاء هيئة التدريس والزوار) - مواقف السيارات B',
-        seatingCapacity: 450,
-      );
-    case 'prof_otaibi_02':
-      return const VenueAuditoriumInfo(
-        addressEn:
-            'IAU Female Campus, College of Computer Science, Al Rakah, Al Khobar 34251, KSA',
-        addressAr:
-            'جامعة الإمام عبد الرحمن، كلية علوم الحاسب، الراكة، الخبر 34251، المملكة العربية السعودية',
-        auditoriumDetailsEn:
-            'Innovation Hub Auditorium 204 (300 Seats, Interactive AI Smartboards)',
-        auditoriumDetailsAr:
-            'قاعة مركز الابتكار 204 (سعة 300 مقعد، شاشات التفاعلية للذكاء الاصطناعي)',
-        gateInfoEn: 'Main Campus Gate 1 - Visitor Parking Area A',
-        gateInfoAr: 'البوابة الرئيسية 1 - مواقف الزوار A',
-        seatingCapacity: 300,
-      );
-    case 'prof_dossary_03':
-      return const VenueAuditoriumInfo(
-        addressEn:
-            'Al-Rahmah Grand Mosque Complex, Corniche Road, Al Khobar 34412, KSA',
-        addressAr:
-            'مجمع جامع الرحمة، طريق الكورنيش، الخبر 34412، المملكة العربية السعودية',
-        auditoriumDetailsEn:
-            'Main Lecture & Seminar Hall (600 Seats, Integrated Spatial Audio System)',
-        auditoriumDetailsAr:
-            'قاعة المحاضرات والندوات الرئيسية (سعة 600 مقعد، نظام الصوت المكاني المعزز)',
-        gateInfoEn: 'North Mosque Gate - Grand Courtyard Parking',
-        gateInfoAr: 'البوابة الشمالية للجامع - مواقف الساحة الكبرى',
-        seatingCapacity: 600,
-      );
-    case 'prof_mansoor_04':
-      return const VenueAuditoriumInfo(
-        addressEn:
-            'Dhahran Techno Valley (DTV) Complex, Building 10, Dhahran 31261, KSA',
-        addressAr:
-            'مجمع وادي الظهران للتقنية، مبنى 10، الظهران 31261، المملكة العربية السعودية',
-        auditoriumDetailsEn:
-            'Clean Energy Auditorium Hall B (250 Seats, Solar Grid Demo Wall)',
-        auditoriumDetailsAr:
-            'قاعة الطاقة النظيفة B (سعة 250 مقعداً، شاشة عرض شبكات الطاقة الشمسية)',
-        gateInfoEn: 'DTV Security Gate 2 - Executive East Parking',
-        gateInfoAr: 'بوابة وادي الظهران الرئيسية - المواقف الشرقية',
-        seatingCapacity: 250,
-      );
-    case 'prof_zahrani_05':
-      return const VenueAuditoriumInfo(
-        addressEn:
-            'Prince Mohammad Bin Fahd University (PMU), Cyber Sciences Center, Al Khobar 34754, KSA',
-        addressAr:
-            'جامعة الأمير محمد بن فهد، مبنى العلوم السيبرانية، الخبر 34754، المملكة العربية السعودية',
-        auditoriumDetailsEn:
-            'Cyber Operations Auditorium 102 (200 Seats, Real-Time Threat Command Wall)',
-        auditoriumDetailsAr:
-            'قاعة عمليات الأمن السيبراني 102 (سعة 200 مقعد، جدار تحليلات التهديدات)',
-        gateInfoEn: 'Gate 2 (Engineering Complex) - Visitor Parking South',
-        gateInfoAr: 'البوابة 2 (بوابة الهندسة) - مواقف الزوار الجنوبية',
-        seatingCapacity: 200,
-      );
     default:
       return VenueAuditoriumInfo(
         addressEn: '${streamer.venueNameEn}, ${streamer.cityEn}, KSA',

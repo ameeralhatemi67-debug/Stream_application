@@ -70,13 +70,18 @@ void main() {
       expect(provider.streamers.any((s) => s.streamerId == customStreamer.streamerId), isFalse);
     });
 
-    test('TC-PROTECT-01: Protected seed streamers cannot be deleted', () async {
-      const protectedId = 'prof_alghamdi_01';
-      expect(provider.streamers.any((s) => s.streamerId == protectedId), isTrue);
+    test('TC-PROTECT-01: no channel is undeletable in the client any more',
+        () async {
+      // The five sample broadcasters that this guard protected no longer ship
+      // inside lib/ (P2), and deleting a real channel is authorized by RLS on
+      // the backend, not by an id list in the client.
+      const seededId = 'prof_alghamdi_01';
+      expect(provider.streamers.any((s) => s.streamerId == seededId), isTrue);
+      expect(provider.isProtectedStreamer(seededId), isFalse);
 
-      final success = await provider.deleteStreamer(protectedId);
-      expect(success, isFalse);
-      expect(provider.streamers.any((s) => s.streamerId == protectedId), isTrue);
+      final success = await provider.deleteStreamer(seededId);
+      expect(success, isTrue);
+      expect(provider.streamers.any((s) => s.streamerId == seededId), isFalse);
     });
   });
 }

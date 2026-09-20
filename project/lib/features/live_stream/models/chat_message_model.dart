@@ -24,9 +24,8 @@ enum ChatSenderBadge {
 /// with sender display info resolved client-side (see LiveChatController)
 /// rather than denormalized onto the row.
 ///
-/// Distinct from GhostComment (ghost_comments.dart), which stays the
-/// simulated/offline-fallback data model (Checkpoint 4) -- the two are not
-/// unified because a real message has one language, not separate EN/AR text.
+/// The only chat model: the simulated offline-fallback model it used to
+/// share the room with was deleted in P2.
 @immutable
 class ChatMessageModel {
   final String id;

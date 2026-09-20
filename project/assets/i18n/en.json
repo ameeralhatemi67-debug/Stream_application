@@ -207,7 +207,7 @@
     "delete_message_confirm_title": "Delete this message for everyone?",
     "user_muted_toast": "User muted for this stream.",
     "message_deleted_toast": "Message deleted.",
-    "demo_mode_banner": "Demo Mode -- offline, showing simulated chat",
+    "chat_unavailable_banner": "Chat is unavailable while offline",
     "moderation_alert_message": "Chatter {name} has been reported by {count}+ viewers.",
     "moderation_alert_quick_mute": "Quick Mute",
     "demo_mode_cannot_send_toast": "You're offline -- messages can't be sent in demo mode.",

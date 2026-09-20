@@ -207,7 +207,7 @@
     "delete_message_confirm_title": "هل تريد حذف هذه الرسالة للجميع؟",
     "user_muted_toast": "تم كتم المستخدم في هذا البث.",
     "message_deleted_toast": "تم حذف الرسالة.",
-    "demo_mode_banner": "وضع تجريبي -- غير متصل، يتم عرض محادثة محاكاة",
+    "chat_unavailable_banner": "المحادثة غير متاحة أثناء انقطاع الاتصال",
     "moderation_alert_message": "تم الإبلاغ عن المستخدم {name} من قبل {count}+ مشاهدين.",
     "moderation_alert_quick_mute": "كتم سريع",
     "demo_mode_cannot_send_toast": "أنت غير متصل -- لا يمكن إرسال الرسائل في الوضع التجريبي.",

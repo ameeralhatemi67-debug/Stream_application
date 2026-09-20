@@ -9,11 +9,12 @@ import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/organization/models/org_speaker_model.dart';
-import 'package:streamer_app/features/profile/models/vod_models.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_multi_speaker_overlay.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_audio_stage_multi_speaker.dart';
 
 import 'fixtures/streamer_fixtures.dart';
+
+import 'fixtures/vod_fixtures.dart';
 
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;

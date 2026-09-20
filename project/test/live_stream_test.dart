@@ -1,6 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
-import 'package:streamer_app/features/live_stream/models/ghost_comments.dart';
 import 'package:streamer_app/features/admin/models/streamer_custom_placeholder_model.dart';
 import 'package:streamer_app/features/live_stream/presentation/abstract_video_player.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_player_overlay_controls.dart';
@@ -10,54 +9,12 @@ import 'package:streamer_app/features/map/models/map_models.dart';
 import 'fixtures/streamer_fixtures.dart';
 
 void main() {
-  group('Live Stream Engine & Ghost Audience Unit Tests', () {
-    test('TC-GHOST-01: GhostCommentPool Data Integrity & Random Generation',
-        () {
-      expect(GhostCommentPool.rawComments, isNotEmpty);
-      expect(GhostCommentPool.rawComments.length, greaterThanOrEqualTo(8));
-
-      final comment =
-          GhostCommentPool.getRandomComment(streamId: 'stream_live_992');
-      expect(comment.streamId, equals('stream_live_992'));
-      expect(comment.messageId, isNotEmpty);
-      expect(comment.getLocalizedSender('en'), isNotEmpty);
-      expect(comment.getLocalizedSender('ar'), isNotEmpty);
-      expect(comment.getLocalizedMessage('en'), isNotEmpty);
-      expect(comment.getLocalizedMessage('ar'), isNotEmpty);
-    });
-
-    test('TC-CHAT-01: AppProvider Live Chat State Management', () {
-      final appProvider = AppProvider();
-      expect(appProvider.chatMessages, isEmpty);
-
-      appProvider.seedGhostChatIfNeeded(streamId: 'stream_live_992');
-      expect(appProvider.chatMessages, isNotEmpty);
-      final initialLength = appProvider.chatMessages.length;
-
-      const userComment = GhostComment(
-        messageId: 'user_test_1',
-        streamId: 'stream_live_992',
-        senderNameEn: 'You',
-        senderNameAr: 'أنت',
-        senderAvatar: 'assets/images/avatars/user_fahad.jpg',
-        messageTextEn: 'Great lecture Professor!',
-        messageTextAr: 'محاضرة قيمة يا دكتور!',
-        timestamp: '14:30:00',
-        isCurrentUser: true,
-        isGhostSimulation: false,
-        reactionType: 'clap',
-      );
-
-      appProvider.addChatMessage(userComment);
-      expect(appProvider.chatMessages.length, equals(initialLength + 1));
-      expect(appProvider.chatMessages.first.messageId, equals('user_test_1'));
-      expect(appProvider.chatMessages.first.isCurrentUser, isTrue);
-      expect(appProvider.chatMessages.first.reactionType, equals('clap'));
-
-      appProvider.clearChatMessages();
-      expect(appProvider.chatMessages, isEmpty);
-    });
-
+  group('Live Stream Engine Unit Tests', () {
+    // TC-GHOST-01 and TC-CHAT-01 covered the simulated "ghost audience" chat
+    // pool and AppProvider's copy of it. Both were deleted in P2 (05 D-03):
+    // an offline room now shows the "chat unavailable" banner over the real
+    // message list instead of invented comments. Real chat behaviour is
+    // covered by live_chat_controller/chat widget tests.
     test('TC-VENUE-01: Haversine Venue Distance Calculation Helper', () {
       final distanceKm = MapRegionModel.calculateHaversineDistance(
         26.2871, 50.2125, // Al Khobar Center

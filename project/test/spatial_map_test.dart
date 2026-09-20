@@ -134,21 +134,17 @@ void main() {
       expect(estimateTravelTime(6.92, 'ar'), contains('دقائق بالسيارة'));
     });
 
-    test('Verify Venue Auditorium Information Lookup by Streamer', () {
+    test('Venue information is derived from the streamer own venue fields',
+        () {
+      // The per-streamer address/gate presets described the five sample
+      // broadcasters that used to ship inside lib/; they were removed in P2,
+      // so every streamer's venue text now comes from its own fields.
       final alGhamdi =
           mockStreamers.firstWhere((s) => s.streamerId == 'prof_alghamdi_01');
-      final alGhamdiAuditorium = getAuditoriumInfoForStreamer(alGhamdi);
-      expect(alGhamdiAuditorium.seatingCapacity, equals(450));
-      expect(alGhamdiAuditorium.addressEn, contains('KFUPM Academic Belt'));
-      expect(alGhamdiAuditorium.getLocalizedAddress('ar'),
-          contains('جامعة الملك فهد'));
-      expect(alGhamdiAuditorium.getLocalizedGate('en'), contains('Gate 3'));
-
-      final otaibi =
-          mockStreamers.firstWhere((s) => s.streamerId == 'prof_otaibi_02');
-      final otaibiAuditorium = getAuditoriumInfoForStreamer(otaibi);
-      expect(otaibiAuditorium.seatingCapacity, equals(300));
-      expect(otaibiAuditorium.addressEn, contains('IAU Female Campus'));
+      final info = getAuditoriumInfoForStreamer(alGhamdi);
+      expect(info.addressEn, contains(alGhamdi.venueNameEn));
+      expect(info.addressEn, contains(alGhamdi.cityEn));
+      expect(info.getLocalizedAddress('ar'), contains(alGhamdi.venueNameAr));
     });
 
     test('Verify External Map Deep Link Generator', () {

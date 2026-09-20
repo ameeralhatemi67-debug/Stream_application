@@ -97,17 +97,20 @@ void main() {
       final provider = AppProvider();
 
       expect(provider.isYouTubeLiveSynced('prof_otaibi_02'), isFalse);
-      final initialVods = provider.getVodsForStreamer('prof_otaibi_02');
-      expect(initialVods.isNotEmpty, isTrue);
+      // No compiled-in sample archive any more: a streamer with no loaded
+      // recordings has none (P2 truthful data).
+      expect(provider.getVodsForStreamer('prof_otaibi_02'), isEmpty);
 
       await provider.loadYouTubeChannelData(
         streamerId: 'prof_otaibi_02',
         handle: 'ahmedamercaller',
       );
 
+      // The channel counts as synced once it has been asked; the list holds
+      // exactly what the API returned, which is nothing in a test binding
+      // (every HTTP request answers 400) -- never a stand-in archive.
       expect(provider.isYouTubeLiveSynced('prof_otaibi_02'), isTrue);
-      final liveVods = provider.getVodsForStreamer('prof_otaibi_02');
-      expect(liveVods.isNotEmpty, isTrue);
+      expect(provider.getVodsForStreamer('prof_otaibi_02'), isEmpty);
     });
 
     test('TC-YT-04: Filter Upcoming Premieres ("Live in N days")', () async {

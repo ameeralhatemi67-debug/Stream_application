@@ -14,6 +14,8 @@ import 'package:streamer_app/features/profile/presentation/widgets/org_speaker_i
 
 import 'fixtures/streamer_fixtures.dart';
 
+import 'fixtures/vod_fixtures.dart';
+
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;
   final Map<String, dynamic> arData;
@@ -136,6 +138,17 @@ void main() {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
+      // Recordings come from the backend now, so the test supplies them
+      // instead of relying on a sample archive inside lib/.
+      provider.setStreamerMediaForTests(
+        'org_dalilk_04',
+        vods: MockVodArchivePool.sampleVods
+            .where((v) => v.streamerId == 'org_dalilk_04')
+            .toList(),
+        playlists: MockVodArchivePool.samplePlaylists
+            .where((pl) => pl.streamerId == 'org_dalilk_04')
+            .toList(),
+      );
       await pumpTestApp(
         tester,
         const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),

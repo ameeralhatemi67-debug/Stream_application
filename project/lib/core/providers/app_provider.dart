@@ -21,7 +21,6 @@ import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/profile/models/streamer_models.dart';
 import '../../features/profile/models/vod_models.dart';
 import '../../features/profile/models/user_account_model.dart';
-import '../../features/live_stream/models/ghost_comments.dart';
 import '../../features/live_stream/models/qa_question_model.dart';
 import '../../features/live_stream/models/stream_privacy_models.dart';
 import '../../features/live_stream/services/rtmp_publish_engine.dart'
@@ -55,9 +54,10 @@ class AppProvider extends ChangeNotifier {
   // compiled in and merged with real data, so an offline or empty backend
   // still showed five fictional channels (P2 truthful data).
   List<StreamerModel> _streamers = [];
-  List<GhostComment> _chatMessages = [];
-  final List<LectureQuestionModel> _questions =
-      List.from(LectureQuestionModel.sampleQuestions);
+  // Audience Q&A has no backend and no screen wired to it (05 D-03). The list
+  // starts empty instead of being pre-filled with invented questions
+  // attributed to named people; the sample set lives in test fixtures.
+  final List<LectureQuestionModel> _questions = [];
   UserProfileModel _userProfile = UserProfileModel.defaultProfile;
   final YouTubeApiService _youTubeService = YouTubeApiService();
   final YouTubeLiveService _youTubeLiveService = YouTubeLiveService();
@@ -758,6 +758,20 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Seeds a streamer's recordings/playlists the way a real backend load
+  /// would. Tests use it instead of the sample archive that used to be
+  /// compiled into lib/ (P2 truthful data).
+  @visibleForTesting
+  void setStreamerMediaForTests(
+    String streamerId, {
+    List<VodModel>? vods,
+    List<PlaylistModel>? playlists,
+  }) {
+    if (vods != null) _streamerVods[streamerId] = vods;
+    if (playlists != null) _streamerPlaylists[streamerId] = playlists;
+    notifyListeners();
+  }
+
   @visibleForTesting
   void addStreamerForTests(StreamerModel streamer) {
     _streamers.add(streamer);
@@ -1216,7 +1230,6 @@ class AppProvider extends ChangeNotifier {
 
       // Remove any previously-loaded backend streamer that is no longer verified in DB
       _streamers.removeWhere((s) =>
-          !protectedStreamerIds.contains(s.streamerId) &&
           (currentUserId == null ||
               (s.streamerId != currentUserId &&
                   s.streamerId != 'streamer_$currentUserId')) &&
@@ -1367,8 +1380,7 @@ class AppProvider extends ChangeNotifier {
       _streamers.removeWhere((s) =>
           s.streamerId == userId ||
           s.streamerId == 'streamer_$userId' ||
-          (!protectedStreamerIds.contains(s.streamerId) &&
-              _myApplication != null &&
+          (_myApplication != null &&
               s.streamerId == 'streamer_${_myApplication!.id}'));
     }
   }
@@ -1901,16 +1913,11 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  static const Set<String> protectedStreamerIds = {
-    'prof_alghamdi_01',
-    'prof_otaibi_02',
-    'prof_dossary_03',
-    'prof_mansoor_04',
-    'prof_zahrani_05',
-  };
-
-  bool isProtectedStreamer(String streamerId) =>
-      protectedStreamerIds.contains(streamerId);
+  /// No channel is undeletable any more. This used to name the five sample
+  /// broadcasters that shipped inside lib/ so an admin could not remove them;
+  /// the samples are gone (P2), and a real channel's deletion is authorized by
+  /// RLS on the backend, not by an id list in the client.
+  bool isProtectedStreamer(String streamerId) => false;
 
   void addStreamer(StreamerModel newStreamer) {
     _streamers.add(newStreamer);
@@ -1927,9 +1934,6 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<bool> deleteStreamer(String streamerId) async {
-    if (protectedStreamerIds.contains(streamerId)) {
-      return false; // Protected original streamer cannot be deleted
-    }
     _streamers.removeWhere((s) =>
         s.streamerId == streamerId || s.streamerId == 'streamer_$streamerId');
     _adminDbService ??= await AdminDatabaseService.create();
@@ -1971,23 +1975,14 @@ class AppProvider extends ChangeNotifier {
     return _syncedYouTubeStreamers.contains(streamerId);
   }
 
-  List<VodModel> getVodsForStreamer(String streamerId) {
-    if (_streamerVods.containsKey(streamerId)) {
-      return _streamerVods[streamerId]!;
-    }
-    return MockVodArchivePool.sampleVods
-        .where((v) => v.streamerId == streamerId)
-        .toList();
-  }
+  /// Recordings this streamer actually has. An empty list means "nothing
+  /// recorded yet" and the UI shows an empty state -- it used to fall back to
+  /// a compiled-in sample archive (P2 truthful data).
+  List<VodModel> getVodsForStreamer(String streamerId) =>
+      _streamerVods[streamerId] ?? const [];
 
-  List<PlaylistModel> getPlaylistsForStreamer(String streamerId) {
-    if (_streamerPlaylists.containsKey(streamerId)) {
-      return _streamerPlaylists[streamerId]!;
-    }
-    return MockVodArchivePool.samplePlaylists
-        .where((p) => p.streamerId == streamerId)
-        .toList();
-  }
+  List<PlaylistModel> getPlaylistsForStreamer(String streamerId) =>
+      _streamerPlaylists[streamerId] ?? const [];
 
   Future<void> loadYouTubeChannelData({
     required String streamerId,
@@ -3127,25 +3122,6 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<GhostComment> get chatMessages => List.unmodifiable(_chatMessages);
-
-  void addChatMessage(GhostComment comment) {
-    _chatMessages.insert(0, comment);
-    notifyListeners();
-  }
-
-  void clearChatMessages() {
-    _chatMessages.clear();
-    notifyListeners();
-  }
-
-  void seedGhostChatIfNeeded({String streamId = 'stream_live_992'}) {
-    if (_chatMessages.isEmpty) {
-      _chatMessages = List.from(GhostCommentPool.rawComments.take(10));
-      notifyListeners();
-    }
-  }
-
   Set<String> get followedStreamerIds => Set.unmodifiable(_followedStreamerIds);
   Set<String> get reminderStreamerIds => Set.unmodifiable(_reminderStreamerIds);
 
@@ -3269,16 +3245,19 @@ class AppProvider extends ChangeNotifier {
       bannerUrl: _userProfile.bannerUrl,
       bioEn: _userProfile.bioEn,
       bioAr: _userProfile.bioAr,
-      isVerified: true,
-      followerCount: 1240,
+      // Synthesized for a broadcaster with no backend row yet: it must not
+      // invent verification, a following, or a venue in a city the account
+      // never named (P2 truthful data). Real values arrive with the profile.
+      isVerified: false,
+      followerCount: 0,
       categoryId:
           _currentCategoryFilter == 'all' ? 'cat_cs' : _currentCategoryFilter,
-      cityEn: 'Riyadh',
-      cityAr: 'الرياض',
-      venueNameEn: 'Main Campus',
-      venueNameAr: 'المقر الرئيسي',
-      latitude: 24.7136,
-      longitude: 46.6753,
+      cityEn: '',
+      cityAr: '',
+      venueNameEn: '',
+      venueNameAr: '',
+      latitude: 0,
+      longitude: 0,
       isCurrentlyLive: _isBroadcastingLive,
       broadcastType:
           _isBroadcastingLive ? _customBroadcastType : BroadcastType.offline,
@@ -3361,20 +3340,27 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Debug-only tool (the admin "Testing tools" tab is gated by kDebugMode):
+  /// pushes one notification through the real pipeline so its rendering can be
+  /// checked. It announces the signed-in account's own channel -- it used to
+  /// name a hardcoded developer identity (P1.6/P2).
   void triggerSimulatedNotification(BuildContext context) {
+    if (!kDebugMode) return;
+    final ownId = primaryOwnedStreamerId;
+    if (ownId == null) return;
+    final name = _googleUserName ?? _userProfile.nameEn;
     addEnhancedNotification(
       AppNotificationModel(
         id: 'notif_sim_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.streamerLiveVideo,
-        streamerId: 'prof_alghamdi_01',
-        streamerName: 'Amir Al-Hatemi',
-        titleEn: '🔴 Live Broadcast Started',
-        titleAr: '🔴 بدأ البث المباشر الآن',
-        bodyEn: '🔴 Amir Al-Hatemi is live now: "$customLiveTitle" .. Join in!',
-        bodyAr:
-            '🔴 أمير الحاتمي بدأ بثاً مباشراً الآن: «$customLiveTitle».. حيّاك شاركنا وتفاعل!',
+        streamerId: ownId,
+        streamerName: name,
+        titleEn: 'Live Broadcast Started',
+        titleAr: 'بدأ البث المباشر الآن',
+        bodyEn: '$name is live now: "$customLiveTitle" .. Join in!',
+        bodyAr: '$name بدأ بثاً مباشراً الآن: «$customLiveTitle».. حيّاك شاركنا وتفاعل!',
         timestamp: DateTime.now(),
-        streamId: 'stream_live_992',
+        streamId: _activeStreamIdForCurrentUser(),
       ),
       context: context,
     );

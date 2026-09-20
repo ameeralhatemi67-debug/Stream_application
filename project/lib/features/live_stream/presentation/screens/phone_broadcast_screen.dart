@@ -10,9 +10,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../discovery/models/academic_category_model.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../../map/models/map_models.dart';
-import '../../models/chat_message_model.dart';
 import '../../models/stream_privacy_models.dart';
-import '../../services/ghost_chat_fallback_controller.dart';
 import '../../services/live_chat_controller.dart';
 import '../../services/rtmp_publish_engine.dart';
 import '../widgets/chat_message_actions_sheet.dart';
@@ -44,7 +42,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   final ScrollController _chatScrollController = ScrollController();
 
   late final LiveChatController _chatController;
-  late final GhostChatFallbackController _ghostChatController;
   late TabController _tabController;
 
   String? _setupError;
@@ -82,8 +79,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       streamId: 'phone_broadcast_${DateTime.now().millisecondsSinceEpoch}',
       onReaction: (type) => _reactionsController.spawnReaction(type),
     )..start();
-    _ghostChatController =
-        GhostChatFallbackController(streamId: 'phone_broadcast_stream');
     _chatController.addListener(_handleChatConnectionChange);
 
     _setWakelock(true);
@@ -107,14 +102,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     }
   }
 
+  /// The studio's chat tab follows the real connection state. It used to fill
+  /// with simulated comments while Realtime was unreachable (05 D-03).
   void _handleChatConnectionChange() {
-    final disconnected =
-        _chatController.connectionState == ChatConnectionState.reconnecting;
-    if (disconnected && !_ghostChatController.isActive) {
-      _ghostChatController.start();
-    } else if (!disconnected && _ghostChatController.isActive) {
-      _ghostChatController.stop();
-    }
+    if (mounted) setState(() {});
   }
 
   Future<void> _confirmPresetAndSetup() async {
@@ -289,7 +280,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     _chatScrollController.dispose();
     _chatController.removeListener(_handleChatConnectionChange);
     _chatController.dispose();
-    _ghostChatController.dispose();
     _engine.removeListener(_onEngineChanged);
     _engine.isMicSilent.removeListener(_onMicSilenceChanged);
     if (_appProviderCaptured) _appProvider.setStreamerMicMuted(false);
@@ -1267,27 +1257,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   Widget _buildLiveChatTab() {
-    final langCode = context.locale.languageCode;
     return ListenableBuilder(
       listenable: _chatController,
       builder: (context, _) {
-        final messages = _chatController.messages.isNotEmpty
-            ? _chatController.messages
-            : _ghostChatController.messages
-                .map((m) => ChatMessageModel(
-                      id: m.messageId,
-                      streamId: m.streamId,
-                      senderId: 'ghost_${m.messageId}',
-                      senderName: m.getLocalizedSender(langCode),
-                      senderAvatarUrl: m.senderAvatar,
-                      body: m.getLocalizedMessage(langCode),
-                      createdAt:
-                          DateTime.tryParse(m.timestamp) ?? DateTime.now(),
-                      isCurrentUser: m.isCurrentUser,
-                      badges: const {},
-                      isPending: false,
-                    ))
-                .toList();
+        // Real messages only: an empty room stays empty (05 D-03).
+        final messages = _chatController.messages;
 
         return LiveChatWidget(
           messages: messages,

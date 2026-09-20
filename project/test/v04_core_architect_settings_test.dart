@@ -98,13 +98,17 @@ void main() {
     test('TC-V04-SET-05: Streamer CRUD and Protected Original 5 Verification',
         () async {
       expect(provider.streamers.length, equals(5));
-      expect(provider.isProtectedStreamer('prof_alghamdi_01'), isTrue);
-      expect(provider.isProtectedStreamer('prof_otaibi_02'), isTrue);
+      // Nothing is protected client-side any more (P2): the seeded samples
+      // are test fixtures, and real deletions are authorized by RLS.
+      expect(provider.isProtectedStreamer('prof_alghamdi_01'), isFalse);
 
-      // Cannot delete original protected streamers
-      final deleteProtectedResult =
+      final deleteSeededResult =
           await provider.deleteStreamer('prof_alghamdi_01');
-      expect(deleteProtectedResult, isFalse);
+      expect(deleteSeededResult, isTrue);
+      expect(provider.streamers.length, equals(4));
+
+      // Put it back so the CRUD assertions below still start from five.
+      provider.addStreamer(mockStreamers.first);
       expect(provider.streamers.length, equals(5));
 
       // Add new custom streamer
