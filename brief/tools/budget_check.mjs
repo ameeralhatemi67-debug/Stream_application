@@ -2,7 +2,7 @@
 // Budget meter for the hardening run. Reads brief/.runtime/usage_snapshot.json (written by
 // cc_statusline_snapshot.mjs) and prints ONE line telling you what to do.
 //
-//   node brief/tools/budget_check.mjs [--plan single|split] [--nap SECONDS] [--source auto|claude|codex] [--probe] [--json]
+//   node brief/tools/budget_check.mjs [--plan single|split] [--nap SECONDS] [--source auto|claude|codex] [--probe] [--new-run] [--json]
 //
 // Two harnesses are supported (auto-detected, freshest signal wins):
 //   claude : Claude Code status line -> brief/.runtime/usage_snapshot.json (cc_statusline_snapshot.mjs).
@@ -10,8 +10,14 @@
 //            reading the `rate_limits` object Codex logs with every model response
 //            (primary = 5-hour window, secondary = weekly). Best-effort parser: if the shape is not
 //            recognised the answer is UNKNOWN (fail closed). Verify once with --probe before a real run.
-//            Codex has no documented prompt-cache TTL in its logs: 30 min is ASSUMED. SPLIT is not
-//            supported there (a new window = a fresh session resumed from the ledger), plan is forced to single.
+//            Codex has no documented prompt-cache TTL in its logs: 30 min is ASSUMED. SPLIT works there too
+//            (window 1 cap 70, window 2 cap 60) but WITHOUT naps: at the window-1 stop the owner starts a FRESH
+//            session in the next window; the window counter lives in brief/.runtime/budget_state.json and survives sessions.
+//   --plan bonus [--extra N] [--bonus-start] : owner-approved extra spend INSIDE the current window only (default N=40,
+//            max 40). --bonus-start (first call of the session) records the used% now; cap = min(94, start + N),
+//            soft = cap - 6; STOP when the window resets or fewer than 4 minutes remain (never cross the reset:
+//            the fresh window belongs to the split plan's window 2). Does not touch the split window counter.
+//   --new-run : forget earlier windows (use ONLY at Step 0 of a brand-new budget, never mid-run).
 //
 // Plans (caps are ABSOLUTE account-wide 5-hour used_percentage, so they already include
 // anything else the user spent in the same window):
@@ -39,11 +45,14 @@ const arg = (name, dflt) => {
 };
 const source = (arg('--source', process.env.BUDGET_SOURCE || 'auto') || 'auto').toLowerCase();
 const probe = argv.includes('--probe');
+const newRun = argv.includes('--new-run');
+const bonusStart = argv.includes('--bonus-start');
+const bonusExtra = Math.min(40, Math.max(1, Number(arg('--extra', '40')) || 40));
 let plan = (arg('--plan', process.env.BUDGET_PLAN || 'single') || 'single').toLowerCase();
 const asJson = argv.includes('--json');
 const nap = Math.min(540, Math.max(0, Number(arg('--nap', '0')) || 0));
 
-let CAPS = plan === 'split' ? [70, 60] : [80];
+let CAPS = plan === 'split' ? [70, 60] : plan === 'bonus' ? [94, 94] : [80];
 const SOFT_MARGIN = 6;
 const WEEKLY_STOP = 90;
 const STALE_SNAPSHOT_S = 900;
@@ -197,10 +206,6 @@ function readClaudeSnapshot() {
     }, null, 1));
     return;
   }
-  if (snap && snap.harness === 'codex' && plan === 'split') {
-    plan = 'single';
-    CAPS = [80];
-  }
 
   if (!snap) {
     emit({
@@ -224,8 +229,8 @@ function readClaudeSnapshot() {
   }
 
   // --- window tracking (detect roll-over between windows) ---
-  const state = readJson(statePath, { plan, windows: [] });
-  state.plan = plan;
+  const state = newRun ? { plan, windows: [] } : readJson(statePath, { plan, windows: [] });
+  if (plan !== 'bonus') state.plan = plan;
   const wins = state.windows;
   const last = wins[wins.length - 1];
   if (!last || Math.abs(last.resets_at - fh.resets_at) > 1800) {
@@ -233,9 +238,17 @@ function readClaudeSnapshot() {
   }
   const cur = wins[wins.length - 1];
   const windowIndex = wins.length; // 1 = window the run started in
+  let bonusInfo = null;
+  if (plan === 'bonus') {
+    if (bonusStart || !state.bonus) {
+      state.bonus = { start_used: fh.used_percentage, extra: bonusExtra, window_resets_at: fh.resets_at, started_at: now };
+    }
+    bonusInfo = state.bonus;
+  }
   writeJson(statePath, state);
 
-  const cap = CAPS[Math.min(windowIndex, CAPS.length) - 1];
+  let cap = CAPS[Math.min(windowIndex, CAPS.length) - 1];
+  if (bonusInfo) cap = Math.min(94, Math.round(bonusInfo.start_used + bonusInfo.extra));
   const soft = cap - SOFT_MARGIN;
   const used = fh.used_percentage;
   const resetsInMin = Math.round((fh.resets_at - now) / 60);
@@ -243,10 +256,19 @@ function readClaudeSnapshot() {
   const pc = snap.prompt_cache;
   const cacheExpiresIn = pc && pc.expires_at ? pc.expires_at - now : null;
 
+  const bonusWindowOver = bonusInfo && Math.abs(bonusInfo.window_resets_at - fh.resets_at) > 1800;
   let status = 'OK';
   let action = 'continue';
   let reason = '';
-  if (fh.resets_at < now - 60) {
+  if (bonusWindowOver) {
+    status = 'STOP';
+    reason = 'bonus_window_over';
+    action = 'The window the bonus belonged to has reset. Start nothing. SAFE_STOP, make sure the RESUME block is current, and tell the owner. The fresh window is split-plan window 2 (cap 60) for a fresh session with brief/RESUME_PROMPT.md.';
+  } else if (bonusInfo && resetsInMin <= 3) {
+    status = 'STOP';
+    reason = `reset_imminent(${resetsInMin}min)`;
+    action = 'SAFE_STOP now (finish nothing new; keep the tree committed and clean), update the RESUME block, then stop. Never run into the window reset.';
+  } else if (fh.resets_at < now - 60) {
     status = 'UNKNOWN';
     reason = 'window_reset_passed_no_new_reading';
     action = 'The last reading belongs to a window that already reset. Do one cheap tool call (a nap counts), re-run once; if it is still the same, treat as STOP for new work.';
@@ -261,13 +283,16 @@ function readClaudeSnapshot() {
   } else if (used >= cap) {
     status = 'STOP';
     reason = `used>=cap(${cap})`;
-    action = plan === 'split' && windowIndex === 1
-      ? 'SAFE_STOP the current step, then follow protocol section D (wait for reset with naps, or leave the RESUME block in brief/LEDGER.md).'
+    action = bonusInfo ? 'SAFE_STOP the current step, update the RESUME block, then stop. The remaining points of this window are not yours to spend.' : plan === 'split' && windowIndex === 1
+      ? (snap.harness === 'codex'
+        ? 'SAFE_STOP the current step, write the RESUME block in brief/LEDGER.md, then STOP. Do NOT wait or nap (Codex): the owner starts a fresh session in the next window with brief/RESUME_PROMPT.md (window 2, cap 60).'
+        : 'SAFE_STOP the current step, then follow protocol section D (wait for reset with naps, or leave the RESUME block in brief/LEDGER.md).')
       : 'SAFE_STOP now.';
-  } else if (used >= soft) {
+  } else if (used >= soft || (bonusInfo && resetsInMin <= 6)) {
     status = 'SOFT';
-    reason = `used>=soft(${soft})`;
-    action = 'Finish only the current step, checkpoint (tests+analyze+commit+ledger), do NOT start a new phase/step.';
+    reason = used >= soft ? `used>=soft(${soft})` : `reset_close(${resetsInMin}min)`;
+    action = 'Finish only the current step, checkpoint (tests+analyze+commit+ledger), do NOT start a new phase/step.'
+      + (plan === 'split' && windowIndex === 1 && snap.harness === 'codex' ? ' Then write the RESUME block and STOP (Codex: no naps; the owner resumes in the next window, cap 60).' : '');
   } else if (age > STALE_SNAPSHOT_S) {
     status = 'UNKNOWN';
     reason = 'stale_snapshot';
@@ -284,6 +309,7 @@ function readClaudeSnapshot() {
     soft,
     headroom: (cap - used).toFixed(1),
     started_window_at_used: Number(cur.first_seen_used).toFixed(1),
+    ...(bonusInfo ? { bonus_start_used: Number(bonusInfo.start_used).toFixed(1), bonus_spent: (used - bonusInfo.start_used).toFixed(1) } : {}),
     resets_in_min: resetsInMin,
     weekly: weekly === null ? '' : Number(weekly).toFixed(1),
     cache_ttl: pc ? pc.ttl : '',
