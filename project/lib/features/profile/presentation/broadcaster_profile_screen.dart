@@ -578,7 +578,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              '${'map.live_badge'.tr()} • ${streamer.activeViewerCount} ${'feed.watching'.tr()}',
+                              '${'map.live_badge'.tr()} • ${appProvider.platformViewerCount(streamer.activeStreamId ?? '') ?? '—'} ${'feed.watching'.tr()}',
                               style: const TextStyle(
                                 color: AppTheme.accentRed,
                                 fontWeight: FontWeight.bold,

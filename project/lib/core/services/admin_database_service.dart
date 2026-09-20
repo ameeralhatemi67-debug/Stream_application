@@ -2496,6 +2496,53 @@ class AdminDatabaseService {
   }
 
   // -------------------------------------------------------------------------
+  // Viewer presence (P3 / 05 D-08). The stream_viewers table is deny-all:
+  // these two RPCs are the only way in or out of it.
+  // -------------------------------------------------------------------------
+
+  /// Reports this viewer as present on [streamId]. Returns false when the
+  /// stream is not live, the caller is its broadcaster, or there is no
+  /// backend -- the caller shows no count rather than inventing one.
+  Future<bool> viewerHeartbeat({
+    required String streamId,
+    required String viewerKey,
+  }) async {
+    if (!_useSupabase || streamId.isEmpty || viewerKey.isEmpty) return false;
+    try {
+      final result = await _client.rpc('viewer_heartbeat', params: {
+        'p_stream_id': streamId,
+        'p_viewer_key': viewerKey,
+      });
+      return result == true;
+    } catch (e) {
+      debugPrint('viewerHeartbeat failed: $e');
+      return false;
+    }
+  }
+
+  /// Live viewer counts per stream id. A missing entry means "unknown" (no
+  /// backend, or the call failed) and must be rendered as such, never as 0.
+  Future<Map<String, int>> fetchViewerCounts(List<String> streamIds) async {
+    if (!_useSupabase || streamIds.isEmpty) return const {};
+    try {
+      final rows = await _client.rpc('get_viewer_counts', params: {
+        'p_stream_ids': streamIds,
+      });
+      final counts = <String, int>{};
+      for (final row in (rows as List)) {
+        final map = row as Map<String, dynamic>;
+        final id = map['stream_id'] as String?;
+        final count = (map['viewer_count'] as num?)?.toInt();
+        if (id != null && count != null) counts[id] = count;
+      }
+      return counts;
+    } catch (e) {
+      debugPrint('fetchViewerCounts failed: $e');
+      return const {};
+    }
+  }
+
+  // -------------------------------------------------------------------------
   // Follows & bookmarks (05 D-07). Own-row RLS does the authorization: every
   // statement below is scoped to the signed-in account by policy, so a failure
   // here means "not signed in" or "offline", never "someone else's rows".

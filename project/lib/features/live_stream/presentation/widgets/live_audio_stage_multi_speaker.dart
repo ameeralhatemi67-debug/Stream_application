@@ -15,7 +15,10 @@ import '../abstract_video_player.dart';
 class LiveAudioStageMultiSpeaker extends StatefulWidget {
   final StreamerModel streamer;
   final String langCode;
-  final int viewerCount;
+  /// Live viewers counted by the server, or null while unknown (P3 /
+  /// 05 D-08). Null renders as "—": the app never shows a number it does not
+  /// have.
+  final int? viewerCount;
   final List<OrgSpeakerModel> speakers;
   final List<VodModel> allVods;
   final String? activeSpeakerId;
@@ -375,7 +378,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${widget.viewerCount} ${'live.listening_count'.tr()}',
+                        '${widget.viewerCount ?? '—'} ${'live.listening_count'.tr()}',
                         style: const TextStyle(
                           color: AppTheme.textSecondaryDark,
                           fontSize: 10.5,

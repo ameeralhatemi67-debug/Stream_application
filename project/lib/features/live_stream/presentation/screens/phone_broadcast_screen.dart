@@ -1129,8 +1129,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               const Icon(Icons.remove_red_eye_rounded,
                   size: 14, color: AppTheme.accentGreen),
               const SizedBox(width: 4),
+              // YouTube's concurrent-viewer figure, labelled as YouTube's and
+              // never merged with this platform's presence count (P3).
               Text(
-                '${streamer.activeViewerCount} viewers',
+                '${_appProvider.youTubeConcurrentViewers(streamer.streamerId) ?? '—'} on YouTube',
                 style: const TextStyle(
                   color: AppTheme.textSecondaryDark,
                   fontSize: 11,

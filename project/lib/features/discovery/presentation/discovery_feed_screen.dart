@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -28,7 +30,26 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     _searchController.text = appProvider.searchQuery;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkDuplicateChannelsIfNeeded();
+      _refreshVisibleViewerCounts();
     });
+    // Live cards show the platform's own viewer count (P3 / 05 D-08). One
+    // batched call covers every live card on screen; the provider throttles
+    // it to one round trip per 30 s, and an unknown count renders as "—".
+    _viewerCountTimer = Timer.periodic(
+        const Duration(seconds: 30), (_) => _refreshVisibleViewerCounts());
+  }
+
+  Timer? _viewerCountTimer;
+
+  void _refreshVisibleViewerCounts() {
+    if (!mounted) return;
+    final provider = context.read<AppProvider>();
+    final ids = provider.streamers
+        .where((s) => s.isCurrentlyLive && (s.activeStreamId ?? '').isNotEmpty)
+        .map((s) => s.activeStreamId!)
+        .toList();
+    if (ids.isEmpty) return;
+    unawaited(provider.refreshViewerCountsFor(ids));
   }
 
   void _checkDuplicateChannelsIfNeeded() async {
@@ -48,6 +69,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
 
   @override
   void dispose() {
+    _viewerCountTimer?.cancel();
     _searchController.dispose();
     super.dispose();
   }
@@ -595,7 +617,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         ),
                         const SizedBox(width: 5),
                         Text(
-                          '${streamer.activeViewerCount} ${'live.listening_count'.tr()}',
+                          '${context.select<AppProvider, int?>((p) => p.platformViewerCount(streamer.activeStreamId ?? '')) ?? '—'} ${'live.listening_count'.tr()}',
                           style: const TextStyle(
                             color: Color(0xFFE4E4E7),
                             fontSize: 12,
@@ -613,7 +635,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         ),
                         const SizedBox(width: 6),
                         Text(
-                          '${streamer.activeViewerCount} ${'feed.watching'.tr()}',
+                          '${context.select<AppProvider, int?>((p) => p.platformViewerCount(streamer.activeStreamId ?? '')) ?? '—'} ${'feed.watching'.tr()}',
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 12,

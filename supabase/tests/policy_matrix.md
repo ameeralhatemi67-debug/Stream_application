@@ -54,12 +54,15 @@ regardless of any permissive policy below.
 | academic_categories | anon, viewer | admin | admin | admin | Public taxonomy read. |
 | tags | anon+viewer (approved only), admin | viewer (pending only) | admin | admin | |
 | terms_and_conditions | anon, viewer | admin | admin | admin | Public legal text; single `for all` admin write policy — open item below. |
+| follows | owner | owner | — | owner | Own-row only (D-07); no admin read path. A follow is created or deleted, never updated. |
+| bookmarks | owner | owner | — | owner | Own-row only (D-07); `vod_id`/`streamer_id` are text because a VOD id comes from YouTube, not from this schema. |
+| stream_viewers | — | — | — | — | **Deny-all**: RLS on, no policy, nothing granted. Presence is written only by `viewer_heartbeat()` and read only by `get_viewer_counts()` (P3 / D-08). The intent is recorded in `comment on table`. |
 | storage.objects (`streamer-assets`) | public bucket read | owner path / org owner, admin | same | same | Path scoping by `can_write_streamer_asset()` (P1.3). |
 
-No table in `public` currently has RLS enabled with zero policies, so there is
-no deny-all table to justify yet. `stream_viewers` (P3) is planned as exactly
-that: RLS on, no policy, reachable only through `viewer_heartbeat` and
-`get_viewer_counts`. It must ship with a `comment on table` stating that.
+`stream_viewers` is the one deny-all table (RLS on, zero policies), which is
+its whole design: presence rows are reachable only through the two SECURITY
+DEFINER functions, and the table carries a `comment on table` saying so. Gate
+G10b lists it by name, as that gate's own text anticipated.
 
 ## Views
 
@@ -77,6 +80,7 @@ gain a PII column.
 | `chat_sender_info(uuid[])`, `chat_sender_info(uuid[], text)` | definer | execute | execute | Guests must see sender names/badges in public chat. |
 | `can_broadcast`, `claim_broadcaster_device`, `device_heartbeat`, `set_live_state`, `release_broadcaster_device`, `sweep_stale_live_flags`, `log_audit_event`, `delete_own_account`, `can_write_streamer_asset` | definer | — | execute |
 | `is_banned(uuid)` | definer | — | — | Called only from other definer functions; a per-uuid ban probe is not exposed to clients. |
+| `viewer_heartbeat(text,text)`, `get_viewer_counts(text[])` | definer | execute | execute | The two deliberate anon exceptions D-21 names: guests watch streams and are counted. `viewer_heartbeat` refuses a stream that is not live, keys signed-in viewers by user id whatever the client sends, and refuses the broadcaster's own account. |
 | `set_updated_at`, `bootstrap_admin_role`, `chat_check_banned_keywords`, `sync_org_owner_role`, `handle_profile_before_delete`, `supersede_prior_approved_placeholder`, `guard_broadcaster_columns`, `guard_application_review`, `guard_affiliation_transition` | definer, trigger | — | — | Revoked from every client role. |
 
 ## Realtime publication

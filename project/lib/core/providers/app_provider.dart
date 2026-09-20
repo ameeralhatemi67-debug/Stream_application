@@ -1563,8 +1563,41 @@ class AppProvider extends ChangeNotifier {
     _liveViewerTimer = null;
   }
 
-  /// Fetches real concurrent viewer counts for all currently-live streamers
-  /// and updates their `activeViewerCount` if the value changed.
+  // Platform viewer presence per stream id (P3 / 05 D-08). Absent means
+  // "unknown", which the UI renders as "—" -- never as 0.
+  final Map<String, int> _platformViewerCounts = {};
+  DateTime? _lastViewerCountFetch;
+  static const Duration _viewerCountPollInterval = Duration(seconds: 30);
+
+  /// Live viewers counted by this platform for [streamId], or null when it is
+  /// not known. This is presence on our own streams; it is never YouTube's
+  /// concurrent-viewer figure, which belongs to the broadcaster studio and is
+  /// labelled there as YouTube's.
+  int? platformViewerCount(String streamId) =>
+      streamId.isEmpty ? null : _platformViewerCounts[streamId];
+
+  /// Refreshes counts for the streams currently on screen. Throttled to one
+  /// round trip per 30 s however many cards ask.
+  Future<void> refreshViewerCountsFor(List<String> streamIds) async {
+    final ids = streamIds.where((id) => id.isNotEmpty).toSet().toList();
+    if (ids.isEmpty) return;
+    final now = DateTime.now();
+    if (_lastViewerCountFetch != null &&
+        now.difference(_lastViewerCountFetch!) < _viewerCountPollInterval) {
+      return;
+    }
+    _lastViewerCountFetch = now;
+    _adminDbService ??= await AdminDatabaseService.create();
+    final counts = await _adminDbService!.fetchViewerCounts(ids);
+    if (counts.isEmpty) return;
+    _platformViewerCounts.addAll(counts);
+    notifyListeners();
+  }
+
+  /// Fetches YouTube's own concurrent-viewer figure for live streams. It is
+  /// kept apart from platform presence (P3): it counts people watching on
+  /// YouTube, which is a different audience from the one in this app, and is
+  /// only shown in the broadcaster studio, labelled as YouTube's.
   Future<void> _pollLiveViewers() async {
     final liveStreamers = _streamers
         .where((s) => s.isCurrentlyLive && s.youtubeVideoId.isNotEmpty)
@@ -1577,19 +1610,21 @@ class AppProvider extends ChangeNotifier {
       final count = await _youTubeService.fetchLiveConcurrentViewers(
         streamer.youtubeVideoId,
       );
-      if (count != null && count != streamer.activeViewerCount) {
-        _streamers = _streamers.map((s) {
-          if (s.streamerId == streamer.streamerId) {
-            return s.copyWith(activeViewerCount: count);
-          }
-          return s;
-        }).toList();
+      if (count != null && count != _youTubeConcurrentByStreamer[streamer.streamerId]) {
+        _youTubeConcurrentByStreamer[streamer.streamerId] = count;
         changed = true;
       }
     }
 
     if (changed) notifyListeners();
   }
+
+  /// YouTube's concurrent-viewer count for a streamer's live broadcast, or
+  /// null when unknown. Studio-only and always labelled as YouTube's.
+  int? youTubeConcurrentViewers(String streamerId) =>
+      _youTubeConcurrentByStreamer[streamerId];
+
+  final Map<String, int> _youTubeConcurrentByStreamer = {};
 
   @override
   void dispose() {

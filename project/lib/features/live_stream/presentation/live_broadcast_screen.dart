@@ -5,9 +5,12 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'dart:async';
+
 import '../../../core/config/feature_flags.dart';
 import '../models/chat_message_model.dart';
 import '../services/live_chat_controller.dart';
+import '../services/viewer_presence_service.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
@@ -54,6 +57,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   bool _isHandRaised = false;
   bool _isReactionMenuOpen = false;
   StreamQualityLevel _selectedQuality = StreamQualityLevel.auto;
+  late final ViewerPresenceService _presenceService;
 
   @override
   void initState() {
@@ -65,7 +69,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       onReaction: (type) => _reactionsController.spawnReaction(type),
     )..start();
     _chatController.addListener(_handleChatConnectionChange);
+    // Real audience presence (P3 / 05 D-08): this device reports itself as
+    // one viewer while the room is open and the app is foregrounded, and
+    // polls the server's count back. It replaces the number that used to
+    // come from a fixture or a stand-in literal.
+    _presenceService = ViewerPresenceService(streamId: widget.streamId);
+    _presenceService.addListener(_onPresenceChanged);
+    unawaited(_presenceService.start());
     _setWakelock(true);
+  }
+
+  void _onPresenceChanged() {
+    if (mounted) setState(() {});
   }
 
   /// Cluster 1 Task 1 -- the audio-dropping fix. When the screen dims and
@@ -102,6 +117,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _chatScrollController.dispose();
     _chatController.removeListener(_handleChatConnectionChange);
     _chatController.dispose();
+    _presenceService.removeListener(_onPresenceChanged);
+    _presenceService.dispose();
     super.dispose();
   }
 
@@ -344,9 +361,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final langCode = context.locale.languageCode;
 
     final streamer = _resolveStreamer(appProvider);
-    // The real count, or 0 when nobody is counted yet -- never a stand-in
-    // number (P2 truthful data; P3 replaces 0 with a proper unknown state).
-    final viewerCount = streamer.activeViewerCount;
+    // Platform presence, counted server-side (P3). Null until the first
+    // successful read, and rendered as "—". YouTube's own concurrent-viewer
+    // number is a different figure and stays in the broadcaster studio,
+    // labelled as YouTube's -- the two are never merged.
+    final viewerCount = _presenceService.count;
 
     return Scaffold(
       backgroundColor: AppTheme.darkBgBase,
@@ -439,7 +458,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   Widget _buildVideoViewport(AppProvider appProvider, StreamerModel streamer,
-      int viewerCount, String langCode,
+      int? viewerCount, String langCode,
       {required bool isSideBySide}) {
     final isAudioLive = streamer.isAudioLive;
 

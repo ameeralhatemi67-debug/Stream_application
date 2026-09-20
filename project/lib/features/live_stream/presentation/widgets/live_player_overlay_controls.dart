@@ -73,7 +73,10 @@ extension StreamQualityLevelInfo on StreamQualityLevel {
 /// own controls while one of those states is on screen.
 class LivePlayerOverlayControls extends StatefulWidget {
   final StreamState streamState;
-  final int viewerCount;
+  /// Live viewers counted by the server, or null while unknown (P3 /
+  /// 05 D-08). Null renders as "—": the app never shows a number it does not
+  /// have.
+  final int? viewerCount;
   final bool isPlaying;
   final bool isMuted;
   final bool isFullscreen;
@@ -209,7 +212,7 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                               const Icon(Icons.remove_red_eye_outlined, size: 12, color: Colors.white),
                               const SizedBox(width: 5),
                               Text(
-                                '${widget.viewerCount} ${'feed.watching'.tr()}',
+                                '${widget.viewerCount ?? '—'} ${'feed.watching'.tr()}',
                                 style: const TextStyle(
                                   color: Colors.white,
                                   fontSize: 11,
