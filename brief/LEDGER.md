@@ -43,10 +43,15 @@
 - P2 6-8, P3 4-6, P4 24-30, P8A6-9, P6 9-12, P5 10-14, P7 9-12, P8B4-6, P9 3-4 points remain original uncalibrated estimates. Remaining total110-151; actual burn may exceed these.
 - No claim of release readiness, complete security/RLS, device/offline behavior, legal approval or Android store acceptance. No production migrations applied.
 
+## Bonus attempt: 2026-09-20
+- Owner authorized up to40 additional points. Live account reading at entry: five-hour55%, weekly8%. Six owner-provided bonus/settings files committed as cd0b698; neither stash applied or dropped.
+- Required bonus-start returned STOP: used_5h1, weekly98, cap41, soft35, snapshot_age17431s, resets_in_min9. This contradicts the fresh live reading and initialized the allowance from stale data. Actual weekly exhaustion is NOT established.
+- No application item started; no analyzer/tests rerun. Prior analyzer0/full266 passing baseline remains unchanged. Extra-spend delta unmeasured; only settings and stop bookkeeping changed. Meter source/caps were not edited by the agent.
+- Budget-tool STOP is binding; bonus application work remains not started. P1.8/1.9/1.6/RPC audit/1.10 are still pending.
+
 ## RESUME block
-- Next: P1.2 together with1.7. Read03 P1 and05, then grep relevant service/provider anchors. Finish remaining P1 controls before P2/P3; follow phase order afterward.
-- Restore named stash owner-brief-settings-before-window2-2026-09-20 before invoking the meter or reading resume instructions. It holds the five original owner brief/meter edits; the prior backup stash remains too. Do not apply both.
-- Commands: git stash list; git stash apply the matching named entry; node brief/tools/budget_check.mjs --plan split. Never repeat --new-run for this run.
-- Continue in a fresh session after reset using restored brief/RESUME_PROMPT.md with MODE: CONTINUE_SPLIT. Window2 cap60/soft54; never a third window. Stop if meter STOP/UNKNOWN or weekly>=90.
-- No implementation files in flight. Partial P1 is a completed source checkpoint, not a completed release phase; SQL runtime validation remains pending. Restore owner settings only, not old application code.
-- Last meter: window1 used_5h44, weekly7, cap70/soft64, headroom26, resets_in_min20, snapshot_age71s, OK. Closing bookkeeping consumption is not included in phase deltas.
+- Next application work: P1.2 together with1.7, then remaining P1. Read03/05. All prior NOT DONE items remain.
+- Owner brief/meter settings are now committed; do NOT restore either old stash. No implementation files in flight.
+- Before any work, resolve the meter's stale-source selection and invalid bonus initialization with the owner; live account tool read55%/8% while bonus meter read1%/98%. Do not interpret this as actual weekly exhaustion.
+- Fresh session after reset: brief/RESUME_PROMPT.md, MODE: CONTINUE_SPLIT, window2 cap60/soft54, no third window. Run node brief/tools/budget_check.mjs --plan split without --new-run and obey status. If it remains STOP/UNKNOWN, start nothing.
+- Latest attempted budget check: bonus STOP at snapshot_age17431s, cap41; no application edits after STOP. Baseline analyzer0, full suite266 passed from prior checkpoint, not rerun in bonus attempt.

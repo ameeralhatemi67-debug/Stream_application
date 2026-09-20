@@ -20,3 +20,10 @@ Evidence: final analyzer0 issues; full suite266 passed, up from264 baseline; imp
 Remaining order: finish P1.2/1.7 together25-35 points, then P1.6/1.8/1.9/1.10 and RPC ban audit10-15 more; then P2,P3,P4,P8A,P6,P5,P7,P8B,P9. Later phases retain their uncalibrated75-101-point estimate, so remaining total is110-151. P0-P3/P9 are pending where unfinished, not cut. Owner-only actions and legacy-asset handling are in OWNER_ACTIONS.md.
 
 Safe checkpoint: application changes and each migration are complete files; git diff --check passed. P0 commit is3ba0eb7; the following local P1 commit holds the partial implementation and this report. Original owner changes are preserved in named stash `owner-brief-settings-before-window2-2026-09-20`; restore it before using the meter, because it contains the owner's split-meter updates. Then run `node brief/tools/budget_check.mjs --plan split` without --new-run. Resume from the LEDGER RESUME block in a fresh window2 session, cap60/soft54, never a third window.
+
+## Bonus attempt
+Owner authorized40 more points; live usage read55% five-hour/8% weekly.
+Owner bonus/settings files committed as cd0b698. No application work started.
+Bonus meter returned STOP using a17431-second-old snapshot:1% five-hour/98% weekly, incorrectly initializing cap41. This contradicts live usage; actual weekly exhaustion is not established.
+Stopped under the binding STOP rule; extra spend unmeasured. Prior analyzer0/tests266 baseline unchanged, not rerun.
+Settings are committed; do not restore the old stashes. Resolve meter freshness before continuing; see LEDGER RESUME block.
