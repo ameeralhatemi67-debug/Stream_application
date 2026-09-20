@@ -1,0 +1,4 @@
+# Files where emoji characters may stay (live-reaction glyph set only, see 05 D-05).
+# Allowed glyphs: heart, clap, raised hand, fire, light bulb, graduation cap.
+# One repo-relative path per line; gates.mjs G3 skips these files. Do not add files without a one-line ledger note.
+project/lib/features/live_stream/presentation/widgets/floating_reactions_overlay.dart

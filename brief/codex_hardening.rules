@@ -1,0 +1,110 @@
+# Codex execution-policy rules for the hardening run (Starlark). Copy to <repo>/.codex/rules/hadayah.rules
+# Check: codex execpolicy check --pretty --rules .codex/rules/hadayah.rules -- git push origin master
+# The strictest decision across all loaded rules wins. These rules only see commands Codex runs directly
+# (a command wrapped inside `powershell -Command "..."` is not matched), so the prompt repeats the same bans.
+
+# ---- git: never publish, never destroy work ----
+prefix_rule(
+    pattern = ["git", "push"],
+    decision = "forbidden",
+    justification = "Owner pushes manually after review. Never push from an autonomous run.",
+    match = ["git push", "git push origin master"],
+    not_match = ["git status", "git log"],
+)
+prefix_rule(
+    pattern = ["git", "reset", "--hard"],
+    decision = "forbidden",
+    justification = "Never discard work; stash instead.",
+    match = ["git reset --hard HEAD~1"],
+)
+prefix_rule(
+    pattern = ["git", "clean"],
+    decision = "forbidden",
+    justification = "Never delete untracked files.",
+    match = ["git clean -fd"],
+)
+prefix_rule(
+    pattern = ["git", "restore"],
+    decision = "forbidden",
+    justification = "Never discard uncommitted work; stash instead.",
+    match = ["git restore ."],
+)
+prefix_rule(
+    pattern = ["git", "checkout", "--"],
+    decision = "forbidden",
+    justification = "Never discard uncommitted work; stash instead.",
+    match = ["git checkout -- lib/main.dart"],
+)
+prefix_rule(
+    pattern = ["git", "branch", "-D"],
+    decision = "forbidden",
+    justification = "Never delete branches.",
+    match = ["git branch -D old"],
+)
+prefix_rule(
+    pattern = ["git", "add", "-A"],
+    decision = "forbidden",
+    justification = "Stage explicit paths only (never .serena, .claude, .codex, brief/.runtime, dart_define.local.json, key.properties).",
+    match = ["git add -A"],
+)
+prefix_rule(
+    pattern = ["git", "add", "."],
+    decision = "forbidden",
+    justification = "Stage explicit paths only.",
+    match = ["git add ."],
+)
+prefix_rule(
+    pattern = ["git", "commit", "-a"],
+    decision = "forbidden",
+    justification = "Stage explicit paths, then commit; -a would sweep in unrelated tracked changes.",
+    match = ["git commit -a -m x"],
+)
+prefix_rule(
+    pattern = ["git", "commit", "-am"],
+    decision = "forbidden",
+    justification = "Stage explicit paths, then commit.",
+    match = ["git commit -am x"],
+)
+
+# ---- Supabase: local stack only, never the real project ----
+# (local `start`, `status`, `test db`, `db reset`, `db lint --local`, `db advisors --local`, `migration new` stay allowed)
+prefix_rule(
+    pattern = ["supabase", ["link", "secrets", "functions", "projects", "branches", "domains", "vanity-subdomains", "sso"]],
+    decision = "forbidden",
+    justification = "Local Supabase stack only. The owner runs anything that touches the real project.",
+    match = ["supabase link --project-ref abc", "supabase secrets set A=b"],
+    not_match = ["supabase start", "supabase status", "supabase test db"],
+)
+prefix_rule(
+    pattern = ["npx", "supabase", ["link", "secrets", "functions", "projects", "branches", "domains", "vanity-subdomains", "sso"]],
+    decision = "forbidden",
+    justification = "Local Supabase stack only. The owner runs anything that touches the real project.",
+    match = ["npx supabase link --project-ref abc", "npx supabase secrets set A=b"],
+    not_match = ["npx supabase start", "npx supabase status", "npx supabase test db"],
+)
+prefix_rule(
+    pattern = ["supabase", "db", ["push", "pull"]],
+    decision = "forbidden",
+    justification = "Migrations are delivered as files; the owner reviews and pushes them.",
+    match = ["supabase db push", "supabase db pull"],
+    not_match = ["supabase db reset", "supabase db lint"],
+)
+prefix_rule(
+    pattern = ["npx", "supabase", "db", ["push", "pull"]],
+    decision = "forbidden",
+    justification = "Migrations are delivered as files; the owner reviews and pushes them.",
+    match = ["npx supabase db push", "npx supabase db pull"],
+    not_match = ["npx supabase db reset", "npx supabase db lint"],
+)
+prefix_rule(
+    pattern = ["supabase", "db", "reset", "--linked"],
+    decision = "forbidden",
+    justification = "Would wipe the real database.",
+    match = ["supabase db reset --linked"],
+)
+prefix_rule(
+    pattern = ["npx", "supabase", "db", "reset", "--linked"],
+    decision = "forbidden",
+    justification = "Would wipe the real database.",
+    match = ["npx supabase db reset --linked"],
+)
