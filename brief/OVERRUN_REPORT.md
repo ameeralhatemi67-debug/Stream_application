@@ -27,3 +27,9 @@ Owner bonus/settings files committed as cd0b698. No application work started.
 Bonus meter returned STOP using a17431-second-old snapshot:1% five-hour/98% weekly, incorrectly initializing cap41. This contradicts live usage; actual weekly exhaustion is not established.
 Stopped under the binding STOP rule; extra spend unmeasured. Prior analyzer0/tests266 baseline unchanged, not rerun.
 Settings are committed; do not restore the old stashes. Resolve meter freshness before continuing; see LEDGER RESUME block.
+
+## Bonus retry, 30-point request
+Settings already committed; no application item started and neither stash touched.
+Meter STOP used a17657-second-old snapshot,1%/98%, cap41; live usage was64%/10%.
+Only5min remained before reset, leaving1min under the required buffer. Stopped without tests/builds; implementation spend0, account bookkeeping spend unmeasured.
+All pending work and the corrected window2 resume instructions remain in LEDGER.md.

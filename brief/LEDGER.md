@@ -49,9 +49,14 @@
 - No application item started; no analyzer/tests rerun. Prior analyzer0/full266 passing baseline remains unchanged. Extra-spend delta unmeasured; only settings and stop bookkeeping changed. Meter source/caps were not edited by the agent.
 - Budget-tool STOP is binding; bonus application work remains not started. P1.8/1.9/1.6/RPC audit/1.10 are still pending.
 
+## Bonus retry, 30-point request
+- Budget/phase row: 2026-09-20, window1, live start64% five-hour/10% weekly; meter start1%/98%, cap41, STOP, snapshot17657s old, reset5min. No application item started; implementation delta0, account bookkeeping delta unmeasured, duration under2min.
+- The six owner settings files were already committed as cd0b698; tree was clean. Neither stash touched. Requested30-point allowance was not correctly initialized; no meter/cap edits attempted.
+- NOT DONE unchanged: P1.8,1.9,1.6,RPC ban audit,1.10 and P1.2/1.7 remain pending. Analyzer0/full266 passing are prior-checkpoint evidence only; no tests, gates or builds rerun in this retry.
+
 ## RESUME block
-- Next application work: P1.2 together with1.7, then remaining P1. Read03/05. All prior NOT DONE items remain.
-- Owner brief/meter settings are now committed; do NOT restore either old stash. No implementation files in flight.
-- Before any work, resolve the meter's stale-source selection and invalid bonus initialization with the owner; live account tool read55%/8% while bonus meter read1%/98%. Do not interpret this as actual weekly exhaustion.
-- Fresh session after reset: brief/RESUME_PROMPT.md, MODE: CONTINUE_SPLIT, window2 cap60/soft54, no third window. Run node brief/tools/budget_check.mjs --plan split without --new-run and obey status. If it remains STOP/UNKNOWN, start nothing.
-- Latest attempted budget check: bonus STOP at snapshot_age17431s, cap41; no application edits after STOP. Baseline analyzer0, full suite266 passed from prior checkpoint, not rerun in bonus attempt.
+- Next: P1.2 together with1.7, then remaining P1, in a FRESH session after reset using brief/RESUME_PROMPT.md with MODE: CONTINUE_SPLIT. Window2 cap60/soft54, never a third window.
+- Owner settings are committed. No application files in flight. Do not apply, pop or drop either historical owner stash.
+- First command: node brief/tools/budget_check.mjs --plan split, without --new-run. Cross-check live usage; STOP/UNKNOWN means start nothing. Stale-source selection remains unresolved and must not be mistaken for actual weekly exhaustion.
+- Latest bonus check: STOP, stale snapshot17657s, used1%, weekly98%, cap41; fresh live reading64%/10%. Only5min to reset, leaving1min before the mandatory4min buffer.
+- No application changes in this retry. Prior analyzer0/tests266 baseline retained; runtime SQL and release acceptance remain UNVERIFIED.
