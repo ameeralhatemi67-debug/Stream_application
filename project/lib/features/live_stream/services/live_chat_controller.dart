@@ -505,10 +505,21 @@ class LiveChatController extends ChangeNotifier {
     } catch (e) {
       _messages.removeWhere((m) => m.id == id);
       notifyListeners();
-      // Rejected by chat_check_banned_keywords (Checkpoint 3 Phase 3) --
-      // surface something readable instead of the raw Postgrest exception.
-      if ('$e'.contains('banned keyword')) {
+      // Server-side refusals carry a readable reason; surface it instead of a
+      // raw Postgrest exception, and never silently drop the message.
+      final text = '$e';
+      if (text.contains('banned keyword')) {
         throw Exception("Message blocked: that language isn't allowed here.");
+      }
+      // P6.1 enforcement, all raised by the chat_messages insert trigger.
+      if (text.contains('Chat is turned off')) {
+        throw Exception('The broadcaster has turned chat off for this stream.');
+      }
+      if (text.contains('Sending too fast')) {
+        throw Exception('Slow down a moment before sending again.');
+      }
+      if (text.contains('Too many messages in one minute')) {
+        throw Exception('You have sent too many messages in the last minute.');
       }
       rethrow;
     }

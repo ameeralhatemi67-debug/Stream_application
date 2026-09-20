@@ -56,6 +56,7 @@ regardless of any permissive policy below.
 | terms_and_conditions | anon, viewer | admin | admin | admin | Public legal text; single `for all` admin write policy — open item below. |
 | follows | owner | owner | — | owner | Own-row only (D-07); no admin read path. A follow is created or deleted, never updated. |
 | bookmarks | owner | owner | — | owner | Own-row only (D-07); `vod_id`/`streamer_id` are text because a VOD id comes from YouTube, not from this schema. |
+| chat_stream_settings | anon, viewer | stream owner/moderator, admin | stream owner/moderator, admin | stream owner/moderator, admin | P6.1. Everyone who can read the chat can see that chat is off; only `chat_can_moderate()` may change it. Absent row = chat on, no slow mode. |
 | stream_viewers | — | — | — | — | **Deny-all**: RLS on, no policy, nothing granted. Presence is written only by `viewer_heartbeat()` and read only by `get_viewer_counts()` (P3 / D-08). The intent is recorded in `comment on table`. |
 | storage.objects (`streamer-assets`) | public bucket read | owner path / org owner, admin | same | same | Path scoping by `can_write_streamer_asset()` (P1.3). |
 
@@ -81,6 +82,7 @@ gain a PII column.
 | `can_broadcast`, `claim_broadcaster_device`, `device_heartbeat`, `set_live_state`, `release_broadcaster_device`, `sweep_stale_live_flags`, `log_audit_event`, `delete_own_account`, `can_write_streamer_asset` | definer | — | execute |
 | `is_banned(uuid)` | definer | — | — | Called only from other definer functions; a per-uuid ban probe is not exposed to clients. |
 | `viewer_heartbeat(text,text)`, `get_viewer_counts(text[])` | definer | execute | execute | The two deliberate anon exceptions D-21 names: guests watch streams and are counted. `viewer_heartbeat` refuses a stream that is not live, keys signed-in viewers by user id whatever the client sends, and refuses the broadcaster's own account. |
+| `chat_enforce_rate_limit` | invoker, trigger | — | — | SECURITY INVOKER on purpose (D-21): `current_user` still separates an ordinary API write from a trusted owner-executed RPC, so server-side tooling is not rate limited. Enforces the 1.2 s floor, slow mode, the 30/minute ceiling and "chat off". |
 | `set_updated_at`, `bootstrap_admin_role`, `chat_check_banned_keywords`, `sync_org_owner_role`, `handle_profile_before_delete`, `supersede_prior_approved_placeholder`, `guard_broadcaster_columns`, `guard_application_review`, `guard_affiliation_transition` | definer, trigger | — | — | Revoked from every client role. |
 
 ## Realtime publication
