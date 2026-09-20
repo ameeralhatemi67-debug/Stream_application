@@ -463,7 +463,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      provider.googleUserName ?? 'Amir Al-Hatemi',
+                      provider.googleUserName ?? provider.googleUserEmail ?? '',
                       style: const TextStyle(
                         color: AppTheme.textPrimaryDark,
                         fontSize: 11,
@@ -471,7 +471,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       ),
                     ),
                     Text(
-                      provider.googleUserEmail ?? 'polkgvd2@gmail.com',
+                      provider.googleUserEmail ?? '',
                       style: const TextStyle(
                         color: AppTheme.textMutedDark,
                         fontSize: 9.5,

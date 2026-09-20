@@ -141,11 +141,12 @@ void main() {
         'StreamerGridCard renders white border and Your Channel badge for own profile',
         (WidgetTester tester) async {
       final provider = AppProvider();
-      // prof_alghamdi_01 is owned strictly by polkgvd2@gmail.com -- see
-      // Cluster 2 Task 10 fix in isOwnStreamerProfile().
+      // Ownership comes from an approved application for that channel, never
+      // from the signed-in email (P1.6).
       provider.debugSetSignedInForTests(
-        email: 'polkgvd2@gmail.com',
+        email: 'owner@example.com',
         isStreamer: true,
+        ownedStreamerId: 'prof_alghamdi_01',
       );
 
       final ownStreamer =
@@ -214,11 +215,12 @@ void main() {
         () {
       final provider = AppProvider();
       provider.debugSetSignedInForTests(
-        email: 'polkgvd2@gmail.com',
+        email: 'owner@example.com',
         isStreamer: true,
+        ownedStreamerId: 'prof_alghamdi_01',
       );
 
-      // Own profile in sample dataset
+      // Own profile: the account's approved application points at it
       expect(provider.isOwnStreamerProfile('prof_alghamdi_01'), isTrue);
 
       // Other streamer channel
@@ -241,6 +243,22 @@ void main() {
       // different accounts, all of them have the streamer account 'Amir
       // Al-Hatemi' as their channel").
       expect(provider.isOwnStreamerProfile('prof_alghamdi_01'), isFalse);
+    });
+
+    test('no email grants ownership of a channel (P1.6 dev identity removed)',
+        () {
+      final provider = AppProvider();
+      // The developer account that used to be hardcoded into
+      // primaryOwnedStreamerId gets no special treatment any more.
+      provider.debugSetSignedInForTests(
+        email: 'polkgvd2@gmail.com',
+        isStreamer: true,
+      );
+
+      expect(provider.isOwnStreamerProfile('prof_alghamdi_01'), isFalse);
+      expect(provider.primaryOwnedStreamerId, isNull);
+      expect(provider.currentUserStreamerId, isNull);
+      expect(provider.detectDuplicateChannels(), isEmpty);
     });
 
     test('admin status alone does not grant ownership of another channel', () {
@@ -316,15 +334,20 @@ void main() {
         'detectDuplicateChannels and resolveDuplicateChannels keeps chosen channel only',
         () {
       final provider = AppProvider();
+      // The account owns 'prof_alghamdi_01' through its approved application
+      // and also still has a card under the application's YouTube handle --
+      // the real duplicate case (P1.6: ownership decides, not a name match).
       provider.debugSetSignedInForTests(
-        email: 'polkgvd2@gmail.com',
+        email: 'owner@example.com',
         isStreamer: true,
+        ownedStreamerId: 'prof_alghamdi_01',
+        ownedYoutubeHandle: 'applied_channel',
       );
 
       // Add a duplicate applied channel
       final duplicateApplied = provider.streamers.first.copyWith(
-        streamerId: 'streamer_applied_amir',
-        fullNameEn: 'Amir Alhatemi (Applied)',
+        streamerId: 'applied_channel',
+        fullNameEn: 'Applied Channel',
       );
       provider.addStreamerForTests(duplicateApplied);
 

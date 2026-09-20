@@ -702,10 +702,6 @@ class AppProvider extends ChangeNotifier {
     if (_myApplication != null) {
       return _myApplication!.applicantProfileId ?? _myApplication!.id;
     }
-    final email = _googleUserEmail?.toLowerCase().trim();
-    if (email == 'polkgvd2@gmail.com') {
-      return 'prof_alghamdi_01';
-    }
     return _authService.currentSession?.user.id;
   }
 
@@ -726,17 +722,11 @@ class AppProvider extends ChangeNotifier {
 
   /// Detects whether multiple streamer cards in the feed belong to this user
   List<StreamerModel> detectDuplicateChannels() {
-    final email = _googleUserEmail?.toLowerCase().trim();
+    // Ownership is decided only by isOwnStreamerProfile (selected org, the
+    // caller's approved application, or the authenticated user id) -- never
+    // by a hardcoded id, a display name or a developer email (P1.6).
     final duplicates = _streamers
-        .where((s) {
-          final isPrimary = s.streamerId == primaryOwnedStreamerId;
-          final isMockAmir = s.streamerId == 'prof_alghamdi_01';
-          final isAppliedAmir = s.fullNameEn.toLowerCase().contains('amir') ||
-              s.fullNameAr.contains('أمير') ||
-              (email != null && s.youtubeHandle.toLowerCase().contains('amir'));
-          return isPrimary ||
-              (email == 'polkgvd2@gmail.com' && (isMockAmir || isAppliedAmir));
-        })
+        .where((s) => isOwnStreamerProfile(s.streamerId))
         .toSet()
         .toList();
 
@@ -748,13 +738,8 @@ class AppProvider extends ChangeNotifier {
 
   /// Removes the unselected duplicate channel from feed and keeps the chosen one
   void resolveDuplicateChannels({required String keptStreamerId}) {
-    _streamers.removeWhere((s) {
-      final isDuplicate = s.streamerId != keptStreamerId &&
-          (s.streamerId == 'prof_alghamdi_01' ||
-              s.streamerId.startsWith('streamer_') ||
-              s.fullNameEn.toLowerCase().contains('amir'));
-      return isDuplicate;
-    });
+    _streamers.removeWhere((s) =>
+        s.streamerId != keptStreamerId && isOwnStreamerProfile(s.streamerId));
     notifyListeners();
   }
 
@@ -790,13 +775,10 @@ class AppProvider extends ChangeNotifier {
     return email.split('@').first.toLowerCase();
   }
 
-  String get currentUserStreamerId {
-    return _selectedBroadcastOrgId ??
-        _myApplication?.applicantProfileId ??
-        _myApplication?.id ??
-        _authService.currentSession?.user.id ??
-        'prof_alghamdi_01';
-  }
+  /// The channel id this account broadcasts as, or null when the account owns
+  /// no channel. Never falls back to a sample/demo id (P1.6): callers must
+  /// handle null instead of acting on someone else's channel.
+  String? get currentUserStreamerId => primaryOwnedStreamerId;
 
   // ---------------------------------------------------------------------
   // Stream Decay Engine (issue_log.md QF-11)
@@ -868,14 +850,14 @@ class AppProvider extends ChangeNotifier {
   String generatePrivateInviteLink() {
     if (!kPrivateStreamingEnabled) return '';
     final token = newId().substring(0, 8);
-    final streamId = _activeStreamIdForCurrentUser() ?? 'stream_live_992';
+    final streamId = _activeStreamIdForCurrentUser();
+    if (streamId == null) return '';
     return 'https://streamer.app/join/$streamId?t=$token';
   }
 
   String? _activeStreamIdForCurrentUser() {
-    final orgId = _selectedBroadcastOrgId;
-    final currentUserId = _authService.currentSession?.user.id;
-    final targetStreamerId = orgId ?? currentUserId ?? 'prof_alghamdi_01';
+    final targetStreamerId = primaryOwnedStreamerId;
+    if (targetStreamerId == null) return null;
     for (final streamer in _streamers) {
       if (streamer.streamerId == targetStreamerId) {
         return streamer.activeStreamId;
@@ -1206,9 +1188,22 @@ class AppProvider extends ChangeNotifier {
 
   /// Fetches verified broadcasters and organizations from Supabase backend
   /// and merges them into _streamers so all devices see new verified streamers.
+  /// Last time this client asked the backend to expire stale live flags.
+  /// A broadcaster whose phone dies stops sending heartbeats, so the flag has
+  /// to be cleared server-side; every client that reads the feed nudges that
+  /// sweep at most once a minute.
+  DateTime? _lastLiveFlagSweepAt;
+  static const Duration _liveFlagSweepInterval = Duration(seconds: 60);
+
   Future<void> loadVerifiedStreamersFromBackend() async {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
+      final now = DateTime.now();
+      if (_lastLiveFlagSweepAt == null ||
+          now.difference(_lastLiveFlagSweepAt!) >= _liveFlagSweepInterval) {
+        _lastLiveFlagSweepAt = now;
+        await _adminDbService!.sweepStaleLiveFlags();
+      }
       final backendStreamers =
           await _adminDbService!.loadVerifiedStreamersFromBackend();
 
@@ -1406,6 +1401,10 @@ class AppProvider extends ChangeNotifier {
   /// trip. Production code paths never call this -- real auth state comes
   /// exclusively from _applySessionUser/_refreshAdminRoleFromBackend above.
   @visibleForTesting
+  /// [ownedStreamerId] attaches an approved broadcaster application for that
+  /// channel, which is one of the three real ownership sources
+  /// (see [primaryOwnedStreamerId]). Tests must use it instead of relying on a
+  /// particular email: no email grants ownership of a channel (P1.6).
   void debugSetSignedInForTests({
     required String email,
     String? name,
@@ -1413,6 +1412,8 @@ class AppProvider extends ChangeNotifier {
     bool isMasterAdmin = false,
     bool isStreamer = true,
     List<String> permittedAdminOrgIds = const [],
+    String? ownedStreamerId,
+    String ownedYoutubeHandle = '',
   }) {
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
@@ -1424,6 +1425,30 @@ class AppProvider extends ChangeNotifier {
     _isAdminFromRoles = isAdmin || isMasterAdmin;
     _isMasterAdminFromRoles = isMasterAdmin;
     _permittedAdminOrgIds = permittedAdminOrgIds;
+    _myApplication = ownedStreamerId == null
+        ? null
+        : BroadcasterApplicationModel(
+            id: ownedStreamerId,
+            applicantProfileId: ownedStreamerId,
+            accountType: ApplicationAccountType.individualScholar,
+            applicantNameEn: name ?? email,
+            applicantNameAr: name ?? email,
+            email: email,
+            phone: '',
+            categoryId: '',
+            venueNameEn: '',
+            venueNameAr: '',
+            latitude: 0,
+            longitude: 0,
+            youtubeChannelUrl: '',
+            youtubeHandle: ownedYoutubeHandle,
+            bioEn: '',
+            bioAr: '',
+            avatarUrl: '',
+            bannerUrl: '',
+            status: ApplicationStatus.approved,
+            submittedAt: DateTime.now(),
+          );
     notifyListeners();
   }
 
@@ -2574,8 +2599,9 @@ class AppProvider extends ChangeNotifier {
   void setCustomStreamerYouTubeUrl(String url) {
     _customYouTubeLiveUrl = url.trim();
     _customYouTubeVideoId = extractYouTubeId(url);
+    final ownId = primaryOwnedStreamerId;
     _streamers = _streamers.map((s) {
-      if (s.streamerId == 'prof_alghamdi_01') {
+      if (ownId != null && s.streamerId == ownId) {
         return s.copyWith(youtubeVideoId: _customYouTubeVideoId);
       }
       return s;
@@ -2583,9 +2609,9 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Amir Al-Hatemi's YouTube channel (prof_alghamdi_01 only). Auto-detect is
-  // intentionally scoped to this single account/channel and must not be
-  // reused for any other streamer in the app.
+  // The YouTube channel the studio's auto-detect looks up. It is a single
+  // configured channel id; the detected video is applied to the caller's own
+  // channel only (P1.6), never to another streamer's card.
   static const String amirYouTubeChannelId = 'UCdPq2Mayw6k-WuvBMKNj44A';
 
   bool _isDetectingAmirLiveVideo = false;
@@ -2616,8 +2642,9 @@ class AppProvider extends ChangeNotifier {
 
       _customYouTubeVideoId = videoId;
       _customYouTubeLiveUrl = 'https://www.youtube.com/watch?v=$videoId';
+      final ownId = primaryOwnedStreamerId;
       _streamers = _streamers.map((s) {
-        if (s.streamerId == 'prof_alghamdi_01') {
+        if (ownId != null && s.streamerId == ownId) {
           return s.copyWith(
             youtubeVideoId: videoId,
             isCurrentlyLive: true,
@@ -2682,10 +2709,9 @@ class AppProvider extends ChangeNotifier {
 
   void setBroadcastType(BroadcastType type) {
     _customBroadcastType = type;
-    final currentUserId = _authService.currentSession?.user.id;
+    final ownId = primaryOwnedStreamerId;
     _streamers = _streamers.map((streamer) {
-      if (streamer.streamerId == 'prof_alghamdi_01' ||
-          (currentUserId != null && streamer.streamerId == currentUserId)) {
+      if (ownId != null && streamer.streamerId == ownId) {
         return streamer.copyWith(
           broadcastType: streamer.isCurrentlyLive ? type : type,
         );
@@ -2801,9 +2827,11 @@ class AppProvider extends ChangeNotifier {
     _isBroadcastingLive = previousLive;
     _isBroadcastingLive = !_isBroadcastingLive;
 
-    final currentUserId = _authService.currentSession?.user.id;
     final orgId = _selectedBroadcastOrgId;
-    final targetStreamerId = orgId ?? currentUserId ?? 'prof_alghamdi_01';
+    // Non-null here: the guard above already returned unless an authenticated
+    // session and a primary device exist, so primaryOwnedStreamerId resolves
+    // to the selected org, the caller's application or the auth user id.
+    final targetStreamerId = primaryOwnedStreamerId!;
 
     // Synchronize target streamer model with the custom live data
     _streamers = _streamers.map<StreamerModel>((streamer) {
@@ -2848,9 +2876,14 @@ class AppProvider extends ChangeNotifier {
       // Start polling real viewer count from YouTube
       _startLiveViewerPolling();
       final isAudio = _customBroadcastType == BroadcastType.liveAudio;
-      final streamerNameEn =
-          orgId != null ? 'Dalilk 4 IELTS' : 'Amir Al-Hatemi';
-      final streamerNameAr = orgId != null ? 'دليل الآيلتس' : 'أمير الحاتمي';
+      // Names come from the broadcasting account itself (P1.6) -- never from
+      // a hardcoded sample streamer.
+      final broadcaster =
+          _streamers.where((s) => s.streamerId == targetStreamerId).firstOrNull;
+      final streamerNameEn = broadcaster?.fullNameEn ??
+          (_googleUserName ?? _userProfile.nameEn);
+      final streamerNameAr = broadcaster?.fullNameAr ??
+          (_googleUserName ?? _userProfile.nameAr);
 
       addEnhancedNotification(
         AppNotificationModel(
@@ -3148,6 +3181,7 @@ class AppProvider extends ChangeNotifier {
       // Private stream filtering (issue_log.md QF-12): if streamer's active broadcast is private,
       // it is visible to the broadcaster, whitelisted handles, or admitted attendees.
       if (s.isCurrentlyLive &&
+          currentUserStreamerId != null &&
           s.streamerId == currentUserStreamerId &&
           _streamVisibility == StreamVisibility.private) {
         final currentHandle = currentUserHandle;
@@ -3260,8 +3294,9 @@ class AppProvider extends ChangeNotifier {
     if (!kDebugMode) return;
     _isPitchDirectorModeEnabled = enabled;
     _isBroadcastingLive = enabled;
+    final ownId = primaryOwnedStreamerId;
     _streamers = _streamers.map((s) {
-      if (s.streamerId == 'prof_alghamdi_01') {
+      if (ownId != null && s.streamerId == ownId) {
         return s.copyWith(
           isCurrentlyLive: enabled,
           broadcastType: enabled ? _customBroadcastType : BroadcastType.offline,
@@ -4367,6 +4402,10 @@ class AppProvider extends ChangeNotifier {
     required Uint8List fileBytes,
     String contentType = 'image/jpeg',
   }) async {
+    // A placeholder card belongs to a channel; without a resolved channel the
+    // submission fails closed rather than being filed under a sample id (P1.6).
+    final ownerStreamerId = currentUserStreamerId;
+    if (ownerStreamerId == null || ownerStreamerId.isEmpty) return null;
     await _ensureApprovedPlaceholderHashCacheLoaded();
     final hash = _hashPlaceholderBytes(fileBytes);
     final cachedUrl = _approvedPlaceholderHashCache[hash];
@@ -4376,8 +4415,8 @@ class AppProvider extends ChangeNotifier {
             p.imageUrl == cachedUrl &&
             p.status == StreamPlaceholderStatus.approved,
         orElse: () => StreamerCustomPlaceholderModel(
-          id: 'cached_${_placeholderCacheKey(currentUserStreamerId, placeholderType)}',
-          streamerId: currentUserStreamerId,
+          id: 'cached_${_placeholderCacheKey(ownerStreamerId, placeholderType)}',
+          streamerId: ownerStreamerId,
           placeholderType: placeholderType,
           imageUrl: cachedUrl,
           status: StreamPlaceholderStatus.approved,

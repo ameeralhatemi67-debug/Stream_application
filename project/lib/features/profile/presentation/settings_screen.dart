@@ -68,9 +68,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
     if (fromApp != null && fromApp.isNotEmpty) {
       return fromApp.startsWith('@') ? fromApp : '@$fromApp';
     }
-    final slug =
-        profile.nameEn.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
-    return '@${slug.isEmpty ? profile.id : slug}';
+    // Falls back to the signed-in account's own name/email, never to a
+    // default fixture profile (P1.6): an account with no name yet shows no
+    // handle rather than someone else's.
+    final source = profile.nameEn.isNotEmpty
+        ? profile.nameEn
+        : (provider.googleUserName ??
+            provider.googleUserEmail?.split('@').first ??
+            '');
+    final slug = source.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]+'), '');
+    return slug.isEmpty ? '' : '@$slug';
   }
 
   @override
@@ -496,12 +503,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  handle,
-                  style:
-                      const TextStyle(color: AppTheme.accentBlue, fontSize: 12),
-                ),
+                if (handle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    handle,
+                    style: const TextStyle(
+                        color: AppTheme.accentBlue, fontSize: 12),
+                  ),
+                ],
                 const SizedBox(height: 4),
                 Text(
                   isAr ? profile.organizationAr : profile.organizationEn,

@@ -133,9 +133,9 @@ class AdminDatabaseService {
       }
     }
 
-    // Seed realistic initial pending applications for immediate testing
-    _cachedApplications = _createInitialSeedApplications();
-    await _saveApplicationsToPrefs();
+    // No seeded applications: the review queue shows only real submissions
+    // (P1.6 dev identity, P2 truthful data). An empty queue is the truthful
+    // state for a backend with nothing pending.
     return List.unmodifiable(_cachedApplications);
   }
 
@@ -570,11 +570,6 @@ class AdminDatabaseService {
       }
     }
 
-    if (_cachedAuditLogs.isEmpty) {
-      _cachedAuditLogs = _createInitialSeedAuditLogs();
-      await _saveAuditLogsToPrefs();
-    }
-
     if (organizationId != null && organizationId.isNotEmpty) {
       return List.unmodifiable(_cachedAuditLogs
           .where((l) => l.organizationId == organizationId)
@@ -887,11 +882,6 @@ class AdminDatabaseService {
       }
     }
 
-    if (_cachedAffiliationRequests.isEmpty) {
-      _cachedAffiliationRequests = _createInitialSeedAffiliations();
-      await _saveAffiliationRequestsToPrefs();
-    }
-
     if (orgId != null && orgId.isNotEmpty) {
       return List.unmodifiable(
           _cachedAffiliationRequests.where((r) => r.orgId == orgId).toList());
@@ -1060,150 +1050,6 @@ class AdminDatabaseService {
     }).toList();
   }
 
-  List<OrgAffiliationRequestModel> _createInitialSeedAffiliations() {
-    return [
-      OrgAffiliationRequestModel(
-        id: 'aff_req_001',
-        orgId: 'org_dalilk_04',
-        orgNameEn: 'Dalilk 4 IELTS Academy',
-        orgNameAr: 'أكاديمية دليل الآيلتس',
-        orgAvatarUrl: 'assets/images/Dalilak/OrgMainProfile.jpg',
-        streamerId: 'prof_alghamdi_01',
-        streamerNameEn: 'Amir Al-Hatemi',
-        streamerNameAr: 'أمير الحاتمي',
-        streamerAvatarUrl: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-        streamerEmail: 'amir.alhatemi@gmail.com',
-        proposedRoleEn: 'AI & Educational Technology Guest Lecturer',
-        proposedRoleAr: 'محاضر زائر في الذكاء الاصطناعي والتقنيات التعليمية',
-        note:
-            'Honored to collaborate on IELTS technology seminars and digital speaking workshops.',
-        direction: AffiliationDirection.streamerToOrg,
-        status: AffiliationStatus.pending,
-        createdAt: DateTime.now().subtract(const Duration(hours: 5)),
-      ),
-    ];
-  }
-
-  // ==========================================
-  // Initial Seed Applications & Audit Logs
-  // ==========================================
-
-  List<BroadcasterApplicationModel> _createInitialSeedApplications() {
-    return [
-      BroadcasterApplicationModel(
-        id: 'app_kfupm_ai_01',
-        accountType: ApplicationAccountType.organizationVenue,
-        applicantNameEn: 'KFUPM AI & Robotics Research Center',
-        applicantNameAr:
-            'مركز بحوث الذكاء الاصطناعي والروبوتات بجامعة الملك فهد',
-        email: 'ai.center@kfupm.edu.sa',
-        phone: '+966 13 860 0000',
-        academicTitleEn: 'Research Institution & Venue',
-        academicTitleAr: 'مؤسسة بحثية وقاعة فعاليات',
-        institutionEn: 'King Fahd University of Petroleum & Minerals',
-        institutionAr: 'جامعة الملك فهد للبترول والمعادن',
-        categoryId: 'cs_tech',
-        tags: const ['#AI', '#Robotics', '#KFUPM', '#Academic'],
-        organizationType: 'University Research Center & Auditorium',
-        venueNameEn: 'KFUPM Building 24 Grand Auditorium',
-        venueNameAr: 'جامعة الملك فهد - مدرج مبنى 24 الرئيسي',
-        latitude: 26.3050,
-        longitude: 50.1450,
-        seatingCapacity: 450,
-        officialWebsiteUrl: 'https://kfupm.edu.sa/ai-center',
-        youtubeChannelUrl: 'https://youtube.com/@kfupm_ai_center',
-        youtubeHandle: 'kfupm_ai_center',
-        bioEn:
-            'Leading academic hub for advanced artificial intelligence, machine learning seminars, and autonomous systems research in the Eastern Province.',
-        bioAr:
-            'المركز الأكاديمي الرائد لأبحاث الذكاء الاصطناعي، والتعلم الآلي، والندوات العلمية للأنظمة الذكية في المنطقة الشرقية.',
-        avatarUrl: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-        bannerUrl: 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
-        status: ApplicationStatus.pending,
-        submittedAt: DateTime.now().subtract(const Duration(hours: 3)),
-      ),
-      BroadcasterApplicationModel(
-        id: 'app_dr_tariq_02',
-        accountType: ApplicationAccountType.individualScholar,
-        applicantNameEn: 'Dr. Tariq Al-Mansoor',
-        applicantNameAr: 'د. طارق المنصور',
-        email: 'tariq.mansoor@iau.edu.sa',
-        phone: '+966 50 123 4567',
-        academicTitleEn: 'Associate Professor of Clinical Medicine',
-        academicTitleAr: 'أستاذ مشارك في الطب الباطني والجراحة',
-        institutionEn: 'Imam Abdulrahman Bin Faisal University',
-        institutionAr: 'جامعة الإمام عبدالرحمن بن فيصل',
-        categoryId: 'medical_health',
-        tags: const ['#Medicine', '#Cardiology', '#HealthScience'],
-        venueNameEn: 'King Fahd Hospital University Auditorium',
-        venueNameAr: 'مستشفى الملك فهد الجامعي - القاعة الكبرى',
-        latitude: 26.4207,
-        longitude: 50.0888,
-        youtubeChannelUrl: 'https://youtube.com/@dr_tariq_medicine',
-        youtubeHandle: 'dr_tariq_medicine',
-        bioEn:
-            'Consultant and academic lecturer specializing in internal medicine, public health informatics, and clinical medical conferences.',
-        bioAr:
-            'استشاري ومحاضر أكاديمي متخصص في الطب الباطني، ونظم المعلوماتية الصحية، والمؤتمرات الطبية السريرية.',
-        avatarUrl: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-        bannerUrl: 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
-        status: ApplicationStatus.pending,
-        submittedAt: DateTime.now().subtract(const Duration(days: 1)),
-      ),
-    ];
-  }
-
-  List<OrgAuditLogEntry> _createInitialSeedAuditLogs() {
-    return [
-      OrgAuditLogEntry(
-        logId: 'audit_dalilk_001',
-        organizationId: 'org_dalilk_04',
-        timestamp: DateTime.now().subtract(const Duration(days: 3)),
-        actorEmail: 'amir.alhatemi@gmail.com',
-        actorName: 'Amir Al-Hatemi (Super Admin)',
-        action: OrgAuditAction.createOrganization,
-        descriptionEn:
-            'Verified and approved Dalilk 4 IELTS academic organization workspace.',
-        descriptionAr:
-            'تم اعتماد وتوثيق مساحة عمل أكاديمية دليل الآيلتس التعليمية.',
-        metadata: const {
-          'org_id': 'org_dalilk_04',
-          'youtube_handle': 'dalilk4ielts',
-        },
-      ),
-      OrgAuditLogEntry(
-        logId: 'audit_dalilk_002',
-        organizationId: 'org_dalilk_04',
-        timestamp: DateTime.now().subtract(const Duration(days: 2)),
-        actorEmail: 'abdulrahman@dalilk.com',
-        actorName: 'Abdulrahman Hejazi (Owner)',
-        action: OrgAuditAction.addSpeakerToRoster,
-        descriptionEn:
-            'Added Dr. Sarah Al-Dosari to Dalilk 4 IELTS speaker roster with broadcast permissions.',
-        descriptionAr:
-            'تمت إضافة د. سارة الدوسري إلى قائمة مدربي دليل الآيلتس مع صلاحيات البث المباشر.',
-        metadata: const {
-          'speaker_id': 'spk_sarah',
-          'role': 'Senior IELTS Speaking & Writing Specialist',
-        },
-      ),
-      OrgAuditLogEntry(
-        logId: 'audit_dalilk_003',
-        organizationId: 'org_dalilk_04',
-        timestamp: DateTime.now().subtract(const Duration(hours: 12)),
-        actorEmail: 'abdulrahman@dalilk.com',
-        actorName: 'Abdulrahman Hejazi (Owner)',
-        action: OrgAuditAction.addVenueBranch,
-        descriptionEn:
-            'Added Dhahran Tech Innovation Hall and Dammam Executive Training Suite campus branches.',
-        descriptionAr:
-            'تمت إضافة فرعي قاعة الابتكار بالظهران وجناح التدريب التنفيذي بالدمام.',
-        metadata: const {
-          'branches': ['dalilk_branch_dhahran', 'dalilk_branch_dammam'],
-        },
-      ),
-    ];
-  }
 
   // ==========================================
   // Organization Venues & Speakers Repository (Checkpoint 3 Phase 2)
@@ -2649,6 +2495,23 @@ class AdminDatabaseService {
           'p_force': force,
         }) ==
         true;
+  }
+
+  /// Clears live flags whose broadcaster's primary device stopped sending
+  /// heartbeats (server-side expiry, see
+  /// 20260920130000_live_flag_expiry_and_privilege_guards.sql). Only ever
+  /// switches flags off, so it is safe for any signed-in client to call
+  /// before reading the feed. Returns how many broadcasts were cleared, or 0
+  /// when there is no backend or the call fails.
+  Future<int> sweepStaleLiveFlags() async {
+    if (!_useSupabase) return 0;
+    try {
+      final result = await _client.rpc('sweep_stale_live_flags');
+      return result is int ? result : 0;
+    } catch (e) {
+      debugPrint('sweepStaleLiveFlags failed: $e');
+      return 0;
+    }
   }
 
   Future<bool> heartbeatDevice(String deviceId) async {

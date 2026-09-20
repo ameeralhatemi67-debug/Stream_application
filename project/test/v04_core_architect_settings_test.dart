@@ -28,6 +28,13 @@ void main() {
 
     test('TC-V04-SET-02: Pitch Director Mode Toggle & Active State Trigger',
         () {
+      // Pitch Director mode marks the caller's OWN channel live (P1.6), so
+      // the test account owns prof_alghamdi_01 through its application.
+      provider.debugSetSignedInForTests(
+        email: 'owner@example.com',
+        isStreamer: true,
+        ownedStreamerId: 'prof_alghamdi_01',
+      );
       expect(provider.isPitchDirectorModeEnabled, isFalse);
 
       provider.togglePitchDirectorMode();
@@ -142,6 +149,13 @@ void main() {
 
     test('TC-V04-SET-06: Broadcast Type & Audio-Only Live State Management',
         () {
+      // Broadcast-type changes apply to the caller's OWN channel only (P1.6),
+      // so the test account owns prof_alghamdi_01 through its application.
+      provider.debugSetSignedInForTests(
+        email: 'owner@example.com',
+        isStreamer: true,
+        ownedStreamerId: 'prof_alghamdi_01',
+      );
       expect(provider.customBroadcastType, equals(BroadcastType.liveVideo));
 
       // Toggle broadcast type to liveAudio
@@ -240,7 +254,15 @@ void main() {
       final allStreamers = provider.streamers;
       expect(allStreamers.length, equals(5));
 
-      // Make Amir Al-Hatemi Live Audio
+      // Pitch Director mode marks the caller's OWN channel live (P1.6), so
+      // the test account owns prof_alghamdi_01 through its application.
+      provider.debugSetSignedInForTests(
+        email: 'owner@example.com',
+        isStreamer: true,
+        ownedStreamerId: 'prof_alghamdi_01',
+      );
+
+      // Make the owned channel Live Audio
       provider.setBroadcastType(BroadcastType.liveAudio);
       provider.setPitchDirectorMode(true);
 

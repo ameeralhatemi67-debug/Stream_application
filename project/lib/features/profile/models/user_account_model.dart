@@ -30,9 +30,11 @@ class UserProfileModel {
     required this.bannerUrl,
     required this.youtubeChannelUrl,
     required this.locationCity,
-    this.totalLectureHours = 142,
-    this.totalSubscribers = 14200,
-    this.isVerifiedScholar = true,
+    this.totalLectureHours = 0,
+    this.totalSubscribers = 0,
+    // Verification is granted by the backend (user_roles / profiles), never
+    // assumed client-side (P1.6).
+    this.isVerifiedScholar = false,
   });
 
   UserProfileModel copyWith({
@@ -72,20 +74,25 @@ class UserProfileModel {
     );
   }
 
+  /// The profile of an account that has not loaded (or does not have) a real
+  /// profile yet: empty, not a developer's identity. Before P1.6 this carried
+  /// a real person's name, photo, bio and YouTube channel, so every signed-out
+  /// or unconfigured account rendered — and pre-filled forms with — that
+  /// identity (issue_log.md: three accounts all showing "Amir Al-Hatemi").
   static const defaultProfile = UserProfileModel(
-    id: 'prof_alghamdi_01',
-    nameEn: 'Amir Al-Hatemi',
-    nameAr: 'أمير الحاتمي',
-    titleEn: 'Computer Science & AI Specialist',
-    titleAr: 'أخصائي علوم الحاسب والذكاء الاصطناعي',
-    organizationEn: 'Multimedia University Graduate',
-    organizationAr: 'خريج جامعة مالتيميديا',
-    bioEn: 'I like to build applications and software with AI, or using AI to boost productivity.',
-    bioAr: 'أحب بناء التطبيقات والبرامج باستخدام الذكاء الاصطناعي، أو استخدام الذكاء الاصطناعي لزيادة الإنتاجية.',
-    avatarUrl: 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-    bannerUrl: 'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
-    youtubeChannelUrl: 'https://youtube.com/@amiralhatime4831',
-    locationCity: 'Al Khobar / Dhahran',
+    id: '',
+    nameEn: '',
+    nameAr: '',
+    titleEn: '',
+    titleAr: '',
+    organizationEn: '',
+    organizationAr: '',
+    bioEn: '',
+    bioAr: '',
+    avatarUrl: '',
+    bannerUrl: '',
+    youtubeChannelUrl: '',
+    locationCity: '',
   );
 }
 

@@ -79,6 +79,12 @@ void main() {
     test('TC-PITCH-01: Pitch Director Mode Activation & Live State Forcing',
         () {
       final provider = AppProvider();
+      // Pitch Director mode marks the caller's OWN channel live (P1.6).
+      provider.debugSetSignedInForTests(
+        email: 'owner@example.com',
+        isStreamer: true,
+        ownedStreamerId: 'prof_alghamdi_01',
+      );
       expect(provider.isPitchDirectorModeEnabled, isFalse);
 
       provider.activatePitchDirectorMode();

@@ -5,6 +5,8 @@ import 'package:streamer_app/features/admin/models/broadcaster_application_model
 import 'package:streamer_app/features/admin/models/terms_and_conditions_model.dart';
 import 'package:streamer_app/features/admin/models/viewer_analytics_model.dart';
 
+import 'fixtures/admin_applications.dart';
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -131,9 +133,15 @@ void main() {
     test('TC-ADMIN-02: Verification Queue Approval & Live Streamer Instantiation',
         () async {
       provider.debugSetSignedInForTests(
-        email: 'polkgvd2@gmail.com',
+        email: 'admin@example.com',
         isAdmin: true,
       );
+      // The queue starts empty now that nothing is seeded at runtime
+      // (P1.6/P2): submit a real application to review.
+      expect(provider.pendingApplicationsCount, 0);
+      for (final fixture in sampleBroadcasterApplications()) {
+        await provider.submitBroadcasterApplication(fixture);
+      }
 
       final initialStreamers = provider.streamers.length;
       final pendingCount = provider.pendingApplicationsCount;

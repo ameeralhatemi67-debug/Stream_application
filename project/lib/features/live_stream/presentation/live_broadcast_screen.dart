@@ -328,7 +328,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final streamer = _resolveStreamer(appProvider);
 
     if (_sourceType == StreamSourceType.youtubeEmbed) {
-      if (streamer.streamerId == 'prof_alghamdi_01' &&
+      // The custom studio video id only ever overrides the caller's own
+      // channel, never a sample id (P1.6).
+      if (appProvider.isOwnStreamerProfile(streamer.streamerId) &&
           appProvider.customYouTubeVideoId.isNotEmpty) {
         return appProvider.customYouTubeVideoId;
       }

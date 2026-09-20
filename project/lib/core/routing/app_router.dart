@@ -200,8 +200,12 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/profile/:id',
         name: 'profile',
+        // A missing/empty channel id resolves to the feed instead of a sample
+        // profile (P1.6).
+        redirect: (context, state) =>
+            (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? 'prof_alghamdi_01';
+          final id = state.pathParameters['id'] ?? '';
           return BroadcasterProfileScreen(streamerId: id);
         },
       ),
@@ -209,8 +213,10 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/live/:id',
         name: 'live',
+        redirect: (context, state) =>
+            (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
         builder: (context, state) {
-          final id = state.pathParameters['id'] ?? 'stream_live_992';
+          final id = state.pathParameters['id'] ?? '';
           return LiveBroadcastScreen(streamId: id);
         },
       ),
@@ -350,8 +356,15 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                           icon: Icons.person_rounded,
                           label: 'Studio Profile',
                           isSelected: false,
-                          onTap: () => context.push(
-                              '/profile/${context.read<AppProvider>().currentUserStreamerId}'),
+                          onTap: () {
+                            final ownId = context
+                                .read<AppProvider>()
+                                .currentUserStreamerId;
+                            context.push(
+                                ownId == null || ownId.isEmpty
+                                    ? '/feed'
+                                    : '/profile/$ownId');
+                          },
                         ),
                       ],
                       _DesktopNavItem(

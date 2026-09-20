@@ -5,6 +5,8 @@ import 'package:streamer_app/features/admin/models/broadcaster_application_model
 import 'package:streamer_app/features/admin/models/terms_and_conditions_model.dart';
 import 'package:streamer_app/features/admin/models/viewer_analytics_model.dart';
 
+import 'fixtures/admin_applications.dart';
+
 void main() {
   group('Admin Hub & Database Layer Unit Tests (Phase 1)', () {
     test('TC-DB-01: BroadcasterApplicationModel JSON Round-Trip & Dual-Track Verification', () {
@@ -103,8 +105,14 @@ void main() {
       expect(reconstituted.totalRegisteredGoogleUsers, equals(185));
     });
 
-    test('TC-DB-04: AdminDatabaseService Initial Seeds & Application Mutations', () async {
+    test('TC-DB-04: Submitted Applications & Application Mutations', () async {
       final service = AdminDatabaseService(null);
+      // The service no longer seeds sample applications (P1.6/P2): an empty
+      // queue is the truthful state, so this test submits its own fixtures.
+      expect(await service.loadApplications(), isEmpty);
+      for (final fixture in sampleBroadcasterApplications()) {
+        await service.submitApplication(fixture);
+      }
       final apps = await service.loadApplications();
 
       expect(apps.length, greaterThanOrEqualTo(2));
@@ -131,9 +139,12 @@ void main() {
 
     test('TC-DB-05: AppProvider Verification State Machine (Approve Application -> Live Streamer)', () async {
       final service = AdminDatabaseService(null);
+      for (final fixture in sampleBroadcasterApplications()) {
+        await service.submitApplication(fixture);
+      }
       final provider = AppProvider(service);
 
-      // Wait for async init to load seed applications
+      // Wait for async init to load the submitted applications
       await Future.delayed(const Duration(milliseconds: 50));
 
       final initialStreamersCount = provider.streamers.length;
@@ -161,6 +172,9 @@ void main() {
 
     test('TC-DB-06: AppProvider Rejection Workflow and Reason Retention', () async {
       final service = AdminDatabaseService(null);
+      for (final fixture in sampleBroadcasterApplications()) {
+        await service.submitApplication(fixture);
+      }
       final provider = AppProvider(service);
 
       await Future.delayed(const Duration(milliseconds: 50));
