@@ -1,39 +1,41 @@
 # LEDGER
 
 ## Run header
-- Date/time started: 2026-09-20, Asia/Riyadh.
-- Model / effort: inherited session settings; unchanged.
-- Plan: SPLIT, explicitly requested. Stopped at first check by weekly guard.
-- Start meter: used_5h=1.0 resets_in_min=38 cache_ttl=30m assumed weekly=98.0; snapshot_age_s=15690.
-- Baselines: analyze, tests, gates and tooling UNVERIFIED. STOP prevented preflight.
+- Started: 2026-09-20 Asia/Riyadh; inherited model/effort unchanged.
+- Plan: SPLIT, detailed binding caps 70/60 and soft 64/54; introductory 80/80 conflicts, so use the stricter detailed rules and unchanged meter.
+- Initial meter: used_5h=9.0, weekly=1.0, resets_in_min=34, cache_ttl=30m assumed. Old checked-in meter forced single; restored owner's exact stash updates, then split check OK at 11.0. --new-run was invoked only once; restored meter retains started_window_at_used=1.0.
+- Baselines pending: analyze/tests; gates 18 failing, G10a-e all 0, G11a-c/e-g all 0, G11d=3.
+- Tooling: Docker/graft unavailable on PATH; use rg; DB acceptance UNVERIFIED-STATIC. Supabase version probe blocked by telemetry filesystem permission; Flutter probe pending.
 
 ## Budget log
-| # | phase/step | window | used_5h | cap/soft | headroom | status | cache_warm |
-|---|------------|--------|---------|----------|----------|--------|------------|
-| 1 | Initial check | 1 | 1.0 | 70/64 | 69.0 | STOP weekly_limit_guard | false |
+| Step | Window | Used 5h | Weekly | Status |
+|---|---|---|---|---|
+| Initial meter | 1 | 9 | 1 | OK, old meter forced single |
+| Restored meter / P0 | 1 | 11 | 1 | OK split cap70 soft64 |
 
 ## Phase log
-No implementation phase started. Estimates remain those in 03; actual phase burn is unmeasured.
+P0 in progress; estimate 1-2%, measured since entry 2 points so far. No implementation phase started.
 
 ## Decisions
-- Follow the explicit weekly >=90 guard; perform stop documentation only, no tests/builds, no waiting and no new phase.
+- Resolve conflicting cap text conservatively using detailed budget rules; no meter edits.
+- Restore named pre-existing stash before execution; keep original stash as backup and exclude its five paths from phase commits.
+- D-24: graft missing, use rg and anchored line ranges.
+- D-14: Docker missing, all DB behavior remains UNVERIFIED-STATIC until owner executes local probes.
 
 ## Evidence
-- Initial meter returned STOP at weekly=98.0. Snapshot age was 15690 seconds; freshness is unverified and STOP remains binding.
-- Initial HEAD 817f6ad. Initial git status showed only five modified brief files; no app or migration edits by this run.
-- Analyze, tests, gates, DB acceptance, release build and secret scan are UNVERIFIED.
+- Meter --probe chose codex, primary 11%, secondary 1%, recent snapshot.
+- gates --history: 18 failing gates; G10a-e=0; G11a-c/e-g=0; G11d=3 missing ignore coverage. No secret values emitted.
 
 ## NOT DONE
-All P0-P9 work remains. Estimates in execution order: P0 1-2%, P1 12-16%, P2 6-8%, P3 4-6%, P4 24-30%, P8A 6-9%, P6 9-12%, P5 10-14%, P7 9-12%, P8B 4-6%, P9 3-4%. No measured data supports revising them.
-
-## Surprises / risks found
-- Weekly guard already exceeded at entry. A five-hour reset alone does not clear it.
-- Five pre-existing brief changes preserved in named stash to meet clean-tree requirement. Restore before using the meter or resume prompt, because the stash includes the owner's meter/protocol updates.
+All implementation phases P1-P9; P0 baseline in progress.
 
 ## RESUME block
-- Next step: restore the named stash, then budget check without --new-run. If OK, start P0 step 2; otherwise stop.
-- Stash: preexisting-before-budget-stop-2026-09-20. Includes 00_MASTER_PROMPT_ASTRA.md, 04_BUDGET_PROTOCOL.md, DESIGN_PROMPT.md, RESUME_PROMPT.md, tools/budget_check.mjs, all under brief/.
-- Commands first: git stash list; git stash apply the matching stash; node brief/tools/budget_check.mjs --plan split.
-- Continue with brief/RESUME_PROMPT.md in a fresh session only when both weekly guard and window rules permit. Never use a third window.
-- Open questions: none. No owner response expected during this run.
-- Meter at stop: window=1 used_5h=1.0 weekly=98.0 STOP. Stop bookkeeping consumption unmeasured.
+- Next: finish P0 tooling/baseline, then P1 in 03.
+- Pre-existing five brief modifications restored; backup stash preexisting-before-budget-stop-2026-09-20 retained.
+- First command: node brief/tools/budget_check.mjs --plan split. Never repeat --new-run this run.
+- Last meter: 11% five-hour, 1% weekly, window1 OK.
+
+## P0 checkpoint
+- Flutter 3.41.2 / Dart 3.11.0; Supabase CLI 2.115.0; pub get succeeded; flutter analyze: 0 issues; flutter test: 264 passed, 0 failed. Existing test logs include caught provider-after-dispose/unconfigured-Supabase errors; suite passes.
+- gates --history: 18 failing, G10a-e=0, G11a-c/e-g=0, G11d=3. Local tag pre-hardening-2026-09-19 created. No dependency file changes.
+- P0 complete at E1 for app baseline; database acceptance UNVERIFIED-STATIC. Next P1.1 column guards. The previous OVERRUN_REPORT describes the earlier aborted run and will be replaced at this run's stop.
