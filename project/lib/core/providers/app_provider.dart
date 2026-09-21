@@ -1637,6 +1637,7 @@ class AppProvider extends ChangeNotifier {
     _unsubscribeFromUserStatusChanges();
     _unsubscribeFromPublicStreamerChanges();
     _unsubscribeFromAcademicCategoryChanges();
+    _unsubscribeFromChatReportChanges();
     super.dispose();
   }
 
@@ -3855,12 +3856,59 @@ class AppProvider extends ChangeNotifier {
     } catch (e) {
       debugPrint('ensureChatReportsLoaded failed: $e');
     }
+    _subscribeToChatReportChanges();
+  }
+
+  RealtimeChannel? _chatReportsChannel;
+
+  /// P6.3: a viewer reporting a message has to reach an open moderation queue
+  /// without the admin reloading the tab. chat_reports is on the realtime
+  /// publication since 20260921130000, and its SELECT policy is admin-tier
+  /// only, so a non-admin subscriber receives nothing even though every client
+  /// could technically open this channel -- Realtime applies RLS per
+  /// subscriber. That is the enforcement; this is only delivery.
+  void _subscribeToChatReportChanges() {
+    _unsubscribeFromChatReportChanges();
+    try {
+      if (!Supabase.instance.isInitialized) return;
+      _chatReportsChannel = Supabase.instance.client
+          .channel('chat_reports_queue')
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'chat_reports',
+            callback: (payload) {
+              debugPrint('Realtime: chat_reports changed');
+              _refreshChatReports();
+            },
+          )
+          .subscribe();
+    } catch (e) {
+      debugPrint('Realtime chat_reports subscription failed: $e');
+    }
+  }
+
+  void _unsubscribeFromChatReportChanges() {
+    if (_chatReportsChannel != null) {
+      try {
+        if (Supabase.instance.isInitialized) {
+          Supabase.instance.client.removeChannel(_chatReportsChannel!);
+        }
+      } catch (_) {}
+      _chatReportsChannel = null;
+    }
   }
 
   Future<void> _refreshChatReports() async {
     _adminDbService ??= await AdminDatabaseService.create();
-    _chatReports = await _adminDbService!.loadChatReports();
-    notifyListeners();
+    try {
+      _chatReports = await _adminDbService!.loadChatReports();
+      notifyListeners();
+    } catch (e) {
+      // A realtime-triggered refresh must never surface as an unhandled error
+      // in a channel callback; the queue keeps whatever it last loaded.
+      debugPrint('_refreshChatReports failed: $e');
+    }
   }
 
   Future<void> dismissChatReport(String reportId) async {

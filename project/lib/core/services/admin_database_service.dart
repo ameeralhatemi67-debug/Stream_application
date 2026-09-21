@@ -1661,11 +1661,49 @@ class AdminDatabaseService {
     }).toList();
   }
 
+
+  /// Appends a platform-scope audit entry for a chat-moderation action (P6.3).
+  ///
+  /// `p_organization_id` is null on purpose: moderating a chat message is a
+  /// platform action, not an organization one, and log_audit_event() accepts a
+  /// null organization for exactly that case while refusing an organization the
+  /// caller is unrelated to (20260921110000). The actor is taken from
+  /// `auth.uid()` server-side, so a client cannot forge who did it.
+  ///
+  /// Best-effort: a failure here is logged but never blocks the moderation
+  /// action itself from taking effect -- an unlogged mute is better than a
+  /// sender who stays unmuted because the audit insert failed.
+  Future<void> recordChatModerationAudit({
+    required String action,
+    required String descriptionEn,
+    required String descriptionAr,
+    Map<String, dynamic> metadata = const {},
+  }) async {
+    if (!_useSupabase) return;
+    try {
+      await _client.rpc('log_audit_event', params: {
+        'p_organization_id': null,
+        'p_action': action,
+        'p_description_en': descriptionEn,
+        'p_description_ar': descriptionAr,
+        'p_metadata': metadata,
+      });
+    } catch (e) {
+      debugPrint('recordChatModerationAudit failed: $e');
+    }
+  }
+
   /// Dismisses a report with no other action -- just removes it from the
   /// queue (chat_reports_delete_admin, 20260827120000).
   Future<void> dismissChatReport(String reportId) async {
     if (!_useSupabase) throw Exception('Supabase not available');
     await _client.from('chat_reports').delete().eq('id', reportId);
+    await recordChatModerationAudit(
+      action: 'chatReportDismissed',
+      descriptionEn: 'Dismissed a chat report with no further action.',
+      descriptionAr: 'تم تجاهل تقرير محادثة دون اتخاذ إجراء.',
+      metadata: {'report_id': reportId},
+    );
   }
 
   /// Deletes the reported message (propagates to every viewer's live chat
@@ -1682,6 +1720,12 @@ class AdminDatabaseService {
     if (!_useSupabase) throw Exception('Supabase not available');
     await _client.from('chat_messages').delete().eq('id', messageId);
     await _client.from('chat_reports').delete().eq('id', reportId);
+    await recordChatModerationAudit(
+      action: 'chatMessageDeleted',
+      descriptionEn: 'Deleted a reported chat message.',
+      descriptionAr: 'تم حذف رسالة محادثة مُبلّغ عنها.',
+      metadata: {'message_id': messageId, 'report_id': reportId},
+    );
   }
 
   /// Mutes/bans the reported sender from this one stream's chat (server-
@@ -1720,6 +1764,17 @@ class AdminDatabaseService {
       profileId: senderId,
       streamId: streamId,
       reason: 'Viewer report reviewed by moderator',
+    );
+    await recordChatModerationAudit(
+      action: 'chatSenderMuted',
+      descriptionEn: 'Muted a chat sender for one stream.',
+      descriptionAr: 'تم كتم مُرسل في محادثة بث واحد.',
+      metadata: {
+        'stream_id': streamId,
+        'muted_profile_id': senderId,
+        'report_id': reportId,
+        'duration_hours': muteDurationHours,
+      },
     );
   }
 
@@ -2111,6 +2166,16 @@ class AdminDatabaseService {
           'AdminDatabaseService.banAccountPlatformWide PostgrestException: ${e.code} ${e.message}');
       rethrow;
     }
+    await recordChatModerationAudit(
+      action: 'chatSenderBanned',
+      descriptionEn: 'Banned an account platform-wide.',
+      descriptionAr: 'تم حظر حساب على مستوى المنصة.',
+      metadata: {
+        'profile_id': profileId,
+        'reason': reason,
+        'expires_at': expiresAt?.toIso8601String(),
+      },
+    );
   }
 
   Future<void> unbanAccount(String profileId) async {

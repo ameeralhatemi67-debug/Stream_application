@@ -389,6 +389,32 @@ class LiveChatController extends ChangeNotifier {
   /// via chat_muted_users' RLS (owner/admin only) and the chat_messages
   /// insert policy that rejects muted senders, not just this client-side
   /// gate. Throws if the caller isn't this stream's owner or an admin tier.
+
+  /// Appends a platform-scope audit entry for an in-room moderation action
+  /// (P6.3). Moderating from inside the live room is exactly as privileged as
+  /// moderating from the admin queue, so it leaves the same trail; the actor is
+  /// taken from `auth.uid()` server-side, so it cannot be forged. Best-effort:
+  /// never let a failed audit write undo a mute or a delete that has already
+  /// taken effect.
+  Future<void> _recordModerationAudit({
+    required String action,
+    required String descriptionEn,
+    required String descriptionAr,
+    Map<String, dynamic> metadata = const {},
+  }) async {
+    try {
+      await _client.rpc('log_audit_event', params: {
+        'p_organization_id': null,
+        'p_action': action,
+        'p_description_en': descriptionEn,
+        'p_description_ar': descriptionAr,
+        'p_metadata': metadata,
+      });
+    } catch (e) {
+      debugPrint('LiveChatController: failed to write moderation audit: $e');
+    }
+  }
+
   Future<void> muteUser(String senderId) async {
     final mutedBy = _currentUserId;
     if (mutedBy == null) throw Exception('Sign in to moderate chat.');
@@ -397,6 +423,12 @@ class LiveChatController extends ChangeNotifier {
       'muted_profile_id': senderId,
       'muted_by': mutedBy,
     });
+    await _recordModerationAudit(
+      action: 'chatSenderMuted',
+      descriptionEn: 'Muted a chat sender from inside the live room.',
+      descriptionAr: 'تم كتم مُرسل من داخل غرفة البث المباشر.',
+      metadata: {'stream_id': streamId, 'muted_profile_id': senderId},
+    );
   }
 
   Future<void> unmuteUser(String senderId) async {
@@ -416,9 +448,27 @@ class LiveChatController extends ChangeNotifier {
   /// every other viewer removes it on the postgres_changes DELETE event
   /// (_handleDelete).
   Future<void> deleteMessage(String messageId) async {
+    // A moderator can delete a message that is not in this client's list at
+    // all (an admin acting from the queue, a message already scrolled past).
+    // Unknown counts as someone else's, so the action is audited rather than
+    // quietly skipped.
+    final idx = _messages.indexWhere((m) => m.id == messageId);
+    final wasOwnMessage = idx != -1 && _messages[idx].isCurrentUser;
+
     await _client.from('chat_messages').delete().eq('id', messageId);
     _messages.removeWhere((m) => m.id == messageId);
     notifyListeners();
+
+    // Deleting your own message is not a moderation action, so it is not
+    // audited; deleting someone else's is, whichever policy allowed it.
+    if (!wasOwnMessage) {
+      await _recordModerationAudit(
+        action: 'chatMessageDeleted',
+        descriptionEn: 'Deleted a chat message from inside the live room.',
+        descriptionAr: 'تم حذف رسالة محادثة من داخل غرفة البث المباشر.',
+        metadata: {'stream_id': streamId, 'message_id': messageId},
+      );
+    }
   }
 
   /// Edits the sender's own message (Cluster 4 Task 13) -- server-enforced
