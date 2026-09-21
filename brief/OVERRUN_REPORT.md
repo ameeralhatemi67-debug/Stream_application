@@ -20,3 +20,51 @@ Production still blocked by GPS decision, privacy URL, signing, physical phones,
 - Budget entry0, closing89, single window cap90. Stop here. Next session finish P4, then P8A only after acceptance. No release readiness claim.
 
 Estimate P4 24-30 points; continuation used 89 points, ratio 3.0-3.7, still partial. Largest consumers: expanded matrix and iterative overflow fixes; Settings/localization changes; full verification and catalog harness repair. Remaining P4 estimate 30-45 points, P8A 10-15 plus owner release inputs.
+
+## P4 completion, 2026-09-22, Claude Code Opus
+
+**P4 is complete.** This is no longer an overrun report for that phase; the
+items this document listed as remaining are done, and the evidence is in the
+P4 completion entry of `brief/LEDGER.md`.
+
+Against the previous checkpoint's remaining list:
+
+| Remaining item, as written here | Outcome |
+|---|---|
+| Live room with stubbed player | Done. Test seam on `AbstractVideoPlayer` plus `test/support/stub_video_player.dart`; eight variants x 2 locales x 7 sizes x 3 scales in the sweep. Six overflow sites found and fixed. |
+| Broader populated dialog/sheet coverage | Done. Eleven dialogs and sheets with real fixtures; nine layout defects fixed. |
+| Full Settings extraction | Done. Four more sections extracted; screen 2170 to 1040 lines. |
+| Settings scrolling review | Done. ContentWidth-capped ListView; section sheets scroll within their own constraints. |
+| Consent withdrawal review | Done. No withdrawal mechanism exists beyond account deletion; the privacy section now states that and shows the recorded consent version and date, instead of implying a toggle. Deletion, export and chat-history behaviour unchanged. |
+| Remaining literal audit | Done. 0 untranslated `Text('...')` literals. 11 keys that were missing from both catalogs and rendering as raw key text are added; the preset picker, LIVE and reconnecting banners, permission dialog and six studio toasts are localized. Catalogs symmetric at 1056. |
+| Arabic phone preview keeps English preset labels | Fixed. The enum now names an i18n key instead of returning an English sentence. |
+| Missing `live.broadcast_from_phone` | Fixed, with ten other absent keys. |
+| Remaining media-contrast audit | Done, and it found more than expected: 21 labels rendering white on white. New `rendered_contrast_test` resolves each label against its actual backdrop across 15 screens x 2 locales. |
+| Remaining `Colors.*` shades | Done. Zero non-transparent `Colors.*` remain in `lib/`; 42 replaced, 19 of them by new shadow tokens. |
+| Screenshot-mode `MissingPluginException` | Fixed, not recorded. `MissingPluginException` is not a subclass of `PlatformException`, so `setOrientation` threw unhandled. The full 120-test sweep now passes in screenshot mode. |
+| Design documentation | Done. `Core_files/Desgin.md` scheme A contract only; nothing else rewritten. |
+
+### Estimate versus actual
+The 03 estimate for all of P4 was 24-30 points. Two prior sessions spent
+approximately 85 and 89 against it and left the phase partial. This session
+finished it but **carries no meter reading**: the owner authorised working
+without one and accepted the usage, and `budget_check.mjs` reports
+`UNKNOWN reason=no_snapshot` because the session was launched from another
+project's directory, so the status-line hook that writes the snapshot never
+ran. No budget file, snapshot or cap was edited. The honest conclusion is that
+P4's true cost is roughly six to eight times its estimate, and that the
+estimate was wrong rather than the work being wasteful: most of this session
+went on defects that no existing test could see, not on redoing anything.
+
+### What is left, in priority order
+1. **P8A** — launcher and adaptive icons, splash and favicon, identity rename
+   off `com.example` (G4a=14, G4b=5), signing fail-closed (G8=1), permission
+   cleanup, target SDK and 16 KB page-size check, AAB only if signing inputs
+   exist, then `scan_build_secrets.mjs`. Estimated 10-15.
+2. P6.4, then P5, P7, P8B, P9, unchanged.
+
+### Standing blocks
+Production is still blocked by the unresolved GPS decision, the privacy URL,
+signing inputs, physical-device testing, production schema and migration
+review, and legal and store approval. No device or emulator run has happened;
+all evidence remains widget-level. **No release readiness is claimed.**

@@ -231,3 +231,98 @@
 - Remaining P4: live room with stubbed player, broader populated dialog/sheet coverage, full Settings extraction and scrolling/consent-withdrawal review, remaining literal and media-contrast audit. Arabic phone preview visibly retains English preset labels and missing live.broadcast_from_phone key. Screenshot-mode tests failed with MissingPluginException for native setOrientation; ordinary layout matrix passes. No emulator/device verification.
 - P8A/P6.4/P5/P7/P8B/P9 not started. SQL unchanged, inherited 48 migrations and 179 pgTAP tests across 11 files, not rerun. No push or production operations. Owner Roadmap.md, skill-observations and both stashes untouched.
 - Budget entry0, closing89, single window cap90. Stop here. Next session finish P4, then P8A only after acceptance. No release readiness claim.
+
+## P4 completion, 2026-09-22, Claude Code Opus
+
+Owner authorised this session to run without the budget meter and accepted
+responsibility for the usage. `budget_check.mjs` returns
+`UNKNOWN reason=no_snapshot`: the session was launched from another project's
+directory, so the status line that writes `brief/.runtime/usage_snapshot.json`
+was never configured. No budget file, snapshot or cap was edited. Recorded
+here because every other entry in this ledger carries meter numbers and this
+one cannot.
+
+### Verified results
+- Analyzer: **0 issues** (`brief/analyzer-p4-final.txt`).
+- Full suite: **439 passed, 0 failed** (was 369) — `brief/full-test-p4-close.txt`.
+- Layout sweep: **120 passed** (was 80), 60 screen/state variants x 2 locales
+  x 7 sizes x 3 scales. Also **green in screenshot mode**, so all 120 preview
+  PNGs under `brief/assets/scheme_a_evidence/` come from a passing run.
+- Rendered contrast: **30 passed**, 15 screens x 2 locales (new test).
+- Theme contrast: **2 passed**. Focused live/settings/broadcast files: 9 files,
+  all green (`brief/focused-p4-close.txt`).
+- Gates: **4 failing, unchanged in number** (`brief/gates-p4-close.txt`).
+  G4a=14, G4b=5, G8=1 are P8A identity and signing. **G6=505 is entirely false
+  positives**: the gate regex matches `Text('key'.tr())`. 493 are plain `.tr()`
+  and 12 are `.tr(args:)`/`.tr(namedArgs:)`, each of the 12 read by hand. Real
+  untranslated `Text('...')` literals: **0** (was 3 at session start).
+- SQL untouched: 48 migrations and 179 pgTAP tests across 11 files inherited,
+  not re-run. No Supabase command of any kind was issued.
+
+### What the new coverage found
+The live room had never been pumped by any test: every player adapter builds a
+`WebViewController`, which asserts with no `WebViewPlatform`. A test-only
+factory seam on `AbstractVideoPlayer` plus `test/support/stub_video_player.dart`
+made it layoutable, and the eight variants immediately found six overflow sites
+in the room and the audio stage. Populated dialog and sheet coverage found nine
+more. Full list is in the two commit messages.
+
+21 labels were rendering **white on white** — not low contrast, invisible —
+left by the scheme A migration in the VOD, playlist and speaker sheets, the
+broadcaster profile, two outlined buttons and the permission dialog title.
+`theme_contrast_test` could not see them because the tokens themselves are
+sound; `rendered_contrast_test` resolves each label against the background
+actually painted behind it and does.
+
+Two scrims had been flattened from a transparent-to-dark gradient into an
+**opaque** media fill, hiding the feed card banner and every VOD thumbnail
+completely. `AppGradients.mediaScrim` replaces them.
+
+Six copies of an unguarded image helper built `NetworkImage('')` for any
+streamer without an avatar: HTTP 400 on every rebuild, blank circle. One
+guarded resolver and `StreamerAvatar` replace all of them.
+
+Eleven i18n keys were referenced but absent from **both** catalogs, so they
+rendered as raw key text to every user in both languages, including the
+`live.broadcast_from_phone` the last session flagged. Catalogs are symmetric
+at 1056 entries.
+
+`RtmpPublishEngine.setOrientation` caught `PlatformException` but not
+`MissingPluginException`, which is not a subclass of it. That is what the last
+session recorded as a screenshot-mode limitation; it is a real fault on any
+build without the native RTMP side registered, and it is now guarded rather
+than worked around.
+
+### Device and native verification limits
+Still no emulator or physical device run: all evidence is widget-level. The
+120 preview PNGs are renders at 360x640 scale 1.0, not device screenshots. The
+native RTMP path is exercised only through its Dart channel wrapper. Nothing
+here establishes real-device streaming or release readiness.
+
+### Commits
+- `94c6508` live room, dialogs and sheets, rendered contrast, localization,
+  image handling.
+- `cf0f9e7` settings extraction, consent record, semantic colour, RTL
+  direction, screenshot mode, design documentation.
+
+Owner `Roadmap.md`, `brief/layout-p4-results.txt`, `skill-observations/` and
+both historical stashes untouched. Nothing pushed.
+
+## RESUME block (2026-09-22, Claude Code Opus, P4 complete)
+- **P4 is COMPLETE.** HEAD `cf0f9e7` on master, tree clean apart from the three
+  owner-owned paths above. Nothing pushed. Both historical stashes untouched.
+- Baseline for the next session: analyzer 0, `flutter test` **439 passed**,
+  layout sweep 120 (green in screenshot mode too), rendered contrast 30, gates
+  **4 failing — G4a 14, G4b 5, G8 1 (all P8A), G6 505 (all false positives,
+  0 real)**. pgTAP 179 across 11 files, inherited, not re-run. Do not re-run
+  the full suite at entry.
+- Exact next step: **P8A**, per `brief/03_WORK_PLAN.md`. In order: launcher and
+  adaptive icon from the supplied `square.svg` / `cercal.svg`, splash and web
+  favicon, identity rename off `com.example` (G4a/G4b), signing fail-closed
+  (G8), Android permission cleanup, target SDK and 16 KB page-size check
+  against current Play requirements, then an AAB **only if signing inputs
+  exist** followed by `node brief/tools/scan_build_secrets.mjs <aab>`.
+- Never create or commit a keystore. Record missing owner inputs in
+  `brief/OWNER_ACTIONS.md` rather than inventing them.
+- The GPS / VULN-COMP-02 owner decision is still unresolved and was not
+  touched. P6.4, P5, P7, P8B and P9 remain not started.
