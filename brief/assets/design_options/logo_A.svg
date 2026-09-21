@@ -1,1 +1,17 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Original Field mark"><defs><linearGradient id="brand" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#17643F"/><stop offset="1" stop-color="#327044"/></linearGradient></defs><g id="bg"><rect width="1024" height="1024" fill="url(#brand)"/></g><g id="mark"><path d="M322 664V510H432V400H542V310H652V664Z" fill="#FFFFFF"/><path d="M322 714H702V674H322Z" fill="#FFFFFF"/></g></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">Field: an open exchange of knowledge</title>
+  <desc id="desc">Two curved, offset learning leaves form an open space. A small dot marks a live voice, and a lower sweep joins the composition.</desc>
+  <defs>
+    <linearGradient id="brand" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#17643F"/>
+      <stop offset="1" stop-color="#327044"/>
+    </linearGradient>
+  </defs>
+  <g id="bg"><rect width="1024" height="1024" fill="url(#brand)"/></g>
+  <g id="mark">
+    <path d="M300 354C364 328 438 347 490 401V644C440 598 368 580 300 600V354Z M336 402C375 395 419 410 450 436V472C414 444 375 431 336 438V402Z" fill="#FFFFFF" fill-rule="evenodd"/>
+    <path d="M534 429C582 381 647 357 724 369V612C650 600 580 626 534 674V429Z M576 460C607 438 644 425 686 426V462C645 461 607 475 576 497V460Z" fill="#D7EDDC" fill-rule="evenodd"/>
+    <path d="M319 650C389 638 454 657 512 705C569 661 637 644 706 659" fill="none" stroke="#FFFFFF" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="624" cy="305" r="30" fill="#FFFFFF"/>
+  </g>
+</svg>

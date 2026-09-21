@@ -3,7 +3,7 @@
 The owner selects the scheme. No app implementation or GPS policy change is part of this delivery.
 
 ## A · Field / مدى
-Idea: Structured green, open spacing and a stepped learning mark.
+Idea: Structured green and open spacing, with curved learning leaves and a live voice mark.
 Best for: A structured educational catalogue.
 Risk: Use text labels to distinguish live status from success.
 
@@ -146,9 +146,9 @@ Each screen is a shared HTML template; only tokens and the original mark vary. P
 
 All six font families and their complete copyright/OFL notices are embedded in preview.html for offline viewing. The app must bundle separate upstream font files and licences after selection; destination filenames and weights are in the JSON. No app fonts were installed.
 
-Gradients have two stops and run top-start to bottom-end, mirrored for RTL. Welcome has two gradient surfaces; feed and live have one each; map and settings have none. The icon export uses the named brand gradient in canonical LTR direction. Icon specimens use a flat primary tile to inspect the mark. Mirror the icon gradient direction in RTL, not its geometry. No gradient text or animated gradients.
+Gradients have two stops and run top-start to bottom-end, mirrored for RTL. Welcome has two gradient surfaces; feed and live have one each; map and settings have none. The icon export uses the named brand gradient in canonical LTR direction. Icon specimens use the named brand gradient. Mirror the icon gradient direction in RTL, not its geometry. No gradient text or animated gradients.
 
-Each SVG is under 6 KB, has viewBox 0 0 1024 1024 and bg/mark groups, and uses one flat mark colour. All mark geometry is bounded by x=312..712 and y=310..714, whose furthest corner is inside radius 300 about (512,512). Hand-written geometric concepts use no religious, national or existing brand assets. This is not a trademark clearance opinion.
+Each SVG is under 6 KB, has viewBox 0 0 1024 1024 and bg/mark groups, and uses at most two flat mark colours. The A revision uses curved pages with transparent evenodd cutouts, a live dot and a connecting sweep; B and C retain their original geometry. All marks stay inside radius 300 about (512,512). Hand-written geometric concepts use no religious, national or existing brand assets. This is not a trademark clearance opinion.
 
 ## Verification
 
@@ -159,3 +159,17 @@ Screenshots were inspected in the browser session rather than added to the eight
 Budget: existing fresh single window, owner cap 90, soft 84. Owner explicitly authorised exceeding the design briefs separate 12-point rise limit after the initial Windows command-length failure. No new run was started.
 
 Also inspected Arabic map and settings. Exercised all scheme buttons and both language directions. All five English frames in A and the B/C frames reported zero horizontal overflow. Verified 135-degree LTR and 225-degree RTL gradients. All phone gradient counts match the tokens. Settings content scrolls vertically inside its frame.
+
+## A icon refinement, 2026-09-21
+
+Owner prefers A and requested a more developed icon. Replaced the step symbol with an asymmetric open-learning mark: curved pages, transparent inset strokes, a live-voice dot and a connecting sweep. Palette and typography remain A. White and pale green are the only mark colours. The monochrome version retains the same cutouts and requires no background-colour patches.
+
+Checked the 48px circle, 96px squircle, 192px rounded square and one-colour silhouette in Chromium, and corrected the preview mask dimensions. The original SVG remains the source for later app icon generation. No Flutter files, production data or DESIGN_CHOICE value changed in this icon-only pass.
+
+The revised A icon adds four colour/gradient-stop checks, all above 3:1. Current totals: A 38, B 34, C 34; 106 passing checks.
+- icon colour 1 / brand stop 1: 7.16:1.
+- icon colour 1 / brand stop 2: 5.94:1.
+- icon colour 2 / brand stop 1: 5.81:1.
+- icon colour 2 / brand stop 2: 4.82:1.
+
+Adaptive safe-zone check uses conservative per-path control-point bounding boxes plus stroke radius, and the exact dot radius. Maximum bound is 288.65px, below 300px.

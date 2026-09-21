@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "A",
   "name": "Field / مدى",
-  "idea": "Structured green, open spacing and a stepped learning mark.",
+  "idea": "Structured green and open spacing, with curved learning leaves and a live voice mark.",
   "colors": {
     "background": "#FFFFFF",
     "surface": "#FFFFFF",
@@ -143,5 +143,15 @@
     "live": 1,
     "map": 0,
     "settings": 0
+  },
+  "iconConcept": {
+    "name": "Open exchange",
+    "meaning": "Two offset learning leaves, a live voice dot and a connecting sweep.",
+    "markColors": [
+      "#FFFFFF",
+      "#D7EDDC"
+    ],
+    "monochrome": "Recolour all mark fills and strokes to one colour. Preserve the evenodd page cutouts, live dot and connecting sweep.",
+    "safeZone": "Every visible mark point stays within radius 300 about (512,512)."
   }
 }
