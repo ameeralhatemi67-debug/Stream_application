@@ -138,3 +138,55 @@ run against the linked production project (`zkkmfjsjouqzibvnzkau`).
    three hardcoded personal emails stay in `bootstrap_admin_role()`; review the
    `20260920` migration set before pushing. Applying `20260920120000` still
    wipes every current live flag.
+
+## P6a (Claude Code Opus, 2026-09-21) — three new migrations to review before any push
+
+Nothing was run against the linked production project. The P1d entries above still
+stand, including the two decisions that block a push.
+
+1. **`20260921140000_audit_moderation_actions.sql` changes a CHECK constraint on
+   `audit_logs`.** It drops `audit_logs_action_check` and re-adds it with four
+   extra values (`chatReportDismissed`, `chatMessageDeleted`, `chatSenderMuted`,
+   `chatSenderBanned`). Without it, **every chat-moderation audit write is
+   rejected with `23514` and silently swallowed**, because an audit write must
+   never undo a mute that already took effect, so both call sites are
+   best-effort. If production already holds moderation audit rows, or a differing
+   constraint, check that before applying:
+   ```
+   select pg_get_constraintdef(oid) from pg_constraint
+    where conname = 'audit_logs_action_check';
+   ```
+   Re-adding a CHECK validates every existing row, so it will fail rather than
+   corrupt anything if production holds an action value this list omits.
+
+2. **`20260921130000_chat_realtime_publication.sql` publishes two tables** to
+   `supabase_realtime`: `chat_stream_settings` and `chat_reports`. Both keep
+   their existing policies and Realtime applies RLS per subscriber, so no new
+   data is exposed — `chat_stream_settings` is already world-readable by policy
+   and `chat_reports` is already admin-only. `chat_muted_users` is deliberately
+   NOT published; the migration comment says why (it would tell a muted account
+   which moderator muted it).
+
+3. **`20260921120000_chat_keyword_boundaries_and_normalization.sql` changes what
+   the chat filter blocks, in both directions.** Decide whether you are happy
+   with the trade before pushing:
+   - No longer blocked: inflected forms. `stupidly` is not caught by `stupid`,
+     and the Arabic `الغبي` is not caught by `غبي`, the same way `hells` is not
+     caught by `hell`. This is the price of `Hello` no longer being blocked.
+   - Newly blocked: decorated and elongated Arabic spellings that previously
+     slipped past entirely (`غَبِيّ`, `غـــبي`), and every casing.
+   - The table gains a `match_mode` column. Set a row to `'substring'` to get the
+     old blunt behaviour for that one keyword:
+     ```
+     update public.chat_banned_keywords set match_mode = 'substring'
+      where keyword = '<the one you want caught everywhere>';
+     ```
+   - There is no admin UI for this yet — the keyword manager is P6.4 item 4 and
+     is not built. Until then the list and its match modes are SQL-only.
+
+4. **Not a migration, but worth knowing for P6.4:** `device_sessions` has exactly
+   one policy, `device_sessions_select_own`, so a platform admin cannot see
+   another account's devices. The P6.4 user directory needs that, and it needs a
+   new migration (an admin SELECT policy or a definer RPC). Admin-initiated
+   account deletion also has no server path today; `delete_own_account()` is
+   self-only.
