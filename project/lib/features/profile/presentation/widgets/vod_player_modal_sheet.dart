@@ -5,7 +5,7 @@ import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../live_stream/presentation/adapters/youtube_player_adapter.dart';
+import '../../../live_stream/presentation/abstract_video_player.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
 
@@ -90,7 +90,7 @@ class VodPlayerModalSheet extends StatelessWidget {
                         Text(
                           title,
                           style: const TextStyle(
-                            color: AppTheme.onMedia,
+                            color: AppTheme.textPrimary,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -118,12 +118,27 @@ class VodPlayerModalSheet extends StatelessWidget {
               ),
             ),
 
-            // Embedded YouTube Video Player Adapter
-            ClipRRect(
-              child: YouTubePlayerAdapter(
-                streamUrl: vod.youtubeVideoId,
-                autoPlay: true,
-                aspectRatio: 16 / 9,
+            // Embedded YouTube Video Player Adapter, built through the
+            // polymorphic factory like every other player in the app, rather
+            // than naming the adapter directly.
+            //
+            // Capped at half the viewport: at 16:9 on a 1280 px landscape
+            // tablet the player alone wanted 720 of the 800 available pixels
+            // and pushed the title and actions off the sheet.
+            ConstrainedBox(
+              // Measured against the viewport, not the incoming constraints:
+              // this sits in a `mainAxisSize: min` Column, whose children are
+              // laid out with an unbounded height, so a LayoutBuilder here
+              // would cap the player at infinity.
+              constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.4),
+              child: ClipRRect(
+                child: AbstractVideoPlayer.fromSource(
+                  sourceType: StreamSourceType.youtubeEmbed,
+                  streamUrl: vod.youtubeVideoId,
+                  autoPlay: true,
+                  aspectRatio: 16 / 9,
+                ),
               ),
             ),
 
@@ -134,21 +149,23 @@ class VodPlayerModalSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Stats Pill Row: Duration, Recorded Date, Views Count
-                    Row(
+                    // Stats pills: duration, recorded date and view count.
+                    // Three chips in a fixed Row overran a 320 px sheet, so
+                    // they wrap onto a second line instead.
+                    Wrap(
+                      spacing: AppTheme.spaceSm,
+                      runSpacing: AppTheme.spaceXs,
                       children: [
                         _buildStatChip(
                           icon: Icons.timer_outlined,
                           label: vod.formattedDuration,
                           color: AppTheme.accent,
                         ),
-                        const SizedBox(width: AppTheme.spaceSm),
                         _buildStatChip(
                           icon: Icons.calendar_today_outlined,
                           label: vod.recordedDate,
                           color: AppTheme.textSecondary,
                         ),
-                        const SizedBox(width: AppTheme.spaceSm),
                         _buildStatChip(
                           icon: Icons.visibility_outlined,
                           label: '${vod.viewCount} ${'profile.views'.tr()}',
@@ -165,7 +182,7 @@ class VodPlayerModalSheet extends StatelessWidget {
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppTheme.onMedia,
+                            color: AppTheme.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -224,7 +241,10 @@ class VodPlayerModalSheet extends StatelessWidget {
                                 ? 'profile.saved_lecture'.tr()
                                 : 'profile.save_lecture'.tr()),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: AppTheme.onMedia,
+                              // An outlined button has no fill, so its label
+                              // sits on the white sheet: `onMedia` white made
+                              // it invisible.
+                              foregroundColor: AppTheme.primary,
                               side: const BorderSide(color: AppTheme.borderStrong),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),

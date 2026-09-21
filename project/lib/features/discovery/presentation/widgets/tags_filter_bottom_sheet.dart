@@ -13,7 +13,8 @@ class TagsFilterBottomSheet extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       builder: (context) => const TagsFilterBottomSheet(),
     );
@@ -46,22 +47,30 @@ class TagsFilterBottomSheet extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.tune_rounded, color: AppTheme.danger, size: 20),
-                  const SizedBox(width: 8),
-                  Text(
-                    'feed.filter_tags_title'.tr(),
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+              Flexible(
+                child: Row(
+                  children: [
+                    const Icon(Icons.tune_rounded,
+                        color: AppTheme.danger, size: 20),
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Text(
+                        'feed.filter_tags_title'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.textMuted),
+                icon: const Icon(Icons.close_rounded,
+                    size: 20, color: AppTheme.textMuted),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -119,26 +128,33 @@ class TagsFilterBottomSheet extends StatelessWidget {
                     spacing: 8,
                     runSpacing: 8,
                     children: allTags.map((tag) {
-                      final isSelected = (tag == 'all' && selectedTag == 'all') || (selectedTag == tag);
+                      final isSelected =
+                          (tag == 'all' && selectedTag == 'all') ||
+                              (selectedTag == tag);
                       final label = tag == 'all' ? 'feed.all_tags'.tr() : tag;
 
                       return ChoiceChip(
                         label: Text(label),
                         selected: isSelected,
                         onSelected: (selected) {
-                          appProvider.setSelectedTagFilter(selected ? tag : 'all');
+                          appProvider
+                              .setSelectedTagFilter(selected ? tag : 'all');
                         },
                         selectedColor: AppTheme.danger,
                         backgroundColor: AppTheme.surfaceAlt,
                         labelStyle: TextStyle(
-                          color: isSelected ? AppTheme.onMedia : AppTheme.textPrimary,
+                          color: isSelected
+                              ? AppTheme.onMedia
+                              : AppTheme.textPrimary,
                           fontSize: 12,
-                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                         side: BorderSide(
                           color: isSelected ? AppTheme.danger : AppTheme.border,
                         ),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8)),
                       );
                     }).toList(),
                   ),
@@ -157,9 +173,11 @@ class TagsFilterBottomSheet extends StatelessWidget {
                 backgroundColor: AppTheme.danger,
                 foregroundColor: AppTheme.onMedia,
                 padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               ),
-              child: Text('dialogs.confirm'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+              child: Text('common.confirm'.tr(),
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ),
         ],
@@ -167,8 +185,10 @@ class TagsFilterBottomSheet extends StatelessWidget {
     );
   }
 
-  Widget _buildCatChip(BuildContext context, AppProvider provider, String catId, String label, String selectedCat) {
-    final isSelected = (catId == 'all' && selectedCat == 'all') || (selectedCat == catId);
+  Widget _buildCatChip(BuildContext context, AppProvider provider, String catId,
+      String label, String selectedCat) {
+    final isSelected =
+        (catId == 'all' && selectedCat == 'all') || (selectedCat == catId);
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,

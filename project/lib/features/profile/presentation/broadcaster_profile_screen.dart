@@ -266,7 +266,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           child: Text(
                             streamer.getLocalizedName(lang),
                             style: const TextStyle(
-                              color: AppTheme.onMedia,
+                              color: AppTheme.textPrimary,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -382,7 +382,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           style: TextStyle(
                             color: hasReminder
                                 ? AppTheme.accent
-                                : AppTheme.onMedia,
+                                : AppTheme.primary,
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                           ),
@@ -588,7 +588,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                             Text(
                               'profile.tap_to_join_live'.tr(),
                               style: const TextStyle(
-                                color: AppTheme.onMedia,
+                                color: AppTheme.danger,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -679,7 +679,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           : 'profile.reminder_btn'.tr(),
                       style: TextStyle(
                         color:
-                            hasReminder ? AppTheme.accent : AppTheme.onMedia,
+                            hasReminder ? AppTheme.accent : AppTheme.primary,
                         fontSize: 12,
                       ),
                     ),

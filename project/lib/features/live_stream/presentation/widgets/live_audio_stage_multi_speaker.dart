@@ -1,8 +1,10 @@
 import 'dart:async';
-import 'dart:math'as math;
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import '../../../../core/layout/content_width.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../organization/models/org_speaker_model.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../../profile/models/vod_models.dart';
@@ -15,6 +17,7 @@ import '../abstract_video_player.dart';
 class LiveAudioStageMultiSpeaker extends StatefulWidget {
   final StreamerModel streamer;
   final String langCode;
+
   /// Live viewers counted by the server, or null while unknown (P3 /
   /// 05 D-08). Null renders as "—": the app never shows a number it does not
   /// have.
@@ -110,8 +113,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
           Timer.periodic(const Duration(seconds: 7), (timer) {
         if (!mounted || !_shouldAnimate) return;
         final list = _resolvedSpeakers;
-        final currentIdx = list
-            .indexWhere((s) => s.speakerId == _currentSpeakingSpeakerId);
+        final currentIdx =
+            list.indexWhere((s) => s.speakerId == _currentSpeakingSpeakerId);
         final nextIdx = (currentIdx + 1) % list.length;
         setState(() {
           _currentSpeakingSpeakerId = list[nextIdx].speakerId;
@@ -157,13 +160,6 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
     ];
   }
 
-  ImageProvider _getImageProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
-
   void _onSpeakerClicked(OrgSpeakerModel speaker) {
     setState(() {
       _currentSpeakingSpeakerId = speaker.speakerId;
@@ -207,7 +203,6 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
         height: double.infinity,
         decoration: const BoxDecoration(
           color: AppTheme.media,
-
         ),
         child: Stack(
           alignment: Alignment.center,
@@ -220,7 +215,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                 height: 140,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: AppTheme.success.withValues(alpha: _shouldAnimate ? 0.08 : 0.02),
+                  color: AppTheme.success
+                      .withValues(alpha: _shouldAnimate ? 0.08 : 0.02),
                 ),
               ),
             ),
@@ -233,74 +229,97 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3.5),
-                    decoration: BoxDecoration(
-                      color: _shouldAnimate ? AppTheme.danger : AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(
-                          Icons.mic_rounded,
-                          size: 11,
-                          color: _shouldAnimate ? AppTheme.onMedia : AppTheme.textMuted,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'live.audio_live_badge'.tr(),
-                          style: TextStyle(
-                            color: _shouldAnimate ? AppTheme.onMedia : AppTheme.textMuted,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.6,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  if (speakers.length > 1)
-                    Container(
+                  Flexible(
+                    child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 3.5),
+                          horizontal: 8, vertical: 3.5),
                       decoration: BoxDecoration(
-                        color: AppTheme.media.withValues(alpha: 0.6),
+                        color:
+                            _shouldAnimate ? AppTheme.danger : AppTheme.surface,
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        border: Border.all(
-                          color: AppTheme.border,
-                        ),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          const Icon(Icons.people_outline_rounded,
-                              size: 12, color: AppTheme.primary),
+                          Icon(
+                            Icons.mic_rounded,
+                            size: 11,
+                            color: _shouldAnimate
+                                ? AppTheme.onMedia
+                                : AppTheme.textMuted,
+                          ),
                           const SizedBox(width: 4),
-                          Text(
-                            '${speakers.length} ${'live.speakers_count'.tr()}',
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
+                          Flexible(
+                            child: Text(
+                              'live.audio_live_badge'.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: _shouldAnimate
+                                    ? AppTheme.onMedia
+                                    : AppTheme.textMuted,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 0.6,
+                              ),
                             ),
                           ),
                         ],
+                      ),
+                    ),
+                  ),
+                  if (speakers.length > 1)
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 7, vertical: 3.5),
+                        // This pill sits on the media surface, so it takes the
+                        // on-media pair: a scrim dark enough for white to clear
+                        // 4.5:1 over any frame. It used to be dark text on a
+                        // half-transparent dark scrim, which failed both over a
+                        // bright frame and over a dark one.
+                        decoration: BoxDecoration(
+                          color: AppTheme.media.withValues(alpha: 0.78),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          border: Border.all(
+                            color: AppTheme.border,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.people_outline_rounded,
+                                size: 12, color: AppTheme.onMedia),
+                            const SizedBox(width: 4),
+                            Flexible(
+                              child: Text(
+                                '${speakers.length} ${'live.speakers_count'.tr()}',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: AppTheme.onMedia,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                 ],
               ),
             ),
 
-            // Main Speakers Roster (Centered, strictly constrained)
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: speakers.length == 1
-                    ? _buildSingleSpeakerLayout(speakers.first)
-                    : _buildMultiSpeakerRoster(speakers, activeId),
-              ),
+            // Main Speakers Roster (centered; scrolls rather than overflowing
+            // when the 16:9 viewport is shorter than the roster needs, which
+            // is what a 320 px phone at text scale 2.0 produces).
+            CenteredScrollable(
+              padding: const EdgeInsets.only(bottom: 24),
+              child: speakers.length == 1
+                  ? _buildSingleSpeakerLayout(speakers.first)
+                  : _buildMultiSpeakerRoster(speakers, activeId),
             ),
 
             // Bottom Live Audio Status Bar with Active Speaking Callout
@@ -310,7 +329,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
               right: 16,
               child: Center(
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: AppTheme.media,
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -345,19 +365,23 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         ),
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        _shouldAnimate
-                            ? 'live.speaking_now'.tr()
-                            : (widget.streamState == StreamState.offline ||
-                                    widget.streamState == StreamState.ended
-                                ? 'live.state_offline_title'.tr()
-                                : 'live.audio_paused'.tr()),
-                        style: TextStyle(
-                          color: _shouldAnimate
-                              ? AppTheme.success
-                              : AppTheme.textMuted,
-                          fontSize: 10.5,
-                          fontWeight: FontWeight.w600,
+                      Flexible(
+                        child: Text(
+                          _shouldAnimate
+                              ? 'live.speaking_now'.tr()
+                              : (widget.streamState == StreamState.offline ||
+                                      widget.streamState == StreamState.ended
+                                  ? 'live.state_offline_title'.tr()
+                                  : 'live.audio_paused'.tr()),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: _shouldAnimate
+                                ? AppTheme.success
+                                : AppTheme.textMuted,
+                            fontSize: 10.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -370,11 +394,15 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        '${widget.viewerCount ?? '—'} ${'live.listening_count'.tr()}',
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
-                          fontSize: 10.5,
+                      Flexible(
+                        child: Text(
+                          '${widget.viewerCount ?? '—'} ${'live.listening_count'.tr()}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 10.5,
+                          ),
                         ),
                       ),
                     ],
@@ -428,7 +456,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                   AnimatedBuilder(
                     animation: _voiceRippleAnimation,
                     builder: (context, child) {
-                      final progress = (_voiceRippleAnimation.value + 0.5) % 1.0;
+                      final progress =
+                          (_voiceRippleAnimation.value + 0.5) % 1.0;
                       final d = 72.0 + (progress * 24.0);
                       return Container(
                         width: d,
@@ -451,7 +480,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: _shouldAnimate ? AppTheme.success : AppTheme.border,
+                      color:
+                          _shouldAnimate ? AppTheme.success : AppTheme.border,
                       width: 2.2,
                     ),
                     boxShadow: _shouldAnimate
@@ -467,22 +497,27 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                   child: Stack(
                     alignment: Alignment.bottomRight,
                     children: [
-                      CircleAvatar(
+                      StreamerAvatar(
                         radius: 34,
-                        backgroundColor: AppTheme.surfaceAlt,
-                        backgroundImage: _getImageProvider(speaker.avatarUrl),
+                        avatarUrl: speaker.avatarUrl,
                       ),
                       Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: _shouldAnimate ? AppTheme.success : AppTheme.surfaceAlt,
+                          color: _shouldAnimate
+                              ? AppTheme.success
+                              : AppTheme.surfaceAlt,
                           shape: BoxShape.circle,
                           border: Border.all(color: AppTheme.media, width: 1.5),
                         ),
                         child: Icon(
-                          _shouldAnimate ? Icons.mic_rounded : Icons.mic_off_rounded,
+                          _shouldAnimate
+                              ? Icons.mic_rounded
+                              : Icons.mic_off_rounded,
                           size: 11,
-                          color: _shouldAnimate ? AppTheme.onMedia : AppTheme.textMuted,
+                          color: _shouldAnimate
+                              ? AppTheme.onMedia
+                              : AppTheme.textMuted,
                         ),
                       ),
                     ],
@@ -561,7 +596,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                           AnimatedBuilder(
                             animation: _voiceRippleAnimation,
                             builder: (context, child) {
-                              final d = 56.0 + (_voiceRippleAnimation.value * 16.0);
+                              final d =
+                                  56.0 + (_voiceRippleAnimation.value * 16.0);
                               return Container(
                                 width: d,
                                 height: d,
@@ -602,11 +638,9 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                           child: Stack(
                             alignment: Alignment.bottomRight,
                             children: [
-                              CircleAvatar(
+                              StreamerAvatar(
                                 radius: isSpeaking ? 25 : 22,
-                                backgroundColor: AppTheme.surfaceAlt,
-                                backgroundImage:
-                                    _getImageProvider(speaker.avatarUrl),
+                                avatarUrl: speaker.avatarUrl,
                               ),
                               Container(
                                 padding: const EdgeInsets.all(3.0),
@@ -691,10 +725,12 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
               ? (minH + ((maxH - minH) * math.sin(val * math.pi)))
               : 2.0;
           final h2 = _shouldAnimate
-              ? (minH + ((maxH - minH) * math.sin((val + 0.33) % 1.0 * math.pi)))
+              ? (minH +
+                  ((maxH - minH) * math.sin((val + 0.33) % 1.0 * math.pi)))
               : 2.0;
           final h3 = _shouldAnimate
-              ? (minH + ((maxH - minH) * math.sin((val + 0.66) % 1.0 * math.pi)))
+              ? (minH +
+                  ((maxH - minH) * math.sin((val + 0.66) % 1.0 * math.pi)))
               : 2.0;
           final barColor =
               _shouldAnimate ? AppTheme.success : AppTheme.textMuted;

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../organization/models/org_speaker_model.dart';
 import '../../../profile/models/vod_models.dart';
 import '../../../profile/presentation/widgets/org_speaker_inspection_sheet.dart';
@@ -19,13 +20,6 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
     this.activeSpeakerId,
     this.onSpeakerTap,
   });
-
-  ImageProvider _getImageProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,13 +99,9 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
                         ]
                       : null,
                 ),
-                child: ClipOval(
-                  child: Image(
-                    image: _getImageProvider(speaker.avatarUrl),
-                    width: 34,
-                    height: 34,
-                    fit: BoxFit.cover,
-                  ),
+                child: StreamerAvatar(
+                  radius: 17,
+                  avatarUrl: speaker.avatarUrl,
                 ),
               ),
               if (isActive)

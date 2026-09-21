@@ -7,6 +7,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../discovery/models/academic_category_model.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../../map/models/map_models.dart';
@@ -165,7 +166,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 style: const TextStyle(color: AppTheme.onMedia),
               ),
               content: Text(
-                'The app needs ${kind == BroadcastPermissionKind.camera ? 'camera' : 'microphone'} access to broadcast. Please enable it in Settings.',
+                (kind == BroadcastPermissionKind.camera
+                        ? 'live.permission_required_body_camera'
+                        : 'live.permission_required_body_microphone')
+                    .tr(),
                 style: const TextStyle(color: AppTheme.textSecondary),
               ),
               actions: [
@@ -308,13 +312,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     });
   }
 
-  ImageProvider _getAvatarProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
-
   @override
   Widget build(BuildContext context) {
     final title = _appProvider.customLiveTitle.isEmpty
@@ -364,7 +361,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             CircleAvatar(
               radius: 17,
               backgroundColor: AppTheme.surface,
-              backgroundImage: _getAvatarProvider(streamer.avatarUrl),
+              backgroundImage: resolveImageProviderOrNull(streamer.avatarUrl),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -553,7 +550,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     CircleAvatar(
                       radius: 34,
                       backgroundColor: AppTheme.surface,
-                      backgroundImage: _getAvatarProvider(streamer.avatarUrl),
+                      backgroundImage: resolveImageProviderOrNull(streamer.avatarUrl),
                     ),
                     const SizedBox(height: 10),
                     Container(
@@ -589,7 +586,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.bold)),
                       style: TextButton.styleFrom(
-                        foregroundColor: AppTheme.onMedia,
+                        // surfaceAlt is a near-white tint, not a media
+                        // surface, so the label takes the primary accent
+                        // rather than `onMedia` white on near-white.
+                        foregroundColor: AppTheme.primary,
                         backgroundColor: AppTheme.surfaceAlt,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
@@ -631,11 +631,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       ),
 
                     if (_engine.state == RtmpPublishState.connecting)
-                      const Positioned(
+                      Positioned(
                         top: AppTheme.spaceSm,
                         left: AppTheme.spaceSm,
                         child: _StatusPill(
-                            label: 'Connecting...', color: AppTheme.warning),
+                            label: 'live.chat_status_connecting'.tr(),
+                            color: AppTheme.warning),
                       ),
 
                     // Top Right: 3-Dots Streamer Controls Menu
@@ -680,11 +681,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
                     // Mic Muted Pill
                     if (_engine.isMuted)
-                      const Positioned(
+                      Positioned(
                         bottom: AppTheme.spaceSm,
                         left: AppTheme.spaceSm,
                         child: _StatusPill(
-                          label: 'MIC MUTED',
+                          label: 'live.mic_muted_badge'.tr(),
                           color: AppTheme.danger,
                         ),
                       ),
@@ -1417,7 +1418,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   CircleAvatar(
                     radius: 40,
                     backgroundColor: AppTheme.surface,
-                    backgroundImage: _getAvatarProvider(streamer.avatarUrl),
+                    backgroundImage: resolveImageProviderOrNull(streamer.avatarUrl),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -1762,7 +1763,7 @@ class _PresetOption extends StatelessWidget {
             const SizedBox(width: 10),
             Expanded(
               child: Text(
-                preset.label,
+                preset.labelKey.tr(),
                 style: TextStyle(
                   color: selected ? AppTheme.primary : AppTheme.textSecondary,
                   fontSize: 12.5,
@@ -1784,10 +1785,11 @@ class _LiveBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bitrateLabel =
-        bitrateBps == null ? '' : ' -- ${(bitrateBps! / 1000).round()} kbps';
     return _StatusPill(
-      label: 'LIVE$bitrateLabel',
+      label: bitrateBps == null
+          ? 'live.live_indicator'.tr()
+          : 'live.live_badge_bitrate'
+              .tr(args: ['${(bitrateBps! / 1000).round()}']),
       color: AppTheme.danger,
     );
   }
@@ -1801,9 +1803,10 @@ class _ReconnectingBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final attemptLabel = (attempt != null && maxAttempts != null)
-        ? ' (attempt $attempt/$maxAttempts)'
-        : '';
+    final message = (attempt != null && maxAttempts != null)
+        ? 'live.stream_interrupted_reconnecting_attempt'.tr(
+            namedArgs: {'current': '$attempt', 'total': '$maxAttempts'})
+        : 'live.stream_interrupted_reconnecting'.tr();
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
@@ -1817,7 +1820,7 @@ class _ReconnectingBanner extends StatelessWidget {
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
-              'Stream interrupted -- reconnecting$attemptLabel...',
+              message,
               style: const TextStyle(
                 color: AppTheme.onMedia,
                 fontSize: 12.5,
@@ -1950,6 +1953,8 @@ class _StatusPill extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
         style: const TextStyle(
             color: AppTheme.onMedia, fontSize: 11, fontWeight: FontWeight.bold),
       ),

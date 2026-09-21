@@ -582,17 +582,18 @@ class _LiveBroadcasterStudioSheetState
                       _youtubeUrlController.text = provider.customYouTubeLiveUrl;
                       InteractiveToastOverlay.show(
                         context,
-                        title: 'Live Broadcast Detected',
-                        message: 'Active Video ID: ${provider.customYouTubeVideoId}',
+                        title: 'live_studio.toast_broadcast_detected_title'.tr(),
+                        message: 'live_studio.toast_broadcast_detected_message'
+                            .tr(args: [provider.customYouTubeVideoId]),
                         icon: Icons.sensors_rounded,
                         accentColor: AppTheme.success,
                       );
                     } else {
                       InteractiveToastOverlay.show(
                         context,
-                        title: 'Broadcast Detection Failed',
+                        title: 'live_studio.toast_detection_failed_title'.tr(),
                         message: provider.amirAutoDetectError ??
-                            'Could not detect an active live video on YouTube.',
+                            'live_studio.toast_detection_failed_message'.tr(),
                         icon: Icons.error_outline_rounded,
                         accentColor: AppTheme.danger,
                       );
@@ -1344,8 +1345,8 @@ class _LiveBroadcasterStudioSheetState
                     Navigator.of(context).pop();
                     InteractiveToastOverlay.show(
                       context,
-                      title: 'Broadcast Ended',
-                      message: 'Your live stream has ended.',
+                      title: 'live_studio.toast_broadcast_ended_title'.tr(),
+                      message: 'live_studio.toast_broadcast_ended_message'.tr(),
                       icon: Icons.stop_circle_rounded,
                       accentColor: AppTheme.danger,
                     );
@@ -1545,8 +1546,8 @@ class _LiveBroadcasterStudioSheetState
     if (streamKey.isEmpty) {
       InteractiveToastOverlay.show(
         context,
-        title: 'Stream Key Required',
-        message: "Paste the stream key from YouTube Studio's Go Live > Stream tab.",
+        title: 'live_studio.toast_stream_key_required_title'.tr(),
+        message: 'live_studio.toast_stream_key_required_message'.tr(),
         icon: Icons.error_outline_rounded,
         accentColor: AppTheme.danger,
       );
@@ -1576,8 +1577,8 @@ class _LiveBroadcasterStudioSheetState
     if (rawIp.isEmpty) {
       InteractiveToastOverlay.show(
         context,
-        title: 'Laptop IP Required',
-        message: "Enter your laptop's local network IP address to continue.",
+        title: 'live_studio.toast_laptop_ip_required_title'.tr(),
+        message: 'live_studio.toast_laptop_ip_required_message'.tr(),
         icon: Icons.error_outline_rounded,
         accentColor: AppTheme.danger,
       );
@@ -1594,7 +1595,7 @@ class _LiveBroadcasterStudioSheetState
 
     InteractiveToastOverlay.show(
       context,
-      title: 'Local RTMP Target Updated',
+      title: 'live_studio.toast_rtmp_target_updated_title'.tr(),
       message: 'rtmp://${provider.rtmpLaptopIp}/live/demo',
       icon: Icons.cell_tower_rounded,
       accentColor: _modeColor,

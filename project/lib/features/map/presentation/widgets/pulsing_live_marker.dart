@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../models/map_models.dart';
 
 class PulsingLiveMarker extends StatefulWidget {
@@ -73,13 +74,6 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
     super.dispose();
   }
 
-  ImageProvider _getAvatarProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
-
   @override
   Widget build(BuildContext context) {
     return RepaintBoundary(
@@ -139,12 +133,8 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                 ],
               ),
               child: Center(
-                child: CircleAvatar(
-                  radius: 17,
-                  backgroundColor: AppTheme.surfaceAlt,
-                  backgroundImage: _getAvatarProvider(widget.marker.avatarUrl),
-                  onBackgroundImageError: (_, __) {},
-                ),
+                child: StreamerAvatar(
+                    radius: 17, avatarUrl: widget.marker.avatarUrl),
               ),
             ),
 

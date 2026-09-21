@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../organization/models/org_speaker_model.dart';
 import '../../models/vod_models.dart';
 
@@ -35,6 +37,32 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
         speakerVods: speakerVods,
         onFilterSelected: onFilterSelected,
       ),
+    );
+  }
+
+  /// A recording thumbnail, or a neutral tile when the entry has none: an
+  /// empty URL used to reach `NetworkImage('')` and fail on every rebuild.
+  Widget _thumbnail(String url) {
+    Widget fallback() => Container(
+          width: 60,
+          height: 40,
+          color: AppTheme.surfaceAlt,
+          alignment: Alignment.center,
+          child: const Icon(Icons.video_library_rounded,
+              size: 16, color: AppTheme.textMuted),
+        );
+    final provider = resolveImageProviderOrNull(url);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(6),
+      child: provider == null
+          ? fallback()
+          : Image(
+              image: provider,
+              width: 60,
+              height: 40,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => fallback(),
+            ),
     );
   }
 
@@ -73,12 +101,16 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'profile.speaker_profile_title'.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.onMedia,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Expanded(
+                  child: Text(
+                    'profile.speaker_profile_title'.tr(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 IconButton(
@@ -101,19 +133,11 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Container(
-                        width: 72,
-                        height: 72,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.primary, width: 2),
-                          image: DecorationImage(
-                            image: speaker.avatarUrl.startsWith('assets/')
-                                ? AssetImage(speaker.avatarUrl) as ImageProvider
-                                : NetworkImage(speaker.avatarUrl),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
+                      StreamerAvatar(
+                        radius: 36,
+                        avatarUrl: speaker.avatarUrl,
+                        borderColor: AppTheme.primary,
+                        borderWidth: 2,
                       ),
                       const SizedBox(width: 16),
                       Expanded(
@@ -123,7 +147,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                             Text(
                               speaker.getLocalizedName(lang),
                               style: const TextStyle(
-                                color: AppTheme.onMedia,
+                                color: AppTheme.textPrimary,
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -177,7 +201,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                     Text(
                       'profile.about'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.onMedia,
+                        color: AppTheme.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -222,7 +246,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                   Text(
                     '${'profile.archived_lectures'.tr()} (${speakerVods.length})',
                     style: const TextStyle(
-                      color: AppTheme.onMedia,
+                      color: AppTheme.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
@@ -259,17 +283,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                           ),
                           child: Row(
                             children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(6),
-                                child: Image(
-                                  image: vod.thumbnailUrl.startsWith('assets/')
-                                      ? AssetImage(vod.thumbnailUrl) as ImageProvider
-                                      : NetworkImage(vod.thumbnailUrl),
-                                  width: 60,
-                                  height: 40,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                              _thumbnail(vod.thumbnailUrl),
                               const SizedBox(width: 12),
                               Expanded(
                                 child: Column(
@@ -278,7 +292,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                                     Text(
                                       vod.getLocalizedTitle(lang),
                                       style: const TextStyle(
-                                        color: AppTheme.onMedia,
+                                        color: AppTheme.textPrimary,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),

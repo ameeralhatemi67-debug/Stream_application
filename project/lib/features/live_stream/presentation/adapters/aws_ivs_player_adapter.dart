@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../abstract_video_player.dart';
 import '../widgets/stream_state_placeholder_overlay.dart';
@@ -61,8 +62,11 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
           children: [
             // Video Surface simulation
             Container(
+              // A video surface, so it takes the media pair: the label below
+              // is `onMedia` white, which was invisible against the near-white
+              // surfaceAlt this was given in the scheme A migration.
               decoration: const BoxDecoration(
-                color: AppTheme.surfaceAlt,
+                color: AppTheme.media,
               ),
               child: Center(
                 child: Column(
@@ -72,7 +76,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                         color: AppTheme.primary, size: 56),
                     const SizedBox(height: AppTheme.spaceSm),
                     Text(
-                      'AWS IVS HLS Low-Latency Stream',
+                      'live.ivs_stream_title'.tr(),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: AppTheme.onMedia,
                             fontWeight: FontWeight.bold,
@@ -125,9 +129,9 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'AWS IVS HLS (<1.5s latency)',
-                      style: TextStyle(
+                    Text(
+                      'live.ivs_latency_badge'.tr(),
+                      style: const TextStyle(
                         color: AppTheme.onMedia,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,

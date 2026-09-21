@@ -78,9 +78,11 @@ class VodGridTile extends StatelessWidget {
                           ),
                         ),
 
-                  // Dark gradient overlay for contrast
-                  Container(
-                    decoration: const BoxDecoration(color: AppTheme.media),
+                  // Dark scrim for contrast; a solid fill here would cover
+                  // the thumbnail it is meant to darken.
+                  const DecoratedBox(
+                    decoration:
+                        BoxDecoration(gradient: AppGradients.mediaScrim),
                   ),
 
                   // Center Play Action Icon Button

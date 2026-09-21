@@ -134,8 +134,12 @@ class _ViewerProfileEditorDialogState
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Center(
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                // Wrap, not Row: six 44 px circles plus their margins overrun
+                // a 320 px dialog, and the row grew with the text scale.
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 0,
+                  runSpacing: AppTheme.spaceSm,
                   children: [
                     ..._avatarPresets.map((preset) {
                       final isSelected = _avatarUrl == preset;

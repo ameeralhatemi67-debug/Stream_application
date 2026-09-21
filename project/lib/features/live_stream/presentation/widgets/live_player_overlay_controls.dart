@@ -199,27 +199,37 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                         ),
                         const SizedBox(width: 8),
 
-                        // Viewer Counter Pill
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                          decoration: BoxDecoration(
-                            color: AppTheme.media.withValues(alpha: 0.65),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.remove_red_eye_outlined, size: 12, color: AppTheme.onMedia),
-                              const SizedBox(width: 5),
-                              Text(
-                                '${widget.viewerCount ?? '—'} ${'feed.watching'.tr()}',
-                                style: const TextStyle(
-                                  color: AppTheme.onMedia,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                        // Viewer Counter Pill. It gives way before the LIVE
+                        // badge does: on a 320 px phone at text scale 2.0 the
+                        // badge and the pill together overran the header row,
+                        // and the count matters less than the fact that the
+                        // room is live.
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color: AppTheme.media.withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.remove_red_eye_outlined, size: 12, color: AppTheme.onMedia),
+                                const SizedBox(width: 5),
+                                Flexible(
+                                  child: Text(
+                                    '${widget.viewerCount ?? '—'} ${'feed.watching'.tr()}',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: AppTheme.onMedia,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
                       ],

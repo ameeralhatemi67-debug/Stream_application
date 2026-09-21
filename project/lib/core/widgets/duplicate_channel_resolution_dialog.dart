@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../features/profile/models/streamer_models.dart';
 import '../theme/app_theme.dart';
+import 'streamer_avatar.dart';
 
 /// Modal dialog presented when a user account is associated with multiple
 /// personal broadcaster channels, allowing the streamer to pick which channel
@@ -44,13 +45,6 @@ class _DuplicateChannelResolutionDialogState
     }
   }
 
-  ImageProvider _getAvatarProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
-
   @override
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
@@ -87,6 +81,7 @@ class _DuplicateChannelResolutionDialogState
       ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 480),
+        child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -127,11 +122,9 @@ class _DuplicateChannelResolutionDialogState
                     ),
                     child: Row(
                       children: [
-                        CircleAvatar(
+                        StreamerAvatar(
                           radius: 20,
-                          backgroundColor: AppTheme.surface,
-                          backgroundImage:
-                              _getAvatarProvider(channel.avatarUrl),
+                          avatarUrl: channel.avatarUrl,
                         ),
                         const SizedBox(width: AppTheme.spaceMd),
                         Expanded(
@@ -192,6 +185,7 @@ class _DuplicateChannelResolutionDialogState
               );
             }),
           ],
+        ),
         ),
       ),
       actions: [

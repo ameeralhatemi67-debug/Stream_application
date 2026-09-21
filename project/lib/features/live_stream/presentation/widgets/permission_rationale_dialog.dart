@@ -35,7 +35,7 @@ class PermissionRationaleDialog extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         side: const BorderSide(color: AppTheme.danger, width: 1.5),
       ),
-      child: Padding(
+      child: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -48,22 +48,24 @@ class PermissionRationaleDialog extends StatelessWidget {
             ),
             const SizedBox(height: AppTheme.spaceMd),
             Text(
-              isCamera ? 'Camera access needed' : 'Microphone access needed',
+              (isCamera
+                      ? 'live.permission_camera_title'
+                      : 'live.permission_microphone_title')
+                  .tr(),
+              // The dialog surface is white, so the title takes textPrimary.
+              // It was `onMedia` white on white, and simply did not show.
               style: const TextStyle(
-                color: AppTheme.onMedia,
+                color: AppTheme.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             Text(
-              isCamera
-                  ? "This app uses your phone's camera to capture video for "
-                      'your broadcast. Nothing is recorded until you start '
-                      'going live.'
-                  : "This app uses your phone's microphone to capture audio "
-                      'for your broadcast. Nothing is recorded until you '
-                      'start going live.',
+              (isCamera
+                      ? 'live.permission_camera_body'
+                      : 'live.permission_microphone_body')
+                  .tr(),
               style: const TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 13,
@@ -71,8 +73,13 @@ class PermissionRationaleDialog extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            // Wrap, not Row: the two labels side by side overran a 320 px
+            // dialog from text scale 1.3 upwards, in both languages. They
+            // stack instead of being clipped.
+            Wrap(
+              alignment: WrapAlignment.end,
+              spacing: AppTheme.spaceSm,
+              runSpacing: AppTheme.spaceSm,
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
@@ -80,7 +87,6 @@ class PermissionRationaleDialog extends StatelessWidget {
                     style: const TextStyle(color: AppTheme.textSecondary),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceSm),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(true),
                   style: ElevatedButton.styleFrom(

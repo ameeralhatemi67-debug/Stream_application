@@ -418,9 +418,10 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                     style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Tap "+ Add Streamer"to invite or associate speakers with this organization.',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                  Text(
+                    'design_ui.no_speakers_added_hint'.tr(),
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 14),

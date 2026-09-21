@@ -84,6 +84,7 @@ class DeviceSessionConflictDialog extends StatelessWidget {
       ),
       content: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 460),
+        child: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -178,6 +179,7 @@ class DeviceSessionConflictDialog extends StatelessWidget {
               ),
             ),
           ],
+        ),
         ),
       ),
       actions: [

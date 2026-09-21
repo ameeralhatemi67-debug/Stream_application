@@ -80,7 +80,8 @@
     "tags": "Tags",
     "live_badge": "LIVE",
     "audio_live_badge": "AUDIO",
-    "offline_badge": "Offline"
+    "offline_badge": "Offline",
+    "your_channel_badge": "Your Channel"
   },
   "profile": {
     "title": "Broadcaster Profile",
@@ -266,7 +267,28 @@
     "chat_empty_subtitle_guest": "Sign in to be the first to say something.",
     "chat_new_messages_pill": "New messages",
     "chat_send_failed_retry": "Retry",
-    "chat_send_failed_discard": "Discard"
+    "chat_send_failed_discard": "Discard",
+    "broadcast_from_phone": "Broadcast from Phone",
+    "phone_broadcast_default_title": "Live from the phone",
+    "slides_attached_title": "Attached slides",
+    "slides_attached_subtitle": "Slides you attach here are shown to viewers alongside the broadcast.",
+    "venue_details_title": "Venue details",
+    "audio_live_badge": "AUDIO LIVE",
+    "speakers_count": "speakers",
+    "preset_low": "Low (480p) - safest on weak or cellular uploads",
+    "preset_medium": "Medium (720p) - recommended default",
+    "preset_high": "High (1080p) - needs a strong Wi-Fi upload",
+    "live_badge_bitrate": "LIVE - {} kbps",
+    "stream_interrupted_reconnecting": "Stream interrupted - reconnecting...",
+    "stream_interrupted_reconnecting_attempt": "Stream interrupted - reconnecting (attempt {current}/{total})...",
+    "permission_required_body_camera": "The app needs camera access to broadcast. Enable it in Settings.",
+    "permission_required_body_microphone": "The app needs microphone access to broadcast. Enable it in Settings.",
+    "ivs_stream_title": "AWS IVS HLS low-latency stream",
+    "ivs_latency_badge": "AWS IVS HLS (under 1.5s latency)",
+    "permission_camera_title": "Camera access needed",
+    "permission_microphone_title": "Microphone access needed",
+    "permission_camera_body": "This app uses your phone's camera to capture video for your broadcast. Nothing is recorded until you start going live.",
+    "permission_microphone_body": "This app uses your phone's microphone to capture audio for your broadcast. Nothing is recorded until you start going live."
   },
   "language": {
     "en": "English",
@@ -444,7 +466,9 @@
     "select_stream_dialog_empty": "You haven't sent messages in any broadcast yet.",
     "delete_messages_by_stream_success_toast": "Your messages in that broadcast have been deleted.",
     "build_version": "Version 1.0.0 (1)",
-    "release_pending": "Testing build. Release review is still pending."
+    "release_pending": "Testing build. Release review is still pending.",
+    "view_guidelines_subtitle": "Academic integrity and broadcast standards",
+    "view_privacy_subtitle": "PDPL KSA regulatory compliance"
   },
   "onboarding": {
     "subtitle": "AlSharqia Educational Knowledge Hub",
@@ -505,7 +529,10 @@
     "status_rejected": "Changes Requested / Declined",
     "apply_card_title": "Become a Verified Broadcaster / Register Organization",
     "apply_card_desc": "Stream your educational lectures and list your physical venue on the AlSharqia GIS map.",
-    "apply_btn": "Apply for Verification"
+    "apply_btn": "Apply for Verification",
+    "admin_feedback": "Reviewer feedback",
+    "reapply_btn": "Reapply",
+    "edit_btn": "Edit Application"
   },
   "admin": {
     "title": "Admin Moderation & Governance Hub",
@@ -856,7 +883,18 @@
     "btn_go_live": "Go Live",
     "btn_end_live": "End Stream",
     "toast_rtmp_set": "Local RTMP Target set to {}",
-    "toast_yt_set": "YouTube Live Target set to Video ID: {}"
+    "toast_yt_set": "YouTube Live Target set to Video ID: {}",
+    "toast_broadcast_detected_title": "Live Broadcast Detected",
+    "toast_broadcast_detected_message": "Active video ID: {}",
+    "toast_detection_failed_title": "Broadcast Detection Failed",
+    "toast_detection_failed_message": "Could not detect an active live video on YouTube.",
+    "toast_broadcast_ended_title": "Broadcast Ended",
+    "toast_broadcast_ended_message": "Your live stream has ended.",
+    "toast_stream_key_required_title": "Stream Key Required",
+    "toast_stream_key_required_message": "Paste the stream key from YouTube Studio, under Go Live > Stream.",
+    "toast_laptop_ip_required_title": "Laptop IP Required",
+    "toast_laptop_ip_required_message": "Enter your laptop's local network IP address to continue.",
+    "toast_rtmp_target_updated_title": "Local RTMP Target Updated"
   },
   "design_ui": {
     "access_denied": "Access Denied",
@@ -973,7 +1011,8 @@
     "active_broadcaster_session": "Active Broadcaster Session",
     "current_local_session": "Current Local Session",
     "continue_as_viewer": "Continue as Viewer",
-    "transfer_broadcaster_to_this_device": "Transfer Broadcaster to This Device"
+    "transfer_broadcaster_to_this_device": "Transfer Broadcaster to This Device",
+    "no_speakers_added_hint": "Use Add Streamer to invite or associate speakers with this organization."
   },
   "design_copy": {
     "academic_broadcasts_spatial_discovery": "Academic Broadcasts & Spatial Discovery",

@@ -66,6 +66,31 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     this.fallbackUrls = const [],
   });
 
+  /// Test-only replacement for [fromSource].
+  ///
+  /// Every concrete adapter binds to a platform implementation the widget
+  /// tester does not have: `YouTubePlayerAdapter` and `WebLivePlayerAdapter`
+  /// build a `WebViewController`, which asserts when `WebViewPlatform.instance`
+  /// is unset. Without this seam the live room cannot be pumped at all, so its
+  /// layout could never be swept the way every other screen is.
+  ///
+  /// Production code never assigns it; `layout_sweep_test` installs a stub
+  /// that paints the same aspect-ratio box and reports a fixed [StreamState],
+  /// so the room is laid out against player *state* rather than a live engine.
+  @visibleForTesting
+  static AbstractVideoPlayer Function({
+    Key? key,
+    required StreamSourceType sourceType,
+    required String streamUrl,
+    bool autoPlay,
+    VoidCallback? onPlayerReady,
+    ValueChanged<StreamState>? onStateChanged,
+    ValueChanged<String>? onError,
+    double aspectRatio,
+    String preferredQuality,
+    List<String> fallbackUrls,
+  })? debugPlayerFactory;
+
   /// Polymorphic factory constructor instantiating concrete player adapters based on [sourceType].
   factory AbstractVideoPlayer.fromSource({
     Key? key,
@@ -79,6 +104,21 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     String preferredQuality = 'auto',
     List<String> fallbackUrls = const [],
   }) {
+    final override = debugPlayerFactory;
+    if (override != null) {
+      return override(
+        key: key,
+        sourceType: sourceType,
+        streamUrl: streamUrl,
+        autoPlay: autoPlay,
+        onPlayerReady: onPlayerReady,
+        onStateChanged: onStateChanged,
+        onError: onError,
+        aspectRatio: aspectRatio,
+        preferredQuality: preferredQuality,
+        fallbackUrls: fallbackUrls,
+      );
+    }
     switch (sourceType) {
       case StreamSourceType.localRtmp:
         return WebLivePlayerAdapter(

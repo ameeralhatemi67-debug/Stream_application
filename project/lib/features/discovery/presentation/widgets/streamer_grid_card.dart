@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../profile/models/streamer_models.dart';
 
 class StreamerGridCard extends StatelessWidget {
@@ -16,11 +18,25 @@ class StreamerGridCard extends StatelessWidget {
     required this.langCode,
   });
 
-  ImageProvider _getImageProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
+  Widget _bannerPlaceholder() => Container(
+        color: AppTheme.surface,
+        alignment: Alignment.center,
+        child: const Icon(Icons.image_not_supported_outlined,
+            color: AppTheme.textMuted),
+      );
+
+  /// A card whose streamer has no banner shows the placeholder directly,
+  /// rather than asking the network for an empty URL and waiting for the
+  /// failure to reach [Image.errorBuilder].
+  Widget _buildBanner(String url) {
+    final provider = resolveImageProviderOrNull(url);
+    if (provider == null) return _bannerPlaceholder();
+    return Image(
+      image: provider,
+      fit: BoxFit.cover,
+      alignment: Alignment.center,
+      errorBuilder: (_, __, ___) => _bannerPlaceholder(),
+    );
   }
 
   @override
@@ -98,22 +114,12 @@ class StreamerGridCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    Image(
-                      image: _getImageProvider(streamer.bannerUrl),
-                      fit: BoxFit.cover,
-                      alignment: Alignment.center,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: AppTheme.surface,
-                        alignment: Alignment.center,
-                        child: const Icon(Icons.image_not_supported_outlined,
-                            color: AppTheme.textMuted),
-                      ),
-                    ),
-                    // Subtle bottom gradient
-                    Container(
-                      decoration: const BoxDecoration(
-                        color: AppTheme.media,
-                      ),
+                    _buildBanner(streamer.bannerUrl),
+                    // Subtle bottom scrim, so the badges and the name below
+                    // keep their contrast over any frame without hiding it.
+                    const DecoratedBox(
+                      decoration:
+                          BoxDecoration(gradient: AppGradients.mediaScrim),
                     ),
                     // LIVE Badge at top left (Video vs Audio)
                     if (isLive)
@@ -144,7 +150,7 @@ class StreamerGridCard extends StatelessWidget {
                               const SizedBox(width: 3.5),
                               Text(
                                 isVideo
-                                    ? 'feed.badge_live'.tr()
+                                    ? 'live.live_indicator'.tr()
                                     : 'live.audio_live_indicator'.tr(),
                                 style: const TextStyle(
                                   color: AppTheme.onMedia,
@@ -177,7 +183,7 @@ class StreamerGridCard extends StatelessWidget {
                                   color: AppTheme.warning, size: 11),
                               const SizedBox(width: 3),
                               Text(
-                                langCode == 'ar' ? 'قناتك' : 'Your Channel',
+                                'feed.your_channel_badge'.tr(),
                                 style: const TextStyle(
                                   color: AppTheme.onMedia,
                                   fontSize: 9.5,
@@ -217,12 +223,9 @@ class StreamerGridCard extends StatelessWidget {
                                 width: 1.2,
                               ),
                             ),
-                            child: CircleAvatar(
+                            child: StreamerAvatar(
                               radius: 20,
-                              backgroundColor: AppTheme.surface,
-                              backgroundImage:
-                                  _getImageProvider(streamer.avatarUrl),
-                              onBackgroundImageError: (_, __) {},
+                              avatarUrl: streamer.avatarUrl,
                             ),
                           ),
                           const SizedBox(width: 6),

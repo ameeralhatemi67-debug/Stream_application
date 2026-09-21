@@ -2,6 +2,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
@@ -107,13 +108,6 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
     }
   }
 
-  ImageProvider _getImageProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
-
   void _playAll() {
     if (_videos.isNotEmpty) {
       Navigator.pop(context);
@@ -123,6 +117,33 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
         streamer: widget.streamer,
       );
     }
+  }
+
+  /// A lecture thumbnail, or a neutral tile when the playlist entry has no
+  /// image yet -- an empty URL used to reach `NetworkImage('')`.
+  Widget _thumbnail(String url,
+      {required double width, required double height, required double radius}) {
+    Widget fallback() => Container(
+          width: width,
+          height: height,
+          color: AppTheme.surfaceAlt,
+          alignment: Alignment.center,
+          child: const Icon(Icons.video_library_rounded,
+              size: 18, color: AppTheme.textMuted),
+        );
+    final provider = resolveImageProviderOrNull(url);
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(radius),
+      child: provider == null
+          ? fallback()
+          : Image(
+              image: provider,
+              width: width,
+              height: height,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => fallback(),
+            ),
+    );
   }
 
   @override
@@ -165,15 +186,8 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: Image(
-                      image: _getImageProvider(widget.playlist.thumbnailUrl),
-                      width: 90,
-                      height: 62,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                  _thumbnail(widget.playlist.thumbnailUrl,
+                      width: 90, height: 62, radius: AppTheme.radiusSm),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Column(
@@ -182,7 +196,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         Text(
                           playlistTitle,
                           style: const TextStyle(
-                            color: AppTheme.onMedia,
+                            color: AppTheme.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -312,16 +326,8 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                               leading: Stack(
                                 alignment: Alignment.bottomRight,
                                 children: [
-                                  ClipRRect(
-                                    borderRadius: BorderRadius.circular(6),
-                                    child: Image(
-                                      image: _getImageProvider(
-                                          video.thumbnailUrl),
-                                      width: 68,
-                                      height: 44,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
+                                  _thumbnail(video.thumbnailUrl,
+                                      width: 68, height: 44, radius: 6),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 4, vertical: 1),
@@ -344,7 +350,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                               title: Text(
                                 video.getLocalizedTitle(widget.langCode),
                                 style: const TextStyle(
-                                  color: AppTheme.onMedia,
+                                  color: AppTheme.textPrimary,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
                                 ),

@@ -569,11 +569,15 @@ class _BroadcasterApplicationSheetState
                               children: [
                                 const Icon(Icons.send_rounded, size: 18),
                                 const SizedBox(width: 8),
-                                Text(
-                                  'application.submit_btn'.tr(),
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
+                                Flexible(
+                                  child: Text(
+                                    'application.submit_btn'.tr(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -805,7 +809,12 @@ class _BroadcasterApplicationSheetState
           const SizedBox(height: AppTheme.spaceSm),
 
           // Quick GPS Coordinate Presets
-          Row(
+          // Wrap: the label and three chips did not fit a 320 px sheet, and
+          // the chips carried English city names into the Arabic form.
+          Wrap(
+            spacing: AppTheme.spaceXs,
+            runSpacing: AppTheme.spaceXs,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Text('design_ui.alsharqia_presets'.tr(),
                 style: const TextStyle(
@@ -814,12 +823,9 @@ class _BroadcasterApplicationSheetState
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              const SizedBox(width: 8),
-              _buildPresetChip('Al Khobar'),
-              const SizedBox(width: 4),
-              _buildPresetChip('Dhahran'),
-              const SizedBox(width: 4),
-              _buildPresetChip('Dammam'),
+              _buildPresetChip('Al Khobar', 'map.khobar'),
+              _buildPresetChip('Dhahran', 'map.dhahran'),
+              _buildPresetChip('Dammam', 'map.dammam'),
             ],
           ),
           const SizedBox(height: AppTheme.spaceSm),
@@ -854,7 +860,9 @@ class _BroadcasterApplicationSheetState
     );
   }
 
-  Widget _buildPresetChip(String cityName) {
+  /// [cityName] stays the English lookup key `_fillCityCoordinates` matches
+  /// on; [labelKey] is what the broadcaster actually reads.
+  Widget _buildPresetChip(String cityName, String labelKey) {
     return InkWell(
       onTap: () => _fillCityCoordinates(cityName),
       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -866,7 +874,7 @@ class _BroadcasterApplicationSheetState
           border: Border.all(color: AppTheme.border),
         ),
         child: Text(
-          cityName,
+          labelKey.tr(),
           style: const TextStyle(color: AppTheme.primary, fontSize: 10),
         ),
       ),
@@ -967,17 +975,21 @@ class _BroadcasterApplicationSheetState
     );
   }
 
+  /// Every section header in this sheet: an icon and a title that has to give
+  /// way rather than overrun a 320 px form, in either language.
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
         Icon(icon, size: 16, color: AppTheme.primary),
         const SizedBox(width: 8),
-        Text(
-          title,
-          style: const TextStyle(
-            color: AppTheme.textPrimary,
-            fontSize: 13,
-            fontWeight: FontWeight.bold,
+        Expanded(
+          child: Text(
+            title,
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],

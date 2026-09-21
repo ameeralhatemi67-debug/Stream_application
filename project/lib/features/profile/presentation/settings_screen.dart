@@ -1031,7 +1031,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               label: Text(
                 app.status == ApplicationStatus.rejected
                     ? 'application.reapply_btn'.tr()
-                    : 'Edit Application',
+                    : 'application.edit_btn'.tr(),
                 style: const TextStyle(fontSize: 11.5),
               ),
               onPressed: () => context.push('/streamer-apply'),
@@ -1723,14 +1723,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildGovernanceRow(
             icon: Icons.verified_user_rounded,
             title: 'settings.view_guidelines'.tr(),
-            subtitle: 'Academic integrity & broadcast standards',
+            subtitle: 'settings.view_guidelines_subtitle'.tr(),
             onTap: () => _openLegalReader(context, terms, 1),
           ),
           const Divider(height: 16, color: AppTheme.border),
           _buildGovernanceRow(
             icon: Icons.privacy_tip_rounded,
             title: 'settings.view_privacy'.tr(),
-            subtitle: 'PDPL KSA Regulatory Compliance',
+            subtitle: 'settings.view_privacy_subtitle'.tr(),
             onTap: () => _openLegalReader(context, terms, 2),
           ),
         ],

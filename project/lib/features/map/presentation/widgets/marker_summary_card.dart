@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
 import 'venue_navigation_sheet.dart';
@@ -16,13 +17,6 @@ class MarkerSummaryCard extends StatelessWidget {
     required this.streamer,
     required this.onClose,
   });
-
-  ImageProvider _getAvatarProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,12 +60,7 @@ class MarkerSummaryCard extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: AppTheme.surfaceAlt,
-                backgroundImage: _getAvatarProvider(streamer.avatarUrl),
-                onBackgroundImageError: (_, __) {},
-              ),
+              StreamerAvatar(radius: 20, avatarUrl: streamer.avatarUrl),
               const SizedBox(width: 10),
               Expanded(
                 child: Column(

@@ -107,4 +107,22 @@ abstract final class AppTheme {
 abstract final class AppGradients {
   static const brand = LinearGradient(begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd, colors: [Color(0xFF17643F), Color(0xFF327044)]);
   static const soft = LinearGradient(begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd, colors: [Color(0xFFD7EDDC), Color(0xFFB8DBB9)]);
+
+  /// Bottom scrim for thumbnails and viewports that carry [AppTheme.onMedia]
+  /// text over an arbitrary video frame.
+  ///
+  /// Both stops are the scheme's own [AppTheme.media]; only the alpha changes,
+  /// so the scrim introduces no colour the tokens do not already define. The
+  /// 0xCC bottom stop is what `theme_contrast_test` pins: against the worst
+  /// case, a pure white frame underneath, white text still clears 4.5:1, which
+  /// a lighter scrim does not.
+  ///
+  /// It exists because the scheme A migration turned two such scrims into a
+  /// *solid* media fill, which hid the feed card banner and the VOD thumbnail
+  /// underneath them completely.
+  static const mediaScrim = LinearGradient(
+    begin: Alignment.topCenter,
+    end: Alignment.bottomCenter,
+    colors: [Color(0x00243536), Color(0xCC243536)],
+  );
 }

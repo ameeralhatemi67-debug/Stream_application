@@ -80,7 +80,8 @@
     "tags": "الوسوم",
     "live_badge": "مباشر",
     "audio_live_badge": "صوتي",
-    "offline_badge": "غير متصل"
+    "offline_badge": "غير متصل",
+    "your_channel_badge": "قناتك"
   },
   "profile": {
     "title": "الملف الشخصي للمحاضر",
@@ -266,7 +267,28 @@
     "chat_empty_subtitle_guest": "سجّل الدخول لتكون أول من يكتب شيئاً.",
     "chat_new_messages_pill": "رسائل جديدة",
     "chat_send_failed_retry": "إعادة المحاولة",
-    "chat_send_failed_discard": "تجاهل"
+    "chat_send_failed_discard": "تجاهل",
+    "broadcast_from_phone": "البث من الهاتف",
+    "phone_broadcast_default_title": "بث مباشر من الهاتف",
+    "slides_attached_title": "الشرائح المرفقة",
+    "slides_attached_subtitle": "الشرائح التي ترفقها هنا تظهر للمشاهدين إلى جانب البث.",
+    "venue_details_title": "تفاصيل المكان",
+    "audio_live_badge": "بث صوتي",
+    "speakers_count": "متحدثين",
+    "preset_low": "منخفضة (480p) - الأكثر أماناً على الاتصالات الضعيفة أو بيانات الجوال",
+    "preset_medium": "متوسطة (720p) - الخيار الموصى به",
+    "preset_high": "عالية (1080p) - تحتاج اتصال Wi-Fi قوياً للرفع",
+    "live_badge_bitrate": "مباشر - {} كيلوبت/ث",
+    "stream_interrupted_reconnecting": "انقطع البث - تتم إعادة الاتصال...",
+    "stream_interrupted_reconnecting_attempt": "انقطع البث - تتم إعادة الاتصال (المحاولة {current}/{total})...",
+    "permission_required_body_camera": "يحتاج التطبيق إلى إذن الكاميرا للبث. فعّله من الإعدادات.",
+    "permission_required_body_microphone": "يحتاج التطبيق إلى إذن الميكروفون للبث. فعّله من الإعدادات.",
+    "ivs_stream_title": "بث AWS IVS HLS منخفض زمن الاستجابة",
+    "ivs_latency_badge": "AWS IVS HLS (زمن استجابة أقل من 1.5 ثانية)",
+    "permission_camera_title": "مطلوب إذن الكاميرا",
+    "permission_microphone_title": "مطلوب إذن الميكروفون",
+    "permission_camera_body": "يستخدم التطبيق كاميرا هاتفك لالتقاط الفيديو الخاص ببثك. لا يُسجَّل أي شيء حتى تبدأ البث المباشر.",
+    "permission_microphone_body": "يستخدم التطبيق ميكروفون هاتفك لالتقاط الصوت الخاص ببثك. لا يُسجَّل أي شيء حتى تبدأ البث المباشر."
   },
   "language": {
     "en": "English",
@@ -444,7 +466,9 @@
     "select_stream_dialog_empty": "لم ترسل رسائل في أي بث بعد.",
     "delete_messages_by_stream_success_toast": "تم حذف رسائلك في ذلك البث.",
     "build_version": "الإصدار 1.0.0 (1)",
-    "release_pending": "الإصدار قيد الاختبار. مراجعة النشر لم تكتمل بعد."
+    "release_pending": "الإصدار قيد الاختبار. مراجعة النشر لم تكتمل بعد.",
+    "view_guidelines_subtitle": "النزاهة الأكاديمية ومعايير البث",
+    "view_privacy_subtitle": "الامتثال لنظام حماية البيانات الشخصية السعودي"
   },
   "onboarding": {
     "subtitle": "منصة المعرفة والبث الأكاديمي بالمنطقة الشرقية",
@@ -505,7 +529,10 @@
     "status_rejected": "ملاحظات على الطلب / مطلوب تعديل ",
     "apply_card_title": "انضم كمعلم موثق / سجّل قاعة ومؤسسة تعليمية",
     "apply_card_desc": "قم ببث محاضراتك العلمية وثبّت مدرجك الفعلي على خريطة المنطقة الشرقية.",
-    "apply_btn": "تقديم طلب التوثيق"
+    "apply_btn": "تقديم طلب التوثيق",
+    "admin_feedback": "ملاحظات المراجع",
+    "reapply_btn": "إعادة التقديم",
+    "edit_btn": "تعديل الطلب"
   },
   "admin": {
     "title": "مركز الإشراف والحوكمة الإدارية",
@@ -856,7 +883,18 @@
     "btn_go_live": "إطلاق البث المباشر",
     "btn_end_live": "إنهاء البث المباشر",
     "toast_rtmp_set": "تم ضبط وجهة RTMP المحلية بنجاح: {}",
-    "toast_yt_set": "تم ضبط وجهة يوتيوب لايف بنجاح لمعرّف الفيديو: {}"
+    "toast_yt_set": "تم ضبط وجهة يوتيوب لايف بنجاح لمعرّف الفيديو: {}",
+    "toast_broadcast_detected_title": "تم اكتشاف بث مباشر",
+    "toast_broadcast_detected_message": "معرّف الفيديو النشط: {}",
+    "toast_detection_failed_title": "تعذر اكتشاف البث",
+    "toast_detection_failed_message": "تعذر العثور على بث مباشر نشط على يوتيوب.",
+    "toast_broadcast_ended_title": "انتهى البث",
+    "toast_broadcast_ended_message": "انتهى بثك المباشر.",
+    "toast_stream_key_required_title": "مفتاح البث مطلوب",
+    "toast_stream_key_required_message": "الصق مفتاح البث من استوديو يوتيوب، من \"بدء البث\" ثم \"البث\".",
+    "toast_laptop_ip_required_title": "عنوان IP للحاسوب مطلوب",
+    "toast_laptop_ip_required_message": "أدخل عنوان IP المحلي لحاسوبك للمتابعة.",
+    "toast_rtmp_target_updated_title": "تم تحديث وجهة RTMP المحلية"
   },
   "design_ui": {
     "access_denied": "الوصول مرفوض",
@@ -973,7 +1011,8 @@
     "active_broadcaster_session": "جلسة المذيع النشطة",
     "current_local_session": "جلسة الجهاز الحالي",
     "continue_as_viewer": "المتابعة كمشاهد",
-    "transfer_broadcaster_to_this_device": "نقل البث إلى هذا الجهاز"
+    "transfer_broadcaster_to_this_device": "نقل البث إلى هذا الجهاز",
+    "no_speakers_added_hint": "استخدم \"إضافة مُقدّم\" لدعوة متحدثين أو ربطهم بهذه المنظمة."
   },
   "design_copy": {
     "academic_broadcasts_spatial_discovery": "البثوث الأكاديمية والمحاضرات التفاعلية",

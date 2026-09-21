@@ -130,12 +130,14 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
               children: [
                 const Icon(Icons.business_rounded, color: AppTheme.danger, size: 22),
                 const SizedBox(width: 8),
-                Text(
-                  'affiliation_modal.title'.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
+                Flexible(
+                  child: Text(
+                    'affiliation_modal.title'.tr(),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -296,11 +298,15 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                         children: [
                           const Icon(Icons.send_rounded, size: 16),
                           const SizedBox(width: 8),
-                          Text(
-                            'affiliation_modal.submit_btn'.tr(),
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                          Flexible(
+                            child: Text(
+                              'affiliation_modal.submit_btn'.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
                             ),
                           ),
                         ],

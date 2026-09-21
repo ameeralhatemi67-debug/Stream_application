@@ -64,14 +64,18 @@ extension BroadcastQualityPresetConfig on BroadcastQualityPreset {
     }
   }
 
-  String get label {
+  /// i18n key for the picker label. The engine is a service and has no
+  /// locale of its own, so it names the string rather than writing it; the
+  /// phone broadcast screen calls `.tr()` on this. Returning English here is
+  /// what left the Arabic preset picker in English.
+  String get labelKey {
     switch (this) {
       case BroadcastQualityPreset.low:
-        return 'Low (480p) -- safest on weak/cellular uploads';
+        return 'live.preset_low';
       case BroadcastQualityPreset.medium:
-        return 'Medium (720p) -- recommended default';
+        return 'live.preset_medium';
       case BroadcastQualityPreset.high:
-        return 'High (1080p) -- needs a strong Wi-Fi upload';
+        return 'live.preset_high';
     }
   }
 }

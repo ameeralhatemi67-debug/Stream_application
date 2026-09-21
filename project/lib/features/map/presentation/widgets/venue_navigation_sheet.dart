@@ -4,6 +4,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
 
@@ -76,274 +77,40 @@ class VenueNavigationSheet extends StatelessWidget {
         ],
       ),
       child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Top Drag Handle Pill
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.borderStrong,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                ),
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceLg),
-
-            // Sheet Header Title Bar
-            Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
+        // The sheet is presented with isScrollControlled, so it may be taller
+        // than the screen: on a 320x568 phone at text scale 1.3 its last 93 px
+        // were clipped with no way to reach them. Scrolling restores them.
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Top Drag Handle Pill
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.navigation_rounded,
-                    color: AppTheme.primary,
-                    size: 22,
+                    color: AppTheme.borderStrong,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   ),
                 ),
-                const SizedBox(width: AppTheme.spaceMd),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'venue.title'.tr(),
-                        style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                      ),
-                      Text(
-                        streamer.getLocalizedCity(langCode),
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.primary,
-                            ),
-                      ),
-                    ],
-                  ),
-                ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded,
-                      color: AppTheme.textMuted),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
-            const SizedBox(height: AppTheme.spaceLg),
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
 
-            // Broadcaster Identity Header Card
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spaceMd),
-              decoration: BoxDecoration(
-                color: AppTheme.surface,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.border),
-              ),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundColor: AppTheme.surfaceAlt,
-                    backgroundImage: NetworkImage(streamer.avatarUrl),
-                  ),
-                  const SizedBox(width: AppTheme.spaceMd),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Text(
-                                streamer.getLocalizedName(langCode),
-                                style: const TextStyle(
-                                  color: AppTheme.textPrimary,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            if (streamer.isVerified)
-                              const Icon(
-                                Icons.verified_rounded,
-                                size: 14,
-                                color: AppTheme.accent,
-                              ),
-                          ],
-                        ),
-                        Text(
-                          streamer.getLocalizedOrganization(langCode),
-                          style: const TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 12,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-
-            // Venue Address & Location Details
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spaceMd),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceAlt,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.location_on_rounded,
-                          size: 16, color: AppTheme.danger),
-                      const SizedBox(width: 8),
-                      Text(
-                        'venue.address_label'.tr(),
-                        style: const TextStyle(
-                          color: AppTheme.textMuted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    streamer.getLocalizedVenue(langCode),
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    auditoriumInfo.getLocalizedAddress(langCode),
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 12,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-
-            // University Auditorium & Campus Info
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spaceMd),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceAlt,
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.border),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.account_balance_rounded,
-                          size: 16, color: AppTheme.accent),
-                      const SizedBox(width: 8),
-                      Text(
-                        'venue.auditorium_label'.tr(),
-                        style: const TextStyle(
-                          color: AppTheme.textMuted,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accent.withValues(alpha: 0.2),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusXs),
-                        ),
-                        child: Text(
-                          '${auditoriumInfo.seatingCapacity} Seats',
-                          style: const TextStyle(
-                            color: AppTheme.accent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    auditoriumInfo.getLocalizedAuditorium(langCode),
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      const Icon(Icons.meeting_room_outlined,
-                          size: 14, color: AppTheme.textMuted),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          auditoriumInfo.getLocalizedGate(langCode),
-                          style: const TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-
-            // Distance Estimation Card
-            Container(
-              padding: const EdgeInsets.all(AppTheme.spaceMd),
-              decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(
-                    color: AppTheme.primary.withValues(alpha: 0.4)),
-              ),
-              child: Row(
+              // Sheet Header Title Bar
+              Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(10),
+                    padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.2),
+                      color: AppTheme.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.directions_car_rounded,
+                      Icons.navigation_rounded,
                       color: AppTheme.primary,
-                      size: 20,
+                      size: 22,
                     ),
                   ),
                   const SizedBox(width: AppTheme.spaceMd),
@@ -352,67 +119,315 @@ class VenueNavigationSheet extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'venue.distance_label'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
+                          'venue.title'.tr(),
+                          style:
+                              Theme.of(context).textTheme.titleLarge?.copyWith(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                         ),
-                        const SizedBox(height: 2),
-                        Row(
-                          children: [
-                            Text(
-                              formattedDistance,
-                              style: const TextStyle(
-                                color: AppTheme.textPrimary,
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              '($travelTimeStr)',
-                              style: const TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                        Text(
+                          streamer.getLocalizedCity(langCode),
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppTheme.primary,
+                                  ),
                         ),
                       ],
                     ),
                   ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded,
+                        color: AppTheme.textMuted),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: AppTheme.spaceLg),
+              const SizedBox(height: AppTheme.spaceLg),
 
-            // External Map Deep Link Action Button
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton.icon(
-                onPressed: () => _openInGoogleMaps(context, streamer, mapUrl),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: AppTheme.bg,
-                  elevation: 0,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  ),
+              // Broadcaster Identity Header Card
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                decoration: BoxDecoration(
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(color: AppTheme.border),
                 ),
-                icon: const Icon(Icons.map_rounded, size: 20),
-                label: Text(
-                  'venue.open_maps'.tr(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
+                child: Row(
+                  children: [
+                    StreamerAvatar(radius: 20, avatarUrl: streamer.avatarUrl),
+                    const SizedBox(width: AppTheme.spaceMd),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  streamer.getLocalizedName(langCode),
+                                  style: const TextStyle(
+                                    color: AppTheme.textPrimary,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 14,
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                              if (streamer.isVerified)
+                                const Icon(
+                                  Icons.verified_rounded,
+                                  size: 14,
+                                  color: AppTheme.accent,
+                                ),
+                            ],
+                          ),
+                          Text(
+                            streamer.getLocalizedOrganization(langCode),
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
+                              fontSize: 12,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+
+              // Venue Address & Location Details
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.location_on_rounded,
+                            size: 16, color: AppTheme.danger),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'venue.address_label'.tr(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      streamer.getLocalizedVenue(langCode),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      auditoriumInfo.getLocalizedAddress(langCode),
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 12,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+
+              // University Auditorium & Campus Info
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.account_balance_rounded,
+                            size: 16, color: AppTheme.accent),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'venue.auditorium_label'.tr(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                            ),
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accent.withValues(alpha: 0.2),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusXs),
+                          ),
+                          child: Text(
+                            '${auditoriumInfo.seatingCapacity} Seats',
+                            style: const TextStyle(
+                              color: AppTheme.accent,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      auditoriumInfo.getLocalizedAuditorium(langCode),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        const Icon(Icons.meeting_room_outlined,
+                            size: 14, color: AppTheme.textMuted),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            auditoriumInfo.getLocalizedGate(langCode),
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+
+              // Distance Estimation Card
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(
+                      color: AppTheme.primary.withValues(alpha: 0.4)),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.directions_car_rounded,
+                        color: AppTheme.primary,
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(width: AppTheme.spaceMd),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'venue.distance_label'.tr(),
+                            style: const TextStyle(
+                              color: AppTheme.primary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          // Distance and drive time wrap rather than clip:
+                          // the Arabic forms are longer than the English ones
+                          // and overran a 320 px sheet.
+                          Wrap(
+                            spacing: AppTheme.spaceSm,
+                            crossAxisAlignment: WrapCrossAlignment.center,
+                            children: [
+                              Text(
+                                formattedDistance,
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimary,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                '($travelTimeStr)',
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceLg),
+
+              // External Map Deep Link Action Button
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: ElevatedButton.icon(
+                  onPressed: () => _openInGoogleMaps(context, streamer, mapUrl),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.bg,
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    ),
+                  ),
+                  icon: const Icon(Icons.map_rounded, size: 20),
+                  label: Text(
+                    'venue.open_maps'.tr(),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

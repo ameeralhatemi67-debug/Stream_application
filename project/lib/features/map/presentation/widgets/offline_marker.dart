@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/streamer_avatar.dart';
 import '../../models/map_models.dart';
 
 class OfflineMarker extends StatelessWidget {
@@ -15,13 +16,6 @@ class OfflineMarker extends StatelessWidget {
     required this.onDoubleTap,
     this.isSelected = false,
   });
-
-  ImageProvider _getAvatarProvider(String url) {
-    if (url.startsWith('assets/')) {
-      return AssetImage(url);
-    }
-    return NetworkImage(url);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,12 +46,7 @@ class OfflineMarker extends StatelessWidget {
               AppTheme.textMuted,
               BlendMode.saturation,
             ),
-            child: CircleAvatar(
-              radius: 14,
-              backgroundColor: AppTheme.surfaceAlt,
-              backgroundImage: _getAvatarProvider(marker.avatarUrl),
-              onBackgroundImageError: (_, __) {},
-            ),
+            child: StreamerAvatar(radius: 14, avatarUrl: marker.avatarUrl),
           ),
         ),
       ),
