@@ -229,11 +229,20 @@ class RtmpPublishEngine extends ChangeNotifier {
     await setAudioOnly(nextOff);
   }
 
+  /// Best-effort: the encoder's rotation is a display concern, and failing to
+  /// set it must never take the broadcast screen down.
+  ///
+  /// [MissingPluginException] is caught alongside [PlatformException] because
+  /// it is not a subclass of it: where the native RTMP side is not registered
+  /// at all, the call threw an unhandled async error rather than falling
+  /// through to the log below.
   Future<void> setOrientation(int orientation) async {
     try {
       await _channel.invokeMethod<void>('setOrientation', {'orientation': orientation});
     } on PlatformException catch (e) {
       debugPrint('[RtmpPublishEngine] setOrientation failed: $e');
+    } on MissingPluginException catch (e) {
+      debugPrint('[RtmpPublishEngine] setOrientation unavailable: $e');
     }
   }
 

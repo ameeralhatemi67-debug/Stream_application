@@ -468,7 +468,12 @@
     "build_version": "Version 1.0.0 (1)",
     "release_pending": "Testing build. Release review is still pending.",
     "view_guidelines_subtitle": "Academic integrity and broadcast standards",
-    "view_privacy_subtitle": "PDPL KSA regulatory compliance"
+    "view_privacy_subtitle": "PDPL KSA regulatory compliance",
+    "consent_record_title": "Consent record",
+    "consent_record_accepted": "You accepted version {version} of the privacy notice on {date}.",
+    "consent_record_outdated": "Your recorded consent is for version {version}, which is no longer the current notice. You will be asked to review it again.",
+    "consent_record_none": "No consent has been recorded for this account yet.",
+    "consent_withdraw_note": "To withdraw consent, delete your account below. Deleting removes the data this consent covers; there is no separate withdrawal that keeps the account open."
   },
   "onboarding": {
     "subtitle": "AlSharqia Educational Knowledge Hub",

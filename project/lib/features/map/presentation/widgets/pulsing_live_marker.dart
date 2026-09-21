@@ -149,7 +149,7 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: const [
                     BoxShadow(
-                      color: Colors.black45,
+                      color: AppTheme.shadow,
                       blurRadius: 4,
                     ),
                   ],

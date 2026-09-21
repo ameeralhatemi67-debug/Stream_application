@@ -315,10 +315,12 @@ class _LiveBroadcasterStudioSheetState
           final tabWidth = constraints.maxWidth / 3;
           return Stack(
             children: [
-              AnimatedPositioned(
+              // Directional: the selected-tab indicator has to slide from the
+              // start edge, which is the right one in Arabic.
+              AnimatedPositionedDirectional(
                 duration: const Duration(milliseconds: 360),
                 curve: Curves.easeOutBack,
-                left: effectiveIndex * tabWidth,
+                start: effectiveIndex * tabWidth,
                 top: 0,
                 bottom: 0,
                 width: tabWidth,

@@ -31,11 +31,45 @@ IBM Plex Sans and IBM Plex Sans Arabic are bundled in `project/assets/fonts/`, i
 
 Cards, buttons and inputs use radius 12; chips use 999. Spacing tokens are 4, 8, 12, 16, 24 and 32; screen inset is 18. Cards have no shadow. Forms and settings should use a centered content width no greater than 720. Compact is below 600, medium below 900, expanded starts at 900. Use directional padding and native RTL.
 
-`AppLogo` renders the owner's supplied `project/assets/logo/colored.svg`; `black.svg` is the monochrome variant. Preserve all supplied assets. The concept logo in the original token JSON is superseded by these supplied assets.
+### Supplied logo assets
 
-Gradients are only `AppGradients.brand` and `soft`, top-start to bottom-end. Brand stops are `#17643F` and `#327044` with white text; soft stops are `#D7EDDC` and `#B8DBB9` with primary text. Allowed on primary buttons, logo tiles, welcome hero and small status accents, at most two visible. Never on app bars, navigation, list cards, dialogs, inputs or body backgrounds. Contrast must pass at both stops. Media controls use opaque or adequately dark scrims with onMedia text.
+All nine files in `project/assets/logo/` are owner-supplied and are preserved as delivered; none is regenerated. `AppLogo` renders `colored.svg` at runtime, with `black.svg` as the monochrome variant. `square.svg` / `square.png` and `cercal.svg` / `cercal.png` are the square and circular lockups reserved for launcher, adaptive and web icons in P8A; `colored.png` and `black.png` are the raster equivalents, and `logoInkscapeMaker.svg` is the editable source. The concept logo in the original token JSON is superseded by these files.
 
-Verification is in `project/test/theme_contrast_test.dart` and `layout_sweep_test.dart`. Widget evidence does not establish real-device streaming or release readiness.
+### Elevation
+
+Cards stay flat. Raised overlays (mini player, markers, floating menus, toasts) take `AppTheme.shadowSoft`, `shadow` or `shadowStrong`, tinted from `media` rather than pure black. Ad-hoc `Colors.black26/38/45/54/87` shades are not permitted and no longer appear in `lib/`.
+
+### Gradients
+
+Three, all from `AppGradients`, and nothing else may declare one (gate G2d):
+
+- `brand`, top-start to bottom-end, stops `#17643F` and `#327044`, white text.
+- `soft`, top-start to bottom-end, stops `#D7EDDC` and `#B8DBB9`, primary text.
+- `mediaScrim`, top-centre to bottom-centre, both stops `media` `#243536` at alpha `0x00` then `0xCC`.
+
+`brand` and `soft` are allowed on primary buttons, logo tiles, the welcome hero and small status accents, at most two visible; never on app bars, navigation, list cards, dialogs, inputs or body backgrounds. Contrast must pass at both stops.
+
+`mediaScrim` is the only correct way to darken a thumbnail or viewport that carries `onMedia` text. Its bottom stop is pinned at `0xCC` because a lighter scrim drops white text below 4.5:1 over a bright frame. A solid `media` fill is not a scrim: used as one it hides the image underneath entirely, which is what happened to the feed card banner and the VOD thumbnail before this rule existed.
+
+### Surfaces and their text
+
+`onMedia` white belongs only on `media`, on a `mediaScrim`, or on a filled `danger` / `primary` control. On `surface`, `surfaceAlt` or an unfilled outlined button it is invisible, not merely low-contrast. Text on a white surface takes `textPrimary`, `textSecondary` or `textMuted`; an outlined button's label takes `primary`.
+
+### Layout helpers
+
+`core/layout/content_width.dart` holds the responsive helpers: `AppBreakpoints` (compact below 600, medium below 900, expanded from 900, content 720), `ContentWidth` for forms and lists, and `CenteredScrollable` for centred panels and empty states that must scroll rather than overflow on a landscape phone or at text scale 2.0.
+
+Missing images are resolved through `core/widgets/safe_image_provider.dart`. `resolveImageProviderOrNull` returns null for an absent URL so the caller can paint a neutral placeholder; `StreamerAvatar` is that placeholder for people. `buildSafeImageProvider`, which substitutes a specific person's photograph, is only correct where the caller means that person.
+
+### Direction
+
+Padding, alignment and positioning are directional: `EdgeInsetsDirectional`, `AlignmentDirectional`, `PositionedDirectional` and `AnimatedPositionedDirectional`. `lib/` contains no `EdgeInsets.only(left:/right:)`, no `Alignment.centerLeft/Right` family and no side-anchored `Positioned`, so overlays and badges mirror in Arabic instead of staying on the Latin side.
+
+### Verification
+
+`project/test/theme_contrast_test.dart` pins the palette and the gradient stops. `project/test/rendered_contrast_test.dart` resolves each rendered label against the background actually painted behind it, across fifteen screens in both locales, which is what catches a sound token used on the wrong surface. `project/test/layout_sweep_test.dart` covers screens, dialogs and sheets at seven sizes, three text scales and both locales, with `test/support/stub_video_player.dart` standing in for the platform player so the live room can be laid out at all.
+
+Widget evidence does not establish real-device streaming or release readiness.
 
 ---
 

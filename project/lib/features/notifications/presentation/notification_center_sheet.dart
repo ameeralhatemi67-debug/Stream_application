@@ -252,7 +252,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
       direction: DismissDirection.endToStart,
       background: Container(
         color: AppTheme.danger,
-        alignment: Alignment.centerRight,
+        alignment: AlignmentDirectional.centerEnd,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
@@ -281,9 +281,9 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
               child: Icon(iconData, color: accentColor, size: 20),
             ),
             if (!notif.isRead)
-              Positioned(
+              PositionedDirectional(
                 top: 0,
-                right: 0,
+                end: 0,
                 child: Container(
                   width: 8,
                   height: 8,

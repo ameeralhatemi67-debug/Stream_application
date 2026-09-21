@@ -70,7 +70,7 @@ class VenueNavigationSheet extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black54,
+            color: AppTheme.shadow,
             blurRadius: 32,
             offset: Offset(0, -8),
           ),

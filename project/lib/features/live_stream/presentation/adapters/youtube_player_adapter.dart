@@ -403,9 +403,9 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
               ),
 
             // Engine badge overlay
-            Positioned(
+            PositionedDirectional(
               top: AppTheme.spaceSm,
-              left: AppTheme.spaceSm,
+              start: AppTheme.spaceSm,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(

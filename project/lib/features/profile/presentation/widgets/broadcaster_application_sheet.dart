@@ -192,7 +192,7 @@ class _BroadcasterApplicationSheetState
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: Colors.black45,
+                color: AppTheme.shadow,
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -350,7 +350,7 @@ class _BroadcasterApplicationSheetState
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               boxShadow: const [
                 BoxShadow(
-                  color: Colors.black45,
+                  color: AppTheme.shadow,
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),

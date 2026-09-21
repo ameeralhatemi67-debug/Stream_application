@@ -88,7 +88,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style:
-                          const TextStyle(color: Colors.white54, fontSize: 11),
+                          TextStyle(color: AppTheme.onMedia.withValues(alpha: 0.54), fontSize: 11),
                     ),
                   ],
                 ),
@@ -108,9 +108,9 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
               ),
 
             // Controls & Engine badge overlay
-            Positioned(
+            PositionedDirectional(
               top: AppTheme.spaceSm,
-              left: AppTheme.spaceSm,
+              start: AppTheme.spaceSm,
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
@@ -144,9 +144,9 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
 
             // Play/Pause Overlay Toggle
             if (!_isLoading && !_hasError)
-              Positioned(
+              PositionedDirectional(
                 bottom: AppTheme.spaceSm,
-                right: AppTheme.spaceSm,
+                end: AppTheme.spaceSm,
                 child: IconButton(
                   onPressed: () {
                     setState(() {

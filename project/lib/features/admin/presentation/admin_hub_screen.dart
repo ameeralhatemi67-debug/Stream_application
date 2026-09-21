@@ -134,7 +134,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: Colors.black45,
+                color: AppTheme.shadow,
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -175,7 +175,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: Colors.black45,
+                color: AppTheme.shadow,
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -413,7 +413,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     child: Text(
                       '$pendingCount',
                       style: const TextStyle(
-                        color: Colors.black87,
+                        color: AppTheme.textPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -485,7 +485,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     child: Text(
                       '$customCardsCount',
                       style: const TextStyle(
-                        color: Colors.black87,
+                        color: AppTheme.textPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -517,7 +517,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     child: Text(
                       '$pendingTagsCount',
                       style: const TextStyle(
-                        color: Colors.black87,
+                        color: AppTheme.textPrimary,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1320,7 +1320,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             children: [
               if (app.status == ApplicationStatus.pending)
                 Padding(
-                  padding: const EdgeInsets.only(right: 4, top: 4),
+                  padding: const EdgeInsetsDirectional.only(end: 4, top: 4),
                   child: Checkbox(
                     value: _selectedApplicationIds.contains(app.id),
                     activeColor: AppTheme.primary,
@@ -1739,18 +1739,18 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         color: AppTheme.media,
                       ),
                     ),
-                    Positioned(
+                    PositionedDirectional(
                       top: 10,
-                      right: 10,
+                      end: 10,
                       child: IconButton(
                         icon: const Icon(Icons.close_rounded,
                             color: AppTheme.onMedia, size: 22),
                         onPressed: () => Navigator.pop(dialogContext),
                       ),
                     ),
-                    Positioned(
+                    PositionedDirectional(
                       bottom: -32,
-                      left: 20,
+                      start: 20,
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,

@@ -120,7 +120,7 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(color: AppTheme.danger, width: 1.5),
             boxShadow: const [
-              BoxShadow(color: Colors.black54, blurRadius: 16, offset: Offset(0, 4)),
+              BoxShadow(color: AppTheme.shadow, blurRadius: 16, offset: Offset(0, 4)),
             ],
           ),
           child: Row(

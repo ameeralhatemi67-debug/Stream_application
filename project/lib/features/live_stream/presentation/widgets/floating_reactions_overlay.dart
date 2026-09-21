@@ -150,8 +150,8 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
                   final x = width * particle.startX + sin(particle.controller.value * 6) * 12;
                   final y = height * particle.yAnimation.value;
 
-                  return Positioned(
-                    left: x,
+                  return PositionedDirectional(
+                    start: x,
                     top: y,
                     child: Opacity(
                       opacity: particle.opacityAnimation.value.clamp(0.0, 1.0),

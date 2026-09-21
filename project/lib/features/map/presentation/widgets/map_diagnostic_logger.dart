@@ -66,10 +66,10 @@ class MapDiagnosticMessengerBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Positioned(
+    return PositionedDirectional(
       bottom: 24,
-      left: 16,
-      right: 16,
+      start: 16,
+      end: 16,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
@@ -81,7 +81,7 @@ class MapDiagnosticMessengerBar extends StatelessWidget {
           ),
           boxShadow: const [
             BoxShadow(
-                color: Colors.black45, blurRadius: 8, offset: Offset(0, 4)),
+                color: AppTheme.shadow, blurRadius: 8, offset: Offset(0, 4)),
           ],
         ),
         child: Row(

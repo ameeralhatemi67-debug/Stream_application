@@ -324,7 +324,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                     color: AppTheme.border),
                               ),
                               leading: Stack(
-                                alignment: Alignment.bottomRight,
+                                alignment: AlignmentDirectional.bottomEnd,
                                 children: [
                                   _thumbnail(video.thumbnailUrl,
                                       width: 68, height: 44, radius: 6),

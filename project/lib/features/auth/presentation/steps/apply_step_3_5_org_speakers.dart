@@ -152,9 +152,9 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                                           ? AssetImage(selectedAvatar)
                                           : NetworkImage(selectedAvatar) as ImageProvider),
                                 ),
-                                Positioned(
+                                PositionedDirectional(
                                   bottom: 0,
-                                  right: 0,
+                                  end: 0,
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: const BoxDecoration(

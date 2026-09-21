@@ -392,10 +392,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 ),
 
                 // Top Spatial Map Controls (Row 1: Full-Width Search + Language, Row 2: City + Topic Dropdowns)
-                Positioned(
+                PositionedDirectional(
                   top: 0,
-                  left: 0,
-                  right: 0,
+                  start: 0,
+                  end: 0,
                   child: SafeArea(
                     bottom: false,
                     child: Padding(
@@ -490,9 +490,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 ),
 
                 // Floating Action Map Controls (Bottom Right)
-                Positioned(
+                PositionedDirectional(
                   bottom: 24,
-                  right: 16,
+                  end: 16,
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -524,10 +524,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                         currentZoom >= kAuditoriumCardZoomThreshold) {
                       return const SizedBox.shrink();
                     }
-                    return Positioned(
+                    return PositionedDirectional(
                       bottom: 24,
-                      left: 16,
-                      right: 76,
+                      start: 16,
+                      end: 76,
                       child: Center(
                         child: MarkerSummaryCard(
                           streamer: _selectedStreamer!,

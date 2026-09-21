@@ -73,7 +73,7 @@ class CitySelectorDropdown extends StatelessWidget {
           ),
           boxShadow: const [
             BoxShadow(
-              color: Colors.black38,
+              color: AppTheme.shadowSoft,
               blurRadius: 10,
               offset: Offset(0, 3),
             ),

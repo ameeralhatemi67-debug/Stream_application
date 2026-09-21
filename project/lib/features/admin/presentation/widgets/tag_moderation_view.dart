@@ -139,7 +139,7 @@ class _TagModerationViewState extends State<TagModerationView> {
                   ),
                   child: Text('${pending.length}',
                       style: const TextStyle(
-                          color: Colors.black87,
+                          color: AppTheme.textPrimary,
                           fontSize: 11,
                           fontWeight: FontWeight.bold)),
                 ),

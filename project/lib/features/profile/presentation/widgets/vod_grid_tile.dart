@@ -109,15 +109,15 @@ class VodGridTile extends StatelessWidget {
                   ),
 
                   // Duration Pill Overlay on Bottom Right
-                  Positioned(
+                  PositionedDirectional(
                     bottom: 8,
-                    right: 8,
+                    end: 8,
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppTheme.media.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                        border: Border.all(color: Colors.white24, width: 0.5),
+                        border: Border.all(color: AppTheme.onMedia.withValues(alpha: 0.24), width: 0.5),
                       ),
                       child: Text(
                         vod.formattedDuration,
@@ -136,7 +136,7 @@ class VodGridTile extends StatelessWidget {
             // Localized VOD Details Text Container (Bottom padding is 10px)
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(left: 10, right: 10, top: 8, bottom: 10),
+                padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [

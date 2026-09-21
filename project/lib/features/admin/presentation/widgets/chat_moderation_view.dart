@@ -524,7 +524,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                     ),
                     if (report.reportedEmail != null)
                       Padding(
-                        padding: const EdgeInsets.only(left: 18),
+                        padding: const EdgeInsetsDirectional.only(start: 18),
                         child: Text(report.reportedEmail!,
                             style: const TextStyle(
                                 color: AppTheme.textMuted, fontSize: 10.5)),
@@ -565,7 +565,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           const SizedBox(height: AppTheme.spaceMd),
           if (isActing)
             const Align(
-              alignment: Alignment.centerRight,
+              alignment: AlignmentDirectional.centerEnd,
               child: SizedBox(
                 width: 16,
                 height: 16,

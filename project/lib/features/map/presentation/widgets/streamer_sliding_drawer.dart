@@ -186,9 +186,9 @@ class StreamerSlidingDrawer extends StatelessWidget {
                       ? AssetImage(streamer.avatarUrl) as ImageProvider
                       : NetworkImage(streamer.avatarUrl),
                 ),
-                Positioned(
+                PositionedDirectional(
                   bottom: 0,
-                  right: 0,
+                  end: 0,
                   child: Container(
                     padding:
                         isAudio ? const EdgeInsets.all(1.5) : EdgeInsets.zero,

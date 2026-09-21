@@ -128,10 +128,10 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
   Widget build(BuildContext context) {
     final topPadding = MediaQuery.of(context).padding.top;
 
-    return Positioned(
+    return PositionedDirectional(
       top: topPadding + 8,
-      left: 16,
-      right: 16,
+      start: 16,
+      end: 16,
       child: Material(
         color: Colors.transparent,
         child: AnimatedBuilder(

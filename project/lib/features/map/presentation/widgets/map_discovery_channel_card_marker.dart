@@ -53,7 +53,7 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                       ? AppTheme.primary.withValues(alpha: 0.4)
                       : (isLive
                           ? AppTheme.danger.withValues(alpha: 0.3)
-                          : Colors.black45),
+                          : AppTheme.textMuted),
                   blurRadius: isSelected ? 8 : 4,
                   offset: const Offset(0, 2),
                 ),
@@ -92,8 +92,8 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                         ),
                 ),
                 if (isLive)
-                  Positioned(
-                    right: 2,
+                  PositionedDirectional(
+                    end: 2,
                     top: 2,
                     child: Container(
                       width: 10,
@@ -139,7 +139,7 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                     ? AppTheme.primary.withValues(alpha: 0.3)
                     : (isLive
                         ? AppTheme.danger.withValues(alpha: 0.2)
-                        : Colors.black38),
+                        : AppTheme.textMuted),
                 blurRadius: isSelected ? 8 : 4,
                 offset: const Offset(0, 2),
               ),

@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+
 /// Overlay widget that floats animated emoji keyframes upward over its child viewport.
 class FloatingEmojiOverlay extends StatefulWidget {
   final Widget child;
@@ -94,8 +96,8 @@ class FloatingEmojiOverlayState extends State<FloatingEmojiOverlay>
                             ? 0.5 + (progress / 0.2) * 0.7
                             : 1.2 - ((progress - 0.2) * 0.2);
 
-                        return Positioned(
-                          left: xPos.clamp(8.0, width - 40.0),
+                        return PositionedDirectional(
+                          start: xPos.clamp(8.0, width - 40.0),
                           top: yPos,
                           child: Opacity(
                             opacity: opacity,
@@ -107,7 +109,7 @@ class FloatingEmojiOverlayState extends State<FloatingEmojiOverlay>
                                   fontSize: 28,
                                   shadows: [
                                     Shadow(
-                                      color: Colors.black45,
+                                      color: AppTheme.textMuted,
                                       blurRadius: 6,
                                     ),
                                   ],

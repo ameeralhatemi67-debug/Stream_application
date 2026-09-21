@@ -78,7 +78,7 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
         child: Container(
           margin: const EdgeInsets.symmetric(horizontal: 3),
           child: Stack(
-            alignment: Alignment.bottomRight,
+            alignment: AlignmentDirectional.bottomEnd,
             children: [
               Container(
                 width: 34,

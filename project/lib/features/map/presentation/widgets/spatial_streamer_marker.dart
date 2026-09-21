@@ -242,7 +242,7 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                           : null,
                       boxShadow: const [
                         BoxShadow(
-                          color: Colors.black54,
+                          color: AppTheme.shadow,
                           blurRadius: 4,
                           offset: Offset(0, 1),
                         ),
@@ -297,9 +297,9 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
 
               // 4. Organization Indicator Icon at Bottom Right
               if (isOrg)
-                Positioned(
+                PositionedDirectional(
                   bottom: -1,
-                  right: -1,
+                  end: -1,
                   child: Container(
                     width: 13.0,
                     height: 13.0,

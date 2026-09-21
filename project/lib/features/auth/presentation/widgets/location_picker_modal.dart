@@ -177,8 +177,8 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                 ),
 
                 // Zoom controls overlay
-                Positioned(
-                  right: 16,
+                PositionedDirectional(
+                  end: 16,
                   bottom: 24,
                   child: Column(
                     children: [

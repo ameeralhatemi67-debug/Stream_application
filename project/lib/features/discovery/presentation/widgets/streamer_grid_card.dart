@@ -98,7 +98,7 @@ class StreamerGridCard extends StatelessWidget {
                       ? AppTheme.danger.withValues(alpha: 0.18)
                       : isAudio
                           ? AppTheme.textMuted.withValues(alpha: 0.15)
-                          : Colors.black26,
+                          : AppTheme.border,
                   blurRadius: isLive ? 10 : 4,
                   offset: const Offset(0, 3),
                 ),
@@ -123,9 +123,9 @@ class StreamerGridCard extends StatelessWidget {
                     ),
                     // LIVE Badge at top left (Video vs Audio)
                     if (isLive)
-                      Positioned(
+                      PositionedDirectional(
                         top: 6,
-                        left: 6,
+                        start: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2.5),
@@ -165,9 +165,9 @@ class StreamerGridCard extends StatelessWidget {
                       ),
                     //  "Your Channel / قناتك"Badge at top right
                     if (isOwnCard)
-                      Positioned(
+                      PositionedDirectional(
                         top: 6,
-                        right: 6,
+                        end: 6,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2.5),

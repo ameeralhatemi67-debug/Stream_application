@@ -166,10 +166,10 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         children: [
           // Top Header Overlay: Live Badge, Viewer count pill, Quality Selector (Video only)
           if (controlsVisible && !widget.isAudioOnly)
-            Positioned(
+            PositionedDirectional(
               top: 8,
-              left: 12,
-              right: 12,
+              start: 12,
+              end: 12,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -246,18 +246,18 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
           // even while the controls are hidden: it explains why the viewer
           // is hearing nothing, which is exactly when they stop tapping.
           if (widget.isStreamerMicMuted && !isPlaceholderVisible)
-            Positioned(
+            PositionedDirectional(
               top: 44,
-              right: 12,
+              end: 12,
               child: _buildMicMutedPill(),
             ),
 
           // Bottom Action Controls Overlay (Play/Pause, Mute/Unmute, Fullscreen)
           if (controlsVisible)
-            Positioned(
+            PositionedDirectional(
               bottom: 8,
-              left: 12,
-              right: 12,
+              start: 12,
+              end: 12,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -370,7 +370,7 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                 fontWeight: FontWeight.bold,
               ),
             ),
-            const Icon(Icons.arrow_drop_down, size: 14, color: Colors.white70),
+            Icon(Icons.arrow_drop_down, size: 14, color: AppTheme.onMedia.withValues(alpha: 0.7)),
           ],
         ),
       ),

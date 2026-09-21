@@ -148,7 +148,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.onMedia,
-                            foregroundColor: Colors.black87,
+                            foregroundColor: AppTheme.textPrimary,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius:
@@ -164,7 +164,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.black87,
+                                    color: AppTheme.textPrimary,
                                   ),
                                 )
                               : Row(

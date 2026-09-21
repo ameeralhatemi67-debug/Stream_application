@@ -515,9 +515,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           if (!isAudioLive &&
               (streamer.isOrganization ||
                   streamer.affiliatedSpeakers.isNotEmpty))
-            Positioned(
+            PositionedDirectional(
               top: 44,
-              left: 12,
+              start: 12,
               child: LiveMultiSpeakerOverlay(
                 speakers: streamer.affiliatedSpeakers,
                 orgName: streamer.getLocalizedName(langCode),
@@ -530,9 +530,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
           // 4. Raise Hand Video Overlay Badge (Bottom-Right)
           if (_isHandRaised)
-            Positioned(
+            PositionedDirectional(
               bottom: 12,
-              right: 12,
+              end: 12,
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -542,7 +542,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   border: Border.all(color: AppTheme.warning, width: 1.5),
                   boxShadow: const [
                     BoxShadow(
-                        color: Colors.black54,
+                        color: AppTheme.shadow,
                         blurRadius: 10,
                         offset: Offset(0, 2)),
                   ],
@@ -903,9 +903,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                                 _buildChatMessageTile(messages[index]),
                           ),
                           if (_chatUnreadWhileScrolled > 0)
-                            Positioned(
-                              left: 0,
-                              right: 0,
+                            PositionedDirectional(
+                              start: 0,
+                              end: 0,
                               bottom: AppTheme.spaceSm,
                               child: Center(child: _buildNewMessagesPill()),
                             ),
@@ -932,9 +932,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
         //  Expandable Reactions FAB Menu (5 Icon Options)
         if (_isReactionMenuOpen)
-          Positioned(
+          PositionedDirectional(
             bottom: 50,
-            right: 14,
+            end: 14,
             child: Material(
               color: Colors.transparent,
               child: Container(
@@ -947,7 +947,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       width: 1.2),
                   boxShadow: const [
                     BoxShadow(
-                        color: Colors.black87,
+                        color: AppTheme.shadowStrong,
                         blurRadius: 16,
                         offset: Offset(0, 4)),
                   ],
@@ -1114,7 +1114,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
             boxShadow: const [
               BoxShadow(
-                  color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+                  color: AppTheme.shadow, blurRadius: 8, offset: Offset(0, 2)),
             ],
           ),
           child: Row(
@@ -1473,7 +1473,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       children: [
         Opacity(opacity: 0.6, child: tile),
         Padding(
-          padding: const EdgeInsets.only(left: 32, bottom: 6),
+          padding: const EdgeInsetsDirectional.only(start: 32, bottom: 6),
           child: Row(
             children: [
               const Icon(Icons.error_outline_rounded,

@@ -222,10 +222,10 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
             ),
 
             // Top Status Bar: Live Audio Indicator & Reciter Count
-            Positioned(
+            PositionedDirectional(
               top: 10,
-              left: 12,
-              right: 12,
+              start: 12,
+              end: 12,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -323,10 +323,10 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
             ),
 
             // Bottom Live Audio Status Bar with Active Speaking Callout
-            Positioned(
+            PositionedDirectional(
               bottom: 8,
-              left: 16,
-              right: 16,
+              start: 16,
+              end: 16,
               child: Center(
                 child: Container(
                   padding:
@@ -341,7 +341,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                     ),
                     boxShadow: const [
                       BoxShadow(
-                        color: Colors.black54,
+                        color: AppTheme.shadow,
                         blurRadius: 8,
                         offset: Offset(0, 2),
                       ),
@@ -495,7 +495,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         : null,
                   ),
                   child: Stack(
-                    alignment: Alignment.bottomRight,
+                    alignment: AlignmentDirectional.bottomEnd,
                     children: [
                       StreamerAvatar(
                         radius: 34,
@@ -636,7 +636,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                 : null,
                           ),
                           child: Stack(
-                            alignment: Alignment.bottomRight,
+                            alignment: AlignmentDirectional.bottomEnd,
                             children: [
                               StreamerAvatar(
                                 radius: isSpeaking ? 25 : 22,

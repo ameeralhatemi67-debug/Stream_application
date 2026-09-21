@@ -21,7 +21,7 @@ class PhoneCameraPreview extends StatelessWidget {
         color: AppTheme.media,
         child: Center(
           child: Text('design_ui.phone_broadcasting_is_android_only_for_now'.tr(),
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppTheme.onMedia.withValues(alpha: 0.7)),
           ),
         ),
       );

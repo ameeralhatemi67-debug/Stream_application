@@ -337,7 +337,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           ),
           if (errorText != null)
             Padding(
-              padding: const EdgeInsets.only(top: 4, left: 4),
+              padding: const EdgeInsetsDirectional.only(top: 4, start: 4),
               child: Text(
                 errorText,
                 style: const TextStyle(

@@ -46,7 +46,7 @@ class MarkerSummaryCard extends StatelessWidget {
         ),
         boxShadow: const [
           BoxShadow(
-            color: Colors.black54,
+            color: AppTheme.shadow,
             blurRadius: 20,
             offset: Offset(0, 6),
           ),

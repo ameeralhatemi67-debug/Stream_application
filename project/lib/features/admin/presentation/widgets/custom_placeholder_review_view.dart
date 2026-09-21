@@ -263,10 +263,10 @@ class _CustomPlaceholderReviewViewState
                             color: AppTheme.textMuted, size: 20),
                       ),
                     ),
-                    Positioned(
-                      left: 4,
+                    PositionedDirectional(
+                      start: 4,
                       bottom: 4,
-                      right: 4,
+                      end: 4,
                       child: Text(
                         card.streamerDisplayName ?? card.streamerId,
                         maxLines: 1,

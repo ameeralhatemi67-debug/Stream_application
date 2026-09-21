@@ -274,7 +274,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                         ),
                         if (streamer.isVerified)
                           Container(
-                            margin: const EdgeInsets.only(left: 6),
+                            margin: const EdgeInsetsDirectional.only(start: 6),
                             child: Icon(
                               Icons.verified_rounded,
                               color: streamer.isOrganization

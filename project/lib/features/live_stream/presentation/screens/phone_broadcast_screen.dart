@@ -624,31 +624,31 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   children: [
                     // Top Left: Live Bitrate Badge
                     if (_engine.state == RtmpPublishState.live)
-                      Positioned(
+                      PositionedDirectional(
                         top: AppTheme.spaceSm,
-                        left: AppTheme.spaceSm,
+                        start: AppTheme.spaceSm,
                         child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
                       ),
 
                     if (_engine.state == RtmpPublishState.connecting)
-                      Positioned(
+                      PositionedDirectional(
                         top: AppTheme.spaceSm,
-                        left: AppTheme.spaceSm,
+                        start: AppTheme.spaceSm,
                         child: _StatusPill(
                             label: 'live.chat_status_connecting'.tr(),
                             color: AppTheme.warning),
                       ),
 
                     // Top Right: 3-Dots Streamer Controls Menu
-                    Positioned(
+                    PositionedDirectional(
                       top: AppTheme.spaceSm,
-                      right: AppTheme.spaceSm,
+                      end: AppTheme.spaceSm,
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppTheme.media.withValues(alpha: 0.65),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(color: Colors.white24, width: 0.8),
+                          border: Border.all(color: AppTheme.onMedia.withValues(alpha: 0.24), width: 0.8),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.more_vert_rounded,
@@ -660,15 +660,15 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
 
                     // Bottom Right: Fullscreen Button
-                    Positioned(
+                    PositionedDirectional(
                       bottom: AppTheme.spaceSm,
-                      right: AppTheme.spaceSm,
+                      end: AppTheme.spaceSm,
                       child: Container(
                         decoration: BoxDecoration(
                           color: AppTheme.media.withValues(alpha: 0.65),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(color: Colors.white24, width: 0.8),
+                          border: Border.all(color: AppTheme.onMedia.withValues(alpha: 0.24), width: 0.8),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.fullscreen_rounded,
@@ -681,9 +681,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
                     // Mic Muted Pill
                     if (_engine.isMuted)
-                      Positioned(
+                      PositionedDirectional(
                         bottom: AppTheme.spaceSm,
-                        left: AppTheme.spaceSm,
+                        start: AppTheme.spaceSm,
                         child: _StatusPill(
                           label: 'live.mic_muted_badge'.tr(),
                           color: AppTheme.danger,
@@ -696,10 +696,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
             // 4. Reconnecting Banner
             if (_engine.state == RtmpPublishState.reconnecting)
-              Positioned(
+              PositionedDirectional(
                 top: 0,
-                left: 0,
-                right: 0,
+                start: 0,
+                end: 0,
                 child: _ReconnectingBanner(
                   attempt: _engine.reconnectAttempt,
                   maxAttempts: _engine.maxReconnectAttempts,
@@ -709,10 +709,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             // 5. Error Banner
             if (_engine.state == RtmpPublishState.error &&
                 _engine.lastError != null)
-              Positioned(
+              PositionedDirectional(
                 top: 0,
-                left: 0,
-                right: 0,
+                start: 0,
+                end: 0,
                 child: _StreamErrorBanner(message: _engine.lastError!),
               ),
 
@@ -726,10 +726,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   return const SizedBox.shrink();
                 }
                 final request = provider.pendingKnockRequests.first;
-                return Positioned(
+                return PositionedDirectional(
                   top: 0,
-                  left: 0,
-                  right: 0,
+                  start: 0,
+                  end: 0,
                   child: _KnockingBanner(
                     request: request,
                     queueLength: provider.pendingKnockRequests.length,
@@ -1455,10 +1455,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             duration: const Duration(milliseconds: 240),
             child: IgnorePointer(
               ignoring: !_controlsVisible,
-              child: Positioned(
+              child: PositionedDirectional(
                 top: 0,
-                left: 0,
-                right: 0,
+                start: 0,
+                end: 0,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spaceLg, vertical: 12),
@@ -1521,10 +1521,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
           // 4. Side Chat Drawer Overlay (when active in fullscreen)
           if (_isSideChatOpen)
-            Positioned(
+            PositionedDirectional(
               top: 60,
               bottom: 80,
-              right: 16,
+              end: 16,
               width: 320,
               child: Container(
                 decoration: BoxDecoration(

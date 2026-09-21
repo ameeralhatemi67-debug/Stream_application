@@ -25,9 +25,9 @@ class PrivateStreamViewerGate extends StatelessWidget {
       case ViewerAccessState.admitted:
         return const SizedBox.shrink();
       case ViewerAccessState.vipPreApproved:
-        return const Positioned(
+        return const PositionedDirectional(
           top: 12,
-          right: 12,
+          end: 12,
           child: _VipBadge(),
         );
       case ViewerAccessState.knocking:
@@ -51,17 +51,17 @@ class _VipBadge extends StatelessWidget {
         color: AppTheme.warning.withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         boxShadow: const [
-          BoxShadow(color: Colors.black45, blurRadius: 8, offset: Offset(0, 2)),
+          BoxShadow(color: AppTheme.shadow, blurRadius: 8, offset: Offset(0, 2)),
         ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.lock_rounded, color: Colors.black87, size: 14),
+          const Icon(Icons.lock_rounded, color: AppTheme.textPrimary, size: 14),
           const SizedBox(width: 5),
           Text('design_ui.vip_invited'.tr(),
             style: const TextStyle(
-              color: Colors.black87,
+              color: AppTheme.textPrimary,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -158,7 +158,7 @@ class _UnauthorizedOverlay extends StatelessWidget {
                 onPressed: onRequestToJoin,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.warning,
-                  foregroundColor: Colors.black87,
+                  foregroundColor: AppTheme.textPrimary,
                 ),
                 child: Text('design_ui.request_to_join'.tr(),
                     style: const TextStyle(fontWeight: FontWeight.bold)),

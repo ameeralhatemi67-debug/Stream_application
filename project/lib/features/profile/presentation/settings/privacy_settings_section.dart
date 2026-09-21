@@ -21,6 +21,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
     return Column(children: [
+      _buildConsentRecordCard(context, context.watch<AppProvider>()),
+      const SizedBox(height: AppTheme.spaceMd),
       _buildDataExportCard(context, provider),
       const SizedBox(height: AppTheme.spaceMd),
       _buildChatHistoryCard(context, provider),
@@ -28,6 +30,76 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       _buildDeleteAccountCard(context, provider),
     ]);
   }
+
+  /// What this account consented to, and how to withdraw it.
+  ///
+  /// The consent version and timestamp were already recorded (AppProvider
+  /// `recordConsent`, and `profiles.consent_version` / `consent_accepted_at`),
+  /// but nothing showed them back to the person who gave them. Withdrawal has
+  /// no separate mechanism in this build: deleting the account is the only one,
+  /// so the card says that plainly rather than implying a toggle exists.
+  Widget _buildConsentRecordCard(BuildContext context, AppProvider provider) {
+    final acceptedAt = provider.consentAcceptedAt;
+    final version = provider.consentVersion;
+    final String status;
+    if (version == null || acceptedAt == null) {
+      status = 'settings.consent_record_none'.tr();
+    } else if (provider.hasAcceptedCurrentConsent) {
+      status = 'settings.consent_record_accepted'.tr(namedArgs: {
+        'version': version,
+        'date': DateFormat.yMMMd(context.locale.languageCode)
+            .format(acceptedAt.toLocal()),
+      });
+    } else {
+      status = 'settings.consent_record_outdated'
+          .tr(namedArgs: {'version': version});
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      decoration: BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.fact_check_outlined,
+                  size: 18, color: AppTheme.primary),
+              const SizedBox(width: AppTheme.spaceSm),
+              Expanded(
+                child: Text(
+                  'settings.consent_record_title'.tr(),
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+          Text(
+            status,
+            style: const TextStyle(
+                color: AppTheme.textSecondary, fontSize: 12, height: 1.5),
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+          Text(
+            'settings.consent_withdraw_note'.tr(),
+            style: const TextStyle(
+                color: AppTheme.textMuted, fontSize: 11.5, height: 1.5),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildDataExportCard(BuildContext context, AppProvider provider) {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),

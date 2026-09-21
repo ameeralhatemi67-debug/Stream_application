@@ -542,7 +542,7 @@ class _DesktopNavItem extends StatelessWidget {
                 child: Text(
                   badge!,
                   style: const TextStyle(
-                    color: Colors.black87,
+                    color: AppTheme.textPrimary,
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                   ),

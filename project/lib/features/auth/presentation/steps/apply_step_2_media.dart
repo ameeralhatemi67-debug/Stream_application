@@ -189,9 +189,9 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
             ),
           ),
         ),
-        Positioned(
+        PositionedDirectional(
           bottom: 8,
-          right: 8,
+          end: 8,
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -301,9 +301,9 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
                           ? const Icon(Icons.person_add_alt_1_rounded, size: 36, color: AppTheme.danger)
                           : null,
                     ),
-                    Positioned(
+                    PositionedDirectional(
                       bottom: 0,
-                      right: 0,
+                      end: 0,
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         decoration: const BoxDecoration(

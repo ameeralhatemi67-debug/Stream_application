@@ -123,7 +123,7 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
             ),
             boxShadow: const [
               BoxShadow(
-                color: Colors.black38,
+                color: AppTheme.shadowSoft,
                 blurRadius: 10,
                 offset: Offset(0, 3),
               ),
@@ -180,7 +180,7 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
               border: Border.all(color: AppTheme.border),
               boxShadow: const [
                 BoxShadow(
-                  color: Colors.black54,
+                  color: AppTheme.shadow,
                   blurRadius: 20,
                   offset: Offset(0, 6),
                 ),

@@ -237,8 +237,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
               children: [
                 const Icon(Icons.notifications_outlined, size: 22),
                 if (unreadNotificationsCount > 0)
-                  Positioned(
-                    right: 0,
+                  PositionedDirectional(
+                    end: 0,
                     top: 0,
                     child: Container(
                       width: 8,
@@ -446,7 +446,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   for (final category in categories.where((c) => c.isActive))
                     Padding(
                       padding:
-                          const EdgeInsets.only(left: AppTheme.spaceSm),
+                          const EdgeInsetsDirectional.only(start: AppTheme.spaceSm),
                       child: _buildCategoryFilterChip(
                         context,
                         selectedCategory,
@@ -592,9 +592,9 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   ),
                 ),
               ),
-              Positioned(
+              PositionedDirectional(
                 top: AppTheme.spaceMd,
-                left: AppTheme.spaceMd,
+                start: AppTheme.spaceMd,
                 child: Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -780,9 +780,9 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                     ),
                   ),
                 ),
-                Positioned(
+                PositionedDirectional(
                   top: 6,
-                  left: 6,
+                  start: 6,
                   child: Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),

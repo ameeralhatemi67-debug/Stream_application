@@ -318,7 +318,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.photo_size_select_small_rounded, color: Colors.white70, size: 20),
+                      Icon(Icons.photo_size_select_small_rounded, color: AppTheme.onMedia.withValues(alpha: 0.7), size: 20),
                       Expanded(
                         child: SliderTheme(
                           data: SliderTheme.of(context).copyWith(

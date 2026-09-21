@@ -55,8 +55,8 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
     final accentColor =
         isAudioOnly ? AppTheme.accent : AppTheme.danger;
 
-    return Positioned(
-      left: position.dx,
+    return PositionedDirectional(
+      start: position.dx,
       top: position.dy,
       child: GestureDetector(
         onPanUpdate: (details) {
@@ -160,10 +160,10 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                   ),
 
                   // 2. Bottom Title & Live Pill Overlay (Tappable to expand)
-                  Positioned(
+                  PositionedDirectional(
                     bottom: 0,
-                    left: 0,
-                    right: 0,
+                    start: 0,
+                    end: 0,
                     child: GestureDetector(
                       onTap: () => _expandToFullScreen(context, provider),
                       child: Container(
@@ -216,9 +216,9 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                           ),
 
                           // Top-Left: Mute / Unmute Button
-                          Positioned(
+                          PositionedDirectional(
                             top: 6,
-                            left: 6,
+                            start: 6,
                             child: IconButton(
                               key: const ValueKey('mini_player_mute_button'),
                               icon: Icon(
@@ -243,9 +243,9 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                           ),
 
                           // Top-Right: Close Button
-                          Positioned(
+                          PositionedDirectional(
                             top: 6,
-                            right: 6,
+                            end: 6,
                             child: IconButton(
                               key: const ValueKey('mini_player_close_button'),
                               icon: const Icon(

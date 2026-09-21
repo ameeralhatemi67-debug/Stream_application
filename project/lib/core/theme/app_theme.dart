@@ -21,6 +21,16 @@ abstract final class AppTheme {
   static const onMedia = Color(0xFFFFFFFF);
   static const media = Color(0xFF243536);
   static const disabled = Color(0xFFE5E8E7);
+
+  /// Elevation shadows.
+  ///
+  /// Tinted from [media] rather than pure black, so every raised surface in
+  /// the scheme sits on the same neutral. They replace the ad-hoc
+  /// ad-hoc black shades the screens had accumulated, which varied by author
+  /// rather than by elevation.
+  static const shadowSoft = Color(0x1F243536);
+  static const shadow = Color(0x33243536);
+  static const shadowStrong = Color(0x4D243536);
   static const spaceXs = 4.0, spaceSm = 8.0, spaceMd = 12.0,
       spaceLg = 16.0, spaceXl = 24.0, space2Xl = 32.0, screenPadding = 18.0;
   static const radiusXs = 4.0, radiusSm = 8.0, radiusMd = 12.0,
