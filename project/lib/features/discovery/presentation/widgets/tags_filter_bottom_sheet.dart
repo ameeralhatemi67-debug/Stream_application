@@ -11,7 +11,7 @@ class TagsFilterBottomSheet extends StatelessWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
@@ -48,12 +48,12 @@ class TagsFilterBottomSheet extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.tune_rounded, color: AppTheme.accentRed, size: 20),
+                  const Icon(Icons.tune_rounded, color: AppTheme.danger, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'feed.filter_tags_title'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -61,12 +61,12 @@ class TagsFilterBottomSheet extends StatelessWidget {
                 ],
               ),
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.textMutedDark),
+                icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.textMuted),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
-          const Divider(color: AppTheme.darkBorderSubtle),
+          const Divider(color: AppTheme.border),
 
           // Scrollable Body
           Flexible(
@@ -80,7 +80,7 @@ class TagsFilterBottomSheet extends StatelessWidget {
                   Text(
                     'feed.academic_fields'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
@@ -109,7 +109,7 @@ class TagsFilterBottomSheet extends StatelessWidget {
                   Text(
                     'feed.tags'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
@@ -128,15 +128,15 @@ class TagsFilterBottomSheet extends StatelessWidget {
                         onSelected: (selected) {
                           appProvider.setSelectedTagFilter(selected ? tag : 'all');
                         },
-                        selectedColor: AppTheme.accentRed,
-                        backgroundColor: AppTheme.darkSurface2,
+                        selectedColor: AppTheme.danger,
+                        backgroundColor: AppTheme.surfaceAlt,
                         labelStyle: TextStyle(
-                          color: isSelected ? Colors.white : AppTheme.textPrimaryDark,
+                          color: isSelected ? AppTheme.onMedia : AppTheme.textPrimary,
                           fontSize: 12,
                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                         ),
                         side: BorderSide(
-                          color: isSelected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+                          color: isSelected ? AppTheme.danger : AppTheme.border,
                         ),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       );
@@ -154,8 +154,8 @@ class TagsFilterBottomSheet extends StatelessWidget {
             child: ElevatedButton(
               onPressed: () => Navigator.pop(context),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentRed,
-                foregroundColor: Colors.white,
+                backgroundColor: AppTheme.danger,
+                foregroundColor: AppTheme.onMedia,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               ),
@@ -175,15 +175,15 @@ class TagsFilterBottomSheet extends StatelessWidget {
       onSelected: (selected) {
         provider.setCategoryFilter(selected ? catId : 'all');
       },
-      selectedColor: AppTheme.accentBlue,
-      backgroundColor: AppTheme.darkSurface2,
+      selectedColor: AppTheme.primary,
+      backgroundColor: AppTheme.surfaceAlt,
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppTheme.textPrimaryDark,
+        color: isSelected ? AppTheme.onMedia : AppTheme.textPrimary,
         fontSize: 12,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
+        color: isSelected ? AppTheme.primary : AppTheme.border,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
     );

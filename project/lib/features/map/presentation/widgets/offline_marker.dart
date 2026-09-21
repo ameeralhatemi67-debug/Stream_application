@@ -37,12 +37,12 @@ class OfflineMarker extends StatelessWidget {
             shape: BoxShape.circle,
             color: Colors.transparent,
             border: Border.all(
-              color: isSelected ? AppTheme.accentBlue : Colors.white,
+              color: isSelected ? AppTheme.primary : AppTheme.onMedia,
               width: isSelected ? 2.2 : 1.8,
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.4),
+                color: AppTheme.media.withValues(alpha: 0.4),
                 blurRadius: isSelected ? 10 : 4,
               ),
             ],
@@ -54,7 +54,7 @@ class OfflineMarker extends StatelessWidget {
             ),
             child: CircleAvatar(
               radius: 14,
-              backgroundColor: AppTheme.darkSurface2,
+              backgroundColor: AppTheme.surfaceAlt,
               backgroundImage: _getAvatarProvider(marker.avatarUrl),
               onBackgroundImageError: (_, __) {},
             ),

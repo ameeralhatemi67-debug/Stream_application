@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import 'rtmp_ip_dialog.dart' show StudioMode;
+import 'rtmp_ip_dialog.dart'show StudioMode;
 
 enum _ActionKind { openStudio, pasteClipboard }
 
@@ -33,10 +33,10 @@ class _Quest {
   });
 }
 
-/// Gamified multi-step "Streamer Academy" setup guide -- the Info (!) button
+/// Gamified multi-step "Streamer Academy"setup guide -- the Info (!) button
 /// destination for all 3 Broadcaster Studio modes (V2 redesign). Replaces
 /// the old plain numbered-steps dialog with a swipeable story-card carousel
-/// (playful, non-technical "quest" copy), a two-tap "paste from clipboard"
+/// (playful, non-technical "quest"copy), a two-tap "paste from clipboard"
 /// shortcut that writes straight back into the studio sheet's stream key
 /// field via [onStreamKeyPasted], and a direct external link into YouTube
 /// Studio. Never asks for a Google account or channel URL -- it only opens
@@ -61,7 +61,7 @@ class StreamerSetupGuideModal extends StatefulWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      barrierColor: Colors.black.withValues(alpha: 0.6),
+      barrierColor: AppTheme.media.withValues(alpha: 0.6),
       builder: (_) => StreamerSetupGuideModal(
         mode: mode,
         onStreamKeyPasted: onStreamKeyPasted,
@@ -100,33 +100,33 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
 
   List<_Quest> _obsQuests(bool isAr) => [
         _Quest(
-          questName: isAr ? 'مركز القيادة 🌐' : 'Mission Control 🌐',
+          questName: isAr ? 'مركز القيادة ' : 'Mission Control ',
           icon: Icons.public_rounded,
           heading: isAr ? 'افتح مركز القيادة' : 'Open Mission Control',
           body: isAr
               ? 'كل شيء يبدأ من استوديو يوتيوب -- مركز قيادتك للبث المباشر. افتحه وابحث عن زر "بدء البث".'
-              : 'Everything starts at YouTube Studio -- your mission control for going live. Open it up and find the "Go Live" button.',
+              : 'Everything starts at YouTube Studio -- your mission control for going live. Open it up and find the "Go Live"button.',
           actions: [
             _QuestAction(_ActionKind.openStudio,
-                isAr ? '🔗 افتح استوديو يوتيوب' : '🔗 Open YouTube Studio'),
+                isAr ? 'افتح استوديو يوتيوب' : 'Open YouTube Studio'),
           ],
         ),
         _Quest(
-          questName: isAr ? 'تصريح الدخول السري 🗝️' : 'The Secret VIP Pass 🗝️',
+          questName: isAr ? 'تصريح الدخول السري ' : 'The Secret VIP Pass ',
           icon: Icons.vpn_key_rounded,
           heading: isAr ? 'احصل على مفتاح بثك السري' : 'Grab Your Secret Stream Key',
           body: isAr
-              ? 'مفتاح البث أشبه بتصريح دخول سري للكواليس. يخبر يوتيوب: "هذا البث فعلاً مني!" من استوديو يوتيوب، افتح تبويب "البث" واضغط نسخ بجانب مفتاح البث الافتراضي.'
-              : 'Think of your Stream Key like a secret VIP backstage pass. It tells YouTube: "Hey, this video is really from ME!" In YouTube Studio, find the "Stream" tab and click Copy next to Default Stream Key.',
+              ? 'مفتاح البث أشبه بتصريح دخول سري للكواليس. يخبر يوتيوب: "هذا البث فعلاً مني!"من استوديو يوتيوب، افتح تبويب "البث"واضغط نسخ بجانب مفتاح البث الافتراضي.'
+              : 'Think of your Stream Key like a secret VIP backstage pass. It tells YouTube: "Hey, this video is really from ME!"In YouTube Studio, find the "Stream"tab and click Copy next to Default Stream Key.',
           actions: [
             _QuestAction(_ActionKind.openStudio,
-                isAr ? '🔗 افتح استوديو يوتيوب' : '🔗 Open YouTube Studio'),
+                isAr ? 'افتح استوديو يوتيوب' : 'Open YouTube Studio'),
             _QuestAction(_ActionKind.pasteClipboard,
-                isAr ? '📋 الصق من الحافظة' : '📋 Paste Key from Clipboard'),
+                isAr ? 'الصق من الحافظة' : 'Paste Key from Clipboard'),
           ],
         ),
         _Quest(
-          questName: isAr ? 'توصيل الأسلاك 💻' : 'Connecting the Wires 💻',
+          questName: isAr ? 'توصيل الأسلاك ' : 'Connecting the Wires ',
           icon: Icons.cable_rounded,
           heading: isAr ? 'وصّل OBS بيوتيوب' : 'Wire Up OBS Studio',
           body: isAr
@@ -134,18 +134,18 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
               : 'Open OBS Studio on your computer, go to Settings > Stream, and paste your Stream Key and Server URL there. This wires your camera straight to YouTube.',
         ),
         _Quest(
-          questName: isAr ? 'جاهز للإقلاع 🎬' : 'Ready for Takeoff 🎬',
+          questName: isAr ? 'جاهز للإقلاع ' : 'Ready for Takeoff ',
           icon: Icons.rocket_launch_rounded,
           heading: isAr ? 'أطلق بثك' : 'Launch Your Broadcast',
           body: isAr
-              ? 'اضغط "بدء البث" في OBS أولاً، ثم اضغط "بدء البث المباشر" أدناه لإطلاق بثك للعالم. 3... 2... 1... انطلاق!'
-              : 'Press "Start Streaming" in OBS first, then tap Go Live below to launch your broadcast to the world. 3... 2... 1... liftoff!',
+              ? 'اضغط "بدء البث"في OBS أولاً، ثم اضغط "بدء البث المباشر"أدناه لإطلاق بثك للعالم. 3... 2... 1... انطلاق!'
+              : 'Press "Start Streaming"in OBS first, then tap Go Live below to launch your broadcast to the world. 3... 2... 1... liftoff!',
         ),
       ];
 
   List<_Quest> _phoneQuests(bool isAr) => [
         _Quest(
-          questName: isAr ? 'تفعيل الحساب ⏳' : 'Account Activation ⏳',
+          questName: isAr ? 'تفعيل الحساب ' : 'Account Activation ',
           icon: Icons.hourglass_top_rounded,
           heading: isAr ? 'فعّل قناتك أولاً' : 'Activate Your Channel First',
           body: isAr
@@ -153,32 +153,32 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
               : 'First time going live on YouTube? Your channel needs a one-time, 24-hour verification before live streaming unlocks. If you\'ve streamed before, skip ahead -- you\'re already good to go!',
         ),
         _Quest(
-          questName: isAr ? 'اضبطه ولا تفكر فيه مجدداً 💾' : 'Set It & Forget It 💾',
+          questName: isAr ? 'اضبطه ولا تفكر فيه مجدداً ' : 'Set It & Forget It ',
           icon: Icons.save_rounded,
           heading: isAr ? 'الصق مفتاح البث مرة واحدة' : 'Paste Your Stream Key Once',
           body: isAr
-              ? 'احصل على مفتاح البث من تبويب "البث" في استوديو يوتيوب والصقه هنا مرة واحدة فقط. سنتذكره للمرة القادمة.'
-              : 'Grab your Stream Key from YouTube Studio\'s "Stream" tab and paste it once below. We\'ll remember it for next time, so you only ever have to do this once.',
+              ? 'احصل على مفتاح البث من تبويب "البث"في استوديو يوتيوب والصقه هنا مرة واحدة فقط. سنتذكره للمرة القادمة.'
+              : 'Grab your Stream Key from YouTube Studio\'s "Stream"tab and paste it once below. We\'ll remember it for next time, so you only ever have to do this once.',
           actions: [
             _QuestAction(_ActionKind.openStudio,
-                isAr ? '🔗 افتح استوديو يوتيوب' : '🔗 Open YouTube Studio'),
+                isAr ? 'افتح استوديو يوتيوب' : 'Open YouTube Studio'),
             _QuestAction(_ActionKind.pasteClipboard,
-                isAr ? '📋 الصق من الحافظة' : '📋 Paste Key from Clipboard'),
+                isAr ? 'الصق من الحافظة' : 'Paste Key from Clipboard'),
           ],
         ),
         _Quest(
-          questName: isAr ? 'بث مباشر من جوالك 📱' : 'Live from Your Phone 📱',
+          questName: isAr ? 'بث مباشر من جوالك ' : 'Live from Your Phone ',
           icon: Icons.smartphone_rounded,
           heading: isAr ? 'افتح الكاميرا وابدأ' : 'Open Camera & Go',
           body: isAr
-              ? 'اضغط "فتح الكاميرا" وسيتحول جوالك بكاميرته وميكروفونه إلى بث مباشر فوري. بدون حاسوب، بدون OBS -- أنت فقط، مباشرة.'
+              ? 'اضغط "فتح الكاميرا"وسيتحول جوالك بكاميرته وميكروفونه إلى بث مباشر فوري. بدون حاسوب، بدون OBS -- أنت فقط، مباشرة.'
               : 'Tap Open Camera and your phone\'s own camera and microphone become the broadcast. No laptop, no OBS -- just you, live.',
         ),
       ];
 
   List<_Quest> _localQuests(bool isAr) => [
         _Quest(
-          questName: isAr ? 'نفس شبكة الغرفة 📶' : 'Same Room Network 📶',
+          questName: isAr ? 'نفس شبكة الغرفة ' : 'Same Room Network ',
           icon: Icons.wifi_rounded,
           heading: isAr ? 'اتصل بنفس شبكة الواي فاي' : 'Join the Same Wi-Fi',
           body: isAr
@@ -186,7 +186,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
               : 'This mode streams straight over your local Wi-Fi -- no internet needed. Just make sure your phone and your laptop are connected to the same network.',
         ),
         _Quest(
-          questName: isAr ? 'وصّل وابدأ ⚡' : 'Plug & Play ⚡',
+          questName: isAr ? 'وصّل وابدأ ' : 'Plug & Play ',
           icon: Icons.bolt_rounded,
           heading: isAr ? 'أدخل عنوان الحاسوب' : 'Enter the Laptop IP',
           body: isAr
@@ -222,7 +222,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(isAr ? 'تم لصق مفتاح البث ✓' : 'Stream key pasted ✓'),
-        backgroundColor: AppTheme.accentPink,
+        backgroundColor: AppTheme.live,
       ),
     );
   }
@@ -256,7 +256,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             bottom: bottomInset > 0 ? bottomInset + AppTheme.spaceMd : AppTheme.spaceLg,
           ),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface1.withValues(alpha: 0.92),
+            color: AppTheme.surface.withValues(alpha: 0.92),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
           child: Column(
@@ -295,9 +295,9 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isAr ? '✨ أكاديمية البث' : '✨ STREAMER ACADEMY',
+                isAr ? 'أكاديمية البث' : 'STREAMER ACADEMY',
                 style: const TextStyle(
-                  color: AppTheme.accentRed,
+                  color: AppTheme.danger,
                   fontWeight: FontWeight.bold,
                   fontSize: 12,
                   letterSpacing: 0.5,
@@ -309,7 +309,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                     ? 'المستوى ${_currentPage + 1} من ${quests.length}: ${quest.questName}'
                     : 'Level ${_currentPage + 1} of ${quests.length}: ${quest.questName}',
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.onMedia,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                 ),
@@ -320,7 +320,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
           ),
         ),
         IconButton(
-          icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+          icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
           tooltip: isAr ? 'إغلاق' : 'Close',
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -335,9 +335,9 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
         child: Container(
           padding: const EdgeInsets.all(AppTheme.spaceLg),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface2,
+            color: AppTheme.surfaceAlt,
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            border: Border.all(color: AppTheme.darkBorderSubtle),
+            border: Border.all(color: AppTheme.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,20 +349,16 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFFFF8080), Color(0xFFFF5274)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    color: AppTheme.surfaceAlt,
                     boxShadow: [
                       BoxShadow(
-                        color: AppTheme.accentRed.withValues(alpha: 0.42),
+                        color: AppTheme.danger.withValues(alpha: 0.42),
                         blurRadius: 24,
                         spreadRadius: 2,
                       ),
                     ],
                   ),
-                  child: Icon(quest.icon, color: Colors.white, size: 30),
+                  child: Icon(quest.icon, color: AppTheme.onMedia, size: 30),
                 ),
               ),
               const SizedBox(height: AppTheme.spaceLg),
@@ -370,7 +366,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                 quest.heading,
                 textAlign: TextAlign.start,
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.onMedia,
                   fontWeight: FontWeight.bold,
                   fontSize: 17,
                 ),
@@ -379,7 +375,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
               Text(
                 quest.body,
                 style: const TextStyle(
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   fontSize: 13,
                   height: 1.5,
                 ),
@@ -396,8 +392,8 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                         _ActionKind.pasteClipboard => () => _pasteFromClipboard(isAr),
                       },
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.accentRed,
-                        side: const BorderSide(color: AppTheme.accentRed),
+                        foregroundColor: AppTheme.danger,
+                        side: const BorderSide(color: AppTheme.danger),
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
@@ -430,7 +426,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             boxShadow: active
                 ? [
                     BoxShadow(
-                      color: AppTheme.accentRed.withValues(alpha: 0.45),
+                      color: AppTheme.danger.withValues(alpha: 0.45),
                       blurRadius: 8,
                       spreadRadius: 0.5,
                     ),
@@ -444,13 +440,9 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             height: 7,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              color: active ? null : const Color(0xFF2C2F3E),
+              color: active ? null : AppTheme.disabled,
               gradient: active
-                  ? const LinearGradient(
-                      colors: [Color(0xFFFF8080), Color(0xFFFF5274)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    )
+                  ? AppGradients.brand
                   : null,
             ),
           ),
@@ -471,15 +463,15 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
               : OutlinedButton(
                   onPressed: () => _goToPage(_currentPage - 1),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.textSecondaryDark,
-                    side: const BorderSide(color: AppTheme.darkBorderSubtle),
+                    foregroundColor: AppTheme.textSecondary,
+                    side: const BorderSide(color: AppTheme.border),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     ),
                   ),
                   child: Text(
-                    isAr ? '◀ الخطوة السابقة' : '◀ Previous Step',
+                    isAr ? 'الخطوة السابقة' : 'Previous Step',
                     style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -491,8 +483,8 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                 ? () => Navigator.of(context).pop()
                 : () => _goToPage(_currentPage + 1),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.accentRed,
-              foregroundColor: Colors.white,
+              backgroundColor: AppTheme.danger,
+              foregroundColor: AppTheme.onMedia,
               padding: const EdgeInsets.symmetric(vertical: 12),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -500,8 +492,8 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             ),
             child: Text(
               isLast
-                  ? (isAr ? '🚀 فهمت، لنبدأ البث!' : "🚀 Got It, Let's Stream!")
-                  : (isAr ? 'التحدي التالي ▶' : 'Next Quest ▶'),
+                  ? (isAr ? 'فهمت، لنبدأ البث!' : "Got It, Let's Stream!")
+                  : (isAr ? 'التحدي التالي ' : 'Next Quest '),
               style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
             ),
           ),

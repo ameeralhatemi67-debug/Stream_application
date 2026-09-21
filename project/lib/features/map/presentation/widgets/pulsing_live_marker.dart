@@ -102,10 +102,10 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                       height: 38,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppTheme.accentRed
+                        color: AppTheme.danger
                             .withValues(alpha: _opacityAnimation.value * 0.4),
                         border: Border.all(
-                          color: AppTheme.accentRed
+                          color: AppTheme.danger
                               .withValues(alpha: _opacityAnimation.value * 0.7),
                           width: 1.2,
                         ),
@@ -126,13 +126,13 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                 color: Colors.transparent,
                 border: Border.all(
                   color: widget.isSelected
-                      ? AppTheme.accentBlue
-                      : AppTheme.accentRed,
+                      ? AppTheme.primary
+                      : AppTheme.danger,
                   width: widget.isSelected ? 2.2 : 1.8,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.accentRed.withValues(alpha: 0.5),
+                    color: AppTheme.danger.withValues(alpha: 0.5),
                     blurRadius: widget.isSelected ? 12 : 6,
                     spreadRadius: 1,
                   ),
@@ -141,7 +141,7 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
               child: Center(
                 child: CircleAvatar(
                   radius: 17,
-                  backgroundColor: AppTheme.darkSurface2,
+                  backgroundColor: AppTheme.surfaceAlt,
                   backgroundImage: _getAvatarProvider(widget.marker.avatarUrl),
                   onBackgroundImageError: (_, __) {},
                 ),
@@ -155,7 +155,7 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentRed,
+                  color: AppTheme.danger,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: const [
                     BoxShadow(
@@ -171,7 +171,7 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                       width: 5,
                       height: 5,
                       decoration: const BoxDecoration(
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -179,7 +179,7 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                     Text(
                       '${widget.marker.viewerCount}',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),

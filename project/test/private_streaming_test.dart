@@ -1,3 +1,4 @@
+import 'support/localized_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
@@ -6,6 +7,7 @@ import 'package:streamer_app/features/live_stream/presentation/widgets/private_s
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(initializeTestLocalization);
 
   group('AppProvider: Private & Restricted Streaming (client-simulated)', () {
     test('defaults to public with no whitelist and knock approval enabled',
@@ -121,7 +123,7 @@ void main() {
 
   group('PrivateStreamViewerGate: renders the correct overlay per state', () {
     Widget wrap(ViewerAccessState state) {
-      return MaterialApp(
+      return localizedApp(
         home: Scaffold(
           body: Stack(
             children: [
@@ -137,23 +139,27 @@ void main() {
 
     testWidgets('notApplicable renders nothing', (tester) async {
       await tester.pumpWidget(wrap(ViewerAccessState.notApplicable));
+      await tester.pump();
       expect(find.text('VIP Invited'), findsNothing);
       expect(find.text('This broadcast is private'), findsNothing);
     });
 
     testWidgets('admitted renders nothing', (tester) async {
       await tester.pumpWidget(wrap(ViewerAccessState.admitted));
+      await tester.pump();
       expect(find.text('VIP Invited'), findsNothing);
       expect(find.text('Waiting for host to admit you...'), findsNothing);
     });
 
     testWidgets('vipPreApproved shows the gold VIP badge', (tester) async {
       await tester.pumpWidget(wrap(ViewerAccessState.vipPreApproved));
+      await tester.pump();
       expect(find.text('VIP Invited'), findsOneWidget);
     });
 
     testWidgets('knocking shows the waiting-room overlay', (tester) async {
       await tester.pumpWidget(wrap(ViewerAccessState.knocking));
+      await tester.pump();
       expect(find.text('Waiting for host to admit you...'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
@@ -163,7 +169,7 @@ void main() {
         (tester) async {
       var requested = false;
       await tester.pumpWidget(
-        MaterialApp(
+        localizedApp(
           home: Scaffold(
             body: Stack(
               children: [
@@ -177,6 +183,7 @@ void main() {
         ),
       );
 
+      await tester.pump();
       expect(find.text('This broadcast is private'), findsOneWidget);
       await tester.tap(find.text('Request to Join'));
       expect(requested, isTrue);

@@ -19,10 +19,10 @@ class CitySelectorDropdown extends StatelessWidget {
 
     return PopupMenuButton<MapRegionModel>(
       onSelected: onCitySelected,
-      color: AppTheme.darkSurface1,
+      color: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        side: const BorderSide(color: AppTheme.darkBorderSubtle, width: 1.0),
+        side: const BorderSide(color: AppTheme.border, width: 1.0),
       ),
       offset: const Offset(0, 44),
       itemBuilder: (context) {
@@ -35,7 +35,7 @@ class CitySelectorDropdown extends StatelessWidget {
                 Icon(
                   Icons.location_on_rounded,
                   size: 18,
-                  color: isCurrent ? AppTheme.accentBlue : AppTheme.textMutedDark,
+                  color: isCurrent ? AppTheme.primary : AppTheme.textMuted,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -44,7 +44,7 @@ class CitySelectorDropdown extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                      color: isCurrent ? AppTheme.accentBlue : AppTheme.textPrimaryDark,
+                      color: isCurrent ? AppTheme.primary : AppTheme.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -54,7 +54,7 @@ class CitySelectorDropdown extends StatelessWidget {
                   const Icon(
                     Icons.check_rounded,
                     size: 16,
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                   ),
               ],
             ),
@@ -65,10 +65,10 @@ class CitySelectorDropdown extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1.withValues(alpha: 0.80),
+          color: AppTheme.surface.withValues(alpha: 0.80),
           borderRadius: BorderRadius.circular(14.0),
           border: Border.all(
-            color: AppTheme.darkBorderSubtle,
+            color: AppTheme.border,
             width: 1.2,
           ),
           boxShadow: const [
@@ -89,14 +89,14 @@ class CitySelectorDropdown extends StatelessWidget {
                   const Icon(
                     Icons.location_on_rounded,
                     size: 16,
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       selectedCity.getLocalizedName(langCode),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -109,7 +109,7 @@ class CitySelectorDropdown extends StatelessWidget {
             ),
             const Icon(
               Icons.arrow_drop_down_rounded,
-              color: AppTheme.textMutedDark,
+              color: AppTheme.textMuted,
               size: 20,
             ),
           ],

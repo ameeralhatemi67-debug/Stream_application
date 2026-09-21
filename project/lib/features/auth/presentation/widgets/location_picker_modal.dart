@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -91,7 +92,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
     return Container(
       height: size.height * 0.85,
       decoration: const BoxDecoration(
-        color: AppTheme.darkBgBase,
+        color: AppTheme.bg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       child: Column(
@@ -104,40 +105,38 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentRed.withValues(alpha: 0.15),
+                    color: AppTheme.danger.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
-                  child: const Icon(Icons.pin_drop_rounded, color: AppTheme.accentRed, size: 22),
+                  child: const Icon(Icons.pin_drop_rounded, color: AppTheme.danger, size: 22),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Pinpoint Broadcast Location',
-                        style: TextStyle(
-                          color: AppTheme.textPrimaryDark,
+                      Text('design_ui.pinpoint_broadcast_location'.tr(),
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                      SizedBox(height: 2),
-                      Text(
-                        'Tap anywhere on the map or move the marker to pin your venue.',
-                        style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+                      const SizedBox(height: 2),
+                      Text('design_ui.tap_anywhere_on_the_map_or_move_the_marker_to_pin_your_venue'.tr(),
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorderSubtle),
+          const Divider(height: 1, color: AppTheme.border),
 
           // Interactive Map Area
           Expanded(
@@ -169,7 +168,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                           child: const Icon(
                             Icons.location_pin,
                             size: 48,
-                            color: AppTheme.accentRed,
+                            color: AppTheme.danger,
                           ),
                         ),
                       ],
@@ -185,8 +184,8 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     children: [
                       FloatingActionButton.small(
                         heroTag: 'zoom_in_picker',
-                        backgroundColor: AppTheme.darkSurface1,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.surface,
+                        foregroundColor: AppTheme.onMedia,
                         onPressed: () {
                           _mapController.move(
                             _currentPosition,
@@ -198,8 +197,8 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                       const SizedBox(height: 8),
                       FloatingActionButton.small(
                         heroTag: 'zoom_out_picker',
-                        backgroundColor: AppTheme.darkSurface1,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.surface,
+                        foregroundColor: AppTheme.onMedia,
                         onPressed: () {
                           _mapController.move(
                             _currentPosition,
@@ -219,11 +218,11 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface1,
-              border: const Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
+              color: AppTheme.surface,
+              border: const Border(top: BorderSide(color: AppTheme.border)),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: AppTheme.media.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, -3),
                 ),
@@ -237,16 +236,15 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.place_rounded, color: AppTheme.accentBlue, size: 20),
+                      const Icon(Icons.place_rounded, color: AppTheme.primary, size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
-                              'Selected Location & Coordinates:',
-                              style: TextStyle(
-                                color: AppTheme.textMutedDark,
+                            Text('design_ui.selected_location_coordinates'.tr(),
+                              style: const TextStyle(
+                                color: AppTheme.textMuted,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -255,7 +253,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                             Text(
                               _resolvedAddress,
                               style: const TextStyle(
-                                color: AppTheme.textPrimaryDark,
+                                color: AppTheme.textPrimary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -268,17 +266,16 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                   const SizedBox(height: AppTheme.spaceMd),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.accentRed,
-                      foregroundColor: Colors.white,
+                      backgroundColor: AppTheme.danger,
+                      foregroundColor: AppTheme.onMedia,
                       padding: const EdgeInsets.symmetric(vertical: 13),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       ),
                     ),
                     icon: const Icon(Icons.check_circle_rounded, size: 18),
-                    label: const Text(
-                      'Use This Location',
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                    label: Text('design_ui.use_this_location'.tr(),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                     onPressed: () {
                       Navigator.of(context).pop(

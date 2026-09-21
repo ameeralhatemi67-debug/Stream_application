@@ -1,5 +1,6 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:typed_data';
-import 'dart:ui' as ui;
+import 'dart:ui'as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -35,7 +36,7 @@ class ImageArrangeModal extends StatefulWidget {
     return showModalBottomSheet<Uint8List?>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.black,
+      backgroundColor: AppTheme.media,
       builder: (ctx) => ImageArrangeModal(
         imagePath: imagePath,
         imageBytes: imageBytes,
@@ -130,24 +131,23 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
         height: height,
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.accentRed, width: 1.5),
+          border: Border.all(color: AppTheme.danger, width: 1.5),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppTheme.accentRed, size: 36),
+            const Icon(Icons.error_outline_rounded, color: AppTheme.danger, size: 36),
             const SizedBox(height: 10),
-            const Text(
-              'Image Decode Error',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            Text('design_ui.image_decode_error'.tr(),
+              style: const TextStyle(color: AppTheme.onMedia, fontWeight: FontWeight.bold, fontSize: 13),
             ),
             const SizedBox(height: 4),
             Text(
               _decodeErrorMessage ?? 'Unable to parse image data on this device.',
-              style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
               textAlign: TextAlign.center,
             ),
           ],
@@ -195,11 +195,11 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
 
     return Container(
       height: size.height * 0.92,
-      color: Colors.black,
+      color: AppTheme.media,
       child: SafeArea(
         child: Column(
           children: [
-            // 🏷️ Top Navigation Bar
+            //  Top Navigation Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               child: Row(
@@ -207,10 +207,9 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                 children: [
                   TextButton(
                     onPressed: () => Navigator.of(context).pop(null),
-                    child: const Text(
-                      'Cancel',
-                      style: TextStyle(
-                        color: Colors.white,
+                    child: Text('design_ui.cancel'.tr(),
+                      style: const TextStyle(
+                        color: AppTheme.onMedia,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
@@ -219,15 +218,15 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                   Text(
                     widget.title,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppTheme.onMedia,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.white,
-                      foregroundColor: Colors.black,
+                      backgroundColor: AppTheme.onMedia,
+                      foregroundColor: AppTheme.media,
                       elevation: 0,
                       padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
                       shape: RoundedRectangleBorder(
@@ -239,19 +238,18 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.media),
                           )
-                        : const Text(
-                            'Apply',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                        : Text('design_ui.apply'.tr(),
+                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                           ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: Color(0xFF2F3336)),
+            const Divider(height: 1, color: AppTheme.border),
 
-            // 🖼️ Canvas Cropper Area with Anti-Black-Bar Boundary Clamping
+            //  Canvas Cropper Area with Anti-Black-Bar Boundary Clamping
             Expanded(
               child: Stack(
                 alignment: Alignment.center,
@@ -259,11 +257,11 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                   // Full Screen Dimmed Backdrop
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black,
+                      color: AppTheme.media,
                     ),
                   ),
 
-                  // 🎯 The Strict Anti-Black-Bar Viewport Box (RepaintBoundary)
+                  //  The Strict Anti-Black-Bar Viewport Box (RepaintBoundary)
                   RepaintBoundary(
                     key: _cropKey,
                     child: ClipRRect(
@@ -271,7 +269,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                       child: Container(
                         width: cutoutWidth,
                         height: cutoutHeight,
-                        color: Colors.black,
+                        color: AppTheme.media,
                         child: InteractiveViewer(
                           transformationController: _transformationController,
                           minScale: 1.0,
@@ -285,7 +283,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                     ),
                   ),
 
-                  // 🔲 Visual Cutout Border Overlay (Guiding Ring / Frame)
+                  //  Visual Cutout Border Overlay (Guiding Ring / Frame)
                   if (!_hasDecodeError)
                     IgnorePointer(
                       child: Container(
@@ -295,12 +293,12 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                           shape: isAvatar ? BoxShape.circle : BoxShape.rectangle,
                           borderRadius: isAvatar ? null : BorderRadius.circular(4),
                           border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.9),
+                            color: AppTheme.onMedia.withValues(alpha: 0.9),
                             width: 2.0,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.6),
+                              color: AppTheme.media.withValues(alpha: 0.6),
                               blurRadius: 20,
                               spreadRadius: 4,
                             ),
@@ -312,10 +310,10 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
               ),
             ),
 
-            // 🔍 Bottom Zoom Slider Bar
+            //  Bottom Zoom Slider Bar
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              color: Colors.black,
+              color: AppTheme.media,
               child: Column(
                 children: [
                   Row(
@@ -324,10 +322,10 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                       Expanded(
                         child: SliderTheme(
                           data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: Colors.white,
-                            inactiveTrackColor: const Color(0xFF2F3336),
-                            thumbColor: Colors.white,
-                            overlayColor: Colors.white.withValues(alpha: 0.2),
+                            activeTrackColor: AppTheme.onMedia,
+                            inactiveTrackColor: AppTheme.border,
+                            thumbColor: AppTheme.onMedia,
+                            overlayColor: AppTheme.onMedia.withValues(alpha: 0.2),
                             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                             trackHeight: 3,
                           ),
@@ -339,13 +337,12 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                           ),
                         ),
                       ),
-                      const Icon(Icons.photo_size_select_actual_rounded, color: Colors.white, size: 24),
+                      const Icon(Icons.photo_size_select_actual_rounded, color: AppTheme.onMedia, size: 24),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Pinch to zoom and drag to reposition',
-                    style: TextStyle(color: Color(0xFF71767B), fontSize: 12),
+                  Text('design_ui.pinch_to_zoom_and_drag_to_reposition'.tr(),
+                    style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                   ),
                 ],
               ),

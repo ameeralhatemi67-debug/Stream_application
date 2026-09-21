@@ -1,3 +1,4 @@
+import 'core/config/app_identity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -109,15 +110,15 @@ class _StreamerAppState extends State<StreamerApp> {
       child: Builder(
         builder: (context) {
           return MaterialApp.router(
-            title: 'Educational Streamer',
+            title: AppIdentity.name(context.locale.languageCode),
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.getDarkThemeForLocale(context.locale),
-            darkTheme: AppTheme.getDarkThemeForLocale(context.locale),
-            themeMode: ThemeMode.dark,
+            theme: AppTheme.forLocale(context.locale),
+            themeMode: ThemeMode.light,
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             routerConfig: _router,
+            builder: (context, child) => MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: child ?? const SizedBox.shrink()),
           );
         },
       ),

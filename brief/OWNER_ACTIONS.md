@@ -190,3 +190,6 @@ stand, including the two decisions that block a push.
    new migration (an admin SELECT policy or a definer RPC). Admin-initiated
    account deletion also has no server path today; `delete_own_account()` is
    self-only.
+
+## Codex scheme A checkpoint, 2026-09-21
+Scheme A and supplied logo accepted. Application ID/names/support email already supplied. Privacy URL and signing still needed for release. No launcher/AAB generated yet. GPS remains unresolved. Physical-device, production-schema/migration and legal/store approvals remain open. See OVERRUN_REPORT.md for unfinished P4 and subsequent phases.

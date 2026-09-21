@@ -223,7 +223,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppTheme.accentRed,
+        backgroundColor: AppTheme.danger,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -454,14 +454,14 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     final stepProgress = (_currentStep + 1) / _totalSteps;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
           icon: Transform.scale(
             scaleX: context.locale.languageCode == 'ar' ? -1.0 : 1.0,
-            child: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
+            child: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimary),
           ),
           onPressed: _previousStep,
         ),
@@ -470,7 +470,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
               ? 'wizard_steps.org_title'.tr(args: ['${_currentStep + 1}', '$_totalSteps'])
               : 'wizard_steps.streamer_title'.tr(args: ['${_currentStep + 1}', '$_totalSteps']),
           style: const TextStyle(
-            color: AppTheme.textPrimaryDark,
+            color: AppTheme.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
@@ -492,19 +492,20 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: stepProgress,
-                          backgroundColor: AppTheme.darkSurface1,
-                          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.accentRed),
+                          backgroundColor: AppTheme.surface,
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.danger),
                           minHeight: 6,
                         ),
                       ),
                       const SizedBox(height: 6),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      Wrap(
+                        alignment: WrapAlignment.spaceBetween,
+                        spacing: AppTheme.spaceSm,
                         children: [
                           Text(
                             'wizard_steps.step_progress'.tr(args: ['${_currentStep + 1}', '$_totalSteps']),
                             style: const TextStyle(
-                              color: AppTheme.textMutedDark,
+                              color: AppTheme.textMuted,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -512,7 +513,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                           Text(
                             'wizard_steps.step_completed'.tr(args: ['${(stepProgress * 100).toInt()}']),
                             style: const TextStyle(
-                              color: AppTheme.accentRed,
+                              color: AppTheme.danger,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -541,16 +542,16 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceLg),
                   decoration: const BoxDecoration(
-                    color: AppTheme.darkSurface1,
-                    border: Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
+                    color: AppTheme.surface,
+                    border: Border(top: BorderSide(color: AppTheme.border)),
                   ),
                   child: Row(
                     children: [
                       if (_currentStep > 0) ...[
                         OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.textPrimaryDark,
-                            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+                            foregroundColor: AppTheme.textPrimary,
+                            side: const BorderSide(color: AppTheme.border),
                             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -564,8 +565,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                       Expanded(
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.accentRed,
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppTheme.danger,
+                            foregroundColor: AppTheme.onMedia,
                             padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -581,18 +582,18 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.onMedia),
                                   ),
                                 )
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Text(
+                                    Flexible(child: Text(
                                       _currentStep == _totalSteps - 1
                                           ? 'wizard_steps.btn_submit'.tr()
                                           : 'wizard_steps.btn_next'.tr(),
                                       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                                    ),
+                                    )),
                                     const SizedBox(width: 6),
                                     _currentStep == _totalSteps - 1
                                         ? const Icon(Icons.send_rounded, size: 16)

@@ -30,7 +30,7 @@ class VodModel {
     this.venueId,
   });
 
-  /// Returns localized title according to active [languageCode] ('ar' or 'en').
+  /// Returns localized title according to active [languageCode] ('ar'or 'en').
   String getLocalizedTitle(String languageCode) =>
       languageCode == 'ar' ? titleAr : titleEn;
 
@@ -38,7 +38,7 @@ class VodModel {
   String getLocalizedDescription(String languageCode) =>
       languageCode == 'ar' ? descriptionAr : descriptionEn;
 
-  /// Human-readable duration string (e.g. "54:00" or "1h 15m").
+  /// Human-readable duration string (e.g. "54:00"or "1h 15m").
   String get formattedDuration {
     final duration = Duration(seconds: durationSeconds);
     final hours = duration.inHours;

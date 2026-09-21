@@ -46,10 +46,10 @@ class OrgBranchesModalSheet extends StatelessWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.8,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.darkBgBase,
+        color: AppTheme.bg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
         border: Border(
-          top: BorderSide(color: AppTheme.darkBorderSubtle, width: 1.5),
+          top: BorderSide(color: AppTheme.border, width: 1.5),
         ),
       ),
       child: Column(
@@ -61,7 +61,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: AppTheme.textSecondaryDark.withValues(alpha: 0.3),
+              color: AppTheme.textSecondary.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -74,10 +74,10 @@ class OrgBranchesModalSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.accentBlue.withValues(alpha: 0.12),
+                    color: AppTheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.domain_rounded, color: AppTheme.accentBlue, size: 22),
+                  child: const Icon(Icons.domain_rounded, color: AppTheme.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -87,7 +87,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
                       Text(
                         'profile.campus_branches'.tr(),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.onMedia,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -95,7 +95,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
                       Text(
                         orgName,
                         style: const TextStyle(
-                          color: AppTheme.textSecondaryDark,
+                          color: AppTheme.textSecondary,
                           fontSize: 13,
                         ),
                         maxLines: 1,
@@ -105,14 +105,14 @@ class OrgBranchesModalSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
             ),
           ),
 
-          const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+          const Divider(color: AppTheme.border, height: 1),
 
           // List of Venue Branches
           Flexible(
@@ -140,12 +140,12 @@ class OrgBranchesModalSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(
           color: venue.isMainHeadquarters
-              ? AppTheme.accentBlue.withValues(alpha: 0.5)
-              : AppTheme.darkBorderSubtle,
+              ? AppTheme.primary.withValues(alpha: 0.5)
+              : AppTheme.border,
         ),
       ),
       child: Column(
@@ -164,7 +164,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
                           child: Text(
                             venue.getLocalizedName(lang),
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppTheme.onMedia,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
@@ -175,14 +175,14 @@ class OrgBranchesModalSheet extends StatelessWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: AppTheme.accentBlue.withValues(alpha: 0.2),
+                              color: AppTheme.primary.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.6)),
+                              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.6)),
                             ),
                             child: Text(
                               'profile.main_hq'.tr(),
                               style: const TextStyle(
-                                color: AppTheme.accentBlue,
+                                color: AppTheme.primary,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -194,13 +194,13 @@ class OrgBranchesModalSheet extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondaryDark),
+                        const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '${venue.getLocalizedCity(lang)} • ${venue.getLocalizedAddress(lang)}',
                             style: const TextStyle(
-                              color: AppTheme.textSecondaryDark,
+                              color: AppTheme.textSecondary,
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -216,19 +216,19 @@ class OrgBranchesModalSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkSurface2,
+                  color: AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.event_seat_rounded, size: 12, color: AppTheme.accentBlue),
+                    const Icon(Icons.event_seat_rounded, size: 12, color: AppTheme.primary),
                     const SizedBox(width: 4),
                     Text(
                       '${venue.seatingCapacity} ${'profile.seating_capacity'.tr()}',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -249,14 +249,14 @@ class OrgBranchesModalSheet extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkBgBase,
+                    color: AppTheme.bg,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppTheme.darkBorderSubtle),
+                    border: Border.all(color: AppTheme.border),
                   ),
                   child: Text(
                     facility,
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -274,8 +274,8 @@ class OrgBranchesModalSheet extends StatelessWidget {
               icon: const Icon(Icons.directions_rounded, size: 16),
               label: Text('profile.get_directions'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.accentBlue,
-                side: BorderSide(color: AppTheme.accentBlue.withValues(alpha: 0.5)),
+                foregroundColor: AppTheme.primary,
+                side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.5)),
                 padding: const EdgeInsets.symmetric(vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),

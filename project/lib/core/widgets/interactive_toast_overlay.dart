@@ -14,7 +14,7 @@ class InteractiveToastOverlay {
     required String title,
     required String message,
     IconData icon = Icons.notifications_active_rounded,
-    Color accentColor = AppTheme.accentBlue,
+    Color accentColor = AppTheme.primary,
     Duration duration = const Duration(seconds: 4),
     VoidCallback? onTap,
     String? actionLabel,
@@ -155,7 +155,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkSurface1,
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                   border: Border.all(
                     color: widget.accentColor.withValues(alpha: 0.6),
@@ -163,7 +163,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.4),
+                      color: AppTheme.media.withValues(alpha: 0.4),
                       blurRadius: 16,
                       offset: const Offset(0, 6),
                     ),
@@ -197,7 +197,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                           Text(
                             widget.title,
                             style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
+                              color: AppTheme.textPrimary,
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
                             ),
@@ -208,7 +208,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                           Text(
                             widget.message,
                             style: const TextStyle(
-                              color: AppTheme.textSecondaryDark,
+                              color: AppTheme.textSecondary,
                               fontSize: 11.5,
                               height: 1.25,
                             ),
@@ -243,7 +243,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
 
                     const SizedBox(width: 4),
                     IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 16, color: AppTheme.textMutedDark),
+                      icon: const Icon(Icons.close_rounded, size: 16, color: AppTheme.textMuted),
                       padding: EdgeInsets.zero,
                       constraints: const BoxConstraints(),
                       onPressed: widget.onDismissed,

@@ -87,7 +87,7 @@ void main() {
       await tester.pumpWidget(buildTestableWidget(const AppSplashScreen()));
       await tester.pump();
 
-      expect(find.text('Educational Streamer'), findsOneWidget);
+      expect(find.text('Hadayah Live'), findsOneWidget);
       expect(find.text('Initializing platform & map assets...'), findsOneWidget);
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
@@ -111,7 +111,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('▶️ Play All Lectures'), findsOneWidget);
+      expect(find.text('Play All Lectures'), findsOneWidget);
       expect(find.text(playlist.getLocalizedTitle('en')), findsOneWidget);
     });
   });

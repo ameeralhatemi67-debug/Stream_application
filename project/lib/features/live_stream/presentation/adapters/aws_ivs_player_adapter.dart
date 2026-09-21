@@ -55,30 +55,26 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
     return AspectRatio(
       aspectRatio: widget.aspectRatio,
       child: Container(
-        color: Colors.black,
+        color: AppTheme.media,
         child: Stack(
           alignment: Alignment.center,
           children: [
             // Video Surface simulation
             Container(
               decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
+                color: AppTheme.surfaceAlt,
               ),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(Icons.cloud_sync_rounded,
-                        color: AppTheme.accentBlue, size: 56),
+                        color: AppTheme.primary, size: 56),
                     const SizedBox(height: AppTheme.spaceSm),
                     Text(
                       'AWS IVS HLS Low-Latency Stream',
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -114,7 +110,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: AppTheme.media.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -124,7 +120,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: AppTheme.accentBlue,
+                        color: AppTheme.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -132,7 +128,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                     const Text(
                       'AWS IVS HLS (<1.5s latency)',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),
@@ -160,7 +156,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                     _isPlaying
                         ? Icons.pause_circle_filled
                         : Icons.play_circle_filled,
-                    color: Colors.white,
+                    color: AppTheme.onMedia,
                     size: 32,
                   ),
                 ),

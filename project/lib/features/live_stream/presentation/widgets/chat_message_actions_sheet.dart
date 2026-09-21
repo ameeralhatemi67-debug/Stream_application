@@ -16,7 +16,7 @@ Future<void> showChatMessageActionsSheet(
 }) async {
   final action = await showModalBottomSheet<_ChatMessageAction>(
     context: context,
-    backgroundColor: AppTheme.darkSurface1,
+    backgroundColor: AppTheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius:
           BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
@@ -97,37 +97,37 @@ Future<void> _handleEdit(
   final newBody = await showDialog<String>(
     context: context,
     builder: (dialogContext) => AlertDialog(
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.darkBorderSubtle),
+        side: const BorderSide(color: AppTheme.border),
       ),
       title: Text(
         'live.edit_message_title'.tr(),
         style: const TextStyle(
-            color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold),
+            color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
       ),
       content: TextField(
         controller: textController,
         autofocus: true,
         maxLength: 500,
         maxLines: 3,
-        style: const TextStyle(color: AppTheme.textPrimaryDark),
+        style: const TextStyle(color: AppTheme.textPrimary),
         decoration: InputDecoration(
           hintText: 'live.edit_message_hint'.tr(),
-          hintStyle: const TextStyle(color: AppTheme.textMutedDark),
+          hintStyle: const TextStyle(color: AppTheme.textMuted),
         ),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
           child: Text('common.cancel'.tr(),
-              style: const TextStyle(color: AppTheme.textMutedDark)),
+              style: const TextStyle(color: AppTheme.textMuted)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.accentBlue,
-            foregroundColor: Colors.white,
+            backgroundColor: AppTheme.primary,
+            foregroundColor: AppTheme.onMedia,
           ),
           onPressed: () =>
               Navigator.of(dialogContext).pop(textController.text),
@@ -161,7 +161,7 @@ Future<void> _runModerationAction(
   } catch (e) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$e'), backgroundColor: AppTheme.accentRed),
+      SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
     );
   }
 }
@@ -170,26 +170,26 @@ Future<bool?> _confirmDelete(BuildContext context, {required String title}) {
   return showDialog<bool>(
     context: context,
     builder: (context) => AlertDialog(
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.darkBorderSubtle),
+        side: const BorderSide(color: AppTheme.border),
       ),
       title: Text(
         title,
         style: const TextStyle(
-            color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold),
+            color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
       ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(false),
           child: Text('common.cancel'.tr(),
-              style: const TextStyle(color: AppTheme.textMutedDark)),
+              style: const TextStyle(color: AppTheme.textMuted)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.accentRed,
-            foregroundColor: Colors.white,
+            backgroundColor: AppTheme.danger,
+            foregroundColor: AppTheme.onMedia,
           ),
           onPressed: () => Navigator.of(context).pop(true),
           child: Text('common.delete'.tr()),
@@ -206,7 +206,7 @@ Future<void> _handleReport(
 }) async {
   final reason = await showModalBottomSheet<String>(
     context: context,
-    backgroundColor: AppTheme.darkSurface1,
+    backgroundColor: AppTheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius:
           BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
@@ -233,7 +233,7 @@ Future<void> _handleReport(
         content: Text(
           isDuplicate ? 'live.report_already_submitted_toast'.tr() : '$e',
         ),
-        backgroundColor: isDuplicate ? null : AppTheme.accentRed,
+        backgroundColor: isDuplicate ? null : AppTheme.danger,
       ),
     );
   }
@@ -278,7 +278,7 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               child: Text(
                 message.senderName,
                 style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
@@ -288,19 +288,19 @@ class _ChatMessageActionsMenu extends StatelessWidget {
           if (message.isCurrentUser) ...[
             ListTile(
               leading:
-                  const Icon(Icons.edit_outlined, color: AppTheme.accentBlue),
+                  const Icon(Icons.edit_outlined, color: AppTheme.primary),
               title: Text(
                 'live.edit_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.edit),
             ),
             ListTile(
               leading: const Icon(Icons.delete_outline_rounded,
-                  color: AppTheme.accentRed),
+                  color: AppTheme.danger),
               title: Text(
                 'live.delete_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               onTap: () =>
                   Navigator.of(context).pop(_ChatMessageAction.deleteOwn),
@@ -308,49 +308,49 @@ class _ChatMessageActionsMenu extends StatelessWidget {
           ] else ...[
             ListTile(
               leading:
-                  const Icon(Icons.flag_outlined, color: AppTheme.accentAmber),
+                  const Icon(Icons.flag_outlined, color: AppTheme.warning),
               title: Text(
                 'live.report_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.report),
             ),
             ListTile(
               leading: const Icon(Icons.visibility_off_outlined,
-                  color: AppTheme.textSecondaryDark),
+                  color: AppTheme.textSecondary),
               title: Text(
                 'live.hide_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.hide),
             ),
             ListTile(
               leading:
-                  const Icon(Icons.block_rounded, color: AppTheme.accentRed),
+                  const Icon(Icons.block_rounded, color: AppTheme.danger),
               title: Text(
                 'live.block_user'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.block),
             ),
             if (canModerate) ...[
-              const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+              const Divider(color: AppTheme.border, height: 1),
               ListTile(
                 leading: const Icon(Icons.mic_off_rounded,
-                    color: AppTheme.accentAmber),
+                    color: AppTheme.warning),
                 title: Text(
                   'live.mute_user'.tr(),
-                  style: const TextStyle(color: AppTheme.textPrimaryDark),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
                 onTap: () =>
                     Navigator.of(context).pop(_ChatMessageAction.mute),
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline_rounded,
-                    color: AppTheme.accentRed),
+                    color: AppTheme.danger),
                 title: Text(
                   'live.delete_message'.tr(),
-                  style: const TextStyle(color: AppTheme.textPrimaryDark),
+                  style: const TextStyle(color: AppTheme.textPrimary),
                 ),
                 onTap: () =>
                     Navigator.of(context).pop(_ChatMessageAction.delete),
@@ -358,10 +358,10 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               if (message.isStreamModerator)
                 ListTile(
                   leading: const Icon(Icons.remove_moderator_outlined,
-                      color: AppTheme.accentRed),
+                      color: AppTheme.danger),
                   title: Text(
                     'live.revoke_moderator'.tr(),
-                    style: const TextStyle(color: AppTheme.textPrimaryDark),
+                    style: const TextStyle(color: AppTheme.textPrimary),
                   ),
                   onTap: () => Navigator.of(context)
                       .pop(_ChatMessageAction.revokeModerator),
@@ -369,10 +369,10 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               else
                 ListTile(
                   leading: const Icon(Icons.add_moderator_outlined,
-                      color: AppTheme.accentGreen),
+                      color: AppTheme.success),
                   title: Text(
                     'live.appoint_moderator'.tr(),
-                    style: const TextStyle(color: AppTheme.textPrimaryDark),
+                    style: const TextStyle(color: AppTheme.textPrimary),
                   ),
                   onTap: () => Navigator.of(context)
                       .pop(_ChatMessageAction.appointModerator),
@@ -417,7 +417,7 @@ class _ReportReasonMenu extends StatelessWidget {
               child: Text(
                 'live.report_reason_prompt'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 13,
                 ),
@@ -428,7 +428,7 @@ class _ReportReasonMenu extends StatelessWidget {
             ListTile(
               title: Text(
                 'live.$key'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               onTap: () => Navigator.of(context).pop(code),
             ),

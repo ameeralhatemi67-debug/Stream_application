@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
@@ -16,7 +16,7 @@ class NotificationCenterSheet extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
@@ -71,7 +71,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 12),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBorderSubtle,
+                  color: AppTheme.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -80,12 +80,12 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
             // Header Row: Title, Unread Count & Action Controls
             Row(
               children: [
-                const Icon(Icons.notifications_rounded, color: AppTheme.accentBlue, size: 22),
+                const Icon(Icons.notifications_rounded, color: AppTheme.primary, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   isAr ? 'مركز التنبيهات' : 'Notifications',
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
@@ -95,12 +95,12 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentRed,
+                      color: AppTheme.danger,
                       borderRadius: BorderRadius.circular(10),
                     ),
                     child: Text(
                       '$unreadNotificationsCount',
-                      style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                      style: const TextStyle(color: AppTheme.onMedia, fontSize: 11, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ],
@@ -114,14 +114,14 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                       style: const TextStyle(fontSize: 11.5),
                     ),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.accentBlue,
+                      foregroundColor: AppTheme.primary,
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                       minimumSize: Size.zero,
                       tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                     ),
                   ),
                 IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.textMutedDark),
+                  icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.textMuted),
                   padding: EdgeInsets.zero,
                   constraints: const BoxConstraints(),
                   onPressed: () => Navigator.pop(context),
@@ -143,19 +143,19 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
-                    label: isAr ? '🔴 البثوث المباشرة' : '🔴 Live',
+                    label: isAr ? 'البثوث المباشرة' : 'Live',
                     category: NotificationCategory.live,
                     count: allNotifications.where((n) => n.category == NotificationCategory.live).length,
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
-                    label: isAr ? '🏛️ الدعوات والإدارة' : '🏛️ Invites & Admin',
+                    label: isAr ? 'الدعوات والإدارة' : 'Invites & Admin',
                     category: NotificationCategory.invitesAndAdmin,
                     count: allNotifications.where((n) => n.category == NotificationCategory.invitesAndAdmin).length,
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
-                    label: isAr ? '🎬 المحاضرات' : '🎬 VODs',
+                    label: isAr ? 'المحاضرات' : 'VODs',
                     category: NotificationCategory.vods,
                     count: allNotifications.where((n) => n.category == NotificationCategory.vods).length,
                   ),
@@ -164,7 +164,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
             ),
 
             const SizedBox(height: AppTheme.spaceSm),
-            const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+            const Divider(color: AppTheme.border, height: 1),
             const SizedBox(height: AppTheme.spaceSm),
 
             // Notifications List or Empty State
@@ -175,14 +175,14 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.notifications_none_rounded, color: AppTheme.textMutedDark, size: 44),
+                      const Icon(Icons.notifications_none_rounded, color: AppTheme.textMuted, size: 44),
                       const SizedBox(height: 12),
                       Text(
                         isAr
                             ? 'لا توجد تنبيهات جديدة في هذا القسم'
                             : 'No notifications in this category',
                         style: const TextStyle(
-                          color: AppTheme.textPrimaryDark,
+                          color: AppTheme.textPrimary,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -192,7 +192,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                         isAr
                             ? 'ستصلك إشعارات البثوث المباشرة والمحاضرات والدعوات فور توفرها.'
                             : 'You will receive alerts for live streams, lectures, and invites when they occur.',
-                        style: const TextStyle(color: AppTheme.textMutedDark, fontSize: 12),
+                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -204,7 +204,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: filteredNotifications.length,
-                  separatorBuilder: (_, __) => const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+                  separatorBuilder: (_, __) => const Divider(color: AppTheme.border, height: 1),
                   itemBuilder: (context, idx) {
                     final notif = filteredNotifications[idx];
                     return _buildNotificationTile(context, notif, appProvider, isAr);
@@ -228,14 +228,14 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
       selected: isSelected,
       onSelected: (_) => setState(() => _selectedCategory = category),
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppTheme.textSecondaryDark,
+        color: isSelected ? AppTheme.onMedia : AppTheme.textSecondary,
         fontSize: 11.5,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
-      backgroundColor: AppTheme.darkSurface2,
-      selectedColor: AppTheme.accentBlue,
+      backgroundColor: AppTheme.surfaceAlt,
+      selectedColor: AppTheme.primary,
       side: BorderSide(
-        color: isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
+        color: isSelected ? AppTheme.primary : AppTheme.border,
       ),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
     );
@@ -258,12 +258,12 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
         color: Colors.red.shade900,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            Icon(Icons.delete_sweep_rounded, color: Colors.white, size: 20),
-            SizedBox(width: 6),
-            Text('Dismiss', style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+            const Icon(Icons.delete_sweep_rounded, color: AppTheme.onMedia, size: 20),
+            const SizedBox(width: 6),
+            Text('design_ui.dismiss'.tr(), style: const TextStyle(color: AppTheme.onMedia, fontSize: 12, fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -292,7 +292,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: AppTheme.accentRed,
+                    color: AppTheme.danger,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -302,7 +302,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
         title: Text(
           notif.getLocalizedTitle(isAr ? 'ar' : 'en'),
           style: TextStyle(
-            color: notif.isRead ? AppTheme.textSecondaryDark : AppTheme.textPrimaryDark,
+            color: notif.isRead ? AppTheme.textSecondary : AppTheme.textPrimary,
             fontSize: 13,
             fontWeight: notif.isRead ? FontWeight.normal : FontWeight.bold,
           ),
@@ -313,14 +313,14 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
             const SizedBox(height: 2),
             Text(
               notif.getLocalizedBody(isAr ? 'ar' : 'en'),
-              style: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11.5, height: 1.3),
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5, height: 1.3),
             ),
             const SizedBox(height: 4),
             Row(
               children: [
                 Text(
                   _formatTimeAgo(notif.timestamp, isAr),
-                  style: const TextStyle(color: AppTheme.textMutedDark, fontSize: 10),
+                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 10),
                 ),
                 if (notif.streamerId.isNotEmpty) ...[
                   const SizedBox(width: 10),
@@ -337,7 +337,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                           Icon(
                             isMuted ? Icons.notifications_off_rounded : Icons.notifications_none_rounded,
                             size: 12,
-                            color: isMuted ? AppTheme.accentRed : AppTheme.accentBlue,
+                            color: isMuted ? AppTheme.danger : AppTheme.primary,
                           ),
                           const SizedBox(width: 3),
                           Text(
@@ -345,7 +345,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                                 ? (isAr ? 'إلغاء الكتم' : 'Unmute')
                                 : (isAr ? 'كتم الإشعارات' : 'Mute'),
                             style: TextStyle(
-                              color: isMuted ? AppTheme.accentRed : AppTheme.accentBlue,
+                              color: isMuted ? AppTheme.danger : AppTheme.primary,
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
                             ),
@@ -411,30 +411,30 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
     switch (type) {
       case NotificationType.streamerLiveVideo:
       case NotificationType.orgStreamerLiveStatus:
-        return AppTheme.accentRed;
+        return AppTheme.danger;
       case NotificationType.streamerLiveAudio:
-        return const Color(0xFFA1A1AA);
+        return AppTheme.textMuted;
       case NotificationType.watchMilestoneOneHour:
         return Colors.amber;
       case NotificationType.streamerApplicationApproved:
-        return AppTheme.accentGreen;
+        return AppTheme.success;
       case NotificationType.streamerApplicationRejected:
         return Colors.orange;
       case NotificationType.orgLiveGuestInvite:
       case NotificationType.orgAffiliationInvite:
-        return AppTheme.accentPurple;
+        return AppTheme.accent;
       case NotificationType.streamerRemovedFromOrg:
         return Colors.blueGrey;
       case NotificationType.adminNoteToStreamer:
       case NotificationType.adminNoteToOrg:
-        return AppTheme.accentBlue;
+        return AppTheme.primary;
       case NotificationType.adminCardEditRequestStreamer:
       case NotificationType.adminCardEditRequestOrg:
         return Colors.deepOrangeAccent;
       case NotificationType.newVodUpload:
-        return AppTheme.accentBlue;
+        return AppTheme.primary;
       case NotificationType.systemAlert:
-        return AppTheme.textSecondaryDark;
+        return AppTheme.textSecondary;
     }
   }
 

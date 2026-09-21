@@ -213,3 +213,14 @@
 - Exact next step: **P6.4 item 1, the server-backed user directory**, starting with the `device_sessions` admin-read gap above (new migration only — the exception that allowed editing `20260920140000` in P1d is closed and must not be reused). Then items 2-6 in the order in `03_WORK_PLAN.md`. After P6: P5, P7, P8B.
 - Read first next session: this block, the P6a section above, the P1d section, and the **P1d + P6a entries in `brief/OWNER_ACTIONS.md`** — the GPS decision and the production-schema comparison still block any `db push`.
 - Design stays reserved for Astra (05 D-27): P4, P8A and P9 are not to be started by a Claude Code session, and all 8 failing gates are design gates. Do not chase them.
+
+## Full design and release pass, 2026-09-21, Codex Astra
+- Owner authorizes SINGLE window 1, cap 90, continuing past soft 84. Entry used_5h=0, weekly=37, resets_in_min=300, cache_ttl=30m assumed. No subagents, plugins, pushes or production SQL. Roadmap and skill observations remain owner-owned. Both historical stashes preserved.
+- P4 starts with scheme A, selected explicitly by owner. Supplied colored.svg replaces the earlier concept; black.svg is monochrome. All nine source assets visually inspected, including rendered SVGs. Inkscape source sheet is not a runtime asset. Upstream IBM Plex fonts and OFL files downloaded for offline bundling.
+
+## RESUME block (2026-09-21, Codex Astra, partial P4)
+- Scheme A implemented in part; read brief/OVERRUN_REPORT.md for coverage and gaps. AppLogo uses supplied colored.svg and black.svg. Fonts bundled with OFL files.
+- Analyzer0, full Flutter305 passed; subsequent real-font layout sweep16 passed across8 screens x7 sizes x3 scales x2 locales. Contrast passed. Gates4 failing: G4a14/G4b5/G6 478/G8 1. SQL unchanged, inherited179 tests/11 files and48 migrations; not rerun.
+- Entry usage0, checkpoint85, hard cap90. Higher live usage used when snapshots lagged. No reset wait.
+- Exact next phase: finish P4 screen/media/RTL/localization/responsive/Settings extraction/documentation gaps, then P8A. P8A/P6.4/P5/P7/P8B/P9 not started. No release readiness claim.
+- Nothing pushed; no SQL or production changes. Owner Roadmap and skill-observations untouched, both historical stashes unchanged. Local phase commit follows.

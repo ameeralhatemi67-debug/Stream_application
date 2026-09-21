@@ -183,13 +183,13 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppTheme.accentRed,
+                              color: AppTheme.danger,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Text(
                               'live.live_indicator'.tr(),
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppTheme.onMedia,
                                 fontSize: 10,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.8,
@@ -203,18 +203,18 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.65),
+                            color: AppTheme.media.withValues(alpha: 0.65),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              const Icon(Icons.remove_red_eye_outlined, size: 12, color: Colors.white),
+                              const Icon(Icons.remove_red_eye_outlined, size: 12, color: AppTheme.onMedia),
                               const SizedBox(width: 5),
                               Text(
                                 '${widget.viewerCount ?? '—'} ${'feed.watching'.tr()}',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.onMedia,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -264,12 +264,12 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
+                              color: AppTheme.media.withValues(alpha: 0.6),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                              color: Colors.white,
+                              color: AppTheme.onMedia,
                               size: 20,
                             ),
                           ),
@@ -286,12 +286,12 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                           child: Container(
                             padding: const EdgeInsets.all(6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withValues(alpha: 0.6),
+                              color: AppTheme.media.withValues(alpha: 0.6),
                               shape: BoxShape.circle,
                             ),
                             child: Icon(
                               widget.isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                              color: Colors.white,
+                              color: AppTheme.onMedia,
                               size: 20,
                             ),
                           ),
@@ -312,12 +312,12 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                     child: Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.6),
+                        color: AppTheme.media.withValues(alpha: 0.6),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         widget.isFullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         size: 20,
                       ),
                     ),
@@ -339,23 +339,23 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         FocusScope.of(context).unfocus();
         widget.onSelectQuality(quality);
       },
-      color: AppTheme.darkSurface2,
+      color: AppTheme.surfaceAlt,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.65),
+          color: AppTheme.media.withValues(alpha: 0.65),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.6), width: 0.8),
+          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.6), width: 0.8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.hd_outlined, size: 14, color: AppTheme.accentBlue),
+            const Icon(Icons.hd_outlined, size: 14, color: AppTheme.primary),
             const SizedBox(width: 4),
             Text(
               widget.selectedQuality.shortLabel,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppTheme.onMedia,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
@@ -372,14 +372,14 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
             children: [
               Icon(
                 isSelected ? Icons.check_rounded : Icons.hd_outlined,
-                color: isSelected ? AppTheme.accentBlue : AppTheme.textMutedDark,
+                color: isSelected ? AppTheme.primary : AppTheme.textMuted,
                 size: 16,
               ),
               const SizedBox(width: 8),
               Text(
                 quality.labelKey.tr(),
                 style: TextStyle(
-                  color: isSelected ? AppTheme.accentBlue : Colors.white,
+                  color: isSelected ? AppTheme.primary : AppTheme.onMedia,
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -397,19 +397,19 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.82),
+          color: AppTheme.media.withValues(alpha: 0.82),
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-          border: Border.all(color: AppTheme.accentAmber, width: 1.2),
+          border: Border.all(color: AppTheme.warning, width: 1.2),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.mic_off_rounded, size: 13, color: AppTheme.accentAmber),
+            const Icon(Icons.mic_off_rounded, size: 13, color: AppTheme.warning),
             const SizedBox(width: 6),
             Text(
               '${'live.mic_muted_badge'.tr()} · ${'live.mic_silent_badge'.tr()}',
               style: const TextStyle(
-                color: AppTheme.accentAmber,
+                color: AppTheme.warning,
                 fontSize: 10.5,
                 fontWeight: FontWeight.bold,
               ),

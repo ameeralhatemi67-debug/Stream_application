@@ -63,7 +63,7 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('viewer_setup.error_name_empty'.tr()),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
       return;
@@ -84,7 +84,7 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Setup error: $e'),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
     } finally {
@@ -97,12 +97,12 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimaryDark),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimary),
           onPressed: () => context.go('/welcome'),
         ),
       ),
@@ -122,13 +122,13 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                   const Icon(
                     Icons.account_circle_outlined,
                     size: 56,
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                   ),
                   const SizedBox(height: AppTheme.spaceMd),
                   Text(
                     'viewer_setup.title'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -138,7 +138,7 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                   Text(
                     'viewer_setup.subtitle'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 13,
                       height: 1.4,
                     ),
@@ -150,23 +150,24 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                   Container(
                     padding: const EdgeInsets.all(AppTheme.spaceMd),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkSurface1,
+                      color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppTheme.darkBorderSubtle),
+                      border: Border.all(color: AppTheme.border),
                     ),
                     child: Column(
                       children: [
                         Text(
                           'viewer_setup.avatar_section_title'.tr(),
                           style: const TextStyle(
-                            color: AppTheme.textPrimaryDark,
+                            color: AppTheme.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: AppTheme.spaceMd),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        Wrap(
+                          alignment: WrapAlignment.center,
+                          runSpacing: AppTheme.spaceSm,
                           children: [
                             ..._avatarPresets.map((preset) {
                               final isSelected = _selectedAvatarUrl == preset;
@@ -179,7 +180,7 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: isSelected
-                                          ? AppTheme.accentBlue
+                                          ? AppTheme.primary
                                           : Colors.transparent,
                                       width: 2.5,
                                     ),
@@ -200,15 +201,15 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                                 height: 48,
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
-                                  color: AppTheme.darkSurface2,
+                                  color: AppTheme.surfaceAlt,
                                   border: Border.all(
-                                    color: AppTheme.darkBorderSubtle,
+                                    color: AppTheme.border,
                                   ),
                                 ),
                                 child: const Icon(
                                   Icons.add_photo_alternate_rounded,
                                   size: 20,
-                                  color: AppTheme.accentBlue,
+                                  color: AppTheme.primary,
                                 ),
                               ),
                             ),
@@ -222,23 +223,23 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                   // Display Name Text Field
                   TextField(
                     controller: _nameController,
-                    style: const TextStyle(color: AppTheme.textPrimaryDark),
+                    style: const TextStyle(color: AppTheme.textPrimary),
                     decoration: InputDecoration(
                       labelText: 'viewer_setup.name_label'.tr(),
-                      labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+                      labelStyle: const TextStyle(color: AppTheme.textSecondary),
                       hintText: 'viewer_setup.name_hint'.tr(),
-                      hintStyle: const TextStyle(color: AppTheme.textMutedDark),
+                      hintStyle: const TextStyle(color: AppTheme.textMuted),
                       prefixIcon: const Icon(Icons.person_outline_rounded,
-                          color: AppTheme.accentBlue),
+                          color: AppTheme.primary),
                       filled: true,
-                      fillColor: AppTheme.darkSurface1,
+                      fillColor: AppTheme.surface,
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                        borderSide: const BorderSide(color: AppTheme.border),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: const BorderSide(color: AppTheme.accentBlue, width: 1.5),
+                        borderSide: const BorderSide(color: AppTheme.primary, width: 1.5),
                       ),
                     ),
                   ),
@@ -249,8 +250,8 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentBlue,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.onMedia,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -264,19 +265,19 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: AppTheme.onMedia,
                               ),
                             )
                           : Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
+                                Flexible(child: Text(
                                   'viewer_setup.btn_enter'.tr(),
                                   style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.bold,
                                   ),
-                                ),
+                                )),
                                 const SizedBox(width: 8),
                                 Transform.scale(
                                   scaleX: context.locale.languageCode == 'ar' ? -1.0 : 1.0,

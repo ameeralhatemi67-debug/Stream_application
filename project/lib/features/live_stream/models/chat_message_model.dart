@@ -1,23 +1,23 @@
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 
 /// A role/status badge shown next to a chat sender's name, resolved from
 /// user_roles/org_speakers/profiles.is_verified via the chat_sender_info RPC
 /// (see supabase/migrations/20260823140000_chat_sender_info.sql -- a regular
 /// viewer can't read those tables cross-user directly under their RLS).
 enum ChatSenderBadge {
-  speaker('🎙️', 'Speaker', 'متحدث'),
-  organization('🏛️', 'Org', 'مؤسسة'),
+  speaker(Icons.mic, 'Speaker', 'متحدث'),
+  organization(Icons.business, 'Org', 'مؤسسة'),
   // Gold ADMIN / cyan MOD pill styling lives in live_chat_widget.dart --
   // these two carry the exact bilingual labels Tasks 13 & 15 ask for
-  // ("👑 ADMIN / المشرف العام", "🛡️ MOD / مشرف البث").
-  admin('👑', 'ADMIN', 'المشرف العام'),
-  moderator('🛡️', 'MOD', 'مشرف البث'),
-  verified('✅', 'Verified', 'موثّق');
+  // ("ADMIN / المشرف العام", "MOD / مشرف البث").
+  admin(Icons.admin_panel_settings, 'ADMIN', 'المشرف العام'),
+  moderator(Icons.shield, 'MOD', 'مشرف البث'),
+  verified(Icons.verified, 'Verified', 'موثّق');
 
-  final String emoji;
+  final IconData icon;
   final String labelEn;
   final String labelAr;
-  const ChatSenderBadge(this.emoji, this.labelEn, this.labelAr);
+  const ChatSenderBadge(this.icon, this.labelEn, this.labelAr);
 }
 
 /// A real, Supabase-backed live chat message. Port of a `chat_messages` row,
@@ -44,7 +44,7 @@ class ChatMessageModel {
   final bool isPending;
 
   /// Set once this message has been edited by its sender (Cluster 4 Task
-  /// 13) -- drives the "(edited)" indicator. Mirrors chat_messages.edited_at.
+  /// 13) -- drives the "(edited)"indicator. Mirrors chat_messages.edited_at.
   final DateTime? editedAt;
 
   /// True for an optimistic echo whose insert was refused by the server

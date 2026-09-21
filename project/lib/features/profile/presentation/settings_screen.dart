@@ -1,3 +1,5 @@
+import '../../../core/widgets/app_logo.dart';
+import '../../../core/config/app_identity.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -87,7 +89,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     // on it). context.select registers this screen's rebuild dependency on
     // exactly the fields those helpers read -- context.watch<AppProvider>()
     // previously rebuilt this whole multi-section screen on ANY AppProvider
-    // change anywhere in the app (map streamers, other users' notifications,
+    // change anywhere in the app (map streamers, other users'notifications,
     // admin audit logs, none of which this screen displays).
     final appProvider = context.read<AppProvider>();
     context.select<
@@ -132,10 +134,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isStreamer = appProvider.isStreamerModeEnabled;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
         title: Text('settings.title'.tr()),
-        backgroundColor: AppTheme.darkBgBase,
+        backgroundColor: AppTheme.bg,
         elevation: 0,
         actions: const [
           LanguageSwitcher(showLabel: false),
@@ -145,27 +147,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         children: [
-          // 👑 Top Option: My Account Profile (Protected, cannot be deleted)
+          //  Top Option: My Account Profile (Protected, cannot be deleted)
           _buildUserProfileHeaderCard(context, appProvider),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 🎭 Section 1: Streamer vs. Viewer Role Mode Toggle
+          //  Section 1: Streamer vs. Viewer Role Mode Toggle
           _buildSectionHeader(
             context,
             title: 'settings.role_mode_title'.tr(),
             icon: Icons.switch_account_rounded,
-            iconColor: AppTheme.accentRed,
+            iconColor: AppTheme.danger,
           ),
           const SizedBox(height: AppTheme.spaceSm),
           _buildRoleModeToggleCard(context, appProvider),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 📝 Section 1.5: Broadcaster & Organization Verification Application & Live Tracking Banner
+          //  Section 1.5: Broadcaster & Organization Verification Application & Live Tracking Banner
           _buildSectionHeader(
             context,
             title: 'application.title'.tr(),
             icon: Icons.verified_rounded,
-            iconColor: AppTheme.accentBlue,
+            iconColor: AppTheme.primary,
           ),
           const SizedBox(height: AppTheme.spaceSm),
           _buildApplicationSection(context, appProvider),
@@ -185,7 +187,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // dedicated modal sheet instead of an always-expanded card.
           _buildSummaryRow(
             icon: Icons.notifications_active_rounded,
-            iconColor: AppTheme.accentBlue,
+            iconColor: AppTheme.primary,
             title: isAr
                 ? 'إعدادات الإشعارات والتنبيهات'
                 : 'Notification Preferences',
@@ -203,7 +205,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           if (isStreamer) ...[
             _buildSummaryRow(
               icon: Icons.movie_creation_rounded,
-              iconColor: AppTheme.accentRed,
+              iconColor: AppTheme.danger,
               title: isAr
                   ? 'تفضيلات الاستوديو والبث'
                   : 'Broadcaster & Studio Preferences',
@@ -222,7 +224,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               title: 'settings.org_management_title'.tr(),
               icon: Icons.apartment_rounded,
-              iconColor: AppTheme.accentAmber,
+              iconColor: AppTheme.warning,
             ),
             const SizedBox(height: AppTheme.spaceSm),
             _buildOrgManagementShortcutCard(context),
@@ -235,7 +237,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               title: 'settings.admin_hub_title'.tr(),
               icon: Icons.admin_panel_settings_rounded,
-              iconColor: AppTheme.accentPurple,
+              iconColor: AppTheme.accent,
             ),
             const SizedBox(height: AppTheme.spaceSm),
             _buildAdminHubShortcutCard(context),
@@ -247,7 +249,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             title: 'settings.governance_legal'.tr(),
             icon: Icons.gavel_rounded,
-            iconColor: AppTheme.accentBlue,
+            iconColor: AppTheme.primary,
           ),
           const SizedBox(height: AppTheme.spaceSm),
           _buildGovernanceCard(context, appProvider),
@@ -261,7 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               title: 'settings.danger_zone'.tr(),
               icon: Icons.warning_amber_rounded,
-              iconColor: AppTheme.accentRed,
+              iconColor: AppTheme.danger,
             ),
             const SizedBox(height: AppTheme.spaceSm),
             _buildDataExportCard(context, appProvider),
@@ -304,20 +306,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: const Icon(Icons.edit_outlined, size: 15),
             label: Text('settings.edit_profile'.tr()),
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.textPrimaryDark,
-              side: const BorderSide(color: AppTheme.darkBorderSubtle),
+              foregroundColor: AppTheme.textPrimary,
+              side: const BorderSide(color: AppTheme.border),
               padding: const EdgeInsets.symmetric(vertical: 11),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
             ),
             onPressed: () {
-              // "Edit Profile" must never open the broadcaster onboarding
+              // "Edit Profile"must never open the broadcaster onboarding
               // flow for a non-verified viewer -- issue_log.md: "clicking
-              // 'Edit account Profile' as a non verified streamer should
+              // 'Edit account Profile'as a non verified streamer should
               // not be an option, as it opened the streamer onboarding."
               // The broadcaster application flow stays reachable strictly
-              // via the dedicated "Apply for Verification" card/button.
+              // via the dedicated "Apply for Verification"card/button.
               if (provider.isApprovedStreamer) {
                 BroadcasterApplicationSheet.show(
                   context,
@@ -342,9 +344,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         children: [
@@ -360,7 +362,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   isAr ? profile.nameAr : profile.nameEn,
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -371,38 +373,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   email,
                   style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 11.5),
+                      color: AppTheme.textSecondary, fontSize: 11.5),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
             ),
           ),
-          Container(
+          Flexible(child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.accentBlue.withValues(alpha: 0.15),
+              color: AppTheme.primary.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               border:
-                  Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.4)),
+                  Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.person_rounded,
-                    color: AppTheme.accentBlue, size: 13),
+                    color: AppTheme.primary, size: 13),
                 const SizedBox(width: 4),
-                Text(
+                Flexible(child: Text(
                   'settings.viewer_badge'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                     fontSize: 10.5,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
+                )),
               ],
             ),
-          ),
+          )),
         ],
       ),
     );
@@ -419,9 +421,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
@@ -436,11 +438,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Container(
                     height: bannerHeight,
                     decoration: const BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppTheme.accentBlue, AppTheme.accentPurple],
-                      ),
+                      color: AppTheme.surfaceAlt,
                     ),
                     child: Image(
                       image: buildSafeImageProvider(path: profile.bannerUrl),
@@ -461,7 +459,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Container(
                       padding: const EdgeInsets.all(3),
                       decoration: const BoxDecoration(
-                        color: AppTheme.darkSurface1,
+                        color: AppTheme.surface,
                         shape: BoxShape.circle,
                       ),
                       child: CircleAvatar(
@@ -476,11 +474,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Container(
                         padding: const EdgeInsets.all(2),
                         decoration: const BoxDecoration(
-                          color: AppTheme.darkSurface1,
+                          color: AppTheme.surface,
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(Icons.verified_rounded,
-                            color: AppTheme.accentGreen, size: 18),
+                            color: AppTheme.success, size: 18),
                       ),
                     ),
                   ],
@@ -498,7 +496,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   isAr ? profile.nameAr : profile.nameEn,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -508,7 +506,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     handle,
                     style: const TextStyle(
-                        color: AppTheme.accentBlue, fontSize: 12),
+                        color: AppTheme.primary, fontSize: 12),
                   ),
                 ],
                 const SizedBox(height: 4),
@@ -516,14 +514,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   isAr ? profile.organizationAr : profile.organizationEn,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 11.5),
+                      color: AppTheme.textSecondary, fontSize: 11.5),
                 ),
                 if (email.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
                     email,
                     style: const TextStyle(
-                        color: AppTheme.textMutedDark, fontSize: 11),
+                        color: AppTheme.textMuted, fontSize: 11),
                   ),
                 ],
                 if ((isAr ? profile.bioAr : profile.bioEn).isNotEmpty) ...[
@@ -534,7 +532,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     maxLines: 3,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 11.5,
                         height: 1.4),
                   ),
@@ -558,12 +556,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
           color: isStreamer
-              ? AppTheme.accentRed.withValues(alpha: 0.5)
-              : AppTheme.darkBorderSubtle,
+              ? AppTheme.danger.withValues(alpha: 0.5)
+              : AppTheme.border,
         ),
       ),
       child: Column(
@@ -576,15 +574,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 height: 40,
                 decoration: BoxDecoration(
                   color: isStreamer
-                      ? AppTheme.accentRed.withValues(alpha: 0.15)
-                      : AppTheme.accentBlue.withValues(alpha: 0.15),
+                      ? AppTheme.danger.withValues(alpha: 0.15)
+                      : AppTheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Icon(
                   isStreamer
                       ? Icons.videocam_rounded
                       : Icons.visibility_rounded,
-                  color: isStreamer ? AppTheme.accentRed : AppTheme.accentBlue,
+                  color: isStreamer ? AppTheme.danger : AppTheme.primary,
                   size: 22,
                 ),
               ),
@@ -598,7 +596,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? 'settings.role_streamer_active'.tr()
                           : 'settings.role_viewer_active'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -613,7 +611,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ? 'حساب مشاهد عادي (يتطلب توثيق المذيع لتفعيل وضع البث)'
                               : 'Viewer Mode (Streamer Studio unlocked upon Broadcaster verification)'),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 11,
                       ),
                     ),
@@ -622,7 +620,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
               Switch(
                 value: isStreamer,
-                activeThumbColor: AppTheme.accentRed,
+                activeThumbColor: AppTheme.danger,
                 onChanged: isApproved
                     ? (val) {
                         provider.setRoleMode(val);
@@ -633,7 +631,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
 
           const SizedBox(height: AppTheme.spaceMd),
-          const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+          const Divider(color: AppTheme.border, height: 1),
           const SizedBox(height: AppTheme.spaceMd),
 
           // Google Account Status / Action
@@ -641,10 +639,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface2,
+                color: AppTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 border: Border.all(
-                    color: AppTheme.accentRed.withValues(alpha: 0.3)),
+                    color: AppTheme.danger.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -652,7 +650,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     width: 32,
                     height: 32,
                     decoration: const BoxDecoration(
-                      color: Colors.white,
+                      color: AppTheme.onMedia,
                       shape: BoxShape.circle,
                     ),
                     child: const Center(
@@ -674,7 +672,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           googleName,
                           style: const TextStyle(
-                            color: AppTheme.textPrimaryDark,
+                            color: AppTheme.textPrimary,
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
                           ),
@@ -682,7 +680,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Text(
                           googleEmail,
                           style: const TextStyle(
-                            color: AppTheme.textMutedDark,
+                            color: AppTheme.textMuted,
                             fontSize: 11,
                           ),
                         ),
@@ -693,13 +691,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentRed.withValues(alpha: 0.2),
+                      color: AppTheme.danger.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: const Text(
-                      'BROADCASTER',
-                      style: TextStyle(
-                        color: AppTheme.accentRed,
+                    child: Text('design_ui.broadcaster'.tr(),
+                      style: const TextStyle(
+                        color: AppTheme.danger,
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),
@@ -713,8 +710,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: double.infinity,
               child: OutlinedButton.icon(
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.textSecondaryDark,
-                  side: const BorderSide(color: AppTheme.darkBorderSubtle),
+                  foregroundColor: AppTheme.textSecondary,
+                  side: const BorderSide(color: AppTheme.border),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
                 icon: const Icon(Icons.logout_rounded, size: 16),
@@ -746,7 +743,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white,
+                  backgroundColor: AppTheme.onMedia,
                   foregroundColor: Colors.black87,
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
@@ -754,7 +751,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.all(2),
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.white,
+                    color: AppTheme.onMedia,
                   ),
                   child: const Text(
                     'G',
@@ -771,7 +768,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: Text('settings.signed_in_toast'.tr()),
-                      backgroundColor: AppTheme.accentRed,
+                      backgroundColor: AppTheme.danger,
                     ),
                   );
                 },
@@ -784,7 +781,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             width: double.infinity,
             child: TextButton.icon(
               style: TextButton.styleFrom(
-                foregroundColor: AppTheme.accentBlue,
+                foregroundColor: AppTheme.primary,
                 padding: const EdgeInsets.symmetric(vertical: 6),
               ),
               icon: const Icon(Icons.restart_alt_rounded, size: 16),
@@ -814,9 +811,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.3)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -826,11 +823,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                  color: AppTheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: const Icon(Icons.school_rounded,
-                    color: AppTheme.accentBlue, size: 24),
+                    color: AppTheme.primary, size: 24),
               ),
               const SizedBox(width: AppTheme.spaceMd),
               Expanded(
@@ -840,7 +837,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'application.apply_card_title'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 13.5,
                       ),
@@ -849,7 +846,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'application.apply_card_desc'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 11,
                       ),
                     ),
@@ -863,8 +860,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             width: double.infinity,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentBlue,
-                foregroundColor: Colors.white,
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.onMedia,
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -897,13 +894,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     switch (app.status) {
       case ApplicationStatus.approved:
-        statusColor = AppTheme.accentGreen;
+        statusColor = AppTheme.success;
         statusIcon = Icons.verified_rounded;
         statusTitle = 'application.status_approved'.tr();
         statusSubtitle = 'application.status_approved_desc'.tr();
         break;
       case ApplicationStatus.rejected:
-        statusColor = AppTheme.accentRed;
+        statusColor = AppTheme.danger;
         statusIcon = Icons.error_outline_rounded;
         statusTitle = 'application.status_rejected'.tr();
         statusSubtitle =
@@ -911,7 +908,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         break;
       case ApplicationStatus.pending:
       default:
-        statusColor = AppTheme.accentAmber;
+        statusColor = AppTheme.warning;
         statusIcon = Icons.hourglass_top_rounded;
         statusTitle = 'application.status_pending'.tr();
         statusSubtitle = 'application.status_pending_desc'.tr();
@@ -921,7 +918,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(color: statusColor.withValues(alpha: 0.4)),
       ),
@@ -960,15 +957,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 1.5),
                           decoration: BoxDecoration(
-                            color: AppTheme.darkSurface2,
+                            color: AppTheme.surfaceAlt,
                             borderRadius: BorderRadius.circular(4),
                             border: Border.all(
-                                color: AppTheme.darkBorderSubtle, width: 0.6),
+                                color: AppTheme.border, width: 0.6),
                           ),
                           child: Text(
                             app.isOrganization ? 'ORGANIZATION' : 'SCHOLAR',
                             style: const TextStyle(
-                                color: AppTheme.textMutedDark, fontSize: 8.5),
+                                color: AppTheme.textMuted, fontSize: 8.5),
                           ),
                         ),
                       ],
@@ -977,7 +974,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       '${isAr ? app.applicantNameAr : app.applicantNameEn} • ${app.email}',
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 11,
                         fontWeight: FontWeight.w600,
                       ),
@@ -992,7 +989,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             width: double.infinity,
             padding: const EdgeInsets.all(AppTheme.spaceSm),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface2,
+              color: AppTheme.surfaceAlt,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
             child: Column(
@@ -1003,12 +1000,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Row(
                     children: [
                       const Icon(Icons.info_outline_rounded,
-                          size: 13, color: AppTheme.accentRed),
+                          size: 13, color: AppTheme.danger),
                       const SizedBox(width: 4),
                       Text(
                         'application.admin_feedback'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.accentRed,
+                          color: AppTheme.danger,
                           fontSize: 10.5,
                           fontWeight: FontWeight.bold,
                         ),
@@ -1019,21 +1016,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     app.reviewNotes!,
                     style: const TextStyle(
-                        color: AppTheme.textSecondaryDark, fontSize: 11),
+                        color: AppTheme.textSecondary, fontSize: 11),
                   ),
                 ] else ...[
                   Text(
                     statusSubtitle,
                     style: const TextStyle(
-                        color: AppTheme.textSecondaryDark, fontSize: 11),
+                        color: AppTheme.textSecondary, fontSize: 11),
                   ),
                 ],
               ],
             ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
-          // A single "Edit"/"Reapply" action only -- no parallel "New
-          // Application" button. An account is strictly limited to one
+          // A single "Edit"/"Reapply"action only -- no parallel "New
+          // Application"button. An account is strictly limited to one
           // personal broadcaster channel (issue_log.md: "I should not have
           // the ability to own two channels"); an existing application
           // (pending, approved, or rejected) is always edited in place.
@@ -1041,8 +1038,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             width: double.infinity,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.accentBlue,
-                side: const BorderSide(color: AppTheme.darkBorderSubtle),
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.border),
                 padding: const EdgeInsets.symmetric(vertical: 9),
               ),
               icon: const Icon(Icons.edit_note_rounded, size: 16),
@@ -1067,12 +1064,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
           color: isBroadcasting
-              ? (isAudioLive ? const Color(0xFFA1A1AA) : AppTheme.accentRed)
-              : AppTheme.darkBorderSubtle,
+              ? (isAudioLive ? AppTheme.textMuted : AppTheme.danger)
+              : AppTheme.border,
           width: isBroadcasting ? 1.5 : 1.0,
         ),
       ),
@@ -1090,9 +1087,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     decoration: BoxDecoration(
                       color: isBroadcasting
                           ? (isAudioLive
-                              ? const Color(0xFFA1A1AA)
-                              : AppTheme.accentRed)
-                          : AppTheme.textMutedDark,
+                              ? AppTheme.textMuted
+                              : AppTheme.danger)
+                          : AppTheme.textMuted,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -1106,9 +1103,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: TextStyle(
                       color: isBroadcasting
                           ? (isAudioLive
-                              ? const Color(0xFFE4E4E7)
-                              : AppTheme.accentRed)
-                          : AppTheme.textMutedDark,
+                              ? AppTheme.onMedia
+                              : AppTheme.danger)
+                          : AppTheme.textMuted,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -1121,11 +1118,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: isAudioLive
-                        ? const Color(0xFF3F3F46)
-                        : AppTheme.accentRed.withValues(alpha: 0.2),
+                        ? AppTheme.media
+                        : AppTheme.danger.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     border: isAudioLive
-                        ? Border.all(color: const Color(0xFFA1A1AA), width: 0.8)
+                        ? Border.all(color: AppTheme.textMuted, width: 0.8)
                         : null,
                   ),
                   child: Text(
@@ -1134,8 +1131,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         : '342 ${'settings.viewers_count'.tr()}',
                     style: TextStyle(
                       color: isAudioLive
-                          ? const Color(0xFFE4E4E7)
-                          : AppTheme.accentRed,
+                          ? AppTheme.onMedia
+                          : AppTheme.danger,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1145,11 +1142,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
-          // 🏢 Broadcast Identity Selector (Scholar vs Organization)
+          //  Broadcast Identity Selector (Scholar vs Organization)
           Text(
             'admin.broadcast_identity'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1174,12 +1171,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                   selected: provider.selectedBroadcastOrgId == null,
-                  selectedColor: AppTheme.accentBlue.withValues(alpha: 0.2),
-                  backgroundColor: AppTheme.darkSurface2,
+                  selectedColor: AppTheme.primary.withValues(alpha: 0.2),
+                  backgroundColor: AppTheme.surfaceAlt,
                   labelStyle: TextStyle(
                     color: provider.selectedBroadcastOrgId == null
-                        ? AppTheme.accentBlue
-                        : AppTheme.textSecondaryDark,
+                        ? AppTheme.primary
+                        : AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight: provider.selectedBroadcastOrgId == null
                         ? FontWeight.bold
@@ -1187,8 +1184,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   side: BorderSide(
                     color: provider.selectedBroadcastOrgId == null
-                        ? AppTheme.accentBlue
-                        : AppTheme.darkBorderSubtle,
+                        ? AppTheme.primary
+                        : AppTheme.border,
                   ),
                   onSelected: (selected) {
                     if (selected) {
@@ -1215,12 +1212,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ],
                   ),
                   selected: provider.selectedBroadcastOrgId == 'org_dalilk_04',
-                  selectedColor: AppTheme.accentAmber.withValues(alpha: 0.2),
-                  backgroundColor: AppTheme.darkSurface2,
+                  selectedColor: AppTheme.warning.withValues(alpha: 0.2),
+                  backgroundColor: AppTheme.surfaceAlt,
                   labelStyle: TextStyle(
                     color: provider.selectedBroadcastOrgId == 'org_dalilk_04'
-                        ? AppTheme.accentAmber
-                        : AppTheme.textSecondaryDark,
+                        ? AppTheme.warning
+                        : AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight:
                         provider.selectedBroadcastOrgId == 'org_dalilk_04'
@@ -1229,8 +1226,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   side: BorderSide(
                     color: provider.selectedBroadcastOrgId == 'org_dalilk_04'
-                        ? AppTheme.accentAmber
-                        : AppTheme.darkBorderSubtle,
+                        ? AppTheme.warning
+                        : AppTheme.border,
                   ),
                   onSelected: (selected) {
                     if (selected) {
@@ -1243,11 +1240,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
-          // 🎙️ / 🎥 Broadcast Format Segmented Selector
+          //  /  Broadcast Format Segmented Selector
           Text(
             'settings.broadcast_format'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -1266,14 +1263,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     decoration: BoxDecoration(
                       color: provider.customBroadcastType ==
                               BroadcastType.liveVideo
-                          ? AppTheme.accentRed.withValues(alpha: 0.2)
-                          : AppTheme.darkSurface2,
+                          ? AppTheme.danger.withValues(alpha: 0.2)
+                          : AppTheme.surfaceAlt,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       border: Border.all(
                         color: provider.customBroadcastType ==
                                 BroadcastType.liveVideo
-                            ? AppTheme.accentRed
-                            : AppTheme.darkBorderSubtle,
+                            ? AppTheme.danger
+                            : AppTheme.border,
                         width: 1.2,
                       ),
                     ),
@@ -1285,8 +1282,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           size: 16,
                           color: provider.customBroadcastType ==
                                   BroadcastType.liveVideo
-                              ? AppTheme.accentRed
-                              : AppTheme.textMutedDark,
+                              ? AppTheme.danger
+                              : AppTheme.textMuted,
                         ),
                         const SizedBox(width: 6),
                         Flexible(
@@ -1295,8 +1292,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: TextStyle(
                               color: provider.customBroadcastType ==
                                       BroadcastType.liveVideo
-                                  ? Colors.white
-                                  : AppTheme.textSecondaryDark,
+                                  ? AppTheme.onMedia
+                                  : AppTheme.textSecondary,
                               fontSize: 12,
                               fontWeight: provider.customBroadcastType ==
                                       BroadcastType.liveVideo
@@ -1324,14 +1321,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     decoration: BoxDecoration(
                       color: provider.customBroadcastType ==
                               BroadcastType.liveAudio
-                          ? const Color(0xFF3F3F46)
-                          : AppTheme.darkSurface2,
+                          ? AppTheme.media
+                          : AppTheme.surfaceAlt,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       border: Border.all(
                         color: provider.customBroadcastType ==
                                 BroadcastType.liveAudio
-                            ? const Color(0xFFA1A1AA)
-                            : AppTheme.darkBorderSubtle,
+                            ? AppTheme.textMuted
+                            : AppTheme.border,
                         width: 1.2,
                       ),
                     ),
@@ -1343,8 +1340,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           size: 16,
                           color: provider.customBroadcastType ==
                                   BroadcastType.liveAudio
-                              ? const Color(0xFFE4E4E7)
-                              : AppTheme.textMutedDark,
+                              ? AppTheme.onMedia
+                              : AppTheme.textMuted,
                         ),
                         const SizedBox(width: 6),
                         Flexible(
@@ -1353,8 +1350,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             style: TextStyle(
                               color: provider.customBroadcastType ==
                                       BroadcastType.liveAudio
-                                  ? Colors.white
-                                  : AppTheme.textSecondaryDark,
+                                  ? AppTheme.onMedia
+                                  : AppTheme.textSecondary,
                               fontSize: 12,
                               fontWeight: provider.customBroadcastType ==
                                       BroadcastType.liveAudio
@@ -1377,11 +1374,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextField(
             controller: _youtubeUrlController,
             style:
-                const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               labelText: 'settings.youtube_url_label'.tr(),
               prefixIcon: const Icon(Icons.smart_display_rounded,
-                  color: AppTheme.accentRed, size: 20),
+                  color: AppTheme.danger, size: 20),
             ),
             onChanged: (val) => provider.setCustomStreamerYouTubeUrl(val),
           ),
@@ -1390,11 +1387,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextField(
             controller: _titleController,
             style:
-                const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               labelText: 'settings.lecture_title_label'.tr(),
               prefixIcon: const Icon(Icons.title_rounded,
-                  color: AppTheme.accentBlue, size: 20),
+                  color: AppTheme.primary, size: 20),
             ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
@@ -1404,7 +1401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               'admin.select_campus_branch'.tr(),
               style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -1418,7 +1415,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 return InputDecorator(
                   decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.apartment_rounded,
-                        color: AppTheme.accentAmber, size: 20),
+                        color: AppTheme.warning, size: 20),
                     contentPadding:
                         EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   ),
@@ -1426,9 +1423,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     child: DropdownButton<String>(
                       value: provider.selectedVenueBranchId,
                       isExpanded: true,
-                      dropdownColor: AppTheme.darkSurface2,
+                      dropdownColor: AppTheme.surfaceAlt,
                       style: const TextStyle(
-                          color: AppTheme.textPrimaryDark, fontSize: 13),
+                          color: AppTheme.textPrimary, fontSize: 13),
                       items: branches.map((b) {
                         return DropdownMenuItem<String>(
                           value: b.venueId,
@@ -1451,7 +1448,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             Text(
               'admin.select_co_speakers'.tr(),
               style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -1476,20 +1473,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       label: Text(spk.getLocalizedName(langCode)),
                       selected: isChecked,
                       selectedColor:
-                          AppTheme.accentAmber.withValues(alpha: 0.25),
-                      backgroundColor: AppTheme.darkSurface2,
+                          AppTheme.warning.withValues(alpha: 0.25),
+                      backgroundColor: AppTheme.surfaceAlt,
                       labelStyle: TextStyle(
                         color: isChecked
-                            ? AppTheme.accentAmber
-                            : AppTheme.textSecondaryDark,
+                            ? AppTheme.warning
+                            : AppTheme.textSecondary,
                         fontSize: 11,
                         fontWeight:
                             isChecked ? FontWeight.bold : FontWeight.normal,
                       ),
                       side: BorderSide(
                         color: isChecked
-                            ? AppTheme.accentAmber
-                            : AppTheme.darkBorderSubtle,
+                            ? AppTheme.warning
+                            : AppTheme.border,
                       ),
                       onSelected: (_) =>
                           provider.toggleCoSpeaker(spk.speakerId),
@@ -1502,11 +1499,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             TextField(
               controller: _venueController,
               style: const TextStyle(
-                  color: AppTheme.textPrimaryDark, fontSize: 13),
+                  color: AppTheme.textPrimary, fontSize: 13),
               decoration: InputDecoration(
                 labelText: 'settings.venue_location_label'.tr(),
                 prefixIcon: const Icon(Icons.location_pin,
-                    color: AppTheme.accentRed, size: 20),
+                    color: AppTheme.danger, size: 20),
               ),
             ),
           ],
@@ -1517,8 +1514,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    isBroadcasting ? AppTheme.darkSurface3 : AppTheme.accentRed,
-                foregroundColor: Colors.white,
+                    isBroadcasting ? AppTheme.surface : AppTheme.danger,
+                foregroundColor: AppTheme.onMedia,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -1553,9 +1550,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       BuildContext context, String currentLocale) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         children: [
@@ -1566,18 +1563,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_off,
               color: currentLocale == 'en'
-                  ? AppTheme.accentRed
-                  : AppTheme.textMutedDark,
+                  ? AppTheme.danger
+                  : AppTheme.textMuted,
               size: 20,
             ),
-            title: const Text('English (US)',
+            title: Text('design_ui.english_us'.tr(),
                 style:
-                    TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
-            subtitle: const Text('LTR Interface',
-                style: TextStyle(color: AppTheme.textMutedDark, fontSize: 11)),
+                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+            subtitle: Text('design_ui.ltr_interface'.tr(),
+                style: const TextStyle(color: AppTheme.textMuted, fontSize: 11)),
             onTap: () => context.setLocale(const Locale('en')),
           ),
-          const Divider(height: 1, color: AppTheme.darkBorderSubtle),
+          const Divider(height: 1, color: AppTheme.border),
           ListTile(
             dense: true,
             leading: Icon(
@@ -1585,15 +1582,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ? Icons.radio_button_checked
                   : Icons.radio_button_off,
               color: currentLocale == 'ar'
-                  ? AppTheme.accentRed
-                  : AppTheme.textMutedDark,
+                  ? AppTheme.danger
+                  : AppTheme.textMuted,
               size: 20,
             ),
             title: const Text('العربية (Arabic)',
                 style:
-                    TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
+                    TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
             subtitle: const Text('واجهة من اليمين إلى اليسار (RTL)',
-                style: TextStyle(color: AppTheme.textMutedDark, fontSize: 11)),
+                style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
             onTap: () => context.setLocale(const Locale('ar')),
           ),
         ],
@@ -1608,9 +1605,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1618,21 +1615,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'settings.quality'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppTheme.spaceSm),
           DropdownButtonFormField<String>(
             initialValue: quality,
-            dropdownColor: AppTheme.darkSurface2,
+            dropdownColor: AppTheme.surfaceAlt,
             style:
-                const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: const InputDecoration(
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               prefixIcon:
-                  Icon(Icons.hd_outlined, color: AppTheme.accentBlue, size: 20),
+                  Icon(Icons.hd_outlined, color: AppTheme.primary, size: 20),
             ),
             items: [
               DropdownMenuItem(
@@ -1667,21 +1664,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border:
-              Border.all(color: AppTheme.accentAmber.withValues(alpha: 0.3)),
+              Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppTheme.accentAmber.withValues(alpha: 0.15),
+                color: AppTheme.warning.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
               child: const Icon(Icons.apartment_rounded,
-                  color: AppTheme.accentAmber, size: 22),
+                  color: AppTheme.warning, size: 22),
             ),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
@@ -1691,7 +1688,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     'settings.org_management_title'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13.5,
                     ),
@@ -1700,7 +1697,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     'settings.org_management_desc'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -1708,7 +1705,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textSecondaryDark),
+                color: AppTheme.textSecondary),
           ],
         ),
       ),
@@ -1722,21 +1719,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border:
-              Border.all(color: AppTheme.accentPurple.withValues(alpha: 0.3)),
+              Border.all(color: AppTheme.accent.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: AppTheme.accentPurple.withValues(alpha: 0.15),
+                color: AppTheme.accent.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
               child: const Icon(Icons.admin_panel_settings_rounded,
-                  color: AppTheme.accentPurple, size: 22),
+                  color: AppTheme.accent, size: 22),
             ),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
@@ -1746,7 +1743,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     'settings.admin_hub_title'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13.5,
                     ),
@@ -1755,7 +1752,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     'settings.admin_hub_desc'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -1763,49 +1760,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textSecondaryDark),
+                color: AppTheme.textSecondary),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildVersionInfoCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
-      ),
-      child: Column(
-        children: [
-          _buildInfoRow('settings.version'.tr(), '2.0.0 (Production Release)'),
-          const Divider(height: 16, color: AppTheme.darkBorderSubtle),
-          _buildInfoRow(
-              'settings.region'.tr(), 'Eastern Province (AlSharqia), KSA'),
-          const Divider(height: 16, color: AppTheme.darkBorderSubtle),
-          _buildInfoRow('settings.status'.tr(), 'All Services Operational 🟢'),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(String label, String value) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label,
-            style: const TextStyle(
-                color: AppTheme.textSecondaryDark, fontSize: 12)),
-        Text(value,
-            style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
-                fontSize: 12,
-                fontWeight: FontWeight.w600)),
-      ],
-    );
-  }
+  Widget _buildVersionInfoCard(BuildContext context) => Container(
+    padding: const EdgeInsets.all(AppTheme.spaceLg),
+    decoration: BoxDecoration(color: AppTheme.surface,
+      borderRadius: BorderRadius.circular(AppTheme.radiusMd), border: Border.all(color: AppTheme.border)),
+    child: Column(children: [
+      const AppLogo(size: 64), const SizedBox(height: AppTheme.spaceMd),
+      Text(AppIdentity.name(context.locale.languageCode), style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
+      const SizedBox(height: AppTheme.spaceSm),
+      Text('settings.build_version'.tr(), textAlign: TextAlign.center),
+      Text('settings.release_pending'.tr(), style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
+    ]),
+  );
 
   Widget _buildGovernanceCard(BuildContext context, AppProvider provider) {
     final terms = provider.termsAndConditions;
@@ -1813,9 +1786,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         children: [
@@ -1826,14 +1799,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 '${'settings.terms_version_label'.tr()}: ${terms.version}',
             onTap: () => _openLegalReader(context, terms, 0),
           ),
-          const Divider(height: 16, color: AppTheme.darkBorderSubtle),
+          const Divider(height: 16, color: AppTheme.border),
           _buildGovernanceRow(
             icon: Icons.verified_user_rounded,
             title: 'settings.view_guidelines'.tr(),
             subtitle: 'Academic integrity & broadcast standards',
             onTap: () => _openLegalReader(context, terms, 1),
           ),
-          const Divider(height: 16, color: AppTheme.darkBorderSubtle),
+          const Divider(height: 16, color: AppTheme.border),
           _buildGovernanceRow(
             icon: Icons.privacy_tip_rounded,
             title: 'settings.view_privacy'.tr(),
@@ -1858,7 +1831,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppTheme.accentBlue),
+            Icon(icon, size: 20, color: AppTheme.primary),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
               child: Column(
@@ -1867,7 +1840,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -1876,7 +1849,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      color: AppTheme.textMutedDark,
+                      color: AppTheme.textMuted,
                       fontSize: 11,
                     ),
                   ),
@@ -1884,7 +1857,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: AppTheme.textSecondaryDark),
+                size: 14, color: AppTheme.textSecondary),
           ],
         ),
       ),
@@ -1908,9 +1881,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1918,7 +1891,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'settings.data_export_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -1927,7 +1900,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'settings.data_export_desc'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondaryDark, fontSize: 11),
+                color: AppTheme.textSecondary, fontSize: 11),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
@@ -1939,14 +1912,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.accentBlue,
+                        color: AppTheme.primary,
                       ),
                     )
                   : const Icon(Icons.download_rounded, size: 18),
               label: Text('settings.data_export_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.accentBlue,
-                side: const BorderSide(color: AppTheme.accentBlue),
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -1977,7 +1950,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.data_export_error_toast'.tr()),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
       return;
@@ -1993,15 +1966,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.darkSurface1,
+          backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+            side: const BorderSide(color: AppTheme.border),
           ),
           title: Text(
             'settings.data_export_dialog_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -2015,22 +1988,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Text(
                   'settings.data_export_dialog_desc'.tr(),
                   style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 12),
+                      color: AppTheme.textSecondary, fontSize: 12),
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 360),
                   padding: const EdgeInsets.all(AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurface2,
+                    color: AppTheme.surfaceAlt,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: Border.all(color: AppTheme.darkBorderSubtle),
+                    border: Border.all(color: AppTheme.border),
                   ),
                   child: SingleChildScrollView(
                     child: SelectableText(
                       jsonText,
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 11.5,
                         fontFamily: 'monospace',
                         height: 1.4,
@@ -2046,13 +2019,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'common.close'.tr(),
-                style: const TextStyle(color: AppTheme.textMutedDark),
+                style: const TextStyle(color: AppTheme.textMuted),
               ),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentBlue,
-                foregroundColor: Colors.white,
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.onMedia,
               ),
               icon: const Icon(Icons.copy_rounded, size: 16),
               label: Text('settings.data_export_copy_btn'.tr()),
@@ -2075,9 +2048,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.accentRed.withValues(alpha: 0.3)),
+        border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2085,7 +2058,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'settings.delete_account_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -2094,7 +2067,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'settings.delete_account_desc'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondaryDark, fontSize: 11),
+                color: AppTheme.textSecondary, fontSize: 11),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
@@ -2106,14 +2079,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.accentRed,
+                        color: AppTheme.danger,
                       ),
                     )
                   : const Icon(Icons.delete_forever_rounded, size: 18),
               label: Text('settings.delete_account_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.accentRed,
-                side: const BorderSide(color: AppTheme.accentRed),
+                foregroundColor: AppTheme.danger,
+                side: const BorderSide(color: AppTheme.danger),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -2133,21 +2106,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
       context: context,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: AppTheme.darkSurface1,
+          backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+            side: const BorderSide(color: AppTheme.border),
           ),
           title: Row(
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.accentRed, size: 22),
+                  color: AppTheme.danger, size: 22),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'settings.delete_account_confirm_title'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -2158,20 +2131,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Text(
             'settings.delete_account_confirm_body'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondaryDark, fontSize: 13),
+                color: AppTheme.textSecondary, fontSize: 13),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMutedDark),
+                style: const TextStyle(color: AppTheme.textMuted),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentRed,
-                foregroundColor: Colors.white,
+                backgroundColor: AppTheme.danger,
+                foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -2201,7 +2174,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.delete_account_error_toast'.tr()),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
     }
@@ -2215,9 +2188,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -2225,7 +2198,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'settings.chat_history_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -2234,7 +2207,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Text(
             'settings.chat_history_desc'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondaryDark, fontSize: 11),
+                color: AppTheme.textSecondary, fontSize: 11),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
@@ -2245,13 +2218,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppTheme.accentBlue),
+                          strokeWidth: 2, color: AppTheme.primary),
                     )
                   : const Icon(Icons.forum_outlined, size: 18),
               label: Text('settings.delete_messages_by_stream_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.accentBlue,
-                side: const BorderSide(color: AppTheme.accentBlue),
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: AppTheme.primary),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -2270,13 +2243,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppTheme.accentRed),
+                          strokeWidth: 2, color: AppTheme.danger),
                     )
                   : const Icon(Icons.delete_sweep_outlined, size: 18),
               label: Text('settings.delete_all_messages_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.accentRed,
-                side: const BorderSide(color: AppTheme.accentRed),
+                foregroundColor: AppTheme.danger,
+                side: const BorderSide(color: AppTheme.danger),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -2296,21 +2269,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface1,
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.darkBorderSubtle),
+          side: const BorderSide(color: AppTheme.border),
         ),
         title: Row(
           children: [
             const Icon(Icons.warning_amber_rounded,
-                color: AppTheme.accentRed, size: 22),
+                color: AppTheme.danger, size: 22),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'settings.delete_all_messages_confirm_title'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -2321,18 +2294,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Text(
           'settings.delete_all_messages_confirm_body'.tr(),
           style:
-              const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 13),
+              const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMutedDark)),
+                style: const TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentRed,
-                foregroundColor: Colors.white),
+                backgroundColor: AppTheme.danger,
+                foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
               _handleDeleteAllMessages(context, provider);
@@ -2355,7 +2328,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Text(success
             ? 'settings.delete_all_messages_success_toast'.tr()
             : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : AppTheme.accentRed,
+        backgroundColor: success ? null : AppTheme.danger,
       ),
     );
   }
@@ -2368,14 +2341,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final selectedStreamId = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface1,
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.darkBorderSubtle),
+          side: const BorderSide(color: AppTheme.border),
         ),
         title: Text('settings.select_stream_dialog_title'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold)),
+                color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: double.maxFinite,
           child: streamIds.isEmpty
@@ -2383,7 +2356,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
                   child: Text(
                     'settings.select_stream_dialog_empty'.tr(),
-                    style: const TextStyle(color: AppTheme.textSecondaryDark),
+                    style: const TextStyle(color: AppTheme.textSecondary),
                   ),
                 )
               : ListView.builder(
@@ -2393,10 +2366,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     final id = streamIds[index];
                     return ListTile(
                       leading: const Icon(Icons.forum_outlined,
-                          color: AppTheme.accentBlue),
+                          color: AppTheme.primary),
                       title: Text(id,
                           style:
-                              const TextStyle(color: AppTheme.textPrimaryDark)),
+                              const TextStyle(color: AppTheme.textPrimary)),
                       onTap: () => Navigator.pop(dialogContext, id),
                     );
                   },
@@ -2406,7 +2379,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMutedDark)),
+                style: const TextStyle(color: AppTheme.textMuted)),
           ),
         ],
       ),
@@ -2421,7 +2394,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         content: Text(success
             ? 'settings.delete_messages_by_stream_success_toast'.tr()
             : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : AppTheme.accentRed,
+        backgroundColor: success ? null : AppTheme.danger,
       ),
     );
   }
@@ -2435,14 +2408,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ⏱️ 10-Minute Rolling Rate Limiter Slider
+          //  10-Minute Rolling Rate Limiter Slider
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -2451,7 +2424,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ? 'الحد الأقصى للتنبيهات (كل 10 دقائق)'
                     : '10-Minute Alert Limit',
                 style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 13.5,
                 ),
@@ -2459,17 +2432,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.18),
+                  color: AppTheme.primary.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   border: Border.all(
-                      color: AppTheme.accentBlue.withValues(alpha: 0.5)),
+                      color: AppTheme.primary.withValues(alpha: 0.5)),
                 ),
                 child: Text(
                   isAr
                       ? '${prefs.maxPer10Min} إشعارات'
                       : '${prefs.maxPer10Min} alerts',
                   style: const TextStyle(
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -2482,7 +2455,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             isAr
                 ? 'يمنع التكرار والإزعاج بدمج التنبيهات الزائدة في ملخص ذكي.'
                 : 'Prevents notification fatigue by bundling excess alerts into a smart digest.',
-            style: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11),
+            style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
           ),
           const SizedBox(height: 8),
           Slider(
@@ -2490,22 +2463,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
             min: 1,
             max: 10,
             divisions: 9,
-            activeColor: AppTheme.accentBlue,
-            inactiveColor: AppTheme.darkBorderSubtle,
+            activeColor: AppTheme.primary,
+            inactiveColor: AppTheme.border,
             label: '${prefs.maxPer10Min}',
             onChanged: (val) {
               provider.setNotificationRateLimit(val.round());
             },
           ),
-          const Divider(color: AppTheme.darkBorderSubtle, height: 24),
+          const Divider(color: AppTheme.border, height: 24),
 
-          // 🔔 Granular Notification Category Toggles
+          //  Granular Notification Category Toggles
           Text(
             isAr
                 ? 'أقسام التنبيهات المفعّلة'
                 : 'Active Notification Categories',
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -2514,7 +2487,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _buildNotifSwitch(
             title:
-                isAr ? '🔴 بثوث الفيديو المباشرة' : '🔴 Live Video Broadcasts',
+                isAr ? 'بثوث الفيديو المباشرة' : 'Live Video Broadcasts',
             value: prefs.liveVideoEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2524,8 +2497,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildNotifSwitch(
             title: isAr
-                ? '🎙️ المساحات الصوتية المباشرة'
-                : '🎙️ Live Audio Stages',
+                ? 'المساحات الصوتية المباشرة'
+                : 'Live Audio Stages',
             value: prefs.liveAudioEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2535,8 +2508,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildNotifSwitch(
             title: isAr
-                ? '🌟 مكافأة إتمام ساعة مشاهدة'
-                : '🌟 1-Hour Watch Milestone Rewards',
+                ? 'مكافأة إتمام ساعة مشاهدة'
+                : ' 1-Hour Watch Milestone Rewards',
             value: prefs.watchMilestonesEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2546,8 +2519,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildNotifSwitch(
             title: isAr
-                ? '🏛️ دعوات المنظمات والمشاركات'
-                : '🏛️ Org Invites & Guest Roles',
+                ? 'دعوات المنظمات والمشاركات'
+                : 'Org Invites & Guest Roles',
             value: prefs.orgInvitesEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2557,8 +2530,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildNotifSwitch(
             title: isAr
-                ? '📩 الرسائل والتوجيهات الإدارية'
-                : '📩 Administrative Governance Notes',
+                ? 'الرسائل والتوجيهات الإدارية'
+                : 'Administrative Governance Notes',
             value: prefs.adminNotesEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2568,8 +2541,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           _buildNotifSwitch(
             title: isAr
-                ? '🎬 المحاضرات والفيديوهات الجديدة'
-                : '🎬 New VODs & Lectures',
+                ? 'المحاضرات والفيديوهات الجديدة'
+                : 'New VODs & Lectures',
             value: prefs.vodsEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2578,15 +2551,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
 
-          // 🔕 Muted Streamers / Organizations List
+          //  Muted Streamers / Organizations List
           if (mutedIds.isNotEmpty) ...[
-            const Divider(color: AppTheme.darkBorderSubtle, height: 24),
+            const Divider(color: AppTheme.border, height: 24),
             Text(
               isAr
                   ? 'القنوات المكتومة (${mutedIds.length})'
                   : 'Muted Channels (${mutedIds.length})',
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -2601,14 +2574,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     ? streamer.getLocalizedName(isAr ? 'ar' : 'en')
                     : id;
                 return Chip(
-                  backgroundColor: AppTheme.darkSurface2,
+                  backgroundColor: AppTheme.surfaceAlt,
                   label: Text(
                     name,
                     style: const TextStyle(
-                        color: AppTheme.textSecondaryDark, fontSize: 11),
+                        color: AppTheme.textSecondary, fontSize: 11),
                   ),
                   deleteIcon: const Icon(Icons.close_rounded,
-                      size: 14, color: AppTheme.accentRed),
+                      size: 14, color: AppTheme.danger),
                   onDeleted: () {
                     provider.toggleMuteEntity(id);
                   },
@@ -2635,12 +2608,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Text(
               title,
               style: const TextStyle(
-                  color: AppTheme.textSecondaryDark, fontSize: 12),
+                  color: AppTheme.textSecondary, fontSize: 12),
             ),
           ),
           Switch(
             value: value,
-            activeThumbColor: AppTheme.accentBlue,
+            activeThumbColor: AppTheme.primary,
             onChanged: onChanged,
           ),
         ],
@@ -2652,21 +2625,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
     BuildContext context, {
     required String title,
     required IconData icon,
-    Color iconColor = AppTheme.textSecondaryDark,
+    Color iconColor = AppTheme.textSecondary,
   }) {
     return Row(
       children: [
         Icon(icon, size: 16, color: iconColor),
         const SizedBox(width: 8),
-        Text(
+        Expanded(child: Text(
           title,
           style: const TextStyle(
-            color: AppTheme.textSecondaryDark,
+            color: AppTheme.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
           ),
-        ),
+        )),
       ],
     );
   }
@@ -2680,7 +2653,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     required String title,
     required String subtitle,
     required VoidCallback onTap,
-    Color iconColor = AppTheme.accentBlue,
+    Color iconColor = AppTheme.primary,
   }) {
     return InkWell(
       onTap: onTap,
@@ -2688,9 +2661,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.darkBorderSubtle),
+          border: Border.all(color: AppTheme.border),
         ),
         child: Row(
           children: [
@@ -2710,7 +2683,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13.5,
                     ),
@@ -2719,7 +2692,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -2727,7 +2700,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ),
             ),
             const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textSecondaryDark),
+                color: AppTheme.textSecondary),
           ],
         ),
       ),
@@ -2737,7 +2710,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void _showModalSheet(BuildContext context, Widget child) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius:
@@ -2784,17 +2757,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildCustomStreamCardsEntry(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: ListTile(
         leading: const Icon(Icons.photo_library_rounded,
-            color: AppTheme.accentBlue, size: 20),
+            color: AppTheme.primary, size: 20),
         title: Text(
           'settings.custom_cards_section'.tr(),
           style: const TextStyle(
-            color: AppTheme.textPrimaryDark,
+            color: AppTheme.textPrimary,
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
@@ -2804,10 +2777,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style:
-              const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+              const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
         ),
         trailing: const Icon(Icons.chevron_right_rounded,
-            color: AppTheme.textMutedDark, size: 20),
+            color: AppTheme.textMuted, size: 20),
         onTap: () => CustomStreamCardsSection.show(context),
       ),
     );

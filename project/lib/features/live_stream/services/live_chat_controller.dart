@@ -47,7 +47,7 @@ enum ChatComposerState {
 /// Checkpoint 2 reuses for ephemeral broadcast reactions (never persisted --
 /// no reason to store millions of reaction rows against the free tier's
 /// quota). Reactions aren't gated behind sign-in like sending a chat message
-/// is: broadcast isn't covered by chat_messages' RLS at all, and there's no
+/// is: broadcast isn't covered by chat_messages'RLS at all, and there's no
 /// reason a guest viewer shouldn't be able to react.
 class LiveChatController extends ChangeNotifier {
   LiveChatController({required this.streamId, this.onReaction});
@@ -73,7 +73,7 @@ class LiveChatController extends ChangeNotifier {
   /// Messages the current viewer has hidden (Cluster 4 Task 13) -- like
   /// blocking, this is a per-viewer client-side preference with no server
   /// component: hiding one message from someone you otherwise still see is
-  /// not a moderation action, just a personal "don't show me this" toggle.
+  /// not a moderation action, just a personal "don't show me this"toggle.
   final Set<String> _hiddenMessageIds = {};
 
   final Map<String, ({String senderId, String senderName, int count})>
@@ -260,7 +260,7 @@ class LiveChatController extends ChangeNotifier {
   /// sender_id -> resolved display info + role badges, populated on demand
   /// via the chat_sender_info RPC (see supabase/migrations/
   /// 20260823140000_chat_sender_info.sql). Not a plain `profiles` select --
-  /// profiles' own RLS only lets a viewer read their own row or an admin's,
+  /// profiles'own RLS only lets a viewer read their own row or an admin's,
   /// so any other sender's name/badges need this SECURITY DEFINER function.
   final Map<String,
           ({String name, String? avatarUrl, Set<ChatSenderBadge> badges})>
@@ -386,7 +386,7 @@ class LiveChatController extends ChangeNotifier {
   }
 
   /// Mutes a sender for this stream (Checkpoint 3 Phase 2) -- server-enforced
-  /// via chat_muted_users' RLS (owner/admin only) and the chat_messages
+  /// via chat_muted_users'RLS (owner/admin only) and the chat_messages
   /// insert policy that rejects muted senders, not just this client-side
   /// gate. Throws if the caller isn't this stream's owner or an admin tier.
 
@@ -439,7 +439,7 @@ class LiveChatController extends ChangeNotifier {
         .eq('muted_profile_id', senderId);
   }
 
-  /// Deletes a message -- server-enforced via chat_messages' delete RLS,
+  /// Deletes a message -- server-enforced via chat_messages'delete RLS,
   /// which now covers two independent cases (Checkpoint 3 Phase 2's
   /// owner/admin moderation policy, and Cluster 4 Task 13's self-delete
   /// policy for the sender's own message): this one client call works for
@@ -495,8 +495,8 @@ class LiveChatController extends ChangeNotifier {
   }
 
   /// Appoints [profileId] as this stream's chat moderator (Cluster 4 Task
-  /// 15) -- server-enforced via stream_moderators' RLS (only this stream's
-  /// owner/admin may insert a scope='stream' row for it, see
+  /// 15) -- server-enforced via stream_moderators'RLS (only this stream's
+  /// owner/admin may insert a scope='stream'row for it, see
   /// supabase/migrations/20260830160000_stream_moderators.sql). Idempotent:
   /// re-appointing an existing moderator is swallowed rather than surfaced
   /// as an error.
@@ -626,7 +626,7 @@ class LiveChatController extends ChangeNotifier {
         });
     } catch (e) {
       // Supabase not initialized, or channel creation otherwise failed --
-      // stay in "reconnecting" rather than crashing the stream screen.
+      // stay in "reconnecting"rather than crashing the stream screen.
       debugPrint('LiveChatController: failed to subscribe: $e');
       _connectionState = ChatConnectionState.reconnecting;
       notifyListeners();
@@ -754,7 +754,7 @@ class LiveChatController extends ChangeNotifier {
   /// Retries a message whose insert was refused (P6.2). Only failures that
   /// could plausibly succeed on a second attempt are retryable -- see
   /// [isRetryable]; a banned keyword will be refused identically forever, so
-  /// offering "retry" there would be a lie.
+  /// offering "retry"there would be a lie.
   Future<void> retryFailedMessage(String messageId) async {
     final idx = _messages.indexWhere((m) => m.id == messageId);
     if (idx == -1) return;

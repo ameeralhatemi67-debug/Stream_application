@@ -22,7 +22,7 @@ class BroadcasterApplicationSheet extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
@@ -188,7 +188,7 @@ class _BroadcasterApplicationSheetState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppTheme.accentRed,
+            color: AppTheme.danger,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
@@ -200,13 +200,13 @@ class _BroadcasterApplicationSheetState
           ),
           child: Row(
             children: [
-              const Icon(Icons.error_outline_rounded, color: Colors.white),
+              const Icon(Icons.error_outline_rounded, color: AppTheme.onMedia),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppTheme.onMedia,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -346,7 +346,7 @@ class _BroadcasterApplicationSheetState
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: AppTheme.accentGreen,
+              color: AppTheme.success,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               boxShadow: const [
                 BoxShadow(
@@ -359,13 +359,13 @@ class _BroadcasterApplicationSheetState
             child: Row(
               children: [
                 const Icon(Icons.check_circle_outline_rounded,
-                    color: Colors.white),
+                    color: AppTheme.onMedia),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'application.submitted_toast'.tr(),
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppTheme.onMedia,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -403,7 +403,7 @@ class _BroadcasterApplicationSheetState
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppTheme.darkBorderSubtle,
+                color: AppTheme.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -416,11 +416,11 @@ class _BroadcasterApplicationSheetState
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceSm),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                  color: AppTheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
                 child: const Icon(Icons.verified_rounded,
-                    color: AppTheme.accentBlue, size: 22),
+                    color: AppTheme.primary, size: 22),
               ),
               const SizedBox(width: AppTheme.spaceSm),
               Expanded(
@@ -430,7 +430,7 @@ class _BroadcasterApplicationSheetState
                     Text(
                       'application.title'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.bold,
                       ),
@@ -438,7 +438,7 @@ class _BroadcasterApplicationSheetState
                     Text(
                       'application.subtitle'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 11,
                       ),
                     ),
@@ -447,12 +447,12 @@ class _BroadcasterApplicationSheetState
               ),
               IconButton(
                 icon: const Icon(Icons.close_rounded,
-                    color: AppTheme.textSecondaryDark),
+                    color: AppTheme.textSecondary),
                 onPressed: () => Navigator.of(context).pop(),
               ),
             ],
           ),
-          const Divider(color: AppTheme.darkBorderSubtle, height: 24),
+          const Divider(color: AppTheme.border, height: 24),
 
           // Form Scroll View
           Expanded(
@@ -540,8 +540,8 @@ class _BroadcasterApplicationSheetState
                     child: ElevatedButton(
                       onPressed: _isSubmitting ? null : _handleSubmit,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentBlue,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.primary,
+                        foregroundColor: AppTheme.onMedia,
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
@@ -557,7 +557,7 @@ class _BroadcasterApplicationSheetState
                                   height: 18,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    color: Colors.white,
+                                    color: AppTheme.onMedia,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
@@ -593,9 +593,9 @@ class _BroadcasterApplicationSheetState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface2,
+        color: AppTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         children: [
@@ -634,10 +634,10 @@ class _BroadcasterApplicationSheetState
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.darkSurface3 : Colors.transparent,
+          color: isSelected ? AppTheme.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: isSelected
-              ? Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.8))
+              ? Border.all(color: AppTheme.primary.withValues(alpha: 0.8))
               : null,
         ),
         child: Row(
@@ -645,7 +645,7 @@ class _BroadcasterApplicationSheetState
             Icon(
               icon,
               size: 20,
-              color: isSelected ? AppTheme.accentBlue : AppTheme.textSecondaryDark,
+              color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -656,8 +656,8 @@ class _BroadcasterApplicationSheetState
                     title,
                     style: TextStyle(
                       color: isSelected
-                          ? AppTheme.textPrimaryDark
-                          : AppTheme.textSecondaryDark,
+                          ? AppTheme.textPrimary
+                          : AppTheme.textSecondary,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
                       fontSize: 12,
                     ),
@@ -807,10 +807,9 @@ class _BroadcasterApplicationSheetState
           // Quick GPS Coordinate Presets
           Row(
             children: [
-              const Text(
-                'AlSharqia Presets:',
-                style: TextStyle(
-                  color: AppTheme.textSecondaryDark,
+              Text('design_ui.alsharqia_presets'.tr(),
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                 ),
@@ -862,13 +861,13 @@ class _BroadcasterApplicationSheetState
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface2,
+          color: AppTheme.surfaceAlt,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: Border.all(color: AppTheme.darkBorderSubtle),
+          border: Border.all(color: AppTheme.border),
         ),
         child: Text(
           cityName,
-          style: const TextStyle(color: AppTheme.accentBlue, fontSize: 10),
+          style: const TextStyle(color: AppTheme.primary, fontSize: 10),
         ),
       ),
     );
@@ -929,34 +928,34 @@ class _BroadcasterApplicationSheetState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface2,
+        color: AppTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedCategory,
           isExpanded: true,
-          dropdownColor: AppTheme.darkSurface2,
-          style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+          dropdownColor: AppTheme.surfaceAlt,
+          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
           icon: const Icon(Icons.arrow_drop_down_rounded,
-              color: AppTheme.textSecondaryDark),
-          items: const [
+              color: AppTheme.textSecondary),
+          items: [
             DropdownMenuItem(
                 value: 'computer_science',
-                child: Text('💻 Computer Science & AI')),
+                child: Text('design_ui.computer_science_ai'.tr())),
             DropdownMenuItem(
                 value: 'medical_health',
-                child: Text('🩺 Medicine & Health Sciences')),
+                child: Text('design_ui.medicine_health_sciences'.tr())),
             DropdownMenuItem(
                 value: 'engineering',
-                child: Text('⚙️ Engineering & Architecture')),
+                child: Text('design_ui.engineering_architecture'.tr())),
             DropdownMenuItem(
                 value: 'islamic_studies',
-                child: Text('📜 Islamic & Arabic Studies')),
+                child: Text('design_ui.islamic_arabic_studies'.tr())),
             DropdownMenuItem(
                 value: 'business_finance',
-                child: Text('📊 Business & Fintech')),
+                child: Text('design_ui.business_fintech'.tr())),
           ],
           onChanged: (val) {
             if (val != null) {
@@ -971,12 +970,12 @@ class _BroadcasterApplicationSheetState
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: AppTheme.accentBlue),
+        Icon(icon, size: 16, color: AppTheme.primary),
         const SizedBox(width: 8),
         Text(
           title,
           style: const TextStyle(
-            color: AppTheme.textPrimaryDark,
+            color: AppTheme.textPrimary,
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
@@ -999,7 +998,7 @@ class _BroadcasterApplicationSheetState
         Text(
           label,
           style: const TextStyle(
-            color: AppTheme.textSecondaryDark,
+            color: AppTheme.textSecondary,
             fontSize: 11,
             fontWeight: FontWeight.w600,
           ),
@@ -1009,27 +1008,27 @@ class _BroadcasterApplicationSheetState
           controller: controller,
           keyboardType: keyboardType,
           maxLines: maxLines,
-          style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: const TextStyle(
-                color: AppTheme.textSecondaryDark, fontSize: 12),
-            prefixIcon: Icon(icon, size: 18, color: AppTheme.textSecondaryDark),
+                color: AppTheme.textSecondary, fontSize: 12),
+            prefixIcon: Icon(icon, size: 18, color: AppTheme.textSecondary),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             filled: true,
-            fillColor: AppTheme.darkSurface2,
+            fillColor: AppTheme.surfaceAlt,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+              borderSide: const BorderSide(color: AppTheme.border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+              borderSide: const BorderSide(color: AppTheme.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.accentBlue),
+              borderSide: const BorderSide(color: AppTheme.primary),
             ),
           ),
         ),

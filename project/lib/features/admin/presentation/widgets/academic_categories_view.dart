@@ -51,7 +51,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppTheme.accentRed : AppTheme.accentGreen,
+        backgroundColor: isError ? AppTheme.danger : AppTheme.success,
       ),
     );
   }
@@ -83,7 +83,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
       BuildContext context, void Function(String) onSelect) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
@@ -93,10 +93,9 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'Select Category Icon',
-              style: TextStyle(
-                color: AppTheme.textPrimaryDark,
+            Text('design_ui.select_category_icon'.tr(),
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -122,20 +121,20 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.darkSurface2,
+                        color: AppTheme.surfaceAlt,
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        border: Border.all(color: AppTheme.darkBorderSubtle),
+                        border: Border.all(color: AppTheme.border),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Icon(item['icon'] as IconData,
-                              color: AppTheme.accentBlue, size: 24),
+                              color: AppTheme.primary, size: 24),
                           const SizedBox(height: 4),
                           Text(
                             item['name'] as String,
                             style: const TextStyle(
-                              color: AppTheme.textSecondaryDark,
+                              color: AppTheme.textSecondary,
                               fontSize: 10,
                             ),
                             maxLines: 1,
@@ -173,17 +172,17 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           final arHasEnglish = latinRegex.hasMatch(nameArController.text);
 
           return AlertDialog(
-            backgroundColor: AppTheme.darkSurface1,
+            backgroundColor: AppTheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              side: const BorderSide(color: AppTheme.darkBorderSubtle),
+              side: const BorderSide(color: AppTheme.border),
             ),
             title: Text(
               existing == null
                   ? 'admin.category_add'.tr()
                   : 'admin.category_edit'.tr(),
               style: const TextStyle(
-                  color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold),
+                  color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
             ),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 580),
@@ -230,16 +229,16 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                           padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.darkSurface2,
-                              foregroundColor: AppTheme.accentBlue,
+                              backgroundColor: AppTheme.surfaceAlt,
+                              foregroundColor: AppTheme.primary,
                               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                                side: const BorderSide(color: AppTheme.darkBorderSubtle),
+                                side: const BorderSide(color: AppTheme.border),
                               ),
                             ),
                             icon: Icon(iconForCategoryIconName(iconController.text), size: 18),
-                            label: const Text('Pick Icon', style: TextStyle(fontSize: 12)),
+                            label: Text('design_ui.pick_icon'.tr(), style: const TextStyle(fontSize: 12)),
                             onPressed: () => _showIconPickerModal(context, (name) {
                               setDialogState(() {
                                 iconController.text = name;
@@ -254,13 +253,13 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                       children: [
                         Checkbox(
                           value: isActive,
-                          activeColor: AppTheme.accentGreen,
+                          activeColor: AppTheme.success,
                           onChanged: (v) =>
                               setDialogState(() => isActive = v ?? true),
                         ),
                         Text('admin.category_active'.tr(),
                             style: const TextStyle(
-                                color: AppTheme.textSecondaryDark, fontSize: 12)),
+                                color: AppTheme.textSecondary, fontSize: 12)),
                       ],
                     ),
                   ],
@@ -271,12 +270,12 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
                 child: Text('common.cancel'.tr(),
-                    style: const TextStyle(color: AppTheme.textMutedDark)),
+                    style: const TextStyle(color: AppTheme.textMuted)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentBlue,
-                    foregroundColor: Colors.white),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.onMedia),
                 onPressed: () {
                   final id = (existing?.id ?? idController.text.trim())
                       .toLowerCase()
@@ -323,14 +322,14 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           TextField(
             controller: controller,
             onChanged: (_) => onChanged?.call(),
-            style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               labelText: label,
               hintText: hint,
-              labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark, fontSize: 11),
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
+              hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
               filled: true,
-              fillColor: AppTheme.darkSurface2,
+              fillColor: AppTheme.surfaceAlt,
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               ),
@@ -342,7 +341,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               child: Text(
                 errorText,
                 style: const TextStyle(
-                  color: AppTheme.accentAmber,
+                  color: AppTheme.warning,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -357,26 +356,26 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface1,
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: const BorderSide(color: AppTheme.darkBorderSubtle),
+          side: const BorderSide(color: AppTheme.border),
         ),
         title: Text('admin.category_delete_confirm_title'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimaryDark, fontWeight: FontWeight.bold)),
+                color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
         content: Text('admin.category_delete_confirm_body'.tr(),
             style:
-                const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12)),
+                const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('common.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMutedDark)),
+                style: const TextStyle(color: AppTheme.textMuted)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
+                backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
               _run(
@@ -409,12 +408,12 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           Row(
             children: [
               const Icon(Icons.category_rounded,
-                  color: AppTheme.accentBlue, size: 20),
+                  color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'admin.tab_categories'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
+                  color: AppTheme.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -422,8 +421,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               const Spacer(),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentBlue,
-                    foregroundColor: Colors.white),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.onMedia),
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: Text('admin.category_add'.tr()),
                 onPressed: () => _showEditDialog(provider),
@@ -436,7 +435,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                 ? Center(
                     child: Text('admin.no_categories'.tr(),
                         style: const TextStyle(
-                            color: AppTheme.textSecondaryDark)))
+                            color: AppTheme.textSecondary)))
                 : ListView.separated(
                     itemCount: sorted.length,
                     separatorBuilder: (_, __) =>
@@ -447,16 +446,16 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                       return Container(
                         padding: const EdgeInsets.all(AppTheme.spaceMd),
                         decoration: BoxDecoration(
-                          color: AppTheme.darkSurface1,
+                          color: AppTheme.surface,
                           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                          border: Border.all(color: AppTheme.darkBorderSubtle),
+                          border: Border.all(color: AppTheme.border),
                         ),
                         child: Row(
                           children: [
                             Icon(iconForCategoryIconName(category.iconName),
                                 color: category.isActive
-                                    ? AppTheme.accentBlue
-                                    : AppTheme.textMutedDark,
+                                    ? AppTheme.primary
+                                    : AppTheme.textMuted,
                                 size: 20),
                             const SizedBox(width: AppTheme.spaceMd),
                             Expanded(
@@ -469,8 +468,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                                     overflow: TextOverflow.ellipsis,
                                     style: TextStyle(
                                       color: category.isActive
-                                          ? AppTheme.textPrimaryDark
-                                          : AppTheme.textMutedDark,
+                                          ? AppTheme.textPrimary
+                                          : AppTheme.textMuted,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                     ),
@@ -480,7 +479,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                        color: AppTheme.textMutedDark,
+                                        color: AppTheme.textMuted,
                                         fontSize: 10.5),
                                   ),
                                 ],
@@ -491,32 +490,32 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                                 width: 16,
                                 height: 16,
                                 child: CircularProgressIndicator(
-                                    strokeWidth: 2, color: AppTheme.accentBlue),
+                                    strokeWidth: 2, color: AppTheme.primary),
                               )
                             else ...[
                               IconButton(
                                 icon: const Icon(Icons.arrow_upward_rounded,
-                                    size: 16, color: AppTheme.textSecondaryDark),
+                                    size: 16, color: AppTheme.textSecondary),
                                 onPressed: index == 0
                                     ? null
                                     : () => _reorder(provider, sorted, index, -1),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.arrow_downward_rounded,
-                                    size: 16, color: AppTheme.textSecondaryDark),
+                                    size: 16, color: AppTheme.textSecondary),
                                 onPressed: index == sorted.length - 1
                                     ? null
                                     : () => _reorder(provider, sorted, index, 1),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.edit_rounded,
-                                    size: 16, color: AppTheme.accentBlue),
+                                    size: 16, color: AppTheme.primary),
                                 onPressed: () =>
                                     _showEditDialog(provider, existing: category),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete_outline_rounded,
-                                    size: 16, color: AppTheme.accentRed),
+                                    size: 16, color: AppTheme.danger),
                                 onPressed: () =>
                                     _confirmDelete(provider, category),
                               ),

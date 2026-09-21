@@ -17,7 +17,7 @@ enum RtmpPublishState {
   /// v0.7 Checkpoint 4 Phase 1 -- the connection dropped mid-broadcast
   /// (network switch, weak signal) and RootEncoder is retrying with
   /// exponential backoff. Distinct from [connecting] (the initial connect)
-  /// so the UI can say "stream interrupted" rather than repeat the
+  /// so the UI can say "stream interrupted"rather than repeat the
   /// first-connect copy.
   reconnecting,
   stopped,
@@ -146,7 +146,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   // at all -- only read-side failures reliably do -- so this engine can't
   // assume a native event will always eventually arrive to end a
   // connecting/reconnecting wait. Without this, that gap is a genuine
-  // silent freeze: an unbounded "reconnecting" banner with no way out.
+  // silent freeze: an unbounded "reconnecting"banner with no way out.
   Timer? _watchdogTimer;
 
   Future<void> initializeCamera({
@@ -168,7 +168,7 @@ class RtmpPublishEngine extends ChangeNotifier {
     // attaching to RtmpPublisherBridge yet -- normally a one-frame race, not
     // a real failure, since the screen mounts the camera preview before
     // calling this. A short bounded retry absorbs that race without needing
-    // a dedicated "view attached" channel event.
+    // a dedicated "view attached"channel event.
     const maxAttempts = 10;
     const retryDelay = Duration(milliseconds: 200);
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -258,7 +258,7 @@ class RtmpPublishEngine extends ChangeNotifier {
       _lastMicRms = null;
       // Mute is a property of a *live* MicrophoneSource, and stopping tears
       // that source down -- carrying the flag over would both strand a
-      // "Streamer Microphone Muted" badge on an ended broadcast and make a
+      // "Streamer Microphone Muted"badge on an ended broadcast and make a
       // restarted one report a mute the native encoder no longer holds.
       _isMuted = false;
       _applySilenceState(levelIsSilent: false);

@@ -16,7 +16,7 @@ class MapDiagnosticLogger {
     final timeStr =
         "${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}.${now.millisecond.toString().padLeft(3, '0')}";
     final prefix =
-        isError ? "🔴 [MAP DIAGNOSTIC ERROR]" : "🟢 [MAP DIAGNOSTIC]";
+        isError ? " [MAP DIAGNOSTIC ERROR]" : " [MAP DIAGNOSTIC]";
 
     debugPrint("$prefix [$timeStr] [$category] $message");
   }
@@ -73,10 +73,10 @@ class MapDiagnosticMessengerBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.black.withValues(alpha: 0.85),
+          color: AppTheme.media.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: areMarkersVisible ? AppTheme.accentRed : AppTheme.accentBlue,
+            color: areMarkersVisible ? AppTheme.danger : AppTheme.primary,
             width: 1.5,
           ),
           boxShadow: const [
@@ -91,7 +91,7 @@ class MapDiagnosticMessengerBar extends StatelessWidget {
                   ? Icons.bug_report_rounded
                   : Icons.info_outline_rounded,
               color:
-                  areMarkersVisible ? AppTheme.accentRed : AppTheme.accentBlue,
+                  areMarkersVisible ? AppTheme.danger : AppTheme.primary,
               size: 18,
             ),
             const SizedBox(width: 8),
@@ -99,7 +99,7 @@ class MapDiagnosticMessengerBar extends StatelessWidget {
               child: Text(
                 "DIAGNOSTIC | Zoom: ${currentZoom.toStringAsFixed(2)} | Markers: ${areMarkersVisible ? 'ACTIVE (ZOOMED IN)' : 'HIDDEN'} | Check Terminal Logs",
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.onMedia,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'monospace',

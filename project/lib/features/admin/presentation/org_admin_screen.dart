@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -35,23 +36,22 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
 
     if (orgIds.isEmpty) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBgBase,
+        backgroundColor: AppTheme.bg,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkSurface1,
+          backgroundColor: AppTheme.surface,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded,
-                color: AppTheme.textPrimaryDark),
+                color: AppTheme.textPrimary),
             onPressed: () => context.go('/feed'),
           ),
-          title: const Text('Organization Admin'),
+          title: Text('design_ui.organization_admin'.tr()),
         ),
-        body: const Center(
+        body: Center(
           child: Padding(
-            padding: EdgeInsets.all(AppTheme.spaceXl),
-            child: Text(
-              'You are not an Owner or Co-Owner of any organization.',
+            padding: const EdgeInsets.all(AppTheme.spaceXl),
+            child: Text('design_ui.you_are_not_an_owner_or_co_owner_of_any_organization'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
             ),
           ),
         ),
@@ -63,16 +63,16 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
         orgIds.contains(_selectedOrgId) ? _selectedOrgId! : orgIds.first;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkSurface1,
+        backgroundColor: AppTheme.surface,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded,
-              color: AppTheme.textPrimaryDark),
+              color: AppTheme.textPrimary),
           tooltip: 'Back to Discovery Feed',
           onPressed: () => context.go('/feed'),
         ),
-        title: const Text('Organization Admin'),
+        title: Text('design_ui.organization_admin'.tr()),
         actions: [
           if (orgIds.length > 1)
             Padding(
@@ -80,10 +80,10 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
               child: Center(
                 child: DropdownButton<String>(
                   value: activeOrgId,
-                  dropdownColor: AppTheme.darkSurface2,
+                  dropdownColor: AppTheme.surfaceAlt,
                   underline: const SizedBox.shrink(),
                   style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
+                      color: AppTheme.textPrimary, fontSize: 13),
                   items: orgIds
                       .map((id) => DropdownMenuItem(
                             value: id,

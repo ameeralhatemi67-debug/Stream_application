@@ -1,3 +1,5 @@
+import '../../../../core/widgets/app_logo.dart';
+import '../../../../core/config/app_identity.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -76,20 +78,12 @@ class _AppSplashScreenState extends State<AppSplashScreen>
     final isAr = context.locale.languageCode == 'ar';
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       body: Container(
         width: double.infinity,
         height: double.infinity,
         decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF18181B),
-              Color(0xFF0F0F11),
-              AppTheme.darkBgBase,
-            ],
-          ),
+          color: AppTheme.surfaceAlt,
         ),
         child: SafeArea(
           child: Center(
@@ -106,35 +100,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                       scale: _scaleAnimation.value,
                       child: Opacity(
                         opacity: _fadeAnimation.value,
-                        child: Container(
-                          width: 104,
-                          height: 104,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            gradient: const LinearGradient(
-                              begin: Alignment.topLeft,
-                              end: Alignment.bottomRight,
-                              colors: [
-                                AppTheme.accentBlue,
-                                AppTheme.accentPurple,
-                              ],
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: AppTheme.accentBlue.withValues(
-                                  alpha: 0.35 * _fadeAnimation.value,
-                                ),
-                                blurRadius: 32,
-                                spreadRadius: 6,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.podcasts_rounded,
-                            size: 52,
-                            color: Colors.white,
-                          ),
-                        ),
+                        child: const AppLogo(size: 104),
                       ),
                     );
                   },
@@ -144,9 +110,9 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
                 // Brand Title
                 Text(
-                  isAr ? 'منصة البث التعليمي' : 'Educational Streamer',
+                  AppIdentity.name(context.locale.languageCode),
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -158,7 +124,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                       ? 'البثوث الأكاديمية والمحاضرات التفاعلية'
                       : 'Academic Broadcasts & Spatial Discovery',
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 13,
                   ),
                 ),
@@ -172,7 +138,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                   child: CircularProgressIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      AppTheme.accentBlue.withValues(alpha: 0.85),
+                      AppTheme.primary.withValues(alpha: 0.85),
                     ),
                   ),
                 ),
@@ -182,7 +148,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                       ? 'جاري تهيئة المنصة وتحميل الخرائط...'
                       : 'Initializing platform & map assets...',
                   style: const TextStyle(
-                    color: AppTheme.textMutedDark,
+                    color: AppTheme.textMuted,
                     fontSize: 11.5,
                   ),
                 ),

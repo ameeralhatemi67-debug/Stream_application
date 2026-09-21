@@ -1,3 +1,5 @@
+import '../../../core/widgets/app_logo.dart';
+import '../../../core/config/app_identity.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -49,8 +51,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Google Sign-In failed: $e'),
-          backgroundColor: AppTheme.accentRed,
+          content: Text('auth_welcome.sign_in_failed'.tr()),
+          backgroundColor: AppTheme.danger,
         ),
       );
     } finally {
@@ -63,7 +65,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -77,35 +79,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
-                  // 🎓 Animated Logo & Identity Badge
-                  Container(
-                    width: 76,
-                    height: 76,
-                    decoration: BoxDecoration(
-                      color: AppTheme.accentRed.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                      border: Border.all(color: AppTheme.accentRed, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.accentRed.withValues(alpha: 0.3),
-                          blurRadius: 28,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.school_rounded,
-                      size: 40,
-                      color: AppTheme.accentRed,
-                    ),
-                  ),
+                  //  Animated Logo & Identity Badge
+                  const AppLogo(size: 96),
                   const SizedBox(height: AppTheme.spaceMd),
 
                   // Brand Title
                   Text(
-                    'auth_welcome.brand_title'.tr(),
+                    AppIdentity.name(context.locale.languageCode),
                     style: TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
                       letterSpacing:
@@ -119,7 +101,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   Text(
                     'auth_welcome.subtitle'.tr(),
                     style: TextStyle(
-                      color: AppTheme.accentBlue.withValues(alpha: 0.9),
+                      color: AppTheme.primary.withValues(alpha: 0.9),
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       height: 1.4,
@@ -128,21 +110,15 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   const SizedBox(height: AppTheme.spaceXl),
 
-                  // 🛡️ Authentication Card Container
+                  //  Authentication Card Container
                   Container(
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkSurface1,
+                      color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                       border: Border.all(
-                          color: AppTheme.darkBorderSubtle, width: 1.2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.4),
-                          blurRadius: 20,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
+                          color: AppTheme.border, width: 1.2),
+
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -150,7 +126,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Text(
                           'auth_welcome.card_title'.tr(),
                           style: const TextStyle(
-                            color: AppTheme.textPrimaryDark,
+                            color: AppTheme.textPrimary,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -160,7 +136,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Text(
                           'auth_welcome.card_subtitle'.tr(),
                           style: const TextStyle(
-                            color: AppTheme.textSecondaryDark,
+                            color: AppTheme.textSecondary,
                             fontSize: 12,
                             height: 1.4,
                           ),
@@ -168,10 +144,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                         const SizedBox(height: AppTheme.spaceLg),
 
-                        // 🔴 1. Sign Up Primary Action (Google)
+                        //  1. Sign Up Primary Action (Google)
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.white,
+                            backgroundColor: AppTheme.onMedia,
                             foregroundColor: Colors.black87,
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             shape: RoundedRectangleBorder(
@@ -198,7 +174,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                       padding: const EdgeInsets.all(2),
                                       decoration: const BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Colors.white,
+                                        color: AppTheme.onMedia,
                                       ),
                                       child: const Text(
                                         'G',
@@ -225,12 +201,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                         const SizedBox(height: AppTheme.spaceMd),
 
-                        // 🔵 2. Log In Secondary Action
+                        //  2. Log In Secondary Action
                         OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.textPrimaryDark,
+                            foregroundColor: AppTheme.textPrimary,
                             side: const BorderSide(
-                              color: AppTheme.darkBorderSubtle,
+                              color: AppTheme.border,
                               width: 1.2,
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 13),
@@ -265,7 +241,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         Row(
                           children: [
                             const Expanded(
-                              child: Divider(color: AppTheme.darkBorderSubtle),
+                              child: Divider(color: AppTheme.border),
                             ),
                             Padding(
                               padding:
@@ -273,23 +249,23 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                               child: Text(
                                 'auth_welcome.divider_or'.tr(),
                                 style: const TextStyle(
-                                  color: AppTheme.textMutedDark,
+                                  color: AppTheme.textMuted,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
                             ),
                             const Expanded(
-                              child: Divider(color: AppTheme.darkBorderSubtle),
+                              child: Divider(color: AppTheme.border),
                             ),
                           ],
                         ),
                         const SizedBox(height: AppTheme.spaceMd),
 
-                        // 🧭 3. Continue as Guest Viewer Action
+                        //  3. Continue as Guest Viewer Action
                         TextButton(
                           style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.accentBlue,
+                            foregroundColor: AppTheme.primary,
                             padding: const EdgeInsets.symmetric(vertical: 10),
                           ),
                           onPressed: () async {
@@ -320,20 +296,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                   ),
                   const SizedBox(height: AppTheme.spaceXl),
 
-                  // 🌍 Bottom Language Switcher Bar
+                  //  Bottom Language Switcher Bar
                   Container(
                     padding:
                         const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkSurface1,
+                      color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      border: Border.all(color: AppTheme.darkBorderSubtle),
+                      border: Border.all(color: AppTheme.border),
                     ),
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(Icons.language_rounded,
-                            size: 16, color: AppTheme.textMutedDark),
+                            size: 16, color: AppTheme.textMuted),
                         SizedBox(width: 8),
                         LanguageSwitcher(),
                       ],

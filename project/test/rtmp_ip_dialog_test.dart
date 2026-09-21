@@ -49,7 +49,7 @@ Widget createTestWidget({
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             theme: ThemeData.dark(useMaterial3: true).copyWith(
-              scaffoldBackgroundColor: AppTheme.darkBgBase,
+              scaffoldBackgroundColor: AppTheme.bg,
             ),
             home: Scaffold(body: child),
           ),
@@ -193,7 +193,7 @@ void main() {
       expect(provider.phoneBroadcastStreamKey,
           equals('real-key-from-youtube-studio'));
       // startQuickPhoneBroadcast (the simulated path) was never called --
-      // the viewer-facing video id is untouched by a fresh "sim_..." id.
+      // the viewer-facing video id is untouched by a fresh "sim_..."id.
       expect(provider.customYouTubeVideoId, equals(videoIdBefore));
 
       // PhoneBroadcastScreen's camera/permission setup needs real platform
@@ -297,7 +297,7 @@ void main() {
       await tester.pumpAndSettle();
 
       final medicineChipFinder =
-          find.widgetWithText(ChoiceChip, '🩺 Medicine & Clinical Health');
+          find.widgetWithText(ChoiceChip, 'Medicine & Clinical Health');
       expect(medicineChipFinder, findsOneWidget);
 
       final beforeTap = tester.widget<ChoiceChip>(medicineChipFinder);
@@ -432,7 +432,7 @@ void main() {
       expect(provider.isBroadcastingLive, isFalse);
       expect(provider.broadcastSessionError, 'broadcast_primary_required');
 
-      // See TC-STUDIO-06 -- cancel the "YouTube Live Target Updated" toast's
+      // See TC-STUDIO-06 -- cancel the "YouTube Live Target Updated"toast's
       // own pending Timer before tearing the provider down.
       InteractiveToastOverlay.dismiss();
       provider.dispose();
@@ -452,25 +452,25 @@ void main() {
       await tester.tap(find.byIcon(Icons.info_outline_rounded));
       await tester.pumpAndSettle();
 
-      expect(find.text('✨ STREAMER ACADEMY'), findsOneWidget);
+      expect(find.text('STREAMER ACADEMY'), findsOneWidget);
       expect(find.textContaining('Level 1 of 4'), findsOneWidget);
-      expect(find.text('Next Quest ▶'), findsOneWidget);
+      expect(find.text('Next Quest '), findsOneWidget);
       // First quest -- no Previous button yet.
-      expect(find.text('◀ Previous Step'), findsNothing);
+      expect(find.text('Previous Step'), findsNothing);
 
       for (var i = 0; i < 3; i++) {
-        await tester.tap(find.text('Next Quest ▶'));
+        await tester.tap(find.text('Next Quest '));
         await tester.pumpAndSettle();
       }
 
       expect(find.textContaining('Level 4 of 4'), findsOneWidget);
-      expect(find.text("🚀 Got It, Let's Stream!"), findsOneWidget);
-      expect(find.text('◀ Previous Step'), findsOneWidget);
+      expect(find.text("Got It, Let's Stream!"), findsOneWidget);
+      expect(find.text('Previous Step'), findsOneWidget);
 
-      await tester.tap(find.text("🚀 Got It, Let's Stream!"));
+      await tester.tap(find.text("Got It, Let's Stream!"));
       await tester.pumpAndSettle();
 
-      expect(find.text('✨ STREAMER ACADEMY'), findsNothing);
+      expect(find.text('STREAMER ACADEMY'), findsNothing);
     });
 
     testWidgets(
@@ -503,10 +503,10 @@ void main() {
 
       // Level 2 ("Set It & Forget It") is the Phone quest carrying the
       // paste action -- advance one quest forward from Level 1.
-      await tester.tap(find.text('Next Quest ▶'));
+      await tester.tap(find.text('Next Quest '));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('📋 Paste Key from Clipboard'));
+      await tester.tap(find.text('Paste Key from Clipboard'));
       await tester.pumpAndSettle();
 
       expect(find.text('Stream key pasted ✓'), findsOneWidget);
@@ -533,8 +533,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('🌐 Public'), findsNothing);
-      expect(find.text('🔒 Private'), findsNothing);
+      expect(find.text('Public'), findsNothing);
+      expect(find.text('Private'), findsNothing);
       expect(find.text('Share Private Invite Link'), findsNothing);
       expect(
         find.text('Require Host Knock Approval for new guests'),
@@ -594,7 +594,7 @@ void main() {
 
       final ipField = findByHint('e.g. 192.168.1.100');
       await tester.enterText(ipField, '10.0.0.42');
-      expect(find.text('🔒 Private'), findsNothing);
+      expect(find.text('Private'), findsNothing);
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Stream'));

@@ -1,4 +1,4 @@
-import 'dart:math' as math;
+import 'dart:math'as math;
 import 'package:latlong2/latlong.dart';
 import '../../profile/models/streamer_models.dart';
 
@@ -246,7 +246,7 @@ String generateExternalMapUrl(double lat, double lng, [String? label]) {
 /// coordinate-only query -- no place id, no label -- is what actually opens
 /// the exact venue pin in the Google Maps app; shared by
 /// VenueNavigationSheet, MarkerSummaryCard and StreamerSlidingDrawer so all
-/// three "open in Maps" actions on the Spatial Map stay byte-for-byte
+/// three "open in Maps"actions on the Spatial Map stay byte-for-byte
 /// identical rather than three hand-typed copies drifting apart.
 String buildGoogleMapsSearchUrl(double lat, double lng) {
   return 'https://www.google.com/maps/search/?api=1&query=$lat,$lng';

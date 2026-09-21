@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../models/device_session_model.dart';
 import '../theme/app_theme.dart';
@@ -53,28 +54,27 @@ class DeviceSessionConflictDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.darkBorderSubtle, width: 1.2),
+        side: const BorderSide(color: AppTheme.border, width: 1.2),
       ),
       title: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.accentAmber.withValues(alpha: 0.15),
+              color: AppTheme.warning.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
             child: const Icon(Icons.devices_other_rounded,
-                color: AppTheme.accentAmber, size: 22),
+                color: AppTheme.warning, size: 22),
           ),
           const SizedBox(width: AppTheme.spaceMd),
-          const Expanded(
-            child: Text(
-              'Multiple Device Login Detected',
-              style: TextStyle(
-                color: AppTheme.textPrimaryDark,
+          Expanded(
+            child: Text('design_ui.multiple_device_login_detected'.tr(),
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -88,10 +88,9 @@ class DeviceSessionConflictDialog extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'This account is currently active as a broadcaster on another device. How would you like to continue on this device?',
-              style: TextStyle(
-                color: AppTheme.textSecondaryDark,
+            Text('design_ui.this_account_is_currently_active_as_a_broadcaster_on_another_devi'.tr(),
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
                 fontSize: 12.5,
                 height: 1.4,
               ),
@@ -102,14 +101,14 @@ class DeviceSessionConflictDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface2,
+                color: AppTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.darkBorderSubtle),
+                border: Border.all(color: AppTheme.border),
               ),
               child: Row(
                 children: [
                   Icon(_platformIcon(existingDevice.platform),
-                      color: AppTheme.textMutedDark, size: 20),
+                      color: AppTheme.textMuted, size: 20),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Column(
@@ -118,16 +117,15 @@ class DeviceSessionConflictDialog extends StatelessWidget {
                         Text(
                           existingDevice.deviceName,
                           style: const TextStyle(
-                            color: AppTheme.textPrimaryDark,
+                            color: AppTheme.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 2),
-                        const Text(
-                          'Active Broadcaster Session',
-                          style: TextStyle(
-                            color: AppTheme.accentAmber,
+                        Text('design_ui.active_broadcaster_session'.tr(),
+                          style: const TextStyle(
+                            color: AppTheme.warning,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -144,14 +142,14 @@ class DeviceSessionConflictDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: AppTheme.accentBlue.withValues(alpha: 0.1),
+                color: AppTheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.accentBlue.withValues(alpha: 0.4)),
+                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
                   Icon(_platformIcon(currentDevice.platform),
-                      color: AppTheme.accentBlue, size: 20),
+                      color: AppTheme.primary, size: 20),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Column(
@@ -160,16 +158,15 @@ class DeviceSessionConflictDialog extends StatelessWidget {
                         Text(
                           '${currentDevice.deviceName} (This Device)',
                           style: const TextStyle(
-                            color: AppTheme.textPrimaryDark,
+                            color: AppTheme.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 2),
-                        const Text(
-                          'Current Local Session',
-                          style: TextStyle(
-                            color: AppTheme.accentBlue,
+                        Text('design_ui.current_local_session'.tr(),
+                          style: const TextStyle(
+                            color: AppTheme.primary,
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -186,22 +183,22 @@ class DeviceSessionConflictDialog extends StatelessWidget {
       actions: [
         OutlinedButton(
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.textSecondaryDark,
-            side: const BorderSide(color: AppTheme.darkBorderSubtle),
+            foregroundColor: AppTheme.textSecondary,
+            side: const BorderSide(color: AppTheme.border),
           ),
           onPressed: () =>
               Navigator.of(context).pop(DeviceSessionChoice.continueAsViewer),
-          child: const Text('Continue as Viewer', style: TextStyle(fontSize: 12.5)),
+          child: Text('design_ui.continue_as_viewer'.tr(), style: const TextStyle(fontSize: 12.5)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.accentBlue,
-            foregroundColor: Colors.white,
+            backgroundColor: AppTheme.primary,
+            foregroundColor: AppTheme.onMedia,
           ),
           onPressed: () => Navigator.of(context)
               .pop(DeviceSessionChoice.transferBroadcaster),
-          child: const Text('Transfer Broadcaster to This Device',
-              style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
+          child: Text('design_ui.transfer_broadcaster_to_this_device'.tr(),
+              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold)),
         ),
       ],
     );

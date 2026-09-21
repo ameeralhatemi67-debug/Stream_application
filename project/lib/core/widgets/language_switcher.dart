@@ -34,10 +34,10 @@ class LanguageSwitcher extends StatelessWidget {
               vertical: AppTheme.spaceSm,
             ),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface2,
+          color: AppTheme.surfaceAlt,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(
-            color: AppTheme.darkBorderSubtle,
+            color: AppTheme.border,
             width: 1.0,
           ),
         ),
@@ -49,7 +49,7 @@ class LanguageSwitcher extends StatelessWidget {
               width: 18,
               height: 18,
               colorFilter: const ColorFilter.mode(
-                AppTheme.accentBlue,
+                AppTheme.primary,
                 BlendMode.srcIn,
               ),
             ),
@@ -59,7 +59,7 @@ class LanguageSwitcher extends StatelessWidget {
                 targetLangCode,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                     ),
               ),
             ],

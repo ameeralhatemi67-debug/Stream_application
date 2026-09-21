@@ -139,7 +139,7 @@ class AdminDatabaseService {
     return List.unmodifiable(_cachedApplications);
   }
 
-  /// Uploads binary image bytes to the Supabase Storage 'streamer-assets' bucket
+  /// Uploads binary image bytes to the Supabase Storage 'streamer-assets'bucket
   /// and returns the public CDN URL. Falls back to null if offline.
   Future<String?> uploadStreamerAsset({
     required String fileName,
@@ -505,7 +505,7 @@ class AdminDatabaseService {
     );
   }
 
-  /// Batch-resolves profile ids to a display string ("Name" or the email if
+  /// Batch-resolves profile ids to a display string ("Name"or the email if
   /// no display name is set), used for reviewed_by (a uuid FK server-side,
   /// but a display string in BroadcasterApplicationModel).
   Future<Map<String, String>> _resolveDisplayNames(
@@ -579,7 +579,7 @@ class AdminDatabaseService {
   }
 
   /// Writes via the log_audit_event() RPC (audit_logs has no direct INSERT
-  /// policy -- see supabase/migrations' RLS -- writes are system-derived only,
+  /// policy -- see supabase/migrations'RLS -- writes are system-derived only,
   /// with the actor's identity taken server-side from auth.uid()).
   Future<void> recordAuditLog(OrgAuditLogEntry entry) async {
     if (_useSupabase) {
@@ -1060,7 +1060,7 @@ class AdminDatabaseService {
   // as their own fallback and treat these as best-effort write-throughs:
   // every method throws on failure (Supabase unavailable, or an orgId that
   // isn't a real organizations.id yet) instead of silently no-op'ing, so
-  // the caller's existing try/catch decides what "fallback" means for it.
+  // the caller's existing try/catch decides what "fallback"means for it.
   // ==========================================
 
   Future<List<OrgVenueBranchModel>> loadOrgVenues(String orgId) async {
@@ -1424,7 +1424,7 @@ class AdminDatabaseService {
     return results;
   }
 
-  /// Toggles Cluster 4 Task 18's "Hide from Map" flag for a streamer or
+  /// Toggles Cluster 4 Task 18's "Hide from Map"flag for a streamer or
   /// organization -- admin-tier only at the RLS layer (profiles_update_admin
   /// / organizations_update_owner_or_admin, both already existing). Which
   /// table to update depends on whether this streamer id is an organization
@@ -1497,7 +1497,7 @@ class AdminDatabaseService {
     return result;
   }
 
-  /// Looks up a profile by exact email for the "grant a role" search field.
+  /// Looks up a profile by exact email for the "grant a role"search field.
   Future<Map<String, dynamic>?> findProfileByEmail(String email) async {
     if (!_useSupabase) return null;
     return await _client
@@ -1608,7 +1608,7 @@ class AdminDatabaseService {
   // ==========================================
 
   /// Every open chat_reports row, joined with the reported message's body
-  /// and both parties' display info. Admin-tier only at the RLS layer
+  /// and both parties'display info. Admin-tier only at the RLS layer
   /// (chat_reports_select_admin, 20260824090000) -- a non-admin caller
   /// would just get an empty list back, not an error.
   Future<List<ChatReportModel>> loadChatReports() async {
@@ -1805,7 +1805,7 @@ class AdminDatabaseService {
   }
 
   /// One aggregated entry per muted profile, newest mute first -- the
-  /// "Muted Chatters Audit Log" section of the admin Chat Moderation tab.
+  /// "Muted Chatters Audit Log"section of the admin Chat Moderation tab.
   Future<List<ChatMuteAuditEntry>> loadMutedChattersAuditLog() async {
     if (!_useSupabase) return const [];
     try {
@@ -1913,7 +1913,7 @@ class AdminDatabaseService {
   // ==========================================
 
   /// Every tag row, admin-tier only at the RLS layer (a non-admin caller
-  /// only ever sees status='approved' rows here, per tags_select_approved_public).
+  /// only ever sees status='approved'rows here, per tags_select_approved_public).
   Future<List<TagModerationModel>> loadAllTags() async {
     if (!_useSupabase) return const [];
     try {
@@ -2054,7 +2054,7 @@ class AdminDatabaseService {
   }
 
   /// Every broadcaster currently carrying [tagName], for the "Inspect
-  /// Broadcasters" drill-down (Cluster 3 Task 12).
+  /// Broadcasters"drill-down (Cluster 3 Task 12).
   Future<List<TaggedBroadcasterSummary>> loadBroadcastersForTag(
       String tagName) async {
     if (!_useSupabase) return const [];
@@ -2272,7 +2272,7 @@ class AdminDatabaseService {
   }
 
   /// The distinct stream ids this user has ever sent a message in, for the
-  /// "Clear Messages by Broadcast" stream picker.
+  /// "Clear Messages by Broadcast"stream picker.
   Future<List<String>> loadMyMessageStreamIds() async {
     if (!_useSupabase) return const [];
     final userId = _client.auth.currentUser?.id;
@@ -2610,7 +2610,7 @@ class AdminDatabaseService {
   // -------------------------------------------------------------------------
   // Follows & bookmarks (05 D-07). Own-row RLS does the authorization: every
   // statement below is scoped to the signed-in account by policy, so a failure
-  // here means "not signed in" or "offline", never "someone else's rows".
+  // here means "not signed in"or "offline", never "someone else's rows".
   // -------------------------------------------------------------------------
 
   /// Channel ids the signed-in account follows. Empty when signed out or

@@ -45,7 +45,7 @@ class ViewerPresenceService extends ChangeNotifier with WidgetsBindingObserver {
   int? _count;
 
   /// Live viewers, or null while it is not known yet (first poll pending,
-  /// offline, or the stream is not live). The UI shows "—" for null.
+  /// offline, or the stream is not live). The UI shows "—"for null.
   int? get count => _count;
 
   bool get isRunning => _heartbeatTimer != null;

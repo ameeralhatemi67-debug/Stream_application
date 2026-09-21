@@ -1,3 +1,4 @@
+import 'package:streamer_app/core/theme/app_theme.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
@@ -159,11 +160,11 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
                         child: Container(
                           padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.4),
+                            color: AppTheme.media.withValues(alpha: 0.4),
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.white.withValues(alpha: 0.2),
+                                color: AppTheme.onMedia.withValues(alpha: 0.2),
                                 blurRadius: 8,
                                 spreadRadius: 1,
                               ),
@@ -186,3 +187,5 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
     );
   }
 }
+
+const liveReactionGlyphs = <String, String>{'heart': '❤️', 'clap': '👏', 'hand': '✋', 'fire': '🔥', 'idea': '💡', 'scholar': '🎓'};

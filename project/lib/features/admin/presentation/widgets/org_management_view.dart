@@ -49,7 +49,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     // (addOrganizationBranch, updateSpeakerPermissions, etc.). context.select
     // scopes this screen's rebuild to just this org's own data -- previously
     // context.watch<AppProvider>() rebuilt this whole management view on ANY
-    // AppProvider change platform-wide, including other orgs' audit logs and
+    // AppProvider change platform-wide, including other orgs'audit logs and
     // affiliation requests.
     final provider = context.read<AppProvider>();
     final (org, branches, speakers, affiliations, auditLogs) = context.select<
@@ -70,10 +70,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     final langCode = context.locale.languageCode;
 
     if (org == null) {
-      return const Center(
-        child: Text(
-          'Organization not found',
-          style: TextStyle(color: AppTheme.textMutedDark),
+      return Center(
+        child: Text('design_ui.organization_not_found'.tr(),
+          style: const TextStyle(color: AppTheme.textMuted),
         ),
       );
     }
@@ -83,7 +82,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 🏢 Organization Header Card
+          //  Organization Header Card
           _buildOrgHeaderCard(org, langCode, branches.length, speakers.length),
           const SizedBox(height: AppTheme.spaceLg),
 
@@ -114,9 +113,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.accentAmber.withValues(alpha: 0.3)),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -125,7 +124,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             height: 64,
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: AppTheme.accentAmber, width: 2),
+              border: Border.all(color: AppTheme.warning, width: 2),
             ),
             clipBehavior: Clip.antiAlias,
             child: org.avatarUrl.startsWith('assets/')
@@ -133,16 +132,16 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     org.avatarUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.darkSurface2,
-                      child: const Icon(Icons.apartment_rounded, color: AppTheme.accentAmber),
+                      color: AppTheme.surfaceAlt,
+                      child: const Icon(Icons.apartment_rounded, color: AppTheme.warning),
                     ),
                   )
                 : Image.network(
                     org.avatarUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.darkSurface2,
-                      child: const Icon(Icons.apartment_rounded, color: AppTheme.accentAmber),
+                      color: AppTheme.surfaceAlt,
+                      child: const Icon(Icons.apartment_rounded, color: AppTheme.warning),
                     ),
                   ),
           ),
@@ -157,7 +156,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       child: Text(
                         org.getLocalizedName(langCode),
                         style: const TextStyle(
-                          color: AppTheme.textPrimaryDark,
+                          color: AppTheme.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -169,14 +168,14 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentAmber.withValues(alpha: 0.2),
+                        color: AppTheme.warning.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        border: Border.all(color: AppTheme.accentAmber, width: 0.8),
+                        border: Border.all(color: AppTheme.warning, width: 0.8),
                       ),
                       child: Text(
                         'profile.org_badge'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.accentAmber,
+                          color: AppTheme.warning,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -188,7 +187,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 Text(
                   org.youtubeHandle.isNotEmpty ? '@${org.youtubeHandle}' : '@dalilk4ielts',
                   style: const TextStyle(
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -197,7 +196,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 Text(
                   org.getLocalizedBio(langCode),
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 12,
                   ),
                   maxLines: 2,
@@ -259,11 +258,11 @@ class _OrgManagementViewState extends State<OrgManagementView> {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? AppTheme.accentAmber.withValues(alpha: 0.15)
-              : AppTheme.darkSurface1,
+              ? AppTheme.warning.withValues(alpha: 0.15)
+              : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(
-            color: isSelected ? AppTheme.accentAmber : AppTheme.darkBorderSubtle,
+            color: isSelected ? AppTheme.warning : AppTheme.border,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -273,13 +272,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? AppTheme.accentAmber : AppTheme.textSecondaryDark,
+              color: isSelected ? AppTheme.warning : AppTheme.textSecondary,
             ),
             const SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : AppTheme.textSecondaryDark,
+                color: isSelected ? AppTheme.onMedia : AppTheme.textSecondary,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 12.5,
               ),
@@ -289,14 +288,14 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
-                    ? AppTheme.accentAmber.withValues(alpha: 0.3)
-                    : AppTheme.darkSurface2,
+                    ? AppTheme.warning.withValues(alpha: 0.3)
+                    : AppTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '$count',
                 style: TextStyle(
-                  color: isSelected ? AppTheme.accentAmber : AppTheme.textMutedDark,
+                  color: isSelected ? AppTheme.warning : AppTheme.textMuted,
                   fontSize: 10.5,
                   fontWeight: FontWeight.bold,
                 ),
@@ -308,7 +307,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     );
   }
 
-  // 📍 1. Branches Section
+  //  1. Branches Section
   Widget _buildBranchesSection(
     BuildContext context,
     AppProvider provider,
@@ -324,15 +323,15 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             Text(
               'admin.org_branches_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentAmber,
-                foregroundColor: Colors.black,
+                backgroundColor: AppTheme.warning,
+                foregroundColor: AppTheme.media,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -371,12 +370,12 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
         border: Border.all(
           color: branch.isMainHeadquarters
-              ? AppTheme.accentAmber.withValues(alpha: 0.5)
-              : AppTheme.darkBorderSubtle,
+              ? AppTheme.warning.withValues(alpha: 0.5)
+              : AppTheme.border,
         ),
       ),
       child: Row(
@@ -386,13 +385,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
               color: branch.isMainHeadquarters
-                  ? AppTheme.accentAmber.withValues(alpha: 0.15)
-                  : AppTheme.darkSurface2,
+                  ? AppTheme.warning.withValues(alpha: 0.15)
+                  : AppTheme.surfaceAlt,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
               branch.isMainHeadquarters ? Icons.stars_rounded : Icons.location_on_rounded,
-              color: branch.isMainHeadquarters ? AppTheme.accentAmber : AppTheme.accentRed,
+              color: branch.isMainHeadquarters ? AppTheme.warning : AppTheme.danger,
               size: 24,
             ),
           ),
@@ -406,7 +405,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     Text(
                       branch.getLocalizedName(langCode),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -416,13 +415,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentAmber.withValues(alpha: 0.2),
+                          color: AppTheme.warning.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           'admin.is_main_hq'.tr(),
                           style: const TextStyle(
-                            color: AppTheme.accentAmber,
+                            color: AppTheme.warning,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -435,7 +434,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 Text(
                   '${branch.getLocalizedCity(langCode)} • ${branch.seatingCapacity} seats • GPS: ${branch.latitude.toStringAsFixed(4)}, ${branch.longitude.toStringAsFixed(4)}',
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -448,13 +447,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       return Container(
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.darkSurface2,
+                          color: AppTheme.surfaceAlt,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           fac,
                           style: const TextStyle(
-                            color: AppTheme.textMutedDark,
+                            color: AppTheme.textMuted,
                             fontSize: 10.5,
                           ),
                         ),
@@ -466,12 +465,12 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.accentBlue),
+            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
             tooltip: 'admin.edit_branch'.tr(),
             onPressed: () => _showAddEditBranchDialog(context, provider, branch: branch),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.accentRed),
+            icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.danger),
             tooltip: 'admin.delete_branch'.tr(),
             onPressed: () => provider.deleteOrganizationBranch(widget.orgId, branch.venueId),
           ),
@@ -480,7 +479,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     );
   }
 
-  // 👥 2. Speakers Section
+  //  2. Speakers Section
   Widget _buildSpeakersSection(
     BuildContext context,
     AppProvider provider,
@@ -496,15 +495,15 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             Text(
               'admin.org_speakers_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.accentAmber,
-                foregroundColor: Colors.black,
+                backgroundColor: AppTheme.warning,
+                foregroundColor: AppTheme.media,
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -543,9 +542,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,16 +561,16 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     speaker.avatarUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.darkSurface2,
-                      child: const Icon(Icons.person, color: AppTheme.accentAmber, size: 20),
+                      color: AppTheme.surfaceAlt,
+                      child: const Icon(Icons.person, color: AppTheme.warning, size: 20),
                     ),
                   )
                 : Image.network(
                     speaker.avatarUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.darkSurface2,
-                      child: const Icon(Icons.person, color: AppTheme.accentAmber, size: 20),
+                      color: AppTheme.surfaceAlt,
+                      child: const Icon(Icons.person, color: AppTheme.warning, size: 20),
                     ),
                   ),
           ),
@@ -585,7 +584,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     Text(
                       speaker.getLocalizedName(langCode),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -595,8 +594,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
                         color: speaker.isPermanentStaff
-                            ? AppTheme.accentAmber.withValues(alpha: 0.2)
-                            : AppTheme.accentBlue.withValues(alpha: 0.2),
+                            ? AppTheme.warning.withValues(alpha: 0.2)
+                            : AppTheme.primary.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -605,8 +604,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                             : 'profile.guest_speaker'.tr(),
                         style: TextStyle(
                           color: speaker.isPermanentStaff
-                              ? AppTheme.accentAmber
-                              : AppTheme.accentBlue,
+                              ? AppTheme.warning
+                              : AppTheme.primary,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -618,7 +617,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 Text(
                   speaker.getLocalizedRole(langCode),
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -629,11 +628,11 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                   runSpacing: 4,
                   children: [
                     if (speaker.permissions.canGoLiveVideo)
-                      _buildPermTag('Video Live', Icons.videocam, AppTheme.accentGreen),
+                      _buildPermTag('Video Live', Icons.videocam, AppTheme.success),
                     if (speaker.permissions.canGoAudioOnly)
-                      _buildPermTag('Audio Live', Icons.mic, AppTheme.accentBlue),
+                      _buildPermTag('Audio Live', Icons.mic, AppTheme.primary),
                     if (speaker.permissions.canChangeLocation)
-                      _buildPermTag('Select Venue', Icons.location_on, AppTheme.accentAmber),
+                      _buildPermTag('Select Venue', Icons.location_on, AppTheme.warning),
                     if (speaker.permissions.canEditDescription)
                       _buildPermTag('Edit Title', Icons.edit_note, Colors.purpleAccent),
                   ],
@@ -642,17 +641,17 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.security_rounded, size: 18, color: AppTheme.accentAmber),
+            icon: const Icon(Icons.security_rounded, size: 18, color: AppTheme.warning),
             tooltip: 'admin.edit_permissions'.tr(),
             onPressed: () => _showPermissionsDialog(context, provider, speaker),
           ),
           IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.accentBlue),
+            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
             tooltip: 'admin.edit_speaker'.tr(),
             onPressed: () => _showAddEditSpeakerDialog(context, provider, speaker: speaker),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.accentRed),
+            icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.danger),
             tooltip: 'admin.delete_speaker'.tr(),
             onPressed: () => provider.deleteOrganizationSpeaker(widget.orgId, speaker.speakerId),
           ),
@@ -683,7 +682,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     );
   }
 
-  // 📋 3. Audit Trail Section
+  //  3. Audit Trail Section
   Widget _buildAuditTrailSection(
     BuildContext context,
     AppProvider provider,
@@ -707,7 +706,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             Text(
               'admin.org_audit_trail_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -716,17 +715,17 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               width: 240,
               height: 36,
               child: TextField(
-                style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 12),
+                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12),
                 decoration: InputDecoration(
                   hintText: 'Search audit trail...',
-                  hintStyle: const TextStyle(color: AppTheme.textMutedDark, fontSize: 12),
-                  prefixIcon: const Icon(Icons.search, size: 16, color: AppTheme.textMutedDark),
+                  hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                  prefixIcon: const Icon(Icons.search, size: 16, color: AppTheme.textMuted),
                   contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
                   filled: true,
-                  fillColor: AppTheme.darkSurface1,
+                  fillColor: AppTheme.surface,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                    borderSide: const BorderSide(color: AppTheme.border),
                   ),
                 ),
                 onChanged: (val) => setState(() => _auditSearchQuery = val),
@@ -740,12 +739,11 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             padding: const EdgeInsets.all(AppTheme.spaceLg),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
-            child: const Text(
-              'No audit logs found for this organization.',
-              style: TextStyle(color: AppTheme.textMutedDark, fontSize: 13),
+            child: Text('design_ui.no_audit_logs_found_for_this_organization'.tr(),
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
             ),
           )
         else
@@ -759,9 +757,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               return Container(
                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkSurface1,
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -769,12 +767,12 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentAmber.withValues(alpha: 0.15),
+                        color: AppTheme.warning.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
                         Icons.history_edu_rounded,
-                        color: AppTheme.accentAmber,
+                        color: AppTheme.warning,
                         size: 16,
                       ),
                     ),
@@ -789,7 +787,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                               Text(
                                 log.actorEmail,
                                 style: const TextStyle(
-                                  color: AppTheme.accentBlue,
+                                  color: AppTheme.primary,
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -797,7 +795,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                               Text(
                                 DateFormat('yyyy-MM-dd HH:mm').format(log.timestamp),
                                 style: const TextStyle(
-                                  color: AppTheme.textMutedDark,
+                                  color: AppTheme.textMuted,
                                   fontSize: 11,
                                 ),
                               ),
@@ -807,7 +805,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                           Text(
                             log.getLocalizedDescription(langCode),
                             style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
+                              color: AppTheme.textPrimary,
                               fontSize: 12.5,
                             ),
                           ),
@@ -846,10 +844,10 @@ class _OrgManagementViewState extends State<OrgManagementView> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              backgroundColor: AppTheme.darkSurface1,
+              backgroundColor: AppTheme.surface,
               title: Text(
                 isEdit ? 'admin.edit_branch'.tr() : 'admin.add_branch'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -857,13 +855,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                   children: [
                     TextField(
                       controller: nameEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.branch_name_en'.tr()),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameArCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.branch_name_ar'.tr()),
                     ),
                     const SizedBox(height: 8),
@@ -872,7 +870,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                         Expanded(
                           child: TextField(
                             controller: cityEnCtrl,
-                            style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                             decoration: InputDecoration(labelText: 'admin.branch_city_en'.tr()),
                           ),
                         ),
@@ -881,7 +879,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                           child: TextField(
                             controller: seatsCtrl,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                             decoration: InputDecoration(labelText: 'admin.seating_capacity'.tr()),
                           ),
                         ),
@@ -894,7 +892,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                           child: TextField(
                             controller: latCtrl,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                             decoration: InputDecoration(labelText: 'admin.latitude'.tr()),
                           ),
                         ),
@@ -903,7 +901,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                           child: TextField(
                             controller: lngCtrl,
                             keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                             decoration: InputDecoration(labelText: 'admin.longitude'.tr()),
                           ),
                         ),
@@ -912,17 +910,17 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     const SizedBox(height: 8),
                     TextField(
                       controller: facCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.facilities'.tr()),
                     ),
                     const SizedBox(height: 12),
                     SwitchListTile(
                       title: Text(
                         'admin.is_main_hq'.tr(),
-                        style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       ),
                       value: isMainHq,
-                      activeThumbColor: AppTheme.accentAmber,
+                      activeThumbColor: AppTheme.warning,
                       onChanged: (val) => setDialogState(() => isMainHq = val),
                     ),
                   ],
@@ -931,10 +929,10 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMutedDark)),
+                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMuted)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentAmber, foregroundColor: Colors.black),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning, foregroundColor: AppTheme.media),
                   onPressed: () {
                     final newBranch = OrgVenueBranchModel(
                       venueId: branch?.venueId ?? newId(),
@@ -985,10 +983,10 @@ class _OrgManagementViewState extends State<OrgManagementView> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              backgroundColor: AppTheme.darkSurface1,
+              backgroundColor: AppTheme.surface,
               title: Text(
                 isEdit ? 'admin.edit_speaker'.tr() : 'admin.add_speaker'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               content: SingleChildScrollView(
                 child: Column(
@@ -996,41 +994,41 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                   children: [
                     TextField(
                       controller: nameEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.instructor_name_en'.tr()),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameArCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.instructor_name_ar'.tr()),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: roleEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.instructor_role_en'.tr()),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: roleArCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.instructor_role_ar'.tr()),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: bioEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(labelText: 'admin.instructor_bio_en'.tr()),
                     ),
                     const SizedBox(height: 12),
                     SwitchListTile(
                       title: Text(
                         'admin.is_permanent_staff'.tr(),
-                        style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13),
+                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                       ),
                       value: isPerm,
-                      activeThumbColor: AppTheme.accentAmber,
+                      activeThumbColor: AppTheme.warning,
                       onChanged: (val) => setDialogState(() => isPerm = val),
                     ),
                   ],
@@ -1039,10 +1037,10 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMutedDark)),
+                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMuted)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentAmber, foregroundColor: Colors.black),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning, foregroundColor: AppTheme.media),
                   onPressed: () {
                     final newSpeaker = OrgSpeakerModel(
                       speakerId: speaker?.speakerId ?? newId(),
@@ -1091,46 +1089,46 @@ class _OrgManagementViewState extends State<OrgManagementView> {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return AlertDialog(
-              backgroundColor: AppTheme.darkSurface1,
+              backgroundColor: AppTheme.surface,
               title: Text(
                 '${'admin.edit_permissions'.tr()}: ${speaker.nameEn}',
-                style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 16),
+                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SwitchListTile(
-                    title: Text('admin.perm_can_video'.tr(), style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
+                    title: Text('admin.perm_can_video'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canVideo,
-                    activeThumbColor: AppTheme.accentGreen,
+                    activeThumbColor: AppTheme.success,
                     onChanged: (val) => setDialogState(() => canVideo = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_audio'.tr(), style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
+                    title: Text('admin.perm_can_audio'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canAudio,
-                    activeThumbColor: AppTheme.accentBlue,
+                    activeThumbColor: AppTheme.primary,
                     onChanged: (val) => setDialogState(() => canAudio = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_location'.tr(), style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
+                    title: Text('admin.perm_can_location'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canLocation,
-                    activeThumbColor: AppTheme.accentAmber,
+                    activeThumbColor: AppTheme.warning,
                     onChanged: (val) => setDialogState(() => canLocation = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_description'.tr(), style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
+                    title: Text('admin.perm_can_description'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canDesc,
                     activeThumbColor: Colors.purpleAccent,
                     onChanged: (val) => setDialogState(() => canDesc = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_time'.tr(), style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
+                    title: Text('admin.perm_can_time'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canTime,
                     activeThumbColor: Colors.orangeAccent,
                     onChanged: (val) => setDialogState(() => canTime = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_links'.tr(), style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 13)),
+                    title: Text('admin.perm_can_links'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canLinks,
                     activeThumbColor: Colors.tealAccent,
                     onChanged: (val) => setDialogState(() => canLinks = val),
@@ -1140,10 +1138,10 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMutedDark)),
+                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMuted)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentAmber, foregroundColor: Colors.black),
+                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning, foregroundColor: AppTheme.media),
                   onPressed: () {
                     final newPerms = OrgBroadcasterPermissions(
                       canGoLiveVideo: canVideo,
@@ -1166,7 +1164,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     );
   }
 
-  // 🤝 3. Affiliations & Join Requests Section
+  //  3. Affiliations & Join Requests Section
   Widget _buildAffiliationsSection(
     BuildContext context,
     AppProvider provider,
@@ -1179,10 +1177,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
-              'Incoming Affiliation Requests & Invites',
-              style: TextStyle(
-                color: AppTheme.textPrimaryDark,
+            Text('design_ui.incoming_affiliation_requests_invites'.tr(),
+              style: const TextStyle(
+                color: AppTheme.textPrimary,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -1190,13 +1187,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.accentPurple.withValues(alpha: 0.15),
+                color: AppTheme.accent.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text(
                 '${affiliations.where((r) => r.isPending).length} Pending',
                 style: const TextStyle(
-                  color: AppTheme.accentPurple,
+                  color: AppTheme.accent,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1211,19 +1208,18 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             padding: const EdgeInsets.all(AppTheme.spaceXl),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.darkBorderSubtle),
+              border: Border.all(color: AppTheme.border),
             ),
-            child: const Column(
+            child: Column(
               children: [
-                Icon(Icons.inbox_outlined,
-                    size: 36, color: AppTheme.textMutedDark),
-                SizedBox(height: 8),
-                Text(
-                  'No affiliation requests found for this organization.',
-                  style: TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                const Icon(Icons.inbox_outlined,
+                    size: 36, color: AppTheme.textMuted),
+                const SizedBox(height: 8),
+                Text('design_ui.no_affiliation_requests_found_for_this_organization'.tr(),
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary,
                     fontSize: 13,
                   ),
                 ),
@@ -1236,12 +1232,12 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               margin: const EdgeInsets.only(bottom: 12),
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface1,
+                color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 border: Border.all(
                   color: req.isPending
-                      ? AppTheme.accentPurple.withValues(alpha: 0.4)
-                      : AppTheme.darkBorderSubtle,
+                      ? AppTheme.accent.withValues(alpha: 0.4)
+                      : AppTheme.border,
                 ),
               ),
               child: Column(
@@ -1261,7 +1257,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                             Text(
                               req.getLocalizedStreamerName(langCode),
                               style: const TextStyle(
-                                color: AppTheme.textPrimaryDark,
+                                color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -1269,7 +1265,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                             Text(
                               req.getLocalizedProposedRole(langCode),
                               style: const TextStyle(
-                                color: AppTheme.accentBlue,
+                                color: AppTheme.primary,
                                 fontSize: 11,
                               ),
                             ),
@@ -1281,20 +1277,20 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: req.isAccepted
-                              ? AppTheme.accentGreen.withValues(alpha: 0.15)
+                              ? AppTheme.success.withValues(alpha: 0.15)
                               : (req.isDeclined
-                                  ? AppTheme.accentRed.withValues(alpha: 0.15)
-                                  : AppTheme.accentAmber.withValues(alpha: 0.15)),
+                                  ? AppTheme.danger.withValues(alpha: 0.15)
+                                  : AppTheme.warning.withValues(alpha: 0.15)),
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           req.status.name.toUpperCase(),
                           style: TextStyle(
                             color: req.isAccepted
-                                ? AppTheme.accentGreen
+                                ? AppTheme.success
                                 : (req.isDeclined
-                                    ? AppTheme.accentRed
-                                    : AppTheme.accentAmber),
+                                    ? AppTheme.danger
+                                    : AppTheme.warning),
                             fontSize: 9.5,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1307,7 +1303,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     Text(
                       '"${req.note}"',
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 11.5,
                         fontStyle: FontStyle.italic,
                       ),
@@ -1320,30 +1316,30 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       children: [
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.accentRed,
-                            side: const BorderSide(color: AppTheme.accentRed),
+                            foregroundColor: AppTheme.danger,
+                            side: const BorderSide(color: AppTheme.danger),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                           ),
                           onPressed: () =>
                               provider.declineOrgAffiliationRequest(req.id),
                           icon: const Icon(Icons.close_rounded, size: 14),
-                          label: const Text('Decline',
-                              style: TextStyle(fontSize: 11)),
+                          label: Text('design_ui.decline'.tr(),
+                              style: const TextStyle(fontSize: 11)),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.accentGreen,
-                            foregroundColor: Colors.white,
+                            backgroundColor: AppTheme.success,
+                            foregroundColor: AppTheme.onMedia,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 6),
                           ),
                           onPressed: () =>
                               provider.acceptOrgAffiliationRequest(req.id),
                           icon: const Icon(Icons.check_rounded, size: 14),
-                          label: const Text('Accept to Roster',
-                              style: TextStyle(
+                          label: Text('design_ui.accept_to_roster'.tr(),
+                              style: const TextStyle(
                                   fontSize: 11, fontWeight: FontWeight.bold)),
                         ),
                       ],

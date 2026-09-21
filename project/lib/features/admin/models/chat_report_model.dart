@@ -1,5 +1,5 @@
 /// A chat_reports row, joined with the reported message's body and both
-/// parties' display info -- what the Chat Moderation Dashboard (v0.8
+/// parties'display info -- what the Chat Moderation Dashboard (v0.8
 /// Checkpoint 4 Phase 1) needs to render one queue entry.
 class ChatReportModel {
   final String id;

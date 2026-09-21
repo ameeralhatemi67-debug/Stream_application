@@ -26,7 +26,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
 
     return Drawer(
       width: 320,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       child: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,16 +35,16 @@ class StreamerSlidingDrawer extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceLg),
               decoration: const BoxDecoration(
-                color: AppTheme.darkSurface2,
+                color: AppTheme.surfaceAlt,
                 border: Border(
                   bottom:
-                      BorderSide(color: AppTheme.darkBorderSubtle, width: 1.0),
+                      BorderSide(color: AppTheme.border, width: 1.0),
                 ),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.podcasts_rounded,
-                      color: AppTheme.accentRed, size: 22),
+                      color: AppTheme.danger, size: 22),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Column(
@@ -67,7 +67,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded,
-                        color: AppTheme.textMutedDark),
+                        color: AppTheme.textMuted),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -91,7 +91,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                             width: 8,
                             height: 8,
                             decoration: const BoxDecoration(
-                              color: AppTheme.accentRed,
+                              color: AppTheme.danger,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -99,7 +99,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                           Text(
                             '${'map.live_now_count'.tr()} (${liveStreamers.length})',
                             style: const TextStyle(
-                              color: AppTheme.accentRed,
+                              color: AppTheme.danger,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.8,
@@ -110,7 +110,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                     ),
                     ...liveStreamers.map((streamer) =>
                         _buildStreamerTile(context, streamer, langCode)),
-                    const Divider(color: AppTheme.darkBorderSubtle, height: 24),
+                    const Divider(color: AppTheme.border, height: 24),
                   ],
                   Padding(
                     padding: const EdgeInsets.symmetric(
@@ -120,7 +120,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                     child: Text(
                       '${'map.offline_upcoming_count'.tr()} (${offlineStreamers.length})',
                       style: const TextStyle(
-                        color: AppTheme.textMutedDark,
+                        color: AppTheme.textMuted,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 0.8,
@@ -132,13 +132,13 @@ class StreamerSlidingDrawer extends StatelessWidget {
                 ],
               ),
             ),
-            const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+            const Divider(color: AppTheme.border, height: 1),
             ListTile(
               leading: const Icon(Icons.settings_outlined,
-                  color: AppTheme.accentBlue),
+                  color: AppTheme.primary),
               title: Text('nav.settings'.tr(),
                   style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 14)),
+                      color: AppTheme.textPrimary, fontSize: 14)),
               onTap: () {
                 Navigator.of(context).pop();
                 context.push('/settings');
@@ -157,11 +157,11 @@ class StreamerSlidingDrawer extends StatelessWidget {
 
     Color statusColor;
     if (isVideo) {
-      statusColor = AppTheme.accentRed;
+      statusColor = AppTheme.danger;
     } else if (isAudio) {
-      statusColor = const Color(0xFFA1A1AA);
+      statusColor = AppTheme.textMuted;
     } else {
-      statusColor = AppTheme.textMutedDark;
+      statusColor = AppTheme.textMuted;
     }
 
     return InkWell(
@@ -181,7 +181,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 22,
-                  backgroundColor: AppTheme.darkSurface2,
+                  backgroundColor: AppTheme.surfaceAlt,
                   backgroundImage: streamer.avatarUrl.startsWith('assets/')
                       ? AssetImage(streamer.avatarUrl) as ImageProvider
                       : NetworkImage(streamer.avatarUrl),
@@ -198,11 +198,11 @@ class StreamerSlidingDrawer extends StatelessWidget {
                       color: statusColor,
                       shape: BoxShape.circle,
                       border:
-                          Border.all(color: AppTheme.darkSurface1, width: 1.5),
+                          Border.all(color: AppTheme.surface, width: 1.5),
                     ),
                     child: isAudio
                         ? const Icon(Icons.mic_rounded,
-                            size: 8, color: Colors.white)
+                            size: 8, color: AppTheme.onMedia)
                         : null,
                   ),
                 ),
@@ -221,7 +221,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                         child: Text(
                           streamer.getLocalizedName(langCode),
                           style: const TextStyle(
-                            color: AppTheme.textPrimaryDark,
+                            color: AppTheme.textPrimary,
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                           ),
@@ -233,7 +233,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                         const Icon(
                           Icons.verified_rounded,
                           size: 14,
-                          color: AppTheme.accentPurple,
+                          color: AppTheme.accent,
                         ),
                     ],
                   ),
@@ -241,7 +241,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   Text(
                     streamer.getLocalizedVenue(langCode),
                     style: const TextStyle(
-                      color: AppTheme.accentBlue,
+                      color: AppTheme.primary,
                       fontSize: 11,
                     ),
                     maxLines: 1,
@@ -251,7 +251,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   Text(
                     streamer.getLocalizedOrganization(langCode),
                     style: const TextStyle(
-                      color: AppTheme.textMutedDark,
+                      color: AppTheme.textMuted,
                       fontSize: 11,
                     ),
                     maxLines: 1,
@@ -270,7 +270,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   icon: const Icon(
                     Icons.navigation_rounded,
                     size: 18,
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                   ),
                   tooltip: 'venue.visit_venue'.tr(),
                   onPressed: () {
@@ -285,7 +285,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   icon: const Icon(
                     Icons.directions_outlined,
                     size: 18,
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                   ),
                   tooltip: 'venue.open_maps'.tr(),
                   onPressed: () => _openInGoogleMaps(streamer),

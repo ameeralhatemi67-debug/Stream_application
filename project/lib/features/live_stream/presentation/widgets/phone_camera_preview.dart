@@ -1,3 +1,5 @@
+import 'package:streamer_app/core/theme/app_theme.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
@@ -15,12 +17,11 @@ class PhoneCameraPreview extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!Platform.isAndroid) {
-      return const ColoredBox(
-        color: Colors.black,
+      return ColoredBox(
+        color: AppTheme.media,
         child: Center(
-          child: Text(
-            'Phone broadcasting is Android-only for now.',
-            style: TextStyle(color: Colors.white70),
+          child: Text('design_ui.phone_broadcasting_is_android_only_for_now'.tr(),
+            style: const TextStyle(color: Colors.white70),
           ),
         ),
       );

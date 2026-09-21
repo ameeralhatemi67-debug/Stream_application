@@ -1,4 +1,5 @@
-import 'dart:math' as math;
+import 'package:easy_localization/easy_localization.dart';
+import 'dart:math'as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -140,7 +141,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     initialZoom: kInitialMapZoom,
                     minZoom: 8.5,
                     maxZoom: 17.5,
-                    backgroundColor: const Color(0xFF121214),
+                    backgroundColor: AppTheme.bg,
                     cameraConstraint: CameraConstraint.contain(
                       bounds: LatLngBounds(
                         const LatLng(25.60, 49.50),
@@ -184,11 +185,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                           return Polygon<Object>(
                             points: region.polygonPoints,
                             color: isSelected
-                                ? AppTheme.accentRed.withValues(alpha: 0.06)
+                                ? AppTheme.danger.withValues(alpha: 0.06)
                                 : Colors.transparent,
                             borderColor: isSelected
-                                ? AppTheme.accentRed
-                                : AppTheme.accentRed.withValues(alpha: 0.35),
+                                ? AppTheme.danger
+                                : AppTheme.danger.withValues(alpha: 0.35),
                             borderStrokeWidth: isSelected ? 2.0 : 1.2,
                           );
                         }).toList(),
@@ -548,9 +549,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
             Container(
               width: 380,
               decoration: const BoxDecoration(
-                color: AppTheme.darkSurface1,
+                color: AppTheme.surface,
                 border:
-                    Border(left: BorderSide(color: AppTheme.darkBorderSubtle)),
+                    Border(left: BorderSide(color: AppTheme.border)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -559,17 +560,17 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     decoration: const BoxDecoration(
                       border: Border(
-                          bottom: BorderSide(color: AppTheme.darkBorderSubtle)),
+                          bottom: BorderSide(color: AppTheme.border)),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.hub_rounded,
-                            color: AppTheme.accentRed, size: 20),
+                            color: AppTheme.danger, size: 20),
                         const SizedBox(width: AppTheme.spaceSm),
                         Text(
                           'AlSharqia Venues & Scholars (${displayedStreamers.length})',
                           style: const TextStyle(
-                            color: AppTheme.textPrimaryDark,
+                            color: AppTheme.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -590,15 +591,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
 
                         return Material(
                           color: isSelected
-                              ? AppTheme.accentRed.withValues(alpha: 0.12)
-                              : AppTheme.darkSurface2,
+                              ? AppTheme.danger.withValues(alpha: 0.12)
+                              : AppTheme.surfaceAlt,
                           shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd),
                             side: BorderSide(
                               color: isSelected
-                                  ? AppTheme.accentRed
-                                  : AppTheme.darkBorderSubtle,
+                                  ? AppTheme.danger
+                                  : AppTheme.border,
                               width: 1,
                             ),
                           ),
@@ -612,7 +613,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundColor: AppTheme.darkSurface3,
+                                    backgroundColor: AppTheme.surface,
                                     backgroundImage:
                                         streamer.avatarUrl.startsWith('assets/')
                                             ? AssetImage(streamer.avatarUrl)
@@ -628,7 +629,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                         Text(
                                           streamer.fullNameEn,
                                           style: const TextStyle(
-                                            color: AppTheme.textPrimaryDark,
+                                            color: AppTheme.textPrimary,
                                             fontWeight: FontWeight.w600,
                                             fontSize: 13,
                                           ),
@@ -636,7 +637,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                         Text(
                                           streamer.venueNameEn,
                                           style: const TextStyle(
-                                            color: AppTheme.textSecondaryDark,
+                                            color: AppTheme.textSecondary,
                                             fontSize: 11,
                                           ),
                                         ),
@@ -648,13 +649,12 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                       padding: const EdgeInsets.symmetric(
                                           horizontal: 6, vertical: 2),
                                       decoration: BoxDecoration(
-                                        color: AppTheme.accentRed,
+                                        color: AppTheme.danger,
                                         borderRadius: BorderRadius.circular(4),
                                       ),
-                                      child: const Text(
-                                        'LIVE',
-                                        style: TextStyle(
-                                          color: Colors.white,
+                                      child: Text('design_ui.live'.tr(),
+                                        style: const TextStyle(
+                                          color: AppTheme.onMedia,
                                           fontSize: 9,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -682,10 +682,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     required VoidCallback onTap,
   }) {
     return Material(
-      color: AppTheme.darkSurface2,
+      color: AppTheme.surfaceAlt,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        side: const BorderSide(color: AppTheme.accentRed, width: 1.2),
+        side: const BorderSide(color: AppTheme.danger, width: 1.2),
       ),
       elevation: 6,
       child: InkWell(
@@ -695,7 +695,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
           width: 44,
           height: 44,
           alignment: Alignment.center,
-          child: Icon(icon, color: AppTheme.accentRed, size: 20),
+          child: Icon(icon, color: AppTheme.danger, size: 20),
         ),
       ),
     );

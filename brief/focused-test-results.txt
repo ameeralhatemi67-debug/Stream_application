@@ -1,0 +1,815 @@
+00:00 +0: loading C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart
+00:00 +0: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:00 +0: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:00 +1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +3: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +3: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/cluster_3_4_categories_moderation_test.dart: Cluster 3 Task 10/11: Academic Categories AppProvider.academicCategories falls back to defaultPool when the backend list is empty (offline / not loaded yet)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:00 +4: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +4: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/cluster_3_4_categories_moderation_test.dart: Cluster 3 Task 10/11: Academic Categories Task 10: selecting a category via setCategoryFilter is reflected in both filteredStreamers (shared by Discovery Feed and Spatial Map) and the selectedCategoryId getter
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:00 +5: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +6: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +7: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +7: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/cluster_3_4_categories_moderation_test.dart: Cluster 3 Task 12: Tag Moderation AppProvider.approvedTags/allTagsForModeration start empty offline -- the tags filter sheet degrades to just the "all" chip rather than crashing when there is no backend to read from
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:00 +8: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +9: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +10: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +11: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +12: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +13: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +14: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +14: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/cluster_3_4_categories_moderation_test.dart: Cluster 4 Task 16: Platform Account Ban AppProvider.isCurrentUserBanned defaults to false with no reason -- this is the state AppRouter's redirect guard reads to decide whether to send a signed-in user to /account-banned
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:00 +15: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +16: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:00 +16: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/cluster_3_4_categories_moderation_test.dart: Cluster 4 Task 18: Temporary Map Visibility AppProvider.filteredStreamers excludes a streamer once isTemporarilyHiddenFromMap is set, but the full streamers list still has them (profile stays reachable by direct link)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:00 +17: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:01 +17: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:01 +17: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:01 +18: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:01 +18: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management AppProvider cannot claim a broadcaster session without a backend
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +19: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+00:01 +19: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management AppProvider cannot claim a broadcaster session without a backend
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+refreshAdminData failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshAcademicCategories failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:01 +19: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:01 +19: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+unhandled element <defs/>; Picture key: Svg loader
+00:01 +20: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +20: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-02: ViewerSetupScreen saves display name and avatar
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +20: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) defaults to public with no whitelist and knock approval enabled
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +21: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +21: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) configureStreamPrivacy retains the whitelist but forces public mode
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +22: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +22: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) add/removeStreamWhitelistHandle mutate the roster without dupes
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +23: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +23: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) simulateIncomingKnock is disabled with private mode
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +24: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +24: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) admitKnockRequest cannot admit a disabled simulated request
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +25: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +25: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) denyKnockRequest handles the disabled empty queue
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +26: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +26: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) admitAllKnockRequests cannot admit disabled simulated requests
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +27: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +27: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) admitAttendeeByHandle adds a VIP attendee when the handle is whitelisted
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +28: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +28: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) kickAttendee removes an admitted attendee
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +29: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +29: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) generatePrivateInviteLink does not share a fake private link
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +30: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:01 +30: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: AppProvider: Private & Restricted Streaming (client-simulated) localViewerAccessState is notApplicable when no stream is live
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:01 +31: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+00:02 +31: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management AppProvider cannot claim a broadcaster session without a backend
+_refreshTags failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:02 +31: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+The finder "Found 0 widgets with text "Open Dialog": []" (used in a call to "tap()") could not find
+any matching widgets.
+
+When the exception was thrown, this was the stack:
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2076:7)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1928:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1061:7)
+#3      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/User/Documents/Amir%20Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart:128:20)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  DeviceSessionConflictDialog renders device options and returns choice
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:02 +31 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-02: ViewerSetupScreen saves display name and avatar
+00:02 +31 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-06: Multi-Device Session Conflict Management DeviceSessionConflictDialog renders device options and returns choice [E]
+  Test failed. See exception logs above.
+  The test description was: DeviceSessionConflictDialog renders device options and returns choice
+  
+00:02 +31 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-02: ViewerSetupScreen saves display name and avatar
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:02 +32 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state notApplicable renders nothing
+00:02 +32 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-03: RoleSelectScreen presents Viewer vs Broadcaster options
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:02 +33 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state notApplicable renders nothing
+00:02 +33 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-04: StreamerApplyScreen wizard renders Step 1 Identity
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +33 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-09: Discovery Feed Own-Card Highlight StreamerGridCard renders white border and Your Channel badge for own profile
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +34 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state notApplicable renders nothing
+00:03 +34 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-09: Discovery Feed Own-Card Highlight StreamerGridCard does NOT render Your Channel badge for other streamers
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +35 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state notApplicable renders nothing
+00:03 +35 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-10: Cell Tower Permission Boundaries isOwnStreamerProfile correctly identifies own channel vs other channels
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +36 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state notApplicable renders nothing
+00:03 +36 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-10: Cell Tower Permission Boundaries arbitrary email logins do not inherit prof_alghamdi_01 (Cluster 2 Task 10)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +37 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state notApplicable renders nothing
+00:03 +37 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-10: Cell Tower Permission Boundaries no email grants ownership of a channel (P1.6 dev identity removed)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +38 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state notApplicable renders nothing
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +38 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-10: Cell Tower Permission Boundaries admin status alone does not grant ownership of another channel
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +39 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +39 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-10: Cell Tower Permission Boundaries admin status alone does not grant ownership of another channel
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +40 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +40 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-11: Stream Decay Engine StreamDecayEngine monitors heartbeats and decays on timeout
+[StreamDecayEngine] Monitoring started for stream: test_stream_01
+00:03 +40 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state admitted renders nothing
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +41 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +41 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-04: StreamerApplyScreen wizard renders Step 1 Identity
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +42 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +42 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-05: ApplicationPendingScreen renders confirmation badge and action
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +42 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-11: Stream Decay Engine StreamDecayEngine monitors heartbeats and decays on timeout
+[StreamDecayEngine] Stream test_stream_01 decayed after 0s of inactivity.
+00:03 +42 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-05: ApplicationPendingScreen renders confirmation badge and action
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +42 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-11: Stream Decay Engine StreamDecayEngine monitors heartbeats and decays on timeout
+[StreamDecayEngine] Monitoring stopped cleanly.
+[StreamDecayEngine] Monitoring stopped cleanly.
+00:03 +43 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +43 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix QF-12: Private Stream Access & Feed Filtering private mode remains public until server entitlements exist
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +44 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +44 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/issue_log_fixes_test.dart: Issue Log Fix: Single Channel Ownership & Duplicate Resolution detectDuplicateChannels and resolveDuplicateChannels keeps chosen channel only
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +45 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +45 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-05: ApplicationPendingScreen renders confirmation badge and action
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+00:03 +45 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state vipPreApproved shows the gold VIP badge
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+00:03 +46 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +46 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state vipPreApproved shows the gold VIP badge
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+00:03 +47 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +47 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state vipPreApproved shows the gold VIP badge
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +48 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +49 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +49 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/v04_ui_ux_specialist_test.dart: Version 0.4 Checkpoint 4.1 & 4.2 UI/UX, Localization & Safety Tests TC-PITCH-01: Pitch Director Mode Activation & Live State Forcing
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +49 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state knocking shows the waiting-room overlay
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +50 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +50 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/v04_ui_ux_specialist_test.dart: Version 0.4 Checkpoint 4.1 & 4.2 UI/UX, Localization & Safety Tests TC-PITCH-01: Pitch Director Mode Activation & Live State Forcing
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +51 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +51 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/v04_ui_ux_specialist_test.dart: Version 0.4 Checkpoint 4.1 & 4.2 UI/UX, Localization & Safety Tests TC-PITCH-02: Category Filtering and Search Operations
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +52 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +52 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-05: ApplicationPendingScreen renders confirmation badge and action
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:03 +53 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +53 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-06: Telemetry counters update on Google login and Guest setup
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +53 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state denied shows the unauthorized notice with a Request to Join button
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TextWidgetFinder:<Found 0 widgets with text "This broadcast is private": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/User/Documents/Amir%20Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart:186:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/User/Documents/Amir%20Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart line 186
+The test description was:
+  denied shows the unauthorized notice with a Request to Join button
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +53 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +53 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/private_streaming_test.dart: PrivateStreamViewerGate: renders the correct overlay per state denied shows the unauthorized notice with a Request to Join button [E]
+  Test failed. See exception logs above.
+  The test description was: denied shows the unauthorized notice with a Request to Join button
+  
+00:03 +53 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +54 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +54 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-07: Saudi phone validator logic
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +55 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +55 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-08: YouTube Handle / URL proof verification logic
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +56 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+00:03 +56 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-09: Step 3 renders on narrow mobile screen (360x800) with zero overflow
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:03 +56 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals Renders speaking equalizer waveform bars and active speaker callout
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [live.audio_live_badge] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [live.speakers_count] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [live.speaking_now] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [live.listening_count] not found[0m
+00:03 +57 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-09: Step 3 renders on narrow mobile screen (360x800) with zero overflow
+00:04 +57 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:04 +57 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-09: Step 3 renders on narrow mobile screen (360x800) with zero overflow
+00:04 +57 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-02: App Startup Loader / Splash Screen Tests AppSplashScreen renders branding, progress indicator, and title
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:04 +58 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-AUTH-09: Step 3 renders on narrow mobile screen (360x800) with zero overflow
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:04 +59 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-01: renders the director_title/director_subtitle localization keys (regression for the missing-key bug)
+00:04 +59 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-ORG-AFF-01: Bi-directional Org Affiliation submission and resolution
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:04 +59 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-03: PlaylistViewerModalSheet Dynamic Fetch & Play All Tests Renders playlist header, Play All button, and resolves lectures on demand
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [profile.lectures_count] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [profile.views] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [profile.views] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [profile.views] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [profile.views] not found[0m
+00:04 +60 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-01: renders the director_title/director_subtitle localization keys (regression for the missing-key bug)
+00:04 +60 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-ORG-AFF-01: Bi-directional Org Affiliation submission and resolution
+Supabase org speaker write-through failed: Exception: Supabase not available
+00:04 +61 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-01: renders the director_title/director_subtitle localization keys (regression for the missing-key bug)
+00:04 +61 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-04: Spatial Map Top Bar Controls 80% Transparency & Styling Renders top search bar, city selector, and topic selector without error
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [map.search_placeholder] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [map.all_topics] not found[0m
+00:04 +62 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-01: renders the director_title/director_subtitle localization keys (regression for the missing-key bug)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:05 +63 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-02: opens on OBS mode with all three pill tabs
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:05 +64 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-03: switching pill tabs morphs the middle card into mode-specific fields
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:06 +65 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-04: root-cause regression -- Open Camera in Phone mode never touches the simulated YouTubeLiveService session, only the real user-typed stream key
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [live.slides_attached_title] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [live.slides_attached_subtitle] not found[0m
+[34m[🌎 Easy Localization] [WARNING] Localization key [live.venue_details_title] not found[0m
+00:06 +66 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-05: an empty stream key blocks Open Camera before it ever reaches AppProvider
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:07 +67 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-06: Local mode updates the laptop RTMP IP
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:07 +68 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-07: an empty laptop IP blocks Stream before it ever reaches AppProvider
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:07 +69 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-08: category chips are selectable in Phone mode
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:08 +70 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-09: switching modes and back preserves typed title text (shared controller across mode morphs)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:08 +71 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-10: the Audio-Only format toggle unfolds the poster backdrop section and drives a bounded (not infinite) pulse animation
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:08 +72 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-10B: the sheet renders at 80% of screen height
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:09 +73 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-10C: all 3 modes share one unified coral pink accent on their Go Live CTA (no per-mode cyan/green/amber)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:09 +74 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-11: OBS Go Live persists title/description/category and denies going live without a primary session
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:09 +75 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-12: an Info button opens the gamified Streamer Academy guide and steps through all 4 OBS quests to the final CTA
+00:09 +75 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-11: OBS Go Live persists title/description/category and denies going live without a primary session
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+refreshAdminData failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshAcademicCategories failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshTags failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:10 +75 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-12: an Info button opens the gamified Streamer Academy guide and steps through all 4 OBS quests to the final CTA
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:10 +76 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-13: Paste Key from Clipboard inside the guide populates the stream key field back in Phone mode
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:10 +77 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-15: private controls are hidden without server entitlements
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:10 +78 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-16: saved whitelist remains editable as data but has no private UI
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:10 +79 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-17: OBS Go Live cannot enable private mode through provider state
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:11 +80 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-18: Local mode cannot enable private streaming
+00:11 +80 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-17: OBS Go Live cannot enable private mode through provider state
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+refreshAdminData failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshAcademicCategories failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshTags failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:11 +80 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-18: Local mode cannot enable private streaming
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:11 +81 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-19: default state (Private never tapped) leaves streamVisibility public
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:11 +82 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: (tearDownAll)
+00:11 +82 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/rtmp_ip_dialog_test.dart: LiveBroadcasterStudioSheet: 80% Broadcaster Studio bottom sheet (V2) TC-STUDIO-19: default state (Private never tapped) leaves streamVisibility public
+loadVerifiedStreamersFromBackend failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+refreshAdminData failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshAcademicCategories failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshTags failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:11 +82 -2: Some tests failed.

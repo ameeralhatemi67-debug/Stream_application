@@ -8,7 +8,7 @@ import '../abstract_video_player.dart';
 /// [StreamState] renders through.
 ///
 /// Before this, each adapter grew its own ad-hoc "Connecting to YouTube
-/// Feed..." spinner and its own black error card, and
+/// Feed..."spinner and its own black error card, and
 /// `LivePlayerOverlayControls` grew a third one for offline/fallbackError --
 /// three visually different answers to the same question. This widget owns
 /// all of them, so a new state (or a streamer's own approved artwork, Task
@@ -29,10 +29,10 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
   /// small print under the error copy. Never the primary message.
   final String? errorDetail;
 
-  /// When non-null, a "Retry" button is offered.
+  /// When non-null, a "Retry"button is offered.
   final VoidCallback? onRetry;
 
-  /// When non-null, an "Open in YouTube" escape hatch is offered (Task 5).
+  /// When non-null, an "Open in YouTube"escape hatch is offered (Task 5).
   final VoidCallback? onOpenInYouTube;
 
   const StreamStatePlaceholderOverlay({
@@ -68,7 +68,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
       case StreamState.initializing:
         return const _PlaceholderSpec(
           icon: Icons.settings_input_antenna_rounded,
-          accent: AppTheme.accentBlue,
+          accent: AppTheme.primary,
           titleKey: 'live.state_initializing_title',
           subtitleKey: 'live.state_initializing_sub',
           showSpinner: true,
@@ -76,7 +76,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
       case StreamState.startingSoon:
         return const _PlaceholderSpec(
           icon: Icons.schedule_rounded,
-          accent: AppTheme.accentAmber,
+          accent: AppTheme.warning,
           titleKey: 'live.state_starting_soon_title',
           subtitleKey: 'live.state_starting_soon_sub',
           pulse: true,
@@ -84,7 +84,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
       case StreamState.reconnecting:
         return const _PlaceholderSpec(
           icon: Icons.sync_rounded,
-          accent: AppTheme.accentAmber,
+          accent: AppTheme.warning,
           titleKey: 'live.state_reconnecting_title',
           subtitleKey: 'live.state_reconnecting_sub',
           showSpinner: true,
@@ -92,28 +92,28 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
       case StreamState.ended:
         return const _PlaceholderSpec(
           icon: Icons.flag_rounded,
-          accent: AppTheme.accentGreen,
+          accent: AppTheme.success,
           titleKey: 'live.state_ended_title',
           subtitleKey: 'live.state_ended_sub',
         );
       case StreamState.offline:
         return const _PlaceholderSpec(
           icon: Icons.satellite_alt_rounded,
-          accent: AppTheme.accentRed,
+          accent: AppTheme.danger,
           titleKey: 'live.state_offline_title',
           subtitleKey: 'live.state_offline_sub',
         );
       case StreamState.noAudioToken:
         return const _PlaceholderSpec(
           icon: Icons.volume_off_rounded,
-          accent: AppTheme.accentAmber,
+          accent: AppTheme.warning,
           titleKey: 'live.state_no_audio_token_title',
           subtitleKey: 'live.state_no_audio_token_sub',
         );
       case StreamState.fallbackError:
         return const _PlaceholderSpec(
           icon: Icons.error_outline_rounded,
-          accent: AppTheme.accentRed,
+          accent: AppTheme.danger,
           titleKey: 'live.state_error_title',
           subtitleKey: 'live.state_error_sub',
         );
@@ -122,7 +122,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
       case StreamState.buffering:
         return const _PlaceholderSpec(
           icon: Icons.play_arrow_rounded,
-          accent: AppTheme.accentBlue,
+          accent: AppTheme.primary,
           titleKey: 'live.state_initializing_title',
           subtitleKey: 'live.state_initializing_sub',
         );
@@ -141,7 +141,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
         duration: const Duration(milliseconds: 260),
         child: Container(
           key: ValueKey('placeholder_${streamState.name}'),
-          color: Colors.black.withValues(alpha: 0.92),
+          color: AppTheme.media.withValues(alpha: 0.92),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -157,7 +157,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               if (custom != null && custom.isNotEmpty)
-                Container(color: Colors.black.withValues(alpha: 0.55)),
+                Container(color: AppTheme.media.withValues(alpha: 0.55)),
               _buildContent(context, spec),
             ],
           ),
@@ -181,7 +181,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
               spec.titleKey.tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppTheme.onMedia,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -191,7 +191,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
               spec.subtitleKey.tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -204,7 +204,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: AppTheme.textMutedDark,
+                  color: AppTheme.textMuted,
                   fontSize: 10.5,
                 ),
               ),
@@ -223,7 +223,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                       label: Text('live.retry_feed'.tr()),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: spec.accent,
-                        foregroundColor: Colors.white,
+                        foregroundColor: AppTheme.onMedia,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 18, vertical: 10),
                       ),
@@ -234,8 +234,8 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                       icon: const Icon(Icons.open_in_new_rounded, size: 16),
                       label: Text('live.open_in_youtube'.tr()),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentRed,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.danger,
+                        foregroundColor: AppTheme.onMedia,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 18, vertical: 10),
                       ),

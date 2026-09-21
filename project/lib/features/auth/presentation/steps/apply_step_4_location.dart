@@ -147,10 +147,10 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (dialogCtx, setDialogState) => AlertDialog(
-          backgroundColor: AppTheme.darkSurface1,
+          backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-          title: const Text('Add Additional Campus / Branch',
-              style: TextStyle(color: AppTheme.textPrimaryDark, fontSize: 16)),
+          title: Text('design_ui.add_additional_campus_branch'.tr(),
+              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16)),
           content: SizedBox(
             width: 440,
             child: SingleChildScrollView(
@@ -160,12 +160,12 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 children: [
                   TextField(
                     controller: branchNameCtrl,
-                    style: const TextStyle(color: AppTheme.textPrimaryDark),
+                    style: const TextStyle(color: AppTheme.textPrimary),
                     decoration: InputDecoration(
                       labelText: 'Branch / Campus Name *',
                       hintText: 'e.g. Dammam North Campus',
                       filled: true,
-                      fillColor: AppTheme.darkSurface2,
+                      fillColor: AppTheme.surfaceAlt,
                       border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                     ),
                   ),
@@ -175,12 +175,12 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                       Expanded(
                         child: TextField(
                           controller: addressCtrl,
-                          style: const TextStyle(color: AppTheme.textPrimaryDark),
+                          style: const TextStyle(color: AppTheme.textPrimary),
                           decoration: InputDecoration(
                             labelText: 'Branch Address / Description *',
                             hintText: 'e.g. King Fahd Road, Dammam',
                             filled: true,
-                            fillColor: AppTheme.darkSurface2,
+                            fillColor: AppTheme.surfaceAlt,
                             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                           ),
                         ),
@@ -188,8 +188,8 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                       const SizedBox(width: 8),
                       IconButton(
                         style: IconButton.styleFrom(
-                          backgroundColor: AppTheme.accentRed.withValues(alpha: 0.15),
-                          foregroundColor: AppTheme.accentRed,
+                          backgroundColor: AppTheme.danger.withValues(alpha: 0.15),
+                          foregroundColor: AppTheme.danger,
                         ),
                         icon: const Icon(Icons.pin_drop_rounded),
                         tooltip: 'Pinpoint Branch on Map',
@@ -217,14 +217,14 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Cancel', style: TextStyle(color: AppTheme.textSecondaryDark)),
+              child: Text('design_ui.cancel'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
             ),
             ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
+              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
               onPressed: () {
                 if (branchNameCtrl.text.trim().isEmpty || addressCtrl.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Please enter a branch name and address.')),
+                    SnackBar(content: Text('design_ui.please_enter_a_branch_name_and_address'.tr())),
                   );
                   return;
                 }
@@ -238,7 +238,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 );
                 Navigator.of(ctx).pop();
               },
-              child: const Text('Add Branch'),
+              child: Text('design_ui.add_branch'.tr()),
             ),
           ],
         ),
@@ -251,13 +251,13 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
     final addressText = widget.venueController.text.trim();
 
     if (widget.isOrganization) {
-      // 🏢 Structured Main Campus / HQ Card for Organizations
+      //  Structured Main Campus / HQ Card for Organizations
       return Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.accentRed.withValues(alpha: 0.4), width: 1.2),
+          border: Border.all(color: AppTheme.danger.withValues(alpha: 0.4), width: 1.2),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -270,17 +270,17 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentRed.withValues(alpha: 0.15),
+                        color: AppTheme.danger.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Row(
                         children: [
-                          const Icon(Icons.star_rounded, size: 13, color: AppTheme.accentRed),
+                          const Icon(Icons.star_rounded, size: 13, color: AppTheme.danger),
                           const SizedBox(width: 4),
                           Text(
                             'wizard_steps.step4_hq_badge'.tr(),
                             style: const TextStyle(
-                              color: AppTheme.accentRed,
+                              color: AppTheme.danger,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -292,7 +292,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 ),
                 TextButton.icon(
                   style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.accentBlue,
+                    foregroundColor: AppTheme.primary,
                     padding: EdgeInsets.zero,
                   ),
                   icon: const Icon(Icons.pin_drop_rounded, size: 15),
@@ -304,14 +304,14 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
             const SizedBox(height: 10),
             TextField(
               controller: widget.venueController,
-              style: const TextStyle(color: AppTheme.textPrimaryDark),
+              style: const TextStyle(color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: 'wizard_steps.step4_venue_org_label'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+                labelStyle: const TextStyle(color: AppTheme.textSecondary),
                 hintText: 'e.g. Al-Rakah HQ Campus, Innovation Auditorium',
-                prefixIcon: const Icon(Icons.apartment_rounded, color: AppTheme.accentRed),
+                prefixIcon: const Icon(Icons.apartment_rounded, color: AppTheme.danger),
                 filled: true,
-                fillColor: AppTheme.darkSurface2,
+                fillColor: AppTheme.surfaceAlt,
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               ),
             ),
@@ -319,12 +319,12 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, color: AppTheme.accentBlue, size: 14),
+                  const Icon(Icons.location_on_outlined, color: AppTheme.primary, size: 14),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       '$cityName • $addressText',
-                      style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -336,29 +336,29 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
         ),
       );
     } else {
-      // 🎓 Standard Individual Broadcaster Location Input
+      //  Standard Individual Broadcaster Location Input
       return Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
             child: TextField(
               controller: widget.venueController,
-              style: const TextStyle(color: AppTheme.textPrimaryDark),
+              style: const TextStyle(color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: 'wizard_steps.step4_venue_ind_label'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+                labelStyle: const TextStyle(color: AppTheme.textSecondary),
                 hintText: 'e.g. Al-Rakah HQ Campus, Innovation Auditorium',
-                hintStyle: const TextStyle(color: AppTheme.textMutedDark),
-                prefixIcon: const Icon(Icons.location_on_outlined, color: AppTheme.accentRed),
+                hintStyle: const TextStyle(color: AppTheme.textMuted),
+                prefixIcon: const Icon(Icons.location_on_outlined, color: AppTheme.danger),
                 filled: true,
-                fillColor: AppTheme.darkSurface1,
+                fillColor: AppTheme.surface,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                  borderSide: const BorderSide(color: AppTheme.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+                  borderSide: const BorderSide(color: AppTheme.danger, width: 1.5),
                 ),
               ),
             ),
@@ -367,12 +367,12 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           Container(
             height: 56,
             decoration: BoxDecoration(
-              color: AppTheme.accentRed.withValues(alpha: 0.15),
+              color: AppTheme.danger.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.accentRed, width: 1.2),
+              border: Border.all(color: AppTheme.danger, width: 1.2),
             ),
             child: IconButton(
-              icon: const Icon(Icons.pin_drop_rounded, color: AppTheme.accentRed),
+              icon: const Icon(Icons.pin_drop_rounded, color: AppTheme.danger),
               tooltip: 'wizard_steps.step4_pinpoint_btn'.tr(),
               onPressed: () => _openMapPinpoint(),
             ),
@@ -391,7 +391,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           Text(
             widget.isOrganization ? 'wizard_steps.step4_title_org'.tr() : 'wizard_steps.step4_title_ind'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -400,7 +400,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           Text(
             'wizard_steps.step4_desc'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
@@ -411,7 +411,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           Text(
             'map.select_city'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -420,16 +420,16 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.darkBorderSubtle),
+              border: Border.all(color: AppTheme.border),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
                 value: widget.selectedCity,
                 isExpanded: true,
-                dropdownColor: AppTheme.darkSurface2,
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                dropdownColor: AppTheme.surfaceAlt,
+                style: const TextStyle(color: AppTheme.textPrimary),
                 items: ApplyStep4Location.cityOptions.entries.map((entry) {
                   return DropdownMenuItem<String>(
                     value: entry.key,
@@ -456,20 +456,20 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 Text(
                   'Additional Campus Branches (${widget.orgBranches.length})',
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.darkSurface1,
-                    foregroundColor: AppTheme.accentBlue,
-                    side: const BorderSide(color: AppTheme.darkBorderSubtle),
+                    backgroundColor: AppTheme.surface,
+                    foregroundColor: AppTheme.primary,
+                    side: const BorderSide(color: AppTheme.border),
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   ),
                   icon: const Icon(Icons.add_location_alt_outlined, size: 16),
-                  label: const Text('Add Branch', style: TextStyle(fontSize: 11)),
+                  label: Text('design_ui.add_branch'.tr(), style: const TextStyle(fontSize: 11)),
                   onPressed: _showAddBranchDialog,
                 ),
               ],
@@ -486,13 +486,13 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                   return Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkSurface1,
+                      color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppTheme.darkBorderSubtle),
+                      border: Border.all(color: AppTheme.border),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.apartment_rounded, color: AppTheme.accentRed, size: 20),
+                        const Icon(Icons.apartment_rounded, color: AppTheme.danger, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -501,14 +501,14 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                               Text(
                                 br.branchName,
                                 style: const TextStyle(
-                                  color: AppTheme.textPrimaryDark,
+                                  color: AppTheme.textPrimary,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
                                 ),
                               ),
                               Text(
                                 br.address,
-                                style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11),
+                                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
                               ),
                             ],
                           ),
@@ -525,37 +525,37 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
             const SizedBox(height: AppTheme.spaceMd),
           ],
 
-          // 📞 Safe Saudi Phone Number Placeholder (+966 / 05) with Validation
+          //  Safe Saudi Phone Number Placeholder (+966 / 05) with Validation
           TextField(
             controller: widget.phoneController,
             keyboardType: TextInputType.phone,
             onChanged: _validatePhone,
-            style: const TextStyle(color: AppTheme.textPrimaryDark),
+            style: const TextStyle(color: AppTheme.textPrimary),
             decoration: InputDecoration(
               labelText: 'Phone / WhatsApp Number (Saudi format) *',
-              labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
               hintText: '05X XXX XXXX or +966 5X XXX XXXX',
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark),
-              prefixIcon: const Icon(Icons.phone_outlined, color: AppTheme.accentRed),
+              hintStyle: const TextStyle(color: AppTheme.textMuted),
+              prefixIcon: const Icon(Icons.phone_outlined, color: AppTheme.danger),
               suffixIcon: widget.phoneController.text.isNotEmpty
                   ? (_phoneValidationError == null
                       ? const Icon(Icons.check_circle_rounded, color: Colors.green)
-                      : const Icon(Icons.error_outline_rounded, color: AppTheme.accentRed))
+                      : const Icon(Icons.error_outline_rounded, color: AppTheme.danger))
                   : null,
               filled: true,
-              fillColor: AppTheme.darkSurface1,
+              fillColor: AppTheme.surface,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 borderSide: BorderSide(
                   color: widget.phoneController.text.isNotEmpty
-                      ? (_phoneValidationError == null ? Colors.green.withValues(alpha: 0.5) : AppTheme.accentRed)
-                      : AppTheme.darkBorderSubtle,
+                      ? (_phoneValidationError == null ? Colors.green.withValues(alpha: 0.5) : AppTheme.danger)
+                      : AppTheme.border,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 borderSide: BorderSide(
-                  color: _phoneValidationError == null ? Colors.green : AppTheme.accentRed,
+                  color: _phoneValidationError == null ? Colors.green : AppTheme.danger,
                   width: 1.5,
                 ),
               ),
@@ -565,22 +565,20 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
             const SizedBox(height: 4),
             Text(
               _phoneValidationError!,
-              style: const TextStyle(color: AppTheme.accentRed, fontSize: 11),
+              style: const TextStyle(color: AppTheme.danger, fontSize: 11),
             ),
           ] else ...[
             const SizedBox(height: 4),
-            const Text(
-              'Accepts 05XXXXXXXX, 9665XXXXXXXX, or +9665XXXXXXXX without spaces (e.g. 050 XXX XXXX).',
-              style: TextStyle(color: AppTheme.textMutedDark, fontSize: 11),
+            Text('design_ui.accepts_05xxxxxxxx_9665xxxxxxxx_or_9665xxxxxxxx_without_spaces_e_'.tr(),
+              style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
             ),
           ],
           const SizedBox(height: AppTheme.spaceMd),
 
           // Preferred Contact Channel
-          const Text(
-            'Preferred Admin Contact Method',
-            style: TextStyle(
-              color: AppTheme.textPrimaryDark,
+          Text('design_ui.preferred_admin_contact_method'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -632,21 +630,21 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.accentRed.withValues(alpha: 0.15) : AppTheme.darkSurface1,
+          color: isSelected ? AppTheme.danger.withValues(alpha: 0.15) : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
-            color: isSelected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+            color: isSelected ? AppTheme.danger : AppTheme.border,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSelected ? AppTheme.accentRed : AppTheme.textSecondaryDark, size: 20),
+            Icon(icon, color: isSelected ? AppTheme.danger : AppTheme.textSecondary, size: 20),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppTheme.textPrimaryDark : AppTheme.textSecondaryDark,
+                color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),

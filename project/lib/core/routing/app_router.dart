@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -83,8 +84,8 @@ class AppRouter {
 
       // Handle OAuth callback deep link redirects (e.g. com.example.streamerapp://login-callback)
       // gracefully without ever falling through to "Route Not Found". Must
-      // mirror the '/welcome' branch's role-select gate above -- routing
-      // straight to '/feed' here skipped the broadcaster onboarding prompt
+      // mirror the '/welcome'branch's role-select gate above -- routing
+      // straight to '/feed'here skipped the broadcaster onboarding prompt
       // entirely on every fresh Google sign-in (issue_log.md: "I did not
       // get a prompt to start the onboarding to be a streamer, it just
       // opened the Discovery tab").
@@ -105,7 +106,7 @@ class AppRouter {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, size: 64, color: AppTheme.accentRed),
+            const Icon(Icons.error_outline_rounded, size: 64, color: AppTheme.danger),
             const SizedBox(height: AppTheme.spaceLg),
             Text(
               'Route Not Found (${state.error?.message ?? state.uri.toString()})',
@@ -114,7 +115,7 @@ class AppRouter {
             const SizedBox(height: AppTheme.spaceMd),
             ElevatedButton(
               onPressed: () => context.go('/feed'),
-              child: const Text('Back to Discovery Feed'),
+              child: Text('design_ui.back_to_discovery_feed'.tr()),
             ),
           ],
         ),
@@ -270,7 +271,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
             ));
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       body: Stack(
         children: [
           if (isDesktop)
@@ -280,9 +281,9 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                 Container(
                   width: 220,
                   decoration: const BoxDecoration(
-                    color: AppTheme.darkSurface1,
+                    color: AppTheme.surface,
                     border: Border(
-                      right: BorderSide(color: AppTheme.darkBorderSubtle, width: 1.0),
+                      right: BorderSide(color: AppTheme.border, width: 1.0),
                     ),
                   ),
                   child: Column(
@@ -297,13 +298,13 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: AppTheme.accentRed.withValues(alpha: 0.15),
+                                color: AppTheme.danger.withValues(alpha: 0.15),
                                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                                border: Border.all(color: AppTheme.accentRed, width: 1.5),
+                                border: Border.all(color: AppTheme.danger, width: 1.5),
                               ),
                               child: const Icon(
                                 Icons.school_rounded,
-                                color: AppTheme.accentRed,
+                                color: AppTheme.danger,
                                 size: 20,
                               ),
                             ),
@@ -312,19 +313,17 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const Text(
-                                    'STREAMER',
-                                    style: TextStyle(
-                                      color: AppTheme.textPrimaryDark,
+                                  Text('design_ui.streamer'.tr(),
+                                    style: const TextStyle(
+                                      color: AppTheme.textPrimary,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 14,
                                       letterSpacing: 1.2,
                                     ),
                                   ),
-                                  Text(
-                                    'AlSharqia Hub',
+                                  Text('design_ui.alsharqia_hub'.tr(),
                                     style: TextStyle(
-                                      color: AppTheme.accentBlue.withValues(alpha: 0.9),
+                                      color: AppTheme.primary.withValues(alpha: 0.9),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -335,7 +334,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                           ],
                         ),
                       ),
-                      const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+                      const Divider(color: AppTheme.border, height: 1),
                       const SizedBox(height: AppTheme.spaceMd),
 
                       // Navigation Items
@@ -400,10 +399,10 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                         margin: const EdgeInsets.all(AppTheme.spaceMd),
                         padding: const EdgeInsets.all(AppTheme.spaceMd),
                         decoration: BoxDecoration(
-                          color: AppTheme.darkSurface2,
+                          color: AppTheme.surfaceAlt,
                           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                           border: Border.all(
-                            color: isStreamerModeEnabled ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+                            color: isStreamerModeEnabled ? AppTheme.danger : AppTheme.border,
                           ),
                         ),
                         child: Row(
@@ -411,14 +410,14 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                             Icon(
                               isStreamerModeEnabled ? Icons.videocam_rounded : Icons.visibility_rounded,
                               size: 18,
-                              color: isStreamerModeEnabled ? AppTheme.accentRed : AppTheme.accentBlue,
+                              color: isStreamerModeEnabled ? AppTheme.danger : AppTheme.primary,
                             ),
                             const SizedBox(width: AppTheme.spaceSm),
                             Expanded(
                               child: Text(
                                 isStreamerModeEnabled ? 'Streamer Mode' : 'Viewer Mode',
                                 style: const TextStyle(
-                                  color: AppTheme.textPrimaryDark,
+                                  color: AppTheme.textPrimary,
                                   fontSize: 11,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -452,16 +451,16 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
           ? null
           : Container(
               decoration: const BoxDecoration(
-                color: AppTheme.darkSurface1,
+                color: AppTheme.surface,
                 border: Border(
-                  top: BorderSide(color: AppTheme.darkBorderSubtle, width: 1.0),
+                  top: BorderSide(color: AppTheme.border, width: 1.0),
                 ),
               ),
               child: BottomNavigationBar(
                 currentIndex: navigationShell.currentIndex,
-                backgroundColor: AppTheme.darkSurface1,
-                selectedItemColor: AppTheme.accentRed,
-                unselectedItemColor: AppTheme.textMutedDark,
+                backgroundColor: AppTheme.surface,
+                selectedItemColor: AppTheme.danger,
+                unselectedItemColor: AppTheme.textMuted,
                 selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
                 unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 11),
                 onTap: (index) {
@@ -473,12 +472,12 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                 items: const [
                   BottomNavigationBarItem(
                     icon: Icon(Icons.grid_view_rounded),
-                    activeIcon: Icon(Icons.grid_view_rounded, color: AppTheme.accentRed),
+                    activeIcon: Icon(Icons.grid_view_rounded, color: AppTheme.danger),
                     label: 'Discovery',
                   ),
                   BottomNavigationBarItem(
                     icon: Icon(Icons.map_rounded),
-                    activeIcon: Icon(Icons.map_rounded, color: AppTheme.accentRed),
+                    activeIcon: Icon(Icons.map_rounded, color: AppTheme.danger),
                     label: 'Spatial Map',
                   ),
                 ],
@@ -511,23 +510,23 @@ class _DesktopNavItem extends StatelessWidget {
         margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm, vertical: 2),
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.accentRed.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected ? AppTheme.danger.withValues(alpha: 0.15) : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: isSelected ? Border.all(color: AppTheme.accentRed.withValues(alpha: 0.5)) : null,
+          border: isSelected ? Border.all(color: AppTheme.danger.withValues(alpha: 0.5)) : null,
         ),
         child: Row(
           children: [
             Icon(
               icon,
               size: 20,
-              color: isSelected ? AppTheme.accentRed : AppTheme.textSecondaryDark,
+              color: isSelected ? AppTheme.danger : AppTheme.textSecondary,
             ),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? AppTheme.textPrimaryDark : AppTheme.textSecondaryDark,
+                  color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -537,7 +536,7 @@ class _DesktopNavItem extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentAmber,
+                  color: AppTheme.warning,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(

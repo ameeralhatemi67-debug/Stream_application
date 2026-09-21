@@ -1,3 +1,4 @@
+import 'support/localized_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +14,7 @@ import 'fixtures/streamer_fixtures.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(initializeTestLocalization);
 
   setUp(() {
     SharedPreferences.setMockInitialValues({});
@@ -105,7 +107,7 @@ void main() {
       DeviceSessionChoice? selectedChoice;
 
       await tester.pumpWidget(
-        MaterialApp(
+        localizedApp(
           home: Scaffold(
             body: Builder(
               builder: (context) => ElevatedButton(
@@ -123,6 +125,7 @@ void main() {
         ),
       );
 
+      await tester.pump();
       await tester.tap(find.text('Open Dialog'));
       await tester.pumpAndSettle();
 
@@ -158,7 +161,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AppProvider>.value(
           value: provider,
-          child: MaterialApp(
+          child: localizedApp(
             home: Scaffold(
               body: SizedBox(
                 width: 250,
@@ -193,7 +196,7 @@ void main() {
       await tester.pumpWidget(
         ChangeNotifierProvider<AppProvider>.value(
           value: provider,
-          child: MaterialApp(
+          child: localizedApp(
             home: Scaffold(
               body: SizedBox(
                 width: 250,

@@ -53,7 +53,7 @@ class TagModerationModel {
   }
 }
 
-/// Minimal broadcaster summary for the tag "Inspect Broadcasters" drill-down
+/// Minimal broadcaster summary for the tag "Inspect Broadcasters"drill-down
 /// (Cluster 3 Task 12) -- deliberately not a full StreamerModel, since the
 /// modal only ever needs enough to show a tappable row.
 class TaggedBroadcasterSummary {

@@ -68,7 +68,7 @@ class ApplyStep5Review extends StatelessWidget {
       builder: (ctx) => Container(
         height: MediaQuery.of(context).size.height * 0.85,
         decoration: const BoxDecoration(
-          color: AppTheme.darkBgBase,
+          color: AppTheme.bg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
         ),
         child: Column(
@@ -77,7 +77,7 @@ class ApplyStep5Review extends StatelessWidget {
               padding: const EdgeInsets.all(AppTheme.spaceLg),
               child: Row(
                 children: [
-                  const Icon(Icons.gavel_rounded, color: AppTheme.accentRed, size: 24),
+                  const Icon(Icons.gavel_rounded, color: AppTheme.danger, size: 24),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -85,20 +85,20 @@ class ApplyStep5Review extends StatelessWidget {
                           ? 'wizard_steps.step5_terms_modal_org'.tr()
                           : 'wizard_steps.step5_terms_modal_ind'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                     onPressed: () => Navigator.of(ctx).pop(),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 1, color: AppTheme.darkBorderSubtle),
+            const Divider(height: 1, color: AppTheme.border),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -108,7 +108,7 @@ class ApplyStep5Review extends StatelessWidget {
                     Text(
                       'wizard_steps.step5_charter_title'.tr(args: [terms.version]),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -117,16 +117,15 @@ class ApplyStep5Review extends StatelessWidget {
                     Text(
                       terms.getLocalizedTerms(ctx.locale.languageCode),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 12,
                         height: 1.5,
                       ),
                     ),
                     const SizedBox(height: AppTheme.spaceLg),
-                    const Text(
-                      'Broadcasting & Audio-Visual Standards',
-                      style: TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                    Text('design_ui.broadcasting_audio_visual_standards'.tr(),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -135,16 +134,15 @@ class ApplyStep5Review extends StatelessWidget {
                     Text(
                       terms.getLocalizedGuidelines(ctx.locale.languageCode),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 12,
                         height: 1.5,
                       ),
                     ),
                     const SizedBox(height: AppTheme.spaceLg),
-                    const Text(
-                      'Privacy & Regional Telemetry Guidelines',
-                      style: TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                    Text('design_ui.privacy_regional_telemetry_guidelines'.tr(),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -153,7 +151,7 @@ class ApplyStep5Review extends StatelessWidget {
                     Text(
                       terms.getLocalizedPrivacy(ctx.locale.languageCode),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 12,
                         height: 1.5,
                       ),
@@ -165,14 +163,14 @@ class ApplyStep5Review extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: const BoxDecoration(
-                border: Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
+                border: Border(top: BorderSide(color: AppTheme.border)),
               ),
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentRed,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.danger,
+                    foregroundColor: AppTheme.onMedia,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: () {
@@ -213,7 +211,7 @@ class ApplyStep5Review extends StatelessWidget {
           Text(
             'wizard_steps.step5_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -222,22 +220,22 @@ class ApplyStep5Review extends StatelessWidget {
           Text(
             'wizard_steps.step5_desc'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
           ),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 📇 Live Broadcaster Preview Card
+          //  Live Broadcaster Preview Card
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: AppTheme.darkBorderSubtle, width: 1.2),
+              border: Border.all(color: AppTheme.border, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.35),
+                  color: AppTheme.media.withValues(alpha: 0.35),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -251,7 +249,7 @@ class ApplyStep5Review extends StatelessWidget {
                 Container(
                   height: 110,
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurface2,
+                    color: AppTheme.surfaceAlt,
                     image: DecorationImage(
                       image: bannerProvider,
                       fit: BoxFit.cover,
@@ -269,7 +267,7 @@ class ApplyStep5Review extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 28,
-                            backgroundColor: AppTheme.darkSurface2,
+                            backgroundColor: AppTheme.surfaceAlt,
                             backgroundImage: avatarProvider,
                           ),
                           const SizedBox(width: 12),
@@ -283,7 +281,7 @@ class ApplyStep5Review extends StatelessWidget {
                                       child: Text(
                                         displayName,
                                         style: const TextStyle(
-                                          color: AppTheme.textPrimaryDark,
+                                          color: AppTheme.textPrimary,
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -291,14 +289,14 @@ class ApplyStep5Review extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(width: 6),
-                                    const Icon(Icons.verified_rounded, color: AppTheme.accentBlue, size: 16),
+                                    const Icon(Icons.verified_rounded, color: AppTheme.primary, size: 16),
                                   ],
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   handle.startsWith('@') ? handle : '@$handle',
                                   style: const TextStyle(
-                                    color: AppTheme.accentRed,
+                                    color: AppTheme.danger,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -308,7 +306,7 @@ class ApplyStep5Review extends StatelessWidget {
                                   Text(
                                     institution,
                                     style: const TextStyle(
-                                      color: AppTheme.textSecondaryDark,
+                                      color: AppTheme.textSecondary,
                                       fontSize: 11,
                                     ),
                                   ),
@@ -323,14 +321,14 @@ class ApplyStep5Review extends StatelessWidget {
                         Text(
                           bio,
                           style: const TextStyle(
-                            color: AppTheme.textSecondaryDark,
+                            color: AppTheme.textSecondary,
                             fontSize: 12,
                             height: 1.4,
                           ),
                         ),
                       ],
                       const SizedBox(height: AppTheme.spaceMd),
-                      const Divider(height: 1, color: AppTheme.darkBorderSubtle),
+                      const Divider(height: 1, color: AppTheme.border),
                       const SizedBox(height: AppTheme.spaceSm),
 
                       // Structured Metadata Breakdown
@@ -377,13 +375,13 @@ class ApplyStep5Review extends StatelessWidget {
                             return Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: AppTheme.darkSurface2,
+                                color: AppTheme.surfaceAlt,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 t,
                                 style: const TextStyle(
-                                  color: AppTheme.textSecondaryDark,
+                                  color: AppTheme.textSecondary,
                                   fontSize: 10,
                                 ),
                               ),
@@ -399,16 +397,16 @@ class ApplyStep5Review extends StatelessWidget {
           ),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 📜 Agreement Checkbox with Clickable Sheet Link
+          //  Agreement Checkbox with Clickable Sheet Link
           GestureDetector(
             onTap: () => onTermsToggled(!agreedToTerms),
             child: Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface1,
+                color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 border: Border.all(
-                  color: agreedToTerms ? AppTheme.accentRed.withValues(alpha: 0.5) : AppTheme.darkBorderSubtle,
+                  color: agreedToTerms ? AppTheme.danger.withValues(alpha: 0.5) : AppTheme.border,
                 ),
               ),
               child: Row(
@@ -417,8 +415,8 @@ class ApplyStep5Review extends StatelessWidget {
                   Checkbox(
                     value: agreedToTerms,
                     onChanged: (val) => onTermsToggled(val ?? false),
-                    activeColor: AppTheme.accentRed,
-                    checkColor: Colors.white,
+                    activeColor: AppTheme.danger,
+                    checkColor: AppTheme.onMedia,
                   ),
                   Expanded(
                     child: Padding(
@@ -428,7 +426,7 @@ class ApplyStep5Review extends StatelessWidget {
                         children: [
                           Text(
                             'wizard_steps.step5_agree_checkbox'.tr(),
-                            style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                           ),
                           GestureDetector(
                             onTap: () => _showTermsModalSheet(context),
@@ -437,7 +435,7 @@ class ApplyStep5Review extends StatelessWidget {
                                   ? 'wizard_steps.step5_terms_modal_org'.tr()
                                   : 'wizard_steps.step5_agree_terms_link'.tr(),
                               style: const TextStyle(
-                                color: AppTheme.accentBlue,
+                                color: AppTheme.primary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 decoration: TextDecoration.underline,
@@ -446,7 +444,7 @@ class ApplyStep5Review extends StatelessWidget {
                           ),
                           Text(
                             'wizard_steps.step5_agree_standards'.tr(),
-                            style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+                            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
                           ),
                         ],
                       ),
@@ -472,12 +470,12 @@ class ApplyStep5Review extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: AppTheme.accentRed),
+          Icon(icon, size: 14, color: AppTheme.danger),
           const SizedBox(width: 6),
           Text(
             '$label: ',
             style: const TextStyle(
-              color: AppTheme.textMutedDark,
+              color: AppTheme.textMuted,
               fontSize: 11,
               fontWeight: FontWeight.w600,
             ),
@@ -486,7 +484,7 @@ class ApplyStep5Review extends StatelessWidget {
             child: Text(
               value,
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 11,
               ),
             ),

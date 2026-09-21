@@ -33,18 +33,18 @@ class MarkerSummaryCard extends StatelessWidget {
 
     Color borderColor;
     if (isVideo) {
-      borderColor = AppTheme.accentRed.withValues(alpha: 0.8);
+      borderColor = AppTheme.danger.withValues(alpha: 0.8);
     } else if (isAudio) {
-      borderColor = const Color(0xFFA1A1AA);
+      borderColor = AppTheme.textMuted;
     } else {
-      borderColor = AppTheme.darkBorderHighlight;
+      borderColor = AppTheme.borderStrong;
     }
 
     return Container(
       width: 320,
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface3,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(
           color: borderColor,
@@ -68,7 +68,7 @@ class MarkerSummaryCard extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 20,
-                backgroundColor: AppTheme.darkSurface2,
+                backgroundColor: AppTheme.surfaceAlt,
                 backgroundImage: _getAvatarProvider(streamer.avatarUrl),
                 onBackgroundImageError: (_, __) {},
               ),
@@ -84,7 +84,7 @@ class MarkerSummaryCard extends StatelessWidget {
                           child: Text(
                             streamer.getLocalizedName(langCode),
                             style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
+                              color: AppTheme.textPrimary,
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
                             ),
@@ -97,7 +97,7 @@ class MarkerSummaryCard extends StatelessWidget {
                           const Icon(
                             Icons.verified_rounded,
                             size: 15,
-                            color: AppTheme.accentPurple,
+                            color: AppTheme.accent,
                           ),
                         ],
                       ],
@@ -106,7 +106,7 @@ class MarkerSummaryCard extends StatelessWidget {
                     Text(
                       streamer.getLocalizedTitle(langCode),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 11,
                       ),
                       maxLines: 1,
@@ -117,7 +117,7 @@ class MarkerSummaryCard extends StatelessWidget {
               ),
               IconButton(
                 icon: const Icon(Icons.close_rounded,
-                    size: 18, color: AppTheme.textMutedDark),
+                    size: 18, color: AppTheme.textMuted),
                 onPressed: onClose,
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -133,21 +133,21 @@ class MarkerSummaryCard extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface1,
+                color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                border: Border.all(color: AppTheme.darkBorderSubtle),
+                border: Border.all(color: AppTheme.border),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.location_on_outlined,
-                      size: 13, color: AppTheme.accentBlue),
+                      size: 13, color: AppTheme.primary),
                   const SizedBox(width: 5),
                   Expanded(
                     child: Text(
                       streamer.getLocalizedVenue(langCode),
                       style: const TextStyle(
                         fontSize: 11,
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -155,7 +155,7 @@ class MarkerSummaryCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   const Icon(Icons.navigation_rounded,
-                      size: 13, color: AppTheme.accentBlue),
+                      size: 13, color: AppTheme.primary),
                 ],
               ),
             ),
@@ -170,17 +170,17 @@ class MarkerSummaryCard extends StatelessWidget {
                     const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                 decoration: BoxDecoration(
                   color: isVideo
-                      ? AppTheme.accentRed.withValues(alpha: 0.2)
+                      ? AppTheme.danger.withValues(alpha: 0.2)
                       : isAudio
-                          ? const Color(0xFF3F3F46)
-                          : AppTheme.darkSurface1,
+                          ? AppTheme.media
+                          : AppTheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   border: Border.all(
                     color: isVideo
-                        ? AppTheme.accentRed
+                        ? AppTheme.danger
                         : isAudio
-                            ? const Color(0xFFA1A1AA)
-                            : AppTheme.darkBorderSubtle,
+                            ? AppTheme.textMuted
+                            : AppTheme.border,
                   ),
                 ),
                 child: Row(
@@ -190,7 +190,7 @@ class MarkerSummaryCard extends StatelessWidget {
                       const Icon(
                         Icons.mic_rounded,
                         size: 12,
-                        color: Color(0xFFE4E4E7),
+                        color: AppTheme.onMedia,
                       ),
                       const SizedBox(width: 4),
                       Text(
@@ -198,7 +198,7 @@ class MarkerSummaryCard extends StatelessWidget {
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFFE4E4E7),
+                          color: AppTheme.onMedia,
                         ),
                       ),
                     ] else ...[
@@ -208,8 +208,8 @@ class MarkerSummaryCard extends StatelessWidget {
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: isVideo
-                              ? AppTheme.accentRed
-                              : AppTheme.textMutedDark,
+                              ? AppTheme.danger
+                              : AppTheme.textMuted,
                         ),
                       ),
                       const SizedBox(width: 5),
@@ -221,8 +221,8 @@ class MarkerSummaryCard extends StatelessWidget {
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                           color: isVideo
-                              ? AppTheme.accentRed
-                              : AppTheme.textMutedDark,
+                              ? AppTheme.danger
+                              : AppTheme.textMuted,
                         ),
                       ),
                     ],
@@ -231,11 +231,11 @@ class MarkerSummaryCard extends StatelessWidget {
               ),
               const Spacer(),
               // Task 9 -- one-click external Google Maps launch, distinct
-              // from the "Visit Venue" button below which opens the in-app
+              // from the "Visit Venue"button below which opens the in-app
               // VenueNavigationSheet with full auditorium/distance details.
               IconButton(
                 icon: const Icon(Icons.directions_rounded,
-                    color: AppTheme.accentBlue, size: 20),
+                    color: AppTheme.primary, size: 20),
                 tooltip: 'venue.open_maps'.tr(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -244,7 +244,7 @@ class MarkerSummaryCard extends StatelessWidget {
               const SizedBox(width: 6),
               IconButton(
                 icon: const Icon(Icons.info_outline_rounded,
-                    color: AppTheme.accentBlue, size: 20),
+                    color: AppTheme.primary, size: 20),
                 tooltip: 'venue.visit_venue'.tr(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
@@ -262,17 +262,17 @@ class MarkerSummaryCard extends StatelessWidget {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: isVideo
-                      ? AppTheme.accentRed
+                      ? AppTheme.danger
                       : isAudio
-                          ? const Color(0xFF3F3F46)
-                          : AppTheme.accentBlue,
-                  foregroundColor: Colors.white,
+                          ? AppTheme.media
+                          : AppTheme.primary,
+                  foregroundColor: AppTheme.onMedia,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     side: isAudio
-                        ? const BorderSide(color: Color(0xFFA1A1AA), width: 1.0)
+                        ? const BorderSide(color: AppTheme.textMuted, width: 1.0)
                         : BorderSide.none,
                   ),
                   elevation: 0,

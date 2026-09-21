@@ -24,7 +24,7 @@ class ApplyStep1Identity extends StatelessWidget {
           Text(
             'wizard_steps.step1_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -33,7 +33,7 @@ class ApplyStep1Identity extends StatelessWidget {
           Text(
             'wizard_steps.step1_desc'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
@@ -43,22 +43,22 @@ class ApplyStep1Identity extends StatelessWidget {
           // Full Name
           TextField(
             controller: nameController,
-            style: const TextStyle(color: AppTheme.textPrimaryDark),
+            style: const TextStyle(color: AppTheme.textPrimary),
             decoration: InputDecoration(
               labelText: 'wizard_steps.step1_name_label'.tr(),
-              labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
               hintText: 'wizard_steps.step1_name_hint'.tr(),
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark),
-              prefixIcon: const Icon(Icons.badge_outlined, color: AppTheme.accentRed),
+              hintStyle: const TextStyle(color: AppTheme.textMuted),
+              prefixIcon: const Icon(Icons.badge_outlined, color: AppTheme.danger),
               filled: true,
-              fillColor: AppTheme.darkSurface1,
+              fillColor: AppTheme.surface,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                borderSide: const BorderSide(color: AppTheme.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+                borderSide: const BorderSide(color: AppTheme.danger, width: 1.5),
               ),
             ),
           ),
@@ -67,23 +67,23 @@ class ApplyStep1Identity extends StatelessWidget {
           // Public Handle
           TextField(
             controller: handleController,
-            style: const TextStyle(color: AppTheme.textPrimaryDark),
+            style: const TextStyle(color: AppTheme.textPrimary),
             decoration: InputDecoration(
               labelText: 'wizard_steps.step1_handle_label'.tr(),
-              labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
               hintText: 'wizard_steps.step1_handle_hint'.tr(),
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark),
+              hintStyle: const TextStyle(color: AppTheme.textMuted),
               prefixIcon: const Icon(Icons.alternate_email_rounded,
-                  color: AppTheme.accentRed),
+                  color: AppTheme.danger),
               filled: true,
-              fillColor: AppTheme.darkSurface1,
+              fillColor: AppTheme.surface,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                borderSide: const BorderSide(color: AppTheme.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+                borderSide: const BorderSide(color: AppTheme.danger, width: 1.5),
               ),
             ),
           ),
@@ -94,22 +94,22 @@ class ApplyStep1Identity extends StatelessWidget {
             controller: bioController,
             maxLines: 4,
             maxLength: 350,
-            style: const TextStyle(color: AppTheme.textPrimaryDark),
+            style: const TextStyle(color: AppTheme.textPrimary),
             decoration: InputDecoration(
               labelText: 'wizard_steps.step1_bio_label'.tr(),
-              labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
               hintText: 'wizard_steps.step1_bio_hint'.tr(),
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark),
+              hintStyle: const TextStyle(color: AppTheme.textMuted),
               alignLabelWithHint: true,
               filled: true,
-              fillColor: AppTheme.darkSurface1,
+              fillColor: AppTheme.surface,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                borderSide: const BorderSide(color: AppTheme.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+                borderSide: const BorderSide(color: AppTheme.danger, width: 1.5),
               ),
             ),
           ),

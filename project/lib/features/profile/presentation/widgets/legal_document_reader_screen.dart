@@ -47,10 +47,10 @@ class _LegalDocumentReaderScreenState
     final doc = docs[_currentIndex];
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
         title: Text(doc.title),
-        backgroundColor: AppTheme.darkBgBase,
+        backgroundColor: AppTheme.bg,
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -58,7 +58,7 @@ class _LegalDocumentReaderScreenState
         child: SelectableText(
           doc.content,
           style: const TextStyle(
-            color: AppTheme.textSecondaryDark,
+            color: AppTheme.textSecondary,
             fontSize: 13,
             height: 1.6,
           ),
@@ -72,7 +72,7 @@ class _LegalDocumentReaderScreenState
           ),
           decoration: const BoxDecoration(
             border: Border(
-              top: BorderSide(color: AppTheme.darkBorderSubtle),
+              top: BorderSide(color: AppTheme.border),
             ),
           ),
           child: Row(
@@ -87,7 +87,7 @@ class _LegalDocumentReaderScreenState
               Text(
                 '${_currentIndex + 1} / 3',
                 style: const TextStyle(
-                    color: AppTheme.textMutedDark, fontSize: 11),
+                    color: AppTheme.textMuted, fontSize: 11),
               ),
               Expanded(
                 child: TextButton.icon(

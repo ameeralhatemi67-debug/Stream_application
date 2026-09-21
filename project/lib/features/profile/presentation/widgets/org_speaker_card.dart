@@ -28,9 +28,9 @@ class OrgSpeakerCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: AppTheme.darkBorderSubtle),
+          border: Border.all(color: AppTheme.border),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +44,7 @@ class OrgSpeakerCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppTheme.accentBlue.withValues(alpha: 0.8),
+                      color: AppTheme.primary.withValues(alpha: 0.8),
                       width: 2,
                     ),
                     image: DecorationImage(
@@ -63,7 +63,7 @@ class OrgSpeakerCard extends StatelessWidget {
                       Text(
                         speaker.getLocalizedName(lang),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.onMedia,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -74,7 +74,7 @@ class OrgSpeakerCard extends StatelessWidget {
                       Text(
                         speaker.getLocalizedRole(lang),
                         style: const TextStyle(
-                          color: AppTheme.accentBlue,
+                          color: AppTheme.primary,
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -86,8 +86,8 @@ class OrgSpeakerCard extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: speaker.isPermanentStaff
-                              ? AppTheme.accentBlue.withValues(alpha: 0.12)
-                              : AppTheme.darkSurface2,
+                              ? AppTheme.primary.withValues(alpha: 0.12)
+                              : AppTheme.surfaceAlt,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -96,8 +96,8 @@ class OrgSpeakerCard extends StatelessWidget {
                               : 'profile.guest_speaker'.tr(),
                           style: TextStyle(
                             color: speaker.isPermanentStaff
-                                ? AppTheme.accentBlue
-                                : AppTheme.textSecondaryDark,
+                                ? AppTheme.primary
+                                : AppTheme.textSecondary,
                             fontSize: 9.5,
                             fontWeight: FontWeight.bold,
                           ),
@@ -113,7 +113,7 @@ class OrgSpeakerCard extends StatelessWidget {
               Text(
                 speaker.getLocalizedBio(lang),
                 style: const TextStyle(
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   fontSize: 11.5,
                   height: 1.35,
                 ),
@@ -128,7 +128,7 @@ class OrgSpeakerCard extends StatelessWidget {
                 Text(
                   '${speakerVods.length} ${'profile.lectures_count'.tr()}',
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.w500,
                   ),
@@ -136,7 +136,7 @@ class OrgSpeakerCard extends StatelessWidget {
                 const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 12,
-                  color: AppTheme.accentBlue,
+                  color: AppTheme.primary,
                 ),
               ],
             ),

@@ -10,7 +10,7 @@ APP_NAME_AR=منصة هدايه
 SUPPORT_EMAIL=ameeralhatemi67@gmail.com
 PRIVACY_POLICY_URL=
 ICON=brief/assets/icon.png    # optional 1024x1024 PNG; if missing, skip icon generation and list it in OWNER_ACTIONS
-DESIGN_CHOICE=                # A | B | C, set after brief/DESIGN_PROMPT.md produced brief/assets/design_options/. Blank = conservative white theme (03 4.1), no gradients, icon/logo untouched (list in OWNER_ACTIONS)
+DESIGN_CHOICE=A
 ```
 Use every value exactly as typed (including the Arabic spelling); never "correct" it. Put them in ONE file, `project/lib/core/config/app_identity.dart` (name en/ar, support email, privacy URL), and read them from there everywhere.
 Blank identity ⇒ keep the working title, centralise the name/ids in one place, and put the exact rename procedure in `OWNER_ACTIONS.md`.

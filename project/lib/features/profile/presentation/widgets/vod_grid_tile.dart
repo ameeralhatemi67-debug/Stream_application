@@ -30,12 +30,12 @@ class VodGridTile extends StatelessWidget {
       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
       child: Container(
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.darkBorderSubtle),
+          border: Border.all(color: AppTheme.border),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
+              color: AppTheme.media.withValues(alpha: 0.3),
               blurRadius: 6,
               offset: const Offset(0, 3),
             ),
@@ -57,10 +57,10 @@ class VodGridTile extends StatelessWidget {
                           vod.thumbnailUrl,
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            color: AppTheme.darkSurface2,
+                            color: AppTheme.surfaceAlt,
                             child: const Center(
                               child: Icon(Icons.video_library_rounded,
-                                  size: 32, color: AppTheme.accentPurple),
+                                  size: 32, color: AppTheme.accent),
                             ),
                           ),
                         )
@@ -70,26 +70,17 @@ class VodGridTile extends StatelessWidget {
                               : 'https://img.youtube.com/vi/${vod.youtubeVideoId}/hqdefault.jpg',
                           fit: BoxFit.cover,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            color: AppTheme.darkSurface2,
+                            color: AppTheme.surfaceAlt,
                             child: const Center(
                               child: Icon(Icons.video_library_rounded,
-                                  size: 32, color: AppTheme.accentPurple),
+                                  size: 32, color: AppTheme.accent),
                             ),
                           ),
                         ),
 
                   // Dark gradient overlay for contrast
                   Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: 0.7),
-                        ],
-                      ),
-                    ),
+                    decoration: const BoxDecoration(color: AppTheme.media),
                   ),
 
                   // Center Play Action Icon Button
@@ -97,11 +88,11 @@ class VodGridTile extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentRed.withValues(alpha: 0.9),
+                        color: AppTheme.danger.withValues(alpha: 0.9),
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: AppTheme.accentRed.withValues(alpha: 0.5),
+                            color: AppTheme.danger.withValues(alpha: 0.5),
                             blurRadius: 10,
                             spreadRadius: 1,
                           ),
@@ -109,7 +100,7 @@ class VodGridTile extends StatelessWidget {
                       ),
                       child: const Icon(
                         Icons.play_arrow_rounded,
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         size: 22,
                       ),
                     ),
@@ -122,14 +113,14 @@ class VodGridTile extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.85),
+                        color: AppTheme.media.withValues(alpha: 0.85),
                         borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                         border: Border.all(color: Colors.white24, width: 0.5),
                       ),
                       child: Text(
                         vod.formattedDuration,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppTheme.onMedia,
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
                         ),
@@ -150,7 +141,7 @@ class VodGridTile extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         fontSize: 12.5,
                         fontWeight: FontWeight.w600,
                         height: 1.25,
@@ -164,14 +155,14 @@ class VodGridTile extends StatelessWidget {
                         const Icon(
                           Icons.history_rounded,
                           size: 11,
-                          color: AppTheme.textMutedDark,
+                          color: AppTheme.textMuted,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '${vod.recordedDate} • ${vod.viewCount} views',
                             style: const TextStyle(
-                              color: AppTheme.textMutedDark,
+                              color: AppTheme.textMuted,
                               fontSize: 10,
                             ),
                             maxLines: 1,

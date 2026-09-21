@@ -36,7 +36,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: AppTheme.accentRed,
+            backgroundColor: AppTheme.danger,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 6),
             content: Text(
@@ -44,7 +44,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                   ? '${'account_banned.title'.tr()}: $reason'
                   : 'account_banned.title'.tr(),
               style: const TextStyle(
-                  color: Colors.white, fontWeight: FontWeight.bold),
+                  color: AppTheme.onMedia, fontWeight: FontWeight.bold),
             ),
           ),
         );
@@ -52,7 +52,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -70,19 +70,19 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                     width: 76,
                     height: 76,
                     decoration: BoxDecoration(
-                      color: AppTheme.accentRed.withValues(alpha: 0.15),
+                      color: AppTheme.danger.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                      border: Border.all(color: AppTheme.accentRed, width: 2),
+                      border: Border.all(color: AppTheme.danger, width: 2),
                     ),
                     child: const Icon(Icons.block_rounded,
-                        color: AppTheme.accentRed, size: 40),
+                        color: AppTheme.danger, size: 40),
                   ),
                   const SizedBox(height: AppTheme.spaceXl),
                   Text(
                     'account_banned.title'.tr(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -92,7 +92,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                     'account_banned.body'.tr(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -103,10 +103,10 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppTheme.spaceMd),
                       decoration: BoxDecoration(
-                        color: AppTheme.darkSurface1,
+                        color: AppTheme.surface,
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         border: Border.all(
-                            color: AppTheme.accentRed.withValues(alpha: 0.3)),
+                            color: AppTheme.danger.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -114,7 +114,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                           Text(
                             'account_banned.reason_label'.tr(),
                             style: const TextStyle(
-                              color: AppTheme.textMutedDark,
+                              color: AppTheme.textMuted,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -123,7 +123,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                           Text(
                             reason,
                             style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
+                              color: AppTheme.textPrimary,
                               fontSize: 13,
                             ),
                           ),
@@ -138,7 +138,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                     ),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: AppTheme.textMutedDark,
+                      color: AppTheme.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -147,8 +147,8 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.darkSurface2,
-                        foregroundColor: AppTheme.textPrimaryDark,
+                        backgroundColor: AppTheme.surfaceAlt,
+                        foregroundColor: AppTheme.textPrimary,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
                       ),

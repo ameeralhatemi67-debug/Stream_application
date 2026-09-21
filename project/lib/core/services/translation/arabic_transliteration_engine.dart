@@ -179,7 +179,7 @@ class ArabicTransliterationEngine {
         continue;
       }
 
-      // Check "الـ" prefix
+      // Check "الـ"prefix
       bool hasAlPrefix = false;
       String coreWord = rawCleanWord;
       if (coreWord.startsWith('ال') && coreWord.length > 3) {
@@ -224,7 +224,7 @@ class ArabicTransliterationEngine {
         continue;
       }
 
-      // Check if word has "al-" or "el-" prefix
+      // Check if word has "al-"or "el-"prefix
       bool hasAlPrefix = false;
       String coreWord = clean;
       if (clean.startsWith('al-') || clean.startsWith('el-')) {

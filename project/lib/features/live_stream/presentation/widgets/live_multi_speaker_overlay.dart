@@ -34,10 +34,10 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.65),
+        color: AppTheme.media.withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.15),
+          color: AppTheme.onMedia.withValues(alpha: 0.15),
           width: 0.8,
         ),
       ),
@@ -63,7 +63,7 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
 
   Widget _buildSpeakerAvatar(BuildContext context, OrgSpeakerModel speaker) {
     final isActive = activeSpeakerId == speaker.speakerId || (activeSpeakerId == null && speaker.isPermanentStaff);
-    final borderColor = isActive ? AppTheme.accentAmber : AppTheme.accentBlue.withValues(alpha: 0.8);
+    final borderColor = isActive ? AppTheme.warning : AppTheme.primary.withValues(alpha: 0.8);
 
     return Tooltip(
       message: '${speaker.nameEn} • ${speaker.roleOrTitleEn}',
@@ -98,7 +98,7 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
                   boxShadow: isActive
                       ? [
                           BoxShadow(
-                            color: AppTheme.accentAmber.withValues(alpha: 0.4),
+                            color: AppTheme.warning.withValues(alpha: 0.4),
                             blurRadius: 6,
                             spreadRadius: 1,
                           ),
@@ -119,9 +119,9 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF22C55E), // Emerald Green Active Voice
+                    color: AppTheme.success, // Emerald Green Active Voice
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.black, width: 1.5),
+                    border: Border.all(color: AppTheme.media, width: 1.5),
                   ),
                 ),
             ],

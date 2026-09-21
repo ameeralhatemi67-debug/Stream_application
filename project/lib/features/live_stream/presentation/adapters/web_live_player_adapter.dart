@@ -1,3 +1,4 @@
+import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -41,7 +42,7 @@ class _WebLivePlayerAdapterState extends State<WebLivePlayerAdapter> {
     } catch (_) {}
 
     try {
-      controller.setBackgroundColor(Colors.black);
+      controller.setBackgroundColor(AppTheme.media);
     } catch (_) {}
 
     if (!kIsWeb) {
@@ -106,7 +107,7 @@ class _WebLivePlayerAdapterState extends State<WebLivePlayerAdapter> {
     return AspectRatio(
       aspectRatio: widget.aspectRatio,
       child: Container(
-        color: Colors.black,
+        color: AppTheme.media,
         child: Stack(
           alignment: Alignment.center,
           children: [

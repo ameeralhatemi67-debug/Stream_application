@@ -25,7 +25,7 @@ extension ModeratorScopeInfo on ModeratorScope {
 }
 
 /// A `stream_moderators` row joined with display info, for the "Stream
-/// Moderator Labels & Delegation" audit table (Cluster 4 Task 15).
+/// Moderator Labels & Delegation"audit table (Cluster 4 Task 15).
 class StreamModeratorModel {
   final String id;
   final String profileId;

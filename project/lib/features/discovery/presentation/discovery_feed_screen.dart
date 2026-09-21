@@ -81,7 +81,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   void _showBookmarksSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
@@ -100,7 +100,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                     Text(
                       'feed.bookmarks_sheet_title'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -111,13 +111,13 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                     ),
                   ],
                 ),
-                const Divider(color: AppTheme.darkBorderSubtle),
+                const Divider(color: AppTheme.border),
                 Padding(
                   padding: const EdgeInsets.symmetric(vertical: 24),
                   child: Center(
                     child: Text(
                       'feed.no_bookmarks'.tr(),
-                      style: const TextStyle(color: AppTheme.textMutedDark),
+                      style: const TextStyle(color: AppTheme.textMuted),
                     ),
                   ),
                 ),
@@ -176,7 +176,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     final isUserStreamerLive = isStreamerModeEnabled && isBroadcastingLive;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
         titleSpacing: AppTheme.spaceMd,
         title: isUserStreamerLive
@@ -184,25 +184,25 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
                   color: customBroadcastType == BroadcastType.liveAudio
-                      ? const Color(0xFF3F3F46)
-                      : AppTheme.accentRed.withValues(alpha: 0.15),
+                      ? AppTheme.media
+                      : AppTheme.danger.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   border: Border.all(
                     color: customBroadcastType == BroadcastType.liveAudio
-                        ? const Color(0xFFA1A1AA)
-                        : AppTheme.accentRed.withValues(alpha: 0.8),
+                        ? AppTheme.textMuted
+                        : AppTheme.danger.withValues(alpha: 0.8),
                   ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (customBroadcastType == BroadcastType.liveAudio) ...[
-                      const Icon(Icons.mic_rounded, size: 12, color: Color(0xFFE4E4E7)),
+                      const Icon(Icons.mic_rounded, size: 12, color: AppTheme.onMedia),
                       const SizedBox(width: 5),
                       Text(
                         'live.audio_live_indicator'.tr(),
                         style: const TextStyle(
-                          color: Color(0xFFE4E4E7),
+                          color: AppTheme.onMedia,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -212,7 +212,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         width: 8,
                         height: 8,
                         decoration: const BoxDecoration(
-                          color: AppTheme.accentRed,
+                          color: AppTheme.danger,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -220,7 +220,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       Text(
                         'live.live_indicator'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.accentRed,
+                          color: AppTheme.danger,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                         ),
@@ -244,7 +244,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: AppTheme.accentRed,
+                        color: AppTheme.danger,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -270,7 +270,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceSm),
         children: [
-          // 🔎 Search Bar + Tag Filter Action Row
+          //  Search Bar + Tag Filter Action Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
             child: Row(
@@ -279,28 +279,28 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   child: Container(
                     height: 46,
                     decoration: BoxDecoration(
-                      color: AppTheme.darkSurface1,
+                      color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(14.0),
                       border: Border.all(
-                        color: AppTheme.darkBorderSubtle,
+                        color: AppTheme.border,
                         width: 1.2,
                       ),
                     ),
                     child: TextField(
                       controller: _searchController,
                       style: const TextStyle(
-                          color: AppTheme.textPrimaryDark, fontSize: 14),
+                          color: AppTheme.textPrimary, fontSize: 14),
                       onChanged: (value) => appProvider.setSearchQuery(value),
                       decoration: InputDecoration(
                         hintText: 'feed.search_feed'.tr(),
                         hintStyle: const TextStyle(
-                            color: AppTheme.textMutedDark, fontSize: 13),
+                            color: AppTheme.textMuted, fontSize: 13),
                         prefixIcon: const Icon(Icons.search_rounded,
-                            color: AppTheme.accentBlue, size: 20),
+                            color: AppTheme.primary, size: 20),
                         suffixIcon: _searchController.text.isNotEmpty
                             ? IconButton(
                                 icon: const Icon(Icons.clear_rounded,
-                                    size: 18, color: AppTheme.textMutedDark),
+                                    size: 18, color: AppTheme.textMuted),
                                 onPressed: () {
                                   _searchController.clear();
                                   appProvider.setSearchQuery('');
@@ -319,13 +319,13 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 const SizedBox(width: AppTheme.spaceSm),
                 // Filter Tags Button
                 Material(
-                  color: AppTheme.darkSurface1,
+                  color: AppTheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14.0),
                     side: BorderSide(
                       color: selectedTagFilter != 'all'
-                          ? AppTheme.accentRed
-                          : AppTheme.darkBorderSubtle,
+                          ? AppTheme.danger
+                          : AppTheme.border,
                       width: 1.2,
                     ),
                   ),
@@ -339,8 +339,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       child: Icon(
                         Icons.tune_rounded,
                         color: selectedTagFilter != 'all'
-                            ? AppTheme.accentRed
-                            : AppTheme.textPrimaryDark,
+                            ? AppTheme.danger
+                            : AppTheme.textPrimary,
                         size: 20,
                       ),
                     ),
@@ -351,7 +351,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
           ),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 🌟 Top Featured Live Stream Hero (Only shown if a streamer is live!)
+          //  Top Featured Live Stream Hero (Only shown if a streamer is live!)
           if (liveStreamers.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
@@ -360,7 +360,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             ),
             const SizedBox(height: AppTheme.spaceXl),
 
-            // 📍 "Live Now in AlSharqia" Section (Only shown if streamers are live!)
+            //  "Live Now in AlSharqia"Section (Only shown if streamers are live!)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
               child: Row(
@@ -372,7 +372,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         width: 10,
                         height: 10,
                         decoration: const BoxDecoration(
-                          color: AppTheme.accentRed,
+                          color: AppTheme.danger,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -380,7 +380,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       Text(
                         'feed.live_in_sharqia'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.textPrimaryDark,
+                          color: AppTheme.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -390,7 +390,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   Text(
                     '${liveStreamers.length} ${'feed.active_streams'.tr()}',
                     style: const TextStyle(
-                        color: AppTheme.accentRed,
+                        color: AppTheme.danger,
                         fontSize: 12,
                         fontWeight: FontWeight.bold),
                   ),
@@ -415,13 +415,13 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             const SizedBox(height: AppTheme.spaceXl),
           ],
 
-          // 🏷️ Category Filter Chips
+          //  Category Filter Chips
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
             child: Text(
               'feed.academic_fields'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -460,16 +460,15 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
           }),
           const SizedBox(height: AppTheme.spaceXl),
 
-          // 🎙️ "Streamers" Grid Section (Replacing old Lecture Archive)
+          //  "Streamers"Grid Section (Replacing old Lecture Archive)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            child: Wrap(alignment: WrapAlignment.spaceBetween, spacing: AppTheme.spaceMd, runSpacing: AppTheme.spaceSm,
               children: [
                 Text(
                   'feed.streamers'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -477,7 +476,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 Text(
                   '${displayedStreamers.length} ${'feed.streamers_count'.tr()}',
                   style: const TextStyle(
-                      color: AppTheme.textMutedDark, fontSize: 12),
+                      color: AppTheme.textMuted, fontSize: 12),
                 ),
               ],
             ),
@@ -526,15 +525,15 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             .read<AppProvider>()
             .setCategoryFilter(selected ? categoryKey : 'all');
       },
-      selectedColor: AppTheme.accentRed,
-      backgroundColor: AppTheme.darkSurface1,
+      selectedColor: AppTheme.danger,
+      backgroundColor: AppTheme.surface,
       labelStyle: TextStyle(
-        color: isSelected ? Colors.white : AppTheme.textPrimaryDark,
+        color: isSelected ? AppTheme.onMedia : AppTheme.textPrimary,
         fontSize: 13,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+        color: isSelected ? AppTheme.danger : AppTheme.border,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -548,16 +547,16 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     final isVideo = streamer.isVideoLive;
 
     Color borderColor = isVideo
-        ? AppTheme.accentRed.withValues(alpha: 0.4)
-        : const Color(0xFFA1A1AA).withValues(alpha: 0.5);
+        ? AppTheme.danger.withValues(alpha: 0.4)
+        : AppTheme.textMuted.withValues(alpha: 0.5);
 
     Color shadowColor = isVideo
-        ? AppTheme.accentRed.withValues(alpha: 0.15)
-        : const Color(0xFFA1A1AA).withValues(alpha: 0.15);
+        ? AppTheme.danger.withValues(alpha: 0.15)
+        : AppTheme.textMuted.withValues(alpha: 0.15);
 
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(color: borderColor, width: 1.5),
         boxShadow: [
@@ -583,11 +582,11 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       : NetworkImage(streamer.bannerUrl) as ImageProvider,
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
-                    color: AppTheme.darkSurface2,
+                    color: AppTheme.surfaceAlt,
                     alignment: Alignment.center,
                     child: const Icon(
                       Icons.image_not_supported_outlined,
-                      color: AppTheme.textMutedDark,
+                      color: AppTheme.textMuted,
                       size: 40,
                     ),
                   ),
@@ -600,10 +599,10 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
-                    color: isVideo ? AppTheme.accentRed : const Color(0xFF3F3F46),
+                    color: isVideo ? AppTheme.danger : AppTheme.media,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     border: isAudio
-                        ? Border.all(color: const Color(0xFFA1A1AA), width: 0.8)
+                        ? Border.all(color: AppTheme.textMuted, width: 0.8)
                         : null,
                   ),
                   child: Row(
@@ -613,13 +612,13 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         const Icon(
                           Icons.mic_rounded,
                           size: 13,
-                          color: Color(0xFFE4E4E7),
+                          color: AppTheme.onMedia,
                         ),
                         const SizedBox(width: 5),
                         Text(
                           '${context.select<AppProvider, int?>((p) => p.platformViewerCount(streamer.activeStreamId ?? '')) ?? '—'} ${'live.listening_count'.tr()}',
                           style: const TextStyle(
-                            color: Color(0xFFE4E4E7),
+                            color: AppTheme.onMedia,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -629,7 +628,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                           width: 8,
                           height: 8,
                           decoration: const BoxDecoration(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -637,7 +636,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         Text(
                           '${context.select<AppProvider, int?>((p) => p.platformViewerCount(streamer.activeStreamId ?? '')) ?? '—'} ${'feed.watching'.tr()}',
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
@@ -657,7 +656,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 Text(
                   streamer.getLocalizedTitle(langCode),
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -679,14 +678,14 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                           Text(
                             streamer.getLocalizedName(langCode),
                             style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
+                              color: AppTheme.textPrimary,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           Text(
                             streamer.getLocalizedVenue(langCode),
                             style: const TextStyle(
-                              color: AppTheme.textSecondaryDark,
+                              color: AppTheme.textSecondary,
                               fontSize: 12,
                             ),
                           ),
@@ -701,14 +700,14 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: isVideo
-                            ? AppTheme.accentRed
-                            : const Color(0xFF3F3F46),
-                        foregroundColor: Colors.white,
+                            ? AppTheme.danger
+                            : AppTheme.media,
+                        foregroundColor: AppTheme.onMedia,
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
                           side: isAudio
-                              ? const BorderSide(color: Color(0xFFA1A1AA), width: 1.0)
+                              ? const BorderSide(color: AppTheme.textMuted, width: 1.0)
                               : BorderSide.none,
                         ),
                       ),
@@ -740,14 +739,14 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
       width: 260,
       margin: const EdgeInsets.only(right: AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
           color: isVideo
-              ? AppTheme.accentRed.withValues(alpha: 0.6)
+              ? AppTheme.danger.withValues(alpha: 0.6)
               : isAudio
-                  ? const Color(0xFFA1A1AA).withValues(alpha: 0.6)
-                  : AppTheme.darkBorderSubtle,
+                  ? AppTheme.textMuted.withValues(alpha: 0.6)
+                  : AppTheme.border,
         ),
       ),
       clipBehavior: Clip.antiAlias,
@@ -771,11 +770,11 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         : NetworkImage(streamer.bannerUrl) as ImageProvider,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.darkSurface2,
+                      color: AppTheme.surfaceAlt,
                       alignment: Alignment.center,
                       child: const Icon(
                         Icons.image_not_supported_outlined,
-                        color: AppTheme.textMutedDark,
+                        color: AppTheme.textMuted,
                         size: 24,
                       ),
                     ),
@@ -788,10 +787,10 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: isVideo ? AppTheme.accentRed : const Color(0xFF3F3F46),
+                      color: isVideo ? AppTheme.danger : AppTheme.media,
                       borderRadius: BorderRadius.circular(4),
                       border: isAudio
-                          ? Border.all(color: const Color(0xFFA1A1AA), width: 0.8)
+                          ? Border.all(color: AppTheme.textMuted, width: 0.8)
                           : null,
                     ),
                     child: Row(
@@ -801,13 +800,13 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                           const Icon(
                             Icons.mic_rounded,
                             size: 10,
-                            color: Color(0xFFE4E4E7),
+                            color: AppTheme.onMedia,
                           ),
                           const SizedBox(width: 3),
                           Text(
                             'feed.audio_live_badge'.tr(),
                             style: const TextStyle(
-                              color: Color(0xFFE4E4E7),
+                              color: AppTheme.onMedia,
                               fontSize: 9.5,
                               fontWeight: FontWeight.bold,
                             ),
@@ -816,7 +815,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                           Text(
                             'feed.live_badge'.tr(),
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppTheme.onMedia,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -836,7 +835,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   Text(
                     streamer.getLocalizedTitle(langCode),
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -847,7 +846,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   Text(
                     streamer.getLocalizedName(langCode),
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 11,
                     ),
                     maxLines: 1,

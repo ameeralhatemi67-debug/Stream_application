@@ -53,7 +53,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
 
     final isAudioOnly = provider.isMiniPlayerAudioOnly;
     final accentColor =
-        isAudioOnly ? AppTheme.accentPurple : AppTheme.accentRed;
+        isAudioOnly ? AppTheme.accent : AppTheme.danger;
 
     return Positioned(
       left: position.dx,
@@ -74,7 +74,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
             width: playerWidth,
             height: playerHeight,
             decoration: BoxDecoration(
-              color: const Color(0xFF14151B),
+              color: AppTheme.media,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               border: Border.all(
                 color: accentColor.withValues(alpha: 0.8),
@@ -82,7 +82,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: AppTheme.media.withValues(alpha: 0.7),
                   blurRadius: 16,
                   offset: const Offset(0, 6),
                 ),
@@ -106,7 +106,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                       });
                     },
                     child: Container(
-                      color: const Color(0xFF0C0D12),
+                      color: AppTheme.media,
                       child: isAudioOnly
                           ? Center(
                               child: Column(
@@ -116,17 +116,17 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: AppTheme.accentPurple
+                                      color: AppTheme.accent
                                           .withValues(alpha: 0.2),
                                       border: Border.all(
-                                        color: AppTheme.accentPurple
+                                        color: AppTheme.accent
                                             .withValues(alpha: 0.6),
                                         width: 1.2,
                                       ),
                                     ),
                                     child: const Icon(
                                       Icons.headphones_rounded,
-                                      color: AppTheme.accentPurple,
+                                      color: AppTheme.accent,
                                       size: 24,
                                     ),
                                   ),
@@ -134,7 +134,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                                   Text(
                                     'live.audio_live_indicator'.tr(),
                                     style: const TextStyle(
-                                      color: AppTheme.accentPurple,
+                                      color: AppTheme.accent,
                                       fontSize: 9,
                                       fontWeight: FontWeight.bold,
                                       letterSpacing: 0.5,
@@ -148,10 +148,10 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) =>
                                   Container(
-                                color: AppTheme.darkSurface1,
+                                color: AppTheme.surface,
                                 child: const Icon(
                                   Icons.videocam_rounded,
-                                  color: AppTheme.textMutedDark,
+                                  color: AppTheme.textMuted,
                                   size: 28,
                                 ),
                               ),
@@ -169,16 +169,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 8, vertical: 5),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.85),
-                            ],
-                          ),
-                        ),
+                        decoration: const BoxDecoration(color: AppTheme.media),
                         child: Row(
                           children: [
                             Container(
@@ -194,7 +185,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                               child: Text(
                                 provider.miniPlayerTitle,
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.onMedia,
                                   fontSize: 10,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -220,7 +211,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                           // Semi-transparent backdrop when controls are visible (must not intercept button taps)
                           IgnorePointer(
                             child: Container(
-                              color: Colors.black.withValues(alpha: 0.25),
+                              color: AppTheme.media.withValues(alpha: 0.25),
                             ),
                           ),
 
@@ -236,16 +227,16 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                                     : Icons.volume_up_rounded,
                                 size: 16,
                                 color: provider.isMiniPlayerMuted
-                                    ? AppTheme.accentAmber
-                                    : Colors.white,
+                                    ? AppTheme.warning
+                                    : AppTheme.onMedia,
                               ),
                               onPressed: provider.toggleMiniPlayerMute,
                               padding: const EdgeInsets.all(5),
                               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                               style: IconButton.styleFrom(
-                                backgroundColor: Colors.black.withValues(alpha: 0.75),
+                                backgroundColor: AppTheme.media.withValues(alpha: 0.75),
                                 shape: const CircleBorder(
-                                  side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
+                                  side: BorderSide(color: AppTheme.onMedia, width: 0.8),
                                 ),
                               ),
                             ),
@@ -260,15 +251,15 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                               icon: const Icon(
                                 Icons.close_rounded,
                                 size: 16,
-                                color: Colors.white,
+                                color: AppTheme.onMedia,
                               ),
                               onPressed: provider.closeMiniPlayer,
                               padding: const EdgeInsets.all(5),
                               constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
                               style: IconButton.styleFrom(
-                                backgroundColor: Colors.black.withValues(alpha: 0.75),
+                                backgroundColor: AppTheme.media.withValues(alpha: 0.75),
                                 shape: const CircleBorder(
-                                  side: BorderSide(color: Color(0x33FFFFFF), width: 0.8),
+                                  side: BorderSide(color: AppTheme.onMedia, width: 0.8),
                                 ),
                               ),
                             ),
@@ -285,13 +276,13 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                                 child: Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: Colors.black.withValues(alpha: 0.6),
+                                    color: AppTheme.media.withValues(alpha: 0.6),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(
                                     Icons.open_in_full_rounded,
                                     size: 16,
-                                    color: Colors.white,
+                                    color: AppTheme.onMedia,
                                   ),
                                 ),
                               ),

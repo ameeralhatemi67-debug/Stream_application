@@ -37,8 +37,8 @@ IconData iconForCategoryIconName(String iconName) {
 /// The Spatial Map's topic dropdown (Cluster 3 Task 10) -- consumes the live
 /// `AppProvider.academicCategories` list instead of a hardcoded constant, so
 /// an admin's category edit (Task 11) shows up here immediately. Prepends a
-/// synthetic "All Topics" entry (id 'all'), matching the discovery feed's
-/// "All" chip.
+/// synthetic "All Topics"entry (id 'all'), matching the discovery feed's
+/// "All"chip.
 class TopicSelectorDropdown extends StatelessWidget {
   final String selectedCategoryId;
   final ValueChanged<String> onCategorySelected;
@@ -79,10 +79,10 @@ class TopicSelectorDropdown extends StatelessWidget {
 
     return PopupMenuButton<String>(
       onSelected: onCategorySelected,
-      color: AppTheme.darkSurface1,
+      color: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        side: const BorderSide(color: AppTheme.darkBorderSubtle, width: 1.0),
+        side: const BorderSide(color: AppTheme.border, width: 1.0),
       ),
       offset: const Offset(0, 44),
       itemBuilder: (context) {
@@ -103,10 +103,10 @@ class TopicSelectorDropdown extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface1.withValues(alpha: 0.80),
+          color: AppTheme.surface.withValues(alpha: 0.80),
           borderRadius: BorderRadius.circular(14.0),
           border: Border.all(
-            color: AppTheme.darkBorderSubtle,
+            color: AppTheme.border,
             width: 1.2,
           ),
           boxShadow: const [
@@ -127,14 +127,14 @@ class TopicSelectorDropdown extends StatelessWidget {
                   Icon(
                     currentIcon,
                     size: 16,
-                    color: AppTheme.accentPurple,
+                    color: AppTheme.accent,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       currentLabel,
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -147,7 +147,7 @@ class TopicSelectorDropdown extends StatelessWidget {
             ),
             const Icon(
               Icons.arrow_drop_down_rounded,
-              color: AppTheme.textMutedDark,
+              color: AppTheme.textMuted,
               size: 20,
             ),
           ],
@@ -169,7 +169,7 @@ class TopicSelectorDropdown extends StatelessWidget {
           Icon(
             icon,
             size: 18,
-            color: isCurrent ? AppTheme.accentPurple : AppTheme.textMutedDark,
+            color: isCurrent ? AppTheme.accent : AppTheme.textMuted,
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -179,7 +179,7 @@ class TopicSelectorDropdown extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                 color:
-                    isCurrent ? AppTheme.accentPurple : AppTheme.textPrimaryDark,
+                    isCurrent ? AppTheme.accent : AppTheme.textPrimary,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
@@ -189,7 +189,7 @@ class TopicSelectorDropdown extends StatelessWidget {
             const Icon(
               Icons.check_rounded,
               size: 16,
-              color: AppTheme.accentPurple,
+              color: AppTheme.accent,
             ),
         ],
       ),

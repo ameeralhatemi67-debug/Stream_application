@@ -47,7 +47,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   late TabController _tabController;
   // Fixed to the YouTube embed engine (ADR-002). The overlay's selector no
   // longer switches engines -- as of Cluster 1 Task 2 it picks a *resolution*
-  // (StreamQualityLevel), which is what its "1080p/720p/480p" labels always
+  // (StreamQualityLevel), which is what its "1080p/720p/480p"labels always
   // claimed to do.
   final StreamSourceType _sourceType = StreamSourceType.youtubeEmbed;
   StreamState _streamState = StreamState.live;
@@ -176,7 +176,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   /// Keeps the chat tab in step with the Realtime connection: a drop shows
-  /// the "chat unavailable" banner over the real (possibly empty) message
+  /// the "chat unavailable"banner over the real (possibly empty) message
   /// list. It used to swap in simulated comments instead (05 D-03).
   void _handleChatConnectionChange() {
     if (!mounted) return;
@@ -211,7 +211,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppTheme.accentRed),
+        SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
       );
     });
   }
@@ -251,7 +251,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   /// Which of the three streamer-brandable states (Task 4b) the current
   /// [_streamState] maps to, or null for the failure states -- a custom card
-  /// must never paper over "offline" or "playback failed", since hiding a
+  /// must never paper over "offline"or "playback failed", since hiding a
   /// real fault behind branded artwork is worse than the plain default.
   StreamPlaceholderType? get _brandablePlaceholderType {
     switch (_streamState) {
@@ -370,12 +370,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final viewerCount = _presenceService.count;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       resizeToAvoidBottomInset: true,
       appBar: _isFullscreen
           ? null
           : AppBar(
-              backgroundColor: AppTheme.darkBgBase,
+              backgroundColor: AppTheme.bg,
               title: Text(
                 streamer.getLocalizedTitle(langCode),
                 style:
@@ -427,7 +427,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   ),
                   if (!_isFullscreen)
                     const VerticalDivider(
-                        width: 1, color: AppTheme.darkBorderSubtle),
+                        width: 1, color: AppTheme.border),
 
                   // Right Side: Cinema Multi-Tab Container
                   if (!_isFullscreen)
@@ -465,7 +465,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final isAudioLive = streamer.isAudioLive;
 
     final videoWidget = Container(
-      color: Colors.black,
+      color: AppTheme.media,
       child: Stack(
         alignment: Alignment.center,
         children: [
@@ -557,12 +557,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text('✋', style: TextStyle(fontSize: 13)),
+                    const Icon(Icons.pan_tool_outlined, size: 13),
                     const SizedBox(width: 5),
                     Text(
                       'live.hand_raised_badge'.tr(),
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold,
                       ),
@@ -639,9 +639,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
       decoration: const BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         border: Border(
-            bottom: BorderSide(color: AppTheme.darkBorderSubtle, width: 1)),
+            bottom: BorderSide(color: AppTheme.border, width: 1)),
       ),
       child: Row(
         children: [
@@ -649,7 +649,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             onTap: () => context.push('/profile/${streamer.streamerId}'),
             child: CircleAvatar(
               radius: 18,
-              backgroundColor: AppTheme.darkSurface3,
+              backgroundColor: AppTheme.surface,
               backgroundImage: _getImageProvider(streamer.avatarUrl),
             ),
           ),
@@ -665,7 +665,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       child: Text(
                         streamer.getLocalizedName(langCode),
                         style: const TextStyle(
-                          color: AppTheme.textPrimaryDark,
+                          color: AppTheme.textPrimary,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -675,13 +675,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     ),
                     const SizedBox(width: 4),
                     const Icon(Icons.verified_rounded,
-                        color: AppTheme.accentBlue, size: 14),
+                        color: AppTheme.primary, size: 14),
                   ],
                 ),
                 Text(
                   streamer.getLocalizedOrganization(langCode),
                   style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 11),
+                      color: AppTheme.textSecondary, fontSize: 11),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -691,15 +691,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           ElevatedButton(
             style: ElevatedButton.styleFrom(
               backgroundColor:
-                  isFollowing ? AppTheme.darkSurface2 : AppTheme.accentRed,
+                  isFollowing ? AppTheme.surfaceAlt : AppTheme.danger,
               foregroundColor:
-                  isFollowing ? AppTheme.textSecondaryDark : Colors.white,
+                  isFollowing ? AppTheme.textSecondary : AppTheme.onMedia,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               minimumSize: const Size(60, 32),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 side: isFollowing
-                    ? const BorderSide(color: AppTheme.darkBorderSubtle)
+                    ? const BorderSide(color: AppTheme.border)
                     : BorderSide.none,
               ),
             ),
@@ -719,7 +719,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   Widget _buildCinemaTabPanel(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
     return Container(
-      color: AppTheme.darkBgBase,
+      color: AppTheme.bg,
       child: Column(
         children: [
           // Tab Views (Chat, Sources, Venue)
@@ -734,20 +734,20 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             ),
           ),
 
-          // 🌟 Sleek Bottom Tab Bar Header (Chat, Sources, Venue at the BOTTOM with reduced height: 38px)
+          //  Sleek Bottom Tab Bar Header (Chat, Sources, Venue at the BOTTOM with reduced height: 38px)
           Container(
             height: 45,
             decoration: const BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               border: Border(
                   top:
-                      BorderSide(color: AppTheme.darkBorderSubtle, width: 0.8)),
+                      BorderSide(color: AppTheme.border, width: 0.8)),
             ),
             child: TabBar(
               controller: _tabController,
-              indicatorColor: AppTheme.accentRed,
-              labelColor: AppTheme.accentRed,
-              unselectedLabelColor: AppTheme.textMutedDark,
+              indicatorColor: AppTheme.danger,
+              labelColor: AppTheme.danger,
+              unselectedLabelColor: AppTheme.textMuted,
               indicatorWeight: 2.0,
               tabs: [
                 Tab(
@@ -797,7 +797,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
-  // 💬 Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
+  //  Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
   Widget _buildChatTabView() {
     return ListenableBuilder(
       listenable: _chatController,
@@ -812,15 +812,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final state = _chatController.connectionState;
     final (color, label) = switch (state) {
       ChatConnectionState.live => (
-          AppTheme.accentGreen,
+          AppTheme.success,
           'live.chat_status_live'.tr()
         ),
       ChatConnectionState.connecting => (
-          AppTheme.accentAmber,
+          AppTheme.warning,
           'live.chat_status_connecting'.tr()
         ),
       ChatConnectionState.reconnecting => (
-          AppTheme.accentRed,
+          AppTheme.danger,
           'live.chat_status_reconnecting'.tr()
         ),
     };
@@ -829,7 +829,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 4),
-      color: AppTheme.darkSurface1,
+      color: AppTheme.surface,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -850,7 +850,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   /// True once LiveChatController can't reach Realtime (dropped connection,
-  /// offline testing, ...) -- reusing its existing "reconnecting" state
+  /// offline testing, ...) -- reusing its existing "reconnecting"state
   /// rather than inventing a new one, since that already means exactly this.
   bool get _isChatOffline =>
       _chatController.connectionState == ChatConnectionState.reconnecting;
@@ -908,14 +908,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     ),
             ),
 
-            // ✍️ Composer -- renders from LiveChatController.composerState, so
+            //  Composer -- renders from LiveChatController.composerState, so
             // a viewer is never invited to type into a box whose insert the
             // server is going to refuse (P6.2).
             _buildChatComposer(),
           ],
         ),
 
-        // 🌟 Expandable Reactions FAB Menu (5 Icon Options)
+        //  Expandable Reactions FAB Menu (5 Icon Options)
         if (_isReactionMenuOpen)
           Positioned(
             bottom: 50,
@@ -925,10 +925,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkSurface1,
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   border: Border.all(
-                      color: AppTheme.accentRed.withValues(alpha: 0.8),
+                      color: AppTheme.danger.withValues(alpha: 0.8),
                       width: 1.2),
                   boxShadow: const [
                     BoxShadow(
@@ -940,15 +940,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    _buildReactionFabIcon('👏', 'clap'),
+                    _buildReactionFabIcon(liveReactionGlyphs['clap']!, 'clap'),
                     const SizedBox(width: 6),
-                    _buildReactionFabIcon('❤️', 'heart'),
+                    _buildReactionFabIcon(liveReactionGlyphs['heart']!, 'heart'),
                     const SizedBox(width: 6),
-                    _buildReactionFabIcon('💡', 'idea'),
+                    _buildReactionFabIcon(liveReactionGlyphs['idea']!, 'idea'),
                     const SizedBox(width: 6),
-                    _buildReactionFabIcon('🔥', 'fire'),
+                    _buildReactionFabIcon(liveReactionGlyphs['fire']!, 'fire'),
                     const SizedBox(width: 6),
-                    _buildReactionFabIcon('🎓', 'scholar'),
+                    _buildReactionFabIcon(liveReactionGlyphs['scholar']!, 'scholar'),
                   ],
                 ),
               ),
@@ -959,24 +959,24 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   /// Shown while Realtime is unreachable. The room used to fill the chat with
-  /// simulated comments behind a "Demo Mode" banner (05 D-03); it now says
+  /// simulated comments behind a "Demo Mode"banner (05 D-03); it now says
   /// plainly that chat is unavailable and shows no invented traffic.
   Widget _buildChatUnavailableBanner() {
     return Container(
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 6),
-      color: AppTheme.accentAmber.withValues(alpha: 0.15),
+      color: AppTheme.warning.withValues(alpha: 0.15),
       child: Row(
         children: [
           const Icon(Icons.wifi_off_rounded,
-              size: 14, color: AppTheme.accentAmber),
+              size: 14, color: AppTheme.warning),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               'live.chat_unavailable_banner'.tr(),
               style: const TextStyle(
-                color: AppTheme.accentAmber,
+                color: AppTheme.warning,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
@@ -996,11 +996,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 8),
-      color: AppTheme.accentRed.withValues(alpha: 0.18),
+      color: AppTheme.danger.withValues(alpha: 0.18),
       child: Row(
         children: [
           const Icon(Icons.warning_amber_rounded,
-              size: 16, color: AppTheme.accentRed),
+              size: 16, color: AppTheme.danger),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -1009,7 +1009,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 'count': '${alert.count}',
               }),
               style: const TextStyle(
-                color: AppTheme.accentRed,
+                color: AppTheme.danger,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
@@ -1018,8 +1018,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           TextButton(
             onPressed: () => _chatController.quickMuteFromAlert(alert.senderId),
             style: TextButton.styleFrom(
-              foregroundColor: Colors.white,
-              backgroundColor: AppTheme.accentRed,
+              foregroundColor: AppTheme.onMedia,
+              backgroundColor: AppTheme.danger,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1030,7 +1030,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           const SizedBox(width: 6),
           IconButton(
             icon: const Icon(Icons.close_rounded,
-                size: 16, color: AppTheme.accentRed),
+                size: 16, color: AppTheme.danger),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             onPressed: () =>
@@ -1045,7 +1045,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   // --- P6.2 composer, empty state and new-message pill --------------------
 
   /// Unread messages that arrived while the viewer was scrolled away from the
-  /// newest end of the list. Drives the "New messages" pill, so a busy chat
+  /// newest end of the list. Drives the "New messages"pill, so a busy chat
   /// never yanks the list out from under someone reading back.
   int _chatUnreadWhileScrolled = 0;
   int _lastSeenChatCount = 0;
@@ -1094,7 +1094,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           padding: const EdgeInsets.symmetric(
               horizontal: AppTheme.spaceMd, vertical: 6),
           decoration: BoxDecoration(
-            color: AppTheme.accentBlue,
+            color: AppTheme.primary,
             borderRadius: BorderRadius.circular(AppTheme.radiusFull),
             boxShadow: const [
               BoxShadow(
@@ -1105,12 +1105,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(Icons.arrow_downward_rounded,
-                  size: 13, color: AppTheme.darkBgBase),
+                  size: 13, color: AppTheme.bg),
               const SizedBox(width: 5),
               Text(
                 '${'live.chat_new_messages_pill'.tr()} ($_chatUnreadWhileScrolled)',
                 style: const TextStyle(
-                  color: AppTheme.darkBgBase,
+                  color: AppTheme.bg,
                   fontSize: 11,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1133,12 +1133,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Icon(Icons.forum_outlined,
-                size: 34, color: AppTheme.textMutedDark),
+                size: 34, color: AppTheme.textMuted),
             const SizedBox(height: AppTheme.spaceSm),
             Text(
               'live.chat_empty_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
@@ -1150,7 +1150,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   : 'live.chat_empty_subtitle'.tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: AppTheme.textMutedDark, fontSize: 11.5),
+                  color: AppTheme.textMuted, fontSize: 11.5),
             ),
           ],
         ),
@@ -1166,18 +1166,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceMd, vertical: 4),
-      color: AppTheme.accentAmber.withValues(alpha: 0.12),
+      color: AppTheme.warning.withValues(alpha: 0.12),
       child: Row(
         children: [
           const Icon(Icons.hourglass_bottom_rounded,
-              size: 12, color: AppTheme.accentAmber),
+              size: 12, color: AppTheme.warning),
           const SizedBox(width: 5),
           Expanded(
             child: Text(
               'live.chat_slow_mode_active'
                   .tr(args: ['${_chatController.slowModeSeconds}']),
               style: const TextStyle(
-                  color: AppTheme.accentAmber,
+                  color: AppTheme.warning,
                   fontSize: 10,
                   fontWeight: FontWeight.bold),
             ),
@@ -1201,8 +1201,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
       decoration: const BoxDecoration(
-        color: AppTheme.darkSurface1,
-        border: Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
+        color: AppTheme.surface,
+        border: Border(top: BorderSide(color: AppTheme.border)),
       ),
       child: Row(
         children: [
@@ -1212,7 +1212,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             child: Text(
               message,
               style: const TextStyle(
-                  color: AppTheme.textSecondaryDark, fontSize: 11.5),
+                  color: AppTheme.textSecondary, fontSize: 11.5),
             ),
           ),
           if (action != null) ...[
@@ -1229,14 +1229,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       case ChatComposerState.guest:
         return _buildChatComposerNotice(
           icon: Icons.login_rounded,
-          color: AppTheme.accentBlue,
+          color: AppTheme.primary,
           message: 'live.chat_composer_guest'.tr(),
           action: TextButton(
             onPressed: () => context.go('/welcome'),
             child: Text(
               'live.chat_composer_guest_action'.tr(),
               style: const TextStyle(
-                  color: AppTheme.accentBlue,
+                  color: AppTheme.primary,
                   fontSize: 11.5,
                   fontWeight: FontWeight.bold),
             ),
@@ -1245,19 +1245,19 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       case ChatComposerState.banned:
         return _buildChatComposerNotice(
           icon: Icons.block_rounded,
-          color: AppTheme.accentRed,
+          color: AppTheme.danger,
           message: 'live.chat_composer_banned'.tr(),
         );
       case ChatComposerState.muted:
         return _buildChatComposerNotice(
           icon: Icons.volume_off_rounded,
-          color: AppTheme.accentRed,
+          color: AppTheme.danger,
           message: 'live.chat_composer_muted'.tr(),
         );
       case ChatComposerState.chatDisabled:
         return _buildChatComposerNotice(
           icon: Icons.speaker_notes_off_rounded,
-          color: AppTheme.textMutedDark,
+          color: AppTheme.textMuted,
           message: 'live.chat_composer_chat_off'.tr(),
         );
       case ChatComposerState.offline:
@@ -1289,8 +1289,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm, vertical: 4),
       decoration: const BoxDecoration(
-        color: AppTheme.darkSurface1,
-        border: Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
+        color: AppTheme.surface,
+        border: Border(top: BorderSide(color: AppTheme.border)),
       ),
       child: Row(
         children: [
@@ -1299,7 +1299,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             icon: Icon(
               Icons.back_hand_rounded,
               color:
-                  _isHandRaised ? Colors.amberAccent : AppTheme.textMutedDark,
+                  _isHandRaised ? Colors.amberAccent : AppTheme.textMuted,
               size: 19,
             ),
             tooltip: 'live.raise_hand_toggle'.tr(),
@@ -1316,13 +1316,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             child: TextField(
               controller: _chatTextController,
               style: const TextStyle(
-                  color: AppTheme.textPrimaryDark, fontSize: 12.5),
+                  color: AppTheme.textPrimary, fontSize: 12.5),
               decoration: InputDecoration(
                 hintText: hint,
                 hintStyle: TextStyle(
                   color: canSend
-                      ? AppTheme.textMutedDark
-                      : AppTheme.accentAmber.withValues(alpha: 0.9),
+                      ? AppTheme.textMuted
+                      : AppTheme.warning.withValues(alpha: 0.9),
                   fontSize: 11,
                 ),
                 contentPadding:
@@ -1330,12 +1330,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   borderSide:
-                      const BorderSide(color: AppTheme.darkBorderSubtle),
+                      const BorderSide(color: AppTheme.border),
                 ),
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   borderSide:
-                      const BorderSide(color: AppTheme.darkBorderSubtle),
+                      const BorderSide(color: AppTheme.border),
                 ),
               ),
               onSubmitted: canSend ? (_) => _handleSendLocalMessage() : null,
@@ -1351,8 +1351,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   ? Icons.close_rounded
                   : Icons.emoji_emotions_outlined,
               color: _isReactionMenuOpen
-                  ? AppTheme.accentRed
-                  : AppTheme.accentBlue,
+                  ? AppTheme.danger
+                  : AppTheme.primary,
               size: 20,
             ),
             tooltip: 'live.reaction_menu_tooltip'.tr(),
@@ -1366,8 +1366,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             icon: Icon(
               Icons.send_rounded,
               color: canSend
-                  ? AppTheme.accentRed
-                  : AppTheme.textMutedDark.withValues(alpha: 0.5),
+                  ? AppTheme.danger
+                  : AppTheme.textMuted.withValues(alpha: 0.5),
               size: 19,
             ),
             onPressed: canSend ? _handleSendLocalMessage : null,
@@ -1394,13 +1394,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           children: [
             CircleAvatar(
               radius: 12,
-              backgroundColor: AppTheme.darkSurface3,
+              backgroundColor: AppTheme.surface,
               child: Text(
                 message.senderName.isNotEmpty
                     ? message.senderName[0].toUpperCase()
                     : '?',
                 style: const TextStyle(
-                    color: AppTheme.accentBlue,
+                    color: AppTheme.primary,
                     fontSize: 10,
                     fontWeight: FontWeight.bold),
               ),
@@ -1413,11 +1413,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     TextSpan(
                       text: message.badges.isEmpty
                           ? '${message.senderName}: '
-                          : '${message.senderName} ${message.badges.map((b) => b.emoji).join()}: ',
+                          : '${message.senderName} ${message.badges.map((b) => context.locale.languageCode == 'ar' ? b.labelAr : b.labelEn).join(', ')}: ',
                       style: TextStyle(
                         color: message.isCurrentUser
-                            ? AppTheme.accentRed
-                            : AppTheme.accentBlue,
+                            ? AppTheme.danger
+                            : AppTheme.primary,
                         fontWeight: FontWeight.bold,
                         fontSize: 12,
                       ),
@@ -1425,13 +1425,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     TextSpan(
                       text: message.body,
                       style: const TextStyle(
-                          color: AppTheme.textPrimaryDark, fontSize: 12),
+                          color: AppTheme.textPrimary, fontSize: 12),
                     ),
                     if (message.isEdited)
                       TextSpan(
                         text: ' ${'live.message_edited_badge'.tr()}',
                         style: const TextStyle(
-                            color: AppTheme.textMutedDark, fontSize: 11),
+                            color: AppTheme.textMuted, fontSize: 11),
                       ),
                   ],
                 ),
@@ -1442,14 +1442,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 width: 9,
                 height: 9,
                 child: CircularProgressIndicator(
-                    strokeWidth: 1.5, color: AppTheme.textMutedDark),
+                    strokeWidth: 1.5, color: AppTheme.textMuted),
               )
             else
               Text(
                 TimeOfDay.fromDateTime(message.createdAt.toLocal())
                     .format(context),
                 style: const TextStyle(
-                    color: AppTheme.textMutedDark, fontSize: 10),
+                    color: AppTheme.textMuted, fontSize: 10),
               ),
           ],
         ),
@@ -1471,13 +1471,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           child: Row(
             children: [
               const Icon(Icons.error_outline_rounded,
-                  size: 12, color: AppTheme.accentRed),
+                  size: 12, color: AppTheme.danger),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   message.failureReason ?? '',
                   style: const TextStyle(
-                      color: AppTheme.accentRed, fontSize: 10.5),
+                      color: AppTheme.danger, fontSize: 10.5),
                 ),
               ),
               if (_chatController.isRetryable(message.id))
@@ -1490,7 +1490,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   child: Text(
                     'live.chat_send_failed_retry'.tr(),
                     style: const TextStyle(
-                        color: AppTheme.accentBlue,
+                        color: AppTheme.primary,
                         fontSize: 10.5,
                         fontWeight: FontWeight.bold),
                   ),
@@ -1505,7 +1505,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 child: Text(
                   'live.chat_send_failed_discard'.tr(),
                   style: const TextStyle(
-                      color: AppTheme.textMutedDark, fontSize: 10.5),
+                      color: AppTheme.textMuted, fontSize: 10.5),
                 ),
               ),
             ],
@@ -1519,7 +1519,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _chatController.retryFailedMessage(messageId).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppTheme.accentRed),
+        SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
       );
     });
   }
@@ -1531,16 +1531,16 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       child: Container(
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: AppTheme.darkSurface2,
+          color: AppTheme.surfaceAlt,
           shape: BoxShape.circle,
-          border: Border.all(color: AppTheme.darkBorderSubtle),
+          border: Border.all(color: AppTheme.border),
         ),
         child: Text(emoji, style: const TextStyle(fontSize: 16)),
       ),
     );
   }
 
-  // 📄 Tab 2: Sources & References (Renamed from Slides)
+  //  Tab 2: Sources & References (Renamed from Slides)
   Widget _buildSourcesTabView(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
     final slidesUrl = appProvider.customSlidesUrl;
@@ -1551,9 +1551,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         Container(
           padding: const EdgeInsets.all(AppTheme.spaceMd),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface1,
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.darkBorderSubtle),
+            border: Border.all(color: AppTheme.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1561,7 +1561,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               Row(
                 children: [
                   const Icon(Icons.menu_book_rounded,
-                      color: AppTheme.accentRed, size: 24),
+                      color: AppTheme.danger, size: 24),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Column(
@@ -1570,14 +1570,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         Text(
                           'live.slides_pdf_title'.tr(),
                           style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
+                              color: AppTheme.textPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 12.5),
                         ),
                         Text(
                           slidesUrl,
                           style: const TextStyle(
-                              color: AppTheme.textMutedDark, fontSize: 10.5),
+                              color: AppTheme.textMuted, fontSize: 10.5),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -1587,8 +1587,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   ElevatedButton(
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          AppTheme.accentBlue.withValues(alpha: 0.2),
-                      foregroundColor: AppTheme.accentBlue,
+                          AppTheme.primary.withValues(alpha: 0.2),
+                      foregroundColor: AppTheme.primary,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 5),
                     ),
@@ -1611,7 +1611,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         Text(
           'live.lecture_agenda_title'.tr(),
           style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 13),
         ),
@@ -1645,7 +1645,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       margin: const EdgeInsets.only(bottom: 6),
       padding: const EdgeInsets.all(AppTheme.spaceSm),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface2,
+        color: AppTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
       ),
       child: Row(
@@ -1653,13 +1653,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
             decoration: BoxDecoration(
-              color: AppTheme.darkBgBase,
+              color: AppTheme.bg,
               borderRadius: BorderRadius.circular(4),
             ),
             child: Text(
               timestamp,
               style: const TextStyle(
-                  color: AppTheme.accentBlue,
+                  color: AppTheme.primary,
                   fontSize: 10.5,
                   fontWeight: FontWeight.bold),
             ),
@@ -1669,7 +1669,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             child: Text(
               title,
               style: const TextStyle(
-                  color: AppTheme.textPrimaryDark, fontSize: 11.5),
+                  color: AppTheme.textPrimary, fontSize: 11.5),
             ),
           ),
         ],
@@ -1677,7 +1677,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
-  // 📍 Tab 3: Venue & RSVP
+  //  Tab 3: Venue & RSVP
   Widget _buildVenueTabView(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
     final isAttending = appProvider.isAttendingInPerson(widget.streamId);
@@ -1694,9 +1694,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         Container(
           padding: const EdgeInsets.all(AppTheme.spaceMd),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface1,
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.darkBorderSubtle),
+            border: Border.all(color: AppTheme.border),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1704,7 +1704,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               Row(
                 children: [
                   const Icon(Icons.location_on_rounded,
-                      color: AppTheme.accentRed, size: 22),
+                      color: AppTheme.danger, size: 22),
                   const SizedBox(width: AppTheme.spaceSm),
                   Expanded(
                     child: Column(
@@ -1713,14 +1713,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         Text(
                           streamer.getLocalizedVenue(langCode),
                           style: const TextStyle(
-                              color: AppTheme.textPrimaryDark,
+                              color: AppTheme.textPrimary,
                               fontWeight: FontWeight.bold,
                               fontSize: 13),
                         ),
                         Text(
                           '${streamer.getLocalizedCity(langCode)}, Eastern Province, KSA',
                           style: const TextStyle(
-                              color: AppTheme.textMutedDark, fontSize: 11),
+                              color: AppTheme.textMuted, fontSize: 11),
                         ),
                       ],
                     ),
@@ -1732,7 +1732,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 Container(
                 padding: const EdgeInsets.all(AppTheme.spaceSm),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkSurface2,
+                  color: AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Row(
@@ -1744,8 +1744,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                           : 'live.hall_fully_booked'.tr(),
                       style: TextStyle(
                         color: availableSeats > 0
-                            ? AppTheme.accentBlue
-                            : AppTheme.textMutedDark,
+                            ? AppTheme.primary
+                            : AppTheme.textMuted,
                         fontWeight: FontWeight.bold,
                         fontSize: 11.5,
                       ),
@@ -1755,8 +1755,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                           ? Icons.event_seat_rounded
                           : Icons.block_rounded,
                       color: availableSeats > 0
-                          ? AppTheme.accentBlue
-                          : AppTheme.textMutedDark,
+                          ? AppTheme.primary
+                          : AppTheme.textMuted,
                       size: 15,
                     ),
                   ],
@@ -1769,10 +1769,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 child: ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isAttending
-                        ? AppTheme.darkSurface3
-                        : AppTheme.accentRed,
+                        ? AppTheme.surface
+                        : AppTheme.danger,
                     foregroundColor:
-                        isAttending ? AppTheme.accentBlue : Colors.white,
+                        isAttending ? AppTheme.primary : AppTheme.onMedia,
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -1802,14 +1802,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           width: double.infinity,
           child: OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.textPrimaryDark,
-              side: const BorderSide(color: AppTheme.darkBorderSubtle),
+              foregroundColor: AppTheme.textPrimary,
+              side: const BorderSide(color: AppTheme.border),
               padding: const EdgeInsets.symmetric(vertical: 10),
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
             ),
             icon: const Icon(Icons.directions_car_rounded,
-                color: AppTheme.accentBlue, size: 16),
+                color: AppTheme.primary, size: 16),
             label: Text('live.get_directions'.tr(),
                 style: const TextStyle(fontSize: 12)),
             onPressed: () {

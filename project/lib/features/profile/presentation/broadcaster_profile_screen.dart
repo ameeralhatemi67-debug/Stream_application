@@ -93,7 +93,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             : activePlaylists;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       appBar: AppBar(
         title: Text(streamer.getLocalizedName(lang)),
         actions: [
@@ -111,8 +111,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               icon: Icon(
                 Icons.cell_tower_rounded,
                 color: appProvider.isPitchDirectorModeEnabled
-                    ? AppTheme.accentRed
-                    : AppTheme.textSecondaryDark,
+                    ? AppTheme.danger
+                    : AppTheme.textSecondary,
               ),
               tooltip: 'live.rtmp_ip_tooltip'.tr(),
               onPressed: () => LiveBroadcasterStudioSheet.show(context),
@@ -158,9 +158,9 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               delegate: _SliverTabBarDelegate(
                 TabBar(
                   controller: _tabController,
-                  indicatorColor: AppTheme.accentBlue,
-                  labelColor: AppTheme.accentBlue,
-                  unselectedLabelColor: AppTheme.textSecondaryDark,
+                  indicatorColor: AppTheme.primary,
+                  labelColor: AppTheme.primary,
+                  unselectedLabelColor: AppTheme.textSecondary,
                   labelStyle: const TextStyle(
                       fontWeight: FontWeight.bold, fontSize: 13),
                   tabs: [
@@ -213,9 +213,9 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,10 +238,10 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                         : null,
                     border: Border.all(
                       color: streamer.isCurrentlyLive
-                          ? AppTheme.accentRed
+                          ? AppTheme.danger
                           : (streamer.isOrganization
-                              ? const Color(0xFFD97706)
-                              : AppTheme.accentBlue),
+                              ? AppTheme.warning
+                              : AppTheme.primary),
                       width: 2.5,
                     ),
                     image: DecorationImage(
@@ -266,7 +266,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           child: Text(
                             streamer.getLocalizedName(lang),
                             style: const TextStyle(
-                              color: Colors.white,
+                              color: AppTheme.onMedia,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -278,8 +278,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                             child: Icon(
                               Icons.verified_rounded,
                               color: streamer.isOrganization
-                                  ? const Color(0xFFD97706)
-                                  : AppTheme.accentPurple,
+                                  ? AppTheme.warning
+                                  : AppTheme.accent,
                               size: 20,
                             ),
                           ),
@@ -289,7 +289,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     Text(
                       streamer.getLocalizedTitle(lang),
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 13,
                       ),
                     ),
@@ -301,14 +301,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               ? Icons.domain_rounded
                               : Icons.account_balance_outlined,
                           size: 14,
-                          color: AppTheme.accentBlue,
+                          color: AppTheme.primary,
                         ),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             streamer.getLocalizedOrganization(lang),
                             style: const TextStyle(
-                              color: AppTheme.accentBlue,
+                              color: AppTheme.primary,
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -349,12 +349,12 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 10),
                           backgroundColor: isFollowing
-                              ? AppTheme.darkSurface2
-                              : AppTheme.accentBlue,
-                          foregroundColor: Colors.white,
+                              ? AppTheme.surfaceAlt
+                              : AppTheme.primary,
+                          foregroundColor: AppTheme.onMedia,
                           side: isFollowing
                               ? const BorderSide(
-                                  color: AppTheme.accentBlue, width: 1.2)
+                                  color: AppTheme.primary, width: 1.2)
                               : BorderSide.none,
                           shape: RoundedRectangleBorder(
                             borderRadius:
@@ -372,8 +372,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               : Icons.notifications_none_rounded,
                           size: 16,
                           color: hasReminder
-                              ? AppTheme.accentPurple
-                              : AppTheme.textSecondaryDark,
+                              ? AppTheme.accent
+                              : AppTheme.textSecondary,
                         ),
                         label: Text(
                           hasReminder
@@ -381,8 +381,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               : 'profile.reminder_btn'.tr(),
                           style: TextStyle(
                             color: hasReminder
-                                ? AppTheme.accentPurple
-                                : Colors.white,
+                                ? AppTheme.accent
+                                : AppTheme.onMedia,
                             fontSize: 12.5,
                             fontWeight: FontWeight.w600,
                           ),
@@ -392,8 +392,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               horizontal: 14, vertical: 10),
                           side: BorderSide(
                             color: hasReminder
-                                ? AppTheme.accentPurple
-                                : AppTheme.darkBorderSubtle,
+                                ? AppTheme.accent
+                                : AppTheme.border,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius:
@@ -421,13 +421,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                 decoration: BoxDecoration(
                   color: appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                      ? AppTheme.accentRed.withValues(alpha: 0.15)
-                      : AppTheme.darkSurface2,
+                      ? AppTheme.danger.withValues(alpha: 0.15)
+                      : AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   border: Border.all(
                     color: appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                        ? AppTheme.accentRed
-                        : AppTheme.darkBorderSubtle,
+                        ? AppTheme.danger
+                        : AppTheme.border,
                     width: 0.8,
                   ),
                 ),
@@ -441,8 +441,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                       size: 12,
                       color:
                           appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                              ? AppTheme.accentRed
-                              : AppTheme.textSecondaryDark,
+                              ? AppTheme.danger
+                              : AppTheme.textSecondary,
                     ),
                     const SizedBox(width: 4),
                     Text(
@@ -452,8 +452,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                       style: TextStyle(
                         color:
                             appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                                ? AppTheme.accentRed
-                                : AppTheme.textSecondaryDark,
+                                ? AppTheme.danger
+                                : AppTheme.textSecondary,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -475,10 +475,10 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 2.5),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentBlue.withValues(alpha: 0.12),
+                      color: AppTheme.primary.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                       border: Border.all(
-                        color: AppTheme.accentBlue.withValues(alpha: 0.5),
+                        color: AppTheme.primary.withValues(alpha: 0.5),
                         width: 0.8,
                       ),
                     ),
@@ -488,13 +488,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                         const Icon(
                           Icons.location_city_rounded,
                           size: 12,
-                          color: AppTheme.accentBlue,
+                          color: AppTheme.primary,
                         ),
                         const SizedBox(width: 4),
                         Text(
                           '${streamer.venues.length} ${'profile.campus_branches_btn'.tr()}',
                           style: const TextStyle(
-                            color: AppTheme.accentBlue,
+                            color: AppTheme.primary,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -513,26 +513,25 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     padding: const EdgeInsets.symmetric(
                         horizontal: 6, vertical: 2.5),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentPurple.withValues(alpha: 0.15),
+                      color: AppTheme.accent.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                       border: Border.all(
-                        color: AppTheme.accentPurple.withValues(alpha: 0.5),
+                        color: AppTheme.accent.withValues(alpha: 0.5),
                         width: 0.8,
                       ),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.domain_add_rounded,
                           size: 12,
-                          color: AppTheme.accentPurple,
+                          color: AppTheme.accent,
                         ),
-                        SizedBox(width: 4),
-                        Text(
-                          'Join an Organization',
-                          style: TextStyle(
-                            color: AppTheme.accentPurple,
+                        const SizedBox(width: 4),
+                        Text('design_ui.join_an_organization'.tr(),
+                          style: const TextStyle(
+                            color: AppTheme.accent,
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
                           ),
@@ -548,7 +547,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
           if (streamer.isCurrentlyLive) ...[
             const SizedBox(height: AppTheme.spaceMd),
             Material(
-              color: AppTheme.accentRed.withValues(alpha: 0.15),
+              color: AppTheme.danger.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               child: InkWell(
                 onTap: () {
@@ -559,7 +558,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 child: Container(
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
                   decoration: BoxDecoration(
-                    border: Border.all(color: AppTheme.accentRed, width: 1.2),
+                    border: Border.all(color: AppTheme.danger, width: 1.2),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: Row(
@@ -568,7 +567,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                         width: 10,
                         height: 10,
                         decoration: const BoxDecoration(
-                          color: AppTheme.accentRed,
+                          color: AppTheme.danger,
                           shape: BoxShape.circle,
                         ),
                       ),
@@ -580,7 +579,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                             Text(
                               '${'map.live_badge'.tr()} • ${appProvider.platformViewerCount(streamer.activeStreamId ?? '') ?? '—'} ${'feed.watching'.tr()}',
                               style: const TextStyle(
-                                color: AppTheme.accentRed,
+                                color: AppTheme.danger,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                               ),
@@ -589,7 +588,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                             Text(
                               'profile.tap_to_join_live'.tr(),
                               style: const TextStyle(
-                                color: Colors.white,
+                                color: AppTheme.onMedia,
                                 fontSize: 13,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -599,7 +598,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                       ),
                       const Icon(
                         Icons.play_circle_fill_rounded,
-                        color: AppTheme.accentRed,
+                        color: AppTheme.danger,
                         size: 28,
                       ),
                     ],
@@ -615,7 +614,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
           Text(
             streamer.getLocalizedBio(lang),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 13,
               height: 1.4,
             ),
@@ -647,12 +646,12 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       backgroundColor: isFollowing
-                          ? AppTheme.darkSurface2
-                          : AppTheme.accentBlue,
-                      foregroundColor: Colors.white,
+                          ? AppTheme.surfaceAlt
+                          : AppTheme.primary,
+                      foregroundColor: AppTheme.onMedia,
                       side: isFollowing
                           ? const BorderSide(
-                              color: AppTheme.accentBlue, width: 1.2)
+                              color: AppTheme.primary, width: 1.2)
                           : BorderSide.none,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -671,8 +670,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           : Icons.notifications_none_rounded,
                       size: 16,
                       color: hasReminder
-                          ? AppTheme.accentPurple
-                          : AppTheme.textSecondaryDark,
+                          ? AppTheme.accent
+                          : AppTheme.textSecondary,
                     ),
                     label: Text(
                       hasReminder
@@ -680,7 +679,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           : 'profile.reminder_btn'.tr(),
                       style: TextStyle(
                         color:
-                            hasReminder ? AppTheme.accentPurple : Colors.white,
+                            hasReminder ? AppTheme.accent : AppTheme.onMedia,
                         fontSize: 12,
                       ),
                     ),
@@ -689,8 +688,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           horizontal: 12, vertical: 10),
                       side: BorderSide(
                         color: hasReminder
-                            ? AppTheme.accentPurple
-                            : AppTheme.darkBorderSubtle,
+                            ? AppTheme.accent
+                            : AppTheme.border,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -731,13 +730,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               const Icon(
                 Icons.subscriptions_rounded,
                 size: 16,
-                color: AppTheme.accentRed,
+                color: AppTheme.danger,
               ),
               const SizedBox(width: 8),
               Text(
                 'profile.featured_channels'.tr(),
                 style: const TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.onMedia,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
@@ -747,14 +746,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkSurface2,
+                  color: AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Text(
                   '${speakers.length}',
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight: FontWeight.bold,
                   ),
@@ -766,7 +765,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
           Text(
             'profile.featured_channels_hint'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
             ),
           ),
@@ -806,13 +805,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? const Color(0xFFD97706).withValues(alpha: 0.12)
-                          : AppTheme.darkBgBase,
+                          ? AppTheme.warning.withValues(alpha: 0.12)
+                          : AppTheme.bg,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       border: Border.all(
                         color: isSelected
-                            ? const Color(0xFFD97706)
-                            : AppTheme.darkBorderSubtle,
+                            ? AppTheme.warning
+                            : AppTheme.border,
                         width: isSelected ? 1.8 : 1.0,
                       ),
                     ),
@@ -828,10 +827,10 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                 shape: BoxShape.circle,
                                 border: Border.all(
                                   color: isSelected
-                                      ? const Color(0xFFD97706)
+                                      ? AppTheme.warning
                                       : (speaker.isPermanentStaff
-                                          ? AppTheme.accentBlue
-                                          : AppTheme.textSecondaryDark),
+                                          ? AppTheme.primary
+                                          : AppTheme.textSecondary),
                                   width: 2,
                                 ),
                                 image: DecorationImage(
@@ -851,7 +850,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                   Text(
                                     speaker.getLocalizedName(lang),
                                     style: const TextStyle(
-                                      color: Colors.white,
+                                      color: AppTheme.onMedia,
                                       fontSize: 13.5,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -863,11 +862,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 5, vertical: 1.5),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.accentRed
+                                      color: AppTheme.danger
                                           .withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(4),
                                       border: Border.all(
-                                        color: AppTheme.accentRed
+                                        color: AppTheme.danger
                                             .withValues(alpha: 0.4),
                                         width: 0.8,
                                       ),
@@ -878,14 +877,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                         const Icon(
                                           Icons.play_arrow_rounded,
                                           size: 11,
-                                          color: AppTheme.accentRed,
+                                          color: AppTheme.danger,
                                         ),
                                         const SizedBox(width: 2),
                                         Flexible(
                                           child: Text(
                                             '@$handle',
                                             style: const TextStyle(
-                                              color: Colors.white,
+                                              color: AppTheme.onMedia,
                                               fontSize: 10.5,
                                               fontWeight: FontWeight.w600,
                                             ),
@@ -904,13 +903,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFD97706),
+                                  color: AppTheme.warning,
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: const Icon(
                                   Icons.check_rounded,
                                   size: 12,
-                                  color: Colors.black,
+                                  color: AppTheme.media,
                                 ),
                               ),
                           ],
@@ -919,7 +918,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                         Text(
                           speaker.getLocalizedRole(lang),
                           style: const TextStyle(
-                            color: AppTheme.accentBlue,
+                            color: AppTheme.primary,
                             fontSize: 11,
                             fontWeight: FontWeight.w600,
                           ),
@@ -931,7 +930,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           child: Text(
                             speaker.getLocalizedBio(lang),
                             style: const TextStyle(
-                              color: AppTheme.textSecondaryDark,
+                              color: AppTheme.textSecondary,
                               fontSize: 11,
                               height: 1.3,
                             ),
@@ -947,7 +946,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               child: Text(
                                 '${speakerVods.length} ${'profile.lectures_count'.tr()} • ${speakerPlaylists.length} ${'profile.playlists'.tr()}',
                                 style: const TextStyle(
-                                  color: AppTheme.textSecondaryDark,
+                                  color: AppTheme.textSecondary,
                                   fontSize: 10.5,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -962,8 +961,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                   : 'profile.view_channel_content'.tr(),
                               style: TextStyle(
                                 color: isSelected
-                                    ? const Color(0xFFD97706)
-                                    : AppTheme.accentBlue,
+                                    ? AppTheme.warning
+                                    : AppTheme.primary,
                                 fontSize: 10.5,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -992,14 +991,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             children: [
               const Icon(
                 Icons.video_library_outlined,
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 size: 48,
               ),
               const SizedBox(height: AppTheme.spaceMd),
               Text(
                 'profile.no_instructor_vods'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   fontSize: 14,
                 ),
                 textAlign: TextAlign.center,
@@ -1049,14 +1048,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             children: [
               const Icon(
                 Icons.playlist_play_rounded,
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 size: 48,
               ),
               const SizedBox(height: AppTheme.spaceMd),
               Text(
                 'profile.no_videos_playlist'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -1073,7 +1072,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
       itemBuilder: (context, index) {
         final playlist = playlists[index];
         return Material(
-          color: AppTheme.darkSurface1,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           child: InkWell(
             onTap: () {
@@ -1083,7 +1082,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             child: Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.darkBorderSubtle),
+                border: Border.all(color: AppTheme.border),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               ),
               child: Row(
@@ -1107,7 +1106,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                         Text(
                           playlist.getLocalizedTitle(lang),
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1118,7 +1117,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                         Text(
                           '${playlist.videoCount} ${'profile.lectures_count'.tr()}',
                           style: const TextStyle(
-                            color: AppTheme.accentBlue,
+                            color: AppTheme.primary,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -1128,7 +1127,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                   ),
                   const Icon(
                     Icons.chevron_right_rounded,
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                   ),
                 ],
               ),
@@ -1151,14 +1150,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             children: [
               const Icon(
                 Icons.event_busy_rounded,
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 size: 48,
               ),
               const SizedBox(height: AppTheme.spaceMd),
               Text(
                 'profile.no_upcoming_schedule'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   fontSize: 14,
                 ),
               ),
@@ -1177,21 +1176,21 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         return Container(
           padding: const EdgeInsets.all(AppTheme.spaceMd),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface1,
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.darkBorderSubtle),
+            border: Border.all(color: AppTheme.border),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceSm),
                 decoration: BoxDecoration(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.15),
+                  color: AppTheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: const Icon(
                   Icons.calendar_today_rounded,
-                  color: AppTheme.accentBlue,
+                  color: AppTheme.primary,
                   size: 20,
                 ),
               ),
@@ -1200,7 +1199,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 child: Text(
                   item,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppTheme.onMedia,
                     fontSize: 13,
                     fontWeight: FontWeight.w500,
                   ),
@@ -1242,7 +1241,7 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: AppTheme.darkBgBase,
+      color: AppTheme.bg,
       child: _tabBar,
     );
   }

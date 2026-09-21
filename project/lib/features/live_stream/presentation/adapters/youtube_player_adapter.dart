@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'dart:convert';
 import 'youtube_navigation_policy.dart';
 import 'package:flutter/foundation.dart';
@@ -72,7 +73,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
     } catch (_) {}
 
     try {
-      controller.setBackgroundColor(Colors.black);
+      controller.setBackgroundColor(AppTheme.media);
     } catch (_) {}
 
     if (!kIsWeb) {
@@ -220,8 +221,8 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
 <!DOCTYPE html>
 <html>
 <head>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <meta name="viewport"content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="referrer"content="strict-origin-when-cross-origin">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; background-color: #000; }
     html, body { width: 100%; height: 100%; overflow: hidden; background-color: #000; }
@@ -377,7 +378,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
     return AspectRatio(
       aspectRatio: widget.aspectRatio,
       child: Container(
-        color: Colors.black,
+        color: AppTheme.media,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -408,7 +409,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.7),
+                  color: AppTheme.media.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -423,10 +424,9 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    const Text(
-                      'YouTube Player',
-                      style: TextStyle(
-                        color: Colors.white,
+                    Text('design_ui.youtube_player'.tr(),
+                      style: const TextStyle(
+                        color: AppTheme.onMedia,
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                       ),

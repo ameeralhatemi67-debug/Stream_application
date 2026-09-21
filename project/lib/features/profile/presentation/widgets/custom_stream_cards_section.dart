@@ -34,7 +34,7 @@ class CustomStreamCardsSection extends StatefulWidget {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
@@ -117,7 +117,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppTheme.accentRed : AppTheme.accentBlue,
+        backgroundColor: isError ? AppTheme.danger : AppTheme.primary,
       ),
     );
   }
@@ -132,7 +132,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
           Text(
             'settings.custom_cards_section'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
@@ -142,7 +142,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
         Text(
           'settings.custom_cards_desc'.tr(),
           style: const TextStyle(
-              color: AppTheme.textSecondaryDark, fontSize: 11.5, height: 1.4),
+              color: AppTheme.textSecondary, fontSize: 11.5, height: 1.4),
         ),
         const SizedBox(height: 10),
         ...StreamPlaceholderType.values.map(_buildCustomCardSlot),
@@ -151,24 +151,24 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
   }
 
   Widget _buildCustomCardSlot(StreamPlaceholderType type) {
-    // Watching (not reading) so a slot flips from "Pending Review" to
-    // "Approved"/"Rejected" the moment an admin acts, without reopening.
+    // Watching (not reading) so a slot flips from "Pending Review"to
+    // "Approved"/"Rejected"the moment an admin acts, without reopening.
     final existing = context.watch<AppProvider>().myPlaceholderFor(type);
     final isUploading = _uploadingCard == type;
 
     final Color statusColor;
     switch (existing?.status) {
       case StreamPlaceholderStatus.approved:
-        statusColor = AppTheme.accentGreen;
+        statusColor = AppTheme.success;
         break;
       case StreamPlaceholderStatus.rejected:
-        statusColor = AppTheme.accentRed;
+        statusColor = AppTheme.danger;
         break;
       case StreamPlaceholderStatus.pending:
-        statusColor = AppTheme.accentAmber;
+        statusColor = AppTheme.warning;
         break;
       case null:
-        statusColor = AppTheme.textMutedDark;
+        statusColor = AppTheme.textMuted;
         break;
     }
 
@@ -176,9 +176,9 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface2,
+        color: AppTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         children: [
@@ -192,15 +192,15 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
                       existing.imageUrl,
                       fit: BoxFit.cover,
                       errorBuilder: (_, __, ___) => const ColoredBox(
-                        color: AppTheme.darkSurface3,
+                        color: AppTheme.surface,
                         child: Icon(Icons.broken_image_outlined,
-                            size: 18, color: AppTheme.textMutedDark),
+                            size: 18, color: AppTheme.textMuted),
                       ),
                     )
                   : const ColoredBox(
-                      color: AppTheme.darkSurface3,
+                      color: AppTheme.surface,
                       child: Icon(Icons.image_outlined,
-                          size: 18, color: AppTheme.textMutedDark),
+                          size: 18, color: AppTheme.textMuted),
                     ),
             ),
           ),
@@ -213,7 +213,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
                 Text(
                   type.editorLabelKey.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 12.5,
                     fontWeight: FontWeight.bold,
                   ),
@@ -239,7 +239,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                        color: AppTheme.textMutedDark, fontSize: 10.5),
+                        color: AppTheme.textMuted, fontSize: 10.5),
                   ),
                 ],
               ],
@@ -251,7 +251,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: AppTheme.accentBlue),
+                      strokeWidth: 2, color: AppTheme.primary),
                 )
               : OutlinedButton.icon(
                   onPressed: () => _pickAndUploadCard(type),
@@ -263,8 +263,8 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
                     style: const TextStyle(fontSize: 11),
                   ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.accentBlue,
-                    side: const BorderSide(color: AppTheme.accentBlue),
+                    foregroundColor: AppTheme.primary,
+                    side: const BorderSide(color: AppTheme.primary),
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   ),

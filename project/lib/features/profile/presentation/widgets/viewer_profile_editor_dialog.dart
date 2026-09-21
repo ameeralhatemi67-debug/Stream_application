@@ -1,4 +1,4 @@
-import 'dart:ui' as ui;
+import 'dart:ui'as ui;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
@@ -11,7 +11,7 @@ import '../../../../core/widgets/safe_image_provider.dart';
 /// (name EN/AR + avatar) -- strictly separate from the Broadcaster
 /// Application flow. A plain viewer never has enough submitted info to
 /// justify opening BroadcasterApplicationSheet; this dialog is the only
-/// thing "Edit Profile" should open for them (issue_log.md).
+/// thing "Edit Profile"should open for them (issue_log.md).
 class ViewerProfileEditorDialog extends StatefulWidget {
   const ViewerProfileEditorDialog({super.key});
 
@@ -81,7 +81,7 @@ class _ViewerProfileEditorDialogState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('viewer_setup.error_name_empty'.tr()),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
       return;
@@ -104,21 +104,21 @@ class _ViewerProfileEditorDialogState
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.darkBorderSubtle),
+        side: const BorderSide(color: AppTheme.border),
       ),
       title: Row(
         children: [
           const Icon(Icons.account_circle_outlined,
-              color: AppTheme.accentBlue, size: 22),
+              color: AppTheme.primary, size: 22),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
               'settings.edit_profile'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -148,7 +148,7 @@ class _ViewerProfileEditorDialogState
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isSelected
-                                  ? AppTheme.accentBlue
+                                  ? AppTheme.primary
                                   : Colors.transparent,
                               width: 2.5,
                             ),
@@ -168,8 +168,8 @@ class _ViewerProfileEditorDialogState
                         height: 44,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: AppTheme.darkSurface2,
-                          border: Border.all(color: AppTheme.darkBorderSubtle),
+                          color: AppTheme.surfaceAlt,
+                          border: Border.all(color: AppTheme.border),
                           image: (_avatarUrl != null &&
                                   !_avatarPresets.contains(_avatarUrl))
                               ? DecorationImage(
@@ -183,7 +183,7 @@ class _ViewerProfileEditorDialogState
                                 !_avatarPresets.contains(_avatarUrl))
                             ? null
                             : const Icon(Icons.add_photo_alternate_rounded,
-                                size: 18, color: AppTheme.accentBlue),
+                                size: 18, color: AppTheme.primary),
                       ),
                     ),
                   ],
@@ -192,22 +192,22 @@ class _ViewerProfileEditorDialogState
               const SizedBox(height: AppTheme.spaceLg),
               TextField(
                 controller: _nameEnController,
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
                 decoration: InputDecoration(
                   labelText: 'viewer_setup.name_label'.tr(),
                   prefixIcon: const Icon(Icons.badge_outlined,
-                      color: AppTheme.accentBlue),
+                      color: AppTheme.primary),
                 ),
               ),
               const SizedBox(height: AppTheme.spaceMd),
               TextField(
                 controller: _nameArController,
                 textDirection: ui.TextDirection.rtl,
-                style: const TextStyle(color: AppTheme.textPrimaryDark),
+                style: const TextStyle(color: AppTheme.textPrimary),
                 decoration: const InputDecoration(
                   labelText: 'الاسم بالعربية',
                   prefixIcon: Icon(Icons.badge_outlined,
-                      color: AppTheme.accentBlue),
+                      color: AppTheme.primary),
                 ),
               ),
             ],
@@ -218,12 +218,12 @@ class _ViewerProfileEditorDialogState
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
           child: Text('common.cancel'.tr(),
-              style: const TextStyle(color: AppTheme.textSecondaryDark)),
+              style: const TextStyle(color: AppTheme.textSecondary)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.accentBlue,
-            foregroundColor: Colors.white,
+            backgroundColor: AppTheme.primary,
+            foregroundColor: AppTheme.onMedia,
           ),
           onPressed: _isSaving ? null : _handleSave,
           child: _isSaving
@@ -231,7 +231,7 @@ class _ViewerProfileEditorDialogState
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
-                      strokeWidth: 2, color: Colors.white),
+                      strokeWidth: 2, color: AppTheme.onMedia),
                 )
               : Text('common.save'.tr()),
         ),

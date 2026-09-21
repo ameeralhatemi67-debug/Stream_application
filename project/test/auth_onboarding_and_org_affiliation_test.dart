@@ -55,8 +55,8 @@ Widget createTestWidget({
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             theme: ThemeData.dark(useMaterial3: true).copyWith(
-              scaffoldBackgroundColor: AppTheme.darkBgBase,
-              cardColor: AppTheme.darkSurface1,
+              scaffoldBackgroundColor: AppTheme.bg,
+              cardColor: AppTheme.surface,
             ),
             home: child,
           ),
@@ -99,7 +99,7 @@ void main() {
       tester.view.devicePixelRatio = 1.0;
       await pumpTestApp(tester, const WelcomeScreen(), provider);
 
-      expect(find.text('STREAMER APP'), findsOneWidget);
+      expect(find.text('Hadayah Live'), findsOneWidget);
       expect(find.text('Sign Up with Google'), findsOneWidget);
       expect(find.text('Already have an account? Log In'), findsOneWidget);
       expect(find.text('Continue as Guest Viewer (Skip Sign In)'), findsOneWidget);

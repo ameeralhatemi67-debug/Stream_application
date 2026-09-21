@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
@@ -29,10 +30,10 @@ class PermissionRationaleDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final isCamera = kind == BroadcastPermissionKind.camera;
     return Dialog(
-      backgroundColor: AppTheme.darkSurface3,
+      backgroundColor: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+        side: const BorderSide(color: AppTheme.danger, width: 1.5),
       ),
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -42,14 +43,14 @@ class PermissionRationaleDialog extends StatelessWidget {
           children: [
             Icon(
               isCamera ? Icons.videocam_rounded : Icons.mic_rounded,
-              color: AppTheme.accentRed,
+              color: AppTheme.danger,
               size: 32,
             ),
             const SizedBox(height: AppTheme.spaceMd),
             Text(
               isCamera ? 'Camera access needed' : 'Microphone access needed',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppTheme.onMedia,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -64,7 +65,7 @@ class PermissionRationaleDialog extends StatelessWidget {
                       'for your broadcast. Nothing is recorded until you '
                       'start going live.',
               style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 13,
                 height: 1.4,
               ),
@@ -75,21 +76,19 @@ class PermissionRationaleDialog extends StatelessWidget {
               children: [
                 TextButton(
                   onPressed: () => Navigator.of(context).pop(false),
-                  child: const Text(
-                    'Not now',
-                    style: TextStyle(color: AppTheme.textSecondaryDark),
+                  child: Text('design_ui.not_now'.tr(),
+                    style: const TextStyle(color: AppTheme.textSecondary),
                   ),
                 ),
                 const SizedBox(width: AppTheme.spaceSm),
                 ElevatedButton(
                   onPressed: () => Navigator.of(context).pop(true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentRed,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.danger,
+                    foregroundColor: AppTheme.onMedia,
                   ),
-                  child: const Text(
-                    'Continue',
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  child: Text('design_ui.continue'.tr(),
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
                 ),
               ],

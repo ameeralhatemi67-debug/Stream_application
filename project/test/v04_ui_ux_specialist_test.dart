@@ -50,32 +50,32 @@ void main() {
       expect(enKeys.length, greaterThanOrEqualTo(30));
     });
 
-    test('TC-THEME-01: Minimalist Dark Theme Palette & High Contrast Ratios',
+    test('TC-THEME-01: Scheme A Light Theme Palette & High Contrast Ratios',
         () {
-      expect(AppTheme.darkBgBase, equals(const Color(0xFF121214)));
-      expect(AppTheme.darkSurface1, equals(const Color(0xFF1A1A1E)));
-      expect(AppTheme.darkSurface2, equals(const Color(0xFF24242A)));
-      expect(AppTheme.darkSurface3, equals(const Color(0xFF2D2D35)));
+      expect(AppTheme.bg, equals(const Color(0xFFFFFFFF)));
+      expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
+      expect(AppTheme.surfaceAlt, equals(const Color(0xFFECF6EF)));
+      expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
 
-      expect(AppTheme.textPrimaryDark, equals(const Color(0xFFFFFFFF)));
-      expect(AppTheme.textSecondaryDark, equals(const Color(0xFFA1A1AA)));
-      expect(AppTheme.textMutedDark, equals(const Color(0xFF71717A)));
+      expect(AppTheme.textPrimary, equals(const Color(0xFF202B2B)));
+      expect(AppTheme.textSecondary, equals(const Color(0xFF485554)));
+      expect(AppTheme.textMuted, equals(const Color(0xFF586563)));
 
-      expect(AppTheme.accentRed, equals(const Color(0xFFFF8080)));
-      expect(AppTheme.accentGreen, equals(const Color(0xFF34D399)));
-      expect(AppTheme.accentBlue, equals(const Color(0xFF38BDF8)));
-      expect(AppTheme.accentPurple, equals(const Color(0xFFA78BFA)));
+      expect(AppTheme.danger, equals(const Color(0xFF9D3044)));
+      expect(AppTheme.success, equals(const Color(0xFF22613D)));
+      expect(AppTheme.primary, equals(const Color(0xFF17643F)));
+      expect(AppTheme.accent, equals(const Color(0xFF17643F)));
     });
 
     test(
-        'TC-THEME-02: Dark Theme Base Surface and Accent Constants Verification',
+        'TC-THEME-02: Light Theme Base Surface and Accent Constants Verification',
         () {
-      expect(AppTheme.darkBgBase, equals(const Color(0xFF121214)));
-      expect(AppTheme.darkSurface1, equals(const Color(0xFF1A1A1E)));
-      expect(AppTheme.darkSurface2, equals(const Color(0xFF24242A)));
-      expect(AppTheme.darkSurface3, equals(const Color(0xFF2D2D35)));
-      expect(AppTheme.accentBlue, equals(const Color(0xFF38BDF8)));
-      expect(AppTheme.accentRed, equals(const Color(0xFFFF8080)));
+      expect(AppTheme.bg, equals(const Color(0xFFFFFFFF)));
+      expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
+      expect(AppTheme.surfaceAlt, equals(const Color(0xFFECF6EF)));
+      expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
+      expect(AppTheme.primary, equals(const Color(0xFF17643F)));
+      expect(AppTheme.danger, equals(const Color(0xFF9D3044)));
     });
 
     test('TC-PITCH-01: Pitch Director Mode Activation & Live State Forcing',

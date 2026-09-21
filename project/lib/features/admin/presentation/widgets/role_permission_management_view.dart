@@ -39,7 +39,7 @@ class _RolePermissionManagementViewState
       SnackBar(
         content: Text(message),
         backgroundColor:
-            isError ? AppTheme.accentRed : AppTheme.accentGreen,
+            isError ? AppTheme.danger : AppTheme.success,
       ),
     );
   }
@@ -122,11 +122,11 @@ class _RolePermissionManagementViewState
   Color _roleColor(String role) {
     switch (role) {
       case 'master_admin':
-        return AppTheme.accentRed;
+        return AppTheme.danger;
       case 'admin':
-        return AppTheme.accentBlue;
+        return AppTheme.primary;
       default:
-        return AppTheme.accentPurple;
+        return AppTheme.accent;
     }
   }
 
@@ -147,15 +147,14 @@ class _RolePermissionManagementViewState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.admin_panel_settings_rounded,
-                  color: AppTheme.accentBlue, size: 20),
-              SizedBox(width: 8),
-              Text(
-                'Roles & Permissions',
-                style: TextStyle(
-                  color: AppTheme.textPrimaryDark,
+              const Icon(Icons.admin_panel_settings_rounded,
+                  color: AppTheme.primary, size: 20),
+              const SizedBox(width: 8),
+              Text('design_ui.roles_permissions'.tr(),
+                style: const TextStyle(
+                  color: AppTheme.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -163,9 +162,8 @@ class _RolePermissionManagementViewState
             ],
           ),
           const SizedBox(height: AppTheme.spaceSm),
-          const Text(
-            'Master Admin can grant/revoke Admin or Master Admin, and toggle extra capability checkboxes. Permitted Admin (Org Owner/Co-Owner) is auto-derived from organization ownership -- see the Organizations tab.',
-            style: TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+          Text('design_ui.master_admin_can_grant_revoke_admin_or_master_admin_and_toggle_ex'.tr(),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
 
@@ -220,7 +218,7 @@ class _RolePermissionManagementViewState
         const SizedBox(height: AppTheme.spaceSm),
         Text(
           'admin.moderator_delegation_desc'.tr(),
-          style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
         ),
         const SizedBox(height: AppTheme.spaceMd),
         if (moderators.isEmpty)
@@ -228,62 +226,62 @@ class _RolePermissionManagementViewState
         else
           Container(
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.darkBorderSubtle),
+              border: Border.all(color: AppTheme.border),
             ),
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
                 headingRowColor:
-                    WidgetStateProperty.all(AppTheme.darkSurface2),
+                    WidgetStateProperty.all(AppTheme.surfaceAlt),
                 columns: [
                   DataColumn(
                       label: Text('admin.moderator_col_user'.tr(),
                           style: const TextStyle(
-                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                              color: AppTheme.textSecondary, fontSize: 11))),
                   DataColumn(
                       label: Text('admin.moderator_col_assigned_by'.tr(),
                           style: const TextStyle(
-                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                              color: AppTheme.textSecondary, fontSize: 11))),
                   DataColumn(
                       label: Text('admin.moderator_col_scope'.tr(),
                           style: const TextStyle(
-                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                              color: AppTheme.textSecondary, fontSize: 11))),
                   DataColumn(
                       label: Text('admin.moderator_col_date'.tr(),
                           style: const TextStyle(
-                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                              color: AppTheme.textSecondary, fontSize: 11))),
                   DataColumn(
                       label: Text('admin.moderator_col_revoke'.tr(),
                           style: const TextStyle(
-                              color: AppTheme.textSecondaryDark, fontSize: 11))),
+                              color: AppTheme.textSecondary, fontSize: 11))),
                 ],
                 rows: moderators.map((m) {
                   return DataRow(cells: [
                     DataCell(Text(
                       m.moderatorEmail ?? m.moderatorDisplayName,
                       style: const TextStyle(
-                          color: AppTheme.textPrimaryDark, fontSize: 12),
+                          color: AppTheme.textPrimary, fontSize: 12),
                     )),
                     DataCell(Text(
                       m.assignedByDisplayName,
                       style: const TextStyle(
-                          color: AppTheme.textSecondaryDark, fontSize: 12),
+                          color: AppTheme.textSecondary, fontSize: 12),
                     )),
                     DataCell(Text(
                       m.scopeLabel,
                       style: const TextStyle(
-                          color: AppTheme.textSecondaryDark, fontSize: 12),
+                          color: AppTheme.textSecondary, fontSize: 12),
                     )),
                     DataCell(Text(
                       DateFormat('yyyy-MM-dd').format(m.grantedAt),
                       style: const TextStyle(
-                          color: AppTheme.textMutedDark, fontSize: 11),
+                          color: AppTheme.textMuted, fontSize: 11),
                     )),
                     DataCell(IconButton(
                       icon: const Icon(Icons.remove_circle_outline_rounded,
-                          size: 18, color: AppTheme.accentRed),
+                          size: 18, color: AppTheme.danger),
                       tooltip: 'admin.moderator_col_revoke'.tr(),
                       onPressed: () async {
                         try {
@@ -293,7 +291,7 @@ class _RolePermissionManagementViewState
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                                 content: Text('$e'),
-                                backgroundColor: AppTheme.accentRed),
+                                backgroundColor: AppTheme.danger),
                           );
                         }
                       },
@@ -313,7 +311,7 @@ class _RolePermissionManagementViewState
         Text(
           title,
           style: const TextStyle(
-            color: AppTheme.textPrimaryDark,
+            color: AppTheme.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -322,13 +320,13 @@ class _RolePermissionManagementViewState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface2,
+            color: AppTheme.surfaceAlt,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             '$count',
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.bold,
             ),
@@ -342,13 +340,13 @@ class _RolePermissionManagementViewState
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Text(message,
           style: const TextStyle(
-              color: AppTheme.textSecondaryDark, fontSize: 12)),
+              color: AppTheme.textSecondary, fontSize: 12)),
     );
   }
 
@@ -356,17 +354,16 @@ class _RolePermissionManagementViewState
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Grant a Platform Role',
-            style: TextStyle(
-              color: AppTheme.textPrimaryDark,
+          Text('design_ui.grant_a_platform_role'.tr(),
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -378,21 +375,21 @@ class _RolePermissionManagementViewState
                 child: TextField(
                   controller: _grantEmailController,
                   style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 13),
+                      color: AppTheme.textPrimary, fontSize: 13),
                   decoration: InputDecoration(
                     hintText: 'Account email...',
                     hintStyle: const TextStyle(
-                        color: AppTheme.textSecondaryDark, fontSize: 12),
+                        color: AppTheme.textSecondary, fontSize: 12),
                     prefixIcon: const Icon(Icons.email_outlined,
-                        color: AppTheme.textSecondaryDark, size: 18),
+                        color: AppTheme.textSecondary, size: 18),
                     filled: true,
-                    fillColor: AppTheme.darkSurface2,
+                    fillColor: AppTheme.surfaceAlt,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide:
-                          const BorderSide(color: AppTheme.darkBorderSubtle),
+                          const BorderSide(color: AppTheme.border),
                     ),
                   ),
                 ),
@@ -400,13 +397,13 @@ class _RolePermissionManagementViewState
               const SizedBox(width: AppTheme.spaceMd),
               DropdownButton<String>(
                 value: _grantRole,
-                dropdownColor: AppTheme.darkSurface2,
+                dropdownColor: AppTheme.surfaceAlt,
                 style: const TextStyle(
-                    color: AppTheme.textPrimaryDark, fontSize: 13),
-                items: const [
-                  DropdownMenuItem(value: 'admin', child: Text('Admin')),
+                    color: AppTheme.textPrimary, fontSize: 13),
+                items: [
+                  DropdownMenuItem(value: 'admin', child: Text('design_ui.admin'.tr())),
                   DropdownMenuItem(
-                      value: 'master_admin', child: Text('Master Admin')),
+                      value: 'master_admin', child: Text('design_ui.master_admin'.tr())),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _grantRole = value);
@@ -415,8 +412,8 @@ class _RolePermissionManagementViewState
               const SizedBox(width: AppTheme.spaceMd),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accentBlue,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: AppTheme.onMedia,
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 12),
                 ),
@@ -425,10 +422,10 @@ class _RolePermissionManagementViewState
                         width: 14,
                         height: 14,
                         child: CircularProgressIndicator(
-                            strokeWidth: 2, color: Colors.white),
+                            strokeWidth: 2, color: AppTheme.onMedia),
                       )
                     : const Icon(Icons.person_add_alt_1_rounded, size: 16),
-                label: const Text('Grant'),
+                label: Text('design_ui.grant'.tr()),
                 onPressed:
                     _isGranting ? null : () => _handleGrantRole(provider),
               ),
@@ -450,9 +447,9 @@ class _RolePermissionManagementViewState
       margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -479,7 +476,7 @@ class _RolePermissionManagementViewState
                     Text(
                       assignment.displayName,
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 13,
                       ),
@@ -488,7 +485,7 @@ class _RolePermissionManagementViewState
                       Text(
                         assignment.email!,
                         style: const TextStyle(
-                            color: AppTheme.textMutedDark, fontSize: 11),
+                            color: AppTheme.textMuted, fontSize: 11),
                       ),
                   ],
                 ),
@@ -513,7 +510,7 @@ class _RolePermissionManagementViewState
               const SizedBox(width: 8),
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline_rounded,
-                    size: 18, color: AppTheme.accentRed),
+                    size: 18, color: AppTheme.danger),
                 tooltip: 'Revoke role',
                 onPressed: () => _handleRevokeRole(provider, assignment),
               ),
@@ -521,7 +518,7 @@ class _RolePermissionManagementViewState
           ),
           if (canTogglePermissions) ...[
             const SizedBox(height: AppTheme.spaceSm),
-            const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+            const Divider(color: AppTheme.border, height: 1),
             const SizedBox(height: AppTheme.spaceSm),
             Wrap(
               spacing: AppTheme.spaceMd,
@@ -536,14 +533,14 @@ class _RolePermissionManagementViewState
                     children: [
                       Checkbox(
                         value: granted,
-                        activeColor: AppTheme.accentGreen,
+                        activeColor: AppTheme.success,
                         onChanged: (checked) => _handleTogglePermission(
                             provider, assignment, capability, checked == true),
                       ),
                       Text(
                         capability,
                         style: const TextStyle(
-                            color: AppTheme.textSecondaryDark, fontSize: 11.5),
+                            color: AppTheme.textSecondary, fontSize: 11.5),
                       ),
                     ],
                   ),

@@ -101,8 +101,8 @@ class PureDartLocalTranslationProvider implements TranslationProvider {
       MapEntry('الطاقة المتجددة', 'Renewable Energy'),
       MapEntry('باحث سريري', 'Clinical Researcher'),
       MapEntry('باحث أكاديمي', 'Academic Researcher'),
-      MapEntry(' في ', ' in '),
-      MapEntry(' و ', ' & '),
+      MapEntry('في ', 'in '),
+      MapEntry('و ', ' & '),
     ];
 
     if (fromArabicToEnglish) {

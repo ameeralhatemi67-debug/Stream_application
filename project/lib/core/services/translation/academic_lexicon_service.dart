@@ -1,7 +1,7 @@
 ﻿/// Comprehensive Domain Lexicon & Gazetteer for Academic Titles, Universities,
 /// Saudi Geographic Venues, and Educational Disciplines.
 class AcademicLexiconService {
-  // 🎓 Academic & Professional Titles (Arabic -> English)
+  //  Academic & Professional Titles (Arabic -> English)
   static const Map<String, String> _titlesArToEn = {
     'أستاذ دكتور': 'Distinguished Professor',
     'بروفيسور': 'Professor',
@@ -24,7 +24,7 @@ class AcademicLexiconService {
     'مختص ذكاء اصطناعي': 'AI Specialist',
   };
 
-  // 🏛️ Universities & Organizations (Arabic -> English)
+  //  Universities & Organizations (Arabic -> English)
   static const Map<String, String> _institutionsArToEn = {
     'جامعة الملك فهد للبترول والمعادن': 'King Fahd University of Petroleum and Minerals',
     'جامعة الإمام عبدالرحمن بن فيصل': 'Imam Abdulrahman Bin Faisal University',
@@ -37,7 +37,7 @@ class AcademicLexiconService {
     'الهيئة السعودية للبيانات والذكاء الاصطناعي': 'SDAIA',
   };
 
-  // 📍 Saudi Cities & Regions (Arabic -> English)
+  //  Saudi Cities & Regions (Arabic -> English)
   static const Map<String, String> _citiesArToEn = {
     'الخبر': 'Al Khobar',
     'الظهران': 'Dhahran',
@@ -54,7 +54,7 @@ class AcademicLexiconService {
     'المنطقة الشرقية': 'Eastern Province',
   };
 
-  // 🏢 Venue Components & Buildings (Arabic -> English)
+  //  Venue Components & Buildings (Arabic -> English)
   static const Map<String, String> _venuePhrasesArToEn = {
     'قاعة الابتكار والمؤتمرات الكبرى': 'Grand Innovation & Conference Hall',
     'قاعة الابتكار': 'Innovation Hall',
@@ -74,7 +74,7 @@ class AcademicLexiconService {
     'مركز رعاية الموهوبين': 'Talent & Gifted Center',
   };
 
-  // 📚 Academic Disciplines & Categories (Arabic -> English)
+  //  Academic Disciplines & Categories (Arabic -> English)
   static const Map<String, String> _categoriesArToEn = {
     'علوم الحاسب والذكاء الاصطناعي': 'Computer Science & AI',
     'الدراسات الإسلامية والشريعة': 'Islamic Studies & Sharia',

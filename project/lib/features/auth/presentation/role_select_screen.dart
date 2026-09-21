@@ -16,7 +16,7 @@ class RoleSelectScreen extends StatelessWidget {
     final userName = provider.googleUserName ?? 'Welcome';
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -42,7 +42,7 @@ class RoleSelectScreen extends StatelessWidget {
                   Text(
                     'role_select.welcome_user'.tr(args: [userName]),
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -52,7 +52,7 @@ class RoleSelectScreen extends StatelessWidget {
                   Text(
                     'role_select.prompt_title'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 13,
                     ),
                     textAlign: TextAlign.center,
@@ -63,7 +63,7 @@ class RoleSelectScreen extends StatelessWidget {
                   _buildOptionCard(
                     context: context,
                     icon: Icons.explore_rounded,
-                    accentColor: AppTheme.accentBlue,
+                    accentColor: AppTheme.primary,
                     title: 'role_select.viewer_title'.tr(),
                     badge: 'role_select.viewer_badge'.tr(),
                     description: 'role_select.viewer_desc'.tr(),
@@ -79,7 +79,7 @@ class RoleSelectScreen extends StatelessWidget {
                   _buildOptionCard(
                     context: context,
                     icon: Icons.podcasts_rounded,
-                    accentColor: AppTheme.accentRed,
+                    accentColor: AppTheme.danger,
                     title: 'role_select.streamer_title'.tr(),
                     badge: 'role_select.streamer_badge'.tr(),
                     description: 'role_select.streamer_desc'.tr(),
@@ -112,7 +112,7 @@ class RoleSelectScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
         border: Border.all(color: accentColor.withValues(alpha: 0.35), width: 1.5),
         boxShadow: [
@@ -146,7 +146,7 @@ class RoleSelectScreen extends StatelessWidget {
                     Text(
                       title,
                       style: const TextStyle(
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -176,7 +176,7 @@ class RoleSelectScreen extends StatelessWidget {
           Text(
             description,
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
@@ -187,7 +187,7 @@ class RoleSelectScreen extends StatelessWidget {
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: accentColor,
-                foregroundColor: Colors.white,
+                foregroundColor: AppTheme.onMedia,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),

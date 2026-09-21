@@ -9,7 +9,7 @@ import 'vod_player_modal_sheet.dart';
 
 /// Modal bottom sheet for viewing and playing lectures inside a playlist.
 /// Dynamically fetches playlist videos on demand with robust fallback resolution,
-/// "Play All" trigger, and individual lecture inline playback.
+/// "Play All"trigger, and individual lecture inline playback.
 class PlaylistViewerModalSheet extends StatefulWidget {
   final PlaylistModel playlist;
   final StreamerModel streamer;
@@ -137,10 +137,10 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
         maxHeight: MediaQuery.of(context).size.height * 0.85,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.darkBgBase,
+        color: AppTheme.bg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
         border: Border(
-          top: BorderSide(color: AppTheme.darkBorderSubtle, width: 1.5),
+          top: BorderSide(color: AppTheme.border, width: 1.5),
         ),
       ),
       child: SafeArea(
@@ -154,13 +154,13 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppTheme.textSecondaryDark.withValues(alpha: 0.4),
+                  color: AppTheme.textSecondary.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
             ),
 
-            // Header Section: Thumbnail, Title, Streamer & "Play All" Action
+            // Header Section: Thumbnail, Title, Streamer & "Play All"Action
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
@@ -183,7 +183,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         Text(
                           playlistTitle,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -194,7 +194,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         Text(
                           '$broadcasterName • ${_videos.isNotEmpty ? _videos.length : widget.playlist.videoCount} ${'profile.lectures_count'.tr()}',
                           style: const TextStyle(
-                            color: AppTheme.accentBlue,
+                            color: AppTheme.primary,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -204,7 +204,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                   ),
                   IconButton(
                     icon: const Icon(Icons.close_rounded,
-                        color: AppTheme.textSecondaryDark),
+                        color: AppTheme.textSecondary),
                     onPressed: () => Navigator.pop(context),
                   ),
                 ],
@@ -221,10 +221,10 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                 child: ElevatedButton.icon(
                   onPressed: _videos.isNotEmpty ? _playAll : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentBlue,
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.onMedia,
                     disabledBackgroundColor:
-                        AppTheme.accentBlue.withValues(alpha: 0.3),
+                        AppTheme.primary.withValues(alpha: 0.3),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -232,7 +232,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                   ),
                   icon: const Icon(Icons.play_arrow_rounded, size: 20),
                   label: Text(
-                    isAr ? '▶️ تشغيل القائمة بالكامل' : '▶️ Play All Lectures',
+                    isAr ? 'تشغيل القائمة بالكامل' : 'Play All Lectures',
                     style: const TextStyle(
                         fontSize: 13, fontWeight: FontWeight.bold),
                   ),
@@ -241,7 +241,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
             ),
 
             const SizedBox(height: 8),
-            const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+            const Divider(color: AppTheme.border, height: 1),
 
             // Video List or Loading State
             Expanded(
@@ -255,7 +255,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                             height: 28,
                             child: CircularProgressIndicator(
                               strokeWidth: 2.5,
-                              color: AppTheme.accentBlue,
+                              color: AppTheme.primary,
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -264,7 +264,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                 ? 'جاري تحميل قائمة المحاضرات...'
                                 : 'Loading playlist lectures...',
                             style: const TextStyle(
-                              color: AppTheme.textMutedDark,
+                              color: AppTheme.textMuted,
                               fontSize: 12,
                             ),
                           ),
@@ -279,14 +279,14 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.playlist_play_rounded,
-                                    color: AppTheme.textMutedDark, size: 40),
+                                    color: AppTheme.textMuted, size: 40),
                                 const SizedBox(height: 10),
                                 Text(
                                   isAr
                                       ? 'لا توجد محاضرات متاحة في هذه القائمة حالياً'
                                       : 'No lectures available in this playlist currently',
                                   style: const TextStyle(
-                                    color: AppTheme.textSecondaryDark,
+                                    color: AppTheme.textSecondary,
                                     fontSize: 13,
                                   ),
                                   textAlign: TextAlign.center,
@@ -303,7 +303,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                           itemBuilder: (context, index) {
                             final video = _videos[index];
                             return ListTile(
-                              tileColor: AppTheme.darkSurface1,
+                              tileColor: AppTheme.surface,
                               contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 10,
                                 vertical: 4,
@@ -312,7 +312,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusMd),
                                 side: const BorderSide(
-                                    color: AppTheme.darkBorderSubtle),
+                                    color: AppTheme.border),
                               ),
                               leading: Stack(
                                 alignment: Alignment.bottomRight,
@@ -332,13 +332,13 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                         horizontal: 4, vertical: 1),
                                     margin: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
-                                      color: Colors.black.withValues(alpha: 0.8),
+                                      color: AppTheme.media.withValues(alpha: 0.8),
                                       borderRadius: BorderRadius.circular(3),
                                     ),
                                     child: Text(
                                       video.formattedDuration,
                                       style: const TextStyle(
-                                        color: Colors.white,
+                                        color: AppTheme.onMedia,
                                         fontSize: 9,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -349,7 +349,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                               title: Text(
                                 video.getLocalizedTitle(widget.langCode),
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.onMedia,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -359,13 +359,13 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                               subtitle: Text(
                                 '${video.viewCount} ${'profile.views'.tr()}',
                                 style: const TextStyle(
-                                  color: AppTheme.textMutedDark,
+                                  color: AppTheme.textMuted,
                                   fontSize: 11,
                                 ),
                               ),
                               trailing: const Icon(
                                 Icons.play_circle_fill_rounded,
-                                color: AppTheme.accentBlue,
+                                color: AppTheme.primary,
                                 size: 24,
                               ),
                               onTap: () {

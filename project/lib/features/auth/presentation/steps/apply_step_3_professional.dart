@@ -175,10 +175,10 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     } else {
       if (current.length >= 6) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You can select a maximum of 6 academic/content fields.'),
-            backgroundColor: AppTheme.accentRed,
-            duration: Duration(seconds: 2),
+          SnackBar(
+            content: Text('design_ui.you_can_select_a_maximum_of_6_academic_content_fields'.tr()),
+            backgroundColor: AppTheme.danger,
+            duration: const Duration(seconds: 2),
           ),
         );
         return;
@@ -191,9 +191,9 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
   void _showAddCustomFieldDialog() {
     if (widget.selectedCategories.length >= 6) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Maximum 6 fields limit reached. Remove a field to add another.'),
-          backgroundColor: AppTheme.accentRed,
+        SnackBar(
+          content: Text('design_ui.maximum_6_fields_limit_reached_remove_a_field_to_add_another'.tr()),
+          backgroundColor: AppTheme.danger,
         ),
       );
       return;
@@ -203,28 +203,28 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.darkSurface1,
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-        title: Text('wizard_steps.step3_add_dialog_title'.tr(), style: const TextStyle(color: AppTheme.textPrimaryDark, fontSize: 16)),
+        title: Text('wizard_steps.step3_add_dialog_title'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16)),
         content: TextField(
           controller: customCtrl,
           autofocus: true,
-          style: const TextStyle(color: AppTheme.textPrimaryDark),
+          style: const TextStyle(color: AppTheme.textPrimary),
           decoration: InputDecoration(
             labelText: 'wizard_steps.step3_add_custom_field'.tr(),
             hintText: 'e.g. Data Science, Architecture',
             filled: true,
-            fillColor: AppTheme.darkSurface2,
+            fillColor: AppTheme.surfaceAlt,
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textSecondaryDark)),
+            child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.accentRed, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
             onPressed: () {
               final text = customCtrl.text.trim();
               if (text.isNotEmpty) {
@@ -260,7 +260,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     );
 
     if (isPhone) {
-      // 📱 Stacked Two-Row Layout on Phone to eliminate horizontal overflow
+      //  Stacked Two-Row Layout on Phone to eliminate horizontal overflow
       return Column(
         children: [
           individualButton,
@@ -269,7 +269,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
         ],
       );
     } else {
-      // 💻 Side-by-Side 2-Column Row on Desktop / Tablet
+      //  Side-by-Side 2-Column Row on Desktop / Tablet
       return Row(
         children: [
           Expanded(child: individualButton),
@@ -292,7 +292,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           Text(
             'wizard_steps.step3_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -301,18 +301,18 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           Text(
             'wizard_steps.step3_desc'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondaryDark,
+              color: AppTheme.textSecondary,
               fontSize: 12,
               height: 1.4,
             ),
           ),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 🏛️ Account Type Selector Toggle (Responsive Two-Row on Phone)
+          //  Account Type Selector Toggle (Responsive Two-Row on Phone)
           Text(
             'wizard_steps.step3_entity_type'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -325,22 +325,22 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           if (widget.isOrganization) ...[
             TextField(
               controller: widget.orgNameController,
-              style: const TextStyle(color: AppTheme.textPrimaryDark),
+              style: const TextStyle(color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: 'wizard_steps.step3_org_name_label'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+                labelStyle: const TextStyle(color: AppTheme.textSecondary),
                 hintText: 'wizard_steps.step3_org_name_hint'.tr(),
-                hintStyle: const TextStyle(color: AppTheme.textMutedDark),
-                prefixIcon: const Icon(Icons.business_rounded, color: AppTheme.accentRed),
+                hintStyle: const TextStyle(color: AppTheme.textMuted),
+                prefixIcon: const Icon(Icons.business_rounded, color: AppTheme.danger),
                 filled: true,
-                fillColor: AppTheme.darkSurface1,
+                fillColor: AppTheme.surface,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                  borderSide: const BorderSide(color: AppTheme.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+                  borderSide: const BorderSide(color: AppTheme.danger, width: 1.5),
                 ),
               ),
             ),
@@ -350,43 +350,43 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           // Affiliation / Workplace
           TextField(
             controller: widget.affiliationController,
-            style: const TextStyle(color: AppTheme.textPrimaryDark),
+            style: const TextStyle(color: AppTheme.textPrimary),
             decoration: InputDecoration(
               labelText: widget.isOrganization
                   ? 'wizard_steps.step3_affiliation_org'.tr()
                   : 'wizard_steps.step3_affiliation_ind'.tr(),
-              labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
               hintText: widget.isOrganization ? 'wizard_steps.step3_org_name_hint'.tr() : 'wizard_steps.step3_affiliation_ind_hint'.tr(),
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark),
-              prefixIcon: const Icon(Icons.school_outlined, color: AppTheme.accentRed),
+              hintStyle: const TextStyle(color: AppTheme.textMuted),
+              prefixIcon: const Icon(Icons.school_outlined, color: AppTheme.danger),
               filled: true,
-              fillColor: AppTheme.darkSurface1,
+              fillColor: AppTheme.surface,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                borderSide: const BorderSide(color: AppTheme.border),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.accentRed, width: 1.5),
+                borderSide: const BorderSide(color: AppTheme.danger, width: 1.5),
               ),
             ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
-          // 🎬 YouTube Channel Handle / URL (With Live Automated Channel Checker)
+          //  YouTube Channel Handle / URL (With Live Automated Channel Checker)
           TextField(
             controller: widget.youtubeController,
-            style: const TextStyle(color: AppTheme.textPrimaryDark),
+            style: const TextStyle(color: AppTheme.textPrimary),
             onChanged: _scheduleYoutubeVerification,
             decoration: InputDecoration(
               labelText: 'wizard_steps.step3_youtube_label'.tr(),
-              labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+              labelStyle: const TextStyle(color: AppTheme.textSecondary),
               hintText: 'https://www.youtube.com/@AlQuran4KOfficial or @amir_alhatemi',
-              hintStyle: const TextStyle(color: AppTheme.textMutedDark),
-              prefixIcon: const Icon(Icons.video_library_rounded, color: AppTheme.accentRed),
+              hintStyle: const TextStyle(color: AppTheme.textMuted),
+              prefixIcon: const Icon(Icons.video_library_rounded, color: AppTheme.danger),
               suffixIcon: _buildYoutubeSuffixIcon(),
               filled: true,
-              fillColor: AppTheme.darkSurface1,
+              fillColor: AppTheme.surface,
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 borderSide: BorderSide(
@@ -412,7 +412,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
-          // 📚 Primary Academic Fields (Headline & Selection)
+          //  Primary Academic Fields (Headline & Selection)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -420,7 +420,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                 child: Text(
                   'wizard_steps.step3_categories_title'.tr(args: ['${widget.selectedCategories.length}']),
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -430,7 +430,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
               if (!isPhone)
                 TextButton.icon(
                   style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.accentBlue,
+                    foregroundColor: AppTheme.primary,
                     padding: EdgeInsets.zero,
                   ),
                   icon: const Icon(Icons.add_rounded, size: 16),
@@ -450,18 +450,18 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                 return FilterChip(
                   label: Text(entry.value),
                   selected: isSelected,
-                  selectedColor: AppTheme.accentRed.withValues(alpha: 0.25),
-                  checkmarkColor: AppTheme.accentRed,
+                  selectedColor: AppTheme.danger.withValues(alpha: 0.25),
+                  checkmarkColor: AppTheme.danger,
                   labelStyle: TextStyle(
-                    color: isSelected ? AppTheme.accentRed : AppTheme.textSecondaryDark,
+                    color: isSelected ? AppTheme.danger : AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
-                  backgroundColor: AppTheme.darkSurface1,
+                  backgroundColor: AppTheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     side: BorderSide(
-                      color: isSelected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+                      color: isSelected ? AppTheme.danger : AppTheme.border,
                     ),
                   ),
                   onSelected: (_) => _toggleCategory(entry.key),
@@ -472,32 +472,32 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                 return FilterChip(
                   label: Text(custom),
                   selected: isSelected,
-                  selectedColor: AppTheme.accentRed.withValues(alpha: 0.25),
-                  checkmarkColor: AppTheme.accentRed,
+                  selectedColor: AppTheme.danger.withValues(alpha: 0.25),
+                  checkmarkColor: AppTheme.danger,
                   labelStyle: TextStyle(
-                    color: isSelected ? AppTheme.accentRed : AppTheme.textSecondaryDark,
+                    color: isSelected ? AppTheme.danger : AppTheme.textSecondary,
                     fontSize: 11,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
-                  backgroundColor: AppTheme.darkSurface1,
+                  backgroundColor: AppTheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     side: BorderSide(
-                      color: isSelected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+                      color: isSelected ? AppTheme.danger : AppTheme.border,
                     ),
                   ),
                   onSelected: (_) => _toggleCategory(custom),
                 );
               }),
-              // On phone view, render "+ Add Custom Field" as a clean ActionChip at the bottom of the wrap!
+              // On phone view, render "+ Add Custom Field"as a clean ActionChip at the bottom of the wrap!
               if (isPhone)
                 ActionChip(
-                  avatar: const Icon(Icons.add_rounded, size: 16, color: AppTheme.accentBlue),
-                  label: Text('wizard_steps.step3_add_custom_field'.tr(), style: const TextStyle(fontSize: 11, color: AppTheme.accentBlue)),
-                  backgroundColor: AppTheme.darkSurface1,
+                  avatar: const Icon(Icons.add_rounded, size: 16, color: AppTheme.primary),
+                  label: Text('wizard_steps.step3_add_custom_field'.tr(), style: const TextStyle(fontSize: 11, color: AppTheme.primary)),
+                  backgroundColor: AppTheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    side: const BorderSide(color: AppTheme.accentBlue, width: 1),
+                    side: const BorderSide(color: AppTheme.primary, width: 1),
                   ),
                   onPressed: _showAddCustomFieldDialog,
                 ),
@@ -505,11 +505,11 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           ),
           const SizedBox(height: AppTheme.spaceLg),
 
-          // 🏷️ Lecture Discovery Topic Tags
+          //  Lecture Discovery Topic Tags
           Text(
             'wizard_steps.step3_tags_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -527,21 +527,21 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                 return FilterChip(
                   label: Text(tag),
                   selected: isSelected,
-                  selectedColor: AppTheme.accentBlue.withValues(alpha: 0.25),
-                  checkmarkColor: AppTheme.accentBlue,
+                  selectedColor: AppTheme.primary.withValues(alpha: 0.25),
+                  checkmarkColor: AppTheme.primary,
                   labelStyle: TextStyle(
                     color: isSelected
-                        ? AppTheme.accentBlue
-                        : AppTheme.textSecondaryDark,
+                        ? AppTheme.primary
+                        : AppTheme.textSecondary,
                     fontSize: 12,
                     fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
-                  backgroundColor: AppTheme.darkSurface1,
+                  backgroundColor: AppTheme.surface,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     side: BorderSide(
                       color:
-                          isSelected ? AppTheme.accentBlue : AppTheme.darkBorderSubtle,
+                          isSelected ? AppTheme.primary : AppTheme.border,
                     ),
                   ),
                   onSelected: (_) => widget.onTagToggled(tag),
@@ -562,11 +562,11 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                     .map((tag) => Chip(
                           label: Text(tag),
                           avatar: const Icon(Icons.hourglass_top_rounded,
-                              size: 14, color: AppTheme.accentAmber),
+                              size: 14, color: AppTheme.warning),
                           backgroundColor:
-                              AppTheme.accentAmber.withValues(alpha: 0.15),
+                              AppTheme.warning.withValues(alpha: 0.15),
                           labelStyle:
-                              const TextStyle(color: AppTheme.accentAmber, fontSize: 11),
+                              const TextStyle(color: AppTheme.warning, fontSize: 11),
                           onDeleted: () => widget.onTagToggled(tag),
                         ))
                     .toList(),
@@ -579,21 +579,21 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                 child: TextField(
                   controller: _customTagController,
                   style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 12),
+                      color: AppTheme.textPrimary, fontSize: 12),
                   onSubmitted: (_) => _submitCustomTag(),
                   decoration: InputDecoration(
                     hintText: 'wizard_steps.step3_custom_tag_hint'.tr(),
                     hintStyle: const TextStyle(
-                        color: AppTheme.textMutedDark, fontSize: 12),
+                        color: AppTheme.textMuted, fontSize: 12),
                     isDense: true,
                     filled: true,
-                    fillColor: AppTheme.darkSurface1,
+                    fillColor: AppTheme.surface,
                     contentPadding: const EdgeInsets.symmetric(
                         horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       borderSide:
-                          const BorderSide(color: AppTheme.darkBorderSubtle),
+                          const BorderSide(color: AppTheme.border),
                     ),
                   ),
                 ),
@@ -603,8 +603,8 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                 onPressed: _submitCustomTag,
                 icon: const Icon(Icons.add_rounded, size: 18),
                 style: IconButton.styleFrom(
-                  backgroundColor: AppTheme.accentBlue,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: AppTheme.onMedia,
                 ),
               ),
             ],
@@ -623,31 +623,31 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           child: SizedBox(
             width: 16,
             height: 16,
-            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accentBlue),
+            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
           ),
         );
       case YoutubeVerificationState.verifiedOnline:
         return const Icon(Icons.verified_rounded, color: Colors.green);
       case YoutubeVerificationState.formatAccepted:
-        return const Icon(Icons.check_circle_outline_rounded, color: AppTheme.accentBlue);
+        return const Icon(Icons.check_circle_outline_rounded, color: AppTheme.primary);
       case YoutubeVerificationState.invalidFormat:
-        return const Icon(Icons.error_outline_rounded, color: AppTheme.accentRed);
+        return const Icon(Icons.error_outline_rounded, color: AppTheme.danger);
       case YoutubeVerificationState.unverified:
         return null;
     }
   }
 
   Color _getYoutubeBorderColor({bool isFocused = false}) {
-    if (widget.youtubeController.text.isEmpty) return isFocused ? AppTheme.accentRed : AppTheme.darkBorderSubtle;
+    if (widget.youtubeController.text.isEmpty) return isFocused ? AppTheme.danger : AppTheme.border;
     switch (_ytState) {
       case YoutubeVerificationState.verifiedOnline:
         return Colors.green;
       case YoutubeVerificationState.formatAccepted:
-        return AppTheme.accentBlue;
+        return AppTheme.primary;
       case YoutubeVerificationState.invalidFormat:
-        return AppTheme.accentRed;
+        return AppTheme.danger;
       default:
-        return isFocused ? AppTheme.accentRed : AppTheme.darkBorderSubtle;
+        return isFocused ? AppTheme.danger : AppTheme.border;
     }
   }
 
@@ -656,11 +656,11 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
       case YoutubeVerificationState.verifiedOnline:
         return Colors.green;
       case YoutubeVerificationState.formatAccepted:
-        return AppTheme.accentBlue;
+        return AppTheme.primary;
       case YoutubeVerificationState.invalidFormat:
-        return AppTheme.accentRed;
+        return AppTheme.danger;
       default:
-        return AppTheme.textMutedDark;
+        return AppTheme.textMuted;
     }
   }
 
@@ -675,10 +675,10 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceMd),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.accentRed.withValues(alpha: 0.12) : AppTheme.darkSurface1,
+          color: isSelected ? AppTheme.danger.withValues(alpha: 0.12) : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
-            color: isSelected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+            color: isSelected ? AppTheme.danger : AppTheme.border,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -692,21 +692,21 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
                   child: Text(
                     title,
                     style: TextStyle(
-                      color: isSelected ? AppTheme.textPrimaryDark : AppTheme.textSecondaryDark,
+                      color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                if (isSelected) const Icon(Icons.check_circle_rounded, color: AppTheme.accentRed, size: 16),
+                if (isSelected) const Icon(Icons.check_circle_rounded, color: AppTheme.danger, size: 16),
               ],
             ),
             const SizedBox(height: 4),
             Text(
               subtitle,
               style: const TextStyle(
-                color: AppTheme.textMutedDark,
+                color: AppTheme.textMuted,
                 fontSize: 11,
               ),
             ),

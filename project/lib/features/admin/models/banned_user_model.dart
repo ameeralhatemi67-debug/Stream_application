@@ -1,6 +1,6 @@
 /// A `banned_users` row (see
 /// supabase/migrations/20260830170000_banned_users.sql), joined with the
-/// banned profile's display info for the "Banned Accounts" admin manager
+/// banned profile's display info for the "Banned Accounts"admin manager
 /// (Cluster 4 Task 16). Row presence = banned; there is no separate
 /// `isActive` flag -- unbanning deletes the row, same pattern as
 /// `chat_muted_users`.

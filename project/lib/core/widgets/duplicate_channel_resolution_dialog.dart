@@ -57,28 +57,28 @@ class _DuplicateChannelResolutionDialogState
     final isAr = lang == 'ar';
 
     return AlertDialog(
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.darkBorderSubtle, width: 1.2),
+        side: const BorderSide(color: AppTheme.border, width: 1.2),
       ),
       title: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.accentAmber.withValues(alpha: 0.15),
+              color: AppTheme.warning.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
             child: const Icon(Icons.warning_amber_rounded,
-                color: AppTheme.accentAmber, size: 22),
+                color: AppTheme.warning, size: 22),
           ),
           const SizedBox(width: AppTheme.spaceMd),
           Expanded(
             child: Text(
               isAr ? 'تم رصد أكثر من قناة للبث' : 'Multiple Channels Detected',
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -97,7 +97,7 @@ class _DuplicateChannelResolutionDialogState
                   ? 'يمكن لكل ناشر امتلاك قناة واحدة فقط. يرجى اختيار القناة التي ترغب بالاحتفاظ بها كقناتك الأساسية، وسيتم حذف القناة الأخرى تلقائياً.'
                   : 'You can only own one personal broadcaster channel. Please select which channel you want to keep. The unselected channel will be deleted permanently.',
               style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 12.5,
                 height: 1.4,
               ),
@@ -118,13 +118,13 @@ class _DuplicateChannelResolutionDialogState
                     padding: const EdgeInsets.all(AppTheme.spaceMd),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.accentBlue.withValues(alpha: 0.12)
-                          : AppTheme.darkSurface2,
+                          ? AppTheme.primary.withValues(alpha: 0.12)
+                          : AppTheme.surfaceAlt,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       border: Border.all(
                         color: isSelected
-                            ? AppTheme.accentBlue
-                            : AppTheme.darkBorderSubtle,
+                            ? AppTheme.primary
+                            : AppTheme.border,
                         width: isSelected ? 1.8 : 1.0,
                       ),
                     ),
@@ -132,7 +132,7 @@ class _DuplicateChannelResolutionDialogState
                       children: [
                         CircleAvatar(
                           radius: 20,
-                          backgroundColor: AppTheme.darkSurface3,
+                          backgroundColor: AppTheme.surface,
                           backgroundImage:
                               _getAvatarProvider(channel.avatarUrl),
                         ),
@@ -144,7 +144,7 @@ class _DuplicateChannelResolutionDialogState
                               Text(
                                 channel.getLocalizedName(lang),
                                 style: const TextStyle(
-                                  color: AppTheme.textPrimaryDark,
+                                  color: AppTheme.textPrimary,
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -153,7 +153,7 @@ class _DuplicateChannelResolutionDialogState
                               Text(
                                 channel.getLocalizedTitle(lang),
                                 style: const TextStyle(
-                                  color: AppTheme.textSecondaryDark,
+                                  color: AppTheme.textSecondary,
                                   fontSize: 11.5,
                                 ),
                               ),
@@ -161,7 +161,7 @@ class _DuplicateChannelResolutionDialogState
                               Text(
                                 channel.organizationEn,
                                 style: const TextStyle(
-                                  color: AppTheme.accentBlue,
+                                  color: AppTheme.primary,
                                   fontSize: 11,
                                 ),
                               ),
@@ -175,17 +175,17 @@ class _DuplicateChannelResolutionDialogState
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isSelected
-                                  ? AppTheme.accentBlue
-                                  : AppTheme.textMutedDark,
+                                  ? AppTheme.primary
+                                  : AppTheme.textMuted,
                               width: 2,
                             ),
                             color: isSelected
-                                ? AppTheme.accentBlue
+                                ? AppTheme.primary
                                 : Colors.transparent,
                           ),
                           child: isSelected
                               ? const Icon(Icons.check_rounded,
-                                  color: Colors.white, size: 16)
+                                  color: AppTheme.onMedia, size: 16)
                               : null,
                         ),
                       ],
@@ -200,8 +200,8 @@ class _DuplicateChannelResolutionDialogState
       actions: [
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.accentBlue,
-            foregroundColor: Colors.white,
+            backgroundColor: AppTheme.primary,
+            foregroundColor: AppTheme.onMedia,
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
           ),
           onPressed: _selectedStreamerId == null

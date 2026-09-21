@@ -37,7 +37,7 @@ import '../../features/discovery/models/academic_category_model.dart';
 import '../models/device_session_model.dart';
 import '../config/feature_flags.dart';
 import '../../features/live_stream/services/stream_decay_engine.dart';
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, kDebugMode;
+import 'package:flutter/foundation.dart'show defaultTargetPlatform, kDebugMode;
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -85,7 +85,7 @@ class AppProvider extends ChangeNotifier {
   // management tab) on top of the existing isAdminUser check.
   bool _isMasterAdminFromRoles = false;
   // organization_id(s) this user is org_owner/org_co_owner for -- the
-  // roadmap's "Permitted Admin" tier (see ADR-007). Disjoint from
+  // roadmap's "Permitted Admin"tier (see ADR-007). Disjoint from
   // isAdminUser: a Permitted Admin is not admin-tier, so AdminHubScreen's
   // guard still excludes them -- they get the org-scoped surface in
   // OrgAdminScreen instead (v0.8 Checkpoint 3 Phase 1).
@@ -120,7 +120,7 @@ class AppProvider extends ChangeNotifier {
   // Academic Categories Taxonomy (Cluster 3 Task 10/11) -- see
   // ensureAcademicCategoriesLoaded/academicCategories. Empty list falls back
   // to AcademicCategoryModel.defaultPool via the getter, covering both
-  // "not loaded yet" and "Supabase unreachable".
+  // "not loaded yet"and "Supabase unreachable".
   List<AcademicCategoryModel> _academicCategories = [];
   bool _academicCategoriesLoaded = false;
 
@@ -164,7 +164,7 @@ class AppProvider extends ChangeNotifier {
   // Streamer Silence / Mic Mute (Cluster 1 Task 1) -- set by the broadcaster
   // side (PhoneBroadcastScreen, from RtmpPublishEngine.isMicSilent), read by
   // the viewer side to decide whether to show the "Streamer Microphone
-  // Muted" badge.
+  // Muted"badge.
   bool _isStreamerMicMuted = false;
 
   bool _isStreamerModeEnabled =
@@ -280,7 +280,7 @@ class AppProvider extends ChangeNotifier {
   /// Picks up any session Supabase already restored on cold start, then
   /// listens for further auth changes (sign-in completing after the OAuth
   /// redirect, token refresh, sign-out). Swallows the "Supabase not
-  /// initialized" assertion so widget/unit tests that construct AppProvider
+  /// initialized"assertion so widget/unit tests that construct AppProvider
   /// without calling Supabase.initialize() keep working unaffected.
   void _initAuthListener() {
     try {
@@ -921,9 +921,9 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Director-panel "search/add @username" action -- admits a viewer
+  /// Director-panel "search/add @username"action -- admits a viewer
   /// directly, distinct from addStreamWhitelistHandle (which only affects
-  /// future streams' pre-approval, not the current live attendee list).
+  /// future streams'pre-approval, not the current live attendee list).
   void admitAttendeeByHandle(String handle) {
     final normalized = handle.trim();
     if (normalized.isEmpty) return;
@@ -1006,8 +1006,8 @@ class AppProvider extends ChangeNotifier {
               type: NotificationType.streamerApplicationApproved,
               streamerId: user.id,
               streamerName: _googleUserName ?? 'Broadcaster',
-              titleEn: '🎉 Broadcaster Application Approved!',
-              titleAr: '🎉 تم قبول طلب توثيق البث!',
+              titleEn: 'Broadcaster Application Approved!',
+              titleAr: 'تم قبول طلب توثيق البث!',
               bodyEn:
                   'Congratulations! Your broadcaster application was approved by the administration. Streamer Studio is now unlocked!',
               bodyAr:
@@ -1027,8 +1027,8 @@ class AppProvider extends ChangeNotifier {
               type: NotificationType.systemAlert,
               streamerId: user.id,
               streamerName: _googleUserName ?? 'User',
-              titleEn: 'ℹ️ Application Status Update',
-              titleAr: 'ℹ️ تحديث حالة الطلب',
+              titleEn: 'Application Status Update',
+              titleAr: 'تحديث حالة الطلب',
               bodyEn:
                   'Your broadcaster application was removed. You can submit a new application anytime.',
               bodyAr:
@@ -1047,8 +1047,8 @@ class AppProvider extends ChangeNotifier {
               type: NotificationType.streamerApplicationRejected,
               streamerId: user.id,
               streamerName: _googleUserName ?? 'User',
-              titleEn: '📋 Broadcaster Application Status Update',
-              titleAr: '📋 تحديث بخصوص طلب التوثيق الأكاديمي',
+              titleEn: 'Broadcaster Application Status Update',
+              titleAr: 'تحديث بخصوص طلب التوثيق الأكاديمي',
               bodyEn:
                   'We could not approve your application at this time: "$reason". You are welcome to re-apply!',
               bodyAr:
@@ -1933,7 +1933,7 @@ class AppProvider extends ChangeNotifier {
                 ? Icons.workspace_premium_rounded
                 : Icons.notifications_active_rounded),
         accentColor:
-            item.isLiveAlert ? AppTheme.accentRed : AppTheme.accentBlue,
+            item.isLiveAlert ? AppTheme.danger : AppTheme.primary,
         actionLabel: item.streamId != null ? (isAr ? 'مشاهدة' : 'Watch') : null,
       );
     }
@@ -2014,7 +2014,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   /// Recordings this streamer actually has. An empty list means "nothing
-  /// recorded yet" and the UI shows an empty state -- it used to fall back to
+  /// recorded yet"and the UI shows an empty state -- it used to fall back to
   /// a compiled-in sample archive (P2 truthful data).
   List<VodModel> getVodsForStreamer(String streamerId) =>
       _streamerVods[streamerId] ?? const [];
@@ -2133,9 +2133,9 @@ class AppProvider extends ChangeNotifier {
 
   /// Updates a viewer's own display name/avatar -- distinct from
   /// submitBroadcasterApplication, which is the broadcaster onboarding
-  /// flow. Settings' "Edit Profile" action must route here for non-verified
+  /// flow. Settings' "Edit Profile"action must route here for non-verified
   /// viewers rather than opening BroadcasterApplicationSheet (issue_log.md:
-  /// "clicking 'Edit account Profile' as a non verified streamer should not
+  /// "clicking 'Edit account Profile'as a non verified streamer should not
   /// be an option, as it opened the streamer onboarding").
   Future<void> updateViewerProfile({
     String? nameEn,
@@ -2185,7 +2185,7 @@ class AppProvider extends ChangeNotifier {
   /// redirect completes.
   Future<void> loginWithGoogle() => _authService.signInWithGoogle();
 
-  /// Uploads binary media (avatar/banner) to Supabase Storage 'streamer-assets' bucket
+  /// Uploads binary media (avatar/banner) to Supabase Storage 'streamer-assets'bucket
   Future<String?> uploadStreamerMediaAsset({
     required String fileName,
     required Uint8List fileBytes,
@@ -2673,7 +2673,7 @@ class AppProvider extends ChangeNotifier {
       if (videoId == null) {
         _amirAutoDetectError =
             'No active live stream found on Amir Al-Hatemi\'s channel. '
-            'Make sure OBS is streaming and you\'ve clicked "Go Live" in YouTube Studio.';
+            'Make sure OBS is streaming and you\'ve clicked "Go Live"in YouTube Studio.';
         return false;
       }
 
@@ -2875,16 +2875,16 @@ class AppProvider extends ChangeNotifier {
           streamerId: targetStreamerId,
           streamerName: streamerNameEn,
           titleEn: isAudio
-              ? '🎙️ Live Audio Stage Started'
-              : '🔴 Live Broadcast Started',
+              ? 'Live Audio Stage Started'
+              : 'Live Broadcast Started',
           titleAr:
-              isAudio ? '🎙️ مساحة صوتية مباشرة' : '🔴 بدأ البث المباشر الآن',
+              isAudio ? 'مساحة صوتية مباشرة' : 'بدأ البث المباشر الآن',
           bodyEn: isAudio
               ? 'Live Audio Stage with $streamerNameEn: "$_customLiveTitle" .. Join in!'
-              : '🔴 $streamerNameEn is live now: "$_customLiveTitle" .. Join and interact!',
+              : ' $streamerNameEn is live now: "$_customLiveTitle" .. Join and interact!',
           bodyAr: isAudio
-              ? '🎙️ مساحة صوتية مباشرة مع $streamerNameAr: «$_customLiveTitle».. استمع وشارك برأيك'
-              : '🔴 $streamerNameAr بدأ بثاً مباشراً الآن: «$_customLiveTitle».. حيّاك شاركنا وتفاعل!',
+              ? 'مساحة صوتية مباشرة مع $streamerNameAr: «$_customLiveTitle».. استمع وشارك برأيك'
+              : ' $streamerNameAr بدأ بثاً مباشراً الآن: «$_customLiveTitle».. حيّاك شاركنا وتفاعل!',
           timestamp: DateTime.now(),
           streamId: _customYouTubeVideoId,
         ),
@@ -2921,7 +2921,7 @@ class AppProvider extends ChangeNotifier {
       _pendingKnockRequests.clear();
       _admittedAttendees.clear();
 
-      // 🌟 Check and push 1-Hour Watch Milestone Notification if user watched >= 60 min
+      //  Check and push 1-Hour Watch Milestone Notification if user watched >= 60 min
       WatchSessionTracker.onStreamEnded(
         'stream_live_992',
         onMilestoneReached: (spkId, spkName, duration) {
@@ -2931,8 +2931,8 @@ class AppProvider extends ChangeNotifier {
               type: NotificationType.watchMilestoneOneHour,
               streamerId: spkId.isNotEmpty ? spkId : targetStreamerId,
               streamerName: spkName,
-              titleEn: '🌟 Thank you for watching!',
-              titleAr: '🌟 شكراً لوقتك الثمين!',
+              titleEn: 'Thank you for watching!',
+              titleAr: 'شكراً لوقتك الثمين!',
               bodyEn:
                   'We loved having you for over an hour in $spkName\'s broadcast. We hope it was valuable and inspiring!',
               bodyAr:
@@ -2964,8 +2964,8 @@ class AppProvider extends ChangeNotifier {
             type: NotificationType.orgStreamerLiveStatus,
             streamerId: orgId,
             streamerName: 'Dalilk 4 IELTS',
-            titleEn: '📡 Stream Session Concluded',
-            titleAr: '📡 انتهت جلسة البث المباشر',
+            titleEn: 'Stream Session Concluded',
+            titleAr: 'انتهت جلسة البث المباشر',
             bodyEn:
                 'Faculty member concluded their live session at Dalilk Auditorium.',
             bodyAr: 'أنهى عضو الكادر جلسته التدريبية المباشرة في مدرج دليلك.',
@@ -3357,7 +3357,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Debug-only tool (the admin "Testing tools" tab is gated by kDebugMode):
+  /// Debug-only tool (the admin "Testing tools"tab is gated by kDebugMode):
   /// pushes one notification through the real pipeline so its rendering can be
   /// checked. It announces the signed-in account's own channel -- it used to
   /// name a hardcoded developer identity (P1.6/P2).
@@ -3507,8 +3507,8 @@ class AppProvider extends ChangeNotifier {
         type: NotificationType.streamerApplicationApproved,
         streamerId: newStreamer.streamerId,
         streamerName: app.applicantNameEn,
-        titleEn: '🎉 Broadcaster Application Approved!',
-        titleAr: '🎉 أهلاً بك في نخبة المذيعين!',
+        titleEn: 'Broadcaster Application Approved!',
+        titleAr: 'أهلاً بك في نخبة المذيعين!',
         bodyEn:
             'Congratulations ${app.applicantNameEn}! Your broadcaster application has been approved and verified on the map.',
         bodyAr:
@@ -3554,8 +3554,8 @@ class AppProvider extends ChangeNotifier {
           type: NotificationType.streamerApplicationRejected,
           streamerId: applicationId,
           streamerName: app.applicantNameEn,
-          titleEn: '📋 Broadcaster Application Status Update',
-          titleAr: '📋 تحديث بخصوص طلب التوثيق الأكاديمي',
+          titleEn: 'Broadcaster Application Status Update',
+          titleAr: 'تحديث بخصوص طلب التوثيق الأكاديمي',
           bodyEn:
               'Thank you for applying. We could not approve the application at this time: "$reason". You are welcome to re-apply anytime!',
           bodyAr:
@@ -3690,7 +3690,7 @@ class AppProvider extends ChangeNotifier {
       // application is approved, in that same session (see
       // approveBroadcasterApplication) -- nothing bulk-loads every real
       // organization on app start, so a Permitted Admin returning on a
-      // fresh session would otherwise hit "Organization not found" for
+      // fresh session would otherwise hit "Organization not found"for
       // their own real org even though RLS would let them manage it (v0.8
       // Checkpoint 3 Phase 1). Seed it from the real backend if missing.
       if (getStreamerById(orgId) == null) {
@@ -3791,7 +3791,7 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Looks up a profile by exact email, for the "grant a role" search field.
+  /// Looks up a profile by exact email, for the "grant a role"search field.
   Future<Map<String, dynamic>?> findProfileByEmail(String email) async {
     _adminDbService ??= await AdminDatabaseService.create();
     return _adminDbService!.findProfileByEmail(email);
@@ -3940,7 +3940,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   /// Deletes the reported message -- propagates to every viewer's live chat
-  /// via chat_messages' postgres_changes DELETE event, the same mechanism
+  /// via chat_messages'postgres_changes DELETE event, the same mechanism
   /// LiveChatController.deleteMessage uses; no separate broadcast needed
   /// since Realtime replicates the DELETE to every subscribed client
   /// regardless of which client issued it.
@@ -3973,7 +3973,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   /// Bans the reported sender platform-wide (Cluster 4 Task 14's "Ban
-  /// Platform-Wide" queue action) and resolves this report. Needs the
+  /// Platform-Wide"queue action) and resolves this report. Needs the
   /// sender's email, which chat_reports doesn't carry directly -- resolved
   /// via reportedEmail on the joined ChatReportModel row.
   Future<void> banChatSenderAndResolveReport(
@@ -4008,7 +4008,7 @@ class AppProvider extends ChangeNotifier {
   /// initState; safe to call repeatedly (only hits the backend once per app
   /// session, same caching shape as ensureChatReportsLoaded). Falls back to
   /// AcademicCategoryModel.defaultPool (via the getter above) when empty --
-  /// covers both "not loaded yet" and "Supabase unreachable".
+  /// covers both "not loaded yet"and "Supabase unreachable".
   Future<void> ensureAcademicCategoriesLoaded() async {
     if (_academicCategoriesLoaded) return;
     _academicCategoriesLoaded = true;
@@ -4080,7 +4080,7 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  /// "Inspect Broadcasters" drill-down data for one tag (Task 12).
+  /// "Inspect Broadcasters"drill-down data for one tag (Task 12).
   Future<List<TaggedBroadcasterSummary>> loadBroadcastersForTag(
       String tagName) async {
     _adminDbService ??= await AdminDatabaseService.create();
@@ -4276,7 +4276,7 @@ class AppProvider extends ChangeNotifier {
       );
     } catch (e) {
       // Task 18: the remote call failing (offline, PGRST205, RLS not yet
-      // migrated) must not surface "Failed to update map visibility" to the
+      // migrated) must not surface "Failed to update map visibility"to the
       // admin -- apply the toggle locally so the UI reflects the intended
       // state immediately, same resilience pattern as the academic
       // categories / stream_moderators fallbacks.
@@ -4348,7 +4348,7 @@ class AppProvider extends ChangeNotifier {
 
   /// Fetches (once per streamer/type per session) the approved card for a
   /// stream about to render a placeholder. A miss is cached as "no custom
-  /// card" by simply leaving the key absent, so a streamer with no artwork
+  /// card"by simply leaving the key absent, so a streamer with no artwork
   /// does not re-query on every state change.
   Future<void> ensureApprovedPlaceholderLoaded(
     String streamerId,
@@ -4439,15 +4439,15 @@ class AppProvider extends ChangeNotifier {
 
   /// Streamer-side upload. Returns the created (or reused) submission, or
   /// null when there is no backend to record it in -- the caller shows the
-  /// "upload failed" toast in that case rather than pretending it queued.
+  /// "upload failed"toast in that case rather than pretending it queued.
   ///
   /// Task 4b: if these exact image bytes were already approved before (for
   /// this streamer, any slot), the upload is skipped entirely and the prior
-  /// approved record is reused -- no new 'pending' row is created, so
+  /// approved record is reused -- no new 'pending'row is created, so
   /// there's nothing for an admin to re-review. This is deliberately a
   /// client-side skip rather than trying to have a streamer's own upload
   /// insert as 'approved' -- the RLS insert policy only ever admits
-  /// status='pending' by design (see submitCustomPlaceholder's own comment
+  /// status='pending'by design (see submitCustomPlaceholder's own comment
   /// in AdminDatabaseService), so an already-vetted image is recognized by
   /// never re-entering the queue at all instead of bypassing that policy.
   Future<StreamerCustomPlaceholderModel?> submitCustomPlaceholder({
@@ -4520,7 +4520,7 @@ class AppProvider extends ChangeNotifier {
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.approveCustomPlaceholder(placeholder.id);
     // The approved artwork becomes live immediately, so refresh the playback
-    // cache entry rather than leaving a stale "no custom card" miss behind.
+    // cache entry rather than leaving a stale "no custom card"miss behind.
     _approvedPlaceholderUrls[_placeholderCacheKey(
             placeholder.streamerId, placeholder.placeholderType)] =
         placeholder.imageUrl;
@@ -4909,7 +4909,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   // =========================================================================
-  // 🔔 14 Humanized Notification Event Dispatchers (Saudi Arabic & English)
+  //  14 Humanized Notification Event Dispatchers (Saudi Arabic & English)
   // =========================================================================
 
   /// Trigger 6: Org Invite to Join Live as Guest Speaker
@@ -4924,8 +4924,8 @@ class AppProvider extends ChangeNotifier {
         id: 'notif_guest_inv_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.orgLiveGuestInvite,
         streamerName: orgNameEn,
-        titleEn: '🎤 Live Guest Speaker Invitation',
-        titleAr: '🎤 دعوة للمشاركة كمتحدث ضيف',
+        titleEn: 'Live Guest Speaker Invitation',
+        titleAr: 'دعوة للمشاركة كمتحدث ضيف',
         bodyEn:
             '$orgNameEn invited you as a guest speaker on their live broadcast: "$streamTitle". Tap to join the stage!',
         bodyAr:
@@ -4948,8 +4948,8 @@ class AppProvider extends ChangeNotifier {
         id: 'notif_aff_inv_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.orgAffiliationInvite,
         streamerName: orgNameEn,
-        titleEn: '🏛️ Faculty Affiliation Invitation',
-        titleAr: '🏛️ دعوة انضمام للكادر التعليمي',
+        titleEn: 'Faculty Affiliation Invitation',
+        titleAr: 'دعوة انضمام للكادر التعليمي',
         bodyEn:
             '$orgNameEn sent you an official invitation to join their accredited faculty roster.',
         bodyAr:
@@ -4972,8 +4972,8 @@ class AppProvider extends ChangeNotifier {
         id: 'notif_aff_rem_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.streamerRemovedFromOrg,
         streamerName: orgNameEn,
-        titleEn: 'ℹ️ Organization Affiliation Updated',
-        titleAr: 'ℹ️ تحديث الارتباط الأكاديمي',
+        titleEn: 'Organization Affiliation Updated',
+        titleAr: 'تحديث الارتباط الأكاديمي',
         bodyEn:
             'Your affiliation with $orgNameEn has concluded. Your independent channel and verified profile remain fully active.',
         bodyAr:
@@ -4994,8 +4994,8 @@ class AppProvider extends ChangeNotifier {
       AppNotificationModel(
         id: 'notif_adm_str_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.adminNoteToStreamer,
-        titleEn: '📩 Administrative Note from Streamer Team',
-        titleAr: '📩 رسالة إدارية من فريق المنصة',
+        titleEn: 'Administrative Note from Streamer Team',
+        titleAr: 'رسالة إدارية من فريق المنصة',
         bodyEn: 'Administrative guidance regarding your channel: "$noteEn"',
         bodyAr: 'توجيه إداري بخصوص قناتك وبثوثك: «$noteAr»',
         timestamp: DateTime.now(),
@@ -5014,8 +5014,8 @@ class AppProvider extends ChangeNotifier {
       AppNotificationModel(
         id: 'notif_adm_card_str_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.adminCardEditRequestStreamer,
-        titleEn: '✏️ Profile Card Update Requested',
-        titleAr: '✏️ مطلوب مراجعة بيانات البطاقة التعريفية',
+        titleEn: 'Profile Card Update Requested',
+        titleAr: 'مطلوب مراجعة بيانات البطاقة التعريفية',
         bodyEn:
             'Please update your profile details ($fieldsEn) to match verification standards.',
         bodyAr:
@@ -5040,8 +5040,8 @@ class AppProvider extends ChangeNotifier {
         id: 'notif_adm_org_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.adminNoteToOrg,
         streamerName: orgNameEn,
-        titleEn: '📩 Administrative Message for $orgNameEn',
-        titleAr: '📩 رسالة إدارية موجهة لـ $orgNameAr',
+        titleEn: 'Administrative Message for $orgNameEn',
+        titleAr: 'رسالة إدارية موجهة لـ $orgNameAr',
         bodyEn: 'Message from platform administration: "$noteEn"',
         bodyAr: 'رسالة إدارية موجهة لإدارة المنظمة: «$noteAr»',
         timestamp: DateTime.now(),
@@ -5063,8 +5063,8 @@ class AppProvider extends ChangeNotifier {
         id: 'notif_adm_card_org_${DateTime.now().millisecondsSinceEpoch}',
         type: NotificationType.adminCardEditRequestOrg,
         streamerName: orgNameEn,
-        titleEn: '✏️ Campus Branch Details Review',
-        titleAr: '✏️ إشعار تنظيمي لتحديث بيانات المدرج',
+        titleEn: 'Campus Branch Details Review',
+        titleAr: 'إشعار تنظيمي لتحديث بيانات المدرج',
         bodyEn:
             'Please review and update location specifications for branch "$branchNameEn".',
         bodyAr:
@@ -5092,9 +5092,9 @@ class AppProvider extends ChangeNotifier {
         type: NotificationType.newVodUpload,
         streamerId: streamerId,
         streamerName: streamerNameEn,
-        titleEn: '🎬 New Lecture Added by $streamerNameEn',
-        titleAr: '🎬 محاضرة جديدة أضافها $streamerNameAr',
-        bodyEn: 'New lecture: "$vodTitleEn" is now available to watch!',
+        titleEn: 'New Lecture Added by $streamerNameEn',
+        titleAr: 'محاضرة جديدة أضافها $streamerNameAr',
+        bodyEn: 'New lecture: "$vodTitleEn"is now available to watch!',
         bodyAr: 'فيديو ومحاضرة جديدة: «$vodTitleAr».. شاهدها الآن واستفد!',
         timestamp: DateTime.now(),
         actionUrl: '/profile/$streamerId',

@@ -39,7 +39,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.error_select_org'.tr()),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
       return;
@@ -49,7 +49,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.error_note_empty'.tr()),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
       return;
@@ -75,7 +75,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.submitted_toast'.tr()),
-          backgroundColor: AppTheme.accentGreen,
+          backgroundColor: AppTheme.success,
         ),
       );
     } catch (e) {
@@ -83,7 +83,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
-          backgroundColor: AppTheme.accentRed,
+          backgroundColor: AppTheme.danger,
         ),
       );
     } finally {
@@ -104,7 +104,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
         bottom: MediaQuery.of(context).viewInsets.bottom + 20,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
@@ -118,7 +118,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBorderSubtle,
+                  color: AppTheme.border,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -128,12 +128,12 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             // Header Title
             Row(
               children: [
-                const Icon(Icons.business_rounded, color: AppTheme.accentRed, size: 22),
+                const Icon(Icons.business_rounded, color: AppTheme.danger, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   'affiliation_modal.title'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimaryDark,
+                    color: AppTheme.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -144,7 +144,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             Text(
               'affiliation_modal.subtitle'.tr(),
               style: const TextStyle(
-                color: AppTheme.textSecondaryDark,
+                color: AppTheme.textSecondary,
                 fontSize: 12,
                 height: 1.35,
               ),
@@ -155,7 +155,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             Text(
               'affiliation_modal.select_org'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -171,13 +171,13 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.accentRed.withValues(alpha: 0.12)
-                        : AppTheme.darkSurface2,
+                        ? AppTheme.danger.withValues(alpha: 0.12)
+                        : AppTheme.surfaceAlt,
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(
                       color: isSelected
-                          ? AppTheme.accentRed
-                          : AppTheme.darkBorderSubtle,
+                          ? AppTheme.danger
+                          : AppTheme.border,
                       width: isSelected ? 1.5 : 1.0,
                     ),
                   ),
@@ -195,7 +195,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                             Text(
                               context.locale.languageCode == 'ar' ? org.fullNameAr : org.fullNameEn,
                               style: const TextStyle(
-                                color: AppTheme.textPrimaryDark,
+                                color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -203,7 +203,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                             Text(
                               '${org.venues.length} Campus Locations • ${org.affiliatedSpeakers.length} Affiliated Speakers',
                               style: const TextStyle(
-                                color: AppTheme.textMutedDark,
+                                color: AppTheme.textMuted,
                                 fontSize: 11,
                               ),
                             ),
@@ -212,7 +212,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                       ),
                       if (isSelected)
                         const Icon(Icons.check_circle_rounded,
-                            color: AppTheme.accentRed, size: 20),
+                            color: AppTheme.danger, size: 20),
                     ],
                   ),
                 ),
@@ -224,21 +224,21 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             // Proposed Title / Role
             TextField(
               controller: _roleController,
-              style: const TextStyle(color: AppTheme.textPrimaryDark),
+              style: const TextStyle(color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: 'affiliation_modal.proposed_role'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+                labelStyle: const TextStyle(color: AppTheme.textSecondary),
                 hintText: 'affiliation_modal.proposed_role_hint'.tr(),
-                hintStyle: const TextStyle(color: AppTheme.textMutedDark),
+                hintStyle: const TextStyle(color: AppTheme.textMuted),
                 filled: true,
-                fillColor: AppTheme.darkSurface2,
+                fillColor: AppTheme.surfaceAlt,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                  borderSide: const BorderSide(color: AppTheme.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.accentRed),
+                  borderSide: const BorderSide(color: AppTheme.danger),
                 ),
               ),
             ),
@@ -248,22 +248,22 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             TextField(
               controller: _noteController,
               maxLines: 3,
-              style: const TextStyle(color: AppTheme.textPrimaryDark),
+              style: const TextStyle(color: AppTheme.textPrimary),
               decoration: InputDecoration(
                 labelText: 'affiliation_modal.intro_note'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondaryDark),
+                labelStyle: const TextStyle(color: AppTheme.textSecondary),
                 hintText: 'affiliation_modal.intro_note_hint'.tr(),
-                hintStyle: const TextStyle(color: AppTheme.textMutedDark),
+                hintStyle: const TextStyle(color: AppTheme.textMuted),
                 alignLabelWithHint: true,
                 filled: true,
-                fillColor: AppTheme.darkSurface2,
+                fillColor: AppTheme.surfaceAlt,
                 enabledBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.darkBorderSubtle),
+                  borderSide: const BorderSide(color: AppTheme.border),
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.accentRed),
+                  borderSide: const BorderSide(color: AppTheme.danger),
                 ),
               ),
             ),
@@ -274,8 +274,8 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accentRed,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.danger,
+                  foregroundColor: AppTheme.onMedia,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -288,7 +288,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                         width: 20,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: Colors.white,
+                          color: AppTheme.onMedia,
                         ),
                       )
                     : Row(

@@ -12,7 +12,7 @@ class ApplicationPendingScreen extends StatelessWidget {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -31,12 +31,12 @@ class ApplicationPendingScreen extends StatelessWidget {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: AppTheme.accentRed.withValues(alpha: 0.15),
+                      color: AppTheme.danger.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.accentRed, width: 2),
+                      border: Border.all(color: AppTheme.danger, width: 2),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.accentRed.withValues(alpha: 0.25),
+                          color: AppTheme.danger.withValues(alpha: 0.25),
                           blurRadius: 24,
                           offset: const Offset(0, 6),
                         ),
@@ -45,7 +45,7 @@ class ApplicationPendingScreen extends StatelessWidget {
                     child: const Icon(
                       Icons.hourglass_top_rounded,
                       size: 40,
-                      color: AppTheme.accentRed,
+                      color: AppTheme.danger,
                     ),
                   ),
                   const SizedBox(height: AppTheme.spaceLg),
@@ -53,7 +53,7 @@ class ApplicationPendingScreen extends StatelessWidget {
                   Text(
                     'wizard_pending.title'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -63,7 +63,7 @@ class ApplicationPendingScreen extends StatelessWidget {
                   Text(
                     'wizard_pending.subtitle'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.accentBlue,
+                      color: AppTheme.primary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -75,9 +75,9 @@ class ApplicationPendingScreen extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     decoration: BoxDecoration(
-                      color: AppTheme.darkSurface1,
+                      color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppTheme.darkBorderSubtle),
+                      border: Border.all(color: AppTheme.border),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,8 +109,8 @@ class ApplicationPendingScreen extends StatelessWidget {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.accentRed,
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.danger,
+                        foregroundColor: AppTheme.onMedia,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius:
@@ -158,7 +158,7 @@ class ApplicationPendingScreen extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 20, color: AppTheme.accentRed),
+        Icon(icon, size: 20, color: AppTheme.danger),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
@@ -167,7 +167,7 @@ class ApplicationPendingScreen extends StatelessWidget {
               Text(
                 title,
                 style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
+                  color: AppTheme.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.bold,
                 ),
@@ -176,7 +176,7 @@ class ApplicationPendingScreen extends StatelessWidget {
               Text(
                 desc,
                 style: const TextStyle(
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   fontSize: 11,
                   height: 1.35,
                 ),

@@ -19,8 +19,8 @@ enum StreamSourceType {
 ///
 /// Cluster 1 Task 4a added [startingSoon], [reconnecting] and [noAudioToken]
 /// so `StreamStatePlaceholderOverlay` can distinguish "the broadcast hasn't
-/// begun yet", "we lost the feed and are retrying" and "the audio token
-/// couldn't be synced" from the generic [offline]/[fallbackError] pair the
+/// begun yet", "we lost the feed and are retrying"and "the audio token
+/// couldn't be synced"from the generic [offline]/[fallbackError] pair the
 /// player adapters used to collapse all three into.
 enum StreamState {
   initializing,

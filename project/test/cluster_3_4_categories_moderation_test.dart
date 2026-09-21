@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
@@ -123,10 +124,10 @@ void main() {
       // field into labelEn/labelAr so live_chat_widget.dart can render the
       // gold ADMIN / cyan MOD pill with a proper bilingual label instead of
       // a hardcoded English string baked into the emoji.
-      expect(ChatSenderBadge.moderator.emoji, equals('🛡️'));
+      expect(ChatSenderBadge.moderator.icon, equals(Icons.shield));
       expect(ChatSenderBadge.moderator.labelEn, equals('MOD'));
       expect(ChatSenderBadge.moderator.labelAr, equals('مشرف البث'));
-      expect(ChatSenderBadge.admin.emoji, equals('👑'));
+      expect(ChatSenderBadge.admin.icon, equals(Icons.admin_panel_settings));
       expect(ChatSenderBadge.admin.labelEn, equals('ADMIN'));
       expect(ChatSenderBadge.admin.labelAr, equals('المشرف العام'));
     });

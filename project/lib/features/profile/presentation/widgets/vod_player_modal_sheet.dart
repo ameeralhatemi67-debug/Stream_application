@@ -53,7 +53,7 @@ class VodPlayerModalSheet extends StatelessWidget {
         maxHeight: MediaQuery.of(context).size.height * 0.9,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.darkSurface3,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       child: SafeArea(
@@ -69,7 +69,7 @@ class VodPlayerModalSheet extends StatelessWidget {
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBorderHighlight,
+                  color: AppTheme.borderStrong,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -90,7 +90,7 @@ class VodPlayerModalSheet extends StatelessWidget {
                         Text(
                           title,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
@@ -101,7 +101,7 @@ class VodPlayerModalSheet extends StatelessWidget {
                         Text(
                           '$broadcasterName ${organization.isNotEmpty ? "• $organization" : ""}',
                           style: const TextStyle(
-                            color: AppTheme.accentBlue,
+                            color: AppTheme.primary,
                             fontSize: 12,
                           ),
                           maxLines: 1,
@@ -111,7 +111,7 @@ class VodPlayerModalSheet extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondaryDark),
+                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -140,32 +140,32 @@ class VodPlayerModalSheet extends StatelessWidget {
                         _buildStatChip(
                           icon: Icons.timer_outlined,
                           label: vod.formattedDuration,
-                          color: AppTheme.accentPurple,
+                          color: AppTheme.accent,
                         ),
                         const SizedBox(width: AppTheme.spaceSm),
                         _buildStatChip(
                           icon: Icons.calendar_today_outlined,
                           label: vod.recordedDate,
-                          color: AppTheme.textSecondaryDark,
+                          color: AppTheme.textSecondary,
                         ),
                         const SizedBox(width: AppTheme.spaceSm),
                         _buildStatChip(
                           icon: Icons.visibility_outlined,
                           label: '${vod.viewCount} ${'profile.views'.tr()}',
-                          color: AppTheme.accentGreen,
+                          color: AppTheme.success,
                         ),
                       ],
                     ),
 
                     const SizedBox(height: AppTheme.spaceLg),
-                    const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+                    const Divider(color: AppTheme.border, height: 1),
                     const SizedBox(height: AppTheme.spaceLg),
 
                     // Full Title & Description
                     Text(
                       title,
                       style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -174,7 +174,7 @@ class VodPlayerModalSheet extends StatelessWidget {
                     Text(
                       description,
                       style: const TextStyle(
-                        color: AppTheme.textSecondaryDark,
+                        color: AppTheme.textSecondary,
                         fontSize: 14,
                         height: 1.4,
                       ),
@@ -195,8 +195,8 @@ class VodPlayerModalSheet extends StatelessWidget {
                         icon: const Icon(Icons.open_in_new_rounded, size: 18),
                         label: Text('live.open_in_youtube'.tr()),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.accentRed,
-                          side: const BorderSide(color: AppTheme.accentRed),
+                          foregroundColor: AppTheme.danger,
+                          side: const BorderSide(color: AppTheme.danger),
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                       ),
@@ -224,8 +224,8 @@ class VodPlayerModalSheet extends StatelessWidget {
                                 ? 'profile.saved_lecture'.tr()
                                 : 'profile.save_lecture'.tr()),
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(color: AppTheme.darkBorderHighlight),
+                              foregroundColor: AppTheme.onMedia,
+                              side: const BorderSide(color: AppTheme.borderStrong),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
@@ -241,8 +241,8 @@ class VodPlayerModalSheet extends StatelessWidget {
                             icon: const Icon(Icons.share_outlined, size: 18),
                             label: Text('profile.share_vod'.tr()),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.accentBlue,
-                              foregroundColor: AppTheme.darkBgBase,
+                              backgroundColor: AppTheme.primary,
+                              foregroundColor: AppTheme.bg,
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),
@@ -295,9 +295,9 @@ class VodPlayerModalSheet extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-        border: Border.all(color: AppTheme.darkBorderSubtle),
+        border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

@@ -37,16 +37,16 @@ class StreamerGridCard extends StatelessWidget {
     Color borderColor;
     double borderWidth;
     if (isOwnCard) {
-      borderColor = Colors.white;
+      borderColor = AppTheme.onMedia;
       borderWidth = 1.8;
     } else if (isVideo) {
-      borderColor = AppTheme.accentRed.withValues(alpha: 0.8);
+      borderColor = AppTheme.danger.withValues(alpha: 0.8);
       borderWidth = 1.5;
     } else if (isAudio) {
-      borderColor = const Color(0xFFA1A1AA);
+      borderColor = AppTheme.textMuted;
       borderWidth = 1.5;
     } else {
-      borderColor = AppTheme.darkBorderSubtle;
+      borderColor = AppTheme.border;
       borderWidth = 1.0;
     }
 
@@ -63,7 +63,7 @@ class StreamerGridCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         child: Container(
           decoration: BoxDecoration(
-            color: AppTheme.darkSurface2,
+            color: AppTheme.surfaceAlt,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(
               color: borderColor,
@@ -72,16 +72,16 @@ class StreamerGridCard extends StatelessWidget {
             boxShadow: [
               if (isOwnCard)
                 BoxShadow(
-                  color: Colors.white.withValues(alpha: 0.3),
+                  color: AppTheme.onMedia.withValues(alpha: 0.3),
                   blurRadius: 10,
                   spreadRadius: 1,
                 )
               else
                 BoxShadow(
                   color: isVideo
-                      ? AppTheme.accentRed.withValues(alpha: 0.18)
+                      ? AppTheme.danger.withValues(alpha: 0.18)
                       : isAudio
-                          ? const Color(0xFFA1A1AA).withValues(alpha: 0.15)
+                          ? AppTheme.textMuted.withValues(alpha: 0.15)
                           : Colors.black26,
                   blurRadius: isLive ? 10 : 4,
                   offset: const Offset(0, 3),
@@ -92,7 +92,7 @@ class StreamerGridCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 🖼️ Top Banner: Flexible 45% height (BoxFit.cover cut-to-fit, NO morphing)
+              //  Top Banner: Flexible 45% height (BoxFit.cover cut-to-fit, NO morphing)
               Expanded(
                 flex: 45,
                 child: Stack(
@@ -103,20 +103,16 @@ class StreamerGridCard extends StatelessWidget {
                       fit: BoxFit.cover,
                       alignment: Alignment.center,
                       errorBuilder: (_, __, ___) => Container(
-                        color: AppTheme.darkSurface3,
+                        color: AppTheme.surface,
                         alignment: Alignment.center,
                         child: const Icon(Icons.image_not_supported_outlined,
-                            color: AppTheme.textMutedDark),
+                            color: AppTheme.textMuted),
                       ),
                     ),
                     // Subtle bottom gradient
                     Container(
                       decoration: const BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [Colors.transparent, Colors.black45],
-                        ),
+                        color: AppTheme.media,
                       ),
                     ),
                     // LIVE Badge at top left (Video vs Audio)
@@ -128,12 +124,12 @@ class StreamerGridCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2.5),
                           decoration: BoxDecoration(
-                            color: isVideo ? AppTheme.accentRed : const Color(0xFF3F3F46),
+                            color: isVideo ? AppTheme.danger : AppTheme.media,
                             borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                             border: Border.all(
                               color: isVideo
-                                  ? AppTheme.accentRed.withValues(alpha: 0.6)
-                                  : AppTheme.darkBorderSubtle,
+                                  ? AppTheme.danger.withValues(alpha: 0.6)
+                                  : AppTheme.border,
                               width: 0.8,
                             ),
                           ),
@@ -143,7 +139,7 @@ class StreamerGridCard extends StatelessWidget {
                               Icon(
                                 isVideo ? Icons.videocam_rounded : Icons.mic_rounded,
                                 size: 10,
-                                color: Colors.white,
+                                color: AppTheme.onMedia,
                               ),
                               const SizedBox(width: 3.5),
                               Text(
@@ -151,7 +147,7 @@ class StreamerGridCard extends StatelessWidget {
                                     ? 'feed.badge_live'.tr()
                                     : 'live.audio_live_indicator'.tr(),
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.onMedia,
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.5,
@@ -161,7 +157,7 @@ class StreamerGridCard extends StatelessWidget {
                           ),
                         ),
                       ),
-                    // ✨ "Your Channel / قناتك" Badge at top right
+                    //  "Your Channel / قناتك"Badge at top right
                     if (isOwnCard)
                       Positioned(
                         top: 6,
@@ -170,9 +166,9 @@ class StreamerGridCard extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 2.5),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.8),
+                            color: AppTheme.media.withValues(alpha: 0.8),
                             borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                            border: Border.all(color: Colors.white, width: 1.0),
+                            border: Border.all(color: AppTheme.onMedia, width: 1.0),
                           ),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
@@ -183,7 +179,7 @@ class StreamerGridCard extends StatelessWidget {
                               Text(
                                 langCode == 'ar' ? 'قناتك' : 'Your Channel',
                                 style: const TextStyle(
-                                  color: Colors.white,
+                                  color: AppTheme.onMedia,
                                   fontSize: 9.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -196,7 +192,7 @@ class StreamerGridCard extends StatelessWidget {
                 ),
               ),
 
-              // 📝 Bottom Content: Flexible 62% height with zero overflow risk
+              //  Bottom Content: Flexible 62% height with zero overflow risk
               Expanded(
                 flex: 55,
                 child: Padding(
@@ -216,14 +212,14 @@ class StreamerGridCard extends StatelessWidget {
                               shape: BoxShape.circle,
                               border: Border.all(
                                 color: isLive
-                                    ? AppTheme.accentRed
-                                    : AppTheme.darkBorderHighlight,
+                                    ? AppTheme.danger
+                                    : AppTheme.borderStrong,
                                 width: 1.2,
                               ),
                             ),
                             child: CircleAvatar(
                               radius: 20,
-                              backgroundColor: AppTheme.darkSurface3,
+                              backgroundColor: AppTheme.surface,
                               backgroundImage:
                                   _getImageProvider(streamer.avatarUrl),
                               onBackgroundImageError: (_, __) {},
@@ -241,7 +237,7 @@ class StreamerGridCard extends StatelessWidget {
                                       child: Text(
                                         streamer.getLocalizedName(langCode),
                                         style: const TextStyle(
-                                          color: AppTheme.textPrimaryDark,
+                                          color: AppTheme.textPrimary,
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -254,7 +250,7 @@ class StreamerGridCard extends StatelessWidget {
                                       const Icon(
                                         Icons.verified_rounded,
                                         size: 12,
-                                        color: AppTheme.accentPurple,
+                                        color: AppTheme.accent,
                                       ),
                                     ],
                                   ],
@@ -262,7 +258,7 @@ class StreamerGridCard extends StatelessWidget {
                                 Text(
                                   streamer.getLocalizedTitle(langCode),
                                   style: const TextStyle(
-                                    color: AppTheme.textSecondaryDark,
+                                    color: AppTheme.textSecondary,
                                     fontSize: 9.5,
                                   ),
                                   maxLines: 1,
@@ -274,7 +270,7 @@ class StreamerGridCard extends StatelessWidget {
                         ],
                       ),
 
-                      // 🏷️ Centered Tag Pills
+                      //  Centered Tag Pills
                       if (streamer.tags.isNotEmpty)
                         SizedBox(
                           height: 25,
@@ -290,16 +286,16 @@ class StreamerGridCard extends StatelessWidget {
                                 padding: const EdgeInsets.symmetric(
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
-                                  color: AppTheme.darkSurface1,
+                                  color: AppTheme.surface,
                                   borderRadius: BorderRadius.circular(5),
                                   border: Border.all(
-                                      color: AppTheme.darkBorderSubtle,
+                                      color: AppTheme.border,
                                       width: 0.8),
                                 ),
                                 child: Text(
                                   tag,
                                   style: const TextStyle(
-                                    color: AppTheme.accentBlue,
+                                    color: AppTheme.primary,
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.w600,
                                     height: 1.0,
@@ -310,12 +306,12 @@ class StreamerGridCard extends StatelessWidget {
                           ),
                         ),
 
-                      // 📍 Bottom Venue & Location Tag
+                      //  Bottom Venue & Location Tag
                       Container(
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 3),
                         decoration: BoxDecoration(
-                          color: AppTheme.darkSurface1,
+                          color: AppTheme.surface,
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusXs),
                         ),
@@ -324,14 +320,14 @@ class StreamerGridCard extends StatelessWidget {
                             const Icon(
                               Icons.location_on_outlined,
                               size: 10,
-                              color: AppTheme.accentRed,
+                              color: AppTheme.danger,
                             ),
                             const SizedBox(width: 3),
                             Expanded(
                               child: Text(
                                 '${streamer.getLocalizedCity(langCode)} • ${streamer.getLocalizedVenue(langCode)}',
                                 style: const TextStyle(
-                                  color: AppTheme.textMutedDark,
+                                  color: AppTheme.textMuted,
                                   fontSize: 9,
                                 ),
                                 maxLines: 1,

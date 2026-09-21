@@ -160,26 +160,25 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       final openSettings = await showDialog<bool>(
             context: context,
             builder: (dialogContext) => AlertDialog(
-              backgroundColor: AppTheme.darkSurface1,
-              title: const Text(
-                'Permission required',
-                style: TextStyle(color: Colors.white),
+              backgroundColor: AppTheme.surface,
+              title: Text('design_ui.permission_required'.tr(),
+                style: const TextStyle(color: AppTheme.onMedia),
               ),
               content: Text(
                 'The app needs ${kind == BroadcastPermissionKind.camera ? 'camera' : 'microphone'} access to broadcast. Please enable it in Settings.',
-                style: const TextStyle(color: AppTheme.textSecondaryDark),
+                style: const TextStyle(color: AppTheme.textSecondary),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogContext, false),
-                  child: const Text('Cancel'),
+                  child: Text('design_ui.cancel'.tr()),
                 ),
                 ElevatedButton(
                   onPressed: () => Navigator.pop(dialogContext, true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.accentBlue,
+                    backgroundColor: AppTheme.primary,
                   ),
-                  child: const Text('Open Settings'),
+                  child: Text('design_ui.open_settings'.tr()),
                 ),
               ],
             ),
@@ -304,7 +303,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     }).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppTheme.accentRed),
+        SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
       );
     });
   }
@@ -331,9 +330,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
     if (!_presetConfirmed) {
       return Scaffold(
-        backgroundColor: AppTheme.darkBgBase,
+        backgroundColor: AppTheme.bg,
         appBar: AppBar(
-          backgroundColor: AppTheme.darkSurface1,
+          backgroundColor: AppTheme.surface,
           title: Text('live.broadcast_from_phone'.tr()),
         ),
         body: _buildPresetPicker(),
@@ -342,20 +341,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
     if (_isFullscreen || isLandscape) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppTheme.media,
         body: _buildFullscreenLandscapeLayout(title, streamer, langCode),
       );
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.darkBgBase,
+      backgroundColor: AppTheme.bg,
       resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        backgroundColor: AppTheme.darkSurface1,
+        backgroundColor: AppTheme.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded,
-              color: Colors.white, size: 22),
+              color: AppTheme.onMedia, size: 22),
           tooltip: 'Back',
           onPressed: () => Navigator.of(context).pop(),
         ),
@@ -364,7 +363,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           children: [
             CircleAvatar(
               radius: 17,
-              backgroundColor: AppTheme.darkSurface3,
+              backgroundColor: AppTheme.surface,
               backgroundImage: _getAvatarProvider(streamer.avatarUrl),
             ),
             const SizedBox(width: 10),
@@ -382,7 +381,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontSize: 13.5,
                             fontWeight: FontWeight.bold,
                           ),
@@ -391,7 +390,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       if (streamer.isVerified) ...[
                         const SizedBox(width: 4),
                         const Icon(Icons.verified_rounded,
-                            size: 14, color: AppTheme.accentBlue),
+                            size: 14, color: AppTheme.primary),
                       ],
                     ],
                   ),
@@ -403,10 +402,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppTheme.accentRed.withValues(alpha: 0.2),
+                          color: AppTheme.danger.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: AppTheme.accentRed.withValues(alpha: 0.6),
+                            color: AppTheme.danger.withValues(alpha: 0.6),
                             width: 0.8,
                           ),
                         ),
@@ -417,15 +416,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               width: 5,
                               height: 5,
                               decoration: const BoxDecoration(
-                                color: AppTheme.accentRed,
+                                color: AppTheme.danger,
                                 shape: BoxShape.circle,
                               ),
                             ),
                             const SizedBox(width: 4),
-                            const Text(
-                              'LIVE',
-                              style: TextStyle(
-                                color: AppTheme.accentRed,
+                            Text('design_ui.live'.tr(),
+                              style: const TextStyle(
+                                color: AppTheme.danger,
                                 fontSize: 9,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.5,
@@ -441,7 +439,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppTheme.textSecondaryDark,
+                            color: AppTheme.textSecondary,
                             fontSize: 10.5,
                           ),
                         ),
@@ -458,16 +456,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             margin: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spaceSm, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.accentRed.withValues(alpha: 0.15),
+              color: AppTheme.danger.withValues(alpha: 0.15),
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppTheme.accentRed.withValues(alpha: 0.5),
+                color: AppTheme.danger.withValues(alpha: 0.5),
                 width: 1.2,
               ),
             ),
             child: IconButton(
               icon: const Icon(Icons.cell_tower_rounded,
-                  color: AppTheme.accentRed, size: 20),
+                  color: AppTheme.danger, size: 20),
               tooltip: 'Broadcaster Studio & End Stream',
               onPressed: () => LiveBroadcasterStudioSheet.show(context),
             ),
@@ -494,7 +492,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
                   ),
                   const VerticalDivider(
-                      width: 1, color: AppTheme.darkBorderSubtle),
+                      width: 1, color: AppTheme.border),
                   Expanded(
                     flex: isDesktop ? 35 : 42,
                     child: _buildCinemaTabPanel(langCode),
@@ -522,7 +520,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }) {
     if (_setupError != null) {
       return Container(
-        color: Colors.black,
+        color: AppTheme.media,
         alignment: Alignment.center,
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         child: Text(
@@ -540,21 +538,21 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       behavior: HitTestBehavior.opaque,
       onTap: () => setState(() => _controlsVisible = !_controlsVisible),
       child: Container(
-        color: Colors.black,
+        color: AppTheme.media,
         child: Stack(
           alignment: Alignment.center,
           children: [
             // 1. Camera Platform View (or Camera Off Audio Poster)
             if (_engine.isCameraOff)
               Container(
-                color: AppTheme.darkBgBase,
+                color: AppTheme.bg,
                 alignment: Alignment.center,
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     CircleAvatar(
                       radius: 34,
-                      backgroundColor: AppTheme.darkSurface3,
+                      backgroundColor: AppTheme.surface,
                       backgroundImage: _getAvatarProvider(streamer.avatarUrl),
                     ),
                     const SizedBox(height: 10),
@@ -562,21 +560,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: AppTheme.accentAmber.withValues(alpha: 0.2),
+                        color: AppTheme.warning.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                         border: Border.all(
-                            color: AppTheme.accentAmber.withValues(alpha: 0.5)),
+                            color: AppTheme.warning.withValues(alpha: 0.5)),
                       ),
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.videocam_off_rounded,
-                              size: 14, color: AppTheme.accentAmber),
-                          SizedBox(width: 6),
-                          Text(
-                            'Camera is Off • Audio Only',
-                            style: TextStyle(
-                              color: AppTheme.accentAmber,
+                          const Icon(Icons.videocam_off_rounded,
+                              size: 14, color: AppTheme.warning),
+                          const SizedBox(width: 6),
+                          Text('design_ui.camera_is_off_audio_only'.tr(),
+                            style: const TextStyle(
+                              color: AppTheme.warning,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -588,12 +585,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     TextButton.icon(
                       onPressed: () => _engine.toggleCamera(false),
                       icon: const Icon(Icons.videocam_rounded, size: 16),
-                      label: const Text('Turn On Camera',
-                          style: TextStyle(
+                      label: Text('design_ui.turn_on_camera'.tr(),
+                          style: const TextStyle(
                               fontSize: 12, fontWeight: FontWeight.bold)),
                       style: TextButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: AppTheme.darkSurface2,
+                        foregroundColor: AppTheme.onMedia,
+                        backgroundColor: AppTheme.surfaceAlt,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 6),
                       ),
@@ -611,9 +608,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             // 2. Loading indicator
             if (loading && !_engine.isCameraOff)
               const ColoredBox(
-                color: Colors.black,
+                color: AppTheme.media,
                 child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.accentRed),
+                  child: CircularProgressIndicator(color: AppTheme.danger),
                 ),
               ),
 
@@ -647,14 +644,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       right: AppTheme.spaceSm,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.65),
+                          color: AppTheme.media.withValues(alpha: 0.65),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
                           border: Border.all(color: Colors.white24, width: 0.8),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.more_vert_rounded,
-                              color: Colors.white, size: 20),
+                              color: AppTheme.onMedia, size: 20),
                           tooltip: 'Streamer Controls',
                           onPressed: () => _showStreamerControlsSheet(streamer),
                         ),
@@ -667,14 +664,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       right: AppTheme.spaceSm,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.65),
+                          color: AppTheme.media.withValues(alpha: 0.65),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
                           border: Border.all(color: Colors.white24, width: 0.8),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.fullscreen_rounded,
-                              color: Colors.white, size: 20),
+                              color: AppTheme.onMedia, size: 20),
                           tooltip: 'Fullscreen',
                           onPressed: _handleToggleFullscreen,
                         ),
@@ -688,7 +685,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         left: AppTheme.spaceSm,
                         child: _StatusPill(
                           label: 'MIC MUTED',
-                          color: AppTheme.accentRed,
+                          color: AppTheme.danger,
                         ),
                       ),
                   ],
@@ -769,12 +766,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
             return Container(
               decoration: const BoxDecoration(
-                color: AppTheme.darkSurface1,
+                color: AppTheme.surface,
                 borderRadius: BorderRadius.vertical(
                     top: Radius.circular(AppTheme.radiusLg)),
                 border: Border(
                   top:
-                      BorderSide(color: AppTheme.darkBorderHighlight, width: 1),
+                      BorderSide(color: AppTheme.borderStrong, width: 1),
                 ),
               ),
               padding: const EdgeInsets.symmetric(
@@ -789,21 +786,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         width: 36,
                         height: 4,
                         decoration: BoxDecoration(
-                          color: AppTheme.darkBorderHighlight,
+                          color: AppTheme.borderStrong,
                           borderRadius: BorderRadius.circular(2),
                         ),
                       ),
                     ),
                     const SizedBox(height: AppTheme.spaceMd),
-                    const Row(
+                    Row(
                       children: [
-                        Icon(Icons.tune_rounded,
-                            color: AppTheme.accentRed, size: 20),
-                        SizedBox(width: 8),
-                        Text(
-                          'Streamer Quick Controls',
-                          style: TextStyle(
-                            color: Colors.white,
+                        const Icon(Icons.tune_rounded,
+                            color: AppTheme.danger, size: 20),
+                        const SizedBox(width: 8),
+                        Text('design_ui.streamer_quick_controls'.tr(),
+                          style: const TextStyle(
+                            color: AppTheme.onMedia,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -812,23 +808,23 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
                     const SizedBox(height: AppTheme.spaceMd),
 
-                    // 1. 🎤 Microphone Mute Toggle
+                    // 1.  Microphone Mute Toggle
                     ListTile(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       ),
                       tileColor: isMuted
-                          ? AppTheme.accentRed.withValues(alpha: 0.15)
-                          : AppTheme.darkSurface2,
+                          ? AppTheme.danger.withValues(alpha: 0.15)
+                          : AppTheme.surfaceAlt,
                       leading: Icon(
                         isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
                         color:
-                            isMuted ? AppTheme.accentRed : AppTheme.accentGreen,
+                            isMuted ? AppTheme.danger : AppTheme.success,
                       ),
                       title: Text(
                         isMuted ? 'Unmute Microphone' : 'Mute Microphone',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontWeight: FontWeight.w600,
                             fontSize: 13.5),
                       ),
@@ -837,11 +833,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             ? 'Your mic is currently silent'
                             : 'Live audio input active',
                         style: const TextStyle(
-                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                            color: AppTheme.textSecondary, fontSize: 11),
                       ),
                       trailing: Switch(
                         value: !isMuted,
-                        activeThumbColor: AppTheme.accentGreen,
+                        activeThumbColor: AppTheme.success,
                         onChanged: (val) async {
                           await _engine.setMuted(!val);
                           setModalState(() {});
@@ -856,20 +852,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
                     const SizedBox(height: 8),
 
-                    // 2. 🔄 Flip Camera Toggle
+                    // 2.  Flip Camera Toggle
                     ListTile(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       ),
-                      tileColor: AppTheme.darkSurface2,
+                      tileColor: AppTheme.surfaceAlt,
                       leading: const Icon(Icons.flip_camera_ios_rounded,
-                          color: AppTheme.accentBlue),
+                          color: AppTheme.primary),
                       title: Text(
                         isFrontCamera
                             ? 'Switch to Back Camera'
                             : 'Switch to Front Camera',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontWeight: FontWeight.w600,
                             fontSize: 13.5),
                       ),
@@ -878,10 +874,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             ? 'Front selfie camera active'
                             : 'Rear environment camera active',
                         style: const TextStyle(
-                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                            color: AppTheme.textSecondary, fontSize: 11),
                       ),
                       trailing: const Icon(Icons.sync_rounded,
-                          color: AppTheme.textSecondaryDark, size: 18),
+                          color: AppTheme.textSecondary, size: 18),
                       onTap: isCameraOff
                           ? null
                           : () async {
@@ -892,28 +888,28 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
                     const SizedBox(height: 8),
 
-                    // 3. 📷 Close Camera (Video / Audio-Only Toggle)
+                    // 3.  Close Camera (Video / Audio-Only Toggle)
                     ListTile(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       ),
                       tileColor: isCameraOff
-                          ? AppTheme.accentAmber.withValues(alpha: 0.15)
-                          : AppTheme.darkSurface2,
+                          ? AppTheme.warning.withValues(alpha: 0.15)
+                          : AppTheme.surfaceAlt,
                       leading: Icon(
                         isCameraOff
                             ? Icons.videocam_off_rounded
                             : Icons.videocam_rounded,
                         color: isCameraOff
-                            ? AppTheme.accentAmber
-                            : AppTheme.accentBlue,
+                            ? AppTheme.warning
+                            : AppTheme.primary,
                       ),
                       title: Text(
                         isCameraOff
                             ? 'Turn On Camera'
                             : 'Close Camera (Audio-Only)',
                         style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontWeight: FontWeight.w600,
                             fontSize: 13.5),
                       ),
@@ -922,11 +918,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             ? 'Displaying profile poster to viewers'
                             : 'Live camera video stream active',
                         style: const TextStyle(
-                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                            color: AppTheme.textSecondary, fontSize: 11),
                       ),
                       trailing: Switch(
                         value: !isCameraOff,
-                        activeThumbColor: AppTheme.accentBlue,
+                        activeThumbColor: AppTheme.primary,
                         onChanged: (val) async {
                           await _engine.toggleCamera(!val);
                           setModalState(() {});
@@ -941,30 +937,30 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
                     const SizedBox(height: 8),
 
-                    // 4. 🔒 Private Attendees Admission (if private)
+                    // 4.  Private Attendees Admission (if private)
                     if (_appProvider.isActiveStreamPrivate) ...[
                       ListTile(
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
                         ),
-                        tileColor: AppTheme.darkSurface2,
+                        tileColor: AppTheme.surfaceAlt,
                         leading: const Icon(Icons.people_alt_rounded,
-                            color: AppTheme.accentAmber),
+                            color: AppTheme.warning),
                         title: Text(
                           'Manage Attendees (${_appProvider.admittedAttendees.length})',
                           style: const TextStyle(
-                              color: Colors.white,
+                              color: AppTheme.onMedia,
                               fontWeight: FontWeight.w600,
                               fontSize: 13.5),
                         ),
                         subtitle: Text(
                           '${_appProvider.pendingKnockRequests.length} waiting in admission queue',
                           style: const TextStyle(
-                              color: AppTheme.textSecondaryDark, fontSize: 11),
+                              color: AppTheme.textSecondary, fontSize: 11),
                         ),
                         trailing: const Icon(Icons.chevron_right_rounded,
-                            color: AppTheme.textSecondaryDark),
+                            color: AppTheme.textSecondary),
                         onTap: () {
                           Navigator.of(sheetContext).pop();
                           _showDirectorPanel(context, _appProvider);
@@ -973,28 +969,26 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       const SizedBox(height: 8),
                     ],
 
-                    // 5. 🗼 Studio & End Stream Shortcut
+                    // 5.  Studio & End Stream Shortcut
                     ListTile(
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       ),
-                      tileColor: AppTheme.accentRed.withValues(alpha: 0.1),
+                      tileColor: AppTheme.danger.withValues(alpha: 0.1),
                       leading: const Icon(Icons.cell_tower_rounded,
-                          color: AppTheme.accentRed),
-                      title: const Text(
-                        'Broadcaster Studio & End Stream',
-                        style: TextStyle(
-                            color: AppTheme.accentRed,
+                          color: AppTheme.danger),
+                      title: Text('design_ui.broadcaster_studio_end_stream'.tr(),
+                        style: const TextStyle(
+                            color: AppTheme.danger,
                             fontWeight: FontWeight.bold,
                             fontSize: 13.5),
                       ),
-                      subtitle: const Text(
-                        'Adjust stream settings or end broadcast session',
-                        style: TextStyle(
-                            color: AppTheme.textSecondaryDark, fontSize: 11),
+                      subtitle: Text('design_ui.adjust_stream_settings_or_end_broadcast_session'.tr(),
+                        style: const TextStyle(
+                            color: AppTheme.textSecondary, fontSize: 11),
                       ),
                       trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                          color: AppTheme.accentRed, size: 14),
+                          color: AppTheme.danger, size: 14),
                       onTap: () {
                         Navigator.of(sheetContext).pop();
                         LiveBroadcasterStudioSheet.show(context);
@@ -1042,9 +1036,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         vertical: 10.0,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.darkSurface1,
+        color: AppTheme.surface,
         border: Border(
-          bottom: BorderSide(color: AppTheme.darkBorderSubtle, width: 1),
+          bottom: BorderSide(color: AppTheme.border, width: 1),
         ),
       ),
       child: Column(
@@ -1063,7 +1057,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   child: Text(
                     effectiveTitle,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppTheme.onMedia,
                       fontSize: 14.5,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1076,7 +1070,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   _isDescriptionExpanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   size: 22,
                 ),
               ],
@@ -1092,16 +1086,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurface2,
+                    color: AppTheme.surfaceAlt,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: Border.all(color: AppTheme.darkBorderSubtle),
+                    border: Border.all(color: AppTheme.border),
                   ),
                   child: Text(
                     categoryModel.getLocalizedName(langCode),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: AppTheme.accentBlue,
+                      color: AppTheme.primary,
                       fontSize: 10.5,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1112,14 +1106,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.darkSurface2,
+                  color: AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Text(
                   _presetCompactLabel,
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 10.5,
                     fontWeight: FontWeight.w600,
                   ),
@@ -1127,14 +1121,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               ),
               const Spacer(),
               const Icon(Icons.remove_red_eye_rounded,
-                  size: 14, color: AppTheme.accentGreen),
+                  size: 14, color: AppTheme.success),
               const SizedBox(width: 4),
               // YouTube's concurrent-viewer figure, labelled as YouTube's and
               // never merged with this platform's presence count (P3).
               Text(
                 '${_appProvider.youTubeConcurrentViewers(streamer.streamerId) ?? '—'} on YouTube',
                 style: const TextStyle(
-                  color: AppTheme.textSecondaryDark,
+                  color: AppTheme.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w500,
                 ),
@@ -1145,12 +1139,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           // Row 3: Expanded Description & Organization (when expanded)
           if (_isDescriptionExpanded) ...[
             const SizedBox(height: 10),
-            const Divider(color: AppTheme.darkBorderSubtle, height: 1),
+            const Divider(color: AppTheme.border, height: 1),
             const SizedBox(height: 8),
             Text(
               description.isNotEmpty ? description : 'No description provided.',
               style: const TextStyle(
-                color: AppTheme.textPrimaryDark,
+                color: AppTheme.textPrimary,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -1159,12 +1153,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             Row(
               children: [
                 const Icon(Icons.account_balance_rounded,
-                    size: 13, color: AppTheme.textMutedDark),
+                    size: 13, color: AppTheme.textMuted),
                 const SizedBox(width: 4),
                 Text(
                   streamer.getLocalizedOrganization(langCode),
                   style: const TextStyle(
-                    color: AppTheme.textSecondaryDark,
+                    color: AppTheme.textSecondary,
                     fontSize: 11,
                   ),
                 ),
@@ -1180,7 +1174,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     final streamer = _appProvider.currentBroadcasterStreamer;
 
     return Container(
-      color: AppTheme.darkBgBase,
+      color: AppTheme.bg,
       child: Column(
         children: [
           Expanded(
@@ -1199,16 +1193,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           Container(
             height: 45,
             decoration: const BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               border: Border(
-                top: BorderSide(color: AppTheme.darkBorderSubtle, width: 0.8),
+                top: BorderSide(color: AppTheme.border, width: 0.8),
               ),
             ),
             child: TabBar(
               controller: _tabController,
-              indicatorColor: AppTheme.accentRed,
-              labelColor: AppTheme.accentRed,
-              unselectedLabelColor: AppTheme.textMutedDark,
+              indicatorColor: AppTheme.danger,
+              labelColor: AppTheme.danger,
+              unselectedLabelColor: AppTheme.textMuted,
               indicatorWeight: 2.0,
               tabs: [
                 Tab(
@@ -1283,7 +1277,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   Widget _buildSlidesTab(StreamerModel streamer, String langCode) {
     return Container(
-      color: AppTheme.darkBgBase,
+      color: AppTheme.bg,
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1291,7 +1285,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           Text(
             'live.slides_attached_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimaryDark,
+              color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -1300,37 +1294,36 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           Text(
             'live.slides_attached_subtitle'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondaryDark, fontSize: 12),
+                color: AppTheme.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           Expanded(
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: AppTheme.darkSurface1,
+                color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.darkBorderSubtle),
+                border: Border.all(color: AppTheme.border),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   const Icon(Icons.slideshow_rounded,
-                      size: 48, color: AppTheme.accentBlue),
+                      size: 48, color: AppTheme.primary),
                   const SizedBox(height: AppTheme.spaceMd),
                   Text(
                     streamer.getLocalizedTitle(langCode),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Presentation Deck (PDF Attached)',
+                  Text('design_ui.presentation_deck_pdf_attached'.tr(),
                     style:
-                        TextStyle(color: AppTheme.textMutedDark, fontSize: 11),
+                        const TextStyle(color: AppTheme.textMuted, fontSize: 11),
                   ),
                 ],
               ),
@@ -1352,12 +1345,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           Row(
             children: [
               const Icon(Icons.account_balance_rounded,
-                  color: AppTheme.accentBlue, size: 20),
+                  color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'live.venue_details_title'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimaryDark,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -1368,9 +1361,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceMd),
             decoration: BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.darkBorderSubtle),
+              border: Border.all(color: AppTheme.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1378,25 +1371,25 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 Text(
                   venueInfo.getLocalizedAddress(langCode),
                   style: const TextStyle(
-                      color: AppTheme.textPrimaryDark, fontSize: 12.5),
+                      color: AppTheme.textPrimary, fontSize: 12.5),
                 ),
-                const Divider(color: AppTheme.darkBorderSubtle, height: 16),
+                const Divider(color: AppTheme.border, height: 16),
                 Text(
                   'Hall: ${venueInfo.getLocalizedAuditorium(langCode)}',
                   style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 12),
+                      color: AppTheme.textSecondary, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Gate: ${venueInfo.getLocalizedGate(langCode)}',
                   style: const TextStyle(
-                      color: AppTheme.textSecondaryDark, fontSize: 12),
+                      color: AppTheme.textSecondary, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Capacity: ${venueInfo.seatingCapacity} Seats',
                   style: const TextStyle(
-                      color: AppTheme.accentGreen, fontSize: 12),
+                      color: AppTheme.success, fontSize: 12),
                 ),
               ],
             ),
@@ -1416,14 +1409,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           // 1. Fullscreen Camera Preview / Audio Poster
           if (_engine.isCameraOff)
             Container(
-              color: AppTheme.darkBgBase,
+              color: AppTheme.bg,
               alignment: Alignment.center,
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   CircleAvatar(
                     radius: 40,
-                    backgroundColor: AppTheme.darkSurface3,
+                    backgroundColor: AppTheme.surface,
                     backgroundImage: _getAvatarProvider(streamer.avatarUrl),
                   ),
                   const SizedBox(height: 12),
@@ -1431,15 +1424,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
                     decoration: BoxDecoration(
-                      color: AppTheme.accentAmber.withValues(alpha: 0.2),
+                      color: AppTheme.warning.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       border: Border.all(
-                          color: AppTheme.accentAmber.withValues(alpha: 0.5)),
+                          color: AppTheme.warning.withValues(alpha: 0.5)),
                     ),
-                    child: const Text(
-                      'Camera is Off • Audio Only',
-                      style: TextStyle(
-                        color: AppTheme.accentAmber,
+                    child: Text('design_ui.camera_is_off_audio_only'.tr(),
+                      style: const TextStyle(
+                        color: AppTheme.warning,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -1470,17 +1462,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spaceLg, vertical: 12),
                   decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [Colors.black87, Colors.transparent],
-                    ),
+                    color: AppTheme.media,
                   ),
                   child: Row(
                     children: [
                       IconButton(
                         icon: const Icon(Icons.fullscreen_exit_rounded,
-                            color: Colors.white, size: 24),
+                            color: AppTheme.onMedia, size: 24),
                         tooltip: 'Exit Fullscreen',
                         onPressed: _handleToggleFullscreen,
                       ),
@@ -1496,7 +1484,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: Colors.white,
+                            color: AppTheme.onMedia,
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1504,7 +1492,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       ),
                       IconButton(
                         icon: const Icon(Icons.more_vert_rounded,
-                            color: Colors.white, size: 22),
+                            color: AppTheme.onMedia, size: 22),
                         tooltip: 'Streamer Controls',
                         onPressed: () => _showStreamerControlsSheet(streamer),
                       ),
@@ -1514,8 +1502,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               ? Icons.chat_bubble_rounded
                               : Icons.chat_bubble_outline_rounded,
                           color: _isSideChatOpen
-                              ? AppTheme.accentRed
-                              : Colors.white,
+                              ? AppTheme.danger
+                              : AppTheme.onMedia,
                           size: 22,
                         ),
                         tooltip: 'Toggle Live Chat',
@@ -1539,9 +1527,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               width: 320,
               child: Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.darkBgBase.withValues(alpha: 0.88),
+                  color: AppTheme.bg.withValues(alpha: 0.88),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: AppTheme.darkBorderSubtle),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: ClipRRect(
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -1558,7 +1546,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     final handleController = TextEditingController();
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.darkSurface1,
+      backgroundColor: AppTheme.surface,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius:
@@ -1574,9 +1562,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '🔒 ${provider.admittedAttendees.length} Attendees',
+                    ' ${provider.admittedAttendees.length} Attendees',
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppTheme.onMedia,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1588,20 +1576,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         child: TextField(
                           controller: handleController,
                           style: const TextStyle(
-                              color: Colors.white, fontSize: 13),
+                              color: AppTheme.onMedia, fontSize: 13),
                           decoration: InputDecoration(
                             hintText: 'Search or add @username',
                             hintStyle: const TextStyle(
-                                color: AppTheme.textMutedDark, fontSize: 12),
+                                color: AppTheme.textMuted, fontSize: 12),
                             filled: true,
-                            fillColor: AppTheme.darkSurface2,
+                            fillColor: AppTheme.surfaceAlt,
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusSm),
                               borderSide: const BorderSide(
-                                  color: AppTheme.darkBorderSubtle),
+                                  color: AppTheme.border),
                             ),
                           ),
                           onSubmitted: (value) {
@@ -1614,7 +1602,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       const SizedBox(width: 8),
                       IconButton(
                         icon: const Icon(Icons.person_add_alt_1_rounded,
-                            color: AppTheme.accentGreen),
+                            color: AppTheme.success),
                         onPressed: () {
                           final value = handleController.text.trim();
                           if (value.isEmpty) return;
@@ -1628,13 +1616,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   ConstrainedBox(
                     constraints: const BoxConstraints(maxHeight: 280),
                     child: provider.admittedAttendees.isEmpty
-                        ? const Padding(
-                            padding: EdgeInsets.symmetric(
+                        ? Padding(
+                            padding: const EdgeInsets.symmetric(
                                 vertical: AppTheme.spaceMd),
-                            child: Text(
-                              'No attendees admitted yet.',
-                              style: TextStyle(
-                                  color: AppTheme.textMutedDark, fontSize: 12),
+                            child: Text('design_ui.no_attendees_admitted_yet'.tr(),
+                              style: const TextStyle(
+                                  color: AppTheme.textMuted, fontSize: 12),
                             ),
                           )
                         : ListView.builder(
@@ -1648,23 +1635,22 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                 leading: attendee.isVip
                                     ? const Icon(
                                         Icons.workspace_premium_rounded,
-                                        color: AppTheme.accentAmber,
+                                        color: AppTheme.warning,
                                         size: 20)
                                     : const Icon(Icons.person_rounded,
-                                        color: AppTheme.textSecondaryDark,
+                                        color: AppTheme.textSecondary,
                                         size: 20),
                                 title: Text(
                                   attendee.displayName,
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 13),
+                                      color: AppTheme.onMedia, fontSize: 13),
                                 ),
                                 trailing: TextButton.icon(
                                   icon: const Icon(Icons.block_rounded,
-                                      color: AppTheme.accentRed, size: 16),
-                                  label: const Text(
-                                    'Kick Out',
-                                    style: TextStyle(
-                                        color: AppTheme.accentRed,
+                                      color: AppTheme.danger, size: 16),
+                                  label: Text('design_ui.kick_out'.tr(),
+                                    style: const TextStyle(
+                                        color: AppTheme.danger,
                                         fontSize: 12),
                                   ),
                                   onPressed: () =>
@@ -1690,10 +1676,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'Choose a broadcast quality',
-              style: TextStyle(
-                  color: Colors.white,
+            Text('design_ui.choose_a_broadcast_quality'.tr(),
+              style: const TextStyle(
+                  color: AppTheme.onMedia,
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
             ),
@@ -1703,7 +1688,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               "You can't change this once you start the camera.",
               textAlign: TextAlign.center,
               style:
-                  TextStyle(color: AppTheme.textSecondaryDark, fontSize: 12.5),
+                  TextStyle(color: AppTheme.textSecondary, fontSize: 12.5),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             ...BroadcastQualityPreset.values.map(
@@ -1722,12 +1707,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               child: ElevatedButton(
                 onPressed: _confirmPresetAndSetup,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.accentRed,
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.danger,
+                  foregroundColor: AppTheme.onMedia,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                child: const Text('Continue',
-                    style: TextStyle(fontWeight: FontWeight.bold)),
+                child: Text('design_ui.continue'.tr(),
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
               ),
             ),
           ],
@@ -1758,11 +1743,11 @@ class _PresetOption extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           color: selected
-              ? AppTheme.accentRed.withValues(alpha: 0.15)
-              : AppTheme.darkSurface1,
+              ? AppTheme.danger.withValues(alpha: 0.15)
+              : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(
-            color: selected ? AppTheme.accentRed : AppTheme.darkBorderSubtle,
+            color: selected ? AppTheme.danger : AppTheme.border,
             width: selected ? 1.5 : 1,
           ),
         ),
@@ -1772,7 +1757,7 @@ class _PresetOption extends StatelessWidget {
               selected
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_unchecked_rounded,
-              color: selected ? AppTheme.accentRed : AppTheme.textMutedDark,
+              color: selected ? AppTheme.danger : AppTheme.textMuted,
               size: 18,
             ),
             const SizedBox(width: 10),
@@ -1780,7 +1765,7 @@ class _PresetOption extends StatelessWidget {
               child: Text(
                 preset.label,
                 style: TextStyle(
-                  color: selected ? Colors.white : AppTheme.textSecondaryDark,
+                  color: selected ? AppTheme.onMedia : AppTheme.textSecondary,
                   fontSize: 12.5,
                   fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -1804,7 +1789,7 @@ class _LiveBadge extends StatelessWidget {
         bitrateBps == null ? '' : ' -- ${(bitrateBps! / 1000).round()} kbps';
     return _StatusPill(
       label: 'LIVE$bitrateLabel',
-      color: AppTheme.accentRed,
+      color: AppTheme.danger,
     );
   }
 }
@@ -1829,13 +1814,13 @@ class _ReconnectingBanner extends StatelessWidget {
       color: Colors.orange.shade900,
       child: Row(
         children: [
-          const Icon(Icons.wifi_off_rounded, color: Colors.white, size: 18),
+          const Icon(Icons.wifi_off_rounded, color: AppTheme.onMedia, size: 18),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
               'Stream interrupted -- reconnecting$attemptLabel...',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppTheme.onMedia,
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
               ),
@@ -1864,13 +1849,13 @@ class _StreamErrorBanner extends StatelessWidget {
       child: Row(
         children: [
           const Icon(Icons.error_outline_rounded,
-              color: Colors.white, size: 18),
+              color: AppTheme.onMedia, size: 18),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
               message,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppTheme.onMedia,
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
               ),
@@ -1905,19 +1890,19 @@ class _KnockingBanner extends StatelessWidget {
         horizontal: AppTheme.spaceMd,
         vertical: AppTheme.spaceSm,
       ),
-      color: AppTheme.darkSurface1.withValues(alpha: 0.96),
+      color: AppTheme.surface.withValues(alpha: 0.96),
       child: Row(
         children: [
           const Icon(Icons.person_rounded,
-              color: AppTheme.accentAmber, size: 18),
+              color: AppTheme.warning, size: 18),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
-              '👤 ${request.displayName} wants to join',
+              ' ${request.displayName} wants to join',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: Colors.white,
+                color: AppTheme.onMedia,
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
               ),
@@ -1928,19 +1913,19 @@ class _KnockingBanner extends StatelessWidget {
               onPressed: onAdmitAll,
               child: Text('Admit All ($queueLength)',
                   style: const TextStyle(
-                      color: AppTheme.accentGreen, fontSize: 11)),
+                      color: AppTheme.success, fontSize: 11)),
             ),
             const SizedBox(width: 4),
           ],
           IconButton(
             icon: const Icon(Icons.close_rounded,
-                color: AppTheme.accentRed, size: 20),
+                color: AppTheme.danger, size: 20),
             tooltip: 'Deny',
             onPressed: onDeny,
           ),
           IconButton(
             icon: const Icon(Icons.check_circle_rounded,
-                color: AppTheme.accentGreen, size: 20),
+                color: AppTheme.success, size: 20),
             tooltip: 'Admit',
             onPressed: onAdmit,
           ),
@@ -1967,7 +1952,7 @@ class _StatusPill extends StatelessWidget {
       child: Text(
         label,
         style: const TextStyle(
-            color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+            color: AppTheme.onMedia, fontSize: 11, fontWeight: FontWeight.bold),
       ),
     );
   }

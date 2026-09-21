@@ -11,7 +11,7 @@ class LiveChatWidget extends StatefulWidget {
 
   /// Long-press on any message tile, own or someone else's (Cluster 4 Task
   /// 13 widened this from the Checkpoint 3 Phase 1 original, which only
-  /// fired for someone else's message). This widget stays a "dumb" one that
+  /// fired for someone else's message). This widget stays a "dumb"one that
   /// only reports the gesture; the caller decides which action sheet to
   /// show based on `message.isCurrentUser`, same shape as onSendTextMessage.
   final void Function(ChatMessageModel message)? onMessageLongPress;
@@ -50,7 +50,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.darkBgBase,
+      color: AppTheme.bg,
       child: Column(
         children: [
           // Live Chat Header Bar
@@ -60,9 +60,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
               vertical: AppTheme.spaceSm,
             ),
             decoration: const BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               border: Border(
-                bottom: BorderSide(color: AppTheme.darkBorderSubtle, width: 1),
+                bottom: BorderSide(color: AppTheme.border, width: 1),
               ),
             ),
             child: Row(
@@ -70,7 +70,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                 const Icon(
                   Icons.chat_bubble_outline_rounded,
                   size: 16,
-                  color: AppTheme.accentBlue,
+                  color: AppTheme.primary,
                 ),
                 const SizedBox(width: AppTheme.spaceSm),
                 Text(
@@ -78,7 +78,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimaryDark,
+                        color: AppTheme.textPrimary,
                       ),
                 ),
                 const Spacer(),
@@ -88,13 +88,13 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.darkSurface2,
+                    color: AppTheme.surfaceAlt,
                     borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   ),
                   child: Text(
                     '${widget.messages.length}',
                     style: const TextStyle(
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
@@ -135,9 +135,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceMd),
             decoration: const BoxDecoration(
-              color: AppTheme.darkSurface1,
+              color: AppTheme.surface,
               border: Border(
-                top: BorderSide(color: AppTheme.darkBorderSubtle, width: 1),
+                top: BorderSide(color: AppTheme.border, width: 1),
               ),
             ),
             child: Row(
@@ -147,7 +147,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     controller: _textController,
                     focusNode: _focusNode,
                     style: const TextStyle(
-                      color: AppTheme.textPrimaryDark,
+                      color: AppTheme.textPrimary,
                       fontSize: 13,
                     ),
                     textInputAction: TextInputAction.send,
@@ -155,7 +155,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     decoration: InputDecoration(
                       hintText: 'live.chat_placeholder'.tr(),
                       hintStyle: const TextStyle(
-                        color: AppTheme.textMutedDark,
+                        color: AppTheme.textMuted,
                         fontSize: 13,
                       ),
                       contentPadding: const EdgeInsets.symmetric(
@@ -163,7 +163,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                         vertical: 10,
                       ),
                       filled: true,
-                      fillColor: AppTheme.darkSurface2,
+                      fillColor: AppTheme.surfaceAlt,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                         borderSide: BorderSide.none,
@@ -171,7 +171,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                         borderSide: const BorderSide(
-                          color: AppTheme.accentBlue,
+                          color: AppTheme.primary,
                           width: 1,
                         ),
                       ),
@@ -183,8 +183,8 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   onPressed: _handleSendText,
                   icon: const Icon(Icons.send_rounded, size: 18),
                   style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.accentBlue,
-                    foregroundColor: AppTheme.darkBgBase,
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.bg,
                     padding: const EdgeInsets.all(12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -215,12 +215,12 @@ class _ChatTile extends StatelessWidget {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: message.isCurrentUser
-              ? AppTheme.accentBlue.withValues(alpha: 0.1)
+              ? AppTheme.primary.withValues(alpha: 0.1)
               : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: message.isCurrentUser
               ? Border.all(
-                  color: AppTheme.accentBlue.withValues(alpha: 0.3), width: 1)
+                  color: AppTheme.primary.withValues(alpha: 0.3), width: 1)
               : null,
         ),
         child: Row(
@@ -229,8 +229,8 @@ class _ChatTile extends StatelessWidget {
             CircleAvatar(
               radius: 14,
               backgroundColor: message.isCurrentUser
-                  ? AppTheme.accentBlue
-                  : AppTheme.darkSurface3,
+                  ? AppTheme.primary
+                  : AppTheme.surface,
               backgroundImage:
                   (message.senderAvatarUrl?.startsWith('assets/') ?? false)
                       ? AssetImage(message.senderAvatarUrl!) as ImageProvider
@@ -244,7 +244,7 @@ class _ChatTile extends StatelessWidget {
                           ? message.senderName[0].toUpperCase()
                           : 'U',
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.onMedia,
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -267,8 +267,8 @@ class _ChatTile extends StatelessWidget {
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           color: message.isCurrentUser
-                              ? AppTheme.accentBlue
-                              : AppTheme.textPrimaryDark,
+                              ? AppTheme.primary
+                              : AppTheme.textPrimary,
                         ),
                       ),
                       ...message.badges
@@ -278,16 +278,16 @@ class _ChatTile extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 5, vertical: 1),
                           decoration: BoxDecoration(
-                            color: AppTheme.accentBlue.withValues(alpha: 0.2),
+                            color: AppTheme.primary.withValues(alpha: 0.2),
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusXs),
                             border: Border.all(
-                                color: AppTheme.accentBlue, width: 0.8),
+                                color: AppTheme.primary, width: 0.8),
                           ),
                           child: Text(
                             'live.you'.tr(),
                             style: const TextStyle(
-                              color: AppTheme.accentBlue,
+                              color: AppTheme.primary,
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
                             ),
@@ -298,7 +298,7 @@ class _ChatTile extends StatelessWidget {
                             .format(context),
                         style: const TextStyle(
                           fontSize: 10,
-                          color: AppTheme.textMutedDark,
+                          color: AppTheme.textMuted,
                         ),
                       ),
                       if (message.isPending)
@@ -307,7 +307,7 @@ class _ChatTile extends StatelessWidget {
                           height: 9,
                           child: CircularProgressIndicator(
                             strokeWidth: 1.5,
-                            color: AppTheme.textMutedDark,
+                            color: AppTheme.textMuted,
                           ),
                         ),
                     ],
@@ -321,13 +321,13 @@ class _ChatTile extends StatelessWidget {
                           TextSpan(
                             text: ' ${'live.message_edited_badge'.tr()}',
                             style:
-                                const TextStyle(color: AppTheme.textMutedDark),
+                                const TextStyle(color: AppTheme.textMuted),
                           ),
                       ],
                     ),
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondaryDark,
+                      color: AppTheme.textSecondary,
                       height: 1.3,
                     ),
                   ),
@@ -342,18 +342,18 @@ class _ChatTile extends StatelessWidget {
 }
 
 /// Chat governance badges (Tasks 13 & 15): Admin gets a gold pill, Moderator
-/// a cyan one, both bilingual ("👑 ADMIN / المشرف العام", "🛡️ MOD / مشرف
+/// a cyan one, both bilingual ("ADMIN / المشرف العام", "MOD / مشرف
 /// البث"). Other badge kinds (speaker/org/verified) stay a plain emoji --
 /// only admin/mod need to visibly stand out in a busy live chat.
 Widget _buildSenderBadge(BuildContext context, ChatSenderBadge badge) {
   final isAr = context.locale.languageCode == 'ar';
   if (badge != ChatSenderBadge.admin && badge != ChatSenderBadge.moderator) {
-    return Text(badge.emoji, style: const TextStyle(fontSize: 11));
+    return Icon(badge.icon, size: 13, color: AppTheme.primary, semanticLabel: isAr ? badge.labelAr : badge.labelEn);
   }
 
   final isAdminBadge = badge == ChatSenderBadge.admin;
   final accentColor =
-      isAdminBadge ? const Color(0xFFD4AF37) : const Color(0xFF22D3EE);
+      isAdminBadge ? AppTheme.warning : AppTheme.primary;
 
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
@@ -363,7 +363,7 @@ Widget _buildSenderBadge(BuildContext context, ChatSenderBadge badge) {
       border: Border.all(color: accentColor, width: 0.8),
     ),
     child: Text(
-      '${badge.emoji} ${isAr ? badge.labelAr : badge.labelEn}',
+      isAr ? badge.labelAr : badge.labelEn,
       style: TextStyle(
         color: accentColor,
         fontSize: 9.5,
@@ -382,15 +382,15 @@ class _ConnectionStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final (color, label) = switch (state) {
       ChatConnectionState.live => (
-          AppTheme.accentGreen,
+          AppTheme.success,
           'live.chat_status_live'.tr()
         ),
       ChatConnectionState.connecting => (
-          AppTheme.accentAmber,
+          AppTheme.warning,
           'live.chat_status_connecting'.tr()
         ),
       ChatConnectionState.reconnecting => (
-          AppTheme.accentRed,
+          AppTheme.danger,
           'live.chat_status_reconnecting'.tr()
         ),
     };

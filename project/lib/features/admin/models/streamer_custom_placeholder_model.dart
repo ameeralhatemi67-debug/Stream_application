@@ -89,7 +89,7 @@ class StreamerCustomPlaceholderModel {
 
   /// Mandatory when [status] is [StreamPlaceholderStatus.rejected] -- it is
   /// the body of the notification the streamer receives, so "rejected with
-  /// no reason" is not a state this pipeline can produce.
+  /// no reason"is not a state this pipeline can produce.
   final String? rejectionReason;
 
   final DateTime createdAt;

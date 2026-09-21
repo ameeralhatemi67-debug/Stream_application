@@ -55,8 +55,8 @@ Widget createTestWidget({
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             theme: ThemeData.dark(useMaterial3: true).copyWith(
-              scaffoldBackgroundColor: AppTheme.darkBgBase,
-              cardColor: AppTheme.darkSurface1,
+              scaffoldBackgroundColor: AppTheme.bg,
+              cardColor: AppTheme.surface,
             ),
             home: child,
           ),

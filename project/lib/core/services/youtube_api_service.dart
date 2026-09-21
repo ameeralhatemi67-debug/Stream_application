@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
+import 'package:http/http.dart'as http;
 import '../../features/profile/models/vod_models.dart';
 
 
@@ -26,7 +26,7 @@ class YouTubeApiService {
   })  : apiKey = apiKey ?? _defaultApiKey,
         _client = client ?? http.Client();
 
-  /// Resolves channel handle or URL (e.g. '@ahmedamercaller' or 'https://www.youtube.com/@dalilk4english_podcast/videos') to channel ID and uploads playlist ID
+  /// Resolves channel handle or URL (e.g. '@ahmedamercaller'or 'https://www.youtube.com/@dalilk4english_podcast/videos') to channel ID and uploads playlist ID
   Future<Map<String, String>> fetchChannelDetails(String handleOrUrl) async {
     String cleanHandle = handleOrUrl.trim();
     cleanHandle = cleanHandle.replaceAll('https://www.youtube.com/', '');
@@ -291,7 +291,7 @@ class YouTubeApiService {
   /// Looks up the currently-live broadcast video ID for a given channel,
   /// using the YouTube Data API's search endpoint (eventType=live).
   /// Returns null if the channel has no active live broadcast right now
-  /// (e.g. OBS hasn't started streaming, or "Go Live" hasn't been clicked
+  /// (e.g. OBS hasn't started streaming, or "Go Live"hasn't been clicked
   /// yet in YouTube Studio).
   Future<String?> fetchLiveVideoId(String channelId) async {
     final url = Uri.parse(
