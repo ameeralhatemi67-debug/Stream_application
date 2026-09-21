@@ -1,0 +1,147 @@
+{
+  "schemaVersion": 1,
+  "id": "A",
+  "name": "Field / مدى",
+  "idea": "Structured green, open spacing and a stepped learning mark.",
+  "colors": {
+    "background": "#FFFFFF",
+    "surface": "#FFFFFF",
+    "surfaceAlt": "#ECF6EF",
+    "border": "#D9DDDE",
+    "borderStrong": "#737B7D",
+    "textPrimary": "#202B2B",
+    "textSecondary": "#485554",
+    "textMuted": "#586563",
+    "primary": "#17643F",
+    "onPrimary": "#FFFFFF",
+    "accent": "#17643F",
+    "success": "#22613D",
+    "warning": "#7C5012",
+    "danger": "#9D3044",
+    "live": "#17643F",
+    "onMedia": "#FFFFFF",
+    "media": "#243536",
+    "disabled": "#E5E8E7"
+  },
+  "gradients": {
+    "brand": {
+      "name": "brand",
+      "stops": [
+        "#17643F",
+        "#327044"
+      ],
+      "begin": "topStart",
+      "end": "bottomEnd",
+      "cssAngleLTR": 135,
+      "cssAngleRTL": 225,
+      "foreground": "#FFFFFF"
+    },
+    "soft": {
+      "name": "soft",
+      "stops": [
+        "#D7EDDC",
+        "#B8DBB9"
+      ],
+      "begin": "topStart",
+      "end": "bottomEnd",
+      "cssAngleLTR": 135,
+      "cssAngleRTL": 225,
+      "foreground": "#202B2B"
+    }
+  },
+  "fonts": {
+    "arabic": {
+      "family": "IBM Plex Sans Arabic",
+      "weights": [
+        400,
+        700
+      ],
+      "bundleFiles": [
+        "IBMPlexSansArabic-400.ttf",
+        "IBMPlexSansArabic-700.ttf"
+      ],
+      "fileNaming": "Destination filenames for upstream assets; retain copyright and licence.",
+      "licence": "SIL Open Font License 1.1",
+      "licenceUrl": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsansarabic/OFL.txt"
+    },
+    "latin": {
+      "family": "IBM Plex Sans",
+      "weights": [
+        400,
+        700
+      ],
+      "bundleFiles": [
+        "IBMPlexSans-Variable.ttf"
+      ],
+      "fileNaming": "Destination filenames for upstream assets; retain copyright and licence.",
+      "licence": "SIL Open Font License 1.1",
+      "licenceUrl": "https://raw.githubusercontent.com/google/fonts/main/ofl/ibmplexsans/OFL.txt"
+    },
+    "runtimeDownload": false
+  },
+  "typeScale": {
+    "display": {
+      "size": 30,
+      "weight": 700,
+      "lineHeightArabic": 1.5,
+      "lineHeightLatin": 1.4
+    },
+    "title": {
+      "size": 21,
+      "weight": 700,
+      "lineHeightArabic": 1.6,
+      "lineHeightLatin": 1.4
+    },
+    "body": {
+      "size": 15,
+      "weight": 400,
+      "lineHeightArabic": 1.8,
+      "lineHeightLatin": 1.4
+    },
+    "caption": {
+      "size": 12,
+      "weight": 400,
+      "lineHeightArabic": 1.7,
+      "lineHeightLatin": 1.4
+    },
+    "numerals": {
+      "size": 13,
+      "weight": 700,
+      "lineHeightArabic": 1.6,
+      "lineHeightLatin": 1.4
+    }
+  },
+  "radii": {
+    "card": 12,
+    "button": 12,
+    "input": 12,
+    "chip": 999
+  },
+  "spacing": {
+    "xs": 4,
+    "sm": 8,
+    "md": 12,
+    "lg": 16,
+    "xl": 24,
+    "xxl": 32,
+    "screen": 18
+  },
+  "shadows": {
+    "card": "none",
+    "dialog": "0 8px 24px #202B2B14"
+  },
+  "density": "comfortable",
+  "iconStyle": {
+    "strokeWidth": 1.75,
+    "lineCap": "round",
+    "size": 22
+  },
+  "logoFile": "logo_A.svg",
+  "gradientScreenCounts": {
+    "welcome": 2,
+    "feed": 1,
+    "live": 1,
+    "map": 0,
+    "settings": 0
+  }
+}
