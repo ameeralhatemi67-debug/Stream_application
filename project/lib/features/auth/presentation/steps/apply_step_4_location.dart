@@ -262,10 +262,11 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: AppTheme.spaceSm,
+              runSpacing: AppTheme.spaceSm,
               children: [
-                Row(
+                Wrap(
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
@@ -273,7 +274,8 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                         color: AppTheme.danger.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Row(
+                      child: Wrap(
+                        crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
                           const Icon(Icons.star_rounded, size: 13, color: AppTheme.danger),
                           const SizedBox(width: 4),
@@ -450,11 +452,12 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
 
           // Organization Additional Campus / Branches Section
           if (widget.isOrganization) ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Wrap(
+              spacing: AppTheme.spaceSm,
+              runSpacing: AppTheme.spaceSm,
               children: [
                 Text(
-                  'Additional Campus Branches (${widget.orgBranches.length})',
+                  'design_copy.branches_count'.tr(namedArgs: {'count': '${widget.orgBranches.length}'}),
                   style: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontSize: 13,
@@ -514,7 +517,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.danger, size: 18),
                           onPressed: () => widget.onRemoveBranch(idx),
                         ),
                       ],
@@ -539,7 +542,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
               prefixIcon: const Icon(Icons.phone_outlined, color: AppTheme.danger),
               suffixIcon: widget.phoneController.text.isNotEmpty
                   ? (_phoneValidationError == null
-                      ? const Icon(Icons.check_circle_rounded, color: Colors.green)
+                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.success)
                       : const Icon(Icons.error_outline_rounded, color: AppTheme.danger))
                   : null,
               filled: true,
@@ -548,14 +551,14 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 borderSide: BorderSide(
                   color: widget.phoneController.text.isNotEmpty
-                      ? (_phoneValidationError == null ? Colors.green.withValues(alpha: 0.5) : AppTheme.danger)
+                      ? (_phoneValidationError == null ? AppTheme.success.withValues(alpha: 0.5) : AppTheme.danger)
                       : AppTheme.border,
                 ),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 borderSide: BorderSide(
-                  color: _phoneValidationError == null ? Colors.green : AppTheme.danger,
+                  color: _phoneValidationError == null ? AppTheme.success : AppTheme.danger,
                   width: 1.5,
                 ),
               ),

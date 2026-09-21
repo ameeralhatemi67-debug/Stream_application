@@ -1,0 +1,2 @@
+Compact command evidence; repetitive backend diagnostics omitted.
+00:01 +6: All tests passed!

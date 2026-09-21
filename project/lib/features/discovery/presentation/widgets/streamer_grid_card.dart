@@ -174,7 +174,7 @@ class StreamerGridCard extends StatelessWidget {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               const Icon(Icons.star_rounded,
-                                  color: Colors.amber, size: 11),
+                                  color: AppTheme.warning, size: 11),
                               const SizedBox(width: 3),
                               Text(
                                 langCode == 'ar' ? 'قناتك' : 'Your Channel',

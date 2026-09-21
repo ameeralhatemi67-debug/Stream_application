@@ -1,3 +1,4 @@
+import '../../../core/widgets/safe_image_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'dart:math'as math;
 import 'package:flutter/material.dart';
@@ -567,14 +568,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                         const Icon(Icons.hub_rounded,
                             color: AppTheme.danger, size: 20),
                         const SizedBox(width: AppTheme.spaceSm),
-                        Text(
-                          'AlSharqia Venues & Scholars (${displayedStreamers.length})',
+                        Expanded(child: Text(
+                          'design_copy.map_venues'.tr(namedArgs: {'count': '${displayedStreamers.length}'}),
                           style: const TextStyle(
                             color: AppTheme.textPrimary,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
-                        ),
+                        )),
                       ],
                     ),
                   ),
@@ -615,10 +616,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                     radius: 20,
                                     backgroundColor: AppTheme.surface,
                                     backgroundImage:
-                                        streamer.avatarUrl.startsWith('assets/')
-                                            ? AssetImage(streamer.avatarUrl)
-                                            : NetworkImage(streamer.avatarUrl)
-                                                as ImageProvider,
+                                        buildSafeImageProvider(path: streamer.avatarUrl),
                                   ),
                                   const SizedBox(width: AppTheme.spaceMd),
                                   Expanded(

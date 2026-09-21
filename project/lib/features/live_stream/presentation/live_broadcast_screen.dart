@@ -544,9 +544,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 decoration: BoxDecoration(
-                  color: Colors.amber.shade900.withValues(alpha: 0.9),
+                  color: AppTheme.warning.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  border: Border.all(color: Colors.amberAccent, width: 1.5),
+                  border: Border.all(color: AppTheme.warning, width: 1.5),
                   boxShadow: const [
                     BoxShadow(
                         color: Colors.black54,
@@ -1299,13 +1299,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             icon: Icon(
               Icons.back_hand_rounded,
               color:
-                  _isHandRaised ? Colors.amberAccent : AppTheme.textMuted,
+                  _isHandRaised ? AppTheme.warning : AppTheme.textMuted,
               size: 19,
             ),
             tooltip: 'live.raise_hand_toggle'.tr(),
             style: IconButton.styleFrom(
               backgroundColor: _isHandRaised
-                  ? Colors.amber.shade900.withValues(alpha: 0.3)
+                  ? AppTheme.warning.withValues(alpha: 0.3)
                   : Colors.transparent,
             ),
             onPressed: _toggleRaiseHand,

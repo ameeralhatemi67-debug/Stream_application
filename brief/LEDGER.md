@@ -224,3 +224,10 @@
 - Entry usage0, checkpoint85, hard cap90. Higher live usage used when snapshots lagged. No reset wait.
 - Exact next phase: finish P4 screen/media/RTL/localization/responsive/Settings extraction/documentation gaps, then P8A. P8A/P6.4/P5/P7/P8B/P9 not started. No release readiness claim.
 - Nothing pushed; no SQL or production changes. Owner Roadmap and skill-observations untouched, both historical stashes unchanged. Local phase commit follows.
+
+## RESUME block (2026-09-21, Codex Astra, P4 responsive continuation)
+- P4 PARTIAL. Analyzer 0 issues; full Flutter suite 369 passed, including 80 real-font layout tests covering 40 screen/state variants x 7 sizes x 3 scales x 2 locales. Focused playlist/contrast run 6 passed. Gates unchanged in classification: G4a14/G4b5/G6 505/G8 1. G6 includes translated calls and real untranslated literals; not all false positives.
+- Fixed populated feed/map, all admin tabs, organization wizard, consent and notification layouts. Extracted privacy/language/about Settings widgets; added content-width helper; moved 97 bilingual literal occurrences into symmetric catalogs, plus five new translation pairs; semantic shades and design docs updated.
+- Remaining P4: live room with stubbed player, broader populated dialog/sheet coverage, full Settings extraction and scrolling/consent-withdrawal review, remaining literal and media-contrast audit. Arabic phone preview visibly retains English preset labels and missing live.broadcast_from_phone key. Screenshot-mode tests failed with MissingPluginException for native setOrientation; ordinary layout matrix passes. No emulator/device verification.
+- P8A/P6.4/P5/P7/P8B/P9 not started. SQL unchanged, inherited 48 migrations and 179 pgTAP tests across 11 files, not rerun. No push or production operations. Owner Roadmap.md, skill-observations and both stashes untouched.
+- Budget entry0, closing89, single window cap90. Stop here. Next session finish P4, then P8A only after acceptance. No release readiness claim.

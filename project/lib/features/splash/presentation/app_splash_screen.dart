@@ -75,7 +75,6 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    final isAr = context.locale.languageCode == 'ar';
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
@@ -120,9 +119,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  isAr
-                      ? 'البثوث الأكاديمية والمحاضرات التفاعلية'
-                      : 'Academic Broadcasts & Spatial Discovery',
+                  'design_copy.academic_broadcasts_spatial_discovery'.tr(),
                   style: const TextStyle(
                     color: AppTheme.textSecondary,
                     fontSize: 13,
@@ -144,9 +141,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
                 Text(
-                  isAr
-                      ? 'جاري تهيئة المنصة وتحميل الخرائط...'
-                      : 'Initializing platform & map assets...',
+                  'design_copy.initializing_platform_map_assets'.tr(),
                   style: const TextStyle(
                     color: AppTheme.textMuted,
                     fontSize: 11.5,

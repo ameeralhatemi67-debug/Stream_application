@@ -1,0 +1,4 @@
+Compact command evidence; repetitive backend diagnostics omitted.
+00:15 +191 -1: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-02: App Startup Loader / Splash Screen Tests AppSplashScreen renders branding, progress indicator, and title [E]
+00:16 +197 -2: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project/test/playlist_and_audio_polish_test.dart: TC-POLISH-03: PlaylistViewerModalSheet Dynamic Fetch & Play All Tests Renders playlist header, Play All button, and resolves lectures on demand [E]
+02:15 +367 -2: Some tests failed.

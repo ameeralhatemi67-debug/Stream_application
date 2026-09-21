@@ -49,7 +49,7 @@ class OfflineMarker extends StatelessWidget {
           ),
           child: ColorFiltered(
             colorFilter: const ColorFilter.mode(
-              Colors.grey,
+              AppTheme.textMuted,
               BlendMode.saturation,
             ),
             child: CircleAvatar(

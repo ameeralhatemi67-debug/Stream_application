@@ -1,0 +1,34 @@
+GATE  STATUS NOW    TARGET TITLE  [top offenders]
+G1a   PASS   0      0      mockStreamers / MockVodArchivePool / sampleQuestions in lib
+G1b   PASS   0      0      FeatureInProgressModal call sites
+G1c   PASS   0      0      hard-coded dev identity ('prof_alghamdi_01', dev emails)
+G1d   PASS   0      0      fake viewer-count literals (1240 / 18450)
+G1e   PASS   0      0      ghost/demo chat
+G2a   PASS   0      0      dark-only theme tokens referenced (AppTheme.dark* / *Dark)
+G2b   PASS   0      0      ThemeMode.dark
+G2c   INFO   0      -      hard-coded color literals outside app_theme.dart (target 0 except allowlisted on-media overlays)
+G2d   PASS   0      0      gradient literals outside lib/core/theme/ (gradients only via AppGradients tokens)
+G3    PASS   0      0      emoji/pictograph occurrences in lib + i18n (excluding brief/emoji_allowlist.txt files)
+G4a   FAIL   14     0      'com.example' package/scheme still present (android/web/lib)  [project/android/app/src/main/kotlin/com/example/streamer_app/MainActivity.kt:3, project/android/app/build.gradle.kts:2, project/android/app/src/main/kotlin/com/example/streamer_app/streaming/RtmpForegroundService.kt:2, project/android/app/src/main/AndroidManifest.xml:1, project/android/app/src/main/kotlin/com/example/streamer_app/streaming/RtmpPublisherBridge.kt:1]
+G4b   FAIL   5      0      app name still the working title 'streamer_app' (manifest label / web title / web manifest)  [project/web/index.html:2, project/web/manifest.json:2, project/android/app/src/main/AndroidManifest.xml:1]
+G5a   PASS   0      0      flutter_vlc_player still in pubspec
+G5b   PASS   0      0      lib/spike_rtmp exists
+G5c   PASS   0      0      assets/map/gadm41_SAU_2.svg (GADM licence) still bundled
+G6    FAIL   505    0      hard-coded English Text('...') literals (should move to i18n)  [project/lib/features/admin/presentation/admin_hub_screen.dart:42, project/lib/features/profile/presentation/settings_screen.dart:37, project/lib/features/profile/presentation/settings/privacy_settings_section.dart:29, project/lib/features/admin/presentation/widgets/org_management_view.dart:27, project/lib/features/live_stream/presentation/screens/phone_broadcast_screen.dart:24]
+G7    PASS   0      0      en/ar i18n key mismatches (-1 = unreadable JSON)
+G8    FAIL   1      0      release build can silently fall back to the debug keystore
+G9    PASS   0      0      Admin "Testing tools" tab not gated by kDebugMode
+G10a  PASS   0      0      public tables without ENABLE ROW LEVEL SECURITY in migrations (of 26)
+G10b  INFO   1      -      tables with RLS on but NO policy (deny-all; must be intentional and commented, e.g. stream_viewers)  [stream_viewers]
+G10c  PASS   0      0      write policies that are unconditionally 'true' (using/with check (true))
+G10d  PASS   0      0      SECURITY DEFINER functions without SET search_path
+G10e  INFO   3      -      GRANT of write/execute privileges to anon/public in migrations (review each; only viewer_heartbeat/get_viewer_counts and public views are expected)
+G11a  PASS   0      0      service-role JWTs / sb_secret keys / private keys / DB URLs with password found in the working tree
+G11b  PASS   0      0      client code (project/lib, android, web) that mentions the service role
+G11c  INFO   0      -      JWT-shaped tokens with an unexpected role (not anon/service_role)
+G11d  PASS   0      0      secret-bearing paths NOT covered by .gitignore (dart_define.local.json, key.properties, keystores, .env)
+G11e  PASS   0      0      secret-bearing files TRACKED by git (must be 0; if >0 the key is burned: rotate it)
+G11f  PASS   0      0      dart_define.local.json holds a service-role/secret-named entry (only the anon key belongs in the app)
+G11g  INFO   0      -      history scan for JWT-shaped tokens skipped (slow, ~1 min): run `node brief/tools/gates.mjs --history` at P0 and P9
+
+4 gate(s) failing.

@@ -54,7 +54,6 @@ class _DuplicateChannelResolutionDialogState
   @override
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
-    final isAr = lang == 'ar';
 
     return AlertDialog(
       backgroundColor: AppTheme.surface,
@@ -76,7 +75,7 @@ class _DuplicateChannelResolutionDialogState
           const SizedBox(width: AppTheme.spaceMd),
           Expanded(
             child: Text(
-              isAr ? 'تم رصد أكثر من قناة للبث' : 'Multiple Channels Detected',
+              'design_copy.multiple_channels_detected'.tr(),
               style: const TextStyle(
                 color: AppTheme.textPrimary,
                 fontSize: 16,
@@ -93,9 +92,7 @@ class _DuplicateChannelResolutionDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              isAr
-                  ? 'يمكن لكل ناشر امتلاك قناة واحدة فقط. يرجى اختيار القناة التي ترغب بالاحتفاظ بها كقناتك الأساسية، وسيتم حذف القناة الأخرى تلقائياً.'
-                  : 'You can only own one personal broadcaster channel. Please select which channel you want to keep. The unselected channel will be deleted permanently.',
+              'design_copy.you_can_only_own_one_personal_broadcaster_channel_please_select_w'.tr(),
               style: const TextStyle(
                 color: AppTheme.textSecondary,
                 fontSize: 12.5,
@@ -213,7 +210,7 @@ class _DuplicateChannelResolutionDialogState
                   Navigator.of(context).pop(selectedChannel);
                 },
           child: Text(
-            isAr ? 'تأكيد وحذف القناة المكررة' : 'Keep Selected & Delete Other',
+            'design_copy.keep_selected_delete_other'.tr(),
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
           ),
         ),

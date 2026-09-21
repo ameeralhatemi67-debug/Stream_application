@@ -10,7 +10,7 @@ updated: 2026-08-09
 
 ## 🎯 Target Platform & Modalities
 * **Primary Platform:** Flutter Mobile (iOS & Android) with responsive Web support (`flutter run -d chrome`).
-* **Design Language:** Refined Minimalist Academic (Dark Mode Graphite `#121214`, Soft Coral `#FF8080`, Verified Cyan `#38BDF8`).
+* **Design Language:** Scheme A, white surfaces, green primary `#17643F`, locally bundled IBM Plex Sans and IBM Plex Sans Arabic, and the supplied Hadayah logo. See `Core_files/Desgin.md`.
 * **Localization:** Bilingual English (LTR) and Arabic (RTL) via `easy_localization`.
 * **Streaming Engine:** YouTube Live Stream & VOD playback (`youtube_player_iframe`) + Spatial GIS Vector Map (`flutter_map`).
 

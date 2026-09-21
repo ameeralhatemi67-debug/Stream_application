@@ -1,8 +1,8 @@
-import '../../../core/widgets/app_logo.dart';
-import '../../../core/config/app_identity.dart';
-import 'dart:convert';
+import '../../../core/layout/content_width.dart';
+import 'settings/privacy_settings_section.dart';
+import 'settings/language_settings_section.dart';
+import 'settings/about_settings_section.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -32,10 +32,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _venueController = TextEditingController();
   final TextEditingController _slidesController = TextEditingController();
-  bool _isDeletingAccount = false;
-  bool _isExportingData = false;
-  bool _isDeletingAllMessages = false;
-  bool _isDeletingStreamMessages = false;
 
   @override
   void initState() {
@@ -144,7 +140,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SizedBox(width: AppTheme.spaceSm),
         ],
       ),
-      body: ListView(
+      body: ContentWidth(child: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         children: [
           //  Top Option: My Account Profile (Protected, cannot be deleted)
@@ -180,7 +176,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.language_rounded,
           ),
           const SizedBox(height: AppTheme.spaceSm),
-          _buildLanguageSelectorCard(context, currentLocale),
+          const LanguageSettingsSection(),
           const SizedBox(height: AppTheme.spaceLg),
 
           // Section 3.5: Notification Preferences -- summary row opening a
@@ -188,9 +184,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _buildSummaryRow(
             icon: Icons.notifications_active_rounded,
             iconColor: AppTheme.primary,
-            title: isAr
-                ? 'إعدادات الإشعارات والتنبيهات'
-                : 'Notification Preferences',
+            title: 'design_copy.notification_preferences'.tr(),
             subtitle: isAr
                 ? '${appProvider.notificationPreferences.maxPer10Min} إشعارات كل 10 دقائق'
                 : '${appProvider.notificationPreferences.maxPer10Min} alerts / 10min',
@@ -206,9 +200,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             _buildSummaryRow(
               icon: Icons.movie_creation_rounded,
               iconColor: AppTheme.danger,
-              title: isAr
-                  ? 'تفضيلات الاستوديو والبث'
-                  : 'Broadcaster & Studio Preferences',
+              title: 'design_copy.broadcaster_studio_preferences'.tr(),
               subtitle: appProvider.isBroadcastingLive
                   ? 'settings.broadcast_status_live'.tr()
                   : 'settings.broadcast_status_offline'.tr(),
@@ -266,11 +258,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               iconColor: AppTheme.danger,
             ),
             const SizedBox(height: AppTheme.spaceSm),
-            _buildDataExportCard(context, appProvider),
-            const SizedBox(height: AppTheme.spaceMd),
-            _buildChatHistoryCard(context, appProvider),
-            const SizedBox(height: AppTheme.spaceMd),
-            _buildDeleteAccountCard(context, appProvider),
+            const PrivacySettingsSection(),
             const SizedBox(height: AppTheme.spaceLg),
           ],
 
@@ -281,10 +269,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             icon: Icons.info_outline_rounded,
           ),
           const SizedBox(height: AppTheme.spaceSm),
-          _buildVersionInfoCard(context),
+          const AboutSettingsSection(),
           const SizedBox(height: AppTheme.spaceXl),
         ],
-      ),
+      )),
     );
   }
 
@@ -551,7 +539,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isLoggedIn = provider.isLoggedInStreamer;
     final googleEmail = provider.googleUserEmail ?? '';
     final googleName = provider.googleUserName ?? '';
-    final isAr = context.locale.languageCode == 'ar';
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -607,9 +594,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? (isStreamer
                               ? 'settings.role_streamer_desc'.tr()
                               : 'settings.role_viewer_desc'.tr())
-                          : (isAr
-                              ? 'حساب مشاهد عادي (يتطلب توثيق المذيع لتفعيل وضع البث)'
-                              : 'Viewer Mode (Streamer Studio unlocked upon Broadcaster verification)'),
+                          : ('design_copy.viewer_mode_streamer_studio_unlocked_upon_broadcaster_verificatio'.tr()),
                       style: const TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 11,
@@ -657,7 +642,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       child: Text(
                         'G',
                         style: TextStyle(
-                          color: Colors.blue,
+                          color: AppTheme.primary,
                           fontWeight: FontWeight.w900,
                           fontSize: 14,
                         ),
@@ -756,7 +741,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: const Text(
                     'G',
                     style: TextStyle(
-                      color: Colors.blue,
+                      color: AppTheme.primary,
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
                     ),
@@ -861,7 +846,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppTheme.primary,
-                foregroundColor: AppTheme.onMedia,
+                foregroundColor: AppTheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -1515,7 +1500,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     isBroadcasting ? AppTheme.surface : AppTheme.danger,
-                foregroundColor: AppTheme.onMedia,
+                foregroundColor: isBroadcasting ? AppTheme.textPrimary : AppTheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -1540,58 +1525,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 provider.toggleBroadcasterGoLive(context);
               },
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildLanguageSelectorCard(
-      BuildContext context, String currentLocale) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        children: [
-          ListTile(
-            dense: true,
-            leading: Icon(
-              currentLocale == 'en'
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_off,
-              color: currentLocale == 'en'
-                  ? AppTheme.danger
-                  : AppTheme.textMuted,
-              size: 20,
-            ),
-            title: Text('design_ui.english_us'.tr(),
-                style:
-                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
-            subtitle: Text('design_ui.ltr_interface'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-            onTap: () => context.setLocale(const Locale('en')),
-          ),
-          const Divider(height: 1, color: AppTheme.border),
-          ListTile(
-            dense: true,
-            leading: Icon(
-              currentLocale == 'ar'
-                  ? Icons.radio_button_checked
-                  : Icons.radio_button_off,
-              color: currentLocale == 'ar'
-                  ? AppTheme.danger
-                  : AppTheme.textMuted,
-              size: 20,
-            ),
-            title: const Text('العربية (Arabic)',
-                style:
-                    TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
-            subtitle: const Text('واجهة من اليمين إلى اليسار (RTL)',
-                style: TextStyle(color: AppTheme.textMuted, fontSize: 11)),
-            onTap: () => context.setLocale(const Locale('ar')),
           ),
         ],
       ),
@@ -1767,19 +1700,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildVersionInfoCard(BuildContext context) => Container(
-    padding: const EdgeInsets.all(AppTheme.spaceLg),
-    decoration: BoxDecoration(color: AppTheme.surface,
-      borderRadius: BorderRadius.circular(AppTheme.radiusMd), border: Border.all(color: AppTheme.border)),
-    child: Column(children: [
-      const AppLogo(size: 64), const SizedBox(height: AppTheme.spaceMd),
-      Text(AppIdentity.name(context.locale.languageCode), style: Theme.of(context).textTheme.titleLarge, textAlign: TextAlign.center),
-      const SizedBox(height: AppTheme.spaceSm),
-      Text('settings.build_version'.tr(), textAlign: TextAlign.center),
-      Text('settings.release_pending'.tr(), style: Theme.of(context).textTheme.bodySmall, textAlign: TextAlign.center),
-    ]),
-  );
-
   Widget _buildGovernanceCard(BuildContext context, AppProvider provider) {
     final terms = provider.termsAndConditions;
 
@@ -1877,528 +1797,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  Widget _buildDataExportCard(BuildContext context, AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'settings.data_export_title'.tr(),
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'settings.data_export_desc'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 11),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: _isExportingData
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppTheme.primary,
-                      ),
-                    )
-                  : const Icon(Icons.download_rounded, size: 18),
-              label: Text('settings.data_export_btn'.tr()),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppTheme.primary),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-              ),
-              onPressed: _isExportingData
-                  ? null
-                  : () => _handleDataExport(context, provider),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleDataExport(
-      BuildContext context, AppProvider provider) async {
-    setState(() => _isExportingData = true);
-    Map<String, dynamic>? data;
-    try {
-      data = await provider.exportMyData();
-    } catch (e) {
-      data = null;
-    }
-    if (!context.mounted) return;
-    setState(() => _isExportingData = false);
-
-    if (data == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('settings.data_export_error_toast'.tr()),
-          backgroundColor: AppTheme.danger,
-        ),
-      );
-      return;
-    }
-
-    final pretty = const JsonEncoder.withIndent('  ').convert(data);
-    if (!context.mounted) return;
-    _showDataExportDialog(context, pretty);
-  }
-
-  void _showDataExportDialog(BuildContext context, String jsonText) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.border),
-          ),
-          title: Text(
-            'settings.data_export_dialog_title'.tr(),
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 15,
-            ),
-          ),
-          content: SizedBox(
-            width: 550,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'settings.data_export_dialog_desc'.tr(),
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 12),
-                ),
-                const SizedBox(height: AppTheme.spaceSm),
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 360),
-                  padding: const EdgeInsets.all(AppTheme.spaceSm),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceAlt,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: Border.all(color: AppTheme.border),
-                  ),
-                  child: SingleChildScrollView(
-                    child: SelectableText(
-                      jsonText,
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11.5,
-                        fontFamily: 'monospace',
-                        height: 1.4,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'common.close'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted),
-              ),
-            ),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: AppTheme.onMedia,
-              ),
-              icon: const Icon(Icons.copy_rounded, size: 16),
-              label: Text('settings.data_export_copy_btn'.tr()),
-              onPressed: () async {
-                await Clipboard.setData(ClipboardData(text: jsonText));
-                if (!dialogContext.mounted) return;
-                ScaffoldMessenger.of(dialogContext).showSnackBar(
-                  SnackBar(
-                      content: Text('settings.data_export_copied_toast'.tr())),
-                );
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildDeleteAccountCard(BuildContext context, AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'settings.delete_account_title'.tr(),
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'settings.delete_account_desc'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 11),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: _isDeletingAccount
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppTheme.danger,
-                      ),
-                    )
-                  : const Icon(Icons.delete_forever_rounded, size: 18),
-              label: Text('settings.delete_account_btn'.tr()),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.danger,
-                side: const BorderSide(color: AppTheme.danger),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-              ),
-              onPressed: _isDeletingAccount
-                  ? null
-                  : () => _showDeleteAccountDialog(context, provider),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAccountDialog(BuildContext context, AppProvider provider) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.border),
-          ),
-          title: Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.danger, size: 22),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'settings.delete_account_confirm_title'.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          content: Text(
-            'settings.delete_account_confirm_body'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 13),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(dialogContext),
-              child: Text(
-                'settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted),
-              ),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
-                foregroundColor: AppTheme.onMedia,
-              ),
-              onPressed: () {
-                Navigator.pop(dialogContext);
-                _handleDeleteAccount(context, provider);
-              },
-              child: Text('settings.delete_account_confirm_btn'.tr()),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Future<void> _handleDeleteAccount(
-      BuildContext context, AppProvider provider) async {
-    setState(() => _isDeletingAccount = true);
-    final success = await provider.deleteOwnAccount();
-    if (!context.mounted) return;
-    setState(() => _isDeletingAccount = false);
-
-    if (success) {
-      context.go('/welcome');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('settings.delete_account_success_toast'.tr())),
-      );
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('settings.delete_account_error_toast'.tr()),
-          backgroundColor: AppTheme.danger,
-        ),
-      );
-    }
-  }
-
-  // ==========================================
-  // Chat History & Privacy (Cluster 4 Task 17)
-  // ==========================================
-
-  Widget _buildChatHistoryCard(BuildContext context, AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'settings.chat_history_title'.tr(),
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'settings.chat_history_desc'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 11),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: _isDeletingStreamMessages
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppTheme.primary),
-                    )
-                  : const Icon(Icons.forum_outlined, size: 18),
-              label: Text('settings.delete_messages_by_stream_btn'.tr()),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppTheme.primary),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-              ),
-              onPressed: _isDeletingStreamMessages
-                  ? null
-                  : () => _showSelectStreamDialog(context, provider),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceSm),
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: _isDeletingAllMessages
-                  ? const SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                          strokeWidth: 2, color: AppTheme.danger),
-                    )
-                  : const Icon(Icons.delete_sweep_outlined, size: 18),
-              label: Text('settings.delete_all_messages_btn'.tr()),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.danger,
-                side: const BorderSide(color: AppTheme.danger),
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-              ),
-              onPressed: _isDeletingAllMessages
-                  ? null
-                  : () => _showDeleteAllMessagesDialog(context, provider),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showDeleteAllMessagesDialog(
-      BuildContext context, AppProvider provider) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.border),
-        ),
-        title: Row(
-          children: [
-            const Icon(Icons.warning_amber_rounded,
-                color: AppTheme.danger, size: 22),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                'settings.delete_all_messages_confirm_title'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16,
-                ),
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          'settings.delete_all_messages_confirm_body'.tr(),
-          style:
-              const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
-                foregroundColor: AppTheme.onMedia),
-            onPressed: () {
-              Navigator.pop(dialogContext);
-              _handleDeleteAllMessages(context, provider);
-            },
-            child: Text('settings.delete_all_messages_btn'.tr()),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _handleDeleteAllMessages(
-      BuildContext context, AppProvider provider) async {
-    setState(() => _isDeletingAllMessages = true);
-    final success = await provider.deleteAllMyMessages();
-    if (!context.mounted) return;
-    setState(() => _isDeletingAllMessages = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(success
-            ? 'settings.delete_all_messages_success_toast'.tr()
-            : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : AppTheme.danger,
-      ),
-    );
-  }
-
-  Future<void> _showSelectStreamDialog(
-      BuildContext context, AppProvider provider) async {
-    final streamIds = await provider.loadMyMessageStreamIds();
-    if (!context.mounted) return;
-
-    final selectedStreamId = await showDialog<String>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppTheme.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.border),
-        ),
-        title: Text('settings.select_stream_dialog_title'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: streamIds.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.all(AppTheme.spaceMd),
-                  child: Text(
-                    'settings.select_stream_dialog_empty'.tr(),
-                    style: const TextStyle(color: AppTheme.textSecondary),
-                  ),
-                )
-              : ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: streamIds.length,
-                  itemBuilder: (context, index) {
-                    final id = streamIds[index];
-                    return ListTile(
-                      leading: const Icon(Icons.forum_outlined,
-                          color: AppTheme.primary),
-                      title: Text(id,
-                          style:
-                              const TextStyle(color: AppTheme.textPrimary)),
-                      onTap: () => Navigator.pop(dialogContext, id),
-                    );
-                  },
-                ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
-          ),
-        ],
-      ),
-    );
-    if (selectedStreamId == null || !context.mounted) return;
-    setState(() => _isDeletingStreamMessages = true);
-    final success = await provider.deleteMyMessagesForStream(selectedStreamId);
-    if (!context.mounted) return;
-    setState(() => _isDeletingStreamMessages = false);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(success
-            ? 'settings.delete_messages_by_stream_success_toast'.tr()
-            : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : AppTheme.danger,
-      ),
-    );
-  }
-
   Widget _buildNotificationPreferencesCard(
       BuildContext context, AppProvider provider) {
     final isAr = context.locale.languageCode == 'ar';
@@ -2420,9 +1818,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                isAr
-                    ? 'الحد الأقصى للتنبيهات (كل 10 دقائق)'
-                    : '10-Minute Alert Limit',
+                'design_copy.10_minute_alert_limit'.tr(),
                 style: const TextStyle(
                   color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
@@ -2452,9 +1848,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 4),
           Text(
-            isAr
-                ? 'يمنع التكرار والإزعاج بدمج التنبيهات الزائدة في ملخص ذكي.'
-                : 'Prevents notification fatigue by bundling excess alerts into a smart digest.',
+            'design_copy.prevents_notification_fatigue_by_bundling_excess_alerts_into_a_sm'.tr(),
             style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
           ),
           const SizedBox(height: 8),
@@ -2474,9 +1868,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           //  Granular Notification Category Toggles
           Text(
-            isAr
-                ? 'أقسام التنبيهات المفعّلة'
-                : 'Active Notification Categories',
+            'design_copy.active_notification_categories'.tr(),
             style: const TextStyle(
               color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
@@ -2487,7 +1879,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           _buildNotifSwitch(
             title:
-                isAr ? 'بثوث الفيديو المباشرة' : 'Live Video Broadcasts',
+                'design_copy.live_video_broadcasts'.tr(),
             value: prefs.liveVideoEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2496,9 +1888,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _buildNotifSwitch(
-            title: isAr
-                ? 'المساحات الصوتية المباشرة'
-                : 'Live Audio Stages',
+            title: 'design_copy.live_audio_stages'.tr(),
             value: prefs.liveAudioEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2507,9 +1897,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _buildNotifSwitch(
-            title: isAr
-                ? 'مكافأة إتمام ساعة مشاهدة'
-                : ' 1-Hour Watch Milestone Rewards',
+            title: 'design_copy.1_hour_watch_milestone_rewards'.tr(),
             value: prefs.watchMilestonesEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2518,9 +1906,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _buildNotifSwitch(
-            title: isAr
-                ? 'دعوات المنظمات والمشاركات'
-                : 'Org Invites & Guest Roles',
+            title: 'design_copy.org_invites_guest_roles'.tr(),
             value: prefs.orgInvitesEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2529,9 +1915,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _buildNotifSwitch(
-            title: isAr
-                ? 'الرسائل والتوجيهات الإدارية'
-                : 'Administrative Governance Notes',
+            title: 'design_copy.administrative_governance_notes'.tr(),
             value: prefs.adminNotesEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -2540,9 +1924,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             },
           ),
           _buildNotifSwitch(
-            title: isAr
-                ? 'المحاضرات والفيديوهات الجديدة'
-                : 'New VODs & Lectures',
+            title: 'design_copy.new_vods_lectures'.tr(),
             value: prefs.vodsEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(

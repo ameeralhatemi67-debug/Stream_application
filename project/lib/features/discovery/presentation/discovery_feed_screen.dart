@@ -400,7 +400,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             const SizedBox(height: AppTheme.spaceMd),
 
             SizedBox(
-              height: 190,
+              height: 142 + MediaQuery.textScalerOf(context).scale(52),
               child: ListView.builder(
                 scrollDirection: Axis.horizontal,
                 padding:
@@ -737,7 +737,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
 
     return Container(
       width: 260,
-      margin: const EdgeInsets.only(right: AppTheme.spaceMd),
+      margin: const EdgeInsetsDirectional.only(end: AppTheme.spaceMd),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),

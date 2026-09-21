@@ -82,14 +82,14 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
               children: [
                 const Icon(Icons.notifications_rounded, color: AppTheme.primary, size: 22),
                 const SizedBox(width: 8),
-                Text(
-                  isAr ? 'مركز التنبيهات' : 'Notifications',
+                Expanded(child: Text(
+                  'design_copy.notifications'.tr(),
                   style: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontSize: 17,
                     fontWeight: FontWeight.bold,
                   ),
-                ),
+                )),
                 if (unreadNotificationsCount > 0) ...[
                   const SizedBox(width: 8),
                   Container(
@@ -104,13 +104,13 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                     ),
                   ),
                 ],
-                const Spacer(),
+
                 if (allNotifications.isNotEmpty)
                   TextButton.icon(
                     onPressed: () => appProvider.markAllNotificationsAsRead(),
                     icon: const Icon(Icons.done_all_rounded, size: 16),
                     label: Text(
-                      isAr ? 'تحديد الكل كمقروء' : 'Mark all read',
+                      'design_copy.mark_all_read'.tr(),
                       style: const TextStyle(fontSize: 11.5),
                     ),
                     style: TextButton.styleFrom(
@@ -137,25 +137,25 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
               child: Row(
                 children: [
                   _buildCategoryChip(
-                    label: isAr ? 'الكل' : 'All',
+                    label: 'design_copy.all'.tr(),
                     category: NotificationCategory.all,
                     count: allNotifications.length,
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
-                    label: isAr ? 'البثوث المباشرة' : 'Live',
+                    label: 'design_copy.live'.tr(),
                     category: NotificationCategory.live,
                     count: allNotifications.where((n) => n.category == NotificationCategory.live).length,
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
-                    label: isAr ? 'الدعوات والإدارة' : 'Invites & Admin',
+                    label: 'design_copy.invites_admin'.tr(),
                     category: NotificationCategory.invitesAndAdmin,
                     count: allNotifications.where((n) => n.category == NotificationCategory.invitesAndAdmin).length,
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
-                    label: isAr ? 'المحاضرات' : 'VODs',
+                    label: 'design_copy.vods'.tr(),
                     category: NotificationCategory.vods,
                     count: allNotifications.where((n) => n.category == NotificationCategory.vods).length,
                   ),
@@ -169,7 +169,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
 
             // Notifications List or Empty State
             if (filteredNotifications.isEmpty)
-              Padding(
+              Flexible(child: SingleChildScrollView(child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Center(
                   child: Column(
@@ -178,9 +178,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                       const Icon(Icons.notifications_none_rounded, color: AppTheme.textMuted, size: 44),
                       const SizedBox(height: 12),
                       Text(
-                        isAr
-                            ? 'لا توجد تنبيهات جديدة في هذا القسم'
-                            : 'No notifications in this category',
+                        'design_copy.no_notifications_in_this_category'.tr(),
                         style: const TextStyle(
                           color: AppTheme.textPrimary,
                           fontSize: 14,
@@ -189,16 +187,14 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isAr
-                            ? 'ستصلك إشعارات البثوث المباشرة والمحاضرات والدعوات فور توفرها.'
-                            : 'You will receive alerts for live streams, lectures, and invites when they occur.',
+                        'design_copy.you_will_receive_alerts_for_live_streams_lectures_and_invites_whe'.tr(),
                         style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                     ],
                   ),
                 ),
-              )
+              )))
             else
               Flexible(
                 child: ListView.separated(
@@ -255,7 +251,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
       key: Key('notif_${notif.id}'),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: Colors.red.shade900,
+        color: AppTheme.danger,
         alignment: Alignment.centerRight,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
@@ -342,8 +338,8 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                           const SizedBox(width: 3),
                           Text(
                             isMuted
-                                ? (isAr ? 'إلغاء الكتم' : 'Unmute')
-                                : (isAr ? 'كتم الإشعارات' : 'Mute'),
+                                ? ('design_copy.unmute'.tr())
+                                : ('design_copy.mute'.tr()),
                             style: TextStyle(
                               color: isMuted ? AppTheme.danger : AppTheme.primary,
                               fontSize: 10,
@@ -415,22 +411,22 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
       case NotificationType.streamerLiveAudio:
         return AppTheme.textMuted;
       case NotificationType.watchMilestoneOneHour:
-        return Colors.amber;
+        return AppTheme.warning;
       case NotificationType.streamerApplicationApproved:
         return AppTheme.success;
       case NotificationType.streamerApplicationRejected:
-        return Colors.orange;
+        return AppTheme.warning;
       case NotificationType.orgLiveGuestInvite:
       case NotificationType.orgAffiliationInvite:
         return AppTheme.accent;
       case NotificationType.streamerRemovedFromOrg:
-        return Colors.blueGrey;
+        return AppTheme.textMuted;
       case NotificationType.adminNoteToStreamer:
       case NotificationType.adminNoteToOrg:
         return AppTheme.primary;
       case NotificationType.adminCardEditRequestStreamer:
       case NotificationType.adminCardEditRequestOrg:
-        return Colors.deepOrangeAccent;
+        return AppTheme.warning;
       case NotificationType.newVodUpload:
         return AppTheme.primary;
       case NotificationType.systemAlert:
@@ -440,7 +436,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
 
   String _formatTimeAgo(DateTime timestamp, bool isAr) {
     final diff = DateTime.now().difference(timestamp);
-    if (diff.inSeconds < 60) return isAr ? 'الآن' : 'Just now';
+    if (diff.inSeconds < 60) return 'design_copy.just_now'.tr();
     if (diff.inMinutes < 60) return isAr ? 'منذ ${diff.inMinutes} دقيقة' : '${diff.inMinutes}m ago';
     if (diff.inHours < 24) return isAr ? 'منذ ${diff.inHours} ساعة' : '${diff.inHours}h ago';
     return isAr ? 'منذ ${diff.inDays} يوم' : '${diff.inDays}d ago';

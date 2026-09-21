@@ -2,52 +2,40 @@
 type: design-system
 project: Streamer_app
 status: active
-updated: 2026-08-09
+updated: 2026-09-21
 ---
 
 # 🎨 Streamer App: Master Design Contract & Token Catalog (`Desgin.md`)
 
 > **Design Philosophy:** **Refined Minimalist Academic**  
-> Engineered for focused academic learning and live lecture discovery across Saudi Arabia. Eliminates distracting visual clutter, building hierarchy through tonal surface elevation, mathematical spacing, crisp bilingual typography (Inter + Tajawal), and soft functional accents.
+> Engineered for focused academic learning and live lecture discovery across Saudi Arabia. Eliminates distracting visual clutter, building hierarchy through tonal surface elevation, mathematical spacing, bundled IBM Plex Sans and IBM Plex Sans Arabic, and soft functional accents.
 
 ---
 
-## 🏛️ 1. Core Visual Tokens & Color Palette
+## Scheme A contract, selected 2026-09-21
 
-### 🌑 Dark Mode Surface Elevation (Levels of Graphite)
-Depth is created through tonal surface elevation without using harsh pure black (`#000000`):
+The runtime source is `project/lib/core/theme/app_theme.dart`, matching `brief/assets/design_options/tokens_A.json`. This section supersedes the older graphite, coral, Inter and Tajawal specifications. The screen sketches below are historical layout references, not evidence of current functionality.
 
-| Token Name | Hex Value | OKLCH / CSS Equivalent | Application & Role |
-| :--- | :--- | :--- | :--- |
-| `--bg-base` | `#121214` | `oklch(0.14 0.005 260)` | Main application canvas backdrop & deep viewports. |
-| `--surface-card` | `#1A1A1E` | `oklch(0.18 0.005 260)` | Stream cards, profile headers, drawer panels. |
-| `--surface-elevated` | `#24242A` | `oklch(0.23 0.005 260)` | Active tab pills, dropdown popovers, search inputs. |
-| `--surface-modal` | `#2D2D35` | `oklch(0.28 0.005 260)` | Bottom sheets, dialogs, map floating control overlays. |
-| `--border-subtle` | `#27272F` | `oklch(0.25 0.000 0)` | Clean card dividing lines and list separators (1px). |
-| `--border-highlight`| `#3F3F4C` | `oklch(0.35 0.000 0)` | Active focus borders, top rim lighting on cards. |
+| Role | Token / value |
+| --- | --- |
+| Canvas and cards | bg / surface `#FFFFFF` |
+| Alternate surface | surfaceAlt `#ECF6EF` |
+| Borders | border `#D9DDDE`, borderStrong `#737B7D` |
+| Text | primary `#202B2B`, secondary `#485554`, muted `#586563` |
+| Primary, accent, live | `#17643F` |
+| Success / warning / danger | `#22613D` / `#7C5012` / `#9D3044` |
+| Media / onMedia | `#243536` / `#FFFFFF` |
+| Disabled fill | `#E5E8E7` |
 
-### 🎯 Functional Accent Tokens
-Functional accents are strictly reserved for state indicators:
+IBM Plex Sans and IBM Plex Sans Arabic are bundled in `project/assets/fonts/`, including OFL licenses. No runtime font download. Body is 15, title 21, display 30, caption 12. Arabic line heights are 1.8 for body, 1.6 for title and 1.5 for display. Latin line height is 1.4.
 
-| Accent Token | Hex Value | Semantic Purpose |
-| :--- | :--- | :--- |
-| `--accent-live` | `#FF8080` / `#FF4B4B` | **Live Stream Pulse:** "LIVE" chips, radar map markers, active broadcast indicator. |
-| `--accent-verified` | `#38BDF8` | **Verified Scholar Badge:** Official university / speaker certification tick. |
-| `--accent-venue` | `#34D399` | **Physical Venue Status:** Available seating, in-person attendance directions. |
-| `--accent-vod` | `#A78BFA` | **Archived VOD Catalog:** Recorded lectures, timestamps, slide chapter markers. |
+Cards, buttons and inputs use radius 12; chips use 999. Spacing tokens are 4, 8, 12, 16, 24 and 32; screen inset is 18. Cards have no shadow. Forms and settings should use a centered content width no greater than 720. Compact is below 600, medium below 900, expanded starts at 900. Use directional padding and native RTL.
 
-### ✍️ Typography & Contrast Scale
+`AppLogo` renders the owner's supplied `project/assets/logo/colored.svg`; `black.svg` is the monochrome variant. Preserve all supplied assets. The concept logo in the original token JSON is superseded by these supplied assets.
 
-* **English Typography:** `GoogleFonts.inter()` (geometric, ultra-clean sans-serif).
-* **Arabic Typography:** `GoogleFonts.tajawal()` (modern, high-legibility Arabic typography).
+Gradients are only `AppGradients.brand` and `soft`, top-start to bottom-end. Brand stops are `#17643F` and `#327044` with white text; soft stops are `#D7EDDC` and `#B8DBB9` with primary text. Allowed on primary buttons, logo tiles, welcome hero and small status accents, at most two visible. Never on app bars, navigation, list cards, dialogs, inputs or body backgrounds. Contrast must pass at both stops. Media controls use opaque or adequately dark scrims with onMedia text.
 
-| Hierarchy Level | Font Size | Weight | Contrast Level & Color |
-| :--- | :--- | :--- | :--- |
-| **H1 Screen Title** | `24sp` / `1.5rem` | Bold (`700`) | Primary White `#FFFFFF` (100% Lightness) |
-| **H2 Section Header** | `18sp` / `1.2rem` | SemiBold (`600`) | Primary White `#F4F4F5` (95% Lightness) |
-| **H3 Card Title / Speaker**| `15sp` / `1.0rem` | Medium (`500`) | Secondary White `#E4E4E7` (90% Lightness) |
-| **Body / Chat Text** | `13sp` / `0.85rem`| Regular (`400`) | Muted Gray `#A1A1AA` (70% Lightness) |
-| **Caption / Timestamp** | `11sp` / `0.75rem`| Regular (`400`) | Dimmed Gray `#71717A` (50% Lightness) |
+Verification is in `project/test/theme_contrast_test.dart` and `layout_sweep_test.dart`. Widget evidence does not establish real-device streaming or release readiness.
 
 ---
 

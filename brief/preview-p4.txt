@@ -1,0 +1,22 @@
+Compact command evidence; repetitive backend diagnostics omitted.
+The following MissingPluginException was thrown running a test:
+MissingPluginException(No implementation found for method setOrientation on channel
+#1      RtmpPublishEngine.setOrientation (package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart:230:7)
+00:02 +0 -1: phone broadcast en at all sizes and text scales [E]
+The following MissingPluginException was thrown running a test (but after the test had completed):
+MissingPluginException(No implementation found for method setOrientation on channel
+#1      RtmpPublishEngine.setOrientation (package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart:230:7)
+The following MissingPluginException was thrown running a test (but after the test had completed):
+MissingPluginException(No implementation found for method setOrientation on channel
+#1      RtmpPublishEngine.setOrientation (package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart:230:7)
+The following MissingPluginException was thrown running a test:
+MissingPluginException(No implementation found for method setOrientation on channel
+#1      RtmpPublishEngine.setOrientation (package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart:230:7)
+00:03 +0 -2: phone broadcast ar at all sizes and text scales [E]
+The following MissingPluginException was thrown running a test (but after the test had completed):
+MissingPluginException(No implementation found for method setOrientation on channel
+#1      RtmpPublishEngine.setOrientation (package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart:230:7)
+The following MissingPluginException was thrown running a test (but after the test had completed):
+MissingPluginException(No implementation found for method setOrientation on channel
+#1      RtmpPublishEngine.setOrientation (package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart:230:7)
+00:03 +0 -2: Some tests failed.

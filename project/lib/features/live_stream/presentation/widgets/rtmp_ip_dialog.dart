@@ -340,14 +340,14 @@ class _LiveBroadcasterStudioSheetState
                     child: _pillTab(
                       StudioMode.phone,
                       Icons.smartphone_rounded,
-                      isAr ? 'الجوال' : 'Phone',
+                      'design_copy.phone'.tr(),
                     ),
                   ),
                   Expanded(
                     child: _pillTab(
                       StudioMode.local,
                       Icons.bolt_rounded,
-                      isAr ? 'محلي' : 'Local',
+                      'design_copy.local'.tr(),
                     ),
                   ),
                 ],
@@ -446,9 +446,7 @@ class _LiveBroadcasterStudioSheetState
       maxLines: 4,
       style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
       decoration: InputDecoration(
-        hintText: isAr
-            ? 'وصف موجز للمحاضرة يظهر للمشاهدين...'
-            : 'A short summary viewers will see...',
+        hintText: 'design_copy.a_short_summary_viewers_will_see'.tr(),
         hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
         filled: true,
         fillColor: AppTheme.surfaceAlt,
@@ -517,21 +515,21 @@ class _LiveBroadcasterStudioSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel(isAr ? 'عنوان البث' : 'Broadcast Title'),
+        _sectionLabel('design_copy.broadcast_title'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _titleField(),
         const SizedBox(height: AppTheme.spaceMd),
-        _sectionLabel(isAr ? 'وصف البث' : 'Broadcast Description'),
+        _sectionLabel('design_copy.broadcast_description'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _descriptionField(isAr),
         const SizedBox(height: AppTheme.spaceMd),
-        _sectionLabel(isAr ? 'الفئة' : 'Category'),
+        _sectionLabel('design_copy.category'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _categoryChips(isAr),
         const SizedBox(height: AppTheme.spaceMd),
         Row(
           children: [
-            Expanded(child: _sectionLabel(isAr ? 'رابط يوتيوب لايف' : 'YouTube Live Link')),
+            Expanded(child: _sectionLabel('design_copy.youtube_live_link'.tr())),
             _infoButton(),
           ],
         ),
@@ -555,11 +553,11 @@ class _LiveBroadcasterStudioSheetState
         const SizedBox(height: AppTheme.spaceSm),
         _buildAutoDetectButton(),
         const SizedBox(height: AppTheme.spaceMd),
-        _sectionLabel(isAr ? 'مفتاح البث' : 'Stream Key'),
+        _sectionLabel('design_copy.stream_key'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _readOnlyKeyBox(),
         const SizedBox(height: AppTheme.spaceSm),
-        _sectionLabel(isAr ? 'عنوان خادم الإرسال' : 'Ingest Server URL'),
+        _sectionLabel('design_copy.ingest_server_url'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _ingestUrlPreview(),
         const SizedBox(height: AppTheme.spaceMd),
@@ -726,21 +724,21 @@ class _LiveBroadcasterStudioSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel(isAr ? 'عنوان البث' : 'Broadcast Title'),
+        _sectionLabel('design_copy.broadcast_title'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _titleField(),
         const SizedBox(height: AppTheme.spaceMd),
-        _sectionLabel(isAr ? 'وصف البث' : 'Broadcast Description'),
+        _sectionLabel('design_copy.broadcast_description'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _descriptionField(isAr),
         const SizedBox(height: AppTheme.spaceMd),
-        _sectionLabel(isAr ? 'الفئة' : 'Category'),
+        _sectionLabel('design_copy.category'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _categoryChips(isAr),
         const SizedBox(height: AppTheme.spaceMd),
         Row(
           children: [
-            Expanded(child: _sectionLabel(isAr ? 'مفتاح بث يوتيوب' : 'YouTube Stream Key')),
+            Expanded(child: _sectionLabel('design_copy.youtube_stream_key'.tr())),
             _infoButton(),
           ],
         ),
@@ -771,7 +769,7 @@ class _LiveBroadcasterStudioSheetState
           ),
         ),
         const SizedBox(height: AppTheme.spaceMd),
-        _sectionLabel(isAr ? 'جودة البث' : 'Quality Preset'),
+        _sectionLabel('design_copy.quality_preset'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _buildQualityPicker(),
         const SizedBox(height: AppTheme.spaceMd),
@@ -843,7 +841,7 @@ class _LiveBroadcasterStudioSheetState
       children: [
         Row(
           children: [
-            Expanded(child: _sectionLabel(isAr ? 'عنوان جهاز الحاسوب المحلي' : 'Laptop Local IP Address')),
+            Expanded(child: _sectionLabel('design_copy.laptop_local_ip_address'.tr())),
             _infoButton(),
           ],
         ),
@@ -889,7 +887,7 @@ class _LiveBroadcasterStudioSheetState
           }).toList(),
         ),
         const SizedBox(height: AppTheme.spaceSm),
-        _sectionLabel(isAr ? 'معاينة رابط البث' : 'Stream URL Preview'),
+        _sectionLabel('design_copy.stream_url_preview'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         Container(
           padding: const EdgeInsets.all(AppTheme.spaceSm),
@@ -953,7 +951,7 @@ class _LiveBroadcasterStudioSheetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    isAr ? 'خلفية الوضع الصوتي فقط' : 'Audio-Only Backdrop',
+                    'design_copy.audio_only_backdrop'.tr(),
                     style: const TextStyle(
                       color: AppTheme.onMedia,
                       fontSize: 12,
@@ -966,7 +964,7 @@ class _LiveBroadcasterStudioSheetState
                       Expanded(
                         child: _posterOption(
                           icon: Icons.graphic_eq_rounded,
-                          label: isAr ? 'الافتراضي' : 'Default',
+                          label: 'design_copy.default'.tr(),
                           selected: _posterChoice == _PosterChoice.defaultVisualizer,
                           onTap: () => setState(() {
                             _posterChoice = _PosterChoice.defaultVisualizer;
@@ -977,7 +975,7 @@ class _LiveBroadcasterStudioSheetState
                       Expanded(
                         child: _posterOption(
                           icon: Icons.image_rounded,
-                          label: isAr ? 'ملصق مخصص' : 'Custom Poster',
+                          label: 'design_copy.custom_poster'.tr(),
                           selected: _posterChoice == _PosterChoice.custom,
                           onTap: _pickPoster,
                         ),
@@ -1067,13 +1065,13 @@ class _LiveBroadcasterStudioSheetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppTheme.spaceMd),
-          _sectionLabel(isAr ? 'الوصول للبث' : 'Stream Access'),
+          _sectionLabel('design_copy.stream_access'.tr()),
           const SizedBox(height: AppTheme.spaceSm),
           Row(
             children: [
               Expanded(
                 child: _accessPill(
-                  label: isAr ? 'عام' : 'Public',
+                  label: 'design_copy.public'.tr(),
                   selected: !_isPrivate,
                   onTap: () => setState(() => _isPrivate = false),
                 ),
@@ -1081,7 +1079,7 @@ class _LiveBroadcasterStudioSheetState
               const SizedBox(width: 8),
               Expanded(
                 child: _accessPill(
-                  label: isAr ? 'خاص' : 'Private',
+                  label: 'design_copy.private'.tr(),
                   selected: _isPrivate,
                   onTap: () => setState(() => _isPrivate = true),
                 ),
@@ -1138,7 +1136,7 @@ class _LiveBroadcasterStudioSheetState
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            isAr ? 'القائمة المعتمدة مسبقاً (Whitelist)' : 'Pre-Approved Roster (Whitelist)',
+            'design_copy.pre_approved_roster_whitelist'.tr(),
             style: const TextStyle(
               color: AppTheme.onMedia,
               fontSize: 12,
@@ -1197,9 +1195,7 @@ class _LiveBroadcasterStudioSheetState
             children: [
               Expanded(
                 child: Text(
-                  isAr
-                      ? 'طلب موافقة المضيف للضيوف الجدد'
-                      : 'Require Host Knock Approval for new guests',
+                  'design_copy.require_host_knock_approval_for_new_guests'.tr(),
                   style: const TextStyle(color: AppTheme.onMedia, fontSize: 12),
                 ),
               ),
@@ -1215,7 +1211,7 @@ class _LiveBroadcasterStudioSheetState
             width: double.infinity,
             child: OutlinedButton.icon(
               icon: const Icon(Icons.ios_share_rounded, size: 16),
-              label: Text(isAr ? 'مشاركة رابط الدعوة الخاص' : 'Share Private Invite Link'),
+              label: Text('design_copy.share_private_invite_link'.tr()),
               style: OutlinedButton.styleFrom(
                 foregroundColor: _modeColor,
                 side: BorderSide(color: _modeColor),
@@ -1269,7 +1265,7 @@ class _LiveBroadcasterStudioSheetState
         Expanded(
           child: _formatOption(
             icon: Icons.videocam_rounded,
-            label: isAr ? 'مرئي' : 'Video',
+            label: 'design_copy.video'.tr(),
             selected: !_isAudioOnly,
             onTap: () => setState(() => _isAudioOnly = false),
           ),
@@ -1278,7 +1274,7 @@ class _LiveBroadcasterStudioSheetState
         Expanded(
           child: _formatOption(
             icon: Icons.mic_rounded,
-            label: isAr ? 'صوتي' : 'Audio',
+            label: 'design_copy.audio'.tr(),
             selected: _isAudioOnly,
             onTap: () => setState(() => _isAudioOnly = true),
             // V2: gentle breathing glow while Audio-Only is the active

@@ -1,156 +1,28 @@
-# streamer-app DESIGN.md
+# Scheme A runtime design
 
-> Auto-generated design system — reverse-engineered via static analysis by skillui.
-> Frameworks: None detected
-> Colors: 0 · Fonts: 0 · Components: 0
-> Icon library: not detected · State: not detected
-> Primary theme: light · Dark mode toggle: no · Motion: none
+## Scheme A contract, selected 2026-09-21
 
----
+The runtime source is `project/lib/core/theme/app_theme.dart`, matching `brief/assets/design_options/tokens_A.json`. This section supersedes the older graphite, coral, Inter and Tajawal specifications. The screen sketches below are historical layout references, not evidence of current functionality.
 
-## 1. Visual Theme & Atmosphere
+| Role | Token / value |
+| --- | --- |
+| Canvas and cards | bg / surface `#FFFFFF` |
+| Alternate surface | surfaceAlt `#ECF6EF` |
+| Borders | border `#D9DDDE`, borderStrong `#737B7D` |
+| Text | primary `#202B2B`, secondary `#485554`, muted `#586563` |
+| Primary, accent, live | `#17643F` |
+| Success / warning / danger | `#22613D` / `#7C5012` / `#9D3044` |
+| Media / onMedia | `#243536` / `#FFFFFF` |
+| Disabled fill | `#E5E8E7` |
 
-This is a **light-themed** interface with a neutral, approachable feel. The light background emphasizes content clarity. Typography uses **sans-serif** throughout — a clean, modern choice that maintains consistency. Spacing follows a **4px base grid** (compact density), with scale: 4, 8, 12, 16, 20, 24, 32, 40px.
+IBM Plex Sans and IBM Plex Sans Arabic are bundled in `project/assets/fonts/`, including OFL licenses. No runtime font download. Body is 15, title 21, display 30, caption 12. Arabic line heights are 1.8 for body, 1.6 for title and 1.5 for display. Latin line height is 1.4.
 
----
+Cards, buttons and inputs use radius 12; chips use 999. Spacing tokens are 4, 8, 12, 16, 24 and 32; screen inset is 18. Cards have no shadow. Forms and settings should use a centered content width no greater than 720. Compact is below 600, medium below 900, expanded starts at 900. Use directional padding and native RTL.
 
-## 2. Color Palette & Roles
+`AppLogo` renders the owner's supplied `project/assets/logo/colored.svg`; `black.svg` is the monochrome variant. Preserve all supplied assets. The concept logo in the original token JSON is superseded by these supplied assets.
 
-No colors detected in the project.
+Gradients are only `AppGradients.brand` and `soft`, top-start to bottom-end. Brand stops are `#17643F` and `#327044` with white text; soft stops are `#D7EDDC` and `#B8DBB9` with primary text. Allowed on primary buttons, logo tiles, welcome hero and small status accents, at most two visible. Never on app bars, navigation, list cards, dialogs, inputs or body backgrounds. Contrast must pass at both stops. Media controls use opaque or adequately dark scrims with onMedia text.
 
----
-
-## 3. Typography Rules
-
-No typography tokens detected.
-
----
-
-## 4. Component Stylings
-
-No components detected. Scan `src/components/` or `components/` to populate this section.
+Verification is in `project/test/theme_contrast_test.dart` and `layout_sweep_test.dart`. Widget evidence does not establish real-device streaming or release readiness.
 
 ---
-
-## 5. Layout Principles
-
-- **Base spacing unit:** 4px
-- **Spacing scale:** 4, 8, 12, 16, 20, 24, 32, 40, 48, 64
-- **Border radius:** 8px
-
-**Spacing as Meaning:**
-| Spacing | Use |
-|---|---|
-| 4-8px | Tight: related items within a group |
-| 12-16px | Medium: between groups |
-| 24-32px | Wide: between sections |
-| 48px+ | Vast: major section breaks |
-
-
----
-
-## 6. Depth & Elevation
-
-No box-shadow values detected. The design appears to use a flat visual style.
-
-
----
-
-## 8. Do's and Don'ts
-
-### Do's
-
-- Follow the **4px** spacing grid for all margins, padding, and gaps
-- Use border and background shifts for elevation — not shadows
-- Use border-radius from the scale: 8px
-
-### Don'ts
-
-- Don't introduce colors outside this palette — extend the design tokens first
-- Don't use arbitrary spacing values — stick to multiples of 4px
-- Don't add box-shadow — this design system uses flat elevation
-- Don't use gradients — the design uses solid colors only
-- Don't use arbitrary border-radius values — pick from the defined scale
-- Don't use backdrop-blur or blur effects
-
-### Anti-Patterns (detected from codebase)
-
-- No box-shadow on any element
-- No gradient backgrounds
-- No blur or backdrop-blur effects
-- No zebra striping on tables/lists
-
-
----
-
-## 9. Responsive Behavior
-
-No breakpoints detected. Consider adding responsive breakpoints to the design system.
-
----
-
-## 10. Agent Prompt Guide
-
-Use these as starting points when building new UI:
-
-### Build a Card
-
-```
-Background: var(--surface)
-Border: 1px solid var(--border)
-Radius: 8px
-Padding: 16px
-Font: sans-serif
-No shadows — use borders and surface colors for depth.
-```
-
-### Build a Button
-
-```
-Primary: bg var(--accent), text white
-Ghost: bg transparent, border var(--border)
-Padding: 8px 16px
-Radius: 8px
-Hover: opacity 0.9 or lighter shade
-Focus: ring with var(--accent)
-```
-
-### Build a Page Layout
-
-```
-Background: var(--background)
-Max-width: 1280px, centered
-Grid: 4px base
-Responsive: mobile-first, breakpoints from Section 9
-```
-
-### Build a Stats Card
-
-```
-Surface: var(--surface)
-Label: var(--text-muted) (muted, 12px, uppercase)
-Value: var(--text-primary) (primary, 24-32px, bold)
-Status: use success/warning/danger from Section 2
-```
-
-### Build a Form
-
-```
-Input bg: var(--background)
-Input border: 1px solid var(--border)
-Focus: border-color var(--accent)
-Label: var(--text-muted) 12px
-Spacing: 16px between fields
-Radius: 8px
-```
-
-### General Component
-
-```
-1. Read DESIGN.md Sections 2-6 for tokens
-2. Colors: only from palette
-3. Font: sans-serif, type scale from Section 3
-4. Spacing: 4px grid
-5. Components: match patterns from Section 4
-6. Elevation: flat, surface shifts
-```

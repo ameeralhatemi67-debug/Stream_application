@@ -179,7 +179,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                       child: const Text(
                                         'G',
                                         style: TextStyle(
-                                          color: Colors.blue,
+                                          color: AppTheme.primary,
                                           fontWeight: FontWeight.w900,
                                           fontSize: 16,
                                         ),

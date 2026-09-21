@@ -41,6 +41,7 @@ class _ConsentDialogState extends State<ConsentDialog> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
+        scrollable: true,
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -86,6 +87,7 @@ class _ConsentDialogState extends State<ConsentDialog> {
     return PopScope(
       canPop: false,
       child: AlertDialog(
+        scrollable: true,
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),

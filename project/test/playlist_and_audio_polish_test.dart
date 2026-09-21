@@ -1,3 +1,6 @@
+import 'dart:convert';
+import 'dart:io';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
@@ -17,8 +20,19 @@ import 'fixtures/streamer_fixtures.dart';
 
 import 'fixtures/vod_fixtures.dart';
 
+class _CatalogLoader extends AssetLoader {
+  const _CatalogLoader();
+  @override
+  Future<Map<String, dynamic>> load(String path, Locale locale) async =>
+      jsonDecode(File('$path/${locale.languageCode}.json').readAsStringSync()) as Map<String, dynamic>;
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(() async {
+    SharedPreferences.setMockInitialValues({});
+    await EasyLocalization.ensureInitialized();
+  });
 
   Widget buildTestableWidget(Widget child, {AppProvider? provider}) {
     return ChangeNotifierProvider<AppProvider>.value(
@@ -26,11 +40,16 @@ void main() {
       child: EasyLocalization(
         supportedLocales: const [Locale('en'), Locale('ar')],
         path: 'assets/i18n',
+        assetLoader: const _CatalogLoader(),
+        saveLocale: false,
         fallbackLocale: const Locale('en'),
         startLocale: const Locale('en'),
-        child: MaterialApp(
+        child: Builder(builder: (context) => MaterialApp(
+          locale: context.locale,
+          supportedLocales: context.supportedLocales,
+          localizationsDelegates: context.localizationDelegates,
           home: Scaffold(body: child),
-        ),
+        )),
       ),
     );
   }

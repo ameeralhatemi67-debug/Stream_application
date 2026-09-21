@@ -627,7 +627,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           ),
         );
       case YoutubeVerificationState.verifiedOnline:
-        return const Icon(Icons.verified_rounded, color: Colors.green);
+        return const Icon(Icons.verified_rounded, color: AppTheme.success);
       case YoutubeVerificationState.formatAccepted:
         return const Icon(Icons.check_circle_outline_rounded, color: AppTheme.primary);
       case YoutubeVerificationState.invalidFormat:
@@ -641,7 +641,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     if (widget.youtubeController.text.isEmpty) return isFocused ? AppTheme.danger : AppTheme.border;
     switch (_ytState) {
       case YoutubeVerificationState.verifiedOnline:
-        return Colors.green;
+        return AppTheme.success;
       case YoutubeVerificationState.formatAccepted:
         return AppTheme.primary;
       case YoutubeVerificationState.invalidFormat:
@@ -654,7 +654,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
   Color _getYoutubeTextColor() {
     switch (_ytState) {
       case YoutubeVerificationState.verifiedOnline:
-        return Colors.green;
+        return AppTheme.success;
       case YoutubeVerificationState.formatAccepted:
         return AppTheme.primary;
       case YoutubeVerificationState.invalidFormat:

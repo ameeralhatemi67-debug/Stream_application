@@ -349,139 +349,21 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   Widget _buildAdminHeader(
       BuildContext context, AppProvider provider, bool isAr, bool isDesktop,
       {required bool isMasterAdmin}) {
-    final tierLabel = isMasterAdmin ? 'MASTER ADMIN' : 'ADMIN';
-    final tierColor = isMasterAdmin ? AppTheme.danger : AppTheme.primary;
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppTheme.spaceXl,
-        vertical: AppTheme.spaceLg,
-      ),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.border, width: 1),
-        ),
-      ),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back_rounded,
-                color: AppTheme.textPrimary),
-            tooltip: 'Back to Discovery Feed',
-            onPressed: () => context.go('/feed'),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: AppTheme.accent.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              border: Border.all(
-                  color: AppTheme.accent.withValues(alpha: 0.6)),
-            ),
-            child: const Icon(Icons.admin_panel_settings_rounded,
-                color: AppTheme.accent, size: 24),
-          ),
-          const SizedBox(width: AppTheme.spaceMd),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      'admin.title'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: tierColor.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border:
-                            Border.all(color: tierColor.withValues(alpha: 0.6)),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.shield_rounded,
-                              size: 11, color: tierColor),
-                          const SizedBox(width: 4),
-                          Text(
-                            tierLabel,
-                            style: TextStyle(
-                              color: tierColor,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  'admin.subtitle'.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 11.5,
-                  ),
-                ),
-              ],
-            ),
-          ),
-
-          // Admin User Info Chip
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppTheme.surfaceAlt,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.border),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                CircleAvatar(
-                  radius: 12,
-                  backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
-                  child: const Icon(Icons.person_rounded,
-                      size: 14, color: AppTheme.primary),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      provider.googleUserName ?? provider.googleUserEmail ?? '',
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      provider.googleUserEmail ?? '',
-                      style: const TextStyle(
-                        color: AppTheme.textMuted,
-                        fontSize: 9.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceSm),
+      child: Row(children: [
+        IconButton(icon: const Icon(Icons.arrow_back_rounded),
+          tooltip: 'common.back'.tr(), onPressed: () => context.go('/feed')),
+        const SizedBox(width: AppTheme.spaceSm),
+        Expanded(child: Text('admin.title'.tr(),
+          maxLines: 2, overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.titleMedium)),
+        if (isDesktop) ...[
+          const SizedBox(width: AppTheme.spaceLg),
+          Flexible(child: Text(provider.googleUserName ?? provider.googleUserEmail ?? '',
+            maxLines: 1, overflow: TextOverflow.ellipsis)),
         ],
-      ),
+      ]),
     );
   }
 
@@ -823,13 +705,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               const Icon(Icons.insights_rounded,
                   color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
-              Text(
+              Expanded(child: Text(
                 'admin.tab_overview'.tr(),
                 style: const TextStyle(
                   color: AppTheme.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
-                ),
+                )),
               ),
             ],
           ),
@@ -889,9 +771,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                 child: _buildActionShortcutCard(
                   title: 'Review Verification Queue',
                   subtitle: '$pendingApps pending applications awaiting review',
@@ -901,7 +785,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 ),
               ),
               const SizedBox(width: AppTheme.spaceMd),
-              Expanded(
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                 child: _buildActionShortcutCard(
                   title: 'Inspect Spatial GIS Map',
                   subtitle: 'View live auditoriums in Al Khobar & Dhahran',
@@ -911,7 +796,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 ),
               ),
               const SizedBox(width: AppTheme.spaceMd),
-              Expanded(
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                 child: _buildActionShortcutCard(
                   title: 'Edit Platform Terms',
                   subtitle: 'Update bilingual policies and Saudi PDPL terms',
@@ -947,13 +833,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
+              Expanded(child: Text(
                 title,
                 style: const TextStyle(
                   color: AppTheme.textSecondary,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
-                ),
+                )),
               ),
               Container(
                 padding: const EdgeInsets.all(6),

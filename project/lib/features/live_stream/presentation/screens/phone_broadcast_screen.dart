@@ -526,7 +526,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         child: Text(
           _setupError!,
           textAlign: TextAlign.center,
-          style: const TextStyle(color: Colors.redAccent),
+          style: const TextStyle(color: AppTheme.danger),
         ),
       );
     }
@@ -635,7 +635,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         top: AppTheme.spaceSm,
                         left: AppTheme.spaceSm,
                         child: _StatusPill(
-                            label: 'Connecting...', color: Colors.amber),
+                            label: 'Connecting...', color: AppTheme.warning),
                       ),
 
                     // Top Right: 3-Dots Streamer Controls Menu
@@ -1670,7 +1670,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   Widget _buildPresetPicker() {
-    return Center(
+    return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         child: Column(
@@ -1678,17 +1678,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           children: [
             Text('design_ui.choose_a_broadcast_quality'.tr(),
               style: const TextStyle(
-                  color: AppTheme.onMedia,
+                  color: AppTheme.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: AppTheme.spaceSm),
-            const Text(
-              "Higher quality looks better but needs a stronger upload. "
-              "You can't change this once you start the camera.",
+            Text(
+              'design_copy.quality_help'.tr(),
               textAlign: TextAlign.center,
               style:
-                  TextStyle(color: AppTheme.textSecondary, fontSize: 12.5),
+                  const TextStyle(color: AppTheme.textSecondary, fontSize: 12.5),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             ...BroadcastQualityPreset.values.map(
@@ -1708,7 +1707,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 onPressed: _confirmPresetAndSetup,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.danger,
-                  foregroundColor: AppTheme.onMedia,
+                  foregroundColor: AppTheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
                 child: Text('design_ui.continue'.tr(),
@@ -1765,7 +1764,7 @@ class _PresetOption extends StatelessWidget {
               child: Text(
                 preset.label,
                 style: TextStyle(
-                  color: selected ? AppTheme.onMedia : AppTheme.textSecondary,
+                  color: selected ? AppTheme.primary : AppTheme.textSecondary,
                   fontSize: 12.5,
                   fontWeight: selected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -1811,7 +1810,7 @@ class _ReconnectingBanner extends StatelessWidget {
         horizontal: AppTheme.spaceMd,
         vertical: AppTheme.spaceSm,
       ),
-      color: Colors.orange.shade900,
+      color: AppTheme.warning,
       child: Row(
         children: [
           const Icon(Icons.wifi_off_rounded, color: AppTheme.onMedia, size: 18),
@@ -1845,7 +1844,7 @@ class _StreamErrorBanner extends StatelessWidget {
         horizontal: AppTheme.spaceMd,
         vertical: AppTheme.spaceSm,
       ),
-      color: Colors.red.shade900,
+      color: AppTheme.danger,
       child: Row(
         children: [
           const Icon(Icons.error_outline_rounded,

@@ -100,98 +100,80 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
 
   List<_Quest> _obsQuests(bool isAr) => [
         _Quest(
-          questName: isAr ? 'مركز القيادة ' : 'Mission Control ',
+          questName: 'design_copy.mission_control'.tr(),
           icon: Icons.public_rounded,
-          heading: isAr ? 'افتح مركز القيادة' : 'Open Mission Control',
-          body: isAr
-              ? 'كل شيء يبدأ من استوديو يوتيوب -- مركز قيادتك للبث المباشر. افتحه وابحث عن زر "بدء البث".'
-              : 'Everything starts at YouTube Studio -- your mission control for going live. Open it up and find the "Go Live"button.',
+          heading: 'design_copy.open_mission_control'.tr(),
+          body: 'design_copy.everything_starts_at_youtube_studio_your_mission_control_for_goin'.tr(),
           actions: [
             _QuestAction(_ActionKind.openStudio,
-                isAr ? 'افتح استوديو يوتيوب' : 'Open YouTube Studio'),
+                'design_copy.open_youtube_studio'.tr()),
           ],
         ),
         _Quest(
-          questName: isAr ? 'تصريح الدخول السري ' : 'The Secret VIP Pass ',
+          questName: 'design_copy.the_secret_vip_pass'.tr(),
           icon: Icons.vpn_key_rounded,
-          heading: isAr ? 'احصل على مفتاح بثك السري' : 'Grab Your Secret Stream Key',
-          body: isAr
-              ? 'مفتاح البث أشبه بتصريح دخول سري للكواليس. يخبر يوتيوب: "هذا البث فعلاً مني!"من استوديو يوتيوب، افتح تبويب "البث"واضغط نسخ بجانب مفتاح البث الافتراضي.'
-              : 'Think of your Stream Key like a secret VIP backstage pass. It tells YouTube: "Hey, this video is really from ME!"In YouTube Studio, find the "Stream"tab and click Copy next to Default Stream Key.',
+          heading: 'design_copy.grab_your_secret_stream_key'.tr(),
+          body: 'design_copy.think_of_your_stream_key_like_a_secret_vip_backstage_pass_it_tell'.tr(),
           actions: [
             _QuestAction(_ActionKind.openStudio,
-                isAr ? 'افتح استوديو يوتيوب' : 'Open YouTube Studio'),
+                'design_copy.open_youtube_studio'.tr()),
             _QuestAction(_ActionKind.pasteClipboard,
-                isAr ? 'الصق من الحافظة' : 'Paste Key from Clipboard'),
+                'design_copy.paste_key_from_clipboard'.tr()),
           ],
         ),
         _Quest(
-          questName: isAr ? 'توصيل الأسلاك ' : 'Connecting the Wires ',
+          questName: 'design_copy.connecting_the_wires'.tr(),
           icon: Icons.cable_rounded,
-          heading: isAr ? 'وصّل OBS بيوتيوب' : 'Wire Up OBS Studio',
-          body: isAr
-              ? 'افتح برنامج OBS على حاسوبك، اذهب إلى الإعدادات > البث، والصق مفتاح البث وعنوان الخادم هناك. هذا يربط كاميراتك مباشرة بيوتيوب.'
-              : 'Open OBS Studio on your computer, go to Settings > Stream, and paste your Stream Key and Server URL there. This wires your camera straight to YouTube.',
+          heading: 'design_copy.wire_up_obs_studio'.tr(),
+          body: 'design_copy.open_obs_studio_on_your_computer_go_to_settings_stream_and_paste_'.tr(),
         ),
         _Quest(
-          questName: isAr ? 'جاهز للإقلاع ' : 'Ready for Takeoff ',
+          questName: 'design_copy.ready_for_takeoff'.tr(),
           icon: Icons.rocket_launch_rounded,
-          heading: isAr ? 'أطلق بثك' : 'Launch Your Broadcast',
-          body: isAr
-              ? 'اضغط "بدء البث"في OBS أولاً، ثم اضغط "بدء البث المباشر"أدناه لإطلاق بثك للعالم. 3... 2... 1... انطلاق!'
-              : 'Press "Start Streaming"in OBS first, then tap Go Live below to launch your broadcast to the world. 3... 2... 1... liftoff!',
+          heading: 'design_copy.launch_your_broadcast'.tr(),
+          body: 'design_copy.press_start_streaming_in_obs_first_then_tap_go_live_below_to_laun'.tr(),
         ),
       ];
 
   List<_Quest> _phoneQuests(bool isAr) => [
         _Quest(
-          questName: isAr ? 'تفعيل الحساب ' : 'Account Activation ',
+          questName: 'design_copy.account_activation'.tr(),
           icon: Icons.hourglass_top_rounded,
-          heading: isAr ? 'فعّل قناتك أولاً' : 'Activate Your Channel First',
-          body: isAr
-              ? 'أول مرة تبث على يوتيوب؟ تحتاج قناتك لتفعيل لمرة واحدة يستغرق 24 ساعة قبل أن يُفتح البث المباشر. إذا بثّيت من قبل، تجاوز هذه الخطوة -- أنت جاهز!'
-              : 'First time going live on YouTube? Your channel needs a one-time, 24-hour verification before live streaming unlocks. If you\'ve streamed before, skip ahead -- you\'re already good to go!',
+          heading: 'design_copy.activate_your_channel_first'.tr(),
+          body: 'design_copy.first_time_going_live_on_youtube_your_channel_needs_a_one_time_24'.tr(),
         ),
         _Quest(
-          questName: isAr ? 'اضبطه ولا تفكر فيه مجدداً ' : 'Set It & Forget It ',
+          questName: 'design_copy.set_it_forget_it'.tr(),
           icon: Icons.save_rounded,
-          heading: isAr ? 'الصق مفتاح البث مرة واحدة' : 'Paste Your Stream Key Once',
-          body: isAr
-              ? 'احصل على مفتاح البث من تبويب "البث"في استوديو يوتيوب والصقه هنا مرة واحدة فقط. سنتذكره للمرة القادمة.'
-              : 'Grab your Stream Key from YouTube Studio\'s "Stream"tab and paste it once below. We\'ll remember it for next time, so you only ever have to do this once.',
+          heading: 'design_copy.paste_your_stream_key_once'.tr(),
+          body: 'design_copy.grab_your_stream_key_from_youtube_studio_s_stream_tab_and_paste_i'.tr(),
           actions: [
             _QuestAction(_ActionKind.openStudio,
-                isAr ? 'افتح استوديو يوتيوب' : 'Open YouTube Studio'),
+                'design_copy.open_youtube_studio'.tr()),
             _QuestAction(_ActionKind.pasteClipboard,
-                isAr ? 'الصق من الحافظة' : 'Paste Key from Clipboard'),
+                'design_copy.paste_key_from_clipboard'.tr()),
           ],
         ),
         _Quest(
-          questName: isAr ? 'بث مباشر من جوالك ' : 'Live from Your Phone ',
+          questName: 'design_copy.live_from_your_phone'.tr(),
           icon: Icons.smartphone_rounded,
-          heading: isAr ? 'افتح الكاميرا وابدأ' : 'Open Camera & Go',
-          body: isAr
-              ? 'اضغط "فتح الكاميرا"وسيتحول جوالك بكاميرته وميكروفونه إلى بث مباشر فوري. بدون حاسوب، بدون OBS -- أنت فقط، مباشرة.'
-              : 'Tap Open Camera and your phone\'s own camera and microphone become the broadcast. No laptop, no OBS -- just you, live.',
+          heading: 'design_copy.open_camera_go'.tr(),
+          body: 'design_copy.tap_open_camera_and_your_phone_s_own_camera_and_microphone_become'.tr(),
         ),
       ];
 
   List<_Quest> _localQuests(bool isAr) => [
         _Quest(
-          questName: isAr ? 'نفس شبكة الغرفة ' : 'Same Room Network ',
+          questName: 'design_copy.same_room_network'.tr(),
           icon: Icons.wifi_rounded,
-          heading: isAr ? 'اتصل بنفس شبكة الواي فاي' : 'Join the Same Wi-Fi',
-          body: isAr
-              ? 'هذا الوضع يبث عبر شبكة الواي فاي المحلية مباشرة -- بدون إنترنت. فقط تأكد أن جوالك وحاسوبك على نفس الشبكة.'
-              : 'This mode streams straight over your local Wi-Fi -- no internet needed. Just make sure your phone and your laptop are connected to the same network.',
+          heading: 'design_copy.join_the_same_wi_fi'.tr(),
+          body: 'design_copy.this_mode_streams_straight_over_your_local_wi_fi_no_internet_need'.tr(),
         ),
         _Quest(
-          questName: isAr ? 'وصّل وابدأ ' : 'Plug & Play ',
+          questName: 'design_copy.plug_play'.tr(),
           icon: Icons.bolt_rounded,
-          heading: isAr ? 'أدخل عنوان الحاسوب' : 'Enter the Laptop IP',
-          body: isAr
-              ? 'ابحث عن عنوان IP المحلي لحاسوبك (يبدأ عادة بـ 192.168...)، اكتبه أدناه، واضغط بث. أنت تبث محلياً خلال ثوانٍ.'
-              : 'Find your laptop\'s local IP address (usually starts with 192.168...), type it in below, and tap Stream. You\'re broadcasting locally in seconds.',
+          heading: 'design_copy.enter_the_laptop_ip'.tr(),
+          body: 'design_copy.find_your_laptop_s_local_ip_address_usually_starts_with_192_168_t'.tr(),
         ),
       ];
 
@@ -210,9 +192,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
     if (text.length < 6) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(isAr
-              ? 'الحافظة فارغة أو النص قصير جداً ليكون مفتاح بث.'
-              : 'Clipboard is empty or too short to be a stream key.'),
+          content: Text('design_copy.clipboard_is_empty_or_too_short_to_be_a_stream_key'.tr()),
         ),
       );
       return;
@@ -221,7 +201,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
     widget.onStreamKeyPasted?.call(text);
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(isAr ? 'تم لصق مفتاح البث ✓' : 'Stream key pasted ✓'),
+        content: Text('design_copy.stream_key_pasted'.tr()),
         backgroundColor: AppTheme.live,
       ),
     );
@@ -295,7 +275,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                isAr ? 'أكاديمية البث' : 'STREAMER ACADEMY',
+                'design_copy.streamer_academy'.tr(),
                 style: const TextStyle(
                   color: AppTheme.danger,
                   fontWeight: FontWeight.bold,
@@ -321,7 +301,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
         ),
         IconButton(
           icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
-          tooltip: isAr ? 'إغلاق' : 'Close',
+          tooltip: 'design_copy.close'.tr(),
           onPressed: () => Navigator.of(context).pop(),
         ),
       ],
@@ -471,7 +451,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                     ),
                   ),
                   child: Text(
-                    isAr ? 'الخطوة السابقة' : 'Previous Step',
+                    'design_copy.previous_step'.tr(),
                     style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -492,8 +472,8 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             ),
             child: Text(
               isLast
-                  ? (isAr ? 'فهمت، لنبدأ البث!' : "Got It, Let's Stream!")
-                  : (isAr ? 'التحدي التالي ' : 'Next Quest '),
+                  ? ('design_copy.got_it_let_s_stream'.tr())
+                  : ('design_copy.next_quest'.tr()),
               style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
             ),
           ),

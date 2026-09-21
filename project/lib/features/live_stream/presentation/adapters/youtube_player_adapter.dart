@@ -419,7 +419,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: Colors.redAccent,
+                        color: AppTheme.danger,
                         shape: BoxShape.circle,
                       ),
                     ),

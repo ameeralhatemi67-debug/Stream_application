@@ -634,7 +634,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     if (speaker.permissions.canChangeLocation)
                       _buildPermTag('Select Venue', Icons.location_on, AppTheme.warning),
                     if (speaker.permissions.canEditDescription)
-                      _buildPermTag('Edit Title', Icons.edit_note, Colors.purpleAccent),
+                      _buildPermTag('Edit Title', Icons.edit_note, AppTheme.accent),
                   ],
                 ),
               ],
@@ -1118,19 +1118,19 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                   SwitchListTile(
                     title: Text('admin.perm_can_description'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canDesc,
-                    activeThumbColor: Colors.purpleAccent,
+                    activeThumbColor: AppTheme.accent,
                     onChanged: (val) => setDialogState(() => canDesc = val),
                   ),
                   SwitchListTile(
                     title: Text('admin.perm_can_time'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canTime,
-                    activeThumbColor: Colors.orangeAccent,
+                    activeThumbColor: AppTheme.warning,
                     onChanged: (val) => setDialogState(() => canTime = val),
                   ),
                   SwitchListTile(
                     title: Text('admin.perm_can_links'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
                     value: canLinks,
-                    activeThumbColor: Colors.tealAccent,
+                    activeThumbColor: AppTheme.primary,
                     onChanged: (val) => setDialogState(() => canLinks = val),
                   ),
                 ],

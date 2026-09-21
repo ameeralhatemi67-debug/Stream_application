@@ -127,7 +127,6 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final isAr = widget.langCode == 'ar';
     final playlistTitle = widget.playlist.getLocalizedTitle(widget.langCode);
     final broadcasterName =
         widget.streamer.getLocalizedName(widget.langCode);
@@ -232,7 +231,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                   ),
                   icon: const Icon(Icons.play_arrow_rounded, size: 20),
                   label: Text(
-                    isAr ? 'تشغيل القائمة بالكامل' : 'Play All Lectures',
+                    'design_copy.play_all_lectures'.tr(),
                     style: const TextStyle(
                         fontSize: 13, fontWeight: FontWeight.bold),
                   ),
@@ -260,9 +259,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            isAr
-                                ? 'جاري تحميل قائمة المحاضرات...'
-                                : 'Loading playlist lectures...',
+                            'design_copy.loading_playlist_lectures'.tr(),
                             style: const TextStyle(
                               color: AppTheme.textMuted,
                               fontSize: 12,
@@ -282,9 +279,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                     color: AppTheme.textMuted, size: 40),
                                 const SizedBox(height: 10),
                                 Text(
-                                  isAr
-                                      ? 'لا توجد محاضرات متاحة في هذه القائمة حالياً'
-                                      : 'No lectures available in this playlist currently',
+                                  'design_copy.no_lectures_available_in_this_playlist_currently'.tr(),
                                   style: const TextStyle(
                                     color: AppTheme.textSecondary,
                                     fontSize: 13,

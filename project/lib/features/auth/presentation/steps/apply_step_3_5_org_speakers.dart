@@ -235,10 +235,10 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.check_circle_rounded, color: Colors.green, size: 14),
+                          const Icon(Icons.check_circle_rounded, color: AppTheme.success, size: 14),
                           const SizedBox(width: 4),
                           Text('design_ui.auto_filled_from_registered_streamer_profile'.tr(),
-                              style: const TextStyle(color: Colors.green, fontSize: 11, fontWeight: FontWeight.w600)),
+                              style: const TextStyle(color: AppTheme.success, fontSize: 11, fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ],
@@ -372,8 +372,9 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
           const SizedBox(height: AppTheme.spaceLg),
 
           // Header with + Add Button
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
             children: [
               Text(
                 'wizard_steps.step3_5_roster_count'.tr(args: ['${speakers.length}']),
@@ -486,7 +487,7 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: Colors.redAccent, size: 18),
+                        icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.danger, size: 18),
                         tooltip: 'Remove speaker',
                         onPressed: () => onRemoveSpeaker(idx),
                       ),

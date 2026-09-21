@@ -77,7 +77,8 @@ abstract final class AppTheme {
     ),
     cardTheme: CardThemeData(color: surface, elevation: 0,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd), side: const BorderSide(color: border))),
-    dialogTheme: const DialogThemeData(backgroundColor: surface, surfaceTintColor: Colors.transparent),
+    dialogTheme: DialogThemeData(backgroundColor: surface, surfaceTintColor: Colors.transparent,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd))),
     bottomSheetTheme: const BottomSheetThemeData(backgroundColor: surface, surfaceTintColor: Colors.transparent),
     navigationBarTheme: const NavigationBarThemeData(backgroundColor: surface, indicatorColor: surfaceAlt),
     navigationRailTheme: const NavigationRailThemeData(backgroundColor: surface, indicatorColor: surfaceAlt),
@@ -88,6 +89,10 @@ abstract final class AppTheme {
       foregroundColor: onPrimary, backgroundColor: primary, disabledBackgroundColor: disabled,
       disabledForegroundColor: textMuted, elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: spaceLg, vertical: spaceMd),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
+    outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
+    filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
     inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: surface,
       hintStyle: const TextStyle(color: textMuted),

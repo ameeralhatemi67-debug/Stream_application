@@ -19,6 +19,13 @@ import 'package:streamer_app/features/discovery/presentation/discovery_feed_scre
 import 'package:streamer_app/features/profile/presentation/settings_screen.dart';
 import 'package:streamer_app/features/admin/presentation/admin_hub_screen.dart';
 
+import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
+import 'package:streamer_app/features/live_stream/presentation/screens/phone_broadcast_screen.dart';
+import 'fixtures/streamer_fixtures.dart';
+import 'package:streamer_app/features/auth/presentation/steps/apply_step_3_professional.dart';
+import 'package:streamer_app/core/widgets/consent_dialog.dart';
+import 'package:streamer_app/features/notifications/presentation/notification_center_sheet.dart';
+
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> data;
   const DirectJsonAssetLoader(this.data);
@@ -53,7 +60,19 @@ void main() {
     'role select': () => const RoleSelectScreen(),
     'application pending': () => const ApplicationPendingScreen(),
     'application identity': () => const StreamerApplyScreen(),
+    for (var step = 1; step < 5; step++) 'wizard individual $step': () => const StreamerApplyScreen(),
+    for (var step = 0; step < 6; step++) 'wizard organization $step': () => const StreamerApplyScreen(),
+    'consent dialog': () => const Scaffold(body: ConsentDialog()),
+    'notification sheet': () => const Scaffold(body: NotificationCenterSheet()),
     'empty feed': () => const DiscoveryFeedScreen(),
+    'populated feed': () => const DiscoveryFeedScreen(),
+    'empty map': () => const SpatialMapScreen(),
+    'populated map': () => const SpatialMapScreen(),
+    'phone broadcast': () => const PhoneBroadcastScreen(),
+    'streamer settings': () => const SettingsScreen(),
+    'admin settings': () => const SettingsScreen(),
+    'organization settings': () => const SettingsScreen(),
+    for (var tab = 0; tab < 13; tab++) 'admin tab $tab': () => const AdminHubScreen(),
     'viewer settings': () => const SettingsScreen(),
     'admin access denied': () => const AdminHubScreen(),
   };
@@ -67,6 +86,18 @@ void main() {
           for(final scale in [1.0, 1.3, 2.0]) {
             tester.view.physicalSize = size;
             final provider = AppProvider();
+            if (entry.key.startsWith('populated') || entry.key == 'streamer settings') {
+              for (final streamer in mockStreamers) {
+                provider.addStreamerForTests(streamer.copyWith(avatarUrl: '', bannerUrl: ''));
+              }
+            }
+            if (entry.key.startsWith('admin tab') || entry.key == 'admin settings') {
+              provider.debugSetSignedInForTests(email: 'admin@example.test', isMasterAdmin: true);
+            } else if (entry.key == 'streamer settings') {
+              provider.debugSetSignedInForTests(email: 'streamer@example.test', ownedStreamerId: mockStreamers.first.streamerId);
+            } else if (entry.key == 'organization settings') {
+              provider.debugSetSignedInForTests(email: 'owner@example.test', isStreamer: false, permittedAdminOrgIds: ['test-org']);
+            }
             final previewKey = GlobalKey();
             final details = <String>[];
             final previousHandler = FlutterError.onError;
@@ -88,6 +119,21 @@ void main() {
               )),
             ));
             await tester.pump(const Duration(milliseconds:200));
+            if (entry.key.startsWith('wizard')) {
+              final controller = tester.widget<PageView>(find.byType(PageView)).controller!;
+              if (entry.key.contains('organization')) {
+                controller.jumpToPage(2);
+                await tester.pump();
+                tester.widget<ApplyStep3Professional>(find.byType(ApplyStep3Professional)).onTypeChanged(true);
+                await tester.pump();
+              }
+              controller.jumpToPage(int.parse(entry.key.split(' ').last));
+              await tester.pump();
+            }
+            if (entry.key.startsWith('admin tab')) {
+              tester.widget<TabBar>(find.byType(TabBar).first).controller!.index = int.parse(entry.key.split(' ').last);
+              await tester.pump(const Duration(milliseconds: 400));
+            }
             final errors=<Object>[];
             Object? error;
             while((error=tester.takeException()) != null) { errors.add(error!); }
