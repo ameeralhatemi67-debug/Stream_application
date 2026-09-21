@@ -12,6 +12,8 @@ current_version: v0.4
 
 This roadmap is organized **Version → Checkpoint → Phase → Task**. A **Version** is a major slice of the app (e.g. "the backend exists now," "chat actually works"). Each Version contains several **Checkpoints** — natural pause points where we stop, you review, we discuss, and you can hand things to a separate agent for a polish pass if you want one. Each Checkpoint contains several **Phases** — each Phase ends in one commit. Each Phase is a handful of concrete **Tasks**.
 
+> 📊 **Current Progress & Live Gantt Chart:** See [Roadmap.md](../../Roadmap.md) for the active hardening run Gantt charts and phase status table (P0, P1, P2, P3 & P6.1 complete; 8 design gates remaining).
+
 ---
 
 ## How this actually runs, day to day

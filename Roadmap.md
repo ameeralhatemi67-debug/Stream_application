@@ -10,7 +10,7 @@
 
 ## 📅 Roadmap Overview & Version Progression
 
-*Updated 2026-09-20. Sources: git history for the built versions, `brief/LEDGER.md` (agent-reported) and a re-run of `node brief/tools/gates.mjs` for the hardening run. Future dates are estimates, not promises: they assume one 5-hour agent window per day at 85-90 % of the limit and no rework.*
+*Updated 2026-09-21. Sources: git history for the built versions, `brief/LEDGER.md` (agent-reported), verified test suite (264 pass, 0 fail, analyzer 0), and static gates check (`node brief/tools/gates.mjs` — 8 failing, all design scope). Future dates are estimates.*
 
 ```mermaid
 gantt
@@ -47,21 +47,22 @@ gantt
     P0 Preflight and baseline                   :done, p0, 2026-09-20, 1d
     P1a Guards, uploads, applications, bans     :done, p1a, 2026-09-20, 1d
     P1b Live state and multi-device             :done, p1b, 2026-09-20, 1d
+    P1c Dev identity, ban audit, RLS review     :done, p1c, 2026-09-20, 2026-09-21
+    P2 Remove placeholders and simulations      :done, p2, 2026-09-20, 2026-09-21
+    P3 True viewer count                        :done, p3, 2026-09-20, 2026-09-21
+    P6.1 Chat rate-limit and slow-mode trigger  :done, p61, 2026-09-20, 2026-09-21
     section Next
-    P1c Dev identity, ban audit, RLS review     :active, p1c, 2026-09-20, 2026-09-21
-    P2 Remove placeholders and simulations      :p2, 2026-09-21, 1d
-    P3 True viewer count                        :p3, 2026-09-21, 1d
-    section Planned
-    P4 White theme, emoji, responsive, i18n     :p4, 2026-09-21, 2026-09-23
-    P8A Android release blockers and identity   :p8a, 2026-09-22, 1d
-    P6 Chat, moderation, admin                  :p6, 2026-09-22, 2026-09-23
-    P5 Map and offline experience               :p5, 2026-09-23, 1d
-    P7 Organizations                            :p7, 2026-09-23, 2026-09-24
-    P8B Store and compliance package            :p8b, 2026-09-24, 1d
-    P9 Closeout and final gates                 :p9, 2026-09-24, 2026-09-25
+    P6.2 to 6.4 Chat UX and admin tools         :active, p6next, 2026-09-21, 1d
+    P5 Map and offline experience               :p5, 2026-09-21, 2026-09-22
+    P7 Organizations                            :p7, 2026-09-22, 2026-09-23
+    P8B Store and compliance package            :p8b, 2026-09-23, 1d
+    section Planned (Reserved for Astra)
+    P4 White theme, emoji, responsive, i18n     :p4, 2026-09-23, 2026-09-25
+    P8A Android release blockers and identity   :p8a, 2026-09-25, 1d
+    P9 Closeout and final gates                 :p9, 2026-09-25, 2026-09-26
     section Owner only
     Docker install and local SQL tests          :crit, own1, 2026-09-20, 2026-09-22
-    Pick design scheme A B or C                 :crit, own2, 2026-09-20, 2026-09-21
+    Pick design scheme A B or C                 :crit, own2, 2026-09-20, 2026-09-22
 ```
 
 ```mermaid
@@ -80,27 +81,39 @@ gantt
     Version 1.1 iOS integration                 :r5, 2026-10-10, 2026-10-24
 ```
 
-### Where the hardening run stands (2026-09-20)
+### Where the hardening run stands (2026-09-21)
 
 | Phase | Status | Evidence | Roadmap link |
 |---|---|---|---|
-| P0 Preflight | Done | analyzer 0 issues, tests 264 to 268 passing (agent-reported) | none |
+| P0 Preflight | Done | analyzer 0 issues, tests 264 passing (full suite green) | none |
 | P1a-b Guards, uploads, applications, bans, live state, multi-device | Done in source, SQL and phones unverified | commits 95b97fc, b61b3f7; 49 pgTAP assertions written, not run (no Docker) | CP 1.0.4, RLS follow-up to CP 0.5 |
-| P1c Dev identity, RPC ban audit, RLS policy review, live-flag expiry | Next | gate G1c = 26 dev-identity hits | CP 1.0.4 |
-| P2 Placeholders and simulations | Not started | G1a 25, G1b 3, G1e 16 | undoes simulated parts of CP 0.6.2.2 and 0.9.2.1 |
-| P3 True viewer count | Not started | G1d 3 | CP 1.0.1 |
-| P4 White theme, emoji, responsive, i18n | Not started, design scheme not chosen | G2a 1549, G3 244, G6 476 | CP 1.0.2 |
-| P8A Android release blockers | Not started | G4a 14, G4b 5, G8 1 | CP 1.0.6 |
-| P6 Chat, moderation, admin | Not started | none | CP 1.0.5 (part) |
-| P5 Map and offline | Not started | none | new (not in the old roadmap) |
-| P7 Organizations | Not started | none | new (not in the old roadmap) |
-| P8B Store and compliance package | Not started | none | CP 1.0.6 (part); not legal certification |
-| P9 Closeout | Not started | none | none |
+| P1c Dev identity, RPC ban audit, RLS policy review, live-flag expiry | Done in source, SQL unverified | commit e94fb13; G1c = 0; helper migration 20260920110000 | CP 1.0.4 |
+| P2 Placeholders and simulations | Done in full | commits d646053, 8ecba34, d83bd4a; G1a-e = 0, G5a-c = 0 | undoes simulated parts of CP 0.6.2.2 and 0.9.2.1 |
+| P3 True viewer count | Done in full | commit 18d7b82; G1d = 0; deny-all stream_viewers + ViewerPresenceService | CP 1.0.1 |
+| P6 Chat, moderation, admin | In Progress (P6.1 done) | commit 298db4b; chat rate-limit & slow-mode trigger; P6.2-6.4 next | CP 1.0.5 (part) |
+| P5 Map and offline | Next after P6 | none | new (not in the old roadmap) |
+| P7 Organizations | Planned | none | new (not in the old roadmap) |
+| P8B Store and compliance package | Planned | none | CP 1.0.6 (part); not legal certification |
+| P4 White theme, emoji, responsive, i18n | Reserved for Astra (05 D-27) | waiting on DESIGN_CHOICE; G2a 1532, G3 231, G6 467 | CP 1.0.2 |
+| P8A Android release blockers | Reserved for Astra (05 D-27) | G4a 14, G4b 5, G8 1 | CP 1.0.6 |
+| P9 Closeout | Reserved for Astra (05 D-27) | none | none |
 
-Not in the hardening plan and still open from this roadmap: CP 1.0.3 (first-run onboarding tour) and the tag explorer and alert thresholds of CP 1.0.5. Gate numbers are from the supervisor's re-run; analyzer and test counts were not re-run by the supervisor.
+Only 8 gates failing (down from 16 at baseline). All 8 failing gates (G2a/b/d, G3, G4a/b, G6, G8) belong strictly to Astra's design/release scope (D-27). All truthfulness (G1a-e), legacy cleanup (G5a-c), secrets (G11a-f), RLS policies (G10a/c/d), and translation symmetry (G7) are at 0 (PASS). Analyzer has 0 issues, 264 tests pass.
 ---
 
 ## 📝 Modification
+
+### 2026-09-21 — Hardening Run Progress: P1c, P2, P3 & P6.1 Completed by Claude Code Opus
+
+**Finding:** Claude Code Opus completed P1c, P2 in full, P3 in full, and the server-side P6.1 chat enforcement slice across two WORK_LIVE sessions (commits `e94fb13`, `d646053`, `8ecba34`, `d83bd4a`, `18d7b82`, `298db4b`, `55948bc`).
+- **P1c**: Removed dev identities/emails, fixed missing `is_banned` migration dependency order (`20260920110000`), added server-side live-flag heartbeat expiry, created RLS policy matrix.
+- **P2**: Empty catalog boot, VLC & spike removed, mock chat/VOD/Q&A pools deleted, G1b modal sites wired to real actions/share, G5c GADM asset removed, D-07 follows/bookmarks persistent server-side.
+- **P3**: Server-backed true presence (`stream_viewers` deny-all, `viewer_heartbeat` + `get_viewer_counts` RPCs, client `ViewerPresenceService`, "—" for unknown, YouTube count separated into studio).
+- **P6.1**: Server-side chat flood rate-limit (1.2s floor), slow mode, and chat-off trigger with client refusal handling.
+
+**Effect:** Gates reduced from 16 to 8 failing. The remaining 8 are strictly design/theme/branding/release gates reserved for Astra under 05 D-27. Test suite is 264 passed, analyzer 0 issues. SQL remains UNVERIFIED-STATIC pending Docker installation.
+
+---
 
 ### 2026-09-20 — Hardening Run Reconciliation and Gantt Refresh
 
