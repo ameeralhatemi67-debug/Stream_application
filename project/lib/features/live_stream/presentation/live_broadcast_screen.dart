@@ -69,6 +69,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       onReaction: (type) => _reactionsController.spawnReaction(type),
     )..start();
     _chatController.addListener(_handleChatConnectionChange);
+    _chatScrollController.addListener(_handleChatScroll);
     // Real audience presence (P3 / 05 D-08): this device reports itself as
     // one viewer while the room is open and the app is foregrounded, and
     // polls the server's count back. It replaces the number that used to
@@ -114,6 +115,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _restorePortraitChrome();
     _tabController.dispose();
     _chatTextController.dispose();
+    _chatScrollController.removeListener(_handleChatScroll);
     _chatScrollController.dispose();
     _chatController.removeListener(_handleChatConnectionChange);
     _chatController.dispose();
@@ -177,7 +179,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   /// the "chat unavailable" banner over the real (possibly empty) message
   /// list. It used to swap in simulated comments instead (05 D-03).
   void _handleChatConnectionChange() {
-    if (mounted) setState(() {});
+    if (!mounted) return;
+    _trackChatArrivals();
+    setState(() {});
   }
 
   ImageProvider _getImageProvider(String url) {
@@ -191,12 +195,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final text = _chatTextController.text.trim();
     if (text.isEmpty) return;
 
-    if (_chatController.connectionState == ChatConnectionState.reconnecting) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('live.demo_mode_cannot_send_toast'.tr())),
-      );
-      return;
-    }
+    // The composer already renders a reason and disables Send for every
+    // blocked state (P6.2), so reaching here without canSend would be a bug --
+    // guard anyway rather than posting into a refusal.
+    if (!_chatController.canSend) return;
     _chatTextController.clear();
 
     _chatController.sendMessage(text).then((_) {
@@ -870,108 +872,46 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               ..._chatController.moderationAlerts
                   .map((alert) => _buildModerationAlertBanner(alert)),
 
+            // Slow mode is a property of the room, not of this viewer, so it
+            // is stated above the list for everyone -- including moderators,
+            // who are exempt from it but still need to know it is on.
+            if (_chatController.slowModeSeconds > 0 &&
+                _chatController.chatEnabled)
+              _buildChatSlowModeBanner(),
+
             // Chat Stream List (Starts from bottom with newest messages, scroll up for older)
             Expanded(
-              child: ListView.builder(
-                      controller: _chatScrollController,
-                      physics: const AlwaysScrollableScrollPhysics(
-                        parent: BouncingScrollPhysics(),
-                      ),
-                      reverse: true,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spaceMd, vertical: 4),
-                      itemCount: messages.length,
-                      itemBuilder: (context, index) =>
-                          _buildChatMessageTile(messages[index]),
+              child: messages.isEmpty
+                  ? _buildChatEmptyState()
+                  : Stack(
+                      children: [
+                        ListView.builder(
+                          controller: _chatScrollController,
+                          physics: const AlwaysScrollableScrollPhysics(
+                            parent: BouncingScrollPhysics(),
+                          ),
+                          reverse: true,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spaceMd, vertical: 4),
+                          itemCount: messages.length,
+                          itemBuilder: (context, index) =>
+                              _buildChatMessageTile(messages[index]),
+                        ),
+                        if (_chatUnreadWhileScrolled > 0)
+                          Positioned(
+                            left: 0,
+                            right: 0,
+                            bottom: AppTheme.spaceSm,
+                            child: Center(child: _buildNewMessagesPill()),
+                          ),
+                      ],
                     ),
             ),
 
-            // ✍️ Chat Input Bar with Raise Hand, Reactions FAB, and Send
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: AppTheme.spaceSm, vertical: 4),
-              decoration: const BoxDecoration(
-                color: AppTheme.darkSurface1,
-                border:
-                    Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
-              ),
-              child: Row(
-                children: [
-                  // ✋ Raise Hand Toggle Button (No notification snackbar spam)
-                  IconButton(
-                    icon: Icon(
-                      Icons.back_hand_rounded,
-                      color: _isHandRaised
-                          ? Colors.amberAccent
-                          : AppTheme.textMutedDark,
-                      size: 19,
-                    ),
-                    tooltip: 'live.raise_hand_toggle'.tr(),
-                    style: IconButton.styleFrom(
-                      backgroundColor: _isHandRaised
-                          ? Colors.amber.shade900.withValues(alpha: 0.3)
-                          : Colors.transparent,
-                    ),
-                    onPressed: _toggleRaiseHand,
-                  ),
-
-                  // 💬 Text Input Field
-                  Expanded(
-                    child: TextField(
-                      controller: _chatTextController,
-                      style: const TextStyle(
-                          color: AppTheme.textPrimaryDark, fontSize: 12.5),
-                      decoration: InputDecoration(
-                        hintText: 'live.chat_placeholder'.tr(),
-                        hintStyle: const TextStyle(
-                            color: AppTheme.textMutedDark, fontSize: 11),
-                        contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusFull),
-                          borderSide: const BorderSide(
-                              color: AppTheme.darkBorderSubtle),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusFull),
-                          borderSide: const BorderSide(
-                              color: AppTheme.darkBorderSubtle),
-                        ),
-                      ),
-                      onSubmitted: (_) => _handleSendLocalMessage(),
-                    ),
-                  ),
-                  const SizedBox(width: 2),
-
-                  // ✨ Reactions Menu FAB Button
-                  IconButton(
-                    icon: Icon(
-                      _isReactionMenuOpen
-                          ? Icons.close_rounded
-                          : Icons.emoji_emotions_outlined,
-                      color: _isReactionMenuOpen
-                          ? AppTheme.accentRed
-                          : AppTheme.accentBlue,
-                      size: 20,
-                    ),
-                    tooltip: 'live.reaction_menu_tooltip'.tr(),
-                    onPressed: () {
-                      setState(
-                          () => _isReactionMenuOpen = !_isReactionMenuOpen);
-                    },
-                  ),
-
-                  // ✈️ Send Button
-                  IconButton(
-                    icon: const Icon(Icons.send_rounded,
-                        color: AppTheme.accentRed, size: 19),
-                    onPressed: _handleSendLocalMessage,
-                  ),
-                ],
-              ),
-            ),
+            // ✍️ Composer -- renders from LiveChatController.composerState, so
+            // a viewer is never invited to type into a box whose insert the
+            // server is going to refuse (P6.2).
+            _buildChatComposer(),
           ],
         ),
 
@@ -1101,8 +1041,344 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     );
   }
 
+
+  // --- P6.2 composer, empty state and new-message pill --------------------
+
+  /// Unread messages that arrived while the viewer was scrolled away from the
+  /// newest end of the list. Drives the "New messages" pill, so a busy chat
+  /// never yanks the list out from under someone reading back.
+  int _chatUnreadWhileScrolled = 0;
+  int _lastSeenChatCount = 0;
+
+  /// The list is `reverse: true`, so offset 0 IS the newest message.
+  bool get _isChatScrolledToNewest {
+    if (!_chatScrollController.hasClients) return true;
+    return _chatScrollController.offset <= 24;
+  }
+
+  void _handleChatScroll() {
+    if (_isChatScrolledToNewest && _chatUnreadWhileScrolled != 0) {
+      setState(() => _chatUnreadWhileScrolled = 0);
+    }
+  }
+
+  /// Counts arrivals the viewer has not scrolled down to yet. Called from the
+  /// controller listener, before the rebuild.
+  void _trackChatArrivals() {
+    final count = _chatController.messages.length;
+    if (count > _lastSeenChatCount && !_isChatScrolledToNewest) {
+      _chatUnreadWhileScrolled += count - _lastSeenChatCount;
+    } else if (_isChatScrolledToNewest) {
+      _chatUnreadWhileScrolled = 0;
+    }
+    _lastSeenChatCount = count;
+  }
+
+  void _scrollChatToNewest() {
+    setState(() => _chatUnreadWhileScrolled = 0);
+    if (!_chatScrollController.hasClients) return;
+    _chatScrollController.animateTo(
+      0,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeOut,
+    );
+  }
+
+  Widget _buildNewMessagesPill() {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        onTap: _scrollChatToNewest,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppTheme.spaceMd, vertical: 6),
+          decoration: BoxDecoration(
+            color: AppTheme.accentBlue,
+            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+            boxShadow: const [
+              BoxShadow(
+                  color: Colors.black54, blurRadius: 8, offset: Offset(0, 2)),
+            ],
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.arrow_downward_rounded,
+                  size: 13, color: AppTheme.darkBgBase),
+              const SizedBox(width: 5),
+              Text(
+                '${'live.chat_new_messages_pill'.tr()} ($_chatUnreadWhileScrolled)',
+                style: const TextStyle(
+                  color: AppTheme.darkBgBase,
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// An empty room stays empty (05 D-03) -- this explains the emptiness
+  /// instead of filling it with invented conversation.
+  Widget _buildChatEmptyState() {
+    final isGuest = _chatController.isGuest;
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.forum_outlined,
+                size: 34, color: AppTheme.textMutedDark),
+            const SizedBox(height: AppTheme.spaceSm),
+            Text(
+              'live.chat_empty_title'.tr(),
+              style: const TextStyle(
+                color: AppTheme.textSecondaryDark,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              isGuest
+                  ? 'live.chat_empty_subtitle_guest'.tr()
+                  : 'live.chat_empty_subtitle'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  color: AppTheme.textMutedDark, fontSize: 11.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// Slow mode is a property of the room, not of this viewer, so it is stated
+  /// for everyone -- including moderators, who are exempt but still need to
+  /// know the room is slowed down.
+  Widget _buildChatSlowModeBanner() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceMd, vertical: 4),
+      color: AppTheme.accentAmber.withValues(alpha: 0.12),
+      child: Row(
+        children: [
+          const Icon(Icons.hourglass_bottom_rounded,
+              size: 12, color: AppTheme.accentAmber),
+          const SizedBox(width: 5),
+          Expanded(
+            child: Text(
+              'live.chat_slow_mode_active'
+                  .tr(args: ['${_chatController.slowModeSeconds}']),
+              style: const TextStyle(
+                  color: AppTheme.accentAmber,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// One row that states why the composer is unusable, with the only action
+  /// that helps. Guests get a sign-in button; the rest are statements of fact,
+  /// because there is nothing the viewer can do about them here.
+  Widget _buildChatComposerNotice({
+    required IconData icon,
+    required Color color,
+    required String message,
+    Widget? action,
+  }) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
+      decoration: const BoxDecoration(
+        color: AppTheme.darkSurface1,
+        border: Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 15, color: color),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Text(
+              message,
+              style: const TextStyle(
+                  color: AppTheme.textSecondaryDark, fontSize: 11.5),
+            ),
+          ),
+          if (action != null) ...[
+            const SizedBox(width: AppTheme.spaceSm),
+            action,
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildChatComposer() {
+    switch (_chatController.composerState) {
+      case ChatComposerState.guest:
+        return _buildChatComposerNotice(
+          icon: Icons.login_rounded,
+          color: AppTheme.accentBlue,
+          message: 'live.chat_composer_guest'.tr(),
+          action: TextButton(
+            onPressed: () => context.go('/welcome'),
+            child: Text(
+              'live.chat_composer_guest_action'.tr(),
+              style: const TextStyle(
+                  color: AppTheme.accentBlue,
+                  fontSize: 11.5,
+                  fontWeight: FontWeight.bold),
+            ),
+          ),
+        );
+      case ChatComposerState.banned:
+        return _buildChatComposerNotice(
+          icon: Icons.block_rounded,
+          color: AppTheme.accentRed,
+          message: 'live.chat_composer_banned'.tr(),
+        );
+      case ChatComposerState.muted:
+        return _buildChatComposerNotice(
+          icon: Icons.volume_off_rounded,
+          color: AppTheme.accentRed,
+          message: 'live.chat_composer_muted'.tr(),
+        );
+      case ChatComposerState.chatDisabled:
+        return _buildChatComposerNotice(
+          icon: Icons.speaker_notes_off_rounded,
+          color: AppTheme.textMutedDark,
+          message: 'live.chat_composer_chat_off'.tr(),
+        );
+      case ChatComposerState.offline:
+      case ChatComposerState.slowMode:
+      case ChatComposerState.ready:
+        return _buildChatInputBar();
+    }
+  }
+
+
+  /// The live composer. Reached only for [ChatComposerState.ready],
+  /// [ChatComposerState.slowMode] and [ChatComposerState.offline]: in the last
+  /// two the field stays visible and readable but sending is held, with the
+  /// countdown or the connection stated in the hint, so the viewer can see
+  /// their draft and why it has not gone yet.
+  Widget _buildChatInputBar() {
+    final state = _chatController.composerState;
+    final secondsLeft = _chatController.slowModeSecondsRemaining;
+    final canSend = state == ChatComposerState.ready;
+
+    final hint = switch (state) {
+      ChatComposerState.slowMode =>
+        'live.chat_composer_slow_mode'.tr(args: ['$secondsLeft']),
+      ChatComposerState.offline => 'live.chat_composer_offline'.tr(),
+      _ => 'live.chat_placeholder'.tr(),
+    };
+
+    return Container(
+      padding:
+          const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm, vertical: 4),
+      decoration: const BoxDecoration(
+        color: AppTheme.darkSurface1,
+        border: Border(top: BorderSide(color: AppTheme.darkBorderSubtle)),
+      ),
+      child: Row(
+        children: [
+          // Raise Hand Toggle Button
+          IconButton(
+            icon: Icon(
+              Icons.back_hand_rounded,
+              color:
+                  _isHandRaised ? Colors.amberAccent : AppTheme.textMutedDark,
+              size: 19,
+            ),
+            tooltip: 'live.raise_hand_toggle'.tr(),
+            style: IconButton.styleFrom(
+              backgroundColor: _isHandRaised
+                  ? Colors.amber.shade900.withValues(alpha: 0.3)
+                  : Colors.transparent,
+            ),
+            onPressed: _toggleRaiseHand,
+          ),
+
+          // Text Input Field
+          Expanded(
+            child: TextField(
+              controller: _chatTextController,
+              style: const TextStyle(
+                  color: AppTheme.textPrimaryDark, fontSize: 12.5),
+              decoration: InputDecoration(
+                hintText: hint,
+                hintStyle: TextStyle(
+                  color: canSend
+                      ? AppTheme.textMutedDark
+                      : AppTheme.accentAmber.withValues(alpha: 0.9),
+                  fontSize: 11,
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  borderSide:
+                      const BorderSide(color: AppTheme.darkBorderSubtle),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+                  borderSide:
+                      const BorderSide(color: AppTheme.darkBorderSubtle),
+                ),
+              ),
+              onSubmitted: canSend ? (_) => _handleSendLocalMessage() : null,
+            ),
+          ),
+          const SizedBox(width: 2),
+
+          // Reactions Menu FAB Button -- reactions are broadcast-only, never
+          // an insert, so they stay available while sending is held.
+          IconButton(
+            icon: Icon(
+              _isReactionMenuOpen
+                  ? Icons.close_rounded
+                  : Icons.emoji_emotions_outlined,
+              color: _isReactionMenuOpen
+                  ? AppTheme.accentRed
+                  : AppTheme.accentBlue,
+              size: 20,
+            ),
+            tooltip: 'live.reaction_menu_tooltip'.tr(),
+            onPressed: () {
+              setState(() => _isReactionMenuOpen = !_isReactionMenuOpen);
+            },
+          ),
+
+          // Send Button
+          IconButton(
+            icon: Icon(
+              Icons.send_rounded,
+              color: canSend
+                  ? AppTheme.accentRed
+                  : AppTheme.textMutedDark.withValues(alpha: 0.5),
+              size: 19,
+            ),
+            onPressed: canSend ? _handleSendLocalMessage : null,
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildChatMessageTile(ChatMessageModel message) {
-    return GestureDetector(
+    final tile = GestureDetector(
       // Cluster 4 Task 13: long-press now opens the actions sheet for every
       // message, own or not -- showChatMessageActionsSheet itself branches
       // on message.isCurrentUser to offer Edit/Delete vs. Report/Hide/Block.
@@ -1161,16 +1437,91 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 ),
               ),
             ),
-            Text(
-              TimeOfDay.fromDateTime(message.createdAt.toLocal())
-                  .format(context),
-              style:
-                  const TextStyle(color: AppTheme.textMutedDark, fontSize: 10),
-            ),
+            if (message.isPending)
+              const SizedBox(
+                width: 9,
+                height: 9,
+                child: CircularProgressIndicator(
+                    strokeWidth: 1.5, color: AppTheme.textMutedDark),
+              )
+            else
+              Text(
+                TimeOfDay.fromDateTime(message.createdAt.toLocal())
+                    .format(context),
+                style: const TextStyle(
+                    color: AppTheme.textMutedDark, fontSize: 10),
+              ),
           ],
         ),
       ),
     );
+
+    if (!message.isFailed) return tile;
+
+    // A refused send keeps the text on screen with the server's own reason
+    // and, where a second attempt could actually succeed, a Retry. A banned
+    // keyword or a chat that has been turned off will be refused identically
+    // forever, so those offer Discard only rather than a button that lies.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Opacity(opacity: 0.6, child: tile),
+        Padding(
+          padding: const EdgeInsets.only(left: 32, bottom: 6),
+          child: Row(
+            children: [
+              const Icon(Icons.error_outline_rounded,
+                  size: 12, color: AppTheme.accentRed),
+              const SizedBox(width: 4),
+              Expanded(
+                child: Text(
+                  message.failureReason ?? '',
+                  style: const TextStyle(
+                      color: AppTheme.accentRed, fontSize: 10.5),
+                ),
+              ),
+              if (_chatController.isRetryable(message.id))
+                TextButton(
+                  onPressed: () => _retryFailedChatMessage(message.id),
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    minimumSize: const Size(0, 28),
+                  ),
+                  child: Text(
+                    'live.chat_send_failed_retry'.tr(),
+                    style: const TextStyle(
+                        color: AppTheme.accentBlue,
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              TextButton(
+                onPressed: () =>
+                    _chatController.discardFailedMessage(message.id),
+                style: TextButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: const Size(0, 28),
+                ),
+                child: Text(
+                  'live.chat_send_failed_discard'.tr(),
+                  style: const TextStyle(
+                      color: AppTheme.textMutedDark, fontSize: 10.5),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _retryFailedChatMessage(String messageId) {
+    _chatController.retryFailedMessage(messageId).catchError((Object e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e'), backgroundColor: AppTheme.accentRed),
+      );
+    });
   }
 
   Widget _buildReactionFabIcon(String emoji, String type) {

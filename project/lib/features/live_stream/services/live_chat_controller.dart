@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -5,6 +7,34 @@ import '../../../core/utils/id_generator.dart';
 import '../models/chat_message_model.dart';
 
 enum ChatConnectionState { connecting, live, reconnecting }
+
+/// Why the composer is (or is not) usable right now (P6.2). Every value maps
+/// to a real server-side rule, so the composer can explain itself instead of
+/// letting the viewer type into a box whose insert is going to be refused:
+///
+/// * [banned]        `banned_users` / the restrictive `*_not_banned` policies.
+/// * [guest]         `chat_messages_insert_own` needs `auth.uid()`.
+/// * [chatDisabled]  `chat_stream_settings.chat_enabled = false`, enforced by
+///                   the `chat_enforce_rate_limit` trigger (P6.1). Moderators
+///                   are exempt, so a broadcaster can still speak.
+/// * [muted]         `chat_muted_users`, enforced by the insert policy.
+/// * [offline]       Realtime is not connected, so a send would be a guess.
+/// * [slowMode]      `chat_stream_settings.slow_mode_seconds` has not elapsed
+///                   since this viewer's own last message.
+/// * [ready]         Nothing is in the way.
+///
+/// Ordered by precedence in [LiveChatController.composerState]: an absolute
+/// block outranks a transient one, so a banned account is never told to wait
+/// out a slow-mode countdown.
+enum ChatComposerState {
+  banned,
+  guest,
+  chatDisabled,
+  muted,
+  offline,
+  slowMode,
+  ready,
+}
 
 /// Owns a single stream's live chat: loads recent history, subscribes to new
 /// messages over Supabase Realtime, and sends new ones. One instance per
@@ -82,6 +112,151 @@ class LiveChatController extends ChangeNotifier {
   ChatConnectionState _connectionState = ChatConnectionState.connecting;
   ChatConnectionState get connectionState => _connectionState;
 
+  // --- P6.2 composer state -------------------------------------------------
+
+  /// Mirrors `chat_stream_settings` for this stream. An absent row means chat
+  /// is on with no slow mode, which is why these default to permissive: a
+  /// stream nobody has configured is an ordinary open chat.
+  bool _chatEnabled = true;
+  int _slowModeSeconds = 0;
+  bool get chatEnabled => _chatEnabled;
+  int get slowModeSeconds => _slowModeSeconds;
+
+  /// Resolved from `is_current_user_banned()` and `chat_is_muted()` -- both
+  /// SECURITY DEFINER, so the client learns its own status without being able
+  /// to read `banned_users` or `chat_muted_users` across users.
+  bool _isSelfBanned = false;
+  bool _isSelfMuted = false;
+  bool get isSelfBanned => _isSelfBanned;
+  bool get isSelfMuted => _isSelfMuted;
+
+  /// Resolves the signed-in user id without assuming Supabase was ever
+  /// initialized: `Supabase.instance` throws when it was not, and the chat
+  /// room still has to render (read-only) in that case rather than crash.
+  /// Overridable in tests via [debugSetStateForTests].
+  String? _debugCurrentUserId;
+  bool _debugUserIdOverridden = false;
+
+  String? get _currentUserId {
+    if (_debugUserIdOverridden) return _debugCurrentUserId;
+    try {
+      return _client.auth.currentUser?.id;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool get isGuest => _currentUserId == null;
+
+  Timer? _slowModeTicker;
+
+  /// When this viewer may next send, given slow mode and their own last
+  /// message. Null when nothing is holding them back.
+  DateTime? get _nextSendAllowedAt {
+    if (_slowModeSeconds <= 0 || _canModerate) return null;
+    DateTime? lastOwn;
+    for (final m in _messages) {
+      if (!m.isCurrentUser || m.isFailed) continue;
+      if (lastOwn == null || m.createdAt.isAfter(lastOwn)) lastOwn = m.createdAt;
+    }
+    if (lastOwn == null) return null;
+    return lastOwn.add(Duration(seconds: _slowModeSeconds));
+  }
+
+  /// Whole seconds left on the slow-mode countdown, 0 when it has elapsed.
+  int get slowModeSecondsRemaining {
+    final next = _nextSendAllowedAt;
+    if (next == null) return 0;
+    final remaining = next.difference(DateTime.now()).inMilliseconds;
+    return remaining <= 0 ? 0 : (remaining / 1000).ceil();
+  }
+
+  /// The single reason the composer is unusable, highest precedence first.
+  /// The widget renders from this; it never re-derives the rules itself.
+  ChatComposerState get composerState {
+    if (_isSelfBanned) return ChatComposerState.banned;
+    if (isGuest) return ChatComposerState.guest;
+    if (!_chatEnabled && !_canModerate) return ChatComposerState.chatDisabled;
+    if (_isSelfMuted) return ChatComposerState.muted;
+    if (_connectionState != ChatConnectionState.live) {
+      return ChatComposerState.offline;
+    }
+    if (slowModeSecondsRemaining > 0) return ChatComposerState.slowMode;
+    return ChatComposerState.ready;
+  }
+
+  bool get canSend => composerState == ChatComposerState.ready;
+
+  /// Runs a 1 s tick only while a countdown is actually visible, so an idle
+  /// chat screen is not rebuilding once a second forever.
+  void _syncSlowModeTicker() {
+    final needed = slowModeSecondsRemaining > 0;
+    if (needed && _slowModeTicker == null) {
+      _slowModeTicker = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (_disposed) return;
+        notifyListeners();
+        if (slowModeSecondsRemaining <= 0) {
+          _slowModeTicker?.cancel();
+          _slowModeTicker = null;
+        }
+      });
+    } else if (!needed && _slowModeTicker != null) {
+      _slowModeTicker?.cancel();
+      _slowModeTicker = null;
+    }
+  }
+
+  /// Reads this stream's chat settings. Absent row = open chat, no slow mode.
+  Future<void> _loadChatSettings() async {
+    try {
+      final row = await _client
+          .from('chat_stream_settings')
+          .select()
+          .eq('stream_id', streamId)
+          .maybeSingle();
+      _applyChatSettings(row);
+    } catch (e) {
+      debugPrint('LiveChatController: failed to load chat settings: $e');
+    }
+  }
+
+  void _applyChatSettings(Map<String, dynamic>? row) {
+    _chatEnabled = (row?['chat_enabled'] as bool?) ?? true;
+    _slowModeSeconds = (row?['slow_mode_seconds'] as int?) ?? 0;
+    _syncSlowModeTicker();
+    if (!_disposed) notifyListeners();
+  }
+
+  /// Re-resolves whether this viewer is platform-banned or muted in this
+  /// stream. Called on start, after any refused send, and after one of the
+  /// viewer's own messages is deleted by someone else -- `chat_muted_users` is
+  /// deliberately not on the realtime publication, because letting a muted
+  /// account read its own row would tell it which moderator muted it
+  /// (see 20260921130000).
+  Future<void> _refreshSelfStatus() async {
+    if (isGuest) {
+      _isSelfBanned = false;
+      _isSelfMuted = false;
+      return;
+    }
+    try {
+      final banned = await _client.rpc('is_current_user_banned');
+      _isSelfBanned = banned as bool? ?? false;
+    } catch (e) {
+      debugPrint('LiveChatController: failed to resolve ban status: $e');
+    }
+    try {
+      final muted = await _client.rpc('chat_is_muted', params: {
+        'p_stream_id': streamId,
+        'p_profile_id': _currentUserId,
+      });
+      _isSelfMuted = muted as bool? ?? false;
+    } catch (e) {
+      debugPrint('LiveChatController: failed to resolve mute status: $e');
+    }
+    if (!_disposed) notifyListeners();
+  }
+
   /// sender_id -> resolved display info + role badges, populated on demand
   /// via the chat_sender_info RPC (see supabase/migrations/
   /// 20260823140000_chat_sender_info.sql). Not a plain `profiles` select --
@@ -102,12 +277,14 @@ class LiveChatController extends ChangeNotifier {
     await _loadBlockedUsers();
     await _loadHiddenMessages();
     await _loadCanModerate();
+    await _loadChatSettings();
+    await _refreshSelfStatus();
     await _loadRecentMessages();
     _subscribe();
   }
 
   Future<void> _loadCanModerate() async {
-    if (_client.auth.currentUser?.id == null) return;
+    if (_currentUserId == null) return;
     try {
       final result = await _client
           .rpc('chat_can_moderate', params: {'p_stream_id': streamId});
@@ -121,7 +298,7 @@ class LiveChatController extends ChangeNotifier {
   static const _blockedUsersPrefsPrefix = 'chat_blocked_users_';
 
   Future<void> _loadBlockedUsers() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = _currentUserId;
     if (userId == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -139,7 +316,7 @@ class LiveChatController extends ChangeNotifier {
     if (!_blockedSenderIds.add(senderId)) return;
     notifyListeners();
 
-    final userId = _client.auth.currentUser?.id;
+    final userId = _currentUserId;
     if (userId == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -155,7 +332,7 @@ class LiveChatController extends ChangeNotifier {
   static const _hiddenMessagesPrefsPrefix = 'chat_hidden_messages_';
 
   Future<void> _loadHiddenMessages() async {
-    final userId = _client.auth.currentUser?.id;
+    final userId = _currentUserId;
     if (userId == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -173,7 +350,7 @@ class LiveChatController extends ChangeNotifier {
     if (!_hiddenMessageIds.add(messageId)) return;
     notifyListeners();
 
-    final userId = _client.auth.currentUser?.id;
+    final userId = _currentUserId;
     if (userId == null) return;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -195,7 +372,7 @@ class LiveChatController extends ChangeNotifier {
     required String reportedSenderId,
     required String reason,
   }) async {
-    final reporterId = _client.auth.currentUser?.id;
+    final reporterId = _currentUserId;
     if (reporterId == null) {
       throw Exception('Sign in to report a message.');
     }
@@ -213,7 +390,7 @@ class LiveChatController extends ChangeNotifier {
   /// insert policy that rejects muted senders, not just this client-side
   /// gate. Throws if the caller isn't this stream's owner or an admin tier.
   Future<void> muteUser(String senderId) async {
-    final mutedBy = _client.auth.currentUser?.id;
+    final mutedBy = _currentUserId;
     if (mutedBy == null) throw Exception('Sign in to moderate chat.');
     await _client.from('chat_muted_users').insert({
       'stream_id': streamId,
@@ -274,7 +451,7 @@ class LiveChatController extends ChangeNotifier {
   /// re-appointing an existing moderator is swallowed rather than surfaced
   /// as an error.
   Future<void> appointStreamModerator(String profileId) async {
-    final assignedBy = _client.auth.currentUser?.id;
+    final assignedBy = _currentUserId;
     if (assignedBy == null) throw Exception('Sign in to appoint moderators.');
     try {
       await _client.from('stream_moderators').insert({
@@ -356,6 +533,23 @@ class LiveChatController extends ChangeNotifier {
           ),
           callback: (payload) => _handleInsert(payload.newRecord),
         )
+        // P6.2: chat off / slow mode has to reach the composer immediately,
+        // not on the next screen open (20260921130000 publishes this table).
+        // An absent row means an open chat, so a DELETE resets to permissive.
+        ..onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'chat_stream_settings',
+          filter: PostgresChangeFilter(
+            type: PostgresChangeFilterType.eq,
+            column: 'stream_id',
+            value: streamId,
+          ),
+          callback: (payload) {
+            final row = payload.newRecord;
+            _applyChatSettings(row.isEmpty ? null : row);
+          },
+        )
         ..onBroadcast(
           event: 'reaction',
           callback: (payload) {
@@ -377,6 +571,7 @@ class LiveChatController extends ChangeNotifier {
                     'LiveChatController: channel status $status: $error');
               }
           }
+          _syncSlowModeTicker();
           notifyListeners();
         });
     } catch (e) {
@@ -404,16 +599,23 @@ class LiveChatController extends ChangeNotifier {
   void _handleDelete(Map<String, dynamic> oldRow) {
     final id = oldRow['id'] as String?;
     if (id == null) return;
-    final before = _messages.length;
-    _messages.removeWhere((m) => m.id == id);
-    if (_messages.length != before) notifyListeners();
+    final idx = _messages.indexWhere((m) => m.id == id);
+    if (idx == -1) return;
+    final wasOwn = _messages[idx].isCurrentUser;
+    _messages.removeAt(idx);
+    _failureKinds.remove(id);
+    notifyListeners();
+    // A moderator deleting one of this viewer's messages usually comes with a
+    // mute (P6.3). chat_muted_users is not published to realtime on purpose,
+    // so this is where the composer finds out.
+    if (wasOwn && !isGuest) _refreshSelfStatus();
   }
 
   Future<List<ChatMessageModel>> _rowsToMessages(
     List<Map<String, dynamic>> rows,
   ) async {
     if (rows.isEmpty) return const [];
-    final currentUserId = _client.auth.currentUser?.id;
+    final currentUserId = _currentUserId;
 
     final unresolvedIds = rows
         .map((r) => r['sender_id'] as String)
@@ -474,7 +676,7 @@ class LiveChatController extends ChangeNotifier {
     final trimmed = body.trim();
     if (trimmed.isEmpty) return;
 
-    final currentUserId = _client.auth.currentUser?.id;
+    final currentUserId = _currentUserId;
     if (currentUserId == null) {
       throw Exception('Sign in to send a chat message.');
     }
@@ -493,36 +695,109 @@ class LiveChatController extends ChangeNotifier {
       isCurrentUser: true,
       isPending: true,
     ));
+    _syncSlowModeTicker();
     notifyListeners();
 
+    await _insertOrMarkFailed(id: id, body: trimmed, senderId: currentUserId);
+  }
+
+  /// Retries a message whose insert was refused (P6.2). Only failures that
+  /// could plausibly succeed on a second attempt are retryable -- see
+  /// [isRetryable]; a banned keyword will be refused identically forever, so
+  /// offering "retry" there would be a lie.
+  Future<void> retryFailedMessage(String messageId) async {
+    final idx = _messages.indexWhere((m) => m.id == messageId);
+    if (idx == -1) return;
+    final message = _messages[idx];
+    if (!message.isFailed || !isRetryable(messageId)) return;
+
+    final senderId = _currentUserId;
+    if (senderId == null) throw Exception('Sign in to send a chat message.');
+
+    _messages[idx] = message.copyWith(isPending: true, isFailed: false);
+    _failureKinds.remove(messageId);
+    notifyListeners();
+
+    await _insertOrMarkFailed(
+        id: messageId, body: message.body, senderId: senderId);
+  }
+
+  /// Drops a failed message from the list without sending it.
+  void discardFailedMessage(String messageId) {
+    final before = _messages.length;
+    _messages.removeWhere((m) => m.id == messageId && m.isFailed);
+    _failureKinds.remove(messageId);
+    if (_messages.length != before) notifyListeners();
+  }
+
+  /// Machine-readable cause per failed message id, so retryability is decided
+  /// from the server's actual refusal rather than by matching display text.
+  final Map<String, _SendFailure> _failureKinds = {};
+
+  bool isRetryable(String messageId) =>
+      _failureKinds[messageId]?.retryable ?? false;
+
+  /// Inserts the row, or leaves the optimistic echo in place marked failed so
+  /// the sender can retry or discard rather than losing what they typed. The
+  /// thrown exception is what the caller surfaces as a toast; the retained
+  /// message is what the sender acts on.
+  Future<void> _insertOrMarkFailed({
+    required String id,
+    required String body,
+    required String senderId,
+  }) async {
     try {
       await _client.from('chat_messages').insert({
         'id': id,
         'stream_id': streamId,
-        'sender_id': currentUserId,
-        'body': trimmed,
+        'sender_id': senderId,
+        'body': body,
       });
     } catch (e) {
-      _messages.removeWhere((m) => m.id == id);
+      final failure = _classifySendFailure('$e');
+      _failureKinds[id] = failure;
+      final idx = _messages.indexWhere((m) => m.id == id);
+      if (idx != -1) {
+        _messages[idx] = _messages[idx].copyWith(
+          isPending: false,
+          isFailed: true,
+          failureReason: failure.message,
+        );
+      }
       notifyListeners();
-      // Server-side refusals carry a readable reason; surface it instead of a
-      // raw Postgrest exception, and never silently drop the message.
-      final text = '$e';
-      if (text.contains('banned keyword')) {
-        throw Exception("Message blocked: that language isn't allowed here.");
-      }
-      // P6.1 enforcement, all raised by the chat_messages insert trigger.
-      if (text.contains('Chat is turned off')) {
-        throw Exception('The broadcaster has turned chat off for this stream.');
-      }
-      if (text.contains('Sending too fast')) {
-        throw Exception('Slow down a moment before sending again.');
-      }
-      if (text.contains('Too many messages in one minute')) {
-        throw Exception('You have sent too many messages in the last minute.');
-      }
-      rethrow;
+      // A refusal may mean the viewer was muted, banned or the chat was
+      // turned off while they were typing; re-resolve so the composer stops
+      // inviting them to try again.
+      await _refreshSelfStatus();
+      await _loadChatSettings();
+      throw Exception(failure.message);
     }
+  }
+
+  /// Maps a server refusal onto a readable reason and whether retrying could
+  /// ever help. Every branch corresponds to a rule enforced by the
+  /// `chat_messages` insert policy or the `chat_enforce_rate_limit` trigger.
+  _SendFailure _classifySendFailure(String raw) {
+    if (raw.contains('banned keyword')) {
+      // Deterministic: the same body will be refused every time.
+      return const _SendFailure(
+          "Message blocked: that language isn't allowed here.", false);
+    }
+    if (raw.contains('Chat is turned off')) {
+      return const _SendFailure(
+          'The broadcaster has turned chat off for this stream.', false);
+    }
+    if (raw.contains('Sending too fast')) {
+      return const _SendFailure(
+          'Slow down a moment before sending again.', true);
+    }
+    if (raw.contains('Too many messages in one minute')) {
+      return const _SendFailure(
+          'You have sent too many messages in the last minute.', true);
+    }
+    // Anything else -- an RLS refusal (muted, banned), a dropped connection,
+    // a timeout. Retrying is reasonable; the composer state explains the rest.
+    return _SendFailure(raw, true);
   }
 
   /// Broadcasts an ephemeral reaction ('heart', 'clap', 'idea', 'fire',
@@ -542,9 +817,61 @@ class LiveChatController extends ChangeNotifier {
     }
   }
 
+  // --- test seams ---------------------------------------------------------
+
+  /// Sets the inputs [composerState] is derived from, without a database.
+  /// The rules themselves are what these tests are about; the server-side
+  /// enforcement of each rule is covered by supabase/tests/chat_rate_limit.test.sql
+  /// and chat_keyword_filter.test.sql.
+  @visibleForTesting
+  void debugSetStateForTests({
+    String? currentUserId,
+    bool overrideCurrentUserId = true,
+    bool? chatEnabled,
+    int? slowModeSeconds,
+    bool? isSelfBanned,
+    bool? isSelfMuted,
+    bool? canModerate,
+    ChatConnectionState? connectionState,
+  }) {
+    if (overrideCurrentUserId) {
+      _debugUserIdOverridden = true;
+      _debugCurrentUserId = currentUserId;
+    }
+    if (chatEnabled != null) _chatEnabled = chatEnabled;
+    if (slowModeSeconds != null) _slowModeSeconds = slowModeSeconds;
+    if (isSelfBanned != null) _isSelfBanned = isSelfBanned;
+    if (isSelfMuted != null) _isSelfMuted = isSelfMuted;
+    if (canModerate != null) _canModerate = canModerate;
+    if (connectionState != null) _connectionState = connectionState;
+    notifyListeners();
+  }
+
+  /// Appends a message directly, for the slow-mode countdown (which is derived
+  /// from the viewer's own most recent message) and the failed-send affordances.
+  @visibleForTesting
+  void debugAddMessageForTests(ChatMessageModel message, {bool? retryable}) {
+    _messages.add(message);
+    if (retryable != null) {
+      _failureKinds[message.id] =
+          _SendFailure(message.failureReason ?? '', retryable);
+    }
+    notifyListeners();
+  }
+
+  /// The classification [sendMessage] would apply to a raw server error, so the
+  /// retry policy can be asserted without a server.
+  @visibleForTesting
+  ({String message, bool retryable}) debugClassifyForTests(String raw) {
+    final f = _classifySendFailure(raw);
+    return (message: f.message, retryable: f.retryable);
+  }
+
   @override
   void dispose() {
     _disposed = true;
+    _slowModeTicker?.cancel();
+    _slowModeTicker = null;
     final channel = _channel;
     if (channel != null) {
       try {
@@ -553,4 +880,13 @@ class LiveChatController extends ChangeNotifier {
     }
     super.dispose();
   }
+}
+
+/// A refusal from the chat insert path: what to tell the sender, and whether a
+/// second attempt could ever succeed.
+@immutable
+class _SendFailure {
+  final String message;
+  final bool retryable;
+  const _SendFailure(this.message, this.retryable);
 }

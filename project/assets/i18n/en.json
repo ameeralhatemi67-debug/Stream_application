@@ -251,7 +251,22 @@
     "appoint_moderator": "Appoint as Stream Moderator",
     "revoke_moderator": "Revoke Moderator",
     "moderator_appointed_toast": "Appointed as stream moderator.",
-    "moderator_revoked_toast": "Moderator role revoked."
+    "moderator_revoked_toast": "Moderator role revoked.",
+    "chat_composer_guest": "Sign in to join the chat",
+    "chat_composer_guest_action": "Sign in",
+    "chat_composer_read_only": "Read-only",
+    "chat_composer_banned": "Your account can no longer post in chat.",
+    "chat_composer_muted": "A moderator has muted you in this stream.",
+    "chat_composer_chat_off": "The broadcaster has turned chat off.",
+    "chat_composer_offline": "Reconnecting. You can read the chat but not send yet.",
+    "chat_composer_slow_mode": "Slow mode: wait {}s",
+    "chat_slow_mode_active": "Slow mode is on: one message every {}s.",
+    "chat_empty_title": "No messages yet",
+    "chat_empty_subtitle": "Be the first to say something.",
+    "chat_empty_subtitle_guest": "Sign in to be the first to say something.",
+    "chat_new_messages_pill": "New messages",
+    "chat_send_failed_retry": "Retry",
+    "chat_send_failed_discard": "Discard"
   },
   "language": {
     "en": "English",

@@ -251,7 +251,22 @@
     "appoint_moderator": "تعيين كمشرف على البث",
     "revoke_moderator": "إلغاء صلاحية المشرف",
     "moderator_appointed_toast": "تم التعيين كمشرف على البث.",
-    "moderator_revoked_toast": "تم إلغاء صلاحية المشرف."
+    "moderator_revoked_toast": "تم إلغاء صلاحية المشرف.",
+    "chat_composer_guest": "سجّل الدخول للمشاركة في المحادثة",
+    "chat_composer_guest_action": "تسجيل الدخول",
+    "chat_composer_read_only": "للقراءة فقط",
+    "chat_composer_banned": "لم يعد بإمكان حسابك الكتابة في المحادثة.",
+    "chat_composer_muted": "قام أحد المشرفين بكتم صوتك في هذا البث.",
+    "chat_composer_chat_off": "أوقف المُقدّم المحادثة.",
+    "chat_composer_offline": "جارٍ إعادة الاتصال. يمكنك قراءة المحادثة دون الإرسال حالياً.",
+    "chat_composer_slow_mode": "الوضع البطيء: انتظر {} ثانية",
+    "chat_slow_mode_active": "الوضع البطيء مُفعّل: رسالة واحدة كل {} ثانية.",
+    "chat_empty_title": "لا توجد رسائل بعد",
+    "chat_empty_subtitle": "كن أول من يكتب شيئاً.",
+    "chat_empty_subtitle_guest": "سجّل الدخول لتكون أول من يكتب شيئاً.",
+    "chat_new_messages_pill": "رسائل جديدة",
+    "chat_send_failed_retry": "إعادة المحاولة",
+    "chat_send_failed_discard": "تجاهل"
   },
   "language": {
     "en": "English",

@@ -47,6 +47,16 @@ class ChatMessageModel {
   /// 13) -- drives the "(edited)" indicator. Mirrors chat_messages.edited_at.
   final DateTime? editedAt;
 
+  /// True for an optimistic echo whose insert was refused by the server
+  /// (P6.2). The message stays in the list so the sender can retry or discard
+  /// it instead of silently losing what they typed; [failureReason] carries
+  /// the server's own explanation. Never true for a confirmed row.
+  final bool isFailed;
+
+  /// Why the send failed, already translated to something a person can read
+  /// (set by LiveChatController.sendMessage). Null unless [isFailed].
+  final String? failureReason;
+
   /// True when `badges` contains ChatSenderBadge.moderator for this stream
   /// (resolved server-side via chat_sender_info's is_moderator column).
   bool get isStreamModerator => badges.contains(ChatSenderBadge.moderator);
@@ -65,6 +75,8 @@ class ChatMessageModel {
     this.badges = const {},
     this.isPending = false,
     this.editedAt,
+    this.isFailed = false,
+    this.failureReason,
   });
 
   ChatMessageModel copyWith({
@@ -75,6 +87,8 @@ class ChatMessageModel {
     Set<ChatSenderBadge>? badges,
     bool? isPending,
     DateTime? editedAt,
+    bool? isFailed,
+    String? failureReason,
   }) {
     return ChatMessageModel(
       id: id ?? this.id,
@@ -88,6 +102,8 @@ class ChatMessageModel {
       badges: badges ?? this.badges,
       isPending: isPending ?? this.isPending,
       editedAt: editedAt ?? this.editedAt,
+      isFailed: isFailed ?? this.isFailed,
+      failureReason: failureReason ?? this.failureReason,
     );
   }
 }

@@ -49,7 +49,12 @@ insert into expected_anon_execute values
 create temporary table expected_realtime(relname text) on commit drop;
 insert into expected_realtime values
   ('chat_messages'), ('broadcaster_applications'), ('profiles'),
-  ('academic_categories'), ('tags'), ('banned_users'), ('device_sessions');
+  ('academic_categories'), ('tags'), ('banned_users'), ('device_sessions'),
+  -- P6.2/P6.3 (20260921130000). chat_stream_settings is world-readable by
+  -- policy, so publishing it exposes nothing new; chat_reports is admin-only
+  -- by policy, so only admin subscribers receive a row. chat_muted_users is
+  -- deliberately NOT here -- see that migration's comment.
+  ('chat_stream_settings'), ('chat_reports');
 
 -- ---------------------------------------------------------------------------
 -- R1 — row-level security is enabled everywhere it must be.
