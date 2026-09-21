@@ -128,8 +128,15 @@ grant execute on function public.delete_own_account() to authenticated;
 
 -- chat_sender_info stays available to anon on purpose: guest viewers must see
 -- sender display names and role badges in a public chat.
-revoke execute on function public.chat_sender_info(uuid[]) from public;
-grant execute on function public.chat_sender_info(uuid[]) to anon, authenticated;
+--
+-- Only the two-argument signature exists: 20260830160000_stream_moderators.sql
+-- did `drop function if exists public.chat_sender_info(uuid[])` and recreated
+-- it as `chat_sender_info(uuid[], text default null)` to add is_moderator. The
+-- one-argument form this migration originally also revoked/granted has not
+-- existed since then, so those two statements aborted the whole migration with
+-- `function public.chat_sender_info(uuid[]) does not exist (SQLSTATE 42883)`
+-- and were removed when the chain was first actually executed (P1d). The
+-- default argument means clients can still call it with just the id array.
 revoke execute on function public.chat_sender_info(uuid[], text) from public;
 grant execute on function public.chat_sender_info(uuid[], text) to anon, authenticated;
 

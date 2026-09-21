@@ -25,11 +25,17 @@ reset role;
 -- A viewer can send one message, but not two in the same instant.
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"90000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
+-- Bodies deliberately avoid the seeded blocklist. 'Hello' cannot be used here:
+-- chat_check_banned_keywords matches on bare substrings and the starter list
+-- in 20260826090000 contains 'hell', so 'Hello' is rejected as profanity
+-- before the rate limiter is ever reached. That substring behaviour is a real
+-- defect, recorded as a P6 finding in brief/OWNER_ACTIONS.md -- it is not
+-- what this file is testing, so these assertions route around it.
 select lives_ok($$insert into public.chat_messages (stream_id, sender_id, body)
- values ('chatstream1', '90000000-0000-4000-8000-000000000002', 'Hello')$$,
+ values ('chatstream1', '90000000-0000-4000-8000-000000000002', 'Salaam')$$,
  'A first message is accepted');
 select throws_ok($$insert into public.chat_messages (stream_id, sender_id, body)
- values ('chatstream1', '90000000-0000-4000-8000-000000000002', 'Hello again')$$,
+ values ('chatstream1', '90000000-0000-4000-8000-000000000002', 'Salaam again')$$,
  '42501', 'Sending too fast', 'A second message inside 1.2 s is refused');
 reset role;
 

@@ -55,16 +55,20 @@ update public.stream_viewers set last_seen = now() - interval '2 minutes';
 select is((select viewer_count from public.get_viewer_counts(array['abcdefghijk'])), 0,
  'Presence older than the 45s window stops counting');
 
--- Direct table access is denied to clients even though the RPCs work.
+-- 06 A12: direct table access is denied to clients even though the RPCs work.
+-- 20260921110000 revoked every table privilege on stream_viewers from anon and
+-- authenticated, so the denial now arrives as 42501 before RLS is consulted
+-- rather than as an empty result set. That is the stronger of the two
+-- outcomes, so these assert the throw instead of a zero count.
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"80000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
-select is((select count(*)::int from public.stream_viewers), 0,
- 'A signed-in client cannot select presence rows directly');
+select throws_ok($$select count(*) from public.stream_viewers$$, '42501', null,
+ 'A12 a signed-in client cannot select presence rows directly');
 reset role;
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
-select is((select count(*)::int from public.stream_viewers), 0,
- 'anon cannot select presence rows directly');
+select throws_ok($$select count(*) from public.stream_viewers$$, '42501', null,
+ 'A12 anon cannot select presence rows directly');
 reset role;
 
 select * from finish();

@@ -41,10 +41,13 @@ reset role;
 select is((select count(*)::int from public.follows where target_id = 'channel-one'), 1,
  'B''s delete removed nothing');
 
--- Anonymous readers get nothing at all.
+-- Anonymous readers get nothing at all. follows/bookmarks are granted to
+-- `authenticated` only (20260921110000), so an anonymous read is refused at the
+-- privilege layer with 42501 rather than returning an empty set.
 set local role anon;
 select set_config('request.jwt.claims', '{"role":"anon"}', true);
-select is((select count(*)::int from public.follows), 0, 'anon reads no follows');
+select throws_ok($$select count(*) from public.follows$$, '42501', null,
+ 'anon reads no follows');
 reset role;
 
 -- A banned account cannot add follows or bookmarks.
