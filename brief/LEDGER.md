@@ -326,3 +326,85 @@ both historical stashes untouched. Nothing pushed.
   `brief/OWNER_ACTIONS.md` rather than inventing them.
 - The GPS / VULN-COMP-02 owner decision is still unresolved and was not
   touched. P6.4, P5, P7, P8B and P9 remain not started.
+
+## P8A, 2026-09-22, Claude Code Opus
+
+### Verified results
+- Gates: **1 failing**, down from 4. G4a 14 -> **0**, G4b 5 -> **0**, G8 1 ->
+  **0**. G6 remains 505 and is entirely false positives (translated `.tr()`
+  calls); real untranslated `Text('...')` literals: 0.
+- Analyzer: 0 issues. Full suite: **439 passed**.
+- Debug APK builds after the Kotlin package move, which is the evidence that
+  the native side still compiles under the new namespace.
+- Release fail-closed verified by running it: `flutter build appbundle
+  --release` stops in 3 s with the keytool instructions, no artifact produced.
+
+### Play requirements, checked not assumed (2026-09-22)
+- Target API: `flutter.targetSdkVersion` = 36. Google Play has required API 36
+  for new apps and updates since 31 August 2026.
+  https://developer.android.com/google/play/requirements/target-sdk
+  A Gradle configuration check now fails the build if it ever drops below 36.
+- 16 KB page size, required for apps targeting Android 15+ since 1 November
+  2025: https://developer.android.com/guide/practices/page-sizes
+  All 10 `.so` files in the APK are stored uncompressed at 16384-byte
+  boundaries, and every arm64 LOAD segment has `p_align` >= 16384
+  (libflutter 65536, libdartjni 16384, libdatastore_shared_counter 16384,
+  libVkLayer_khronos_validation 65536 - the last is debug-only). AGP is 8.11.1,
+  above the 8.5.1 that makes alignment automatic.
+
+### Permissions
+Merged manifest now declares exactly eight, all in use: INTERNET,
+ACCESS_NETWORK_STATE, CAMERA, RECORD_AUDIO, FOREGROUND_SERVICE,
+FOREGROUND_SERVICE_CAMERA, FOREGROUND_SERVICE_MICROPHONE, POST_NOTIFICATIONS.
+READ_EXTERNAL_STORAGE and READ_MEDIA_IMAGES were removed after checking that
+`image_picker_android` declares no storage permission of its own and uses the
+photo picker, which grants per-item URIs. Verified by reading the merged
+manifest of a built APK, not by assumption.
+
+### Icons and splash
+Layers derived by `brief/tools/make_launcher_assets.py` from the supplied logo;
+`project/assets/logo/` is read-only and unchanged. A first pass inset the mark
+in the source as well as letting `flutter_launcher_icons` apply its 16% inset,
+which put the mark at ~39% of the icon; caught by rendering the masked result
+and looking at it, then corrected to 92% in the source. Evidence:
+`brief/assets/launcher_icon_check.png`, 192/96/48 px under circular and
+squircle masks plus the themed silhouette.
+
+The launch window was black on a dark-mode device and flashed to the white UI,
+because `values-night/` used `Theme.Black` and `drawable-v21` used
+`?android:colorBackground` while the app ships one light theme. Both now render
+white with the mark.
+
+### Not done, and why
+- **No AAB.** `key.properties` does not exist and a keystore must never be
+  created by the agent, so no release artifact, no size figure, no release
+  smoke test.
+- **No release secret scan.** A debug APK was scanned as the nearest available
+  evidence: `brief/scan-p8a-debug-apk.txt`. It reports LEAK; all 7 hits were
+  traced to PEM header constants in a crypto dependency's key parser and to the
+  literal prefix `sb_secret_` declared in `supabase-2.16.1/lib/src/api_key.dart`
+  matched across a kernel constant-pool boundary. No secret is in the build. The
+  scanner was not modified.
+- **No device verification of anything in P4 or P8A.**
+- PRIVACY_POLICY_URL still blank; GPS decision still unresolved.
+
+### Commit
+`7bcec29`.
+
+## RESUME block (2026-09-22, Claude Code Opus, P4 complete and P8A complete)
+- **P4 and P8A are both COMPLETE.** HEAD `7bcec29` on master. Tree clean apart
+  from the owner-owned `Roadmap.md`, `brief/layout-p4-results.txt` and
+  `skill-observations/`, all untouched. Both historical stashes untouched.
+  **Nothing pushed.** No Supabase command was run in this session.
+- Baseline for the next session: analyzer 0, `flutter test` **439 passed**,
+  layout sweep 120 (green in screenshot mode too), rendered contrast 30, gates
+  **1 failing — G6 505, all false positives**. pgTAP 179 across 11 files,
+  inherited, not re-run. Do not re-run the full suite at entry.
+- Exact next step: **P6.4 item 1, the server-backed user directory**, starting
+  from the `device_sessions` admin-read gap recorded in the P6a section and in
+  OWNER_ACTIONS item 4 (new migration only). Then P6.4 items 2-6, then P5, P7,
+  P8B, P9.
+- Before any release work resumes, the owner must supply the keystore and the
+  privacy URL: `brief/OWNER_ACTIONS.md`, P8A section. Until then the release
+  build is expected to fail, by design.
+- The GPS / VULN-COMP-02 decision remains unresolved and untouched.

@@ -68,3 +68,23 @@ Production is still blocked by the unresolved GPS decision, the privacy URL,
 signing inputs, physical-device testing, production schema and migration
 review, and legal and store approval. No device or emulator run has happened;
 all evidence remains widget-level. **No release readiness is claimed.**
+
+## P8A, 2026-09-22, Claude Code Opus
+
+**P8A is complete** to the limit of what can be done without owner inputs.
+Gates went from 4 failing to 1, and the remaining one is entirely false
+positives. Detail and evidence in the P8A entry of `brief/LEDGER.md`.
+
+Done: application identity across Gradle, the Kotlin package tree, the manifest,
+the OAuth deep-link scheme and the web shell; a localized launcher label;
+release signing that fails closed; adaptive, monochrome, legacy and web icons
+with a white splash carrying the mark; permission cleanup down to eight; and the
+Play target-API and 16 KB page-size requirements checked against the current
+published policy rather than assumed.
+
+Blocked on the owner, not on effort: the release AAB and its secret scan (both
+need a keystore the agent must never create), the privacy policy URL, and
+real-device verification of the icons, the splash and the RTMP path.
+
+Remaining phases, unchanged in order: P6.4, P5, P7, P8B, P9. **No release
+readiness is claimed.**
