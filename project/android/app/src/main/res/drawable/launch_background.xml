@@ -1,12 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Modify this file to customize your launch splash screen -->
+<!--
+  Launch window. Scheme A is a light-only app (ThemeMode.light), so this is
+  white in both light and dark mode: a dark-mode device used to get a black
+  launch window and then flash to the white UI.
+-->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:drawable="@android:color/white" />
-
-    <!-- You can insert your own image assets here -->
-    <!-- <item>
+    <item>
         <bitmap
             android:gravity="center"
-            android:src="@mipmap/launch_image" />
-    </item> -->
+            android:src="@drawable/splash_logo" />
+    </item>
 </layer-list>

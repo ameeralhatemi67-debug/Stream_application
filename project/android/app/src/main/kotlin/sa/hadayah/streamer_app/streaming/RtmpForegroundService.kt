@@ -1,4 +1,4 @@
-package com.example.streamer_app.streaming
+package sa.hadayah.streamer_app.streaming
 
 import android.app.Notification
 import android.app.NotificationChannel
@@ -9,7 +9,7 @@ import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.example.streamer_app.R
+import sa.hadayah.streamer_app.R
 
 /**
  * Keeps camera+mic capture alive while the app is backgrounded or the screen

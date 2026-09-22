@@ -6,8 +6,13 @@
          declared permission is flagged by both Play Console and Apple's privacy review, and
          needlessly worries privacy-conscious users. Re-add only if/when a real "take photo"
          option is built (see doc/Audit/02_Permissions_Audit.md). -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32"/>
-    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
+    <!-- READ_EXTERNAL_STORAGE and READ_MEDIA_IMAGES removed (P8A). image_picker is only ever
+         called with ImageSource.gallery, and image_picker_android goes through the Android
+         photo picker (ACTION_PICK_IMAGES / PickVisualMedia, with ACTION_GET_CONTENT below
+         API 33). Both hand back a per-item URI grant and need no storage permission, and the
+         plugin's own manifest declares none. Declaring them anyway asks every user for
+         access to their whole photo library, which Play Console flags and which the app does
+         not use. Re-add only if the app ever enumerates MediaStore directly. -->
     <!-- CAMERA + RECORD_AUDIO (v0.7 Checkpoint 2): captures the phone's own
          camera/mic to publish an RTMP broadcast, see
          doc/Roadmap/v0.7_Mobile_Streaming_Android.md. Runtime-permission
@@ -29,7 +34,7 @@
          one. Requested at runtime, best-effort, in PhoneBroadcastScreen. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
-        android:label="streamer_app"
+        android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:networkSecurityConfig="@xml/network_security_config"
@@ -62,7 +67,7 @@
                 <action android:name="android.intent.action.VIEW"/>
                 <category android:name="android.intent.category.DEFAULT"/>
                 <category android:name="android.intent.category.BROWSABLE"/>
-                <data android:scheme="com.example.streamerapp" android:host="login-callback"/>
+                <data android:scheme="sa.hadayah.streamerapp" android:host="login-callback"/>
             </intent-filter>
         </activity>
         <!-- Don't delete the meta-data below.

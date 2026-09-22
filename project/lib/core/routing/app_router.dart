@@ -82,7 +82,7 @@ class AppRouter {
         return '/feed';
       }
 
-      // Handle OAuth callback deep link redirects (e.g. com.example.streamerapp://login-callback)
+      // Handle OAuth callback deep link redirects (e.g. sa.hadayah.streamerapp://login-callback)
       // gracefully without ever falling through to "Route Not Found". Must
       // mirror the '/welcome'branch's role-select gate above -- routing
       // straight to '/feed'here skipped the broadcaster onboarding prompt

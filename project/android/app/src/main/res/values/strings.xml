@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The launcher label. Owner-supplied identity, brief/05_DECISIONS.md; kept in
+  step with project/lib/core/config/app_identity.dart. A string resource, not
+  a literal in the manifest, so the Arabic name in values-ar/ is what an
+  Arabic device shows on its home screen.
+-->
+<resources>
+    <string name="app_name">Hadayah Live</string>
+</resources>

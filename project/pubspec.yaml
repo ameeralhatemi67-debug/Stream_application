@@ -58,11 +58,15 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^3.0.0
+  # Generates the launcher, adaptive and web icons from the owner's supplied
+  # logo. A dev dependency: nothing it produces is imported at runtime.
+  flutter_launcher_icons: ^0.14.4
 
 flutter:
   uses-material-design: true
 
   assets:
+    - assets/logo/
     - assets/logo/colored.svg
     - assets/logo/black.svg
     - assets/Language.svg
@@ -85,3 +89,26 @@ flutter:
         - asset: assets/fonts/IBMPlexSansArabic-400.ttf
         - asset: assets/fonts/IBMPlexSansArabic-700.ttf
           weight: 700
+
+
+# Launcher, adaptive and web icons, built by `dart run flutter_launcher_icons`
+# from the layers `brief/tools/make_launcher_assets.py` derives from the
+# owner's supplied logo. See Core_files/Desgin.md for which supplied file is
+# which. Re-run the Python script first if the logo ever changes.
+flutter_launcher_icons:
+  android: true
+  ios: false
+  # The finished square tile, for the legacy mipmaps on Android 7 and below.
+  image_path: "assets/launcher/icon_1024.png"
+  # Adaptive icon (Android 8+): a flat background with the mark inset into the
+  # safe zone, so a circular or squircle mask cannot clip it.
+  adaptive_icon_background: "assets/launcher/adaptive_background.png"
+  adaptive_icon_foreground: "assets/launcher/adaptive_foreground.png"
+  # Themed icon (Android 13+): a silhouette the launcher tints itself.
+  adaptive_icon_monochrome: "assets/launcher/adaptive_monochrome.png"
+  min_sdk_android: 24
+  web:
+    generate: true
+    image_path: "assets/launcher/icon_1024.png"
+    background_color: "#FFFFFF"
+    theme_color: "#17643F"

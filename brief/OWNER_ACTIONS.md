@@ -193,3 +193,66 @@ stand, including the two decisions that block a push.
 
 ## Codex scheme A checkpoint, 2026-09-21
 Scheme A and supplied logo accepted. Application ID/names/support email already supplied. Privacy URL and signing still needed for release. No launcher/AAB generated yet. GPS remains unresolved. Physical-device, production-schema/migration and legal/store approvals remain open. See OVERRUN_REPORT.md for unfinished P4 and subsequent phases.
+
+## P8A, 2026-09-22 (Claude Code Opus)
+
+Identity, icons, splash, permissions and the SDK checks are done and committed.
+Five things remain, and every one of them needs you, not the agent.
+
+### 1. Upload keystore and key.properties (blocks any release artifact)
+The release build now **fails closed**. Without `project/android/key.properties`
+it stops at configuration with an explanation rather than quietly signing with
+the debug keystore, which is what it used to do (gate G8, VULN-BUILD-01).
+Verified: `flutter build appbundle --release` fails in 3 seconds with
+
+    Release signing is not configured: android/key.properties is missing.
+
+Generate the keystore yourself and keep it out of the repository:
+
+    keytool -genkey -v -keystore <somewhere OUTSIDE this repo>/hadayah-upload.jks \
+      -keyalg RSA -keysize 2048 -validity 10000 -alias upload
+
+then create `project/android/key.properties` (gitignored) with
+
+    storePassword=...
+    keyPassword=...
+    keyAlias=upload
+    storeFile=<absolute path to hadayah-upload.jks>
+
+**The agent did not and must never create a keystore.** Losing this file means
+you can never update the app under the same Play listing.
+
+### 2. Consequences of 1: no AAB, and no release secret scan
+`flutter build appbundle --release` could not run, so:
+- there is **no AAB**, no AAB size figure, and no release smoke test;
+- `node brief/tools/scan_build_secrets.mjs <aab>` could not run on the artifact
+  that matters.
+A debug APK was scanned instead as the closest available evidence. It reports
+`LEAK`, and all 7 hits were traced and are false positives: six PEM header
+constants from a crypto dependency's key parser, and one match of the literal
+prefix `sb_secret_` declared in `supabase-2.16.1/lib/src/api_key.dart`, matched
+across a kernel constant-pool boundary. Full working in
+`brief/scan-p8a-debug-apk.txt`. The scanner was not modified. Re-run it on the
+real AAB once you have signing.
+
+### 3. PRIVACY_POLICY_URL is still blank
+`brief/05_DECISIONS.md` has `PRIVACY_POLICY_URL=` empty, so
+`AppIdentity.privacyPolicyUrl` is an empty string. Play requires a reachable
+privacy policy URL for any app that handles personal data, and this one handles
+accounts, chat and location. Fill it in `05_DECISIONS.md` and
+`project/lib/core/config/app_identity.dart` together.
+
+### 4. Real-device verification
+Everything in P4 and P8A is widget-level or build-level. Nobody has yet seen
+this app on a physical Android phone. Specifically unverified:
+- the launcher icon under a real launcher's mask, and the Android 13+ themed
+  icon with a user-chosen wallpaper tint;
+- the launch window, now white in both light and dark mode;
+- the phone RTMP broadcast path, including the orientation channel whose
+  missing-plugin case was fixed this session;
+- Arabic RTL on a device rather than in the widget tester.
+
+### 5. Unchanged blocks carried forward
+The GPS / VULN-COMP-02 decision is still unresolved and was not touched.
+Production schema and migration review, and legal and store approval, remain
+open. **No release readiness is claimed.**

@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+
+import '../../../../core/config/app_identity.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -157,7 +159,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                   children: [
                     TileLayer(
                       urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                      userAgentPackageName: 'com.example.streamer_app',
+                      userAgentPackageName: AppIdentity.applicationId,
                     ),
                     MarkerLayer(
                       markers: [

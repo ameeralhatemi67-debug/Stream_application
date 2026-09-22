@@ -1,11 +1,11 @@
 {
-    "name": "streamer_app",
-    "short_name": "streamer_app",
+    "name": "Hadayah Live",
+    "short_name": "Hadayah Live",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#FFFFFF",
+    "theme_color": "#17643F",
+    "description": "Hadayah Live: educational live broadcasting for the Eastern Province.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

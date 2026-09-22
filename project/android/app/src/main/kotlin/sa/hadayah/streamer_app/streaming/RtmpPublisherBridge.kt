@@ -1,4 +1,4 @@
-package com.example.streamer_app.streaming
+package sa.hadayah.streamer_app.streaming
 
 import android.content.Context
 import android.content.Intent

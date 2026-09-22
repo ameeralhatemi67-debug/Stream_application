@@ -1,7 +1,7 @@
-package com.example.streamer_app
+package sa.hadayah.streamer_app
 
-import com.example.streamer_app.streaming.RtmpPublisherBridge
-import com.example.streamer_app.streaming.RtmpPublisherViewFactory
+import sa.hadayah.streamer_app.streaming.RtmpPublisherBridge
+import sa.hadayah.streamer_app.streaming.RtmpPublisherViewFactory
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.EventChannel

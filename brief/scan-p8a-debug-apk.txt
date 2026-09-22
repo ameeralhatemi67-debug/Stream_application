@@ -1,0 +1,31 @@
+SCAN files=670 anon_keys_found=0 service_role_jwts=0 other_secrets=7
+  LEAK in assets/flutter_assets/kernel_blob.bin (x7)
+RESULT: LEAK. Do not publish. Rotate the key in the Supabase dashboard, rebuild, re-scan.
+
+--- Analysis, 2026-09-22 ---
+Target: project/build/app/outputs/flutter-apk/app-debug.apk (a DEBUG artifact;
+no release AAB can be produced because android/key.properties does not exist
+and a keystore must never be created by the agent).
+
+service_role_jwts = 0. anon_keys_found = 0 (no --dart-define was supplied).
+The 7 "other_secrets" are all in assets/flutter_assets/kernel_blob.bin, which
+is the debug Dart kernel and therefore contains dependency source strings. Each
+was traced:
+
+  6 x PEM headers - "-----BEGIN PRIVATE KEY-----", "-----BEGIN EC PRIVATE
+    KEY-----", "-----BEGIN RSA PRIVATE KEY-----". These are parser constants in
+    a crypto dependency, declared as `static const BEGIN_PRIVATE_KEY = '...'`
+    in a KeyParser class. They are the header literals used to RECOGNISE a key,
+    not key material.
+
+  1 x "sb_secret_..." - the scanner's pattern sb_secret_[A-Za-z0-9_-]{10,}
+    matched across a constant-pool boundary. The real string is the prefix
+    constant in supabase-2.16.1/lib/src/api_key.dart:
+      const _secretKeyPrefix = 'sb_secret_';
+    immediately followed in the kernel string table by the unrelated string
+    "Unrecognized". Verified by extracting the match with the credential
+    portion masked and reading the surrounding bytes.
+
+Conclusion: no secret is present in this build. The scanner is fail-closed by
+design and was NOT modified. The release-AAB scan that P8A actually requires
+remains blocked on owner signing inputs; see brief/OWNER_ACTIONS.md.

@@ -35,6 +35,31 @@ Cards, buttons and inputs use radius 12; chips use 999. Spacing tokens are 4, 8,
 
 All nine files in `project/assets/logo/` are owner-supplied and are preserved as delivered; none is regenerated. `AppLogo` renders `colored.svg` at runtime, with `black.svg` as the monochrome variant. `square.svg` / `square.png` and `cercal.svg` / `cercal.png` are the square and circular lockups reserved for launcher, adaptive and web icons in P8A; `colored.png` and `black.png` are the raster equivalents, and `logoInkscapeMaker.svg` is the editable source. The concept logo in the original token JSON is superseded by these files.
 
+### Launcher icon, themed icon and splash (P8A)
+
+`brief/tools/make_launcher_assets.py` derives every icon layer from the supplied
+files and writes them to `project/assets/launcher/`; it never writes into
+`project/assets/logo/`. `flutter_launcher_icons` then generates the Android
+mipmaps, the adaptive and monochrome drawables and the web icons.
+
+- Adaptive background: flat `#EEFFF3`, sampled from the owner's `square.png`
+  tile rather than approximated.
+- Adaptive foreground: the bare `colored.png` mark at 92% of the layer.
+  `flutter_launcher_icons` wraps it in a 16% inset, which is what implements
+  the 72dp safe zone; insetting again in the source shrinks the mark to about
+  39% of the icon and leaves it swimming.
+- Monochrome (Android 13+ themed icons): the same geometry from `black.png`,
+  forced to a black silhouette with its alpha kept, since the launcher tints it.
+- Legacy mipmaps, web icons and the 512px store icon come from the finished
+  `square.png` tile.
+- Checked at 192, 96 and 48 px under a circular and a squircle mask, and as a
+  themed silhouette: `brief/assets/launcher_icon_check.png`.
+
+The launch window is white with the mark centred, in **both** light and dark
+mode. The app ships one light `ThemeData`, so `values-night/` deliberately
+mirrors `values/`: a dark-mode device previously got a black launch window that
+flashed to the white UI.
+
 ### Elevation
 
 Cards stay flat. Raised overlays (mini player, markers, floating menus, toasts) take `AppTheme.shadowSoft`, `shadow` or `shadowStrong`, tinted from `media` rather than pure black. Ad-hoc `Colors.black26/38/45/54/87` shades are not permitted and no longer appear in `lib/`.
