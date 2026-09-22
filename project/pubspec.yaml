@@ -18,6 +18,7 @@ dependencies:
   http: ^1.2.0
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.0
+  connectivity_plus: ^6.0.5
 
   # Localization (English LTR & Arabic RTL)
   easy_localization: ^3.0.7
@@ -77,6 +78,7 @@ flutter:
     - assets/images/BidonWaraq/
     - assets/images/Dalilak/
     - assets/images/quran/
+    - assets/images/avatars/
 
   fonts:
     - family: IBM Plex Sans

@@ -1,5 +1,9 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:streamer_app/core/providers/app_provider.dart';
+import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
 import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
 import 'package:streamer_app/features/map/presentation/widgets/offline_marker.dart';
@@ -267,9 +271,10 @@ void main() {
   group('Cluster 2 -- Tile Provider, White Markers & Google Maps (Task 7-9)',
       () {
     test(
-        'Task 7: Free dark basemap tile URL has zero watermark and zero API key requirement', () {
+        'Task 7 (UI-07): free light basemap tile URL has zero watermark and '
+        'zero API key requirement', () {
       expect(kSpatialMapTileUrlTemplate, contains('server.arcgisonline.com'));
-      expect(kSpatialMapTileUrlTemplate, contains('World_Dark_Gray_Base'));
+      expect(kSpatialMapTileUrlTemplate, contains('World_Light_Gray_Base'));
       expect(kSpatialMapTileUrlTemplate, contains('{z}/{y}/{x}'));
     });
 
@@ -324,6 +329,28 @@ void main() {
       await tester.pump();
 
       expect(_findStrokeRingMarkerContainer(), findsWidgets);
+    });
+
+    testWidgets(
+        'UI-12: offline marker ring is not pure white -- a white ring only '
+        'worked against the old dark basemap and disappears on the current '
+        'light basemap (UI-07)', (tester) async {
+      await tester.pumpWidget(MaterialApp(
+        home: Scaffold(
+          body: SpatialStreamerMarker(
+            marker: testMarker,
+            onTap: () {},
+            onDoubleTap: () {},
+          ),
+        ),
+      ));
+      await tester.pump();
+
+      final ringContainer =
+          tester.widget<Container>(_findStrokeRingMarkerContainer().first);
+      final border =
+          (ringContainer.decoration as BoxDecoration).border! as Border;
+      expect(border.top.color, isNot(equals(AppTheme.onMedia)));
     });
 
     testWidgets(
@@ -406,6 +433,120 @@ void main() {
       await tester.pump();
 
       expect(_findStrokeRingMarkerContainer(), findsWidgets);
+    });
+  });
+
+  group('UI-08: Spatial Map offline experience (AppProvider cache layer)', () {
+    // Deliberately provider-only, no widget pump of SpatialMapScreen: pumping
+    // the full screen reproducibly hung this test environment indefinitely
+    // (confirmed via CPU-trend monitoring -- near-zero CPU growth over
+    // multiple minutes, i.e. a genuine stall, not merely slow compilation)
+    // for a cause this session could not pin down (ruled out: real-network
+    // dependence -- the offline branch never mounts a TileLayer; a stale
+    // build cache -- reproduced again after `flutter clean`; the specific
+    // widget subtree -- the same cached-marker/status-forcing logic is
+    // exercised here without incident). The UI-rendering half of UI-08
+    // (banner text, timestamp, hidden attribution) is therefore verified by
+    // `flutter analyze` plus manual code review only, documented as such in
+    // brief/UI_ISSUES_FIX_REPORT_2026-09-22.md, not by a widget test here.
+    // This group instead locks down the part that matters most for data
+    // safety -- that a cached marker can never resurrect a stale "LIVE"
+    // status -- without touching FlutterMap at all.
+    setUp(() {
+      SharedPreferences.setMockInitialValues({});
+    });
+
+    test(
+        'loads a persisted marker cache from disk and exposes it via '
+        'cachedMapMarkers/mapCacheUpdatedAt', () async {
+      SharedPreferences.setMockInitialValues({
+        // Must match AppProvider's private _mapCacheKey /
+        // _mapCacheUpdatedAtKey constants.
+        'spatial_map_marker_cache_v1': jsonEncode([
+          const MapMarkerModel(
+            markerId: 'pin_cached_1',
+            streamerId: 'cached_1',
+            displayNameEn: 'Cached Streamer',
+            displayNameAr: 'مذيع مخزن',
+            venueNameEn: 'Cached Hall',
+            venueNameAr: 'قاعة مخزنة',
+            latitude: 26.2871,
+            longitude: 50.2125,
+            cityId: 'khobar',
+            categoryId: 'cs_tech',
+            // Deliberately seeded as "live" -- fromCachedJson must force it
+            // to offline regardless of what the stored JSON says (below).
+            status: MarkerStatus.liveVideo,
+            viewerCount: 999,
+            avatarUrl: '',
+          ).toJson(),
+        ]),
+        'spatial_map_marker_cache_updated_at_v1':
+            DateTime(2026, 1, 1, 12, 0).toIso8601String(),
+      });
+
+      final provider = AppProvider();
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      expect(provider.cachedMapMarkers, hasLength(1));
+      final cached = provider.cachedMapMarkers.single;
+      expect(cached.streamerId, 'cached_1');
+      // The core UI-08 safety property: a cached marker is never live.
+      expect(cached.status, MarkerStatus.offline);
+      expect(cached.isLive, isFalse);
+      expect(cached.viewerCount, 0);
+      expect(provider.mapCacheUpdatedAt, DateTime(2026, 1, 1, 12, 0));
+
+      provider.dispose();
+    });
+
+    test('starts with no cached markers when nothing was ever persisted',
+        () async {
+      final provider = AppProvider();
+      await Future.delayed(const Duration(milliseconds: 150));
+
+      expect(provider.cachedMapMarkers, isEmpty);
+      expect(provider.mapCacheUpdatedAt, isNull);
+
+      provider.dispose();
+    });
+
+    test('MapMarkerModel.fromCachedJson always forces MarkerStatus.offline',
+        () {
+      const live = MapMarkerModel(
+        markerId: 'm',
+        streamerId: 's',
+        displayNameEn: 'A',
+        displayNameAr: 'أ',
+        venueNameEn: 'V',
+        venueNameAr: 'ق',
+        latitude: 1,
+        longitude: 1,
+        cityId: 'khobar',
+        categoryId: 'cs_tech',
+        status: MarkerStatus.liveVideo,
+        viewerCount: 500,
+        avatarUrl: '',
+      );
+      final roundTripped = MapMarkerModel.fromCachedJson(live.toJson());
+      expect(roundTripped.status, MarkerStatus.offline);
+      expect(roundTripped.viewerCount, 0);
+    });
+
+    test('debugSetOnlineForTests flips isOnline and notifies listeners',
+        () async {
+      final provider = AppProvider();
+      await Future.delayed(const Duration(milliseconds: 80));
+      expect(provider.isOnline, isTrue);
+
+      var notified = false;
+      provider.addListener(() => notified = true);
+      provider.debugSetOnlineForTests(false);
+
+      expect(provider.isOnline, isFalse);
+      expect(notified, isTrue);
+
+      provider.dispose();
     });
   });
 }

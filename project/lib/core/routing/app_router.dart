@@ -469,16 +469,16 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                     initialLocation: index == navigationShell.currentIndex,
                   );
                 },
-                items: const [
+                items: [
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.grid_view_rounded),
-                    activeIcon: Icon(Icons.grid_view_rounded, color: AppTheme.danger),
-                    label: 'Discovery',
+                    icon: const Icon(Icons.grid_view_rounded),
+                    activeIcon: const Icon(Icons.grid_view_rounded, color: AppTheme.danger),
+                    label: context.tr('nav.feed'),
                   ),
                   BottomNavigationBarItem(
-                    icon: Icon(Icons.map_rounded),
-                    activeIcon: Icon(Icons.map_rounded, color: AppTheme.danger),
-                    label: 'Spatial Map',
+                    icon: const Icon(Icons.map_rounded),
+                    activeIcon: const Icon(Icons.map_rounded, color: AppTheme.danger),
+                    label: context.tr('nav.map'),
                   ),
                 ],
               ),

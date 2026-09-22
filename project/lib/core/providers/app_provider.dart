@@ -12,7 +12,9 @@ import '../services/notifications/watch_session_tracker.dart';
 import '../services/youtube_api_service.dart';
 import '../services/supabase_auth_service.dart';
 import '../services/admin_database_service.dart';
+import '../services/connectivity_service.dart';
 import '../utils/id_generator.dart';
+import '../../features/map/models/map_models.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -37,7 +39,8 @@ import '../../features/discovery/models/academic_category_model.dart';
 import '../models/device_session_model.dart';
 import '../config/feature_flags.dart';
 import '../../features/live_stream/services/stream_decay_engine.dart';
-import 'package:flutter/foundation.dart'show defaultTargetPlatform, kDebugMode;
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kDebugMode, visibleForTesting;
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -46,11 +49,50 @@ bool _looksLikeUuid(String? value) =>
     value != null && _uuidPattern.hasMatch(value);
 
 class AppProvider extends ChangeNotifier {
+  // Directory results are screen-scoped, not cached across account changes.
+  Future<List<Map<String, dynamic>>> searchAdminUsers(String query, int offset) async {
+    if (!isAdminUser) throw StateError('Not permitted');
+    _adminDbService ??= await AdminDatabaseService.create();
+    return _adminDbService!.searchAdminUsers(query, offset);
+  }
+
+  Future<Map<String, dynamic>> loadAdminUserDetail(String id) async {
+    if (!isAdminUser) throw StateError('Not permitted');
+    _adminDbService ??= await AdminDatabaseService.create();
+    return _adminDbService!.loadAdminUserDetail(id);
+  }
+
+  Future<void> updateAdminAccount(String id, String action, String reason) async {
+    if (!isAdminUser) throw StateError('Not permitted');
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.updateAdminAccount(id, action, reason);
+    await _refreshBannedUsers();
+    await refreshAdminData();
+  }
+
   // Starts empty: the catalog comes from the backend
   // (loadVerifiedStreamersFromBackend). Sample broadcasters used to be
   // compiled in and merged with real data, so an offline or empty backend
   // still showed five fictional channels (P2 truthful data).
   List<StreamerModel> _streamers = [];
+
+  // --- UI-08: Spatial Map offline experience -------------------------------
+  // Device network reachability, not proof any given request will succeed --
+  // see ConnectivityService's own doc comment. Defaults to true so a widget
+  // test that never calls ensureConnectivityMonitoringActive() (matching the
+  // ensureLivePollingActive() pattern -- see that method's doc) renders the
+  // normal online map, not a false offline state.
+  bool _isOnline = true;
+  ConnectivityService? _connectivityService;
+  StreamSubscription<bool>? _connectivitySub;
+  static const String _mapCacheKey = 'spatial_map_marker_cache_v1';
+  static const String _mapCacheUpdatedAtKey = 'spatial_map_marker_cache_updated_at_v1';
+  List<MapMarkerModel> _cachedMapMarkers = [];
+  DateTime? _mapCacheUpdatedAt;
+
+  bool get isOnline => _isOnline;
+  List<MapMarkerModel> get cachedMapMarkers => List.unmodifiable(_cachedMapMarkers);
+  DateTime? get mapCacheUpdatedAt => _mapCacheUpdatedAt;
   // Audience Q&A has no backend and no screen wired to it (05 D-03). The list
   // starts empty instead of being pre-filled with invented questions
   // attributed to named people; the sample set lives in test fixtures.
@@ -275,6 +317,13 @@ class AppProvider extends ChangeNotifier {
     // NOTE: Live viewer polling is NOT started in the constructor to keep
     // widget tests clean (no pending timer assertions). The real app starts
     // it via AppProvider.ensureLivePollingActive() from main.dart / app root.
+    // Connectivity *monitoring* (the stream subscription) follows the same
+    // rule -- see ensureConnectivityMonitoringActive(). Loading whatever
+    // offline map cache is already on disk is a one-shot read, not a
+    // subscription, so it's safe to kick off here: it's what lets the map
+    // show cached venues immediately if the app opens with no network at
+    // all, before main.dart gets a chance to call anything.
+    _loadMapMarkerCacheFromDisk();
   }
 
   /// Picks up any session Supabase already restored on cold start, then
@@ -1243,6 +1292,9 @@ class AppProvider extends ChangeNotifier {
         }
       }
       notifyListeners();
+      // UI-08: refresh the offline fallback snapshot every time a backend
+      // load actually succeeds.
+      unawaited(_persistMapMarkerCache());
     } catch (e) {
       debugPrint('loadVerifiedStreamersFromBackend failed: $e');
     }
@@ -1557,6 +1609,101 @@ class AppProvider extends ChangeNotifier {
     _startLiveViewerPolling();
   }
 
+  /// Public entry-point (main.dart / app root only, same rule as
+  /// [ensureLivePollingActive]) that starts live connectivity monitoring for
+  /// the Spatial Map's offline experience (UI-08). Checks the current status
+  /// immediately, then subscribes so [isOnline] and the cached-marker
+  /// fallback stay live; recovering from offline automatically retries the
+  /// backend streamer load ("Retry and recover when connectivity returns").
+  void ensureConnectivityMonitoringActive() {
+    _connectivityService ??= ConnectivityService();
+    _connectivitySub?.cancel();
+    _connectivitySub = _connectivityService!.onStatusChange.listen((online) {
+      _applyConnectivity(online);
+    });
+    // After subscribing, so a status change that lands while the initial
+    // probe is still in flight is not overwritten by its staler answer.
+    _connectivityService!.checkNow().then(_applyConnectivity);
+  }
+
+  void _applyConnectivity(bool online) {
+    final wasOffline = !_isOnline;
+    if (_isOnline == online) return;
+    _isOnline = online;
+    notifyListeners();
+    if (wasOffline && online) {
+      loadVerifiedStreamersFromBackend();
+    }
+  }
+
+  /// Re-probes connectivity on demand and returns the fresh state.
+  ///
+  /// The Spatial Map's offline banner needs this, not just another backend
+  /// fetch: `connectivity_plus` only emits on *change*, so an app that cold
+  /// started offline (or that missed an event) would otherwise stay pinned to
+  /// `isOnline == false` forever no matter how many times the user tapped
+  /// Retry -- the banner's own escape hatch could not actually escape.
+  Future<bool> refreshConnectivityNow() async {
+    _connectivityService ??= ConnectivityService();
+    final online = await _connectivityService!.checkNow();
+    _applyConnectivity(online);
+    return online;
+  }
+
+  /// Test-only hook: lets widget tests simulate an offline/online transition
+  /// without touching the real `connectivity_plus` platform channel.
+  @visibleForTesting
+  void debugSetOnlineForTests(bool online) {
+    _isOnline = online;
+    notifyListeners();
+  }
+
+  Future<void> _loadMapMarkerCacheFromDisk() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_mapCacheKey);
+      final updatedAtRaw = prefs.getString(_mapCacheUpdatedAtKey);
+      if (raw == null || raw.isEmpty) return;
+      final decoded = jsonDecode(raw) as List<dynamic>;
+      _cachedMapMarkers = decoded
+          .map((e) => MapMarkerModel.fromCachedJson(e as Map<String, dynamic>))
+          .toList();
+      _mapCacheUpdatedAt =
+          updatedAtRaw != null ? DateTime.tryParse(updatedAtRaw) : null;
+      notifyListeners();
+    } catch (e) {
+      debugPrint('_loadMapMarkerCacheFromDisk failed: $e');
+    }
+  }
+
+  /// Persists the current streamer catalog's map-relevant fields as the
+  /// offline fallback snapshot. Called after every successful backend
+  /// refresh (loadVerifiedStreamersFromBackend) -- a successful refresh is
+  /// itself proof the device was online a moment ago, so this is the natural
+  /// "last known good" point to snapshot, without coupling it to the
+  /// separate connectivity-monitoring subscription.
+  Future<void> _persistMapMarkerCache() async {
+    try {
+      final markers = _streamers
+          .where((s) => s.latitude != 0 || s.longitude != 0)
+          .map(MapMarkerModel.fromStreamer)
+          .toList();
+      if (markers.isEmpty) return;
+      final now = DateTime.now();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        _mapCacheKey,
+        jsonEncode(markers.map((m) => m.toJson()).toList()),
+      );
+      await prefs.setString(_mapCacheUpdatedAtKey, now.toIso8601String());
+      _cachedMapMarkers =
+          markers.map((m) => MapMarkerModel.fromCachedJson(m.toJson())).toList();
+      _mapCacheUpdatedAt = now;
+    } catch (e) {
+      debugPrint('_persistMapMarkerCache failed: $e');
+    }
+  }
+
   /// Stops the polling loop (called when all broadcasts end).
   void _stopLiveViewerPolling() {
     _liveViewerTimer?.cancel();
@@ -1638,6 +1785,7 @@ class AppProvider extends ChangeNotifier {
     _unsubscribeFromPublicStreamerChanges();
     _unsubscribeFromAcademicCategoryChanges();
     _unsubscribeFromChatReportChanges();
+    _connectivitySub?.cancel();
     super.dispose();
   }
 
@@ -2124,7 +2272,7 @@ class AppProvider extends ChangeNotifier {
     _userProfile = _userProfile.copyWith(
       nameEn: _guestViewerName,
       nameAr: _guestViewerName,
-      avatarUrl: avatarUrl ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+      avatarUrl: avatarUrl ?? 'assets/images/avatars/neutral_1.png',
     );
 
     await recordGuestSession();

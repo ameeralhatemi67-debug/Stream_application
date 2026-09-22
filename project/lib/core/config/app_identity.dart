@@ -4,6 +4,6 @@ abstract final class AppIdentity {
   static const nameEn = 'Hadayah Live';
   static const nameAr = 'منصة هدايه';
   static const supportEmail = 'ameeralhatemi67@gmail.com';
-  static const privacyPolicyUrl = '';
+  static const privacyPolicyUrl = 'https://ameeralhatemi67-debug.github.io/privacy/';
   static String name(String languageCode) => languageCode == 'ar' ? nameAr : nameEn;
 }

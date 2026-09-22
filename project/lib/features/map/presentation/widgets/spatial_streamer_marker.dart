@@ -155,8 +155,12 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
         onDoubleTap: widget.onDoubleTap,
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
-          width: isLive ? 52.0 : 44.0,
-          height: isLive ? 52.0 : 44.0,
+          // UI-12: 44px sat right at (Apple's) minimum touch-target size and
+          // below Android's 48dp recommendation; 48 gives the offline
+          // marker (by far the most common state) a comfortable hit area
+          // without enlarging its visible ring/avatar, which stay centred.
+          width: isLive ? 52.0 : 48.0,
+          height: isLive ? 52.0 : 48.0,
           child: Stack(
             alignment: Alignment.center,
             clipBehavior: Clip.none,
@@ -199,10 +203,15 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                   borderRadius: isOrg ? BorderRadius.circular(14.0) : null,
                   // Transparent background with outer stroke ring (floating avatar gap)
                   color: Colors.transparent,
+                  // UI-12: the offline ring used to be a hardcoded
+                  // AppTheme.onMedia (pure white), which only worked against
+                  // the old dark basemap -- on the light basemap (UI-07) a
+                  // white ring on a near-white tile all but disappeared.
+                  // primaryAccent already resolves to AppTheme.borderStrong
+                  // for this exact offline/unselected case, which reads
+                  // clearly against any basemap.
                   border: Border.all(
-                    color: widget.isSelected
-                        ? AppTheme.primary
-                        : (isLive ? primaryAccent : AppTheme.onMedia),
+                    color: widget.isSelected ? AppTheme.primary : primaryAccent,
                     width: widget.isSelected ? 2.2 : 1.8,
                   ),
                   boxShadow: [

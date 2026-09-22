@@ -120,6 +120,26 @@ void main() {
       expect(find.text('Fahad Al-Otaibi'), findsOneWidget);
     });
 
+    testWidgets(
+        'TC-AUTH-02b: ViewerSetupScreen avatar presets are neutral, not '
+        'real-person or branded photos (UI-05)', (tester) async {
+      tester.view.physicalSize = const Size(800, 700);
+      tester.view.devicePixelRatio = 1.0;
+      await pumpTestApp(tester, const ViewerSetupScreen(), provider);
+
+      final avatarFinder = find.byType(CircleAvatar);
+      expect(avatarFinder, findsWidgets);
+      for (final element in avatarFinder.evaluate()) {
+        final avatar = element.widget as CircleAvatar;
+        final image = avatar.backgroundImage;
+        if (image is AssetImage) {
+          expect(image.assetName, isNot(contains('Amir_Alhatemi')));
+          expect(image.assetName, isNot(contains('Dalilak')));
+          expect(image.assetName, contains('assets/images/avatars/'));
+        }
+      }
+    });
+
     testWidgets('TC-AUTH-03: RoleSelectScreen presents Viewer vs Broadcaster options',
         (tester) async {
       tester.view.physicalSize = const Size(1000, 800);

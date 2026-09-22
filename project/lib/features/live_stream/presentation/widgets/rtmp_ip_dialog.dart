@@ -38,7 +38,17 @@ enum _PosterChoice { defaultVisualizer, custom }
 /// displays -- there is exactly one source of truth for "the"stream key
 /// now, and it is never auto-generated.
 class LiveBroadcasterStudioSheet extends StatefulWidget {
-  const LiveBroadcasterStudioSheet({super.key});
+  /// Test-only: lets a widget test (e.g. rendered_contrast_test.dart) render
+  /// the sheet already on the Phone or Local tab instead of only ever being
+  /// able to exercise the OBS default. Production always uses the default
+  /// (OBS), matching the real entry point's behaviour before this existed.
+  @visibleForTesting
+  final StudioMode initialMode;
+
+  const LiveBroadcasterStudioSheet({
+    super.key,
+    @visibleForTesting this.initialMode = StudioMode.obs,
+  });
 
   static Future<void> show(BuildContext context) {
     return showModalBottomSheet<void>(
@@ -130,6 +140,7 @@ class _LiveBroadcasterStudioSheetState
   @override
   void initState() {
     super.initState();
+    _mode = widget.initialMode;
     final provider = Provider.of<AppProvider>(context, listen: false);
     _titleController = TextEditingController(text: provider.customLiveTitle);
     _descriptionController =
@@ -204,18 +215,24 @@ class _LiveBroadcasterStudioSheetState
     final isAr = context.locale.languageCode == 'ar';
     final screenHeight = MediaQuery.of(context).size.height;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    // UI-09: on a short screen with a gesture nav bar, the safe-area inset
+    // (not just the keyboard inset) has to be honoured or the bottom action
+    // row renders flush against/under the system bar.
+    final bottomSafeArea = MediaQuery.of(context).padding.bottom;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
         child: Container(
-          height: screenHeight * 0.80,
+          constraints: BoxConstraints(maxHeight: screenHeight * 0.80),
           padding: EdgeInsets.only(
             left: AppTheme.spaceLg,
             right: AppTheme.spaceLg,
             top: AppTheme.spaceMd,
-            bottom: bottomInset > 0 ? bottomInset + AppTheme.spaceMd : AppTheme.spaceLg,
+            bottom: bottomInset > 0
+                ? bottomInset + AppTheme.spaceMd
+                : bottomSafeArea + AppTheme.spaceLg,
           ),
           // V2: no outer border stroke -- the sheet sits cleanly against the
           // blurred backdrop with just its borderless rounded-top edge.
@@ -223,8 +240,14 @@ class _LiveBroadcasterStudioSheetState
             color: AppTheme.surface.withValues(alpha: 0.88),
             borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
           ),
+          // UI-02/UI-09: mainAxisSize.min + Flexible (not Expanded) lets the
+          // sheet shrink to fit short content (Local mode) instead of always
+          // stretching to 80% of the screen and leaving a dead gap below the
+          // last field, while still capping tall content (OBS mode) at the
+          // maxHeight above and letting it scroll internally.
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
+            mainAxisSize: MainAxisSize.min,
             children: [
               _buildHandle(),
               const SizedBox(height: AppTheme.spaceMd),
@@ -232,8 +255,9 @@ class _LiveBroadcasterStudioSheetState
               const SizedBox(height: AppTheme.spaceLg),
               _buildModePill(isAr),
               const SizedBox(height: AppTheme.spaceMd),
-              Expanded(
+              Flexible(
                 child: SingleChildScrollView(
+                  padding: const EdgeInsets.only(top: AppTheme.spaceXs),
                   child: _buildMiddleCard(isAr),
                 ),
               ),
@@ -278,7 +302,7 @@ class _LiveBroadcasterStudioSheetState
               Text(
                 'live_studio.director_title'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.onMedia,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -299,8 +323,15 @@ class _LiveBroadcasterStudioSheetState
   }
 
   Widget _buildModePill(bool isAr) {
+    // UI-04 root cause: AnimatedPositionedDirectional's `start` is already
+    // resolved against the ambient TextDirection (right edge in RTL), which
+    // is the exact same start-relative convention the Row below uses to lay
+    // out its own (also Directionality-aware) children. Manually mirroring
+    // the index here on top of that double-flips it in Arabic, so the pink
+    // selection indicator lands under a different tab than the one whose
+    // fields are actually showing -- e.g. selecting OBS visually highlighted
+    // the محلي (Local) tab instead. The index must be passed through as-is.
     final index = StudioMode.values.indexOf(_mode);
-    final effectiveIndex = isAr ? (StudioMode.values.length - 1 - index) : index;
 
     return Container(
       height: 48,
@@ -320,7 +351,7 @@ class _LiveBroadcasterStudioSheetState
               AnimatedPositionedDirectional(
                 duration: const Duration(milliseconds: 360),
                 curve: Curves.easeOutBack,
-                start: effectiveIndex * tabWidth,
+                start: index * tabWidth,
                 top: 0,
                 bottom: 0,
                 width: tabWidth,
@@ -381,7 +412,11 @@ class _LiveBroadcasterStudioSheetState
               label,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                color: selected ? AppTheme.onMedia : AppTheme.textSecondary,
+                // UI-02: the selected pill is a light tint of _modeColor, so
+                // white (onMedia) text on it was near-invisible. _modeColor
+                // itself (already used for the icon) reads clearly on that
+                // tint, matching the pattern the category chips already use.
+                color: selected ? _modeColor : AppTheme.textSecondary,
                 fontSize: 12,
                 fontWeight: selected ? FontWeight.bold : FontWeight.w500,
               ),
@@ -538,7 +573,7 @@ class _LiveBroadcasterStudioSheetState
         const SizedBox(height: AppTheme.spaceSm),
         TextField(
           controller: _youtubeUrlController,
-          style: const TextStyle(color: AppTheme.onMedia, fontSize: 13),
+          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
           decoration: InputDecoration(
             hintText: 'https://youtube.com/watch?v=... or Video ID',
             hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
@@ -642,8 +677,8 @@ class _LiveBroadcasterStudioSheetState
               key.isEmpty
                   ? 'Not set -- add it in Phone mode'
                   : (_streamKeyVisible ? key : masked),
-              style: const TextStyle(
-                color: AppTheme.onMedia,
+              style: TextStyle(
+                color: key.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary,
                 fontSize: 12,
                 fontFamily: 'monospace',
               ),
@@ -698,7 +733,11 @@ class _LiveBroadcasterStudioSheetState
           Expanded(
             child: Text(
               url.isEmpty ? 'rtmp://a.rtmp.youtube.com/live2' : url,
-              style: const TextStyle(color: AppTheme.onMedia, fontSize: 11, fontFamily: 'monospace'),
+              style: TextStyle(
+                color: url.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary,
+                fontSize: 11,
+                fontFamily: 'monospace',
+              ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
@@ -749,7 +788,7 @@ class _LiveBroadcasterStudioSheetState
         TextField(
           controller: _streamKeyController,
           obscureText: !_streamKeyVisible,
-          style: const TextStyle(color: AppTheme.onMedia, fontSize: 13, fontFamily: 'monospace'),
+          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13, fontFamily: 'monospace'),
           decoration: InputDecoration(
             hintText: 'xxxx-xxxx-xxxx-xxxx-xxxx',
             hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
@@ -852,7 +891,7 @@ class _LiveBroadcasterStudioSheetState
         TextField(
           controller: _ipController,
           keyboardType: TextInputType.url,
-          style: const TextStyle(color: AppTheme.onMedia, fontSize: 13, fontFamily: 'monospace'),
+          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13, fontFamily: 'monospace'),
           decoration: InputDecoration(
             hintText: 'e.g. 192.168.1.100',
             hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
@@ -906,7 +945,13 @@ class _LiveBroadcasterStudioSheetState
               Expanded(
                 child: Text(
                   'rtmp://${_ipController.text.trim().isEmpty ? "..." : _ipController.text.trim()}/live/demo',
-                  style: const TextStyle(color: AppTheme.onMedia, fontSize: 11, fontFamily: 'monospace'),
+                  style: TextStyle(
+                    color: _ipController.text.trim().isEmpty
+                        ? AppTheme.textMuted
+                        : AppTheme.textPrimary,
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -956,7 +1001,7 @@ class _LiveBroadcasterStudioSheetState
                   Text(
                     'design_copy.audio_only_backdrop'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.onMedia,
+                      color: AppTheme.textPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1027,7 +1072,7 @@ class _LiveBroadcasterStudioSheetState
             Text(
               label,
               style: TextStyle(
-                color: selected ? AppTheme.onMedia : AppTheme.textSecondary,
+                color: selected ? _modeColor : AppTheme.textSecondary,
                 fontSize: 10.5,
                 fontWeight: selected ? FontWeight.bold : FontWeight.normal,
               ),
@@ -1117,7 +1162,7 @@ class _LiveBroadcasterStudioSheetState
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: selected ? AppTheme.onMedia : AppTheme.textSecondary,
+            color: selected ? _modeColor : AppTheme.textSecondary,
             fontSize: 12.5,
             fontWeight: selected ? FontWeight.bold : FontWeight.normal,
           ),
@@ -1141,7 +1186,7 @@ class _LiveBroadcasterStudioSheetState
           Text(
             'design_copy.pre_approved_roster_whitelist'.tr(),
             style: const TextStyle(
-              color: AppTheme.onMedia,
+              color: AppTheme.textPrimary,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -1152,7 +1197,7 @@ class _LiveBroadcasterStudioSheetState
               Expanded(
                 child: TextField(
                   controller: _whitelistInputController,
-                  style: const TextStyle(color: AppTheme.onMedia, fontSize: 12.5),
+                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12.5),
                   decoration: InputDecoration(
                     hintText: '@sarah, @khalid',
                     hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
@@ -1185,7 +1230,7 @@ class _LiveBroadcasterStudioSheetState
                   backgroundColor: AppTheme.surface,
                   label: Text(
                     handle,
-                    style: const TextStyle(color: AppTheme.onMedia, fontSize: 11),
+                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 11),
                   ),
                   deleteIcon: const Icon(Icons.close_rounded, size: 14, color: AppTheme.danger),
                   onDeleted: () => setState(() => _whitelistHandles.remove(handle)),
@@ -1199,7 +1244,7 @@ class _LiveBroadcasterStudioSheetState
               Expanded(
                 child: Text(
                   'design_copy.require_host_knock_approval_for_new_guests'.tr(),
-                  style: const TextStyle(color: AppTheme.onMedia, fontSize: 12),
+                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12),
                 ),
               ),
               Switch(
@@ -1317,7 +1362,7 @@ class _LiveBroadcasterStudioSheetState
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.bold,
-                color: selected ? AppTheme.onMedia : AppTheme.textSecondary,
+                color: selected ? _modeColor : AppTheme.textSecondary,
               ),
             ),
           ],
@@ -1356,8 +1401,13 @@ class _LiveBroadcasterStudioSheetState
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
+              // UI-02: this was AppTheme.surfaceAlt (a pale mint fill) with
+              // white text/icon on top -- effectively invisible, which read
+              // as a disabled button even though it was fully tappable. A
+              // solid fill in the mode's own semantic accent gives the
+              // primary action the contrast and hierarchy it needs.
               decoration: BoxDecoration(
-                color: AppTheme.surfaceAlt,
+                color: _modeColor,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 boxShadow: [
                   BoxShadow(
@@ -1420,8 +1470,9 @@ class _LiveBroadcasterStudioSheetState
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             child: Container(
               padding: const EdgeInsets.symmetric(vertical: 14),
+              // UI-02: solid fill (was the near-invisible pale surfaceAlt).
               decoration: BoxDecoration(
-                color: AppTheme.surfaceAlt,
+                color: _modeColor,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 boxShadow: [
                   BoxShadow(

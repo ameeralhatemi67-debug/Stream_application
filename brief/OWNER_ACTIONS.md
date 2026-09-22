@@ -4,9 +4,9 @@ Claude Code appends specifics under each item (exact commands, file names, value
 
 ## Before the app can be published
 - [ ] **Design scheme + logo** — run `brief/DESIGN_PROMPT.md`, open `brief/assets/design_options/preview.html`, then write `DESIGN_CHOICE=A|B|C` in `brief/05_DECISIONS.md`. Check the font licences listed in its `NOTES.md` before publishing.
-- [ ] **Arabic app name** — 05 has `منصة هدايه`; the standard spelling of "guidance" is `هداية` (with ta marbuta). Claude Code uses the value exactly as typed, so fix it in 05 if you want the standard spelling.
+- [x] **Arabic app name** — owner confirmed that `منصة هدايه` is the correct product name and spelling for this release.
 - [ ] **Support email** — `ameeralhatemi67@gmail.com` is a personal address and becomes public in the Play listing and privacy policy. Consider a dedicated address before publishing.
-- [ ] **App identity** — fill `APP_ID`, `APP_NAME_EN`, `APP_NAME_AR`, `SUPPORT_EMAIL`, `PRIVACY_POLICY_URL` in `brief/05_DECISIONS.md` (or follow the rename procedure below if they were blank during the run). The package name is permanent after the first Play upload.
+- [x] **App identity** — owner supplied the values in `brief/05_DECISIONS.md`; `PRIVACY_POLICY_URL` is `https://ameeralhatemi67-debug.github.io/privacy/` and is mirrored in `AppIdentity`.
 - [ ] **Upload keystore** — generate it yourself, create `project/android/key.properties` (never commit either). Release builds fail on purpose without it.
 - [ ] **Play Console** — developer account and identity verification, Play App Signing, store listing assets and screenshots, content-rating questionnaire, Data-safety form, foreground-service declaration + demo video (draft text in `store/`).
 - [ ] **Public pages** — host a privacy policy and an account-deletion page; put the URLs in the listing and in the app.
@@ -16,7 +16,7 @@ Claude Code appends specifics under each item (exact commands, file names, value
 - [ ] **Review, then push migrations** — read the diff of every new file in `supabase/migrations/` first, then `npx supabase db push` yourself. Claude Code never touched the real project.
 - [ ] **Supabase Auth URLs** — update Redirect URLs / Site URL for the final deep-link scheme.
 - [ ] **Supabase region** — decide it (PDPL cross-border considerations).
-- [ ] **Master admins** — choose the accounts; consider removing personal emails from `supabase/migrations/20260822090000_admin_role_bootstrap.sql` before the repo is ever shared.
+- [x] **Master admins** — owner confirmed that `polkgvd2@gmail.com`, `ameeralhatemi67@gmail.com`, and `amir.alhatemi@gmail.com` stay. The third address is for agent/test access.
 
 ## Keys and RLS (verify on the real project after you push)
 - [ ] In the Supabase dashboard confirm RLS shows as enabled on every table and the Security Advisor has no errors.
@@ -235,12 +235,11 @@ across a kernel constant-pool boundary. Full working in
 `brief/scan-p8a-debug-apk.txt`. The scanner was not modified. Re-run it on the
 real AAB once you have signing.
 
-### 3. PRIVACY_POLICY_URL is still blank
-`brief/05_DECISIONS.md` has `PRIVACY_POLICY_URL=` empty, so
-`AppIdentity.privacyPolicyUrl` is an empty string. Play requires a reachable
-privacy policy URL for any app that handles personal data, and this one handles
-accounts, chat and location. Fill it in `05_DECISIONS.md` and
-`project/lib/core/config/app_identity.dart` together.
+### 3. Privacy policy URL supplied
+The owner supplied `https://ameeralhatemi67-debug.github.io/privacy/`. It is now
+set in `brief/05_DECISIONS.md` and `project/lib/core/config/app_identity.dart`.
+The public account-deletion page still needs to be confirmed as a separate store
+link.
 
 ### 4. Real-device verification
 Everything in P4 and P8A is widget-level or build-level. Nobody has yet seen

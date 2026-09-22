@@ -36,6 +36,31 @@ abstract final class AppTheme {
   static const radiusXs = 4.0, radiusSm = 8.0, radiusMd = 12.0,
       radiusLg = 12.0, radiusFull = 999.0;
 
+  /// Shared search-field surface contract (UI-01): the feed search bar and
+  /// the spatial-map search bar must use one radius, one border width and
+  /// one height rather than each hand-rolling its own Container decoration,
+  /// which is how they drifted (or were reported to drift) apart in the
+  /// first place. Fill colour/opacity and elevation are intentionally left
+  /// to each call site -- the map bar floats over a variable-colour tile
+  /// layer and needs a translucent fill plus a shadow to stay legible,
+  /// while the feed bar sits inline on a plain white list and needs neither.
+  static const searchBarRadius = 14.0;
+  static const searchBarBorderWidth = 1.2;
+  static const searchBarHeight = 46.0;
+
+  /// Shared floating map-overlay contract (UI-11): the search bar, city/topic
+  /// dropdowns and the floating action buttons that sit over the spatial map
+  /// share one radius, fill opacity and drop-shadow mechanism so they read as
+  /// one system of controls rather than each picking its own elevation
+  /// style. Accent colour (e.g. the map tab's red on an active/selected
+  /// control) is left to the call site -- that is deliberate per-control
+  /// state, not surface inconsistency.
+  static const mapOverlayRadius = searchBarRadius;
+  static const mapOverlayFillAlpha = 0.80;
+  static const mapOverlayShadow = [
+    BoxShadow(color: shadowSoft, blurRadius: 10, offset: Offset(0, 3)),
+  ];
+
   static TextTheme buildTextTheme(String languageCode) {
     final ar = languageCode == 'ar';
     TextStyle style(double size, double arabicHeight, {bool bold = false, Color color = textPrimary}) => TextStyle(

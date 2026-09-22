@@ -20,11 +20,14 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
   String? _selectedAvatarUrl;
   bool _isLoading = false;
 
+  // Neutral, original geometric marks -- not photos of real people or
+  // branded content, per UI-05 (viewer onboarding must offer anonymous-safe
+  // defaults, not identifiable/branded presets).
   final List<String> _avatarPresets = [
-    'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-    'assets/images/Dalilak/profile1.jpg',
-    'assets/images/Dalilak/profile2.jpg',
-    'assets/images/Dalilak/profile3.jpg',
+    'assets/images/avatars/neutral_1.png',
+    'assets/images/avatars/neutral_2.png',
+    'assets/images/avatars/neutral_3.png',
+    'assets/images/avatars/neutral_4.png',
   ];
 
   @override

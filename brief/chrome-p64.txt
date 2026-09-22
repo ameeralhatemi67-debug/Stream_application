@@ -1,0 +1,38 @@
+Launching lib\main.dart on Chrome in debug mode...
+Waiting for connection from debug service on Chrome...            100.8s
+
+Flutter run key commands.
+r Hot reload. 
+R Hot restart.
+h List all available interactive commands.
+d Detach (terminate "flutter run" but leave application running).
+c Clear the screen
+q Quit (terminate the application on the device).
+
+Debug service listening on ws://127.0.0.1:57836/b9DtLiMFDDk=/ws
+A Dart VM Service on Chrome is available at: http://127.0.0.1:57836/b9DtLiMFDDk=
+The Flutter DevTools debugger and profiler on Chrome is available at: http://127.0.0.1:57836/b9DtLiMFDDk=/devtools/?uri=ws://127.0.0.1:57836/b9DtLiMFDDk=/ws
+Starting application from main method in: org-dartlang-app:/web_entrypoint.dart.
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+Supabase not initialized: SUPABASE_URL / SUPABASE_ANON_KEY were not provided via --dart-define.
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime public streamer subscription failed: Assertion failed: file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/supabase_flutter-2.17.2/lib/src/supabase.dart:45:7
+_instance._isInitialized
+"You must initialize the supabase instance before calling Supabase.instance"
+Realtime academic_categories subscription failed: Assertion failed: file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/supabase_flutter-2.17.2/lib/src/supabase.dart:45:7
+_instance._isInitialized
+"You must initialize the supabase instance before calling Supabase.instance"
+Supabase auth listener not attached (Supabase not initialized?): Assertion failed: file:///C:/Users/User/AppData/Local/Pub/Cache/hosted/pub.dev/supabase_flutter-2.17.2/lib/src/supabase.dart:45:7
+_instance._isInitialized
+"You must initialize the supabase instance before calling Supabase.instance"
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Load asset from assets/i18n[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+unhandled element <defs/>; Picture key: Svg loader

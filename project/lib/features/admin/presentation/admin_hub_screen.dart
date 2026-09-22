@@ -20,6 +20,7 @@ import 'widgets/custom_placeholder_review_view.dart';
 import 'widgets/academic_categories_view.dart';
 import 'widgets/tag_moderation_view.dart';
 import 'widgets/banned_accounts_view.dart';
+import 'widgets/admin_user_directory_view.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
@@ -78,7 +79,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     // 11/12, Cluster 4 Task 16), +1 more for Roles & Permissions when this
     // viewer is also a Master Admin (Checkpoint 2 Phase 3).
     _tabController =
-        TabController(length: (_isMasterAdminForTabs ? 12 : 11) + (kDebugMode ? 1 : 0), vsync: this);
+        TabController(length: (_isMasterAdminForTabs ? 13 : 12) + (kDebugMode ? 1 : 0), vsync: this);
     if (_isMasterAdminForTabs) {
       provider.ensureRoleManagementDataLoaded();
       provider.ensureStreamModeratorsLoaded();
@@ -338,6 +339,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 const BannedAccountsView(),
                 if (kDebugMode) _buildTestingToolsTab(context, provider),
                 if (_isMasterAdminForTabs) const RolePermissionManagementView(),
+                const AdminUserDirectoryView(),
               ],
             ),
           ),
@@ -565,6 +567,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
               text: 'admin.tab_roles'.tr(),
             ),
+          Tab(icon: const Icon(Icons.people_outline), text: 'directory.title'.tr()),
         ],
       ),
     );

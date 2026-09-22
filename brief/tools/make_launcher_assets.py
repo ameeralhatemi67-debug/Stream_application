@@ -40,10 +40,15 @@ CANVAS = 1024
 # The safe zone is NOT applied here: flutter_launcher_icons wraps the
 # foreground in `<inset android:inset="16%">`, which scales the drawable to 68%
 # of the 108dp canvas, or 73dp -- effectively the 72dp guaranteed-visible area
-# already. Insetting again here would shrink the mark to roughly 39% of the
-# icon and leave it swimming in empty space. 0.92 therefore fills the layer,
-# keeping only a little breathing room for the mark's own asymmetry.
-MARK_FRACTION = 0.92
+# already.
+#
+# UI-06: 0.92 combined with that built-in 68% inset still left the mark
+# spanning ~63% of the full icon canvas (0.92 * 0.68), which is enough that
+# an asymmetric mark's widest points sit right against a circular/squircle
+# mask's visible edge -- "too large, little breathing room" (brief/Ui_issues/
+# app_icon_main_page.jpg). 0.74 brings that down to ~50% of the full canvas,
+# a comfortable, still-legible-at-small-sizes fill for a simple bold mark.
+MARK_FRACTION = 0.74
 # Sampled from the owner's square.png tile, so the generated background matches
 # the supplied artwork rather than approximating it.
 TILE_BACKGROUND = (238, 255, 243, 255)

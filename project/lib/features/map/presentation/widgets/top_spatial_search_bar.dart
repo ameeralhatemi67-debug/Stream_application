@@ -41,8 +41,19 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _isSearching = false;
+  bool _isFocused = false;
 
   List<SearchResultItem> _results = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(_onFocusChanged);
+  }
+
+  void _onFocusChanged() {
+    if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
+  }
 
   void _onQueryChanged(String query) {
     if (query.trim().isEmpty) {
@@ -103,6 +114,7 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
   @override
   void dispose() {
     _searchController.dispose();
+    _focusNode.removeListener(_onFocusChanged);
     _focusNode.dispose();
     super.dispose();
   }
@@ -113,13 +125,15 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
       mainAxisSize: MainAxisSize.min,
       children: [
         Container(
-          height: 46,
+          height: AppTheme.searchBarHeight,
           decoration: BoxDecoration(
             color: AppTheme.surface.withValues(alpha: 0.80),
-            borderRadius: BorderRadius.circular(14.0),
+            borderRadius: BorderRadius.circular(AppTheme.searchBarRadius),
+            // UI-01: same focus treatment as the feed search bar -- neither
+            // had one before, which is its own contrast/affordance gap.
             border: Border.all(
-              color: AppTheme.border,
-              width: 1.2,
+              color: _isFocused ? AppTheme.primary : AppTheme.border,
+              width: _isFocused ? 1.6 : AppTheme.searchBarBorderWidth,
             ),
             boxShadow: const [
               BoxShadow(
@@ -138,7 +152,7 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
               fontSize: 13,
             ),
             decoration: InputDecoration(
-              hintText: 'map.search_placeholder'.tr(),
+              hintText: context.tr('map.search_placeholder'),
               hintStyle: const TextStyle(
                 color: AppTheme.textMuted,
                 fontSize: 12,

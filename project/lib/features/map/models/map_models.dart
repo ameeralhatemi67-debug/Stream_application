@@ -116,6 +116,48 @@ class MapMarkerModel {
       isOrganization: streamer.isOrganization,
     );
   }
+
+  /// UI-08: serialized to `shared_preferences` as the last-known-good venue
+  /// snapshot, so the spatial map still has real markers to show (with a
+  /// "last updated" timestamp) the moment the device goes offline, rather
+  /// than an empty canvas.
+  Map<String, dynamic> toJson() => {
+        'markerId': markerId,
+        'streamerId': streamerId,
+        'displayNameEn': displayNameEn,
+        'displayNameAr': displayNameAr,
+        'venueNameEn': venueNameEn,
+        'venueNameAr': venueNameAr,
+        'latitude': latitude,
+        'longitude': longitude,
+        'cityId': cityId,
+        'categoryId': categoryId,
+        'viewerCount': viewerCount,
+        'avatarUrl': avatarUrl,
+        'isOrganization': isOrganization,
+      };
+
+  /// Cached markers always deserialize as [MarkerStatus.offline]: live status
+  /// is inherently a live-network fact and must never be replayed from a
+  /// stale cache (UI-08 "live status marked unavailable while offline").
+  factory MapMarkerModel.fromCachedJson(Map<String, dynamic> json) {
+    return MapMarkerModel(
+      markerId: json['markerId'] as String,
+      streamerId: json['streamerId'] as String,
+      displayNameEn: json['displayNameEn'] as String,
+      displayNameAr: json['displayNameAr'] as String,
+      venueNameEn: json['venueNameEn'] as String,
+      venueNameAr: json['venueNameAr'] as String,
+      latitude: (json['latitude'] as num).toDouble(),
+      longitude: (json['longitude'] as num).toDouble(),
+      cityId: json['cityId'] as String,
+      categoryId: json['categoryId'] as String,
+      status: MarkerStatus.offline,
+      viewerCount: 0,
+      avatarUrl: json['avatarUrl'] as String,
+      isOrganization: json['isOrganization'] as bool? ?? false,
+    );
+  }
 }
 
 /// AlSharqia Core Regions & 50% Decimated Clean Geographic Municipal Bounding Coordinates
@@ -200,6 +242,26 @@ const List<MapRegionModel> alSharqiaRegions = [
     ],
   ),
 ];
+
+/// Whether a streamer/marker in [categoryId] survives the map's current
+/// topic filter.
+///
+/// The Spatial Map matched categories with its own inline copy of this
+/// aliasing table (cs_tech == computer_science, islamic_studies == sharia,
+/// and so on), and the offline marker layer needed the same rules again --
+/// a third hand-written copy is how the offline view would end up filtering
+/// differently from the online one. One function, used by both.
+bool categoryFilterMatches(String filter, String categoryId) {
+  if (filter == 'all' || filter == categoryId) return true;
+  const aliases = <String, Set<String>>{
+    'computer_science': {'cs_tech', 'computer_science'},
+    'cs_tech': {'cs_tech', 'computer_science'},
+    'islamic_studies': {'islamic_studies', 'sharia'},
+    'medicine': {'medicine', 'health'},
+    'engineering': {'engineering', 'innovation'},
+  };
+  return aliases[filter]?.contains(categoryId) ?? false;
+}
 
 /// Haversine Formula for GIS distance estimation in kilometers between two LatLng coordinates
 double calculateDistanceKm(double lat1, double lon1, double lat2, double lon2) {

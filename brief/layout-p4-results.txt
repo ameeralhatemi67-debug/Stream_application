@@ -1,0 +1,20 @@
+Insufficient system resources exist to complete the requested service.
+Unhandled exception:
+Error: Flutter failed to write to a file at "C:\Users\User\AppData\Roaming\.flutter_tool_state". The flutter tool cannot access the file or directory.
+Please ensure that the SDK and/or project is installed in a location that has read/write permissions for the current user.
+#0      throwToolExit (package:flutter_tools/src/base/common.dart:34:3)
+#1      _throwFileSystemException (package:flutter_tools/src/base/error_handling_io.dart:828:3)
+#2      _handleWindowsException (package:flutter_tools/src/base/error_handling_io.dart:818:3)
+#3      _runSync (package:flutter_tools/src/base/error_handling_io.dart:560:7)
+#4      ErrorHandlingFile.writeAsStringSync (package:flutter_tools/src/base/error_handling_io.dart:253:5)
+#5      Config._flushValues (package:flutter_tools/src/base/config.dart:182:11)
+#6      Config.setValue (package:flutter_tools/src/base/config.dart:171:5)
+#7      _DefaultPersistentToolState.setIsRunningOnBot (package:flutter_tools/src/persistent_tool_state.dart:116:13)
+#8      BotDetector.isRunningOnBot (package:flutter_tools/src/base/bot_detector.dart:79:26)
+<asynchronous suspension>
+#9      runInContext.runnerWrapper (package:flutter_tools/src/context_runner.dart:77:20)
+<asynchronous suspension>
+#10     AppContext.run.<anonymous closure> (package:flutter_tools/src/base/context.dart:154:19)
+<asynchronous suspension>
+#11     main (package:flutter_tools/executable.dart:103:3)
+<asynchronous suspension>

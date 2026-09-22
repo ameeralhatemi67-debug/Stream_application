@@ -161,6 +161,39 @@ void main() {
     });
 
     testWidgets(
+        'TC-SET-03b: ViewerProfileEditorDialog avatar presets are neutral, '
+        'not real-person or branded photos (UI-05)', (tester) async {
+      useTallTestSurface(tester);
+      final viewerProvider = AppProvider();
+
+      await tester.pumpWidget(
+        createTestWidget(
+            child: const SettingsScreen(), provider: viewerProvider),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Edit Account Profile'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(ViewerProfileEditorDialog), findsOneWidget);
+
+      final avatarFinder = find.descendant(
+        of: find.byType(ViewerProfileEditorDialog),
+        matching: find.byType(CircleAvatar),
+      );
+      expect(avatarFinder, findsWidgets);
+      for (final element in avatarFinder.evaluate()) {
+        final avatar = element.widget as CircleAvatar;
+        final image = avatar.backgroundImage;
+        if (image is AssetImage) {
+          expect(image.assetName, isNot(contains('Amir_Alhatemi')));
+          expect(image.assetName, isNot(contains('Dalilak')));
+          expect(image.assetName, contains('assets/images/avatars/'));
+        }
+      }
+    });
+
+    testWidgets(
         'TC-SET-04: the Streamer Mode switch is disabled for a non-approved '
         'account and enabled once approved', (tester) async {
       useTallTestSurface(tester);

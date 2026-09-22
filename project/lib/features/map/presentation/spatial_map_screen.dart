@@ -1,10 +1,12 @@
 import '../../../core/widgets/safe_image_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'dart:math'as math;
+import 'dart:ui'as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
@@ -17,12 +19,19 @@ import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
 
-/// Free Dark GIS Basemap (Esri World Dark Gray Canvas & OpenStreetMap fallback)
-/// Completely free of watermarks or API key requirements.
+/// Free Light GIS Basemap (Esri World Light Gray Canvas & OpenStreetMap
+/// fallback). Completely free of watermarks or API key requirements.
+///
+/// UI-07: this used to be the dark-canvas sibling tile set
+/// (`World_Dark_Gray_Base`), which read as dark/low-contrast/noisy against
+/// the rest of the app's light theme (brief/Ui_issues/Map_when_wifi_on.jpg).
+/// The light-canvas set is the same Esri service, same terms, same zero-key
+/// zero-watermark access -- only the palette differs -- so it's a drop-in
+/// swap, not a provider change.
 const String kSpatialMapTileUrlTemplate =
-    'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}';
+    'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 
-/// Zero-API-key fallback used when the primary dark tile request fails.
+/// Zero-API-key fallback used when the primary tile request fails.
 const String kSpatialMapTileFallbackUrl =
     'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
@@ -47,6 +56,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   StreamerModel? _selectedStreamer;
   late final ValueNotifier<double> _zoomNotifier;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
+  bool _isRetryingConnectivity = false;
 
   @override
   void initState() {
@@ -106,8 +116,161 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     _animateCameraTo(alSharqiaRegions.first.centerCoordinates, 13.5);
   }
 
+  /// UI-08 "Retry and recover when connectivity returns": a manual nudge on
+  /// top of the automatic recovery ConnectivityService.onStatusChange
+  /// already drives (AppProvider.ensureConnectivityMonitoringActive) -- the
+  /// device connectivity API can report "connected" slightly before the
+  /// backend is actually reachable, so a visible retry action matters even
+  /// though recovery is also automatic.
+  Future<void> _retryConnectivity() async {
+    if (_isRetryingConnectivity) return;
+    setState(() => _isRetryingConnectivity = true);
+    final provider = context.read<AppProvider>();
+    // Re-probe first: connectivity_plus only emits on *change*, so without
+    // this an app that cold started offline never leaves the offline branch
+    // however often Retry is tapped. Only fetch if we are actually back.
+    final online = await provider.refreshConnectivityNow();
+    if (online) {
+      await provider.loadVerifiedStreamersFromBackend();
+    }
+    if (!mounted) return;
+    setState(() => _isRetryingConnectivity = false);
+  }
+
+  /// Tapping a cached (offline) marker can't open the normal
+  /// MarkerSummaryCard flow -- that needs a full StreamerModel the offline
+  /// cache deliberately doesn't carry (UI-08 caches only what a map pin
+  /// needs, not a whole profile). This shows what the cache does have and
+  /// says plainly what it doesn't, rather than silently doing nothing or
+  /// pretending the summary card's live data is real.
+  void _showCachedMarkerInfo(BuildContext context, MapMarkerModel marker) {
+    final isAr = context.locale.languageCode == 'ar';
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+      ),
+      builder: (sheetContext) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                marker.getLocalizedName(isAr ? 'ar' : 'en'),
+                style: const TextStyle(
+                  color: AppTheme.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                marker.getLocalizedVenue(isAr ? 'ar' : 'en'),
+                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                decoration: BoxDecoration(
+                  color: AppTheme.surfaceAlt,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.wifi_off_rounded, color: AppTheme.textMuted, size: 18),
+                    const SizedBox(width: AppTheme.spaceSm),
+                    Expanded(
+                      child: Text(
+                        'map.offline_marker_details_unavailable'.tr(),
+                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12.5),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.directions_rounded, size: 18),
+                  label: Text('map.open_in_maps'.tr()),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primary,
+                    side: const BorderSide(color: AppTheme.primary),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                  ),
+                  onPressed: () {
+                    Navigator.of(sheetContext).pop();
+                    launchUrl(
+                      Uri.parse(buildGoogleMapsSearchUrl(marker.latitude, marker.longitude)),
+                      mode: LaunchMode.externalApplication,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   MapMarkerModel _mapStreamerToMarker(StreamerModel streamer) {
     return MapMarkerModel.fromStreamer(streamer);
+  }
+
+  /// UI-08 offline marker layer: cached venues only, always rendered with
+  /// [MarkerStatus.offline] (MapMarkerModel.fromCachedJson forces this), so
+  /// there is no risk of replaying a stale "LIVE" badge from before the
+  /// device went offline. No collision-avoidance pass -- the cached set is
+  /// small and this is a reduced-functionality fallback view, not the full
+  /// interactive map.
+  Widget _buildOfflineMarkerLayer(BuildContext context, String categoryFilter) {
+    final cached =
+        context.select<AppProvider, List<MapMarkerModel>>((p) => p.cachedMapMarkers);
+    // The topic dropdown is pure local filtering -- it needs no network, so
+    // it must keep working offline rather than looking functional and doing
+    // nothing. Same matcher the online path uses (map_models.dart), so the
+    // two views can't filter differently.
+    final visible = cached
+        .where((m) => categoryFilterMatches(categoryFilter, m.categoryId))
+        .toList();
+
+    return ValueListenableBuilder<double>(
+      valueListenable: _zoomNotifier,
+      builder: (context, currentZoom, child) {
+        // Cached markers are all offline status, and this layer runs no
+        // collision-avoidance pass, so without the same LOD threshold the
+        // online path uses for offline streamers a zoomed-out view would be
+        // a pile of overlapping discs (UI-12 marker readability).
+        if (currentZoom < kStreamerMarkersZoomThreshold) {
+          return const SizedBox.shrink();
+        }
+        return MarkerLayer(
+          markers: visible
+              .map(
+                (marker) => Marker(
+                  key: ValueKey('offline_marker_${marker.streamerId}'),
+                  point: marker.coordinates,
+                  width: 48.0,
+                  height: 48.0,
+                  alignment: Alignment.center,
+                  child: SpatialStreamerMarker(
+                    key: ValueKey('offline_avatar_${marker.streamerId}'),
+                    marker: marker,
+                    onTap: () => _showCachedMarkerInfo(context, marker),
+                    onDoubleTap: () {},
+                  ),
+                ),
+              )
+              .toList(),
+        );
+      },
+    );
   }
 
   @override
@@ -121,6 +284,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     final currentCategoryFilter =
         context.select<AppProvider, String>((p) => p.currentCategoryFilter);
     final isDesktop = MediaQuery.of(context).size.width >= 900;
+    // UI-08: everything below branches on this single flag rather than
+    // scattering connectivity checks through the widget tree.
+    final isOnline = context.select<AppProvider, bool>((p) => p.isOnline);
 
     return Scaffold(
       key: _scaffoldKey,
@@ -163,26 +329,61 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     },
                   ),
                   children: [
-                    // Fast Dark GIS Basemap Tile Layer with Zero Watermark & Fallback
-                    TileLayer(
-                      urlTemplate: kSpatialMapTileUrlTemplate,
-                      fallbackUrl: kSpatialMapTileFallbackUrl,
-                      subdomains: const ['server', 'services'],
-                      maxZoom: 19,
-                      userAgentPackageName: 'com.streamer.app',
-                      tileProvider: NetworkTileProvider(),
-                      keepBuffer: 6,
-                      panBuffer: 2,
-                      tileDisplay: const TileDisplay.fadeIn(
-                          duration: Duration(milliseconds: 100)),
-                    ),
+                    // UI-08: no live network means no live tiles -- showing
+                    // the (permanently empty, offline) NetworkTileProvider
+                    // layer was exactly the "blank white field" bug
+                    // (Map_when_wifi_Off.jpg). The bundled schematic layer
+                    // below replaces it instead of leaving it mounted to
+                    // fail silently.
+                    if (isOnline)
+                      TileLayer(
+                        urlTemplate: kSpatialMapTileUrlTemplate,
+                        fallbackUrl: kSpatialMapTileFallbackUrl,
+                        subdomains: const ['server', 'services'],
+                        maxZoom: 19,
+                        userAgentPackageName: 'com.streamer.app',
+                        tileProvider: NetworkTileProvider(),
+                        keepBuffer: 6,
+                        panBuffer: 2,
+                        tileDisplay: const TileDisplay.fadeIn(
+                            duration: Duration(milliseconds: 100)),
+                      ),
 
-                    // AlSharqia City Boundaries Outlines
+                    // AlSharqia City Boundaries Outlines.
+                    //
+                    // UI-07/UI-11 (online): every region used to outline in
+                    // the same saturated danger-red regardless of selection,
+                    // which read as "red everywhere" and competed with both
+                    // the basemap and the markers. Red is now reserved for
+                    // the one selected region -- the actual highlight -- and
+                    // unselected regions recede into a faint neutral so they
+                    // still show city extent without dominating the canvas.
+                    //
+                    // UI-08 (offline): this is also the bundled offline
+                    // basemap -- every region gets a filled, labelled land
+                    // tone instead of just an outline, which is genuine
+                    // geographic context built from the app's own already-
+                    // reviewed region geometry (project/lib/features/map/
+                    // models/map_models.dart), not a live tile request that
+                    // would just fail. It is deliberately schematic, not a
+                    // pretend detailed map.
                     RepaintBoundary(
                       child: PolygonLayer<Object>(
                         polygons: alSharqiaRegions.map((region) {
                           final isSelected =
                               region.regionId == _selectedRegion.regionId;
+                          if (!isOnline) {
+                            return Polygon<Object>(
+                              points: region.polygonPoints,
+                              color: isSelected
+                                  ? AppTheme.surfaceAlt
+                                  : AppTheme.surfaceAlt.withValues(alpha: 0.6),
+                              borderColor: isSelected
+                                  ? AppTheme.primary
+                                  : AppTheme.borderStrong.withValues(alpha: 0.6),
+                              borderStrokeWidth: isSelected ? 2.0 : 1.2,
+                            );
+                          }
                           return Polygon<Object>(
                             points: region.polygonPoints,
                             color: isSelected
@@ -190,14 +391,18 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                 : Colors.transparent,
                             borderColor: isSelected
                                 ? AppTheme.danger
-                                : AppTheme.danger.withValues(alpha: 0.35),
-                            borderStrokeWidth: isSelected ? 2.0 : 1.2,
+                                : AppTheme.borderStrong.withValues(alpha: 0.45),
+                            borderStrokeWidth: isSelected ? 2.0 : 1.0,
                           );
                         }).toList(),
                       ),
                     ),
 
+                    if (!isOnline)
+                      _buildOfflineMarkerLayer(context, currentCategoryFilter),
+
                     // Dynamic Level of Detail (LOD) Markers Layer with ValueListenableBuilder (No FlutterMap Rebuilds)
+                    if (isOnline)
                     ValueListenableBuilder<double>(
                       valueListenable: _zoomNotifier,
                       builder: (context, currentZoom, child) {
@@ -247,7 +452,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
 
                         for (final streamer in sortedStreamers) {
                           final isLive = streamer.isCurrentlyLive;
-                          final double radius = (isLive ? 56.0 : 46.0) / 2.0;
+                          // Kept in sync with SpatialStreamerMarker's own
+                          // outer hit-target size (UI-12).
+                          final double radius = (isLive ? 56.0 : 48.0) / 2.0;
                           final origLatLng =
                               LatLng(streamer.latitude, streamer.longitude);
                           final math.Point<double> pixelPos =
@@ -335,8 +542,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             Marker(
                               key: ValueKey('marker_${streamer.streamerId}'),
                               point: adjustedPoint,
-                              width: isLive ? 56.0 : 46.0,
-                              height: isLive ? 56.0 : 46.0,
+                              width: isLive ? 56.0 : 48.0,
+                              height: isLive ? 56.0 : 48.0,
                               rotate: true,
                               alignment: Alignment.center,
                               child: SpatialStreamerMarker(
@@ -388,6 +595,50 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                         );
                       },
                     ),
+
+                    // UI-07: the basemap's licence requires visible
+                    // attribution -- there was none before. Bottom-left so
+                    // it never collides with the bottom-right floating
+                    // action buttons. Only shown online: the offline layer
+                    // below is bundled app data (the region polygons already
+                    // in map_models.dart), not third-party tiles, so no
+                    // tile-provider attribution applies to it.
+                    //
+                    // A plain Text in a bounded, ellipsizing box rather than
+                    // flutter_map's own SimpleAttributionWidget: that widget
+                    // sizes its Row to its own intrinsic content with no
+                    // width constraint, which overflowed on a narrow Arabic
+                    // (RTL) screen at a large text scale -- caught by
+                    // layout_sweep_test.dart's "empty map ar" case.
+                    if (isOnline)
+                      Align(
+                        // Directional, not Alignment.bottomLeft: the floating
+                        // action buttons are PositionedDirectional(end:), so a
+                        // hard-coded left anchor put the attribution on the
+                        // same side as those buttons in Arabic. bottomStart
+                        // keeps the two on opposite sides in both locales, and
+                        // matches the "no side-anchored alignment" rule in
+                        // Core_files/Desgin.md.
+                        alignment: AlignmentDirectional.bottomStart,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 190),
+                          child: Container(
+                            color: AppTheme.surface.withValues(alpha: 0.75),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            child: const Text(
+                              'Esri, HERE, Garmin, OpenStreetMap contributors',
+                              maxLines: 1,
+                              softWrap: false,
+                              overflow: TextOverflow.ellipsis,
+                              textDirection: ui.TextDirection.ltr,
+                              style: TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 9,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
                   ],
                 ),
 
@@ -406,6 +657,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          if (!isOnline) ...[
+                            _buildOfflineBanner(context),
+                            const SizedBox(height: AppTheme.spaceSm),
+                          ],
                           // Row 1: Search bar taking nearly 100% width + Language Switcher Toggle
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.center,
@@ -674,26 +929,114 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     );
   }
 
+  /// UI-08 explicit bilingual offline banner: states the state plainly, says
+  /// what still works (cached venues) and what doesn't (live status, new
+  /// venues), shows when the cache was last refreshed, and offers a manual
+  /// retry on top of the automatic recovery.
+  Widget _buildOfflineBanner(BuildContext context) {
+    final updatedAt = context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
+    final lastUpdatedText = updatedAt == null
+        ? 'map.offline_last_updated_never'.tr()
+        : 'map.offline_last_updated'
+            .tr(namedArgs: {'time': DateFormat('yyyy-MM-dd HH:mm').format(updatedAt)});
+
+    return Container(
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      decoration: BoxDecoration(
+        color: AppTheme.surface.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.5)),
+        boxShadow: AppTheme.mapOverlayShadow,
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.wifi_off_rounded, color: AppTheme.warning, size: 20),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'map.offline_banner_title'.tr(),
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'map.offline_banner_body'.tr(),
+                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11.5, height: 1.4),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  lastUpdatedText,
+                  style: const TextStyle(
+                    color: AppTheme.textMuted,
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: AppTheme.spaceSm),
+          OutlinedButton(
+            onPressed: _isRetryingConnectivity ? null : _retryConnectivity,
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.primary,
+              side: const BorderSide(color: AppTheme.primary),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              minimumSize: Size.zero,
+            ),
+            child: Text(
+              _isRetryingConnectivity
+                  ? 'map.offline_retrying'.tr()
+                  : 'map.offline_retry'.tr(),
+              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // UI-11: same radius and drop-shadow mechanism as the search bar and
+  // dropdowns (AppTheme.mapOverlay*) instead of a plain Material elevation,
+  // so the floating controls read as the same system of surfaces. The red
+  // border/icon stays -- that is this screen's own deliberate "Spatial Map"
+  // tab accent (mirrored by the nav label and the selected region outline),
+  // not an inconsistency to remove.
   Widget _buildFloatingMapButton({
     required IconData icon,
     required String tooltip,
     required VoidCallback onTap,
   }) {
-    return Material(
-      color: AppTheme.surfaceAlt,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        side: const BorderSide(color: AppTheme.danger, width: 1.2),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
+        boxShadow: AppTheme.mapOverlayShadow,
       ),
-      elevation: 6,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        child: Container(
-          width: 44,
-          height: 44,
-          alignment: Alignment.center,
-          child: Icon(icon, color: AppTheme.danger, size: 20),
+      child: Material(
+        color: AppTheme.surfaceAlt.withValues(alpha: AppTheme.mapOverlayFillAlpha),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
+          side: const BorderSide(color: AppTheme.danger, width: 1.2),
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
+          child: Tooltip(
+            message: tooltip,
+            child: Container(
+              width: 44,
+              height: 44,
+              alignment: Alignment.center,
+              child: Icon(icon, color: AppTheme.danger, size: 20),
+            ),
+          ),
         ),
       ),
     );

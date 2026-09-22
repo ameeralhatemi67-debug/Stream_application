@@ -59,6 +59,9 @@ class _StreamerAppState extends State<StreamerApp> {
     // widget tests (which use their own AppProvider instances) stay free of
     // pending Timer assertions.
     _appProvider.ensureLivePollingActive();
+    // UI-08: starts the Spatial Map's offline/online monitoring (same
+    // constructor-vs-explicit-start rule as ensureLivePollingActive above).
+    _appProvider.ensureConnectivityMonitoringActive();
     // Built once and bound to _appProvider so its redirect (see
     // app_router.dart) can react to auth state changes via refreshListenable
     // -- GoRouter must not be rebuilt on every frame.

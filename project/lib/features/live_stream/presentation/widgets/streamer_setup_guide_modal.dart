@@ -222,6 +222,9 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
     final quests = _quests(isAr);
     final screenHeight = MediaQuery.of(context).size.height;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    // UI-09: also honour the safe-area inset (gesture nav bar), not just the
+    // keyboard inset, so the nav row never sits flush against/under it.
+    final bottomSafeArea = MediaQuery.of(context).padding.bottom;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
@@ -233,7 +236,9 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             left: AppTheme.spaceLg,
             right: AppTheme.spaceLg,
             top: AppTheme.spaceMd,
-            bottom: bottomInset > 0 ? bottomInset + AppTheme.spaceMd : AppTheme.spaceLg,
+            bottom: bottomInset > 0
+                ? bottomInset + AppTheme.spaceMd
+                : bottomSafeArea + AppTheme.spaceLg,
           ),
           decoration: BoxDecoration(
             color: AppTheme.surface.withValues(alpha: 0.92),
@@ -289,7 +294,9 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                     ? 'المستوى ${_currentPage + 1} من ${quests.length}: ${quest.questName}'
                     : 'Level ${_currentPage + 1} of ${quests.length}: ${quest.questName}',
                 style: const TextStyle(
-                  color: AppTheme.onMedia,
+                  // UI-03: this sits on the pale surface behind the header,
+                  // not on dark media -- onMedia (white) was unreadable here.
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 15,
                 ),
@@ -309,8 +316,25 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
   }
 
   Widget _buildQuestCard(_Quest quest, bool isAr) {
-    return SingleChildScrollView(
-      child: Padding(
+    // UI-10: previously a plain SingleChildScrollView top-anchored the card,
+    // so short quests (few actions, short body) left a large dead gap below
+    // the card and above the dots/nav row. Centering the card within the
+    // available height keeps the layout stable for tall quests (still
+    // scrolls) while pulling short ones toward the middle instead of the top.
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Center(child: _buildQuestCardContent(quest, isAr)),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuestCardContent(_Quest quest, bool isAr) {
+    return Padding(
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceXs),
         child: Container(
           padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -338,7 +362,9 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                       ),
                     ],
                   ),
-                  child: Icon(quest.icon, color: AppTheme.onMedia, size: 30),
+                  // UI-03: dark icon on the pale card, not onMedia (white),
+                  // which disappeared against AppTheme.surfaceAlt.
+                  child: Icon(quest.icon, color: AppTheme.textPrimary, size: 30),
                 ),
               ),
               const SizedBox(height: AppTheme.spaceLg),
@@ -346,7 +372,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                 quest.heading,
                 textAlign: TextAlign.start,
                 style: const TextStyle(
-                  color: AppTheme.onMedia,
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 17,
                 ),
@@ -390,7 +416,6 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
             ],
           ),
         ),
-      ),
     );
   }
 

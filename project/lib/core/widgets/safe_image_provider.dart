@@ -32,10 +32,17 @@ ImageProvider? resolveImageProviderOrNull(String? path) {
 }
 
 /// Robust ImageProvider resolver that prevents NetworkImage URI crashes on local file paths
+///
+/// The default falls back to a neutral, original geometric mark rather than
+/// any real person's photo -- callers that render a specific verified
+/// streamer/org and want that streamer's own photo as the fallback should
+/// keep passing their own [defaultAsset] (e.g. the org's brand mark); this
+/// default is only for the generic "no image, no caller-specified fallback"
+/// case, which must never resolve to an identifiable person by accident.
 ImageProvider buildSafeImageProvider({
   String? path,
   Uint8List? bytes,
-  String defaultAsset = 'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+  String defaultAsset = 'assets/images/avatars/neutral_1.png',
 }) {
   if (bytes != null && bytes.isNotEmpty) {
     return MemoryImage(bytes);

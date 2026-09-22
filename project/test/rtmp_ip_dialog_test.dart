@@ -30,6 +30,7 @@ late Map<String, dynamic> globalArData;
 Widget createTestWidget({
   required Widget child,
   required AppProvider provider,
+  Locale locale = const Locale('en'),
 }) {
   return EasyLocalization(
     supportedLocales: const [Locale('en'), Locale('ar')],
@@ -37,7 +38,7 @@ Widget createTestWidget({
     assetLoader:
         DirectJsonAssetLoader(enData: globalEnData, arData: globalArData),
     fallbackLocale: const Locale('en'),
-    startLocale: const Locale('en'),
+    startLocale: locale,
     saveLocale: false,
     useOnlyLangCode: true,
     child: Builder(
@@ -107,6 +108,71 @@ void main() {
     Finder findByHint(String hint) => find.byWidgetPredicate(
           (w) => w is TextField && w.decoration?.hintText == hint,
         );
+
+    // Pulls a nested key (e.g. 'design_copy.local') out of the raw locale
+    // JSON so the test can tap a tab by its actual rendered label without
+    // hardcoding the Arabic translation inline.
+    String localized(Map<String, dynamic> data, String dottedKey) {
+      dynamic value = data;
+      for (final part in dottedKey.split('.')) {
+        value = (value as Map<String, dynamic>)[part];
+      }
+      return value as String;
+    }
+
+    for (final locale in [const Locale('en'), const Locale('ar')]) {
+      testWidgets(
+          'TC-STUDIO-20 (${locale.languageCode}): tapping every mode tab '
+          'shows that mode\'s own fields, never another mode\'s -- '
+          'UI-04 semantic mapping must survive RTL tab reordering',
+          (tester) async {
+        useTallTestSurface(tester);
+        final data = locale.languageCode == 'ar' ? globalArData : globalEnData;
+        await tester.pumpWidget(
+          createTestWidget(
+            child: const LiveBroadcasterStudioSheet(),
+            provider: provider,
+            locale: locale,
+          ),
+        );
+        await tester.pumpAndSettle();
+
+        const obsLabel = 'OBS';
+        final phoneLabel = localized(data, 'design_copy.phone');
+        final localLabel = localized(data, 'design_copy.local');
+
+        // Starts on OBS: the YouTube-link field is OBS/Phone-only in its
+        // "paste a link" form, but the laptop-IP field is Local-only and
+        // the stream-key *obscured* field is Phone-only -- each is a
+        // reliable, locale-independent fingerprint (hardcoded hint text)
+        // for exactly one mode.
+        expect(findByHint('e.g. 192.168.1.100'), findsNothing);
+        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
+            findsOneWidget);
+        expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
+
+        await tester.tap(find.text(localLabel));
+        await tester.pumpAndSettle();
+        expect(findByHint('e.g. 192.168.1.100'), findsOneWidget);
+        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
+            findsNothing);
+        expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
+
+        await tester.tap(find.text(phoneLabel));
+        await tester.pumpAndSettle();
+        expect(findByHint('e.g. 192.168.1.100'), findsNothing);
+        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
+            findsNothing);
+        expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsOneWidget);
+
+        await tester.tap(find.text(obsLabel));
+        await tester.pumpAndSettle();
+        expect(findByHint('e.g. 192.168.1.100'), findsNothing);
+        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
+            findsOneWidget);
+        expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
+      });
+    }
 
     testWidgets(
         'TC-STUDIO-01: renders the director_title/director_subtitle '
@@ -367,7 +433,10 @@ void main() {
       expect(find.textContaining('Audio-Only Backdrop'), findsNothing);
     });
 
-    testWidgets('TC-STUDIO-10B: the sheet renders at 80% of screen height',
+    testWidgets(
+        'TC-STUDIO-10B: the sheet is capped at 80% of screen height and '
+        'shrinks to content instead of always stretching to the cap '
+        '(UI-02/UI-10: no dead space below short Local-mode content)',
         (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
@@ -378,10 +447,20 @@ void main() {
 
       final screenHeight = tester.view.physicalSize.height /
           tester.view.devicePixelRatio;
-      final sheetSize =
+      final obsSheetSize =
           tester.getSize(find.byType(LiveBroadcasterStudioSheet));
 
-      expect(sheetSize.height, closeTo(screenHeight * 0.80, 0.5));
+      // Never exceeds the 80% cap, even for the tallest (OBS) mode.
+      expect(obsSheetSize.height, lessThanOrEqualTo(screenHeight * 0.80 + 0.5));
+
+      // Local mode's content is much shorter -- the sheet must shrink with
+      // it rather than staying pinned at the same height as OBS mode.
+      await tester.tap(find.text('Local'));
+      await tester.pumpAndSettle();
+      final localSheetSize =
+          tester.getSize(find.byType(LiveBroadcasterStudioSheet));
+
+      expect(localSheetSize.height, lessThan(obsSheetSize.height));
     });
 
     testWidgets(

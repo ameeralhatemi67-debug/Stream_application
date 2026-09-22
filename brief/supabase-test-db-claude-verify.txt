@@ -1,0 +1,31 @@
+Connecting to local database...
+psql:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/admin_user_directory.test.sql:19: ERROR:  permission denied for function is_banned
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/admin_user_directory.test.sql ............ 
+Dubious, test returned 3 (wstat 768, 0x300)
+Failed 19/23 subtests 
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/application_and_ban_guards.test.sql ...... ok
+psql:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/broadcast_sessions.test.sql:33: ERROR:  permission denied for function is_banned
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/broadcast_sessions.test.sql .............. 
+Dubious, test returned 3 (wstat 768, 0x300)
+Failed 10/22 subtests 
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/broadcaster_columns.test.sql ............. ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/chat_keyword_filter.test.sql ............. ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/chat_moderation_authority.test.sql ....... ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/chat_rate_limit.test.sql ................. ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/follows_and_bookmarks.test.sql ........... ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/live_flag_expiry_and_privilege.test.sql .. ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/rls_catalog.test.sql ..................... ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/streamer_assets.test.sql ................. ok
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/viewer_presence.test.sql ................. ok
+
+Test Summary Report
+-------------------
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/admin_user_directory.test.sql          (Wstat: 768 (exited 3) Tests: 4 Failed: 0)
+  Non-zero exit status: 3
+  Parse errors: Bad plan.  You planned 23 tests but ran 4.
+/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/supabase/tests/broadcast_sessions.test.sql            (Wstat: 768 (exited 3) Tests: 12 Failed: 0)
+  Non-zero exit status: 3
+  Parse errors: Bad plan.  You planned 22 tests but ran 12.
+Files=12, Tests=173,  1 wallclock secs ( 0.09 usr  0.08 sys +  0.12 cusr  0.16 csys =  0.45 CPU)
+Result: FAIL
+error running container: exit 1

@@ -40,6 +40,28 @@ bool _looksLikeUuid(String? value) =>
 /// that doesn't correspond to a real backend row yet). Every public method
 /// signature is unchanged from the SharedPreferences-only version.
 class AdminDatabaseService {
+  /// These admin paths never fall back to local data or simulated success.
+  Future<List<Map<String, dynamic>>> searchAdminUsers(String query, int offset) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    final rows = await _client.rpc('admin_user_directory', params: {
+      'p_query': query, 'p_offset': offset,
+    });
+    return (rows as List).map((row) => Map<String, dynamic>.from(row as Map)).toList();
+  }
+
+  Future<Map<String, dynamic>> loadAdminUserDetail(String profileId) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    final row = await _client.rpc('admin_user_detail', params: {'p_profile_id': profileId});
+    return Map<String, dynamic>.from(row as Map);
+  }
+
+  Future<void> updateAdminAccount(String profileId, String action, String reason) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    await _client.rpc('admin_update_account', params: {
+      'p_profile_id': profileId, 'p_action': action, 'p_reason': reason,
+    });
+  }
+
   static const String _kApplicationsKey = 'streamer_admin_applications_v1';
   static const String _kTermsKey = 'streamer_admin_terms_v1';
   static const String _kAnalyticsKey = 'streamer_admin_analytics_v1';

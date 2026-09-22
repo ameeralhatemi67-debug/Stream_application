@@ -10,7 +10,7 @@
 
 ## 📅 Roadmap Overview & Version Progression
 
-*Updated 2026-09-21. Sources: git history for the built versions, `brief/LEDGER.md` (agent-reported), verified test suite (264 pass, 0 fail, analyzer 0), and static gates check (`node brief/tools/gates.mjs` — 8 failing, all design scope). Future dates are estimates.*
+*Updated 2026-09-22. Sources: git history, the 2026-09-22 audit, the latest RESUME block in `brief/LEDGER.md`, `brief/03_WORK_PLAN.md`, `brief/06_VERIFICATION.md`, `brief/OWNER_ACTIONS.md`, recorded analyzer/test evidence, and the current static gate report. Future dates are estimates. The app is not release-ready.*
 
 ```mermaid
 gantt
@@ -42,7 +42,7 @@ gantt
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d
     tickInterval 1day
-    section Done (SQL and devices unverified)
+    section Done or implemented (SQL and devices still unverified)
     Briefing framework and budget tooling       :done, brief, 2026-09-19, 2026-09-20
     P0 Preflight and baseline                   :done, p0, 2026-09-20, 1d
     P1a Guards, uploads, applications, bans     :done, p1a, 2026-09-20, 1d
@@ -51,18 +51,22 @@ gantt
     P2 Remove placeholders and simulations      :done, p2, 2026-09-20, 2026-09-21
     P3 True viewer count                        :done, p3, 2026-09-20, 2026-09-21
     P6.1 Chat rate-limit and slow-mode trigger  :done, p61, 2026-09-20, 2026-09-21
-    section Next
-    P6.2 to 6.4 Chat UX and admin tools         :active, p6next, 2026-09-21, 1d
-    P5 Map and offline experience               :p5, 2026-09-21, 2026-09-22
-    P7 Organizations                            :p7, 2026-09-22, 2026-09-23
-    P8B Store and compliance package            :p8b, 2026-09-23, 1d
-    section Planned (Reserved for Astra)
-    P4 White theme, emoji, responsive, i18n     :p4, 2026-09-23, 2026-09-25
-    P8A Android release blockers and identity   :p8a, 2026-09-25, 1d
-    P9 Closeout and final gates                 :p9, 2026-09-25, 2026-09-26
-    section Owner only
-    Docker install and local SQL tests          :crit, own1, 2026-09-20, 2026-09-22
-    Pick design scheme A B or C                 :crit, own2, 2026-09-20, 2026-09-22
+    P1 policy quality and audit scope (partial) :crit, p1d, 2026-09-21, 1d
+    P4 White theme, responsive UI and i18n      :done, p4, 2026-09-22, 1d
+    P8A Android identity and branding (partial)  :crit, p8a, 2026-09-22, 1d
+    P6.2 to 6.3 Chat UX and moderation linkage  :done, p6a, 2026-09-21, 1d
+    section Current next phase
+    P6.4 Admin tools                             :active, p64, 2026-09-22, 2d
+    section Planned
+    P5 Map and offline experience                :p5, after p64, 2d
+    P7 Organizations                             :p7, after p5, 2d
+    P8B Store and compliance package             :p8b, after p7, 1d
+    P9 Closeout and final gates                  :p9, after p8b, 2d
+    section Owner blockers (estimates)
+    Venue-only GPS policy verification            :crit, gps, 2026-09-22, 1d
+    Production schema comparison                 :crit, prod, after gps, 1d
+    Privacy URL and legal review                 :crit, legal, after prod, 2d
+    Keystore, AAB and device verification        :crit, release, after legal, 3d
 ```
 
 ```mermaid
@@ -81,24 +85,24 @@ gantt
     Version 1.1 iOS integration                 :r5, 2026-10-10, 2026-10-24
 ```
 
-### Where the hardening run stands (2026-09-21)
+### Where the hardening run stands (2026-09-22)
 
 | Phase | Status | Evidence | Roadmap link |
 |---|---|---|---|
-| P0 Preflight | Done | analyzer 0 issues, tests 264 passing (full suite green) | none |
-| P1a-b Guards, uploads, applications, bans, live state, multi-device | Done in source, SQL and phones unverified | commits 95b97fc, b61b3f7; 49 pgTAP assertions written, not run (no Docker) | CP 1.0.4, RLS follow-up to CP 0.5 |
-| P1c Dev identity, RPC ban audit, RLS policy review, live-flag expiry | Done in source, SQL unverified | commit e94fb13; G1c = 0; helper migration 20260920110000 | CP 1.0.4 |
-| P2 Placeholders and simulations | Done in full | commits d646053, 8ecba34, d83bd4a; G1a-e = 0, G5a-c = 0 | undoes simulated parts of CP 0.6.2.2 and 0.9.2.1 |
-| P3 True viewer count | Done in full | commit 18d7b82; G1d = 0; deny-all stream_viewers + ViewerPresenceService | CP 1.0.1 |
-| P6 Chat, moderation, admin | In Progress (P6.1 done) | commit 298db4b; chat rate-limit & slow-mode trigger; P6.2-6.4 next | CP 1.0.5 (part) |
-| P5 Map and offline | Next after P6 | none | new (not in the old roadmap) |
-| P7 Organizations | Planned | none | new (not in the old roadmap) |
-| P8B Store and compliance package | Planned | none | CP 1.0.6 (part); not legal certification |
-| P4 White theme, emoji, responsive, i18n | Reserved for Astra (05 D-27) | waiting on DESIGN_CHOICE; G2a 1532, G3 231, G6 467 | CP 1.0.2 |
-| P8A Android release blockers | Reserved for Astra (05 D-27) | G4a 14, G4b 5, G8 1 | CP 1.0.6 |
-| P9 Closeout | Reserved for Astra (05 D-27) | none | none |
+| P0 Preflight | Complete | Baseline, brief, tag and protected owner state are recorded. Local SQL execution remains environment-limited. | 1.0.0 |
+| P1 Access control, RLS and secrets | Partial | Source, migration and recorded local SQL evidence are present. This audit could not rerun Docker/Supabase; device scenarios, production comparison and release scan remain open. | 1.0.1 |
+| P2 Truthful data | Complete | Fresh gates show G1a-e and G5a-c at zero; fabricated production paths were removed. | 1.0.2 |
+| P3 Viewer presence | Partial | Server-backed heartbeat/count code and grants are present. Guest, deduplication, expiry and multi-client device scenarios remain unrun. | 1.0.3 |
+| P4 Design and responsive UI | Complete to recorded E1/E2 evidence | Scheme A, bundled IBM Plex fonts, white theme, localization and responsive/layout tests are present. No physical-device visual QA. | 1.0.4 |
+| P8A Android identity and branding | Partial, complete to available owner inputs | Identity, permissions, launcher, splash, target SDK, 16 KB checks and fail-closed signing are done. No keystore, AAB, release scan or device smoke test. | 1.0.5 |
+| P6.1-P6.3 Chat and moderation | Partial | Server rate limits, slow mode, keyword normalization, composer states, live report linkage and audit scope are implemented. Report-reason enum and server-side blocks remain open. | 1.0.6 |
+| P6.4 Admin tools | Not started | User directory is the next implementation item; the remaining five admin tools are also open. | 1.0.6 |
+| P5 Map and offline | Not started | No implementation or evidence yet. | 1.0.7 |
+| P7 Organizations | Not started | Co-owner designation, invitations, public organization profile and scoped controls remain open. | 1.0.8 |
+| P8B Store and compliance package | Not started | No store package exists. Drafting would not equal legal certification. | 1.0.9 |
+| P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
-Only 8 gates failing (down from 16 at baseline). All 8 failing gates (G2a/b/d, G3, G4a/b, G6, G8) belong strictly to Astra's design/release scope (D-27). All truthfulness (G1a-e), legacy cleanup (G5a-c), secrets (G11a-f), RLS policies (G10a/c/d), and translation symmetry (G7) are at 0 (PASS). Analyzer has 0 issues, 264 tests pass.
+The current gate run has one failing gate, G6 with 505 matches. The audit independently verified that all 505 are translated `.tr()` calls and that there are zero real untranslated literals. P4 and P8A are therefore not blocked by G6, but neither has physical-device evidence. The recorded Flutter suite has 439 passing tests, the layout sweep has 120 passing cases, and rendered contrast has 30 passing checks. The SQL evidence records 48 migrations and 179 pgTAP assertions across 11 files, but this audit could not rerun Docker or Supabase.
 ---
 
 ## 📝 Modification
@@ -498,97 +502,189 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 - [x] Task 0.95.2.3.3: Add "Hide from Map" moderation toggle in Streamers Registry.
 
 ---
+## Version 1.0 — hardening and release
 
-## 🚀 Version 1.0 — Stream Telemetry, Mobile Harmony & Store Submission *(Active Sprint)*
+> Status on 2026-09-22: the app is in a truthfulness and security hardening run. P0, P2, P4 and the available P8A work are complete to their evidence limits. P1 and P3 remain partial because SQL/runtime and device evidence is incomplete. P6.1-P6.3 are implemented, while P6.4 is the next engineering phase. The recorded Flutter suite passed 439 tests, the layout sweep passed 120 cases, and rendered contrast passed 30 checks. The app is not release-ready.
 
-> Status note (2026-09-20): most tasks below map onto hardening phases P1 to P9 (see the Overview table). Boxes stay unticked until a phase has verified evidence; the multi-device SQL and the two-phone tests are still pending.
+### Checkpoint 1.0.0: P0 hardening foundation `[Backend & Security Track]`
 
-### Checkpoint 1.0.1: Stream Telemetry & Database Session Logging (Cluster 5) `[Backend & Security Track]`
-*Rule: Upon completion of Checkpoint 1.0.1, push snapshot to GitHub.*
+#### Phase 1.0.0.1: Preflight and evidence baseline
 
-#### Phase 1.0.1.1: Accurate Views Counter on Streams and Videos (Task 19)
-- [ ] Task 1.0.1.1.1: Format and display live viewer counts and cumulative video views across Stream Cards, VOD Tiles, and Player Overlays.
-- [ ] Task 1.0.1.1.2: Integrate `WatchSessionTracker` recording duration ticks and reporting view telemetry.
+- [x] Task 1.0.0.1.1: Create the hardening brief, ledger, budget rules and verification gates.
+- [x] Task 1.0.0.1.2: Record the baseline analyzer, test and gate results.
+- [/] Task 1.0.0.1.3: Probe Docker and write the local SQL tests. The 48-migration chain and 179 pgTAP plan counts are recorded, but this audit environment could not rerun Docker/Supabase.
+- [x] Task 1.0.0.1.4: Protect owner stashes and keep production Supabase changes out of the agent run.
 
-#### Phase 1.0.1.2: Logging Stream Session Data into Supabase (Task 20)
-- [ ] Task 1.0.1.2.1: Ensure starting/stopping a broadcast records session ID, streamer ID, title, start time, end time, duration, peak viewers, and ingest protocol into `public.streams`.
-- [ ] Task 1.0.1.2.2: Ensure phone camera broadcasts trigger DB session logging on start/stop.
+### Checkpoint 1.0.1: P1 access control, RLS and secrets `[Backend & Security Track]`
 
----
+#### Phase 1.0.1.1: privileged-column and storage guards
 
-### Checkpoint 1.0.2: Responsive UI, Assets & Phone Studio Harmony (Cluster 6) `[Platform & UI Track]`
-*Rule: Upon completion of Checkpoint 1.0.2, push snapshot to GitHub.*
+- [/] Task 1.0.1.1.1: Guard privileged profile and organization columns against ordinary client writes. Source and recorded local SQL evidence exist; this audit could not rerun the database.
+- [/] Task 1.0.1.1.2: Add owner-scoped streamer and organization asset policies and upload paths. Source and recorded local SQL evidence exist; production comparison and device evidence remain open.
+- [/] Task 1.0.1.1.3: Force application and affiliation review fields to server-controlled values. Source and recorded local SQL evidence exist; this audit could not rerun the database.
+- [/] Task 1.0.1.1.4: Enforce ban checks on protected writes. The helper and policies are present; pgTAP evidence is recorded but not rerun in this audit.
 
-#### Phase 1.0.2.1: Profile Media Refresh & Lecture Bookmarks (Tasks 21 & 22)
-- [ ] Task 1.0.2.1.1: Expand preset avatar and banner library with clean academic and university themes.
-- [ ] Task 1.0.2.1.2: Connect Lecture Bookmarks feature rendering saved lectures in a responsive GridView.
+#### Phase 1.0.1.2: guarded live state and multi-device sessions
 
-#### Phase 1.0.2.2: Layout Hardening & Emoji Strip (Tasks 23–25)
-- [ ] Task 1.0.2.2.1: Audit and eliminate RenderFlex overflow errors across small phone viewports (320px–375px).
-- [ ] Task 1.0.2.2.2: Strip emojis from notification titles, category filter tabs, and toast headers; use clean vector icons.
-- [ ] Task 1.0.2.2.3: Remove redundant language selector card from Settings body.
+- [/] Task 1.0.1.2.1: Restrict live-state changes to verified broadcasters, permitted organization members and valid stream IDs. Source and recorded SQL evidence exist; runtime probes remain open.
+- [/] Task 1.0.1.2.2: Enforce one primary broadcaster device and deny viewers a broadcaster-device conflict. The server path exists; physical-device and runtime probes remain open.
+- [/] Task 1.0.1.2.3: Add device heartbeats, displacement handling and stale-primary recovery. The server path exists; physical-device and runtime probes remain open.
+- [/] Task 1.0.1.2.4: Expire stale live flags server-side. The migration is present; scheduled execution and runtime probes remain open.
+- [/] Task 1.0.1.2.5: Verify two-phone conflict, transfer, silent-primary recovery and audio-only scenarios on physical devices.
 
-#### Phase 1.0.2.3: Mobile Admin Hub & Studio Harmonization (Tasks 26–29)
-- [ ] Task 1.0.2.3.1: Build fully mobile-responsive Admin Hub layout with horizontal scrollable tabs and stacked metric cards.
-- [ ] Task 1.0.2.3.2: Harmonize phone camera broadcasting view with live room controls (chat, reactions, viewer count).
-- [ ] Task 1.0.2.3.3: Restrict App Bar "Go Live" studio button to streamer's own profile page.
-- [ ] Task 1.0.2.3.4: Verify 100% Arabic localization symmetry across all new views.
+#### Phase 1.0.1.3: private mode, development cleanup and navigation
 
----
+- [x] Task 1.0.1.3.1: Disable private streaming behind the feature flag.
+- [x] Task 1.0.1.3.2: Hide debug testing tools and simulator toggles outside debug mode.
+- [x] Task 1.0.1.3.3: Restrict embedded web navigation to approved YouTube hosts without changing ADR-006 embed settings.
+- [/] Task 1.0.1.3.4: Confirm the behavior on a real device and with the local database probes. No emulator or physical-device run exists.
 
-### Checkpoint 1.0.3: First-Run Onboarding Tour & Interactive Walkthrough `[Platform & UI Track]`
-*Rule: Upon completion of Checkpoint 1.0.3, push snapshot to GitHub.*
+#### Phase 1.0.1.4: policy quality and audit scope
 
-#### Phase 1.0.3.1: Interactive First-Run Walkthrough
-- [ ] Task 1.0.3.1.1: Build multi-step animated onboarding tour highlighting Spatial Map discovery, Live Auditorium, and Broadcaster Studio.
-- [ ] Task 1.0.3.1.2: Persist onboarding completion flag in `SharedPreferences`.
+- [x] Task 1.0.1.4.1: Write the table-by-table access matrix in `supabase/tests/policy_matrix.md`.
+- [x] Task 1.0.1.4.2: Split the remaining loose `for all` policies into named per-command policies. Static gate and recorded local SQL evidence support completion.
+- [x] Task 1.0.1.4.3: Add explicit function execute grants, view security-invoker checks and deny-all table intent comments. Source and recorded policy-matrix evidence support completion.
+- [x] Task 1.0.1.4.4: Review storage buckets, realtime publication tables and Data API schema exposure. The review and matrix are recorded; production comparison remains open.
+- [x] Task 1.0.1.4.5: Restrict `log_audit_event` to the correct organization scope. The audit re-read the guard directly and confirmed the organization check.
+- [/] Task 1.0.1.4.6: Run the RLS attack and positive probes against local Supabase. The probes are written and prior local results are recorded, but this audit could not rerun them.
 
----
+#### Phase 1.0.1.5: secrets and release-artifact security
 
-### Checkpoint 1.0.4: Multi-Device Session Governance, Onboarding & Access Control `[Backend & Security Track]`
-*Rule: Upon completion of Checkpoint 1.0.4, push snapshot to GitHub.*
+- [x] Task 1.0.1.5.1: Keep service-role keys, database passwords, keystores and local define files out of the repository.
+- [x] Task 1.0.1.5.2: Complete ignore rules, runtime local-key loading and the security documentation. The audit confirmed the source and documented setup.
+- [/] Task 1.0.1.5.3: Build the release AAB and run `scan_build_secrets.mjs`. P8A's fail-closed signing path is complete, but the owner has not supplied the keystore and no AAB or release scan exists.
 
-#### Phase 1.0.4.1: Multi-Device Session Collision Disambiguation
-- [ ] Task 1.0.4.1.1: Detect simultaneous active sessions on second device sign-in and present interactive device picker modal ("Continue on this device / Terminate other session").
-- [ ] Task 1.0.4.1.2: Separate viewer session credentials from streamer studio tokens so testing on secondary devices does not override broadcaster state.
+### Checkpoint 1.0.2: P2 truthful data and real actions `[Core Streaming Track]`
 
-#### Phase 1.0.4.2: Post-Login Onboarding Gateway & Profile Gating
-- [ ] Task 1.0.4.2.1: Implement post-login role onboarding gateway routing new accounts to `/role-select` ("Apply as Academic Broadcaster" vs "Continue as Viewer / Student").
-- [ ] Task 1.0.4.2.2: Ensure non-streamer viewers have zero public profile tab in navigation until formal verification approval.
+#### Phase 1.0.2.1: remove production simulations
 
-#### Phase 1.0.4.3: Discovery Feed Own-Card Highlight & Cell-Tower Permission Boundaries
-- [ ] Task 1.0.4.3.1: Render a crisp white border (`Border.all(color: Colors.white, width: 1.8)`) with a glowing "Your Channel / قناتك" badge on the streamer's own card in Discovery Hub.
-- [ ] Task 1.0.4.3.2: Restrict the App Bar "Go Live" Cell Tower button strictly to the broadcaster's own profile page, preventing accidental broadcast triggers on other channels.
+- [x] Task 1.0.2.1.1: Start the app with an empty catalog and keep fixtures under `project/test/fixtures/`.
+- [x] Task 1.0.2.1.2: Remove simulated chat, VOD, Q&A, audience, venue and viewer-count data from production paths.
+- [x] Task 1.0.2.1.3: Remove the RTMP spike, VLC path, simulated services and fake broadcast identifiers.
+- [x] Task 1.0.2.1.4: Remove fabricated avatars, verification, coordinates and fallback YouTube IDs.
+- [x] Task 1.0.2.1.5: Remove the GADM asset while preserving the real custom placeholder-card feature.
 
-#### Phase 1.0.4.4: Stream Key Persistence & Stream Decay Engine
-- [ ] Task 1.0.4.4.1: Persist RTMP stream keys and broadcast metadata in `SharedPreferences` keyed by user handle (`stream_key_${userHandle}`).
-- [ ] Task 1.0.4.4.2: Enforce `StreamDecayEngine` idle timeout (terminating ghost streams if no RTMP frames or heartbeats arrive for > 180 seconds).
+#### Phase 1.0.2.2: real user actions and media controls
 
-#### Phase 1.0.4.5: Private Stream Access Control & Guest Feed Filtering
-- [ ] Task 1.0.4.5.1: Enforce feed filtering so Public streams remain visible to all viewers, while Private streams with whitelists/knock-gates are strictly hidden from unauthorized guest viewers.
+- [x] Task 1.0.2.2.1: Persist follows and bookmarks through Supabase with own-row RLS.
+- [x] Task 1.0.2.2.2: Replace placeholder modal sites with bookmark and share actions, then remove the unused modal.
+- [x] Task 1.0.2.2.3: Wire raise-hand to the existing reaction channel and keep RSVP disabled behind its flag.
+- [x] Task 1.0.2.2.4: Verify play, pause and mute against the real iframe controller or keep unavailable actions hidden. The hardening pass removed simulated controls and kept unavailable actions out of production paths.
 
----
+### Checkpoint 1.0.3: P3 true viewer presence `[Backend & Security Track]`
 
-### Checkpoint 1.0.5: Advanced Tag Discovery & Chat Governance Alert Thresholds `[Admin & Governance Track]`
-*Rule: Upon completion of Checkpoint 1.0.5, push snapshot to GitHub.*
+#### Phase 1.0.3.1: server-backed viewer counts
 
-#### Phase 1.0.5.1: Tag Explorer & Broadcaster Mapping
-- [ ] Task 1.0.5.1.1: Build complete Tag Explorer in Admin Hub listing all active tags with streamer/organization count metrics.
-- [ ] Task 1.0.5.1.2: Add drill-down modal showing all broadcasters tagged under a specific discipline.
+- [/] Task 1.0.3.1.1: Add deny-all `stream_viewers` storage and the `viewer_heartbeat` and `get_viewer_counts` RPCs. Source and grants are present; SQL runtime evidence is recorded but not rerun here.
+- [/] Task 1.0.3.1.2: Add foreground-only client heartbeats and batched feed polling. The client path exists; guest, expiry and multi-client probes remain open.
+- [x] Task 1.0.3.1.3: Display `—` for unknown counts and never invent a viewer number.
+- [x] Task 1.0.3.1.4: Keep the YouTube concurrent count separate and label it "on YouTube" in the studio.
+- [/] Task 1.0.3.1.5: Run the guest, signed-in, deduplication, expiry and direct-select-denial probes against local Supabase and devices. The required scenarios remain unrun.
 
-#### Phase 1.0.5.2: In-Stream Moderator Alert Thresholds & Chatter Auditing
-- [ ] Task 1.0.5.2.1: Add visual badge highlighting for Admin and Moderator messages in live chat.
-- [ ] Task 1.0.5.2.2: Implement 3+ report/hide alert threshold alerting in-stream moderators with one-tap quick-block button.
-- [ ] Task 1.0.5.2.3: Build Admin audit table of muted chatters showing previous message history across all streams.
+### Checkpoint 1.0.4: P4 design and responsive app pass `[Platform & UI Track]`
 
----
+#### Phase 1.0.4.1: design scheme, theme and responsive layout
 
-### Checkpoint 1.0.6: Google Play Store Release & Regulatory Compliance `[Backend & Security Track]`
-*Rule: Upon completion of Checkpoint 1.0.6, push snapshot to GitHub.*
+- [x] Task 1.0.4.1.1: Select design scheme A, B or C and record `DESIGN_CHOICE`.
+- [x] Task 1.0.4.1.2: Implement the selected white theme, semantic tokens, typography, gradients, spacing and contrast tests.
+- [x] Task 1.0.4.1.3: Remove decorative emoji, migrate required strings to Arabic/English catalogs and complete the responsive sweep. G6's 505 matches are translated calls, not untranslated literals.
+- [x] Task 1.0.4.1.4: Refactor Settings, Admin, Live and Onboarding layouts for phone, tablet, landscape, LTR and RTL. Recorded layout evidence is green; device visual QA remains open.
 
-#### Phase 1.0.6.1: Google Play Store Release Packaging
-- [ ] Task 1.0.6.1.1: Configure Android App Bundle (`.aab`) signing keys, ProGuard rules, and 16 KB page-size alignment.
-- [ ] Task 1.0.6.1.2: Complete Google Play Store Data Safety declarations and Saudi regulatory compliance sign-off.
+#### Phase 1.0.4.2: onboarding and first-run flow
+
+- [x] Task 1.0.4.2.1: Build the first-run tour for discovery, live viewing and broadcaster studio.
+- [x] Task 1.0.4.2.2: Persist onboarding completion and keep role routing truthful.
+
+### Checkpoint 1.0.5: P8A Android release identity and branding `[Platform & UI Track]`
+
+#### Phase 1.0.5.1: app identity, icon and release blockers
+
+- [x] Task 1.0.5.1.1: Set the final application ID, app names, redirect scheme and package identity from the owner inputs. The audit confirmed the namespace and identity wiring.
+- [x] Task 1.0.5.1.2: Create the selected logo, launcher icon, splash and store icon. Debug APK assets were rendered and inspected.
+- [x] Task 1.0.5.1.3: Remove unnecessary permissions and verify the required Android target and native library alignment. Target SDK 36 and 16 KB alignment checks are recorded.
+- [/] Task 1.0.5.1.4: Create the release AAB, smoke-test it, scan it for secrets and record the result. Signing correctly fails closed because the owner has not supplied a keystore and `key.properties`.
+
+### Checkpoint 1.0.6: P6 chat, moderation and admin `[Admin & Governance Track]`
+
+#### Phase 1.0.6.1: chat client and moderation UX
+
+- [x] Task 1.0.6.1.1: Enforce the 1.2-second message floor, slow mode and chat-off state on the server.
+- [/] Task 1.0.6.1.2: Complete Arabic-aware keyword normalization and the report-reason enum. Arabic normalization and boundary matching are implemented; the report-reason enum is still open.
+- [x] Task 1.0.6.1.3: Add guest read-only mode, muted/slow/offline/banned composer states, retry behavior and the report/block action sheet. Client behavior is implemented; server-side blocks remain open.
+
+#### Phase 1.0.6.2: live moderation linkage
+
+- [x] Task 1.0.6.2.1: Deliver reports to the admin queue live and reflect delete/mute actions in the room.
+- [x] Task 1.0.6.2.2: Audit every moderation action with the corrected organization scope.
+
+#### Phase 1.0.6.3: admin tools
+
+- [ ] Task 1.0.6.3.1: Add the server-backed user directory, account detail, ban/unban and revoke actions.
+- [ ] Task 1.0.6.3.2: Add live-stream force-end/remove-from-feed controls.
+- [ ] Task 1.0.6.3.3: Add the audit-log viewer and keyword manager.
+- [ ] Task 1.0.6.3.4: Add app kill switches and invalidate deleted-account cache entries.
+- [ ] Task 1.0.6.3.5: Complete the tag explorer and broadcaster mapping.
+
+### Checkpoint 1.0.7: P5 map and offline experience `[GIS & Spatial Track]`
+
+#### Phase 1.0.7.1: connectivity and offline data
+
+- [ ] Task 1.0.7.1.1: Add debounced connectivity and reachability state.
+- [ ] Task 1.0.7.1.2: Cache the last good catalog with a version and timestamp.
+- [ ] Task 1.0.7.1.3: Add offline banners, cached-card state, disabled-action explanations and live-room recovery.
+
+#### Phase 1.0.7.2: map data and licensing
+
+- [ ] Task 1.0.7.2.1: Choose and test the permitted offline map strategy with attribution and cache controls.
+- [ ] Task 1.0.7.2.2: Add Saudi bounds, presets, clustering, provider-backed search and native directions.
+- [ ] Task 1.0.7.2.3: Record map licensing and remove any remaining disallowed map assets.
+
+### Checkpoint 1.0.8: P7 organizations `[Admin & Governance Track]`
+
+#### Phase 1.0.8.1: organization roles and public profiles
+
+- [ ] Task 1.0.8.1.1: Add owner/co-owner role designation, invitations, expiry, removal and permission enforcement.
+- [ ] Task 1.0.8.1.2: Add the public organization profile with real venues, branches, roster and live streams.
+- [ ] Task 1.0.8.1.3: Add organization admin member, venue and audit controls.
+- [ ] Task 1.0.8.1.4: Update the organization specification and ADR-007.
+
+### Checkpoint 1.0.9: P8B store and Saudi-compliance package `[Backend & Security Track]`
+
+#### Phase 1.0.9.1: store documentation and data rights
+
+- [ ] Task 1.0.9.1.1: Draft truthful Data Safety, permissions, foreground-service and UGC-moderation documents.
+- [ ] Task 1.0.9.1.2: Extend data export to every user-linked table and verify consent withdrawal.
+- [ ] Task 1.0.9.1.3: Draft Arabic/English listing text and mark all legal claims for counsel review.
+- [ ] Task 1.0.9.1.4: Prepare the PDPL, CST/GCAM, minors, retention and cross-border questions for a lawyer.
+
+### Checkpoint 1.0.10: P9 final verification and release gate `[Backend & Security Track]`
+
+#### Phase 1.0.10.1: closeout
+
+- [ ] Task 1.0.10.1.1: Run analyzer, full tests, gates, layout sweep, local SQL probes and the physical-device scenarios.
+- [ ] Task 1.0.10.1.2: Review the full hardening diff for secrets, runtime files and unintended changes.
+- [ ] Task 1.0.10.1.3: Update status, decisions, ADRs, the final report and owner action list.
+- [ ] Task 1.0.10.1.4: Mark Version 1.0 complete only after the release AAB, SQL evidence, device evidence, store package and owner/legal approvals are present.
+
+### Version 1.0 checkpoint map
+
+| Checkpoint | Current status | Evidence or open work |
+|---|---|---|
+| 1.0.0 P0 hardening foundation | Partial | The brief and baseline are complete. Local SQL runtime evidence could not be rerun in this audit. |
+| 1.0.1 P1 access control, RLS and secrets | Partial | Source and recorded local evidence are present. Production comparison, device scenarios and the release scan remain open. |
+| 1.0.2 P2 truthful data and real actions | Complete to gate evidence | Production simulations were removed and real actions were wired. No device or production-database run exists. |
+| 1.0.3 P3 true viewer presence | Partial | Presence service, count RPCs and grants are present. SQL runtime, expiry and multi-client device probes remain open. |
+| 1.0.4 P4 design and responsive app pass | Complete to recorded E1/E2 evidence | Scheme A, white theme, fonts, localization and responsive tests are complete. Physical-device visual QA remains open. |
+| 1.0.5 P8A Android release identity and branding | Partial, complete to available inputs | Identity, assets, permissions, target SDK, 16 KB checks and fail-closed signing are complete. No keystore, AAB, release scan or device smoke test exists. |
+| 1.0.6 P6 chat, moderation and admin | Partial | P6.1-P6.3 are implemented. The report-reason enum, server-side blocks and all P6.4 tools remain open. |
+| 1.0.7 P5 map and offline experience | Not started | Connectivity, cache, offline map and licensing work remain open. |
+| 1.0.8 P7 organizations | Not started | Co-owner roles, invitations, public organization profile and audit scope remain open. |
+| 1.0.9 P8B store and Saudi-compliance package | Not started | Store documents, data export, counsel questions and listing draft remain open. |
+| 1.0.10 P9 final verification and release gate | Not started | Full re-verification, gates, SQL, devices, release diff, store package and owner approvals remain open. |
+
+### Release gate
+
+Version 1.0 is not release-ready. The next engineering phase is P6.4, starting with the server-backed admin user directory and the `device_sessions` admin-read migration. The owner has decided that exact coordinates are public venue coordinates for map navigation, not home addresses. The release track still needs venue-only data-entry verification, a production schema comparison before any `db push`, physical-device verification, an owner-supplied keystore and signed AAB, and the P8B legal/store package. Do not mark the version complete from static code review or widget tests alone.
 
 ---
 

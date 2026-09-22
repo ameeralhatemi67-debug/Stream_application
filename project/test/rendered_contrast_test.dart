@@ -16,6 +16,8 @@ import 'package:streamer_app/features/auth/presentation/welcome_screen.dart';
 import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/live_broadcast_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/permission_rationale_dialog.dart';
+import 'package:streamer_app/features/live_stream/presentation/widgets/rtmp_ip_dialog.dart';
+import 'package:streamer_app/features/live_stream/presentation/widgets/streamer_setup_guide_modal.dart';
 import 'package:streamer_app/features/map/presentation/widgets/venue_navigation_sheet.dart';
 import 'package:streamer_app/features/admin/presentation/admin_hub_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/screens/phone_broadcast_screen.dart';
@@ -217,6 +219,21 @@ void main() {
           body: VenueNavigationSheet(
             streamer: mockStreamers.first.copyWith(avatarUrl: '', bannerUrl: ''),
           ),
+        ),
+    // UI-02/UI-03: these two sheets had the worst instance of the onMedia-
+    // on-a-pale-surface bug in the whole app (invisible "Go Live" button,
+    // invisible tutorial heading/icon) and neither was covered by this
+    // rendered-contrast sweep before, so the regression shipped unnoticed.
+    'broadcaster studio (OBS)': () =>
+        const Scaffold(body: LiveBroadcasterStudioSheet()),
+    'broadcaster studio (Phone)': () => const Scaffold(
+          body: LiveBroadcasterStudioSheet(initialMode: StudioMode.phone),
+        ),
+    'broadcaster studio (Local)': () => const Scaffold(
+          body: LiveBroadcasterStudioSheet(initialMode: StudioMode.local),
+        ),
+    'broadcaster tutorial (OBS)': () => const Scaffold(
+          body: StreamerSetupGuideModal(mode: StudioMode.obs),
         ),
   };
   for (final entry in screens.entries) {

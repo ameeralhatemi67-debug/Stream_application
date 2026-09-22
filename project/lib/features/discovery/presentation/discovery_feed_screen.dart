@@ -22,12 +22,15 @@ class DiscoveryFeedScreen extends StatefulWidget {
 
 class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+  bool _isSearchFocused = false;
 
   @override
   void initState() {
     super.initState();
     final appProvider = context.read<AppProvider>();
     _searchController.text = appProvider.searchQuery;
+    _searchFocusNode.addListener(_onSearchFocusChanged);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkDuplicateChannelsIfNeeded();
       _refreshVisibleViewerCounts();
@@ -40,6 +43,10 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   }
 
   Timer? _viewerCountTimer;
+
+  void _onSearchFocusChanged() {
+    if (mounted) setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
+  }
 
   void _refreshVisibleViewerCounts() {
     if (!mounted) return;
@@ -71,6 +78,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   void dispose() {
     _viewerCountTimer?.cancel();
     _searchController.dispose();
+    _searchFocusNode.removeListener(_onSearchFocusChanged);
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -277,17 +286,21 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
               children: [
                 Expanded(
                   child: Container(
-                    height: 46,
+                    height: AppTheme.searchBarHeight,
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(14.0),
+                      borderRadius: BorderRadius.circular(AppTheme.searchBarRadius),
+                      // UI-01: same shape/border contract as the spatial-map
+                      // search bar (AppTheme.searchBar* tokens), plus a
+                      // focus ring neither field had before.
                       border: Border.all(
-                        color: AppTheme.border,
-                        width: 1.2,
+                        color: _isSearchFocused ? AppTheme.primary : AppTheme.border,
+                        width: _isSearchFocused ? 1.6 : AppTheme.searchBarBorderWidth,
                       ),
                     ),
                     child: TextField(
                       controller: _searchController,
+                      focusNode: _searchFocusNode,
                       style: const TextStyle(
                           color: AppTheme.textPrimary, fontSize: 14),
                       onChanged: (value) => appProvider.setSearchQuery(value),
