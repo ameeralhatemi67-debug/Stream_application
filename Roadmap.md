@@ -10,6 +10,8 @@
 
 ## 📅 Roadmap Overview & Version Progression
 
+P8B documentation update, 2026-09-24: commit `e151559` was fast-forwarded into local `master`. Seven `store/` drafts now cover Data safety, permissions/foreground service, UGC, Saudi counsel questions, bilingual listing, and export/withdrawal gaps. This is preparation only: owner and counsel decisions, export/deletion/withdrawal engineering, real release evidence, and Play declarations remain open. **P8B is not accepted.** P6 and P6S remain unaccepted; the app is not publish-ready.
+
 Owner-evidence remediation, 2026-09-23: account-scoped role hydration, viewer/transfer cleanup, server-confirmed LIVE, actor/action/date audit paging, phone/RTL layouts, admin localization, profile/VOD truthfulness and asset-listing restrictions are implemented locally. Final Flutter **530 passed**, analyzer **0 issues**, disposable SQL **288 assertions / 16 files passed**. Two local password sessions verified Realtime transfer and server denial of the displaced device; the initial snapshot/join window still uses the existing 20-second heartbeat fallback. G6=565 (+11 localized `.tr()` matches), G11a=9 unchanged, G7=0. **P6 is NOT accepted; P6S is NOT complete; the app is not release-ready.** Partial phone lifecycle repairs compile, but two physical phones, Google OAuth and YouTube ingest were not tested. Windows STL1011 was reproduced; signed-in blank-web and exact avatar-429 behavior remain owner retests. Evidence, issue-by-issue outcomes and exact retest steps: `brief/evidence/2026-09-23/p6-owner-acceptance/REMEDIATION_2026-09-23.md`. No push, deploy or production operation.
 
 Prior checkpoint (historical): Admin Hub checkpoint 2026-09-23, commit `11d0b09`: desktop side navigation, narrow-screen drawer, persistent English/Arabic toggle, honest unavailable analytics, and the admin role-loading fix are locally verified. Full Flutter 514 passed, analyzer 0, fresh local SQL 283 assertions passed. Browser UI evidence covers Welcome pause, Safety end/remove, audit reasons/actor/action filter, keyword lifecycle, history/recovery and refresh-based block synchronization. Gates are NOT green: G6=554 and G11a=9 in pre-existing nested worktrees. P6 remains NOT accepted; no physical Android devices or real Google OAuth were tested. Actor/date audit filter controls remain absent. P6S has not started. Separate P2/player truthfulness work remains open. Evidence and exact owner steps: `brief/evidence/2026-09-23/admin-hub/README.md`.
@@ -106,7 +108,7 @@ gantt
 | P6S Broadcast and navigation reliability | Partial repairs; acceptance blocked by P6 | Landscape crash, preview ownership, native/server LIVE confirmation and chat watch-ID alignment repaired locally. Physical sender/viewer/rotation, YouTube ingest, laptop/Local transport, private access, PiP and exit matrix remain open. | 1.0.6 |
 | P5 Map and offline | Not started | No implementation or evidence yet. | 1.0.7 |
 | P7 Organizations | Not started | Co-owner designation, invitations, public organization profile and scoped controls remain open. | 1.0.8 |
-| P8B Store and compliance package | Not started | No store package exists. Drafting would not equal legal certification. | 1.0.9 |
+| P8B Store and compliance package | Drafts prepared; not accepted | Seven `store/` drafts merged at `e151559`; code, owner/counsel decisions and release evidence remain open. | 1.0.9 |
 | P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
 An earlier 2026-09-23 checkpoint was fast-forwarded from `p6-client-safety` into `master` at `0d6b7a1`. It passed 504 Flutter tests, `flutter analyze` with 0 issues, and 278 local SQL assertions across 15 files on a fresh disposable database. G6 flags 552 matches (the +24 over 528 are localized `.tr()` calls the regex also counts); its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These historical results are superseded by the owner-remediation summary above.
@@ -694,7 +696,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 | 1.0.6 P6 chat, moderation and admin | Partial | Backend, client blocks/flags, live list, audit/keyword views and deleted-account cache cleanup are locally verified (504 Flutter, 278 SQL). Owner migration review and real-session acceptance remain open. Acceptance attempt 2026-09-23 (`p6-acceptance`): 506 Flutter, 283 SQL; not accepted until owner steps in `p6-acceptance-sessions.md` pass. |
 | 1.0.7 P5 map and offline experience | Not started | Connectivity, cache, offline map and licensing work remain open. |
 | 1.0.8 P7 organizations | Not started | Co-owner roles, invitations, public organization profile and audit scope remain open. |
-| 1.0.9 P8B store and Saudi-compliance package | Not started | Store documents, data export, counsel questions and listing draft remain open. |
+| 1.0.9 P8B store and Saudi-compliance package | Drafts prepared; not accepted | Seven `store/` drafts exist; complete export/withdrawal/deletion work and owner/counsel review remain open. |
 | 1.0.10 P9 final verification and release gate | Not started | Full re-verification, gates, SQL, devices, release diff, store package and owner approvals remain open. |
 
 ### Release gate

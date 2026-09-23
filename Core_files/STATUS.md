@@ -8,6 +8,8 @@ health: release_blocked
 
 # Project status: Streamer App
 
+P8B documentation update, 2026-09-24: seven `store/` compliance and bilingual listing drafts were merged locally at `e151559`. They identify unresolved owner/counsel decisions and export, withdrawal and erasure engineering. **P8B is not accepted.** P6 physical-device/Google acceptance and P6S remain open; no Play Store readiness is claimed.
+
 ## Current release status (2026-09-23)
 
 Owner-evidence remediation, 2026-09-23: account-scoped role hydration, viewer/transfer cleanup, server-confirmed LIVE, actor/action/date audit paging, phone/RTL layouts, admin localization, profile/VOD truthfulness and asset-listing restrictions are implemented locally. Final Flutter **530 passed**, analyzer **0 issues**, disposable SQL **288 assertions / 16 files passed**. Two local password sessions verified Realtime transfer and server denial of the displaced device; the initial snapshot/join window still uses the existing 20-second heartbeat fallback. G6=565 (+11 localized `.tr()` matches), G11a=9 unchanged, G7=0. **P6 is NOT accepted; P6S is NOT complete; the app is not release-ready.** Partial phone lifecycle repairs compile, but two physical phones, Google OAuth and YouTube ingest were not tested. Windows STL1011 was reproduced; signed-in blank-web and exact avatar-429 behavior remain owner retests. Evidence, issue-by-issue outcomes and exact retest steps: `brief/evidence/2026-09-23/p6-owner-acceptance/REMEDIATION_2026-09-23.md`. No push, deploy or production operation.
