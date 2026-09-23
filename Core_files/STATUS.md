@@ -12,9 +12,11 @@ health: release_blocked
 
 The app is not publish-ready. P6.4 directory and device access were locally verified in `1832b3e`. Commits `034aaf9` and `4f1dbda` added the weekly budget guard and audited account/session, app live-end/feed-removal, chat-block/report-validation and app-flag backend controls. The latest checkpoint passed 263 SQL assertions across 14 files, all 464 Flutter tests, and `flutter analyze` with 0 issues. The G6 localization scan still reports 528 matches.
 
-P6 still needs client-side block persistence/sync, flag controls and availability UI, a dedicated live list, audit and keyword views, and deleted-account cache acceptance. Account deletion is locally tested, but real Auth HTTP, storage and issued-JWT behavior remain limits. P6S physical broadcast and access tests, P5, P7, P8B and P9 remain open. There is no signed release AAB or physical-device streaming acceptance. See `brief/README.md`, `brief/03_WORK_PLAN.md` and the latest RESUME block in `brief/LEDGER.md` for the active plan and evidence limits.
+Update 2026-09-23 (Claude Opus, branch `p6-client-safety`, commits `bb285c8`, `1eb5d71`): chat blocks are server-owned with failure handling and refresh-based cross-device sync, and Settings has an unblock list. Report reasons match server validation. App flags drive a platform chat pause and a sign-ups-paused notice. Admins have a Safety tab (live list with presence counts, audit log, keyword manager with server-side audit trigger, Master Admin platform switches). Confirmed account deletions purge local caches. Evidence: full Flutter 504 passed, analyzer 0, SQL 278 assertions across 15 files on a fresh disposable database, gates exit 0 with G6=552 (+24 localized `.tr()` calls counted by the regex). Not yet merged to `master`.
 
-The next Claude Opus P6 client run has not started: two sessions stopped on a missing usage snapshot without changing app code. The owner waived Claude Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K; the Codex cap in §J is unchanged.
+P6 client and admin scope is implemented and locally verified (see `brief/evidence/2026-09-23/p6-client-admin.md`); P6 safety acceptance (owner review of migration `20260923130000`, two-device/real-session checks) is still open, so P6S stays blocked. Account deletion is locally tested, but real Auth HTTP, storage and issued-JWT behavior remain limits. P6S physical broadcast and access tests, P5, P7, P8B and P9 remain open. There is no signed release AAB or physical-device streaming acceptance. See `brief/README.md`, `brief/03_WORK_PLAN.md` and the latest RESUME block in `brief/LEDGER.md` for the active plan and evidence limits.
+
+The Claude Opus P6 client run completed under the §K metering waiver; the Codex cap in §J is unchanged.
 
 ---
 

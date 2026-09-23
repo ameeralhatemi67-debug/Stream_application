@@ -56,7 +56,7 @@ gantt
     P8A Android identity and branding (partial)  :crit, p8a, 2026-09-22, 1d
     P6.2 to 6.3 Chat UX and moderation linkage  :done, p6a, 2026-09-21, 1d
     section Current next phase
-    P6.4 Admin tools, item 1 verified locally    :active, p64, 2026-09-22, 2d
+    P6.4 Admin tools, client and views local     :active, p64, 2026-09-22, 2d
     section Planned
     P6S Broadcast and navigation reliability     :crit, p6s, after p64, 2d
     P5 Map and offline experience                :p5, after p6s, 2d
@@ -96,17 +96,17 @@ gantt
 | P3 Viewer presence | Partial | Server-backed heartbeat/count code and grants are present. Guest, deduplication, expiry and multi-client device scenarios remain unrun. | 1.0.3 |
 | P4 Design and responsive UI | Complete to recorded E1/E2 evidence | Scheme A, bundled IBM Plex fonts, white theme, localization and responsive/layout tests are present. No physical-device visual QA. | 1.0.4 |
 | P8A Android identity and branding | Partial, complete to available owner inputs | Identity, permissions, launcher, splash, target SDK, 16 KB checks and fail-closed signing are done. No keystore, AAB, release scan or device smoke test. | 1.0.5 |
-| P6.1-P6.3 Chat and moderation | Partial | Server rate limits, slow mode, report validation and viewer block policies have local evidence. The client Block action still uses local preferences and needs server sync. | 1.0.6 |
-| P6.4 Admin tools | Partial | Directory deletion/session revocation and live end/feed removal have audited backend controls. Flag enforcement exists on the server; client controls, live list, audit/keyword views and cache acceptance remain open. | 1.0.6 |
+| P6.1-P6.3 Chat and moderation | Partial | Server rate limits, slow mode, report validation and viewer blocks have local evidence. Client blocks are now server-owned with failure states and refresh-based sync (`bb285c8`); two-device acceptance remains. | 1.0.6 |
+| P6.4 Admin tools | Partial | Directory actions, Safety tab (live list, audit log, keyword manager with audit trigger), Master Admin switches, availability states and deleted-account cache cleanup are locally verified (`1eb5d71`: 504 Flutter, 278 SQL). Owner migration review and real-session acceptance remain. | 1.0.6 |
 | P6S Broadcast and navigation reliability | Not started | Physical sender/viewer tests, direct laptop, Local transport, private access, live-media PiP and exit paths remain open. | 1.0.6 |
 | P5 Map and offline | Not started | No implementation or evidence yet. | 1.0.7 |
 | P7 Organizations | Not started | Co-owner designation, invitations, public organization profile and scoped controls remain open. | 1.0.8 |
 | P8B Store and compliance package | Not started | No store package exists. Drafting would not equal legal certification. | 1.0.9 |
 | P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
-The latest 2026-09-23 checkpoint passed 464 Flutter tests, `flutter analyze` with 0 issues, and 263 local SQL assertions across 14 files. G6 still flags 528 localization matches; its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the older counts below where they differ.
+The latest 2026-09-23 checkpoint (branch `p6-client-safety`) passed 504 Flutter tests, `flutter analyze` with 0 issues, and 278 local SQL assertions across 15 files on a fresh disposable database. G6 flags 552 matches (the +24 over 528 are localized `.tr()` calls the regex also counts); its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the older counts below where they differ.
 
-Workflow note, 2026-09-23: the next Claude Opus P6 client run was blocked twice by a missing usage snapshot before code changes. The owner waived Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K. No P6 milestone advanced; the Codex 5% cap remains separate in §J.
+Workflow note, 2026-09-23: after the owner waived Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K, the Claude Opus P6 client run completed on branch `p6-client-safety`; the Codex 5% cap remains separate in §J.
 ---
 
 ## 📝 Modification
@@ -508,7 +508,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 ---
 ## Version 1.0 — hardening and release
 
-> Status on 2026-09-23: the P6 safety backend now includes audited account/session actions, live end/feed removal, chat blocks, report validation and global flags. Client wiring and admin views remain, so P6S has not started. The latest checkpoint passed 464 Flutter tests and 263 local SQL assertions; G6 remains a known scan failure. Physical streaming, signing and other release gates remain open. The app is not release-ready.
+> Status on 2026-09-23: the P6 safety backend and its client wiring and admin views (server-owned blocks, availability states, Safety tab, keyword audit, deleted-account cache cleanup) are locally verified. P6 acceptance (owner migration review, real-session checks) is still open, so P6S has not started. The latest checkpoint passed 504 Flutter tests and 278 local SQL assertions; G6 remains a known scan failure (552). Physical streaming, signing and other release gates remain open. The app is not release-ready.
 
 ### Checkpoint 1.0.0: P0 hardening foundation `[Backend & Security Track]`
 
@@ -680,7 +680,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 | 1.0.3 P3 true viewer presence | Partial | Presence service, count RPCs and grants are present. SQL runtime, expiry and multi-client device probes remain open. |
 | 1.0.4 P4 design and responsive app pass | Complete to recorded E1/E2 evidence | Scheme A, white theme, fonts, localization and responsive tests are complete. Physical-device visual QA remains open. |
 | 1.0.5 P8A Android release identity and branding | Partial, complete to available inputs | Identity, assets, permissions, target SDK, 16 KB checks and fail-closed signing are complete. No keystore, AAB, release scan or device smoke test exists. |
-| 1.0.6 P6 chat, moderation and admin | Partial | Local safety backend passed 263 SQL assertions. Client blocks/flags, dedicated live list, audit/keyword views and deleted-account cache acceptance remain open. |
+| 1.0.6 P6 chat, moderation and admin | Partial | Backend, client blocks/flags, live list, audit/keyword views and deleted-account cache cleanup are locally verified (504 Flutter, 278 SQL). Owner migration review and real-session acceptance remain open. |
 | 1.0.7 P5 map and offline experience | Not started | Connectivity, cache, offline map and licensing work remain open. |
 | 1.0.8 P7 organizations | Not started | Co-owner roles, invitations, public organization profile and audit scope remain open. |
 | 1.0.9 P8B store and Saudi-compliance package | Not started | Store documents, data export, counsel questions and listing draft remain open. |
@@ -688,7 +688,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 
 ### Release gate
 
-Version 1.0 is not release-ready. Finish the remaining P6 work, then P6S broadcast, access, playback and exit-path reliability before P5, P7, P8B and P9. The owner has decided that exact coordinates are public venue coordinates for map navigation, not home addresses. The release track still needs venue-only data-entry verification, a production schema comparison before any owner-approved `db push`, physical-device verification, an owner-supplied keystore and signed AAB, and the P8B legal/store package. Do not mark the version complete from static code review or widget tests alone.
+Version 1.0 is not release-ready. Finish P6 acceptance, then P6S broadcast, access, playback and exit-path reliability before P5, P7, P8B and P9. The owner has decided that exact coordinates are public venue coordinates for map navigation, not home addresses. The release track still needs venue-only data-entry verification, a production schema comparison before any owner-approved `db push`, physical-device verification, an owner-supplied keystore and signed AAB, and the P8B legal/store package. Do not mark the version complete from static code review or widget tests alone.
 
 ---
 
