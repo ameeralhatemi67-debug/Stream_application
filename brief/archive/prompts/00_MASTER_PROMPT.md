@@ -4,7 +4,7 @@
 1. Fill the blanks in `brief/05_DECISIONS.md` → "Owner inputs" (app id, names, support email, privacy URL). Blank = Claude Code will not rename anything and will leave exact rename steps for you.
 2. From the repo root run `claude --permission-mode acceptEdits --settings brief/claude_settings.json` (loads the usage meter and the safety rules). Send one throw-away message ("hi"), and check the status line shows `5h nn% (reset nnm) | 7d nn% | cache 1h warm`. If it says `5h n/a`, stop: see `brief/04_BUDGET_PROTOCOL.md` §A.
 3. Paste everything between the two marker lines when about **60 minutes** remain in your 5-hour window, and keep the terminal open. Don't switch model/effort afterwards. Change `PLAN:` only if you want to force SINGLE or SPLIT.
-4. If the run stops early, it leaves `brief/OVERRUN_REPORT.md` (why, with numbers). Continue later with `brief/RESUME_PROMPT.md`.
+4. If the run stops early, it leaves `brief/archive/reports/2026-09-22/OVERRUN_REPORT.md` (why, with numbers). Continue later with `brief/archive/prompts/RESUME_PROMPT.md`.
 
 --- paste from here ---
 PLAN: AUTO   (AUTO | SINGLE | SPLIT — rules in brief/04_BUDGET_PROTOCOL.md §B)
@@ -16,7 +16,7 @@ You are Claude Code, working autonomously on this repo: Streamer_app, a Flutter 
 - The meter is the account-wide 5-hour usage percentage, read with `node brief/tools/budget_check.mjs --plan <plan>`. Absolute caps: SINGLE 80 (soft 74) · SPLIT 70 (soft 64) then 60 (soft 54) across two 5-hour windows · never a third window · weekly ≥ 90 ⇒ stop. Full rules: `brief/04_BUDGET_PROTOCOL.md`. Read it now, first, before anything else.
 - Your FIRST actions are 04 "Step 0": read the meter, choose the plan (AUTO rule), fill in the run header of `brief/LEDGER.md` (a template). If the meter cannot be read, STOP immediately and tell the owner to do 04 §A. Never proceed on an assumed number and never claim OK without a fresh meter line.
 - Check the meter at every phase start, every 10-15 tool calls, after any command over 2 minutes, and before any build or full test run. Obey the status: OK ⇒ continue; SOFT ⇒ finish only the step in progress, run the phase checkpoint, start nothing new; STOP ⇒ start nothing, put the tree in a safe state; UNKNOWN ⇒ do what the output says.
-- If you cannot finish inside the cap, stop at a safe place (04 §E) and write `brief/OVERRUN_REPORT.md` explaining WHY, with numbers: stop reason, plan and windows used, estimate vs actual per phase, the 3 biggest consumers and their cause, what is left, and how to resume. Stopping early and clean beats finishing half-done. Never run past a STOP to "finish quickly", never edit the caps/tools/`.runtime`, and never use the reserve (the remaining 20 %/30 % belongs to the owner's other work).
+- If you cannot finish inside the cap, stop at a safe place (04 §E) and write `brief/archive/reports/2026-09-22/OVERRUN_REPORT.md` explaining WHY, with numbers: stop reason, plan and windows used, estimate vs actual per phase, the 3 biggest consumers and their cause, what is left, and how to resume. Stopping early and clean beats finishing half-done. Never run past a STOP to "finish quickly", never edit the caps/tools/`.runtime`, and never use the reserve (the remaining 20 %/30 % belongs to the owner's other work).
 - SPLIT is allowed only with a warm 1-hour cache. Cross the window reset with the nap loop in 04 §D so the cache stays warm; do nothing else while waiting.
 - Session hygiene (cache): no model, effort, plugin or MCP change; no manual `/compact`; no subagents (at most one read-only Explore for a repo-wide question the map cannot answer).
 
@@ -40,7 +40,7 @@ Two honest limits: you cannot certify legal compliance, so you produce the evide
 - **When in doubt about a destructive step** (deleting a file family, a schema change touching existing data): grep for usage first, prefer hiding behind a `false` const over deleting if usage is unclear, and record why.
 
 ## 5. Finishing
-Stop at a safe state (04 §E: last commit complete, tree clean or a named stash, analyze/tests at baseline or better, no half-written migration, ledger + RESUME block current). Then write `brief/FINAL_REPORT.md` (everything done) or `brief/OVERRUN_REPORT.md` (budget stop), each ≤ 1 page, honest about what is verified vs unverified. Your last chat message is at most 12 lines and points to that report.
+Stop at a safe state (04 §E: last commit complete, tree clean or a named stash, analyze/tests at baseline or better, no half-written migration, ledger + RESUME block current). Then write `brief/FINAL_REPORT.md` (everything done) or `brief/archive/reports/2026-09-22/OVERRUN_REPORT.md` (budget stop), each ≤ 1 page, honest about what is verified vs unverified. Your last chat message is at most 12 lines and points to that report.
 
 Begin: 04 Step 0.
 --- end ---

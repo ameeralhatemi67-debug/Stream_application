@@ -1,15 +1,27 @@
 # OWNER ACTIONS — things only the owner can do
 
-Claude Code appends specifics under each item (exact commands, file names, values). It never fakes, skips or "pretends done" any of these. Tick a box only when you did it.
+Historical notes below are retained; where they conflict with the dated current snapshot or `05_DECISIONS.md`, the later owner decision and `README.md`/`03_WORK_PLAN.md` control. Tick a box only when the owner has completed the action.
+
+## Current owner-dependent release actions (2026-09-23)
+
+- [ ] Supply upload keystore and local `project/android/key.properties`; never commit either.
+- [ ] Confirm the supplied privacy page is reachable/current and supply a public account-deletion page URL.
+- [ ] Complete Play Console setup, listing assets, content rating, Data Safety, foreground-service declaration/demo, and OAuth/API-key branding/restrictions.
+- [ ] Review production migration diffs and decide/apply them to the real Supabase project; set final Auth URLs and region.
+- [ ] Obtain legal/counsel review of Saudi licensing, PDPL/cross-border, minors, Arabic Terms and Privacy; choose release support contact.
+- [ ] Complete physical-device broadcast and lifecycle matrix with real test channel/OBS; owner supplies access/devices as needed.
+- [ ] After signing exists, build and smoke-test the AAB and run the build secret scan; provide final go/no-go/store evidence.
+
+Resolved owner inputs: Arabic app name and design/logo selection are recorded; privacy URL supplied and configured (page itself not freshly verified); exact public venue coordinates are intentional by D-33; the three bootstrap admin addresses are confirmed by D-36. See `05_DECISIONS.md`. The account-deletion page and actual privacy-page availability remain unverified.
 
 ## Before the app can be published
-- [ ] **Design scheme + logo** — run `brief/DESIGN_PROMPT.md`, open `brief/assets/design_options/preview.html`, then write `DESIGN_CHOICE=A|B|C` in `brief/05_DECISIONS.md`. Check the font licences listed in its `NOTES.md` before publishing.
+- [x] **Design scheme + logo** — scheme A and supplied logo accepted; source evidence remains under `brief/assets/design_options/`. Check font licences before publishing.
 - [x] **Arabic app name** — owner confirmed that `منصة هدايه` is the correct product name and spelling for this release.
 - [ ] **Support email** — `ameeralhatemi67@gmail.com` is a personal address and becomes public in the Play listing and privacy policy. Consider a dedicated address before publishing.
 - [x] **App identity** — owner supplied the values in `brief/05_DECISIONS.md`; `PRIVACY_POLICY_URL` is `https://ameeralhatemi67-debug.github.io/privacy/` and is mirrored in `AppIdentity`.
 - [ ] **Upload keystore** — generate it yourself, create `project/android/key.properties` (never commit either). Release builds fail on purpose without it.
 - [ ] **Play Console** — developer account and identity verification, Play App Signing, store listing assets and screenshots, content-rating questionnaire, Data-safety form, foreground-service declaration + demo video (draft text in `store/`).
-- [ ] **Public pages** — host a privacy policy and an account-deletion page; put the URLs in the listing and in the app.
+- [ ] **Public pages** — verify the supplied privacy page is reachable/current; host and supply a separate account-deletion page; put both URLs in the listing and applicable in-app surfaces.
 - [ ] **Lawyer review** — CST / GCAM licensing for a digital-content platform, PDPL texts and cross-border transfer, minors/age policy, Arabic Terms and Privacy (see `store/counsel_questions.md`). Nothing in this repo is a legal opinion.
 
 ## Backend (real Supabase project)
@@ -89,22 +101,19 @@ run against the linked production project (`zkkmfjsjouqzibvnzkau`).
      `supabase db push` will normally skip it; that is the safe outcome, but it
      means production keeps whatever view shape it has today.
 
-2. **DECISION NEEDED — exact GPS coordinates are public again (VULN-COMP-02).**
+2. **Resolved owner decision — exact coordinates for public venues (D-33).**
    `20260822140000_restrict_pii_rls.sql` deliberately removed
    `latitude`/`longitude` from the anon-readable `streamer_public_profiles`,
    because an individual broadcaster's self-declared venue can be their home;
    it explicitly deferred "how is a streamer's location shown publicly without
    exposing exact GPS (fuzzing/rounding, a radius query)". `20260830180000`
    silently put the columns back, and `admin_database_service.dart` now reads
-   them for the map. Restoring them was unavoidable to make the chain apply, so
-   **the exposure is live in the repo now**. This was not decided here because
-   every option changes what the map shows. Pick one:
-   - round in the view: `round(latitude::numeric, 2) as latitude` (~1.1 km) —
-     one migration, markers land in the right neighbourhood, not on a doorstep;
-   - keep full precision for organizations (public institutions) and round only
-     for individual streamers;
-   - keep exact coordinates and accept the risk, recorded as an ADR with your
-     name and the date (05 D-21 / EXEC-12.4 require a named approver).
+   them for the map. The later owner decision is to publish exact coordinates
+   for public venues; home addresses are outside that venue path. Keep this
+   historical vulnerability analysis for audit context, but do not reopen the
+   choice. Verify the pending documentation/comment migration and actual local
+   or production schema before applying any migration; the decision does not
+   prove database state.
 
 3. **DECISION NEEDED — the schema granted the API roles almost nothing.** Only
    four objects had ever been granted to `anon`/`authenticated`. Table
@@ -191,8 +200,8 @@ stand, including the two decisions that block a push.
    account deletion also has no server path today; `delete_own_account()` is
    self-only.
 
-## Codex scheme A checkpoint, 2026-09-21
-Scheme A and supplied logo accepted. Application ID/names/support email already supplied. Privacy URL and signing still needed for release. No launcher/AAB generated yet. GPS remains unresolved. Physical-device, production-schema/migration and legal/store approvals remain open. See OVERRUN_REPORT.md for unfinished P4 and subsequent phases.
+## Codex scheme A checkpoint, 2026-09-21 (historical)
+Scheme A and supplied logo accepted. Later owner inputs supplied the privacy URL and exact public-venue-coordinate decision (D-33). Signing, physical-device, production-schema/migration and legal/store approvals remain open. The old checkpoint report is archived under `archive/reports/2026-09-22/`.
 
 ## P8A, 2026-09-22 (Claude Code Opus)
 
@@ -232,10 +241,10 @@ A debug APK was scanned instead as the closest available evidence. It reports
 constants from a crypto dependency's key parser, and one match of the literal
 prefix `sb_secret_` declared in `supabase-2.16.1/lib/src/api_key.dart`, matched
 across a kernel constant-pool boundary. Full working in
-`brief/scan-p8a-debug-apk.txt`. The scanner was not modified. Re-run it on the
+`brief/evidence/2026-09-22/logs/scan-p8a-debug-apk.txt`. The scanner was not modified. Re-run it on the
 real AAB once you have signing.
 
-### 3. Privacy policy URL supplied
+### 3. Privacy policy URL supplied (availability unverified)
 The owner supplied `https://ameeralhatemi67-debug.github.io/privacy/`. It is now
 set in `brief/05_DECISIONS.md` and `project/lib/core/config/app_identity.dart`.
 The public account-deletion page still needs to be confirmed as a separate store

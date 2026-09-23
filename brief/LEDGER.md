@@ -55,7 +55,7 @@
 - NOT DONE unchanged: P1.8,1.9,1.6,RPC ban audit,1.10 and P1.2/1.7 remain pending. Analyzer0/full266 passing are prior-checkpoint evidence only; no tests, gates or builds rerun in this retry.
 
 ## RESUME block (window 1, SUPERSEDED by the last RESUME block)
-- Next: P1.2 together with 1.7 (live-state + multi-device RPCs and client), then P1.8, 1.9, 1.6, the RPC ban audit, 1.10; then P2, P3, then later phases in plan order only if the forecast fits. FRESH session with `brief/RESUME_PROMPT.md`, `MODE: CONTINUE_SPLIT`, `OWNER_CAP=90` (owner-approved for window 2: cap 90, soft 84; never a third window; weekly >= 90 stops).
+- Next: P1.2 together with 1.7 (live-state + multi-device RPCs and client), then P1.8, 1.9, 1.6, the RPC ban audit, 1.10; then P2, P3, then later phases in plan order only if the forecast fits. FRESH session with `brief/archive/prompts/RESUME_PROMPT.md`, `MODE: CONTINUE_SPLIT`, `OWNER_CAP=90` (owner-approved for window 2: cap 90, soft 84; never a third window; weekly >= 90 stops).
 - Window 1 is over. Tree is clean at the latest commit. The two owner stashes are historical (content already committed): never apply, pop or drop them.
 - Meter (fixed 2026-09-20, see 04 §I): first command `node brief/tools/budget_check.mjs --plan split --cap 90` (never `--new-run`), expect window=2 cap=90 soft=84; pass `--cap 90` on every check. A stale log reading is UNKNOWN, not STOP: read usage from the Codex display and add `--live-used N --live-weekly W --live-resets-in-min R`.
 - Baseline (Astra-reported, not re-run by the supervisor): analyzer 0, 266 tests, gates 17 failing vs 18 baseline. New SQL is UNVERIFIED-STATIC.
@@ -83,7 +83,7 @@
 - Next session (owner-authorized): `MODE: NEW_BUDGET`, `OWNER_CAP=90`, one fresh window. Meter: `node brief/tools/budget_check.mjs --plan single --new-run --cap 90` once at Step 0, then `--plan single --cap 90` on every check (still one window only; weekly >= 90 stops).
 - Entry baseline: do not re-run the full suite at entry (it cost 14 points last time, mostly SDK/cache startup). The evidence at commit b61b3f7 is the baseline (analyzer 0, 268 tests, gates 16); run analyze plus the tests you touch, and the full suite at each phase checkpoint, with the flutter flags above.
 - Supervisor follow-ups from a static read of `20260920120000_guarded_broadcast_sessions.sql` (not run): (1) a live flag has no server-side expiry: if the broadcaster's phone dies, the profile/org stays live, and `set_live_state` needs a fresh primary heartbeat even to end. Add after P1.10: viewer-facing reads count a stream as live only while the owner's primary device heartbeat is under 90 s old, or a scheduled sweep clears it. (2) `claim_broadcaster_device` evaluates `can_broadcast` for every organization per call: fine now, revisit at scale. (3) the migration wipes all live flags when applied (already in OWNER_ACTIONS).
-- Harness note (supervisor): the next session may be Claude Code (Opus, `OWNER_CAP=85`, `--source claude`, see `brief/OPUS_PROMPT.md`) or Astra (`OWNER_CAP=90`, `--source codex`). The paste prompt's harness and cap govern; the RESUME steps above still apply. Run one harness at a time on this repo.
+- Harness note (supervisor): the next session may be Claude Code (Opus, `OWNER_CAP=85`, `--source claude`, see `brief/archive/prompts/OPUS_PROMPT.md`) or Astra (`OWNER_CAP=90`, `--source codex`). The paste prompt's harness and cap govern; the RESUME steps above still apply. Run one harness at a time on this repo.
 - Design scope (owner, 05 D-27): P4 and P8A (redesign, logo, icon) are reserved for Astra and wait for `DESIGN_CHOICE`; a Claude Code (Opus) session stops after P3, or continues only with P6, P5, P7, P8B, and never starts P4, P8A or P9.
 
 ## P1c — Claude Code Opus, window 1 (2026-09-20)
@@ -219,7 +219,7 @@
 - P4 starts with scheme A, selected explicitly by owner. Supplied colored.svg replaces the earlier concept; black.svg is monochrome. All nine source assets visually inspected, including rendered SVGs. Inkscape source sheet is not a runtime asset. Upstream IBM Plex fonts and OFL files downloaded for offline bundling.
 
 ## RESUME block (2026-09-21, Codex Astra, partial P4)
-- Scheme A implemented in part; read brief/OVERRUN_REPORT.md for coverage and gaps. AppLogo uses supplied colored.svg and black.svg. Fonts bundled with OFL files.
+- Scheme A implemented in part; read brief/archive/reports/2026-09-22/OVERRUN_REPORT.md for coverage and gaps. AppLogo uses supplied colored.svg and black.svg. Fonts bundled with OFL files.
 - Analyzer0, full Flutter305 passed; subsequent real-font layout sweep16 passed across8 screens x7 sizes x3 scales x2 locales. Contrast passed. Gates4 failing: G4a14/G4b5/G6 478/G8 1. SQL unchanged, inherited179 tests/11 files and48 migrations; not rerun.
 - Entry usage0, checkpoint85, hard cap90. Higher live usage used when snapshots lagged. No reset wait.
 - Exact next phase: finish P4 screen/media/RTL/localization/responsive/Settings extraction/documentation gaps, then P8A. P8A/P6.4/P5/P7/P8B/P9 not started. No release readiness claim.
@@ -247,7 +247,7 @@ one cannot.
 - Full suite: **439 passed, 0 failed** (was 369) — `brief/full-test-p4-close.txt`.
 - Layout sweep: **120 passed** (was 80), 60 screen/state variants x 2 locales
   x 7 sizes x 3 scales. Also **green in screenshot mode**, so all 120 preview
-  PNGs under `brief/assets/scheme_a_evidence/` come from a passing run.
+  PNGs under `brief/evidence/2026-09-21/screenshots/` come from a passing run.
 - Rendered contrast: **30 passed**, 15 screens x 2 locales (new test).
 - Theme contrast: **2 passed**. Focused live/settings/broadcast files: 9 files,
   all green (`brief/focused-p4-close.txt`).
@@ -305,7 +305,7 @@ here establishes real-device streaming or release readiness.
 - `cf0f9e7` settings extraction, consent record, semantic colour, RTL
   direction, screenshot mode, design documentation.
 
-Owner `Roadmap.md`, `brief/layout-p4-results.txt`, `skill-observations/` and
+Owner `Roadmap.md`, `brief/evidence/2026-09-22/logs/layout-p4-results.txt`, `skill-observations/` and
 both historical stashes untouched. Nothing pushed.
 
 ## RESUME block (2026-09-22, Claude Code Opus, P4 complete)
@@ -380,7 +380,7 @@ white with the mark.
   created by the agent, so no release artifact, no size figure, no release
   smoke test.
 - **No release secret scan.** A debug APK was scanned as the nearest available
-  evidence: `brief/scan-p8a-debug-apk.txt`. It reports LEAK; all 7 hits were
+  evidence: `brief/evidence/2026-09-22/logs/scan-p8a-debug-apk.txt`. It reports LEAK; all 7 hits were
   traced to PEM header constants in a crypto dependency's key parser and to the
   literal prefix `sb_secret_` declared in `supabase-2.16.1/lib/src/api_key.dart`
   matched across a kernel constant-pool boundary. No secret is in the build. The
@@ -393,7 +393,7 @@ white with the mark.
 
 ## RESUME block (2026-09-22, Claude Code Opus, P4 complete and P8A complete)
 - **P4 and P8A are both COMPLETE.** HEAD `7bcec29` on master. Tree clean apart
-  from the owner-owned `Roadmap.md`, `brief/layout-p4-results.txt` and
+  from the owner-owned `Roadmap.md`, `brief/evidence/2026-09-22/logs/layout-p4-results.txt` and
   `skill-observations/`, all untouched. Both historical stashes untouched.
   **Nothing pushed.** No Supabase command was run in this session.
 - Baseline for the next session: analyzer 0, `flutter test` **439 passed**,
@@ -428,8 +428,16 @@ white with the mark.
 - New supabase/tests/admin_user_directory.test.sql has 23 pgTAP assertions. UNVERIFIED-STATIC: no new migration or probe was executed against any database. Existing migrations were not edited. The pending public venue coordinate comment migration remains owner-owned.
 - Reproduced an Arabic navigation defect in the in-app browser: bottom tabs stayed English and search placeholder stayed English after changing language. Replaced hardcoded bottom labels with nav catalog keys and changed search hint to context.tr to subscribe to locale changes. Rebuilt Chrome successfully. Post-fix in-app browser showed the new English Discovery Feed label; final Arabic recheck was inconclusive because browser state/screenshot capture stopped responding. Do not claim final Arabic browser verification.
 - Browser evidence: native Chrome 153 launch/debug-service connection succeeded at ports 7357 and 7358 without Supabase credentials. UI interaction used the URL-aware Codex in-app browser, not native Chrome automation. Verified welcome, local guest consent/setup, name validation, guest feed with 0 broadcasters, guest Settings redirect to welcome, map render, initial language switch/RTL and exact Arabic product title منصة هدايه. Login entry was visible; OAuth was not attempted. No populated venue marker or Google Maps action could be verified with the unconfigured catalog. No production credentials used.
-- Android evidence: flutter devices detected emulator-5554 Android 17/API 37, adb confirmed Pixel_9_Pro. Debug APK built and installed, native Flutter loaded, then Flutter lost its debug connection. App process remained present; crash-buffer query empty. Android screencap confirmed the rendered welcome screen (brief/assets/p64/android-launch.png). A guest-entry tap did not yield a verified transition. Native Windows capture failed because the emulator crop was outside its monitor; ADB screenshot was used. Remaining emulator flow is unverified. No physical device run, no RTMP or release verification.
-- Verification: 7/7 new targeted tests passed (brief/test-p64-directory.txt); full Flutter suite 446/446 passed in 6m47s (brief/full-test-p64.txt); flutter analyze 0 issues (brief/analyzer-p64.txt); git diff --check clean for changed app/catalog files. Gates retain one failure, G6=523; the new directory Text calls are translated or server-provided data, and the regex still flags translated expressions. Other gates unchanged in classification (brief/gates-p64.txt). No new release-readiness claim.
+- Android evidence: flutter devices detected emulator-5554 Android 17/API 37, adb confirmed Pixel_9_Pro. Debug APK built and installed, native Flutter loaded, then Flutter lost its debug connection. App process remained present; crash-buffer query empty. Android screencap confirmed the rendered welcome screen (brief/evidence/2026-09-22/screenshots/android-launch.png). A guest-entry tap did not yield a verified transition. Native Windows capture failed because the emulator crop was outside its monitor; ADB screenshot was used. Remaining emulator flow is unverified. No physical device run, no RTMP or release verification.
+- Verification: 7/7 new targeted tests passed (brief/evidence/2026-09-22/logs/test-p64-directory.txt); full Flutter suite 446/446 passed in 6m47s (brief/evidence/2026-09-22/logs/full-test-p64.txt); flutter analyze 0 issues (brief/evidence/2026-09-22/logs/analyzer-p64.txt); git diff --check clean for changed app/catalog files. Gates retain one failure, G6=523; the new directory Text calls are translated or server-provided data, and the regex still flags translated expressions. Other gates unchanged in classification (brief/evidence/2026-09-22/logs/gates-p64.txt). No new release-readiness claim.
 - Docker blocker and recovery: installed CLI was only available outside sandbox at AppData/Local/Programs/DockerDesktop/resources/bin. Started installed Docker Desktop hidden for local SQL tests; backend failed on dockerInference Unix socket binding. Normal restart stalled; supported force-stop succeeded; clean start reproduced the same error in host logs at 07:14:40 UTC. Attempted supported `docker desktop disable model-runner`, but it did not confirm success. Final `docker desktop stop --force --timeout 30` succeeded. No factory reset, pruning, volume/container deletion, socket deletion, WSL shutdown, config rewrite, diagnostic upload or credential changes. Docker remains STOPPED and unresolved; verify its inference setting on recovery rather than assuming the disable command succeeded.
 - Budget: resumed at live 26% five-hour / 72% weekly. Five-hour window rolled over during implementation; final live reading 67% in the new window / 89% weekly. Closing near the brief's weekly guard, with DB runtime blocker. No meter/cap files edited.
 - Next steps: recover Docker non-destructively; review/apply pending migrations only to local Supabase and run all SQL probes, extending protection/audit-rollback cases as needed. Finish directory actions against the local backend, populated venue/Google Maps checks, and emulator navigation. Do not start P5/P7/P8B/P9 while item 1 remains unverified. Account deletion requires a separately designed admin-authorized backend path. Keep existing owner changes, stashes and three bootstrap emails intact.
+
+## Documentation checkpoint (2026-09-23)
+- Consolidated the release sequence and P6S broadcast/access/playback/lifecycle acceptance into `brief/03_WORK_PLAN.md`, now the sole canonical release plan. The four-day schedule is conditional; it does not promise publication.
+- Added `brief/README.md` as the entry point; aligned verification and owner actions with the later supplied privacy URL and D-33 exact public-venue-coordinate decision. Neither privacy-page availability nor account-deletion URL was checked here.
+- Archived the superseded release addendum, model prompts, dated reports/checkpoint, raw logs and screenshots under `brief/archive/` and `brief/evidence/`; contents were preserved and links repaired. `brief/tools/` remains in place. No application code, migrations, external services, remotes, push or commit changed.
+- Current blockers remain P6.4 item 1's recorded local SQL/test defects; incomplete P6/P6S/P5/P7/P8B/P9 work; no physical-device streaming evidence; disabled private mode with no enforceable invite/access path; URL-only Local mode; no real-media mini-player; web Phone platform error; and no signed AAB. Latest broad UI evidence is 463 tests / analyzer 0 / web build, dated 2026-09-22, not rerun for this docs-only checkpoint.
+- Exact next engineering task: recover local Supabase/Docker without destructive cleanup, repair the `20260922110000_admin_user_directory.sql` access-policy regression and malformed `admin_user_directory.test.sql` quoting, then rerun the local DB tests and directory authorization/audit cases. Do not begin dependent release phases until this passes.
+- Follow-up documentation only: reconcile `Roadmap.md`, `AGENTS.md`, `Core_files/STATUS.md`, `Core_files/progres.md` and relevant `Core_files/` records against this plan; they were not edited in this pass.

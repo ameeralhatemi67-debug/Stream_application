@@ -7,10 +7,10 @@ Verification-only pass over Astra's P6.4 work (admin user directory, device_sess
 - HEAD: `3939de4290fe0addf85fc4aad6b276da3fd06e8` (`docs(brief): record P8A results, limits and the P6.4 resume point`), branch `master`.
 - Working tree at session start and session end is **identical** (verified `git status --porcelain` before and after): same 12 modified files, same 13 untracked paths (see below), no new modifications from this verification pass except the report and evidence files this task was asked to create.
 - Modified (tracked): `Roadmap.md`, `brief/05_DECISIONS.md`, `brief/LEDGER.md`, `brief/OWNER_ACTIONS.md`, `project/assets/i18n/ar.json`, `project/assets/i18n/en.json`, `project/lib/core/config/app_identity.dart`, `project/lib/core/providers/app_provider.dart`, `project/lib/core/routing/app_router.dart`, `project/lib/core/services/admin_database_service.dart`, `project/lib/features/admin/presentation/admin_hub_screen.dart`, `project/lib/features/map/presentation/widgets/top_spatial_search_bar.dart`.
-- Untracked: `brief/Health_And_Audit_Check_for_brief_Progress.md`, `brief/P64_CHECKPOINT.md`, `brief/analyzer-p64.txt`, `brief/assets/p64/`, `brief/chrome-p64.txt`, `brief/full-test-p64.txt`, `brief/gates-p64.txt`, `brief/layout-p4-results.txt`, `brief/test-p64-directory.txt`, `skill-observations/`, `supabase/migrations/20260922100000_document_public_venue_coordinates.sql`, `supabase/migrations/20260922110000_admin_user_directory.sql`, `supabase/tests/admin_user_directory.test.sql`, `project/lib/features/admin/presentation/widgets/admin_user_directory_view.dart`, `project/test/admin_user_directory_test.dart`.
+- Untracked: `brief/archive/reports/2026-09-22/Health_And_Audit_Check_for_brief_Progress.md`, `brief/archive/checkpoints/P64_CHECKPOINT.md`, `brief/evidence/2026-09-22/logs/analyzer-p64.txt`, `brief/evidence/2026-09-22/screenshots/`, `brief/evidence/2026-09-22/logs/chrome-p64.txt`, `brief/evidence/2026-09-22/logs/full-test-p64.txt`, `brief/evidence/2026-09-22/logs/gates-p64.txt`, `brief/evidence/2026-09-22/logs/layout-p4-results.txt`, `brief/evidence/2026-09-22/logs/test-p64-directory.txt`, `skill-observations/`, `supabase/migrations/20260922100000_document_public_venue_coordinates.sql`, `supabase/migrations/20260922110000_admin_user_directory.sql`, `supabase/tests/admin_user_directory.test.sql`, `project/lib/features/admin/presentation/widgets/admin_user_directory_view.dart`, `project/test/admin_user_directory_test.dart`.
 - `git diff --check` → clean, exit 0 (no whitespace/conflict-marker errors). **[E2, PASS]**
 
-This report and its evidence files add: `brief/CLAUDE_SONNET_VERIFICATION_REPORT_2026-09-22.md`, `brief/assets/claude-sonnet-verify-2026-09-22/*.png` (10 screenshots), `brief/analyzer-claude-verify.txt`, `brief/full-test-claude-verify.txt`, `brief/gates-claude-verify.txt`, `brief/supabase-test-db-claude-verify.txt`.
+This report and its evidence files add: `brief/archive/reports/2026-09-22/CLAUDE_SONNET_VERIFICATION_REPORT_2026-09-22.md`, `brief/evidence/2026-09-22/screenshots/*.png` (10 screenshots), `brief/analyzer-claude-verify.txt`, `brief/full-test-claude-verify.txt`, `brief/gates-claude-verify.txt`, `brief/supabase-test-db-claude-verify.txt`.
 
 ## 2. Environment
 
@@ -54,7 +54,7 @@ Because the same UI code (same Flutter widgets, same router, same i18n catalogs)
 
 ## 5. Android emulator verification (Pixel_9_Pro, Android 17 / API 37) — interactive, via `adb input`/`adb screencap`
 
-No Computer Use / browser-automation tool was available here either, but `adb` gives a reliable, scriptable, and safe way to drive *only* the emulator (no risk of touching unrelated windows), so this pass is genuinely interactive: tap → screenshot → inspect, repeated. All screenshots below are saved under `brief/assets/claude-sonnet-verify-2026-09-22/`.
+No Computer Use / browser-automation tool was available here either, but `adb` gives a reliable, scriptable, and safe way to drive *only* the emulator (no risk of touching unrelated windows), so this pass is genuinely interactive: tap → screenshot → inspect, repeated. All screenshots below are saved under `brief/evidence/2026-09-22/screenshots/`.
 
 ### 5a. Guest flow, unconfigured backend (mirrors Astra's own no-credentials approach — avoids any production access)
 

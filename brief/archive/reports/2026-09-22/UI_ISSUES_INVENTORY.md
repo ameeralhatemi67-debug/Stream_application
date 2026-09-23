@@ -2,23 +2,23 @@
 
 Date: 2026-09-22
 
-This inventory records the issues visible in `brief/Ui_issues/`. It is a work list for a later implementation pass. The screenshots are evidence of visual problems, not proof of the underlying runtime cause.
+This inventory records the issues visible in `brief/evidence/2026-09-22/ui-issues/`. It is a work list for a later implementation pass. The screenshots are evidence of visual problems, not proof of the underlying runtime cause.
 
 ## Reference images
 
-The source screenshots are stored in [`brief/Ui_issues/`](Ui_issues/):
+The source screenshots are stored in [`brief/evidence/2026-09-22/ui-issues/`](../../../evidence/2026-09-22/ui-issues/):
 
-- [`SearchPar_Discovery_feed.jpg`](Ui_issues/SearchPar_Discovery_feed.jpg)
-- [`SearchPar_Spatial_map.jpg`](Ui_issues/SearchPar_Spatial_map.jpg)
-- [`OBS_set_up.jpg`](Ui_issues/OBS_set_up.jpg)
-- [`OBS_Extend_screen_shot.jpg`](Ui_issues/OBS_Extend_screen_shot.jpg)
-- [`Local_set_up.jpg`](Ui_issues/Local_set_up.jpg)
-- [`stream_set_up_arabic.jpg`](Ui_issues/stream_set_up_arabic.jpg)
+- [`SearchPar_Discovery_feed.jpg`](../../../evidence/2026-09-22/ui-issues/SearchPar_Discovery_feed.jpg)
+- [`SearchPar_Spatial_map.jpg`](../../../evidence/2026-09-22/ui-issues/SearchPar_Spatial_map.jpg)
+- [`OBS_set_up.jpg`](../../../evidence/2026-09-22/ui-issues/OBS_set_up.jpg)
+- [`OBS_Extend_screen_shot.jpg`](../../../evidence/2026-09-22/ui-issues/OBS_Extend_screen_shot.jpg)
+- [`Local_set_up.jpg`](../../../evidence/2026-09-22/ui-issues/Local_set_up.jpg)
+- [`stream_set_up_arabic.jpg`](../../../evidence/2026-09-22/ui-issues/stream_set_up_arabic.jpg)
 - `Screenshot_20260922_113308_Hadayah Live.jpg` through `Screenshot_20260922_113334_Hadayah Live.jpg` for the broadcaster tutorial modal
-- [`Viewer_bording_page.jpg`](Ui_issues/Viewer_bording_page.jpg)
-- [`app_icon_main_page.jpg`](Ui_issues/app_icon_main_page.jpg)
-- [`Map_when_wifi_on.jpg`](Ui_issues/Map_when_wifi_on.jpg)
-- [`Map_when_wifi_Off.jpg`](Ui_issues/Map_when_wifi_Off.jpg)
+- [`Viewer_bording_page.jpg`](../../../evidence/2026-09-22/ui-issues/Viewer_bording_page.jpg)
+- [`app_icon_main_page.jpg`](../../../evidence/2026-09-22/ui-issues/app_icon_main_page.jpg)
+- [`Map_when_wifi_on.jpg`](../../../evidence/2026-09-22/ui-issues/Map_when_wifi_on.jpg)
+- [`Map_when_wifi_Off.jpg`](../../../evidence/2026-09-22/ui-issues/Map_when_wifi_Off.jpg)
 
 ## Priority summary
 
@@ -39,7 +39,7 @@ The source screenshots are stored in [`brief/Ui_issues/`](Ui_issues/):
 
 ## UI-01: Search bars have mixed corner geometry
 
-References: [`SearchPar_Discovery_feed.jpg`](Ui_issues/SearchPar_Discovery_feed.jpg), [`SearchPar_Spatial_map.jpg`](Ui_issues/SearchPar_Spatial_map.jpg).
+References: [`SearchPar_Discovery_feed.jpg`](../../../evidence/2026-09-22/ui-issues/SearchPar_Discovery_feed.jpg), [`SearchPar_Spatial_map.jpg`](../../../evidence/2026-09-22/ui-issues/SearchPar_Spatial_map.jpg).
 
 ### What is visible
 
@@ -63,7 +63,7 @@ Use one shared search-field surface contract for feed and map:
 
 ## UI-02: Broadcaster Studio has poor contrast and inconsistent control styling
 
-References: [`OBS_set_up.jpg`](Ui_issues/OBS_set_up.jpg), [`OBS_Extend_screen_shot.jpg`](Ui_issues/OBS_Extend_screen_shot.jpg), [`Local_set_up.jpg`](Ui_issues/Local_set_up.jpg), [`stream_set_up_arabic.jpg`](Ui_issues/stream_set_up_arabic.jpg).
+References: [`OBS_set_up.jpg`](../../../evidence/2026-09-22/ui-issues/OBS_set_up.jpg), [`OBS_Extend_screen_shot.jpg`](../../../evidence/2026-09-22/ui-issues/OBS_Extend_screen_shot.jpg), [`Local_set_up.jpg`](../../../evidence/2026-09-22/ui-issues/Local_set_up.jpg), [`stream_set_up_arabic.jpg`](../../../evidence/2026-09-22/ui-issues/stream_set_up_arabic.jpg).
 
 ### What is visible
 
@@ -122,7 +122,7 @@ The `STREAMER ACADEMY` label is readable, but the level title, large tutorial he
 
 ## UI-04: Arabic broadcaster mode labels and selection are confusing
 
-Reference: [`stream_set_up_arabic.jpg`](Ui_issues/stream_set_up_arabic.jpg).
+Reference: [`stream_set_up_arabic.jpg`](../../../evidence/2026-09-22/ui-issues/stream_set_up_arabic.jpg).
 
 ### What is visible
 
@@ -149,7 +149,7 @@ RTL may change visual order, but it must not change which label, icon, selected 
 
 ## UI-05: Viewer onboarding uses real-person avatar presets
 
-Reference: [`Viewer_bording_page.jpg`](Ui_issues/Viewer_bording_page.jpg).
+Reference: [`Viewer_bording_page.jpg`](../../../evidence/2026-09-22/ui-issues/Viewer_bording_page.jpg).
 
 ### What is visible
 
@@ -173,7 +173,7 @@ The viewer setup screen offers photographs of identifiable people and a branded 
 
 ## UI-06: Launcher icon mark is too large
 
-Reference: [`app_icon_main_page.jpg`](Ui_issues/app_icon_main_page.jpg).
+Reference: [`app_icon_main_page.jpg`](../../../evidence/2026-09-22/ui-issues/app_icon_main_page.jpg).
 
 ### What is visible
 
@@ -191,7 +191,7 @@ Reduce the foreground mark scale while keeping the logo legible at small sizes. 
 
 ## UI-07: Online map basemap is too dark and low quality
 
-Reference: [`Map_when_wifi_on.jpg`](Ui_issues/Map_when_wifi_on.jpg).
+Reference: [`Map_when_wifi_on.jpg`](../../../evidence/2026-09-22/ui-issues/Map_when_wifi_on.jpg).
 
 ### What is visible
 
@@ -217,7 +217,7 @@ This is more than a color tweak if the current tile source is inherently dark or
 
 ## UI-08: Offline map has no usable basemap
 
-Reference: [`Map_when_wifi_Off.jpg`](Ui_issues/Map_when_wifi_Off.jpg).
+Reference: [`Map_when_wifi_Off.jpg`](../../../evidence/2026-09-22/ui-issues/Map_when_wifi_Off.jpg).
 
 ### What is visible
 
@@ -246,7 +246,7 @@ This should be tracked as a feature phase, not treated as a small visual patch.
 
 ## UI-09: Broadcaster sheet bottom actions can be clipped or too faint
 
-References: [`OBS_Extend_screen_shot.jpg`](Ui_issues/OBS_Extend_screen_shot.jpg), [`Local_set_up.jpg`](Ui_issues/Local_set_up.jpg), [`stream_set_up_arabic.jpg`](Ui_issues/stream_set_up_arabic.jpg).
+References: [`OBS_Extend_screen_shot.jpg`](../../../evidence/2026-09-22/ui-issues/OBS_Extend_screen_shot.jpg), [`Local_set_up.jpg`](../../../evidence/2026-09-22/ui-issues/Local_set_up.jpg), [`stream_set_up_arabic.jpg`](../../../evidence/2026-09-22/ui-issues/stream_set_up_arabic.jpg).
 
 ### What is visible
 
@@ -279,7 +279,7 @@ Fix contrast first, then tighten the vertical rhythm. Keep enough space for Arab
 
 ## UI-11: Map controls and overlays need one surface treatment
 
-References: [`Map_when_wifi_on.jpg`](Ui_issues/Map_when_wifi_on.jpg), [`Map_when_wifi_Off.jpg`](Ui_issues/Map_when_wifi_Off.jpg).
+References: [`Map_when_wifi_on.jpg`](../../../evidence/2026-09-22/ui-issues/Map_when_wifi_on.jpg), [`Map_when_wifi_Off.jpg`](../../../evidence/2026-09-22/ui-issues/Map_when_wifi_Off.jpg).
 
 ### What is visible
 
@@ -300,7 +300,7 @@ Define a small map overlay contract for surface color, radius, border, shadow, i
 
 ## UI-12: Map marker scale and contrast need review
 
-Reference: [`Map_when_wifi_on.jpg`](Ui_issues/Map_when_wifi_on.jpg).
+Reference: [`Map_when_wifi_on.jpg`](../../../evidence/2026-09-22/ui-issues/Map_when_wifi_on.jpg).
 
 ### What is visible
 
