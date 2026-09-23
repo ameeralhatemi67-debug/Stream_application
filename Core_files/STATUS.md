@@ -14,6 +14,8 @@ The app is not publish-ready. P6.4 directory and device access were locally veri
 
 P6 still needs client-side block persistence/sync, flag controls and availability UI, a dedicated live list, audit and keyword views, and deleted-account cache acceptance. Account deletion is locally tested, but real Auth HTTP, storage and issued-JWT behavior remain limits. P6S physical broadcast and access tests, P5, P7, P8B and P9 remain open. There is no signed release AAB or physical-device streaming acceptance. See `brief/README.md`, `brief/03_WORK_PLAN.md` and the latest RESUME block in `brief/LEDGER.md` for the active plan and evidence limits.
 
+The next Claude Opus P6 client run has not started: two sessions stopped on a missing usage snapshot without changing app code. The owner waived Claude Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K; the Codex cap in §J is unchanged.
+
 ---
 
 ## Historical feature snapshot (2026-08-17)

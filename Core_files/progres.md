@@ -10,6 +10,13 @@ updated: 2026-09-23
 
 ---
 
+## 2026-09-23: Claude Opus P6 continuation unblocked
+
+- Two Opus sessions stopped before editing because the Claude usage snapshot was absent. No P6 code or test evidence changed.
+- The owner explicitly waived Claude Opus metering and percentage caps in `brief/04_BUDGET_PROTOCOL.md` §K while retaining efficient testing and all repository safety rules. The Codex 5% weekly cap remains in §J. The next P6 client task is unchanged.
+
+---
+
 ## 2026-09-23: P6 account, live and chat safety backend
 
 - Commit `034aaf9` repaired the weekly usage meter. Commit `4f1dbda` added audited admin account deletion/Auth-session revocation and app live-end/feed-removal actions, plus backend chat blocks, report validation and global chat/registration flags.

@@ -105,6 +105,8 @@ gantt
 | P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
 The latest 2026-09-23 checkpoint passed 464 Flutter tests, `flutter analyze` with 0 issues, and 263 local SQL assertions across 14 files. G6 still flags 528 localization matches; its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the older counts below where they differ.
+
+Workflow note, 2026-09-23: the next Claude Opus P6 client run was blocked twice by a missing usage snapshot before code changes. The owner waived Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K. No P6 milestone advanced; the Codex 5% cap remains separate in §J.
 ---
 
 ## 📝 Modification

@@ -1,4 +1,4 @@
-# Issues encountered during P6.4 item 1 verification
+# Issues encountered during release hardening
 
 Updated: 2026-09-23. This is a local troubleshooting record, not proof that the database tests passed.
 
@@ -9,6 +9,7 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Docker Inference manager `dockerInference` socket bind collision** — currently operational; earlier root cause unresolved.
 - **Supabase CLI telemetry temp-file `EPERM`** — workaround: `DO_NOT_TRACK=1`.
 - **Weekly-only budget window mislabeled five-hour** — FIXED with owner-authorized weekly mode and focused tests.
+- **Claude Opus budget `no_snapshot` stopped P6** — workflow override recorded; Opus continuation not yet verified.
 - **Git `.git/index.lock` access denied** — resolved by approved staging outside the sandbox.
 - **`device_sessions` SELECT permission denied for `is_banned(uuid)`** — FIXED; disposable local SQL suite passed.
 - **Malformed single-dollar pgTAP quoting in `admin_user_directory.test.sql`** — FIXED; all 33 assertions passed locally.
@@ -78,3 +79,12 @@ Five assertions in `supabase/tests/admin_user_directory.test.sql` used malformed
 ## Weekly-only budget window mislabeled five-hour
 
 Status: FIXED. Codex primary duration was 10,080 minutes with no secondary window, but the meter treated primary as five-hour. With explicit owner authorization, classify known durations correctly, preserve percentage-valued 1 as 1%, and add weekly-only mode with cap 5 / soft 4. Two Node tests cover thresholds, stale readings and missing weekly data. The live check returned weekly=3, cap=5, status=OK. No five-hour data was invented.
+
+## Claude Opus budget `no_snapshot` stopped P6
+
+Status: UNVERIFIED workflow override; no P6 code changed in the blocked sessions.
+Observed: `budget_check.mjs --source claude --plan single` returned `status=UNKNOWN reason=no_snapshot` twice because `brief/.runtime/usage_snapshot.json` was absent.
+Cause: the Claude status-line snapshot had not been written in those sessions; whether Claude's status line would later provide usage was not established.
+Fix/workaround: the owner explicitly removed Claude Opus 5.5 usage-meter and percentage-cap requirements in `brief/04_BUDGET_PROTOCOL.md` §K. Opus can resume the P6 task without a snapshot while following the unchanged repository safety and technical verification rules. The Codex 5% weekly cap remains in §J.
+Verification: policy and project instructions were updated; a new Opus session has not yet tested the continuation. Do not claim that the meter itself was repaired.
+Evidence: the two reported `UNKNOWN reason=no_snapshot` readings and `brief/04_BUDGET_PROTOCOL.md` §K.
