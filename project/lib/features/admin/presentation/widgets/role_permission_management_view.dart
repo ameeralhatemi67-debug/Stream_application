@@ -306,7 +306,9 @@ class _RolePermissionManagementViewState
   }
 
   Widget _buildSectionHeader(String title, int count) {
-    return Row(
+    return Wrap(
+      spacing: AppTheme.spaceSm,
+      crossAxisAlignment: WrapCrossAlignment.center,
       children: [
         Text(
           title,
@@ -369,9 +371,10 @@ class _RolePermissionManagementViewState
             ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
-          Row(
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Expanded(
+              SizedBox(
                 child: TextField(
                   controller: _grantEmailController,
                   style: const TextStyle(
@@ -394,8 +397,9 @@ class _RolePermissionManagementViewState
                   ),
                 ),
               ),
-              const SizedBox(width: AppTheme.spaceMd),
+              const SizedBox(height: AppTheme.spaceMd),
               DropdownButton<String>(
+                isExpanded: true,
                 value: _grantRole,
                 dropdownColor: AppTheme.surfaceAlt,
                 style: const TextStyle(
@@ -409,7 +413,7 @@ class _RolePermissionManagementViewState
                   if (value != null) setState(() => _grantRole = value);
                 },
               ),
-              const SizedBox(width: AppTheme.spaceMd),
+              const SizedBox(height: AppTheme.spaceMd),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,

@@ -159,6 +159,8 @@ class AppProvider extends ChangeNotifier {
   // Admin status now comes from the user_roles table (via the is_admin_tier()
   // RPC) instead of a hardcoded email allowlist -- see _refreshAdminRoleFromBackend.
   bool _isAdminFromRoles = false;
+  bool _adminRoleLoading = false;
+  bool get adminRoleLoading => _adminRoleLoading;
   // Distinguishes master_admin from plain admin within is_admin_tier() (via
   // the is_master_admin() RPC -- see v0.8 Checkpoint 1 Phase 1). Used to gate
   // master_admin-only surfaces (e.g. Checkpoint 2's role/permission
@@ -396,6 +398,8 @@ class AppProvider extends ChangeNotifier {
   /// admin status from user_roles via the is_admin_tier() RPC.
   Future<void> _applySessionUser(User user,
       {required bool isFreshSignIn}) async {
+    _adminRoleLoading = _adminRoleLoading ||
+        !_isLoggedInStreamer || _googleUserEmail != user.email;
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
     _isGuestViewer = false;
@@ -422,6 +426,8 @@ class AppProvider extends ChangeNotifier {
     }
     await _flushPendingConsentIfAny(user.id);
     await _refreshAdminRoleFromBackend();
+    _adminRoleLoading = false;
+    notifyListeners();
     await _refreshPermittedAdminOrgsFromBackend();
     await _refreshCurrentUserBanStatus();
     await loadViewerLibrary();
@@ -1474,6 +1480,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _clearAuthState() {
+    _adminRoleLoading = false;
     _deviceGeneration++;
     _deviceHeartbeatTimer?.cancel();
     _deviceSubscription?.cancel();

@@ -294,7 +294,7 @@ void main() {
               await tester.pump();
             }
             if (entry.key.startsWith('admin tab')) {
-              tester.widget<TabBar>(find.byType(TabBar).first).controller!.index = int.parse(entry.key.split(' ').last);
+              tester.widget<TabBarView>(find.byType(TabBarView).first).controller!.index = int.parse(entry.key.split(' ').last);
               await tester.pump(const Duration(milliseconds: 400));
             }
             final errors=<Object>[];

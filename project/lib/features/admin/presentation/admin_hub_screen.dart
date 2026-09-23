@@ -10,7 +10,8 @@ import '../../profile/presentation/widgets/streamer_editor_sheet.dart';
 import 'widgets/org_management_view.dart';
 import '../models/broadcaster_application_model.dart';
 import '../models/terms_and_conditions_model.dart';
-import '../models/viewer_analytics_model.dart';
+import '../../../../core/widgets/language_switcher.dart';
+import '../../../../core/layout/content_width.dart';
 import '../models/chat_report_model.dart';
 import '../models/tag_moderation_model.dart';
 import '../../profile/models/streamer_models.dart';
@@ -33,14 +34,10 @@ class AdminHubScreen extends StatefulWidget {
 }
 
 class _AdminHubScreenState extends State<AdminHubScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
-  // Decided once in initState from the role known at navigation time (Admin
-  // Hub is only reachable after sign-in already resolved is_master_admin(),
-  // see AppProvider._refreshAdminRoleFromBackend) -- the tab count can't
-  // change out from under a live TabController, so this mirrors whichever
-  // value initState used to size it.
-  late final bool _isMasterAdminForTabs;
+    with TickerProviderStateMixin {
+  late TabController _tabController;
+  // Rebuild the controller if the backend role changes while the hub is open.
+  late bool _isMasterAdminForTabs;
 
   // Search & Filter Controllers
   final TextEditingController _appSearchController = TextEditingController();
@@ -225,7 +222,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           String? googleUserEmail,
           List<BroadcasterApplicationModel> pendingApplications,
           List<StreamerModel> streamers,
-          ViewerAnalyticsModel viewerAnalytics,
           List<BroadcasterApplicationModel> applications,
           TermsAndConditionsModel termsAndConditions,
           List<ChatReportModel> chatReports,
@@ -240,7 +236,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           googleUserEmail: p.googleUserEmail,
           pendingApplications: p.pendingApplications,
           streamers: p.streamers,
-          viewerAnalytics: p.viewerAnalytics,
           applications: p.applications,
           termsAndConditions: p.termsAndConditions,
           chatReports: p.chatReports,
@@ -250,7 +245,21 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           bannedUsersCount: p.bannedUsers.length,
         ));
     final isAr = context.locale.languageCode == 'ar';
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = MediaQuery.of(context).size.width >= AppBreakpoints.expanded;
+    if (_isMasterAdminForTabs != provider.isMasterAdmin) {
+      final oldIndex = _tabController.index;
+      const rolesIndex = 11 + (kDebugMode ? 1 : 0);
+      final hadMaster = _isMasterAdminForTabs;
+      _isMasterAdminForTabs = provider.isMasterAdmin;
+      var index = oldIndex;
+      if (hadMaster && oldIndex == rolesIndex) index = 0;
+      if (hadMaster && oldIndex > rolesIndex) index--;
+      if (!hadMaster && oldIndex >= rolesIndex) index++;
+      _tabController.dispose();
+      _tabController = TabController(
+        length: (_isMasterAdminForTabs ? 14 : 13) + (kDebugMode ? 1 : 0),
+        initialIndex: index, vsync: this);
+    }
 
     // Access Guard
     if (!provider.isAdminUser) {
@@ -313,269 +322,95 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       );
     }
 
+    final views = TabBarView(
+      controller: _tabController,
+      physics: const NeverScrollableScrollPhysics(),
+      children: [
+        _buildOverviewTab(context, provider, isAr),
+        _buildVerificationQueueTab(context, provider, isAr),
+        _buildStreamersRegistryTab(context, provider, isAr),
+        const OrgManagementView(orgId: 'org_dalilk_04'),
+        _buildViewerAnalyticsTab(context, provider, isAr),
+        _buildTermsGovernanceTab(context, provider, isAr),
+        const ChatModerationView(),
+        const CustomPlaceholderReviewView(),
+        const AcademicCategoriesView(),
+        const TagModerationView(),
+        const BannedAccountsView(),
+        if (kDebugMode) _buildTestingToolsTab(context, provider),
+        if (_isMasterAdminForTabs) const RolePermissionManagementView(),
+        const AdminUserDirectoryView(),
+        const AdminSafetyView(),
+      ],
+    );
     return Scaffold(
       backgroundColor: AppTheme.bg,
-      body: Column(
-        children: [
-          // Top Admin Header
-          _buildAdminHeader(context, provider, isAr, isDesktop,
-              isMasterAdmin: provider.isMasterAdmin),
-
-          // Horizontal Navigation Tabs
-          _buildTabBar(provider),
-
-          // Tab Views
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildOverviewTab(context, provider, isAr),
-                _buildVerificationQueueTab(context, provider, isAr),
-                _buildStreamersRegistryTab(context, provider, isAr),
-                const OrgManagementView(orgId: 'org_dalilk_04'),
-                _buildViewerAnalyticsTab(context, provider, isAr),
-                _buildTermsGovernanceTab(context, provider, isAr),
-                const ChatModerationView(),
-                const CustomPlaceholderReviewView(),
-                const AcademicCategoriesView(),
-                const TagModerationView(),
-                const BannedAccountsView(),
-                if (kDebugMode) _buildTestingToolsTab(context, provider),
-                if (_isMasterAdminForTabs) const RolePermissionManagementView(),
-                const AdminUserDirectoryView(),
-                const AdminSafetyView(),
-              ],
-            ),
-          ),
-        ],
+      appBar: AppBar(
+        leading: isDesktop
+            ? IconButton(icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: 'common.back'.tr(), onPressed: () => context.go('/feed'))
+            : null,
+        title: Text('admin.title'.tr(), maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: const [LanguageSwitcher(), SizedBox(width: AppTheme.spaceMd)],
       ),
-    );
-  }
-
-  Widget _buildAdminHeader(
-      BuildContext context, AppProvider provider, bool isAr, bool isDesktop,
-      {required bool isMasterAdmin}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceSm),
-      child: Row(children: [
-        IconButton(icon: const Icon(Icons.arrow_back_rounded),
-          tooltip: 'common.back'.tr(), onPressed: () => context.go('/feed')),
-        const SizedBox(width: AppTheme.spaceSm),
-        Expanded(child: Text('admin.title'.tr(),
-          maxLines: 2, overflow: TextOverflow.ellipsis,
-          style: Theme.of(context).textTheme.titleMedium)),
+      drawer: isDesktop ? null : Drawer(
+        child: SafeArea(child: _buildNavigation(provider, closeDrawer: true))),
+      body: Row(children: [
         if (isDesktop) ...[
-          const SizedBox(width: AppTheme.spaceLg),
-          Flexible(child: Text(provider.googleUserName ?? provider.googleUserEmail ?? '',
-            maxLines: 1, overflow: TextOverflow.ellipsis)),
+          SizedBox(width: 260, child: _buildNavigation(provider)),
+          const VerticalDivider(width: 1),
         ],
+        Expanded(child: views),
       ]),
     );
   }
 
-  Widget _buildTabBar(AppProvider provider) {
-    final pendingCount = provider.pendingApplications.length;
-    final chatReportsCount = provider.chatReports.length;
-    final customCardsCount = provider.pendingCustomPlaceholders.length;
-    final pendingTagsCount = provider.allTagsForModeration
-        .where((t) => t.status == TagStatus.pending)
-        .length;
-    final bannedCount = provider.bannedUsers.length;
-
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.border, width: 1),
-        ),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        isScrollable: true,
-        indicatorColor: AppTheme.primary,
-        indicatorWeight: 3,
-        labelColor: AppTheme.primary,
-        unselectedLabelColor: AppTheme.textSecondary,
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-        tabs: [
-          Tab(
-            icon: const Icon(Icons.dashboard_rounded, size: 18),
-            text: 'admin.tab_overview'.tr(),
-          ),
-          Tab(
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.how_to_reg_rounded, size: 18),
-                if (pendingCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warning,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$pendingCount',
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
+  Widget _buildNavigation(AppProvider provider, {bool closeDrawer = false}) {
+    final entries = <({String label, IconData icon, int count})>[
+      (label: 'admin.tab_overview', icon: Icons.dashboard_outlined, count: 0),
+      (label: 'admin.tab_verification', icon: Icons.how_to_reg_outlined, count: provider.pendingApplications.length),
+      (label: 'admin.tab_streamers', icon: Icons.groups_outlined, count: 0),
+      (label: 'admin.tab_organizations', icon: Icons.apartment_outlined, count: 0),
+      (label: 'admin.tab_viewers', icon: Icons.analytics_outlined, count: 0),
+      (label: 'admin.tab_terms', icon: Icons.gavel_outlined, count: 0),
+      (label: 'admin.tab_chat_moderation', icon: Icons.report_outlined, count: provider.chatReports.length),
+      (label: 'admin.tab_custom_cards', icon: Icons.image_outlined, count: provider.pendingCustomPlaceholders.length),
+      (label: 'admin.tab_categories', icon: Icons.school_outlined, count: 0),
+      (label: 'admin.tab_tags', icon: Icons.label_outline, count: provider.allTagsForModeration.where((t) => t.status == TagStatus.pending).length),
+      (label: 'admin.tab_banned_accounts', icon: Icons.person_off_outlined, count: provider.bannedUsers.length),
+      if (kDebugMode) (label: 'admin.tab_testing', icon: Icons.science_outlined, count: 0),
+      if (_isMasterAdminForTabs) (label: 'admin.tab_roles', icon: Icons.admin_panel_settings_outlined, count: 0),
+      (label: 'directory.title', icon: Icons.people_outline, count: 0),
+      (label: 'safety.tab', icon: Icons.shield_outlined, count: 0),
+    ];
+    return AnimatedBuilder(
+      animation: _tabController,
+      builder: (context, _) => ListView(
+        key: const ValueKey('admin-navigation'),
+        padding: const EdgeInsets.all(AppTheme.spaceSm),
+        children: [
+          if (closeDrawer) ListTile(
+            leading: const Icon(Icons.arrow_back_rounded),
+            title: Text('common.back'.tr()),
+            onTap: () => context.go('/feed')),
+          for (var i = 0; i < entries.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: AppTheme.spaceXs),
+              child: ListTile(
+                key: ValueKey(entries[i].label),
+                selected: _tabController.index == i,
+                selectedColor: AppTheme.primary,
+                selectedTileColor: AppTheme.surfaceAlt,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                leading: Icon(entries[i].icon),
+                title: Text(entries[i].label.tr()),
+                trailing: entries[i].count > 0 ? Text(entries[i].count.toString()) : null,
+                onTap: () {
+                  _tabController.animateTo(i);
+                  if (closeDrawer) Navigator.of(context).pop();
+                },
+              ),
             ),
-            text: 'admin.tab_verification'.tr(),
-          ),
-          Tab(
-            icon: const Icon(Icons.groups_rounded, size: 18),
-            text: 'admin.tab_streamers'.tr(),
-          ),
-          Tab(
-            icon: const Icon(Icons.apartment_rounded, size: 18),
-            text: 'admin.tab_organizations'.tr(),
-          ),
-          Tab(
-            icon: const Icon(Icons.analytics_rounded, size: 18),
-            text: 'admin.tab_viewers'.tr(),
-          ),
-          Tab(
-            icon: const Icon(Icons.gavel_rounded, size: 18),
-            text: 'admin.tab_terms'.tr(),
-          ),
-          Tab(
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.report_gmailerrorred_rounded, size: 18),
-                if (chatReportsCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppTheme.danger,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$chatReportsCount',
-                      style: const TextStyle(
-                        color: AppTheme.onMedia,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            text: 'admin.tab_chat_moderation'.tr(),
-          ),
-          Tab(
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.image_rounded, size: 18),
-                if (customCardsCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warning,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$customCardsCount',
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            text: 'admin.tab_custom_cards'.tr(),
-          ),
-          Tab(
-            icon: const Icon(Icons.category_rounded, size: 18),
-            text: 'admin.tab_categories'.tr(),
-          ),
-          Tab(
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.sell_rounded, size: 18),
-                if (pendingTagsCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warning,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$pendingTagsCount',
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            text: 'admin.tab_tags'.tr(),
-          ),
-          Tab(
-            icon: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.person_off_rounded, size: 18),
-                if (bannedCount > 0) ...[
-                  const SizedBox(width: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceAlt,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$bannedCount',
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ],
-            ),
-            text: 'admin.tab_banned_accounts'.tr(),
-          ),
-          if (kDebugMode) Tab(
-            icon: const Icon(Icons.science_rounded, size: 18),
-            text: 'admin.tab_testing'.tr(),
-          ),
-          if (_isMasterAdminForTabs)
-            Tab(
-              icon: const Icon(Icons.admin_panel_settings_rounded, size: 18),
-              text: 'admin.tab_roles'.tr(),
-            ),
-          Tab(icon: const Icon(Icons.people_outline), text: 'directory.title'.tr()),
-          Tab(
-            icon: const Icon(Icons.shield_outlined, size: 18),
-            text: 'safety.tab'.tr(),
-          ),
         ],
       ),
     );
@@ -698,12 +533,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       BuildContext context, AppProvider provider, bool isAr) {
     final totalBroadcasters = provider.streamers.length;
     final verifiedScholars =
-        provider.streamers.where((s) => !s.isOrganization).length;
+        provider.streamers.where((s) => !s.isOrganization && s.isVerified).length;
     final orgVenues = provider.streamers.where((s) => s.isOrganization).length;
     final pendingApps = provider.pendingApplications.length;
-    final totalAuditoriumSeats = provider.viewerAnalytics.totalAuditoriumRsvps;
-    final activeViewers = provider.viewerAnalytics.totalGuestSessions +
-        provider.viewerAnalytics.totalRegisteredGoogleUsers;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spaceXl),
@@ -728,13 +560,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
           const SizedBox(height: AppTheme.spaceLg),
 
+          Text('admin.overview_data_note'.tr()),
+          const SizedBox(height: AppTheme.spaceMd),
           // KPI Grid
           Wrap(
             spacing: AppTheme.spaceMd,
             runSpacing: AppTheme.spaceMd,
             children: [
               _buildKpiCard(
-                title: 'admin.kpi_total_broadcasters'.tr(),
+                title: 'admin.loaded_broadcasters'.tr(),
                 value: '$totalBroadcasters',
                 icon: Icons.cell_tower_rounded,
                 color: AppTheme.danger,
@@ -746,7 +580,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 color: AppTheme.primary,
               ),
               _buildKpiCard(
-                title: 'admin.kpi_org_venues'.tr(),
+                title: 'admin.loaded_organizations'.tr(),
                 value: '$orgVenues',
                 icon: Icons.apartment_rounded,
                 color: AppTheme.accent,
@@ -759,13 +593,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ),
               _buildKpiCard(
                 title: 'admin.kpi_active_viewers'.tr(),
-                value: '$activeViewers',
+                value: 'admin.unavailable'.tr(),
                 icon: Icons.group_rounded,
                 color: AppTheme.success,
               ),
               _buildKpiCard(
                 title: 'admin.kpi_auditorium_seats'.tr(),
-                value: '$totalAuditoriumSeats',
+                value: 'admin.unavailable'.tr(),
                 icon: Icons.event_seat_rounded,
                 color: AppTheme.primary,
               ),
@@ -788,8 +622,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                 child: _buildActionShortcutCard(
-                  title: 'Review Verification Queue',
-                  subtitle: '$pendingApps pending applications awaiting review',
+                  title: 'admin.review_queue'.tr(),
+                  subtitle: 'admin.pending_review'.tr(args: ['$pendingApps']),
                   icon: Icons.rate_review_rounded,
                   color: AppTheme.warning,
                   onTap: () => _tabController.animateTo(1),
@@ -799,8 +633,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                 child: _buildActionShortcutCard(
-                  title: 'Inspect Spatial GIS Map',
-                  subtitle: 'View live auditoriums in Al Khobar & Dhahran',
+                  title: 'admin.inspect_map'.tr(),
+                  subtitle: 'admin.inspect_map_hint'.tr(),
                   icon: Icons.map_rounded,
                   color: AppTheme.primary,
                   onTap: () => context.go('/map'),
@@ -810,11 +644,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               Padding(
                 padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                 child: _buildActionShortcutCard(
-                  title: 'Edit Platform Terms',
-                  subtitle: 'Update bilingual policies and Saudi PDPL terms',
+                  title: 'admin.edit_terms'.tr(),
+                  subtitle: 'admin.edit_terms_hint'.tr(),
                   icon: Icons.edit_document,
                   color: AppTheme.accent,
-                  onTap: () => _tabController.animateTo(4),
+                  onTap: () => _tabController.animateTo(5),
                 ),
               ),
             ],
@@ -2335,125 +2169,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   Widget _buildViewerAnalyticsTab(
       BuildContext context, AppProvider provider, bool isAr) {
-    final analytics = provider.viewerAnalytics;
-
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spaceXl),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.analytics_rounded,
-                  color: AppTheme.primary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'admin.tab_viewers'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceLg),
-
-          // Metrics Grid
-          Wrap(
-            spacing: AppTheme.spaceMd,
-            runSpacing: AppTheme.spaceMd,
-            children: [
-              _buildKpiCard(
-                title: 'admin.guest_sessions'.tr(),
-                value: '${analytics.totalGuestSessions}',
-                icon: Icons.person_outline_rounded,
-                color: AppTheme.primary,
-              ),
-              _buildKpiCard(
-                title: 'admin.registered_users'.tr(),
-                value: '${analytics.totalRegisteredGoogleUsers}',
-                icon: Icons.account_circle_rounded,
-                color: AppTheme.success,
-              ),
-              _buildKpiCard(
-                title: 'admin.auditorium_rsvps'.tr(),
-                value: '${analytics.totalAuditoriumRsvps}',
-                icon: Icons.event_seat_rounded,
-                color: AppTheme.accent,
-              ),
-              _buildKpiCard(
-                title: 'admin.lecture_bookmarks'.tr(),
-                value: '${analytics.totalLectureBookmarks}',
-                icon: Icons.bookmark_added_rounded,
-                color: AppTheme.warning,
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceXl),
-
-          // Geographic Distribution Card
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spaceLg),
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.border),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('design_ui.alsharqia_regional_engagement_breakdown'.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceMd),
-                _buildRegionProgressBar('Al Khobar (Academic Corridor)', 0.45,
-                    '45% Active Attendance'),
-                const SizedBox(height: AppTheme.spaceSm),
-                _buildRegionProgressBar('Dhahran (KFUPM & Research Valley)',
-                    0.35, '35% Research Traffic'),
-                const SizedBox(height: AppTheme.spaceSm),
-                _buildRegionProgressBar('Dammam (Medical & Cultural Centers)',
-                    0.20, '20% Institutional Streamers'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildRegionProgressBar(
-      String label, double percentage, String detail) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(label,
-                style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 12)),
-            Text(detail,
-                style: const TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold)),
-          ],
-        ),
-        const SizedBox(height: 4),
-        LinearProgressIndicator(
-          value: percentage,
-          backgroundColor: AppTheme.surfaceAlt,
-          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.primary),
-          minHeight: 6,
-          borderRadius: BorderRadius.circular(3),
-        ),
-      ],
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text('admin.tab_viewers'.tr(), style: Theme.of(context).textTheme.titleLarge),
+        const SizedBox(height: AppTheme.spaceLg),
+        Text('admin.analytics_unavailable'.tr()),
+      ]),
     );
   }
 

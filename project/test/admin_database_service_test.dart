@@ -94,15 +94,16 @@ void main() {
 
     test('TC-DB-03: ViewerAnalyticsModel Serialization & Metrics Default', () {
       final analytics = ViewerAnalyticsModel.createDefault();
-      expect(analytics.totalGuestSessions, equals(1420));
-      expect(analytics.totalRegisteredGoogleUsers, equals(185));
-      expect(analytics.totalLectureBookmarks, equals(920));
-      expect(analytics.totalAuditoriumRsvps, equals(365));
+      expect(analytics.totalGuestSessions, equals(0));
+      expect(analytics.totalRegisteredGoogleUsers, equals(0));
+      expect(analytics.totalLectureBookmarks, equals(0));
+      expect(analytics.totalAuditoriumRsvps, equals(0));
 
+      expect(ViewerAnalyticsModel.fromJson(const {}).activeViewersLive, 0);
       final json = analytics.toJson();
       final reconstituted = ViewerAnalyticsModel.fromJson(json);
-      expect(reconstituted.totalGuestSessions, equals(1420));
-      expect(reconstituted.totalRegisteredGoogleUsers, equals(185));
+      expect(reconstituted.totalGuestSessions, equals(0));
+      expect(reconstituted.totalRegisteredGoogleUsers, equals(0));
     });
 
     test('TC-DB-04: Submitted Applications & Application Mutations', () async {

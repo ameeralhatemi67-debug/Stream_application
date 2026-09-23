@@ -777,7 +777,7 @@ class AdminDatabaseService {
           return _cachedAnalytics!;
         }
         final defaults = ViewerAnalyticsModel.createDefault();
-        await saveAnalytics(defaults);
+        // Missing measurements must not seed the shared analytics row.
         return defaults;
       } catch (e) {
         debugPrint('Supabase loadAnalytics failed, falling back: $e');

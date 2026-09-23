@@ -732,7 +732,18 @@
     "moderator_col_scope": "Scope",
     "moderator_col_date": "Granted Date",
     "moderator_col_revoke": "Revoke",
-    "no_moderators": "No moderators appointed yet."
+    "no_moderators": "No moderators appointed yet.",
+    "unavailable": "Unavailable",
+    "loaded_broadcasters": "Loaded broadcasters",
+    "loaded_organizations": "Loaded organizations",
+    "overview_data_note": "Counts reflect the currently loaded records. Platform viewer and attendance metrics are unavailable. See Safety for current live broadcasts and viewer counts.",
+    "analytics_unavailable": "Platform analytics are not available yet. Guest sessions, registered users, attendance, bookmarks and regional percentages are not currently measured reliably.",
+    "review_queue": "Review verification queue",
+    "pending_review": "{} applications awaiting review",
+    "inspect_map": "Open venue map",
+    "inspect_map_hint": "Browse venues on the map",
+    "edit_terms": "Edit platform terms",
+    "edit_terms_hint": "Update the English and Arabic policies"
   },
   "common": {
     "cancel": "Cancel",

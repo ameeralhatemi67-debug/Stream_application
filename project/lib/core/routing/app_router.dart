@@ -68,7 +68,7 @@ class AppRouter {
 
       if (_authGuardedPaths.contains(path)) {
         if (!isLoggedIn) return '/welcome';
-        if (path == '/admin' && !provider.isAdminUser) return '/feed';
+        if (path == '/admin' && !provider.adminRoleLoading && !provider.isAdminUser) return '/feed';
         if (path == '/org-admin' && !provider.isPermittedAdmin) return '/feed';
         return null;
       }
@@ -231,7 +231,9 @@ class AppRouter {
         parentNavigatorKey: _rootNavigatorKey,
         path: '/admin',
         name: 'admin',
-        builder: (context, state) => const AdminHubScreen(),
+        builder: (context, state) => context.select<AppProvider, bool>((p) => p.adminRoleLoading)
+            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
+            : const AdminHubScreen(),
       ),
       GoRoute(
         parentNavigatorKey: _rootNavigatorKey,

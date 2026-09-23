@@ -33,29 +33,29 @@ class ViewerAnalyticsModel {
 
   factory ViewerAnalyticsModel.fromJson(Map<String, dynamic> json) =>
       ViewerAnalyticsModel(
-        totalGuestSessions: (json['totalGuestSessions'] as num?)?.toInt() ?? 1250,
+        totalGuestSessions: (json['totalGuestSessions'] as num?)?.toInt() ?? 0,
         totalRegisteredGoogleUsers:
-            (json['totalRegisteredGoogleUsers'] as num?)?.toInt() ?? 170,
+            (json['totalRegisteredGoogleUsers'] as num?)?.toInt() ?? 0,
         totalLectureBookmarks:
-            (json['totalLectureBookmarks'] as num?)?.toInt() ?? 890,
+            (json['totalLectureBookmarks'] as num?)?.toInt() ?? 0,
         totalAuditoriumRsvps:
-            (json['totalAuditoriumRsvps'] as num?)?.toInt() ?? 340,
+            (json['totalAuditoriumRsvps'] as num?)?.toInt() ?? 0,
         totalBroadcastHours:
-            (json['totalBroadcastHours'] as num?)?.toDouble() ?? 142.5,
+            (json['totalBroadcastHours'] as num?)?.toDouble() ?? 0,
         activeViewersLive:
-            (json['activeViewersLive'] as num?)?.toInt() ?? 342,
+            (json['activeViewersLive'] as num?)?.toInt() ?? 0,
         lastRefreshed: DateTime.parse(
             json['lastRefreshed'] as String? ?? DateTime.now().toIso8601String()),
       );
 
   static ViewerAnalyticsModel createDefault() {
     return ViewerAnalyticsModel(
-      totalGuestSessions: 1420,
-      totalRegisteredGoogleUsers: 185,
-      totalLectureBookmarks: 920,
-      totalAuditoriumRsvps: 365,
-      totalBroadcastHours: 156.4,
-      activeViewersLive: 342,
+      totalGuestSessions: 0,
+      totalRegisteredGoogleUsers: 0,
+      totalLectureBookmarks: 0,
+      totalAuditoriumRsvps: 0,
+      totalBroadcastHours: 0,
+      activeViewersLive: 0,
       lastRefreshed: DateTime.now(),
     );
   }
