@@ -7,6 +7,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { findHardCodedText } from './g6_scanner.mjs';
+import { countPrivateKeyMaterial } from './g11_private_key_scanner.mjs';
 
 const root = process.cwd();
 const projectDir = path.join(root, 'project');
@@ -253,7 +254,8 @@ const ident = (x) => x.replace(/"/g, '').replace(/^public\./i, '').toLowerCase()
       const bucket = role === 'service_role' ? svc : role === 'anon' ? null : other;
       if (bucket) bucket.set(r, (bucket.get(r) || 0) + 1);
     }
-    const bad = (t.match(/sb_secret_[A-Za-z0-9_-]{10,}|-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|postgres(?:ql)?:\/\/[^:\s\/]+:[^@\s]+@/g) || []).length;
+    const bad = (t.match(/sb_secret_[A-Za-z0-9_-]{10,}|postgres(?:ql)?:\/\/[^:\s\/]+:[^@\s]+@/g) || []).length
+      + countPrivateKeyMaterial(t);
     if (bad) svc.set(r, (svc.get(r) || 0) + bad);
     if (/^project\/(lib|android|web)\//.test(r) && /service_role|SERVICE_ROLE|serviceRole|sb_secret_/.test(t)) clientRef.set(r, 1);
   }
