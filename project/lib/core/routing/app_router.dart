@@ -46,209 +46,244 @@ class AppRouter {
   /// GoRouter expects a stable instance so its internal navigation state
   /// survives widget rebuilds.
   static GoRouter build(AppProvider provider) => GoRouter(
-    navigatorKey: _rootNavigatorKey,
-    initialLocation: '/splash',
-    // Re-evaluates `redirect` whenever auth state changes (sign-in
-    // completing after the OAuth redirect, sign-out, role refresh) --
-    // without this, GoRouter would only re-check on navigation.
-    refreshListenable: provider,
-    redirect: (context, state) {
-      final path = state.matchedLocation;
-      final isLoggedIn = provider.isLoggedInStreamer;
+        navigatorKey: _rootNavigatorKey,
+        initialLocation: '/splash',
+        // Re-evaluates `redirect` whenever auth state changes (sign-in
+        // completing after the OAuth redirect, sign-out, role refresh) --
+        // without this, GoRouter would only re-check on navigation.
+        refreshListenable: provider,
+        redirect: (context, state) {
+          final path = state.matchedLocation;
+          final isLoggedIn = provider.isLoggedInStreamer;
+          if (isLoggedIn && provider.authHydrating) {
+            return path == '/splash'
+                ? null
+                : Uri(
+                    path: '/splash',
+                    queryParameters: {'from': state.uri.toString()}).toString();
+          }
+          if (isLoggedIn &&
+              !provider.hasCompletedRoleSelection &&
+              !provider.isApprovedStreamer &&
+              !provider.isAdminUser &&
+              provider.myApplication == null &&
+              path != '/role-select' &&
+              path != '/account-banned' &&
+              !provider.isCurrentUserBanned) {
+            return '/role-select';
+          }
 
-      // Cluster 4 Task 16: a platform-banned account is locked out of the
-      // entire app (not just guarded paths) until they sign out -- checked
-      // ahead of the guarded-paths block so it also covers /feed and /map.
-      if (isLoggedIn && provider.isCurrentUserBanned && path != '/account-banned') {
-        return '/account-banned';
-      }
-      if (path == '/account-banned' && !provider.isCurrentUserBanned) {
-        return isLoggedIn ? '/feed' : '/welcome';
-      }
+          if (path == '/splash' && state.uri.queryParameters['from'] != null) {
+            return state.uri.queryParameters['from'];
+          }
 
-      if (_authGuardedPaths.contains(path)) {
-        if (!isLoggedIn) return '/welcome';
-        if (path == '/admin' && !provider.adminRoleLoading && !provider.isAdminUser) return '/feed';
-        if (path == '/org-admin' && !provider.isPermittedAdmin) return '/feed';
-        return null;
-      }
+          // Cluster 4 Task 16: a platform-banned account is locked out of the
+          // entire app (not just guarded paths) until they sign out -- checked
+          // ahead of the guarded-paths block so it also covers /feed and /map.
+          if (isLoggedIn &&
+              provider.isCurrentUserBanned &&
+              path != '/account-banned') {
+            return '/account-banned';
+          }
+          if (path == '/account-banned' && !provider.isCurrentUserBanned) {
+            return isLoggedIn ? '/feed' : '/welcome';
+          }
 
-      // Once a session exists, route users who haven't selected a role or applied
-      // to the Role Select screen; otherwise route to Discovery feed.
-      if (path == '/welcome' && isLoggedIn) {
-        if (!provider.hasCompletedRoleSelection && !provider.isApprovedStreamer) {
-          return '/role-select';
-        }
-        return '/feed';
-      }
+          if (_authGuardedPaths.contains(path)) {
+            if (!isLoggedIn) return '/welcome';
+            if (path == '/admin' &&
+                !provider.adminRoleLoading &&
+                !provider.isAdminUser) {
+              return '/feed';
+            }
+            if (path == '/org-admin' && !provider.isPermittedAdmin) {
+              return '/feed';
+            }
+            return null;
+          }
 
-      // Handle OAuth callback deep link redirects (e.g. sa.hadayah.streamerapp://login-callback)
-      // gracefully without ever falling through to "Route Not Found". Must
-      // mirror the '/welcome'branch's role-select gate above -- routing
-      // straight to '/feed'here skipped the broadcaster onboarding prompt
-      // entirely on every fresh Google sign-in (issue_log.md: "I did not
-      // get a prompt to start the onboarding to be a streamer, it just
-      // opened the Discovery tab").
-      if (state.uri.host == 'login-callback' ||
-          path == '/login-callback' ||
-          state.uri.path == '/login-callback') {
-        if (!isLoggedIn) return '/welcome';
-        if (!provider.hasCompletedRoleSelection && !provider.isApprovedStreamer) {
-          return '/role-select';
-        }
-        return '/feed';
-      }
+          // Once a session exists, route users who haven't selected a role or applied
+          // to the Role Select screen; otherwise route to Discovery feed.
+          if (path == '/welcome' && isLoggedIn) {
+            if (!provider.hasCompletedRoleSelection &&
+                !provider.isApprovedStreamer) {
+              return '/role-select';
+            }
+            return '/feed';
+          }
 
-      return null;
-    },
-    errorBuilder: (context, state) => Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.error_outline_rounded, size: 64, color: AppTheme.danger),
-            const SizedBox(height: AppTheme.spaceLg),
-            Text(
-              'Route Not Found (${state.error?.message ?? state.uri.toString()})',
-              style: Theme.of(context).textTheme.titleLarge,
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-            ElevatedButton(
-              onPressed: () => context.go('/feed'),
-              child: Text('design_ui.back_to_discovery_feed'.tr()),
-            ),
-          ],
-        ),
-      ),
-    ),
-    routes: [
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/login-callback',
-        name: 'login-callback',
-        builder: (context, state) => const AppSplashScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/splash',
-        name: 'splash',
-        builder: (context, state) => const AppSplashScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/welcome',
-        name: 'welcome',
-        builder: (context, state) => const WelcomeScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/viewer-setup',
-        name: 'viewer-setup',
-        builder: (context, state) => const ViewerSetupScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/role-select',
-        name: 'role-select',
-        builder: (context, state) => const RoleSelectScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/streamer-apply',
-        name: 'streamer-apply',
-        builder: (context, state) => const StreamerApplyScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/application-pending',
-        name: 'application-pending',
-        builder: (context, state) => const ApplicationPendingScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/onboarding',
-        name: 'onboarding',
-        builder: (context, state) => const WelcomeScreen(),
-      ),
-      StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) {
-          return ResponsiveScaffoldWithNestedNavigation(navigationShell: navigationShell);
+          // Handle OAuth callback deep link redirects (e.g. sa.hadayah.streamerapp://login-callback)
+          // gracefully without ever falling through to "Route Not Found". Must
+          // mirror the '/welcome'branch's role-select gate above -- routing
+          // straight to '/feed'here skipped the broadcaster onboarding prompt
+          // entirely on every fresh Google sign-in (issue_log.md: "I did not
+          // get a prompt to start the onboarding to be a streamer, it just
+          // opened the Discovery tab").
+          if (state.uri.host == 'login-callback' ||
+              path == '/login-callback' ||
+              state.uri.path == '/login-callback') {
+            if (!isLoggedIn) return '/welcome';
+            if (!provider.hasCompletedRoleSelection &&
+                !provider.isApprovedStreamer) {
+              return '/role-select';
+            }
+            return '/feed';
+          }
+
+          return null;
         },
-        branches: [
-          StatefulShellBranch(
-            navigatorKey: _feedNavigatorKey,
-            routes: [
-              GoRoute(
-                path: '/feed',
-                name: 'feed',
-                builder: (context, state) => const DiscoveryFeedScreen(),
+        errorBuilder: (context, state) => Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline_rounded,
+                    size: 64, color: AppTheme.danger),
+                const SizedBox(height: AppTheme.spaceLg),
+                Text(
+                  'Route Not Found (${state.error?.message ?? state.uri.toString()})',
+                  style: Theme.of(context).textTheme.titleLarge,
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+                ElevatedButton(
+                  onPressed: () => context.go('/feed'),
+                  child: Text('design_ui.back_to_discovery_feed'.tr()),
+                ),
+              ],
+            ),
+          ),
+        ),
+        routes: [
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/login-callback',
+            name: 'login-callback',
+            builder: (context, state) => const AppSplashScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/splash',
+            name: 'splash',
+            builder: (context, state) => const AppSplashScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/welcome',
+            name: 'welcome',
+            builder: (context, state) => const WelcomeScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/viewer-setup',
+            name: 'viewer-setup',
+            builder: (context, state) => const ViewerSetupScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/role-select',
+            name: 'role-select',
+            builder: (context, state) => const RoleSelectScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/streamer-apply',
+            name: 'streamer-apply',
+            builder: (context, state) => const StreamerApplyScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/application-pending',
+            name: 'application-pending',
+            builder: (context, state) => const ApplicationPendingScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/onboarding',
+            name: 'onboarding',
+            builder: (context, state) => const WelcomeScreen(),
+          ),
+          StatefulShellRoute.indexedStack(
+            builder: (context, state, navigationShell) {
+              return ResponsiveScaffoldWithNestedNavigation(
+                  navigationShell: navigationShell);
+            },
+            branches: [
+              StatefulShellBranch(
+                navigatorKey: _feedNavigatorKey,
+                routes: [
+                  GoRoute(
+                    path: '/feed',
+                    name: 'feed',
+                    builder: (context, state) => const DiscoveryFeedScreen(),
+                  ),
+                ],
+              ),
+              StatefulShellBranch(
+                navigatorKey: _mapNavigatorKey,
+                routes: [
+                  GoRoute(
+                    path: '/map',
+                    name: 'map',
+                    builder: (context, state) => const SpatialMapScreen(),
+                  ),
+                ],
               ),
             ],
           ),
-          StatefulShellBranch(
-            navigatorKey: _mapNavigatorKey,
-            routes: [
-              GoRoute(
-                path: '/map',
-                name: 'map',
-                builder: (context, state) => const SpatialMapScreen(),
-              ),
-            ],
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/profile/:id',
+            name: 'profile',
+            // A missing/empty channel id resolves to the feed instead of a sample
+            // profile (P1.6).
+            redirect: (context, state) =>
+                (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
+            builder: (context, state) {
+              final id = state.pathParameters['id'] ?? '';
+              return BroadcasterProfileScreen(streamerId: id);
+            },
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/live/:id',
+            name: 'live',
+            redirect: (context, state) =>
+                (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
+            builder: (context, state) {
+              final id = state.pathParameters['id'] ?? '';
+              return LiveBroadcastScreen(streamId: id);
+            },
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/settings',
+            name: 'settings',
+            builder: (context, state) => const SettingsScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/admin',
+            name: 'admin',
+            builder: (context, state) =>
+                context.select<AppProvider, bool>((p) => p.adminRoleLoading)
+                    ? const Scaffold(
+                        body: Center(child: CircularProgressIndicator()))
+                    : const AdminHubScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/org-admin',
+            name: 'orgAdmin',
+            builder: (context, state) => const OrgAdminScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/account-banned',
+            name: 'accountBanned',
+            builder: (context, state) => const AccountBannedScreen(),
           ),
         ],
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/profile/:id',
-        name: 'profile',
-        // A missing/empty channel id resolves to the feed instead of a sample
-        // profile (P1.6).
-        redirect: (context, state) =>
-            (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
-        builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '';
-          return BroadcasterProfileScreen(streamerId: id);
-        },
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/live/:id',
-        name: 'live',
-        redirect: (context, state) =>
-            (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
-        builder: (context, state) {
-          final id = state.pathParameters['id'] ?? '';
-          return LiveBroadcastScreen(streamId: id);
-        },
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/settings',
-        name: 'settings',
-        builder: (context, state) => const SettingsScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/admin',
-        name: 'admin',
-        builder: (context, state) => context.select<AppProvider, bool>((p) => p.adminRoleLoading)
-            ? const Scaffold(body: Center(child: CircularProgressIndicator()))
-            : const AdminHubScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/org-admin',
-        name: 'orgAdmin',
-        builder: (context, state) => const OrgAdminScreen(),
-      ),
-      GoRoute(
-        parentNavigatorKey: _rootNavigatorKey,
-        path: '/account-banned',
-        name: 'accountBanned',
-        builder: (context, state) => const AccountBannedScreen(),
-      ),
-    ],
-  );
+      );
 }
 
 /// Responsive Scaffold supporting Desktop NavigationRail and Mobile BottomNav
@@ -263,14 +298,19 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.of(context).size.width >= 900;
-    final (isStreamerModeEnabled, isAdminUser, isPermittedAdmin, hasPendingApplications, pendingCount) =
-        context.select<AppProvider, (bool, bool, bool, bool, int)>((p) => (
-              p.isStreamerModeEnabled,
-              p.isAdminUser,
-              p.isPermittedAdmin,
-              p.pendingApplications.isNotEmpty,
-              p.pendingApplications.length,
-            ));
+    final (
+      isStreamerModeEnabled,
+      isAdminUser,
+      isPermittedAdmin,
+      hasPendingApplications,
+      pendingCount
+    ) = context.select<AppProvider, (bool, bool, bool, bool, int)>((p) => (
+          p.isStreamerModeEnabled,
+          p.isAdminUser,
+          p.isPermittedAdmin,
+          p.pendingApplications.isNotEmpty,
+          p.pendingApplications.length,
+        ));
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
@@ -301,8 +341,10 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                               height: 36,
                               decoration: BoxDecoration(
                                 color: AppTheme.danger.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                                border: Border.all(color: AppTheme.danger, width: 1.5),
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusSm),
+                                border: Border.all(
+                                    color: AppTheme.danger, width: 1.5),
                               ),
                               child: const Icon(
                                 Icons.school_rounded,
@@ -315,7 +357,8 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text('design_ui.streamer'.tr(),
+                                  Text(
+                                    'design_ui.streamer'.tr(),
                                     style: const TextStyle(
                                       color: AppTheme.textPrimary,
                                       fontWeight: FontWeight.bold,
@@ -323,9 +366,11 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                       letterSpacing: 1.2,
                                     ),
                                   ),
-                                  Text('design_ui.alsharqia_hub'.tr(),
+                                  Text(
+                                    'design_ui.alsharqia_hub'.tr(),
                                     style: TextStyle(
-                                      color: AppTheme.primary.withValues(alpha: 0.9),
+                                      color: AppTheme.primary
+                                          .withValues(alpha: 0.9),
                                       fontSize: 11,
                                       fontWeight: FontWeight.w500,
                                     ),
@@ -361,10 +406,9 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                             final ownId = context
                                 .read<AppProvider>()
                                 .currentUserStreamerId;
-                            context.push(
-                                ownId == null || ownId.isEmpty
-                                    ? '/feed'
-                                    : '/profile/$ownId');
+                            context.push(ownId == null || ownId.isEmpty
+                                ? '/feed'
+                                : '/profile/$ownId');
                           },
                         ),
                       ],
@@ -379,7 +423,8 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                         _DesktopNavItem(
                           icon: Icons.admin_panel_settings_rounded,
                           label: 'Admin Hub',
-                          badge: hasPendingApplications ? '$pendingCount' : null,
+                          badge:
+                              hasPendingApplications ? '$pendingCount' : null,
                           isSelected: false,
                           onTap: () => context.push('/admin'),
                         ),
@@ -402,22 +447,31 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                         padding: const EdgeInsets.all(AppTheme.spaceMd),
                         decoration: BoxDecoration(
                           color: AppTheme.surfaceAlt,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
                           border: Border.all(
-                            color: isStreamerModeEnabled ? AppTheme.danger : AppTheme.border,
+                            color: isStreamerModeEnabled
+                                ? AppTheme.danger
+                                : AppTheme.border,
                           ),
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              isStreamerModeEnabled ? Icons.videocam_rounded : Icons.visibility_rounded,
+                              isStreamerModeEnabled
+                                  ? Icons.videocam_rounded
+                                  : Icons.visibility_rounded,
                               size: 18,
-                              color: isStreamerModeEnabled ? AppTheme.danger : AppTheme.primary,
+                              color: isStreamerModeEnabled
+                                  ? AppTheme.danger
+                                  : AppTheme.primary,
                             ),
                             const SizedBox(width: AppTheme.spaceSm),
                             Expanded(
                               child: Text(
-                                isStreamerModeEnabled ? 'Streamer Mode' : 'Viewer Mode',
+                                isStreamerModeEnabled
+                                    ? 'Streamer Mode'
+                                    : 'Viewer Mode',
                                 style: const TextStyle(
                                   color: AppTheme.textPrimary,
                                   fontSize: 11,
@@ -431,7 +485,9 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
 
                       // Language Switcher in Sidebar
                       const Padding(
-                        padding: EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
+                        padding: EdgeInsets.symmetric(
+                            horizontal: AppTheme.spaceMd,
+                            vertical: AppTheme.spaceSm),
                         child: LanguageSwitcher(),
                       ),
                       const SizedBox(height: AppTheme.spaceSm),
@@ -463,8 +519,10 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                 backgroundColor: AppTheme.surface,
                 selectedItemColor: AppTheme.danger,
                 unselectedItemColor: AppTheme.textMuted,
-                selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-                unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.normal, fontSize: 11),
+                selectedLabelStyle:
+                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
+                unselectedLabelStyle: const TextStyle(
+                    fontWeight: FontWeight.normal, fontSize: 11),
                 onTap: (index) {
                   navigationShell.goBranch(
                     index,
@@ -474,12 +532,14 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                 items: [
                   BottomNavigationBarItem(
                     icon: const Icon(Icons.grid_view_rounded),
-                    activeIcon: const Icon(Icons.grid_view_rounded, color: AppTheme.danger),
+                    activeIcon: const Icon(Icons.grid_view_rounded,
+                        color: AppTheme.danger),
                     label: context.tr('nav.feed'),
                   ),
                   BottomNavigationBarItem(
                     icon: const Icon(Icons.map_rounded),
-                    activeIcon: const Icon(Icons.map_rounded, color: AppTheme.danger),
+                    activeIcon:
+                        const Icon(Icons.map_rounded, color: AppTheme.danger),
                     label: context.tr('nav.map'),
                   ),
                 ],
@@ -509,12 +569,18 @@ class _DesktopNavItem extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm, vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 10),
+        margin: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spaceSm, vertical: 2),
+        padding: const EdgeInsets.symmetric(
+            horizontal: AppTheme.spaceMd, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.danger.withValues(alpha: 0.15) : Colors.transparent,
+          color: isSelected
+              ? AppTheme.danger.withValues(alpha: 0.15)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: isSelected ? Border.all(color: AppTheme.danger.withValues(alpha: 0.5)) : null,
+          border: isSelected
+              ? Border.all(color: AppTheme.danger.withValues(alpha: 0.5))
+              : null,
         ),
         child: Row(
           children: [
@@ -528,7 +594,9 @@ class _DesktopNavItem extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
+                  color: isSelected
+                      ? AppTheme.textPrimary
+                      : AppTheme.textSecondary,
                   fontSize: 13,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -536,7 +604,8 @@ class _DesktopNavItem extends StatelessWidget {
             ),
             if (badge != null) ...[
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                 decoration: BoxDecoration(
                   color: AppTheme.warning,
                   borderRadius: BorderRadius.circular(10),

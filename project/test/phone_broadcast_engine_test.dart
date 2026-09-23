@@ -22,6 +22,45 @@ void main() {
     messenger.setMockMessageHandler(eventChannel.name, null);
   });
 
+  test('start acknowledgement stays connecting until native confirmation',
+      () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
+    final engine = RtmpPublishEngine();
+    await engine.initializeCamera();
+    await engine.startPublishing('rtmp://localhost/test');
+    var confirmed = false;
+    final connection = engine.waitUntilLive().then((live) => confirmed = live);
+    await Future<void>.delayed(Duration.zero);
+    expect(confirmed, isFalse);
+    expect(engine.state, RtmpPublishState.connecting);
+    messenger.handlePlatformMessage(eventChannel.name,
+        eventChannel.codec.encodeSuccessEnvelope({'type': 'live'}), (_) {});
+    await connection;
+    expect(confirmed, isTrue);
+    engine.dispose();
+  });
+
+  test('connection wait fails on native error and screen disposal', () async {
+    messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
+    for (final dispose in [false, true]) {
+      final engine = RtmpPublishEngine();
+      await engine.initializeCamera();
+      await engine.startPublishing('rtmp://localhost/test');
+      final connection = engine.waitUntilLive();
+      if (dispose) {
+        engine.dispose();
+      } else {
+        messenger.handlePlatformMessage(
+            eventChannel.name,
+            eventChannel.codec.encodeSuccessEnvelope(
+                {'type': 'error', 'message': 'test failure'}),
+            (_) {});
+      }
+      expect(await connection, isFalse);
+      if (!dispose) engine.dispose();
+    }
+  });
+
   test(
     'initializeCamera transitions idle -> initializingCamera -> ready on success',
     () async {
@@ -45,7 +84,8 @@ void main() {
     },
   );
 
-  test('initializeCamera surfaces a PlatformException as error state', () async {
+  test('initializeCamera surfaces a PlatformException as error state',
+      () async {
     messenger.setMockMethodCallHandler(methodChannel, (call) async {
       throw PlatformException(code: 'PREPARE_FAILED', message: 'no encoder');
     });
@@ -117,9 +157,11 @@ void main() {
     expect(engine.isFrontCamera, isTrue);
   });
 
-  test('switchCamera surfaces an error without flipping isFrontCamera', () async {
+  test('switchCamera surfaces an error without flipping isFrontCamera',
+      () async {
     messenger.setMockMethodCallHandler(methodChannel, (call) async {
-      throw PlatformException(code: 'SWITCH_FAILED', message: 'no second camera');
+      throw PlatformException(
+          code: 'SWITCH_FAILED', message: 'no second camera');
     });
 
     final engine = RtmpPublishEngine();
@@ -129,7 +171,8 @@ void main() {
     expect(engine.lastError, 'no second camera');
   });
 
-  test("initializeCamera sends the selected preset's width/height/bitrate", () async {
+  test("initializeCamera sends the selected preset's width/height/bitrate",
+      () async {
     Map<dynamic, dynamic>? capturedArgs;
     messenger.setMockMethodCallHandler(methodChannel, (call) async {
       capturedArgs = call.arguments as Map<dynamic, dynamic>?;
@@ -190,7 +233,8 @@ void main() {
     expect(engine.state, RtmpPublishState.stopped);
   });
 
-  test('setMuted toggles isMuted on success and sends the muted flag', () async {
+  test('setMuted toggles isMuted on success and sends the muted flag',
+      () async {
     MethodCall? captured;
     messenger.setMockMethodCallHandler(methodChannel, (call) async {
       captured = call;
@@ -249,7 +293,8 @@ void main() {
     },
   );
 
-  test('an event-channel "live" event flips state to live once initialized', () async {
+  test('an event-channel "live" event flips state to live once initialized',
+      () async {
     messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
 
     final engine = RtmpPublishEngine();
@@ -348,7 +393,8 @@ void main() {
 
     final engine = RtmpPublishEngine();
     final observed = <bool>[];
-    engine.isMicSilent.addListener(() => observed.add(engine.isMicSilent.value));
+    engine.isMicSilent
+        .addListener(() => observed.add(engine.isMicSilent.value));
 
     expect(engine.isMicSilent.value, isFalse);
 

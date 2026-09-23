@@ -40,12 +40,11 @@ class VodPlayerModalSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
     final title = vod.getLocalizedTitle(lang);
-    final isSaved = context.select<AppProvider, bool>(
-        (p) => p.isBookmarked(vod.vodId));
+    final isSaved =
+        context.select<AppProvider, bool>((p) => p.isBookmarked(vod.vodId));
     final description = vod.getLocalizedDescription(lang);
-    final broadcasterName = streamer != null
-        ? streamer!.getLocalizedName(lang)
-        : vod.streamerId;
+    final broadcasterName =
+        streamer != null ? streamer!.getLocalizedName(lang) : vod.streamerId;
     final organization = streamer?.getLocalizedOrganization(lang) ?? '';
 
     return Container(
@@ -54,7 +53,8 @@ class VodPlayerModalSheet extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       child: SafeArea(
         top: false,
@@ -65,7 +65,8 @@ class VodPlayerModalSheet extends StatelessWidget {
             // Top Drag Handle Indicator bar
             Center(
               child: Container(
-                margin: const EdgeInsets.only(top: AppTheme.spaceSm, bottom: AppTheme.spaceXs),
+                margin: const EdgeInsets.only(
+                    top: AppTheme.spaceSm, bottom: AppTheme.spaceXs),
                 width: 36,
                 height: 4,
                 decoration: BoxDecoration(
@@ -111,7 +112,8 @@ class VodPlayerModalSheet extends StatelessWidget {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
+                    icon: const Icon(Icons.close_rounded,
+                        color: AppTheme.textSecondary),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -156,11 +158,12 @@ class VodPlayerModalSheet extends StatelessWidget {
                       spacing: AppTheme.spaceSm,
                       runSpacing: AppTheme.spaceXs,
                       children: [
-                        _buildStatChip(
-                          icon: Icons.timer_outlined,
-                          label: vod.formattedDuration,
-                          color: AppTheme.accent,
-                        ),
+                        if (vod.durationSeconds > 0)
+                          _buildStatChip(
+                            icon: Icons.timer_outlined,
+                            label: vod.formattedDuration,
+                            color: AppTheme.accent,
+                          ),
                         _buildStatChip(
                           icon: Icons.calendar_today_outlined,
                           label: vod.recordedDate,
@@ -245,7 +248,8 @@ class VodPlayerModalSheet extends StatelessWidget {
                               // sits on the white sheet: `onMedia` white made
                               // it invisible.
                               foregroundColor: AppTheme.primary,
-                              side: const BorderSide(color: AppTheme.borderStrong),
+                              side: const BorderSide(
+                                  color: AppTheme.borderStrong),
                               padding: const EdgeInsets.symmetric(vertical: 12),
                             ),
                           ),

@@ -14,6 +14,7 @@ enum RtmpPublishState {
   ready,
   connecting,
   live,
+
   /// v0.7 Checkpoint 4 Phase 1 -- the connection dropped mid-broadcast
   /// (network switch, weak signal) and RootEncoder is retrying with
   /// exponential backoff. Distinct from [connecting] (the initial connect)
@@ -143,6 +144,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   int? get maxReconnectAttempts => _maxReconnectAttempts;
 
   StreamSubscription<dynamic>? _eventSub;
+  bool _disposed = false;
 
   // v0.7 Checkpoint 4 Phase 1 -- a watchdog, not just a display concern.
   // Confirmed on-device that a write-side connection drop (broken pipe from
@@ -211,7 +213,8 @@ class RtmpPublishEngine extends ChangeNotifier {
   /// applies source changes on the fly.
   Future<void> setAudioOnly(bool audioOnly) async {
     try {
-      await _channel.invokeMethod<void>('setAudioOnly', {'audioOnly': audioOnly});
+      await _channel
+          .invokeMethod<void>('setAudioOnly', {'audioOnly': audioOnly});
       _isAudioOnly = audioOnly;
       _isCameraOff = audioOnly;
       notifyListeners();
@@ -238,7 +241,8 @@ class RtmpPublishEngine extends ChangeNotifier {
   /// through to the log below.
   Future<void> setOrientation(int orientation) async {
     try {
-      await _channel.invokeMethod<void>('setOrientation', {'orientation': orientation});
+      await _channel
+          .invokeMethod<void>('setOrientation', {'orientation': orientation});
     } on PlatformException catch (e) {
       debugPrint('[RtmpPublishEngine] setOrientation failed: $e');
     } on MissingPluginException catch (e) {
@@ -257,25 +261,51 @@ class RtmpPublishEngine extends ChangeNotifier {
     }
   }
 
+  /// A MethodChannel acknowledgement only starts an attempt. A native
+  /// connection event is required before the caller can publish live state.
+  Future<bool> waitUntilLive() async {
+    if (_state == RtmpPublishState.live) return true;
+    if (_state != RtmpPublishState.connecting &&
+        _state != RtmpPublishState.reconnecting) {
+      return false;
+    }
+    final result = Completer<bool>();
+    void changed() {
+      if (_state == RtmpPublishState.live) {
+        result.complete(true);
+      } else if (_state == RtmpPublishState.error ||
+          _state == RtmpPublishState.stopped) {
+        result.complete(false);
+      }
+      if (result.isCompleted) removeListener(changed);
+    }
+
+    addListener(changed);
+    return result.future;
+  }
+
   Future<void> stopPublishing() async {
+    if (_disposed) return;
     try {
       await _channel.invokeMethod<void>('stopStream');
     } on PlatformException catch (e) {
       _lastError = e.message ?? e.code;
     } finally {
-      _lastBitrateBps = null;
-      _reconnectAttempt = null;
-      _maxReconnectAttempts = null;
-      _silenceTimer?.cancel();
-      _silenceTimer = null;
-      _lastMicRms = null;
-      // Mute is a property of a *live* MicrophoneSource, and stopping tears
-      // that source down -- carrying the flag over would both strand a
-      // "Streamer Microphone Muted"badge on an ended broadcast and make a
-      // restarted one report a mute the native encoder no longer holds.
-      _isMuted = false;
-      _applySilenceState(levelIsSilent: false);
-      _setState(RtmpPublishState.stopped);
+      if (!_disposed) {
+        _lastBitrateBps = null;
+        _reconnectAttempt = null;
+        _maxReconnectAttempts = null;
+        _silenceTimer?.cancel();
+        _silenceTimer = null;
+        _lastMicRms = null;
+        // Mute is a property of a *live* MicrophoneSource, and stopping tears
+        // that source down -- carrying the flag over would both strand a
+        // "Streamer Microphone Muted"badge on an ended broadcast and make a
+        // restarted one report a mute the native encoder no longer holds.
+        _isMuted = false;
+        _applySilenceState(levelIsSilent: false);
+        _setState(RtmpPublishState.stopped);
+      }
     }
   }
 
@@ -375,6 +405,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   }
 
   void _setState(RtmpPublishState value) {
+    if (_disposed) return;
     _watchdogTimer?.cancel();
     _state = value;
     switch (value) {
@@ -414,6 +445,8 @@ class RtmpPublishEngine extends ChangeNotifier {
 
   @override
   void dispose() {
+    _setState(RtmpPublishState.stopped);
+    _disposed = true;
     _watchdogTimer?.cancel();
     _silenceTimer?.cancel();
     isMicSilent.dispose();

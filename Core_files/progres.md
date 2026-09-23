@@ -1,12 +1,14 @@
 ---
 type: progress
 project: Streamer_app
-updated: 2026-09-23
+updated: 2026-09-24
 ---
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
 
-Admin Hub checkpoint 2026-09-23, commit `11d0b09`: desktop side navigation, narrow-screen drawer, persistent English/Arabic toggle, honest unavailable analytics, and the admin role-loading fix are locally verified. Full Flutter 514 passed, analyzer 0, fresh local SQL 283 assertions passed. Browser UI evidence covers Welcome pause, Safety end/remove, audit reasons/actor/action filter, keyword lifecycle, history/recovery and refresh-based block synchronization. Gates are NOT green: G6=554 and G11a=9 in pre-existing nested worktrees. P6 remains NOT accepted; no physical Android devices or real Google OAuth were tested. Actor/date audit filter controls remain absent. P6S has not started. Separate P2/player truthfulness work remains open. Evidence and exact owner steps: `brief/evidence/2026-09-23/admin-hub/README.md`.
+Owner-evidence remediation, 2026-09-23: account-scoped role hydration, viewer/transfer cleanup, server-confirmed LIVE, actor/action/date audit paging, phone/RTL layouts, admin localization, profile/VOD truthfulness and asset-listing restrictions are implemented locally. Final Flutter **530 passed**, analyzer **0 issues**, disposable SQL **288 assertions / 16 files passed**. Two local password sessions verified Realtime transfer and server denial of the displaced device; the initial snapshot/join window still uses the existing 20-second heartbeat fallback. G6=565 (+11 localized `.tr()` matches), G11a=9 unchanged, G7=0. **P6 is NOT accepted; P6S is NOT complete; the app is not release-ready.** Partial phone lifecycle repairs compile, but two physical phones, Google OAuth and YouTube ingest were not tested. Windows STL1011 was reproduced; signed-in blank-web and exact avatar-429 behavior remain owner retests. Evidence, issue-by-issue outcomes and exact retest steps: `brief/evidence/2026-09-23/p6-owner-acceptance/REMEDIATION_2026-09-23.md`. No push, deploy or production operation.
+
+Prior checkpoint (historical): Admin Hub checkpoint 2026-09-23, commit `11d0b09`: desktop side navigation, narrow-screen drawer, persistent English/Arabic toggle, honest unavailable analytics, and the admin role-loading fix are locally verified. Full Flutter 514 passed, analyzer 0, fresh local SQL 283 assertions passed. Browser UI evidence covers Welcome pause, Safety end/remove, audit reasons/actor/action filter, keyword lifecycle, history/recovery and refresh-based block synchronization. Gates are NOT green: G6=554 and G11a=9 in pre-existing nested worktrees. P6 remains NOT accepted; no physical Android devices or real Google OAuth were tested. Actor/date audit filter controls remain absent. P6S has not started. Separate P2/player truthfulness work remains open. Evidence and exact owner steps: `brief/evidence/2026-09-23/admin-hub/README.md`.
 
 
 > Historical log of accomplishments, design iterations, and active sprint milestones.

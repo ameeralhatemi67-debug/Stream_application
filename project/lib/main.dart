@@ -49,6 +49,7 @@ class _StreamerAppState extends State<StreamerApp> {
   late final AppProvider _appProvider;
   late final GoRouter _router;
   bool _deviceConflictDialogShown = false;
+  bool _broadcastLossShown = false;
 
   @override
   void initState() {
@@ -75,6 +76,21 @@ class _StreamerAppState extends State<StreamerApp> {
   /// (issue_log.md multi-device collision). Global (root navigator) so it
   /// fires regardless of which screen the user lands on after sign-in.
   void _maybeShowDeviceConflictDialog() {
+    final lost = _appProvider.broadcastSessionError == 'broadcast_session_lost';
+    if (lost && !_broadcastLossShown) {
+      _broadcastLossShown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        _router.go('/feed');
+        final context = AppRouter.rootNavigatorKey.currentContext;
+        if (context != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('broadcast_session_lost'.tr())));
+        }
+      });
+    } else if (!lost) {
+      _broadcastLossShown = false;
+    }
     final remote = _appProvider.remoteBroadcasterSession;
     final current = _appProvider.currentDeviceSession;
     if (remote == null || current == null) {
@@ -85,7 +101,10 @@ class _StreamerAppState extends State<StreamerApp> {
     _deviceConflictDialogShown = true;
 
     final context = AppRouter.rootNavigatorKey.currentContext;
-    if (context == null) return;
+    if (context == null) {
+      _deviceConflictDialogShown = false;
+      return;
+    }
     DeviceSessionConflictDialog.show(
       context: context,
       currentDevice: current,
@@ -95,6 +114,7 @@ class _StreamerAppState extends State<StreamerApp> {
         _appProvider.transferBroadcasterToCurrentDevice();
       } else if (choice == DeviceSessionChoice.continueAsViewer) {
         _appProvider.continueAsViewerOnCurrentDevice();
+        _router.go('/feed');
       }
     });
   }
@@ -121,7 +141,8 @@ class _StreamerAppState extends State<StreamerApp> {
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             routerConfig: _router,
-            builder: (context, child) => MediaQuery.withClampedTextScaling(maxScaleFactor: 1.3, child: child ?? const SizedBox.shrink()),
+            builder: (context, child) => MediaQuery.withClampedTextScaling(
+                maxScaleFactor: 1.3, child: child ?? const SizedBox.shrink()),
           );
         },
       ),

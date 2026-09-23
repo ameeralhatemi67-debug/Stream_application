@@ -141,7 +141,8 @@
     "speaker_profile_title": "Instructor Profile",
     "featured_channels_hint": "Click any instructor or channel to view their lectures & playlists",
     "filter_active_badge": "Active Filter",
-    "view_channel_content": "View Lectures"
+    "view_channel_content": "View Lectures",
+    "channel_unavailable": "Channel unavailable."
   },
   "live": {
     "title": "Live Broadcast Room",
@@ -304,7 +305,9 @@
     "report_invalid_toast": "This report couldn't be accepted. Pick a reason and try again.",
     "report_not_permitted_toast": "Sign in with an active account to report messages.",
     "report_failed_toast": "Couldn't send the report. Check your connection and try again.",
-    "chat_composer_platform_paused": "Chat is paused across the platform right now."
+    "chat_composer_platform_paused": "Chat is paused across the platform right now.",
+    "not_live": "Not live",
+    "watch_url_required": "Enter the YouTube watch URL so viewers and chat can join this broadcast."
   },
   "language": {
     "en": "English",
@@ -1265,6 +1268,58 @@
     "action_chatReportDismissed": "Chat report dismissed",
     "action_chatMessageDeleted": "Chat message deleted",
     "action_chatSenderMuted": "Chat sender muted",
-    "action_chatSenderBanned": "Chat sender banned"
+    "action_chatSenderBanned": "Chat sender banned",
+    "audit_actor": "Actor email (exact)",
+    "audit_apply": "Apply",
+    "audit_dates": "Date range",
+    "audit_clear": "Clear filters"
+  },
+  "broadcast_approval_required": "Broadcaster approval and verification are required. Submit or review your application.",
+  "roles": {
+    "master_admin": "Master Admin",
+    "admin": "Admin",
+    "org_owner": "Permitted Admin (Owner)",
+    "org_co_owner": "Permitted Admin (Co-Owner)",
+    "masters": "Master Admins",
+    "admins": "Admins",
+    "owners": "Permitted Admins (Owners & Co-Owners)",
+    "no_masters": "No Master Admins yet.",
+    "no_admins": "No Admins yet.",
+    "no_owners": "No organization owners yet.",
+    "email": "Account email…",
+    "revoke": "Revoke role",
+    "grant_failed": "Could not grant this role.",
+    "revoke_failed": "Could not revoke this role.",
+    "permission_failed": "Could not update this permission.",
+    "account_missing": "This account must sign in before a role can be granted.",
+    "revoked": "Role revoked.",
+    "granted": "Role granted.",
+    "edit_terms": "Edit terms",
+    "moderate_chat_platform_wide": "Moderate chat across the platform",
+    "manage_admins": "Manage administrators",
+    "stream": "Stream",
+    "organization": "Organization",
+    "global": "Platform-wide"
+  },
+  "moderation": {
+    "failed": "Could not complete this action.",
+    "ten_minutes": "10 minutes",
+    "one_hour": "1 hour",
+    "mute_title": "Mute sender?",
+    "mute": "Mute",
+    "search": "Search sender, reporter, stream or reason…",
+    "dismissed": "Report dismissed.",
+    "delete_title": "Delete this message?",
+    "delete_body": "This removes the message from the chat. This cannot be undone.",
+    "delete": "Delete",
+    "deleted": "Message deleted.",
+    "mute_body": "{name} will be unable to send messages in this stream for the selected duration.",
+    "muted": "Sender muted in this stream.",
+    "ban_body": "{name} will be blocked from protected account actions. Connected sessions show the suspension screen when their status refreshes.",
+    "banned": "Account banned from protected actions.",
+    "stream_count": "{count} streams",
+    "reported": "Reported: {name}",
+    "reason": "Reason: {reason}",
+    "metadata": "Reported by {name} • Stream: {stream} • {date}"
   }
 }

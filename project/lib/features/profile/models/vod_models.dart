@@ -40,6 +40,7 @@ class VodModel {
 
   /// Human-readable duration string (e.g. "54:00"or "1h 15m").
   String get formattedDuration {
+    if (durationSeconds <= 0) return '';
     final duration = Duration(seconds: durationSeconds);
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
@@ -160,5 +161,6 @@ class PlaylistModel {
   });
 
   String getLocalizedTitle(String lang) => lang == 'ar' ? titleAr : titleEn;
-  String getLocalizedDescription(String lang) => lang == 'ar' ? descriptionAr : descriptionEn;
+  String getLocalizedDescription(String lang) =>
+      lang == 'ar' ? descriptionAr : descriptionEn;
 }

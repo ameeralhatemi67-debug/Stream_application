@@ -56,6 +56,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   late AppProvider _appProvider;
   bool _appProviderCaptured = false;
   bool _weStartedBroadcast = false;
+  bool _starting = false;
+  bool _syncingLive = false;
 
   @override
   void didChangeDependencies() {
@@ -77,15 +79,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
     _tabController = TabController(length: 3, vsync: this);
     _chatController = LiveChatController(
-      streamId: 'phone_broadcast_${DateTime.now().millisecondsSinceEpoch}',
+      streamId: context.read<AppProvider>().customYouTubeVideoId,
       onReaction: (type) => _reactionsController.spawnReaction(type),
-    )..start();
+    );
+    if (context.read<AppProvider>().customYouTubeVideoId.isNotEmpty) {
+      _chatController.start();
+    }
     _chatController.addListener(_handleChatConnectionChange);
 
     _setWakelock(true);
 
     if (widget.quickLaunchPreset != null) {
-      _weStartedBroadcast = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) _confirmPresetAndSetup();
       });
@@ -162,8 +166,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             context: context,
             builder: (dialogContext) => AlertDialog(
               backgroundColor: AppTheme.surface,
-              title: Text('design_ui.permission_required'.tr(),
-                style: const TextStyle(color: AppTheme.onMedia),
+              title: Text(
+                'design_ui.permission_required'.tr(),
+                style: const TextStyle(color: AppTheme.textPrimary),
               ),
               content: Text(
                 (kind == BroadcastPermissionKind.camera
@@ -196,44 +201,86 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   Future<void> _startBroadcast() async {
+    if (_starting || _weStartedBroadcast) return;
+    _starting = true;
     try {
-      if (!_appProvider.isBroadcastingLive) {
-        await _appProvider.toggleBroadcasterGoLive(context);
-      }
-      if (!mounted ||
-          !_appProvider.isBroadcastingLive ||
-          _appProvider.currentDeviceSession?.isPrimaryBroadcaster != true) {
+      final permitted = await _appProvider.checkBroadcastPermission();
+      if (!mounted) return;
+      if (!permitted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                (_appProvider.broadcastSessionError ?? 'broadcast_state_failed')
+                    .tr())));
         return;
       }
       _weStartedBroadcast = true;
       await _engine.startPublishing(_appProvider.phoneBroadcastFullUrl);
+      final connected = await _engine.waitUntilLive();
+      if (!mounted) return;
+      if (!connected || !_weStartedBroadcast) {
+        await _stopBroadcast();
+        return;
+      }
+      await _appProvider.setBroadcasterLive(true, context);
+      if (!_appProvider.isBroadcastingLive) await _stopBroadcast();
     } on Exception {
       await _stopBroadcast();
-      // The engine's error state drives the UI.
+    } finally {
+      _starting = false;
+      if (mounted) {
+        setState(() {});
+        if (_weStartedBroadcast && _engine.state != RtmpPublishState.live) {
+          _syncEncoderLiveState();
+        }
+      }
     }
   }
 
   void _onBroadcastSessionChanged() {
-    if (!mounted ||
-        _appProvider.broadcastSessionError != 'broadcast_session_lost') {
-      return;
+    if (!mounted || !_weStartedBroadcast) return;
+    if (!_appProvider.isStreamerModeEnabled ||
+        _appProvider.currentDeviceSession?.isPrimaryBroadcaster != true ||
+        _appProvider.broadcastSessionError == 'broadcast_session_lost') {
+      _stopBroadcast();
     }
-    _weStartedBroadcast = false;
-    _engine.stopPublishing();
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text('broadcast_session_lost'.tr())));
+    setState(() {});
   }
 
   Future<void> _stopBroadcast() async {
-    await _engine.stopPublishing();
-    if (_weStartedBroadcast && _appProvider.isBroadcastingLive) {
-      await _appProvider.toggleBroadcasterGoLive(mounted ? context : null);
-    }
+    final owned = _weStartedBroadcast;
     _weStartedBroadcast = false;
+    await _engine.stopPublishing();
+    if (owned) await _appProvider.setBroadcasterLive(false);
   }
 
-  void _onEngineChanged() => setState(() {});
+  void _onEngineChanged() {
+    if (!mounted) return;
+    setState(() {});
+    if (_weStartedBroadcast && !_starting && !_syncingLive) {
+      _syncEncoderLiveState();
+    }
+  }
+
+  Future<void> _syncEncoderLiveState() async {
+    _syncingLive = true;
+    try {
+      // Reconcile again if a disconnect arrives while the RPC is in flight.
+      do {
+        final live =
+            _weStartedBroadcast && _engine.state == RtmpPublishState.live;
+        await _appProvider.setBroadcasterLive(live);
+        if (_appProvider.broadcastSessionError != null) break;
+      } while (mounted &&
+          _appProvider.isBroadcastingLive !=
+              (_weStartedBroadcast && _engine.state == RtmpPublishState.live));
+      if (_engine.state == RtmpPublishState.error ||
+          _appProvider.broadcastSessionError != null) {
+        await _stopBroadcast();
+      }
+    } finally {
+      _syncingLive = false;
+    }
+  }
 
   void _onMicSilenceChanged() {
     if (!_appProviderCaptured) return;
@@ -275,9 +322,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     }
     _setWakelock(false);
     _restorePortraitChrome();
-    if (_weStartedBroadcast) {
-      _stopBroadcast();
-    }
+
     _tabController.dispose();
     _chatTextController.dispose();
     _chatScrollController.dispose();
@@ -286,9 +331,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     _engine.removeListener(_onEngineChanged);
     _engine.isMicSilent.removeListener(_onMicSilenceChanged);
     if (_appProviderCaptured) _appProvider.setStreamerMicMuted(false);
-    if (_weStartedBroadcast && _appProvider.isBroadcastingLive) {
+    // A successful start RPC may still be pending when the route closes.
+    // Queue stop behind it even while the visible state is still offline.
+    if (_weStartedBroadcast) {
       final provider = _appProvider;
-      Future.microtask(() => provider.toggleBroadcasterGoLive());
+      Future.microtask(() => provider.setBroadcasterLive(false));
     }
     _engine.dispose();
     super.dispose();
@@ -351,8 +398,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded,
-              color: AppTheme.onMedia, size: 22),
-          tooltip: 'Back',
+              color: AppTheme.textPrimary, size: 22),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: () => Navigator.of(context).pop(),
         ),
         titleSpacing: 0,
@@ -378,7 +425,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppTheme.onMedia,
+                            color: AppTheme.textPrimary,
                             fontSize: 13.5,
                             fontWeight: FontWeight.bold,
                           ),
@@ -418,7 +465,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               ),
                             ),
                             const SizedBox(width: 4),
-                            Text('design_ui.live'.tr(),
+                            Text(
+                              (_engine.state == RtmpPublishState.live &&
+                                          _appProvider.isBroadcastingLive
+                                      ? 'design_ui.live'
+                                      : 'live.not_live')
+                                  .tr(),
                               style: const TextStyle(
                                 color: AppTheme.danger,
                                 fontSize: 9,
@@ -488,8 +540,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       ],
                     ),
                   ),
-                  const VerticalDivider(
-                      width: 1, color: AppTheme.border),
+                  const VerticalDivider(width: 1, color: AppTheme.border),
                   Expanded(
                     flex: isDesktop ? 35 : 42,
                     child: _buildCinemaTabPanel(langCode),
@@ -498,12 +549,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               )
             : Column(
                 children: [
-                  _buildVideoViewport(
-                    isSideBySide: false,
-                    streamer: streamer,
-                  ),
-                  _buildTitleAndDescriptionStrip(
-                      title, description, streamer, langCode),
+                  if (mediaQuery.viewInsets.bottom == 0) ...[
+                    _buildVideoViewport(
+                        isSideBySide: false, streamer: streamer),
+                    _buildTitleAndDescriptionStrip(
+                        title, description, streamer, langCode),
+                  ],
                   Expanded(child: _buildCinemaTabPanel(langCode)),
                 ],
               ),
@@ -550,7 +601,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     CircleAvatar(
                       radius: 34,
                       backgroundColor: AppTheme.surface,
-                      backgroundImage: resolveImageProviderOrNull(streamer.avatarUrl),
+                      backgroundImage:
+                          resolveImageProviderOrNull(streamer.avatarUrl),
                     ),
                     const SizedBox(height: 10),
                     Container(
@@ -568,7 +620,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           const Icon(Icons.videocam_off_rounded,
                               size: 14, color: AppTheme.warning),
                           const SizedBox(width: 6),
-                          Text('design_ui.camera_is_off_audio_only'.tr(),
+                          Text(
+                            'design_ui.camera_is_off_audio_only'.tr(),
                             style: const TextStyle(
                               color: AppTheme.warning,
                               fontSize: 11,
@@ -623,7 +676,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 child: Stack(
                   children: [
                     // Top Left: Live Bitrate Badge
-                    if (_engine.state == RtmpPublishState.live)
+                    if (_engine.state == RtmpPublishState.live &&
+                        _appProvider.isBroadcastingLive)
                       PositionedDirectional(
                         top: AppTheme.spaceSm,
                         start: AppTheme.spaceSm,
@@ -648,7 +702,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           color: AppTheme.media.withValues(alpha: 0.65),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(color: AppTheme.onMedia.withValues(alpha: 0.24), width: 0.8),
+                          border: Border.all(
+                              color: AppTheme.onMedia.withValues(alpha: 0.24),
+                              width: 0.8),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.more_vert_rounded,
@@ -668,7 +724,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           color: AppTheme.media.withValues(alpha: 0.65),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(color: AppTheme.onMedia.withValues(alpha: 0.24), width: 0.8),
+                          border: Border.all(
+                              color: AppTheme.onMedia.withValues(alpha: 0.24),
+                              width: 0.8),
                         ),
                         child: IconButton(
                           icon: const Icon(Icons.fullscreen_rounded,
@@ -771,8 +829,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 borderRadius: BorderRadius.vertical(
                     top: Radius.circular(AppTheme.radiusLg)),
                 border: Border(
-                  top:
-                      BorderSide(color: AppTheme.borderStrong, width: 1),
+                  top: BorderSide(color: AppTheme.borderStrong, width: 1),
                 ),
               ),
               padding: const EdgeInsets.symmetric(
@@ -798,7 +855,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         const Icon(Icons.tune_rounded,
                             color: AppTheme.danger, size: 20),
                         const SizedBox(width: 8),
-                        Text('design_ui.streamer_quick_controls'.tr(),
+                        Text(
+                          'design_ui.streamer_quick_controls'.tr(),
                           style: const TextStyle(
                             color: AppTheme.onMedia,
                             fontSize: 15,
@@ -819,8 +877,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           : AppTheme.surfaceAlt,
                       leading: Icon(
                         isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                        color:
-                            isMuted ? AppTheme.danger : AppTheme.success,
+                        color: isMuted ? AppTheme.danger : AppTheme.success,
                       ),
                       title: Text(
                         isMuted ? 'Unmute Microphone' : 'Mute Microphone',
@@ -901,9 +958,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         isCameraOff
                             ? Icons.videocam_off_rounded
                             : Icons.videocam_rounded,
-                        color: isCameraOff
-                            ? AppTheme.warning
-                            : AppTheme.primary,
+                        color:
+                            isCameraOff ? AppTheme.warning : AppTheme.primary,
                       ),
                       title: Text(
                         isCameraOff
@@ -978,13 +1034,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       tileColor: AppTheme.danger.withValues(alpha: 0.1),
                       leading: const Icon(Icons.cell_tower_rounded,
                           color: AppTheme.danger),
-                      title: Text('design_ui.broadcaster_studio_end_stream'.tr(),
+                      title: Text(
+                        'design_ui.broadcaster_studio_end_stream'.tr(),
                         style: const TextStyle(
                             color: AppTheme.danger,
                             fontWeight: FontWeight.bold,
                             fontSize: 13.5),
                       ),
-                      subtitle: Text('design_ui.adjust_stream_settings_or_end_broadcast_session'.tr(),
+                      subtitle: Text(
+                        'design_ui.adjust_stream_settings_or_end_broadcast_session'
+                            .tr(),
                         style: const TextStyle(
                             color: AppTheme.textSecondary, fontSize: 11),
                       ),
@@ -1213,9 +1272,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     children: [
                       const Icon(Icons.chat_bubble_outline_rounded, size: 14),
                       const SizedBox(width: 5),
-                      Text('live.tab_chat'.tr(),
-                          style: const TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.bold)),
+                      Flexible(
+                          child: Text('live.tab_chat'.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
@@ -1226,9 +1288,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     children: [
                       const Icon(Icons.picture_as_pdf_outlined, size: 14),
                       const SizedBox(width: 5),
-                      Text('live.tab_sources'.tr(),
-                          style: const TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.bold)),
+                      Flexible(
+                          child: Text('live.tab_sources'.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
@@ -1239,9 +1304,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     children: [
                       const Icon(Icons.location_on_outlined, size: 14),
                       const SizedBox(width: 5),
-                      Text('live.tab_venue'.tr(),
-                          style: const TextStyle(
-                              fontSize: 11, fontWeight: FontWeight.bold)),
+                      Flexible(
+                          child: Text('live.tab_venue'.tr(),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 11, fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
@@ -1294,8 +1362,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             'live.slides_attached_subtitle'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           Expanded(
@@ -1322,9 +1389,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text('design_ui.presentation_deck_pdf_attached'.tr(),
-                    style:
-                        const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+                  Text(
+                    'design_ui.presentation_deck_pdf_attached'.tr(),
+                    style: const TextStyle(
+                        color: AppTheme.textMuted, fontSize: 11),
                   ),
                 ],
               ),
@@ -1389,8 +1457,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 const SizedBox(height: 4),
                 Text(
                   'Capacity: ${venueInfo.seatingCapacity} Seats',
-                  style: const TextStyle(
-                      color: AppTheme.success, fontSize: 12),
+                  style: const TextStyle(color: AppTheme.success, fontSize: 12),
                 ),
               ],
             ),
@@ -1418,7 +1485,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   CircleAvatar(
                     radius: 40,
                     backgroundColor: AppTheme.surface,
-                    backgroundImage: resolveImageProviderOrNull(streamer.avatarUrl),
+                    backgroundImage:
+                        resolveImageProviderOrNull(streamer.avatarUrl),
                   ),
                   const SizedBox(height: 12),
                   Container(
@@ -1430,7 +1498,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       border: Border.all(
                           color: AppTheme.warning.withValues(alpha: 0.5)),
                     ),
-                    child: Text('design_ui.camera_is_off_audio_only'.tr(),
+                    child: Text(
+                      'design_ui.camera_is_off_audio_only'.tr(),
                       style: const TextStyle(
                         color: AppTheme.warning,
                         fontSize: 12,
@@ -1450,15 +1519,15 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           FloatingReactionsOverlay(controller: _reactionsController),
 
           // 3. Top Translucent Overlay Bar
-          AnimatedOpacity(
-            opacity: _controlsVisible ? 1.0 : 0.0,
-            duration: const Duration(milliseconds: 240),
-            child: IgnorePointer(
-              ignoring: !_controlsVisible,
-              child: PositionedDirectional(
-                top: 0,
-                start: 0,
-                end: 0,
+          PositionedDirectional(
+            top: 0,
+            start: 0,
+            end: 0,
+            child: AnimatedOpacity(
+              opacity: _controlsVisible ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 240),
+              child: IgnorePointer(
+                ignoring: !_controlsVisible,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppTheme.spaceLg, vertical: 12),
@@ -1474,7 +1543,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         onPressed: _handleToggleFullscreen,
                       ),
                       const SizedBox(width: AppTheme.spaceSm),
-                      if (_engine.state == RtmpPublishState.live)
+                      if (_engine.state == RtmpPublishState.live &&
+                          _appProvider.isBroadcastingLive)
                         _LiveBadge(bitrateBps: _engine.lastBitrateBps),
                       const SizedBox(width: AppTheme.spaceMd),
                       Expanded(
@@ -1589,8 +1659,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusSm),
-                              borderSide: const BorderSide(
-                                  color: AppTheme.border),
+                              borderSide:
+                                  const BorderSide(color: AppTheme.border),
                             ),
                           ),
                           onSubmitted: (value) {
@@ -1620,7 +1690,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         ? Padding(
                             padding: const EdgeInsets.symmetric(
                                 vertical: AppTheme.spaceMd),
-                            child: Text('design_ui.no_attendees_admitted_yet'.tr(),
+                            child: Text(
+                              'design_ui.no_attendees_admitted_yet'.tr(),
                               style: const TextStyle(
                                   color: AppTheme.textMuted, fontSize: 12),
                             ),
@@ -1649,10 +1720,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                 trailing: TextButton.icon(
                                   icon: const Icon(Icons.block_rounded,
                                       color: AppTheme.danger, size: 16),
-                                  label: Text('design_ui.kick_out'.tr(),
+                                  label: Text(
+                                    'design_ui.kick_out'.tr(),
                                     style: const TextStyle(
-                                        color: AppTheme.danger,
-                                        fontSize: 12),
+                                        color: AppTheme.danger, fontSize: 12),
                                   ),
                                   onPressed: () =>
                                       provider.kickAttendee(attendee.id),
@@ -1677,7 +1748,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('design_ui.choose_a_broadcast_quality'.tr(),
+            Text(
+              'design_ui.choose_a_broadcast_quality'.tr(),
               style: const TextStyle(
                   color: AppTheme.textPrimary,
                   fontSize: 16,
@@ -1687,8 +1759,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             Text(
               'design_copy.quality_help'.tr(),
               textAlign: TextAlign.center,
-              style:
-                  const TextStyle(color: AppTheme.textSecondary, fontSize: 12.5),
+              style: const TextStyle(
+                  color: AppTheme.textSecondary, fontSize: 12.5),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             ...BroadcastQualityPreset.values.map(
@@ -1804,8 +1876,8 @@ class _ReconnectingBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final message = (attempt != null && maxAttempts != null)
-        ? 'live.stream_interrupted_reconnecting_attempt'.tr(
-            namedArgs: {'current': '$attempt', 'total': '$maxAttempts'})
+        ? 'live.stream_interrupted_reconnecting_attempt'
+            .tr(namedArgs: {'current': '$attempt', 'total': '$maxAttempts'})
         : 'live.stream_interrupted_reconnecting'.tr();
     return Container(
       width: double.infinity,
@@ -1895,8 +1967,7 @@ class _KnockingBanner extends StatelessWidget {
       color: AppTheme.surface.withValues(alpha: 0.96),
       child: Row(
         children: [
-          const Icon(Icons.person_rounded,
-              color: AppTheme.warning, size: 18),
+          const Icon(Icons.person_rounded, color: AppTheme.warning, size: 18),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
@@ -1914,8 +1985,8 @@ class _KnockingBanner extends StatelessWidget {
             TextButton(
               onPressed: onAdmitAll,
               child: Text('Admit All ($queueLength)',
-                  style: const TextStyle(
-                      color: AppTheme.success, fontSize: 11)),
+                  style:
+                      const TextStyle(color: AppTheme.success, fontSize: 11)),
             ),
             const SizedBox(width: 4),
           ],

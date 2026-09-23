@@ -41,7 +41,7 @@ import '../config/feature_flags.dart';
 import '../../features/live_stream/services/stream_decay_engine.dart';
 import '../../features/live_stream/services/chat_block_list.dart';
 import 'package:flutter/foundation.dart'
-    show defaultTargetPlatform, kDebugMode, visibleForTesting;
+    show defaultTargetPlatform, kDebugMode, kIsWeb, visibleForTesting;
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -51,7 +51,8 @@ bool _looksLikeUuid(String? value) =>
 
 class AppProvider extends ChangeNotifier {
   // Directory results are screen-scoped, not cached across account changes.
-  Future<List<Map<String, dynamic>>> searchAdminUsers(String query, int offset) async {
+  Future<List<Map<String, dynamic>>> searchAdminUsers(
+      String query, int offset) async {
     if (!isAdminUser) throw StateError('Not permitted');
     _adminDbService ??= await AdminDatabaseService.create();
     return _adminDbService!.searchAdminUsers(query, offset);
@@ -63,7 +64,8 @@ class AppProvider extends ChangeNotifier {
     return _adminDbService!.loadAdminUserDetail(id);
   }
 
-  Future<void> updateAdminAccount(String id, String action, String reason) async {
+  Future<void> updateAdminAccount(
+      String id, String action, String reason) async {
     if (!isAdminUser) throw StateError('Not permitted');
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.updateAdminAccount(id, action, reason);
@@ -84,8 +86,7 @@ class AppProvider extends ChangeNotifier {
   /// is what other lists rely on, and this covers the time until it lands or
   /// the case where it fails.
   void purgeDeletedAccountFromCaches(String profileId) {
-    bool matches(String id) =>
-        id == profileId || id == 'streamer_$profileId';
+    bool matches(String id) => id == profileId || id == 'streamer_$profileId';
     final removedVideoIds = {
       for (final s in _streamers)
         if (matches(s.streamerId) && s.youtubeVideoId.isNotEmpty)
@@ -124,12 +125,14 @@ class AppProvider extends ChangeNotifier {
   ConnectivityService? _connectivityService;
   StreamSubscription<bool>? _connectivitySub;
   static const String _mapCacheKey = 'spatial_map_marker_cache_v1';
-  static const String _mapCacheUpdatedAtKey = 'spatial_map_marker_cache_updated_at_v1';
+  static const String _mapCacheUpdatedAtKey =
+      'spatial_map_marker_cache_updated_at_v1';
   List<MapMarkerModel> _cachedMapMarkers = [];
   DateTime? _mapCacheUpdatedAt;
 
   bool get isOnline => _isOnline;
-  List<MapMarkerModel> get cachedMapMarkers => List.unmodifiable(_cachedMapMarkers);
+  List<MapMarkerModel> get cachedMapMarkers =>
+      List.unmodifiable(_cachedMapMarkers);
   DateTime? get mapCacheUpdatedAt => _mapCacheUpdatedAt;
   // Audience Q&A has no backend and no screen wired to it (05 D-03). The list
   // starts empty instead of being pre-filled with invented questions
@@ -137,7 +140,7 @@ class AppProvider extends ChangeNotifier {
   final List<LectureQuestionModel> _questions = [];
   UserProfileModel _userProfile = UserProfileModel.defaultProfile;
   final YouTubeApiService _youTubeService = YouTubeApiService();
-  final SupabaseAuthService _authService = SupabaseAuthService();
+  final SupabaseAuthService _authService;
   AdminDatabaseService? _adminDbService;
 
   // Admin Hub, Verification & Governance State
@@ -351,7 +354,12 @@ class AppProvider extends ChangeNotifier {
   final List<AppNotificationItem> _notifications = [];
 
   AppProvider([AdminDatabaseService? adminDbService])
-      : _adminDbService = adminDbService {
+      : this.withServices(adminDbService: adminDbService);
+
+  AppProvider.withServices(
+      {AdminDatabaseService? adminDbService, SupabaseAuthService? authService})
+      : _adminDbService = adminDbService,
+        _authService = authService ?? SupabaseAuthService() {
     _initAdminDatabase();
     _initAuthListener();
     // NOTE: Live viewer polling is NOT started in the constructor to keep
@@ -398,12 +406,21 @@ class AppProvider extends ChangeNotifier {
   /// admin status from user_roles via the is_admin_tier() RPC.
   Future<void> _applySessionUser(User user,
       {required bool isFreshSignIn}) async {
-    _adminRoleLoading = _adminRoleLoading ||
-        !_isLoggedInStreamer || _googleUserEmail != user.email;
+    // Token refresh/duplicate initialSession must not reclaim a displaced
+    // device or override an explicit viewer choice.
+    if (_hydratingUserId == user.id ||
+        (_sessionUserId == user.id && !_authHydrating)) {
+      return;
+    }
+    _clearAuthState();
+    final generation = _authGeneration;
+    _sessionUserId = user.id;
+    _hydratingUserId = user.id;
+    _authHydrating = true;
+    _adminRoleLoading = true;
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
     _isGuestViewer = false;
-    _isStreamerModeEnabled = _isAdminFromRoles || _isApprovedStreamer;
     _googleUserEmail = user.email;
 
     final meta = user.userMetadata ?? const <String, dynamic>{};
@@ -421,27 +438,49 @@ class AppProvider extends ChangeNotifier {
 
     _subscribeToUserStatusChanges(user.id);
 
-    if (isFreshSignIn) {
-      await _ensureProfileRow(user);
+    try {
+      if (isFreshSignIn) {
+        await _ensureProfileRow(user);
+      }
+      final prefs = await SharedPreferences.getInstance();
+      if (_authGeneration != generation) return;
+      _hasCompletedRoleSelection =
+          prefs.getBool('has_completed_role_selection_${user.id}') ?? false;
+      await _flushPendingConsentIfAny(user.id);
+      if (_authGeneration != generation) return;
+      await _refreshAdminRoleFromBackend();
+      if (_authGeneration != generation) return;
+      await _refreshPermittedAdminOrgsFromBackend();
+      if (_authGeneration != generation) return;
+      await _refreshCurrentUserBanStatus();
+      if (_authGeneration != generation) return;
+      await loadViewerLibrary();
+      if (_authGeneration != generation) return;
+      await refreshMyApplicationAndStreamerStatus();
+      if (_authGeneration != generation) return;
+      _isStreamerModeEnabled = isApprovedStreamer;
+      if (_isAdminFromRoles) {
+        await refreshAdminData();
+      }
+      // Multi-device broadcaster collision check -- only meaningful once we
+      // know this account is actually an approved streamer (see
+      // initDeviceSession doc). Fires on every session application, not just
+      // a fresh sign-in, so a resumed session (e.g. a cold web reload) still
+      // re-checks for a conflict from another device.
+      if (_authGeneration != generation) return;
+      if (isApprovedStreamer) await initDeviceSession();
+      if (_authGeneration != generation) return;
+    } catch (_) {
+      // Keep failed hydration unprivileged; another auth event can retry.
+      if (_authGeneration == generation) _sessionUserId = null;
+    } finally {
+      if (_authGeneration == generation) {
+        _hydratingUserId = null;
+        _authHydrating = false;
+        _adminRoleLoading = false;
+        notifyListeners();
+      }
     }
-    await _flushPendingConsentIfAny(user.id);
-    await _refreshAdminRoleFromBackend();
-    _adminRoleLoading = false;
-    notifyListeners();
-    await _refreshPermittedAdminOrgsFromBackend();
-    await _refreshCurrentUserBanStatus();
-    await loadViewerLibrary();
-    await refreshMyApplicationAndStreamerStatus();
-    if (_isAdminFromRoles) {
-      await refreshAdminData();
-    }
-    // Multi-device broadcaster collision check -- only meaningful once we
-    // know this account is actually an approved streamer (see
-    // initDeviceSession doc). Fires on every session application, not just
-    // a fresh sign-in, so a resumed session (e.g. a cold web reload) still
-    // re-checks for a conflict from another device.
-    await initDeviceSession();
-    notifyListeners();
   }
 
   /// Creates this user's profiles row on their very first sign-in. Existing
@@ -563,14 +602,17 @@ class AppProvider extends ChangeNotifier {
   /// plain admin apart (both pass isAdminUser; only the former passes
   /// isMasterAdmin -- see ADR-007).
   Future<void> _refreshAdminRoleFromBackend() async {
+    final generation = _authGeneration;
     try {
       final results = await Future.wait([
         Supabase.instance.client.rpc('is_admin_tier'),
         Supabase.instance.client.rpc('is_master_admin'),
       ]);
+      if (_authGeneration != generation) return;
       _isAdminFromRoles = results[0] == true;
       _isMasterAdminFromRoles = results[1] == true;
     } catch (e) {
+      if (_authGeneration != generation) return;
       debugPrint('Admin role check failed: $e');
       _isAdminFromRoles = false;
       _isMasterAdminFromRoles = false;
@@ -581,10 +623,14 @@ class AppProvider extends ChangeNotifier {
   /// direct user_roles select (RLS already lets any signed-in user read
   /// their own rows -- no admin tier needed, unlike is_admin_tier()).
   Future<void> _refreshPermittedAdminOrgsFromBackend() async {
+    final generation = _authGeneration;
     try {
       _adminDbService ??= await AdminDatabaseService.create();
-      _permittedAdminOrgIds = await _adminDbService!.loadPermittedAdminOrgIds();
+      final ids = await _adminDbService!.loadPermittedAdminOrgIds();
+      if (_authGeneration != generation) return;
+      _permittedAdminOrgIds = ids;
     } catch (e) {
+      if (_authGeneration != generation) return;
       debugPrint('Permitted admin org lookup failed: $e');
       _permittedAdminOrgIds = [];
     }
@@ -592,9 +638,7 @@ class AppProvider extends ChangeNotifier {
 
   bool _isApprovedStreamer = false;
   bool get isApprovedStreamer =>
-      _isApprovedStreamer ||
-      _isAdminFromRoles ||
-      _permittedAdminOrgIds.isNotEmpty;
+      _isApprovedStreamer || _permittedAdminOrgIds.isNotEmpty;
 
   BroadcasterApplicationModel? _myApplication;
   BroadcasterApplicationModel? get myApplication => _myApplication;
@@ -608,6 +652,7 @@ class AppProvider extends ChangeNotifier {
   bool _deviceHeartbeatBusy = false;
   int _deviceGeneration = 0;
   bool _liveStateBusy = false;
+  Completer<void>? _liveStateCompletion;
   String? _broadcastSessionError;
   String? get broadcastSessionError => _broadcastSessionError;
   DeviceSessionModel? get currentDeviceSession => _currentDeviceSession;
@@ -615,6 +660,12 @@ class AppProvider extends ChangeNotifier {
   DeviceSessionModel? get remoteBroadcasterSession => _remoteBroadcasterSession;
   bool _hasCompletedRoleSelection = false;
   bool get hasCompletedRoleSelection => _hasCompletedRoleSelection;
+  String? _sessionUserId;
+  int _authGeneration = 0;
+  String? _hydratingUserId;
+  bool _authHydrating = false;
+  bool get authHydrating => _authHydrating;
+  bool _viewerDeviceChoice = false;
 
   /// Fingerprints this device, then checks the backend for another device
   /// on this same account currently holding broadcaster rights. If one is
@@ -635,7 +686,8 @@ class AppProvider extends ChangeNotifier {
         deviceId = newId();
         await prefs.setString('local_device_id', deviceId);
       }
-      final platform = defaultTargetPlatform.name.toLowerCase();
+      final platform =
+          kIsWeb ? 'web' : defaultTargetPlatform.name.toLowerCase();
       final deviceName = '$platform Device';
 
       final userId = _authService.currentSession?.user.id;
@@ -663,7 +715,8 @@ class AppProvider extends ChangeNotifier {
       _remoteBroadcasterSession = remote;
 
       if (userId != null) {
-        final claimed = remote == null &&
+        final claimed = !_viewerDeviceChoice &&
+            remote == null &&
             await _adminDbService!.claimDevice(_currentDeviceSession!);
         if (generation != _deviceGeneration) return;
         _currentDeviceSession =
@@ -700,6 +753,7 @@ class AppProvider extends ChangeNotifier {
       _currentDeviceSession = device.copyWith(isPrimaryBroadcaster: true);
       _remoteBroadcasterSession = null;
       _broadcastSessionError = null;
+      _viewerDeviceChoice = false;
       _isStreamerModeEnabled = true;
       notifyListeners();
     } catch (_) {
@@ -733,15 +787,19 @@ class AppProvider extends ChangeNotifier {
     if (device == null) return;
     final primary = sessions.where((s) => s.isPrimaryBroadcaster).firstOrNull;
     _remoteBroadcasterSession =
-        primary?.deviceId == device.deviceId ? null : primary;
+        _viewerDeviceChoice || primary?.deviceId == device.deviceId
+            ? null
+            : primary;
     if (primary?.deviceId == device.deviceId) {
       _currentDeviceSession = device.copyWith(isPrimaryBroadcaster: true);
     } else if (device.isPrimaryBroadcaster || _isBroadcastingLive) {
       _loseBroadcastDevice();
     }
+    notifyListeners();
   }
 
   void _loseBroadcastDevice() {
+    _remoteBroadcasterSession = null;
     if (_currentDeviceSession == null) return;
     final changed = _currentDeviceSession!.isPrimaryBroadcaster ||
         _isBroadcastingLive ||
@@ -751,6 +809,7 @@ class AppProvider extends ChangeNotifier {
     _broadcastSessionError = 'broadcast_session_lost';
     _isBroadcastingLive = false;
     _isStreamerModeEnabled = false;
+    _viewerDeviceChoice = true;
     _stopLiveViewerPolling();
     if (changed) notifyListeners();
   }
@@ -763,6 +822,9 @@ class AppProvider extends ChangeNotifier {
   }
 
   void continueAsViewerOnCurrentDevice() {
+    _viewerDeviceChoice = true;
+    _isBroadcastingLive = false;
+    _remoteBroadcasterSession = null;
     if (_currentDeviceSession != null) {
       _currentDeviceSession =
           _currentDeviceSession!.copyWith(isPrimaryBroadcaster: false);
@@ -780,12 +842,21 @@ class AppProvider extends ChangeNotifier {
   void selectViewerRole() {
     _hasCompletedRoleSelection = true;
     _isStreamerModeEnabled = false;
+    unawaited(_persistRoleSelection());
     notifyListeners();
   }
 
   void selectBroadcasterRole() {
     _hasCompletedRoleSelection = true;
+    unawaited(_persistRoleSelection());
     notifyListeners();
+  }
+
+  Future<void> _persistRoleSelection() async {
+    final userId = _sessionUserId;
+    if (userId == null) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_completed_role_selection_$userId', true);
   }
 
   /// Returns the single primary streamer ID owned by this user account, if any.
@@ -912,7 +983,9 @@ class AppProvider extends ChangeNotifier {
 
   StreamVisibility get streamVisibility => _streamVisibility;
   bool get isActiveStreamPrivate =>
-      kPrivateStreamingEnabled && _isBroadcastingLive && _streamVisibility == StreamVisibility.private;
+      kPrivateStreamingEnabled &&
+      _isBroadcastingLive &&
+      _streamVisibility == StreamVisibility.private;
   List<String> get streamWhitelistHandles =>
       List.unmodifiable(_streamWhitelistHandles);
   bool get requireKnockApproval => _requireKnockApproval;
@@ -929,7 +1002,8 @@ class AppProvider extends ChangeNotifier {
     List<String>? whitelistHandles,
     bool? requireKnockApproval,
   }) {
-    _streamVisibility = kPrivateStreamingEnabled ? visibility : StreamVisibility.public;
+    _streamVisibility =
+        kPrivateStreamingEnabled ? visibility : StreamVisibility.public;
     if (whitelistHandles != null) {
       _streamWhitelistHandles = List.of(whitelistHandles);
     }
@@ -1066,12 +1140,34 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> refreshMyApplicationAndStreamerStatus() async {
+    final generation = _authGeneration;
     final user = _authService.currentSession?.user;
     if (user == null) return;
     try {
       _adminDbService ??= await AdminDatabaseService.create();
       final isStreamer = await _adminDbService!.checkIsProfileStreamer(user.id);
       final myApp = await _adminDbService!.loadMyApplication(user.id);
+      final profile = await _adminDbService!.loadOwnProfile(user.id);
+      if (_authGeneration != generation) return;
+      if (profile != null) {
+        _userProfile = UserProfileModel.defaultProfile.copyWith(
+          nameEn: profile['display_name_en'] as String? ?? _googleUserName,
+          nameAr: profile['display_name_ar'] as String? ?? _googleUserName,
+          avatarUrl: profile['avatar_url'] as String? ?? _googleUserAvatar,
+          bannerUrl: profile['banner_url'] as String? ?? '',
+          bioEn: profile['bio_en'] as String? ?? '',
+          bioAr: profile['bio_ar'] as String? ?? '',
+          titleEn: profile['title_en'] as String? ?? '',
+          titleAr: profile['title_ar'] as String? ?? '',
+          youtubeChannelUrl: profile['youtube_handle'] as String? ?? '',
+          isVerifiedScholar: profile['is_verified'] == true,
+        );
+        if (_isBroadcastingLive &&
+            _selectedBroadcastOrgId == null &&
+            profile['is_currently_live'] != true) {
+          _loseBroadcastDevice();
+        }
+      }
 
       final previousApp = _myApplication;
       _myApplication = myApp;
@@ -1083,12 +1179,9 @@ class AppProvider extends ChangeNotifier {
                 a.email.toLowerCase() == user.email!.toLowerCase()));
       }
 
-      if (isStreamer ||
-          myApp?.status == ApplicationStatus.approved ||
-          _isAdminFromRoles ||
-          _permittedAdminOrgIds.isNotEmpty) {
+      if (_authGeneration != generation) return;
+      if (isStreamer) {
         _isApprovedStreamer = true;
-        _isStreamerModeEnabled = true;
 
         if (previousApp != null &&
             previousApp.status == ApplicationStatus.pending &&
@@ -1151,7 +1244,7 @@ class AppProvider extends ChangeNotifier {
           );
         }
       }
-      _syncCurrentUserStreamerProfile();
+      await loadVerifiedStreamersFromBackend();
       notifyListeners();
     } catch (e) {
       debugPrint('refreshMyApplicationAndStreamerStatus failed: $e');
@@ -1177,7 +1270,6 @@ class AppProvider extends ChangeNotifier {
               value: userId,
             ),
             callback: (payload) {
-              debugPrint('Realtime: user application changed ($payload)');
               refreshMyApplicationAndStreamerStatus();
             },
           )
@@ -1191,7 +1283,7 @@ class AppProvider extends ChangeNotifier {
               value: userId,
             ),
             callback: (payload) {
-              debugPrint('Realtime: user profile changed ($payload)');
+              // Never print profile payloads containing account data.
               refreshMyApplicationAndStreamerStatus();
             },
           )
@@ -1228,7 +1320,6 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'profiles',
             callback: (payload) {
-              debugPrint('Realtime: public profile changed ($payload)');
               loadVerifiedStreamersFromBackend();
               if (_isAdminFromRoles) {
                 refreshAdminData();
@@ -1240,7 +1331,6 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'organizations',
             callback: (payload) {
-              debugPrint('Realtime: organization changed ($payload)');
               loadVerifiedStreamersFromBackend();
               if (_isAdminFromRoles) {
                 refreshAdminData();
@@ -1252,8 +1342,6 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'broadcaster_applications',
             callback: (payload) {
-              debugPrint(
-                  'Realtime: broadcaster application status changed ($payload)');
               loadVerifiedStreamersFromBackend();
               refreshAdminData();
             },
@@ -1317,13 +1405,8 @@ class AppProvider extends ChangeNotifier {
           await _adminDbService!.loadVerifiedStreamersFromBackend();
 
       final backendIds = backendStreamers.map((s) => s.streamerId).toSet();
-      final currentUserId = _authService.currentSession?.user.id;
-
       // Remove any previously-loaded backend streamer that is no longer verified in DB
       _streamers.removeWhere((s) =>
-          (currentUserId == null ||
-              (s.streamerId != currentUserId &&
-                  s.streamerId != 'streamer_$currentUserId')) &&
           _looksLikeUuid(s.streamerId.replaceFirst('streamer_', '')) &&
           !backendIds.contains(s.streamerId));
 
@@ -1344,142 +1427,17 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  StreamerModel _createStreamerModelForUser({
-    required String userId,
-    BroadcasterApplicationModel? app,
-  }) {
-    final nameEn = (app != null && app.applicantNameEn.trim().isNotEmpty)
-        ? app.applicantNameEn.trim()
-        : (_googleUserName ?? _userProfile.nameEn);
-    final nameAr = (app != null && app.applicantNameAr.trim().isNotEmpty)
-        ? app.applicantNameAr.trim()
-        : (_googleUserName ?? _userProfile.nameAr);
-
-    final titleEn = (app != null &&
-            app.academicTitleEn != null &&
-            app.academicTitleEn!.trim().isNotEmpty)
-        ? app.academicTitleEn!.trim()
-        : ((app?.isOrganization == true)
-            ? 'Educational Institution & Venue'
-            : 'Lecturer & Academic Researcher');
-    final titleAr = (app != null &&
-            app.academicTitleAr != null &&
-            app.academicTitleAr!.trim().isNotEmpty)
-        ? app.academicTitleAr!.trim()
-        : ((app?.isOrganization == true)
-            ? 'مؤسسة تعليمية وقاعة'
-            : 'محاضر وباحث أكاديمي');
-
-    final orgEn = (app != null &&
-            app.institutionEn != null &&
-            app.institutionEn!.trim().isNotEmpty)
-        ? app.institutionEn!.trim()
-        : ((app?.isOrganization == true)
-            ? nameEn
-            : 'Independent Academic Broadcaster');
-    final orgAr = (app != null &&
-            app.institutionAr != null &&
-            app.institutionAr!.trim().isNotEmpty)
-        ? app.institutionAr!.trim()
-        : ((app?.isOrganization == true) ? nameAr : 'بث أكاديمي مستقل');
-
-    final avatar = (app != null && app.avatarUrl.trim().isNotEmpty)
-        ? app.avatarUrl.trim()
-        : (_googleUserAvatar ?? _userProfile.avatarUrl);
-
-    final banner = (app != null && app.bannerUrl.trim().isNotEmpty)
-        ? app.bannerUrl.trim()
-        : 'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4';
-
-    final bioEn = (app != null && app.bioEn.trim().isNotEmpty)
-        ? app.bioEn.trim()
-        : 'Verified academic lecturer and live broadcaster on Streamer App.';
-    final bioAr = (app != null && app.bioAr.trim().isNotEmpty)
-        ? app.bioAr.trim()
-        : 'محاضر أكاديمي معتمد ومذيع مباشر على منصة البث التفاعلي.';
-
-    final categoryId = (app != null && app.categoryId.trim().isNotEmpty)
-        ? app.categoryId.trim()
-        : 'computer_science';
-
-    final tags = (app != null && app.tags.isNotEmpty)
-        ? app.tags
-        : const ['#Live', '#Academic', '#Education'];
-
-    final venueEn = (app != null && app.venueNameEn.trim().isNotEmpty)
-        ? app.venueNameEn.trim()
-        : 'Al Khobar Innovation Hall';
-    final venueAr = (app != null && app.venueNameAr.trim().isNotEmpty)
-        ? app.venueNameAr.trim()
-        : 'قاعة الابتكار بالخبر';
-
-    final lat = (app != null && app.latitude != 0.0) ? app.latitude : 26.2871;
-    final lng = (app != null && app.longitude != 0.0) ? app.longitude : 50.2125;
-
-    final ytHandle = (app != null && app.youtubeHandle.trim().isNotEmpty)
-        ? app.youtubeHandle.trim()
-        : 'ahmedamercaller';
-
-    return StreamerModel(
-      streamerId: userId,
-      fullNameEn: nameEn,
-      fullNameAr: nameAr,
-      titleEn: titleEn,
-      titleAr: titleAr,
-      organizationEn: orgEn,
-      organizationAr: orgAr,
-      avatarUrl: avatar,
-      bannerUrl: banner,
-      bioEn: bioEn,
-      bioAr: bioAr,
-      isVerified: true,
-      followerCount: 0,
-      categoryId: categoryId,
-      tags: tags,
-      cityEn: 'Al Khobar',
-      cityAr: 'الخبر',
-      venueNameEn: venueEn,
-      venueNameAr: venueAr,
-      latitude: lat,
-      longitude: lng,
-      isCurrentlyLive: _isBroadcastingLive,
-      broadcastType:
-          _isBroadcastingLive ? _customBroadcastType : BroadcastType.offline,
-      isOrganization: app?.isOrganization ?? false,
-      youtubeHandle: ytHandle,
-      youtubeVideoId: 'dQw4w9WgXcQ',
-    );
-  }
-
-  void _syncCurrentUserStreamerProfile() {
-    final userId = _authService.currentSession?.user.id;
-    if (userId == null) return;
-
-    if (isApprovedStreamer && _isStreamerModeEnabled) {
-      final userStreamer = _createStreamerModelForUser(
-        userId: userId,
-        app: _myApplication,
-      );
-      final idx = _streamers.indexWhere((s) =>
-          s.streamerId == userId ||
-          s.streamerId == 'streamer_$userId' ||
-          (userStreamer.streamerId.isNotEmpty &&
-              s.streamerId == userStreamer.streamerId));
-      if (idx != -1) {
-        _streamers[idx] = userStreamer;
-      } else {
-        _streamers.add(userStreamer);
-      }
-    } else {
-      _streamers.removeWhere((s) =>
-          s.streamerId == userId ||
-          s.streamerId == 'streamer_$userId' ||
-          (_myApplication != null &&
-              s.streamerId == 'streamer_${_myApplication!.id}'));
-    }
-  }
-
   void _clearAuthState() {
+    _authGeneration++;
+    _sessionUserId = null;
+    _hydratingUserId = null;
+    _authHydrating = false;
+    _hasCompletedRoleSelection = false;
+    _viewerDeviceChoice = false;
+    _selectedBroadcastOrgId = null;
+    _selectedVenueBranchId = null;
+    _selectedCoSpeakerIds = [];
+    _userProfile = UserProfileModel.defaultProfile;
     _adminRoleLoading = false;
     _deviceGeneration++;
     _deviceHeartbeatTimer?.cancel();
@@ -1488,11 +1446,16 @@ class AppProvider extends ChangeNotifier {
     _remoteBroadcasterSession = null;
     _isBroadcastingLive = false;
     _unsubscribeFromUserStatusChanges();
-    final userId = _authService.currentSession?.user.id;
-    if (userId != null) {
-      _streamers.removeWhere(
-          (s) => s.streamerId == userId || s.streamerId == 'streamer_$userId');
-    }
+    _broadcastSessionError = null;
+    _liveStateBusy = false;
+    _phoneBroadcastStreamKey = '';
+    _customYouTubeLiveUrl = '';
+    _customYouTubeVideoId = '';
+    _customLiveTitle = '';
+    _customLiveDescription = '';
+    _customLiveVenue = '';
+    _customSlidesUrl = '';
+    _stopLiveViewerPolling();
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
     _isApprovedStreamer = false;
@@ -1516,6 +1479,7 @@ class AppProvider extends ChangeNotifier {
   /// trip. Production code paths never call this -- real auth state comes
   /// exclusively from _applySessionUser/_refreshAdminRoleFromBackend above.
   @visibleForTesting
+
   /// [ownedStreamerId] attaches an approved broadcaster application for that
   /// channel, which is one of the three real ownership sources
   /// (see [primaryOwnedStreamerId]). Tests must use it instead of relying on a
@@ -1533,8 +1497,9 @@ class AppProvider extends ChangeNotifier {
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
     _isGuestViewer = false;
-    _isApprovedStreamer = isStreamer || isAdmin || isMasterAdmin;
-    _isStreamerModeEnabled = isStreamer || isAdmin || isMasterAdmin;
+    _isApprovedStreamer = isStreamer;
+    _hasCompletedRoleSelection = true;
+    _isStreamerModeEnabled = isStreamer;
     _googleUserEmail = email;
     _googleUserName = name ?? email;
     _isAdminFromRoles = isAdmin || isMasterAdmin;
@@ -1595,7 +1560,6 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'academic_categories',
             callback: (payload) {
-              debugPrint('Realtime: academic_categories changed ($payload)');
               _refreshAcademicCategories();
             },
           )
@@ -1741,8 +1705,9 @@ class AppProvider extends ChangeNotifier {
         jsonEncode(markers.map((m) => m.toJson()).toList()),
       );
       await prefs.setString(_mapCacheUpdatedAtKey, now.toIso8601String());
-      _cachedMapMarkers =
-          markers.map((m) => MapMarkerModel.fromCachedJson(m.toJson())).toList();
+      _cachedMapMarkers = markers
+          .map((m) => MapMarkerModel.fromCachedJson(m.toJson()))
+          .toList();
       _mapCacheUpdatedAt = now;
     } catch (e) {
       debugPrint('_persistMapMarkerCache failed: $e');
@@ -1802,7 +1767,8 @@ class AppProvider extends ChangeNotifier {
       final count = await _youTubeService.fetchLiveConcurrentViewers(
         streamer.youtubeVideoId,
       );
-      if (count != null && count != _youTubeConcurrentByStreamer[streamer.streamerId]) {
+      if (count != null &&
+          count != _youTubeConcurrentByStreamer[streamer.streamerId]) {
         _youTubeConcurrentByStreamer[streamer.streamerId] = count;
         changed = true;
       }
@@ -2125,8 +2091,7 @@ class AppProvider extends ChangeNotifier {
             : (item.type == NotificationType.watchMilestoneOneHour
                 ? Icons.workspace_premium_rounded
                 : Icons.notifications_active_rounded),
-        accentColor:
-            item.isLiveAlert ? AppTheme.danger : AppTheme.primary,
+        accentColor: item.isLiveAlert ? AppTheme.danger : AppTheme.primary,
         actionLabel: item.streamId != null ? (isAr ? 'مشاهدة' : 'Watch') : null,
       );
     }
@@ -2217,34 +2182,34 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> loadYouTubeChannelData({
     required String streamerId,
-    String handle = 'ahmedamercaller',
+    required String handle,
   }) async {
+    _streamerVods.remove(streamerId);
+    _streamerPlaylists.remove(streamerId);
+    _syncedYouTubeStreamers.remove(streamerId);
+    if (handle.trim().isEmpty) {
+      notifyListeners();
+      return;
+    }
     try {
+      final details = await _youTubeService.fetchChannelDetails(handle);
+      final channelId = details['channelId'];
+      if (channelId == null || channelId.isEmpty) {
+        notifyListeners();
+        return;
+      }
       final vods = await _youTubeService.fetchChannelVideos(
-        streamerId: streamerId,
-        handle: handle,
-      );
-      if (vods.isNotEmpty) {
-        if (streamerId != 'org_dalilk_04') {
-          _streamerVods[streamerId] = vods;
-        }
-      }
-      final channelDetails = await _youTubeService.fetchChannelDetails(handle);
-      final channelId =
-          channelDetails['channelId'] ?? 'UCah56qawts736uNxZA3inLQ';
+          streamerId: streamerId, handle: handle);
       final playlists = await _youTubeService.fetchChannelPlaylists(
-        streamerId: streamerId,
-        channelId: channelId,
-      );
-      if (playlists.isNotEmpty) {
-        if (streamerId != 'org_dalilk_04') {
-          _streamerPlaylists[streamerId] = playlists;
-        }
-      }
+          streamerId: streamerId, channelId: channelId);
+      // A response for an old handle must never overwrite a newly linked one.
+      if (getStreamerById(streamerId)?.youtubeHandle != handle) return;
+      _streamerVods[streamerId] = vods;
+      _streamerPlaylists[streamerId] = playlists;
       _syncedYouTubeStreamers.add(streamerId);
       notifyListeners();
-    } catch (e) {
-      debugPrint('Error loading YouTube data for $streamerId: $e');
+    } catch (_) {
+      notifyListeners();
     }
   }
 
@@ -2767,6 +2732,10 @@ class AppProvider extends ChangeNotifier {
     // Enabling Streamer Mode requires an already-authenticated session that is
     // an approved broadcaster or admin -- role changes go through the real backend.
     if (isStreamer && !isApprovedStreamer) return;
+    if (isStreamer && _viewerDeviceChoice) {
+      _viewerDeviceChoice = false;
+      unawaited(initDeviceSession());
+    }
     _isStreamerModeEnabled = isStreamer;
     notifyListeners();
   }
@@ -2951,9 +2920,40 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> toggleBroadcasterGoLive([BuildContext? context]) async {
-    if (_liveStateBusy) return;
+  Future<bool> checkBroadcastPermission() async {
     final generation = _deviceGeneration;
+    if (_currentDeviceSession?.isPrimaryBroadcaster != true) {
+      _broadcastSessionError = 'broadcast_primary_required';
+      notifyListeners();
+      return false;
+    }
+    try {
+      final allowed = await _adminDbService?.canBroadcast(
+              orgId: _selectedBroadcastOrgId,
+              type: _customBroadcastType.name) ??
+          false;
+      if (generation != _deviceGeneration) return false;
+      _broadcastSessionError = allowed ? null : 'broadcast_approval_required';
+      notifyListeners();
+      return allowed;
+    } catch (_) {
+      if (generation != _deviceGeneration) return false;
+      _broadcastSessionError = 'broadcast_state_failed';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<void> toggleBroadcasterGoLive([BuildContext? context]) =>
+      setBroadcasterLive(!_isBroadcastingLive, context);
+
+  Future<void> setBroadcasterLive(bool live, [BuildContext? context]) async {
+    final generation = _deviceGeneration;
+    while (_liveStateBusy) {
+      await _liveStateCompletion?.future;
+      if (generation != _deviceGeneration) return;
+    }
+    if (live == _isBroadcastingLive) return;
     final device = _currentDeviceSession;
     if (_authService.currentSession == null ||
         device == null ||
@@ -2967,10 +2967,11 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    final nextLive = !_isBroadcastingLive;
+    final nextLive = live;
     final previousLive = _isBroadcastingLive;
     _liveStateBusy = true;
-    _isBroadcastingLive = nextLive;
+    final completion = Completer<void>();
+    _liveStateCompletion = completion;
     notifyListeners();
     try {
       await _adminDbService!.setLiveState(
@@ -2984,22 +2985,25 @@ class AppProvider extends ChangeNotifier {
         return;
       }
       _broadcastSessionError = null;
-    } catch (_) {
+    } catch (error) {
       if (generation != _deviceGeneration) return;
       _isBroadcastingLive =
           previousLive && _currentDeviceSession?.isPrimaryBroadcaster == true;
-      _broadcastSessionError = 'broadcast_state_failed';
+      _broadcastSessionError =
+          error is PostgrestException && error.code == '42501'
+              ? 'broadcast_approval_required'
+              : 'broadcast_state_failed';
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('broadcast_state_failed'.tr())));
+            SnackBar(content: Text(_broadcastSessionError!.tr())));
       }
       notifyListeners();
       return;
     } finally {
-      _liveStateBusy = false;
+      if (generation == _deviceGeneration) _liveStateBusy = false;
+      completion.complete();
     }
-    _isBroadcastingLive = previousLive;
-    _isBroadcastingLive = !_isBroadcastingLive;
+    _isBroadcastingLive = nextLive;
 
     final orgId = _selectedBroadcastOrgId;
     // Non-null here: the guard above already returned unless an authenticated
@@ -3054,10 +3058,10 @@ class AppProvider extends ChangeNotifier {
       // a hardcoded sample streamer.
       final broadcaster =
           _streamers.where((s) => s.streamerId == targetStreamerId).firstOrNull;
-      final streamerNameEn = broadcaster?.fullNameEn ??
-          (_googleUserName ?? _userProfile.nameEn);
-      final streamerNameAr = broadcaster?.fullNameAr ??
-          (_googleUserName ?? _userProfile.nameAr);
+      final streamerNameEn =
+          broadcaster?.fullNameEn ?? (_googleUserName ?? _userProfile.nameEn);
+      final streamerNameAr =
+          broadcaster?.fullNameAr ?? (_googleUserName ?? _userProfile.nameAr);
 
       addEnhancedNotification(
         AppNotificationModel(
@@ -3067,11 +3071,9 @@ class AppProvider extends ChangeNotifier {
               : NotificationType.streamerLiveVideo,
           streamerId: targetStreamerId,
           streamerName: streamerNameEn,
-          titleEn: isAudio
-              ? 'Live Audio Stage Started'
-              : 'Live Broadcast Started',
-          titleAr:
-              isAudio ? 'مساحة صوتية مباشرة' : 'بدأ البث المباشر الآن',
+          titleEn:
+              isAudio ? 'Live Audio Stage Started' : 'Live Broadcast Started',
+          titleAr: isAudio ? 'مساحة صوتية مباشرة' : 'بدأ البث المباشر الآن',
           bodyEn: isAudio
               ? 'Live Audio Stage with $streamerNameEn: "$_customLiveTitle" .. Join in!'
               : ' $streamerNameEn is live now: "$_customLiveTitle" .. Join and interact!',
@@ -3249,6 +3251,7 @@ class AppProvider extends ChangeNotifier {
   // RSVP / Physical Attendance
   bool isAttendingInPerson(String lectureId) =>
       _inPersonRsvpMap[lectureId] ?? false;
+
   /// Seats left at the venue. 0 while no venue capacity is known -- the UI
   /// that would show it is hidden behind kVenueRsvpEnabled.
   int getAvailableSeats(String lectureId) =>
@@ -3293,10 +3296,13 @@ class AppProvider extends ChangeNotifier {
   /// Loads the signed-in account's follows and bookmarks. A guest keeps
   /// whatever it collected locally; signing out clears both (_clearAuthState).
   Future<void> loadViewerLibrary() async {
-    if (_authService.currentSession == null) return;
+    final generation = _authGeneration;
+    final userId = _authService.currentSession?.user.id;
+    if (userId == null) return;
     _adminDbService ??= await AdminDatabaseService.create();
     final follows = await _adminDbService!.loadFollowedTargetIds();
     final bookmarks = await _adminDbService!.loadBookmarkedVodIds();
+    if (_authGeneration != generation) return;
     _followedStreamerIds
       ..clear()
       ..addAll(follows);
@@ -3568,7 +3574,8 @@ class AppProvider extends ChangeNotifier {
         titleEn: 'Live Broadcast Started',
         titleAr: 'بدأ البث المباشر الآن',
         bodyEn: '$name is live now: "$customLiveTitle" .. Join in!',
-        bodyAr: '$name بدأ بثاً مباشراً الآن: «$customLiveTitle».. حيّاك شاركنا وتفاعل!',
+        bodyAr:
+            '$name بدأ بثاً مباشراً الآن: «$customLiveTitle».. حيّاك شاركنا وتفاعل!',
         timestamp: DateTime.now(),
         streamId: _activeStreamIdForCurrentUser(),
       ),
@@ -4323,6 +4330,7 @@ class AppProvider extends ChangeNotifier {
   List<BannedUserModel> get bannedUsers => List.unmodifiable(_bannedUsers);
 
   Future<void> _refreshCurrentUserBanStatus() async {
+    final generation = _authGeneration;
     try {
       if (!Supabase.instance.isInitialized) return;
       final userId = _authService.currentSession?.user.id;
@@ -4336,6 +4344,7 @@ class AppProvider extends ChangeNotifier {
           .select('reason, expires_at')
           .eq('profile_id', userId)
           .maybeSingle();
+      if (_authGeneration != generation) return;
       final expiresAtRaw = row?['expires_at'] as String?;
       final expiresAt =
           expiresAtRaw != null ? DateTime.parse(expiresAtRaw) : null;

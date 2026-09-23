@@ -8,22 +8,82 @@ import '../../../map/presentation/widgets/topic_selector_dropdown.dart'
     show iconForCategoryIconName;
 
 const List<Map<String, dynamic>> kAvailableCategoryIcons = [
-  {'name': 'school', 'icon': Icons.school_rounded, 'label': 'Education / School'},
-  {'name': 'mosque', 'icon': Icons.mosque_rounded, 'label': 'Islamic / Religious'},
-  {'name': 'computer', 'icon': Icons.computer_rounded, 'label': 'Computer Science / Tech'},
-  {'name': 'engineering', 'icon': Icons.engineering_rounded, 'label': 'Engineering'},
-  {'name': 'medical_services', 'icon': Icons.medical_services_rounded, 'label': 'Medicine / Healthcare'},
-  {'name': 'business_center', 'icon': Icons.business_center_rounded, 'label': 'Business / Economics'},
-  {'name': 'menu_book', 'icon': Icons.menu_book_rounded, 'label': 'Literature / Humanities'},
-  {'name': 'science', 'icon': Icons.science_rounded, 'label': 'Science / Physics'},
-  {'name': 'psychology', 'icon': Icons.psychology_rounded, 'label': 'Psychology / Social'},
-  {'name': 'architecture', 'icon': Icons.architecture_rounded, 'label': 'Architecture / Design'},
+  {
+    'name': 'school',
+    'icon': Icons.school_rounded,
+    'label': 'Education / School'
+  },
+  {
+    'name': 'mosque',
+    'icon': Icons.mosque_rounded,
+    'label': 'Islamic / Religious'
+  },
+  {
+    'name': 'computer',
+    'icon': Icons.computer_rounded,
+    'label': 'Computer Science / Tech'
+  },
+  {
+    'name': 'engineering',
+    'icon': Icons.engineering_rounded,
+    'label': 'Engineering'
+  },
+  {
+    'name': 'medical_services',
+    'icon': Icons.medical_services_rounded,
+    'label': 'Medicine / Healthcare'
+  },
+  {
+    'name': 'business_center',
+    'icon': Icons.business_center_rounded,
+    'label': 'Business / Economics'
+  },
+  {
+    'name': 'menu_book',
+    'icon': Icons.menu_book_rounded,
+    'label': 'Literature / Humanities'
+  },
+  {
+    'name': 'science',
+    'icon': Icons.science_rounded,
+    'label': 'Science / Physics'
+  },
+  {
+    'name': 'psychology',
+    'icon': Icons.psychology_rounded,
+    'label': 'Psychology / Social'
+  },
+  {
+    'name': 'architecture',
+    'icon': Icons.architecture_rounded,
+    'label': 'Architecture / Design'
+  },
   {'name': 'palette', 'icon': Icons.palette_rounded, 'label': 'Arts / Media'},
-  {'name': 'gavel', 'icon': Icons.gavel_rounded, 'label': 'Law / Jurisprudence'},
-  {'name': 'public', 'icon': Icons.public_rounded, 'label': 'Global / International'},
-  {'name': 'calculate', 'icon': Icons.calculate_rounded, 'label': 'Mathematics'},
-  {'name': 'biotech', 'icon': Icons.biotech_rounded, 'label': 'Biology / Chemistry'},
-  {'name': 'history_edu', 'icon': Icons.history_edu_rounded, 'label': 'History / Heritage'},
+  {
+    'name': 'gavel',
+    'icon': Icons.gavel_rounded,
+    'label': 'Law / Jurisprudence'
+  },
+  {
+    'name': 'public',
+    'icon': Icons.public_rounded,
+    'label': 'Global / International'
+  },
+  {
+    'name': 'calculate',
+    'icon': Icons.calculate_rounded,
+    'label': 'Mathematics'
+  },
+  {
+    'name': 'biotech',
+    'icon': Icons.biotech_rounded,
+    'label': 'Biology / Chemistry'
+  },
+  {
+    'name': 'history_edu',
+    'icon': Icons.history_edu_rounded,
+    'label': 'History / Heritage'
+  },
 ];
 
 /// Admin Academic Categories manager (Cluster 3 Task 11): create, edit,
@@ -33,8 +93,7 @@ class AcademicCategoriesView extends StatefulWidget {
   const AcademicCategoriesView({super.key});
 
   @override
-  State<AcademicCategoriesView> createState() =>
-      _AcademicCategoriesViewState();
+  State<AcademicCategoriesView> createState() => _AcademicCategoriesViewState();
 }
 
 class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
@@ -56,8 +115,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     );
   }
 
-  Future<void> _run(String id, Future<void> Function() action,
-      String successMessage) async {
+  Future<void> _run(
+      String id, Future<void> Function() action, String successMessage) async {
     setState(() => _actingOnIds.add(id));
     try {
       await action();
@@ -69,8 +128,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     }
   }
 
-  Future<void> _reorder(
-      AppProvider provider, List<AcademicCategoryModel> sorted, int index, int delta) async {
+  Future<void> _reorder(AppProvider provider,
+      List<AcademicCategoryModel> sorted, int index, int delta) async {
     final targetIndex = index + delta;
     if (targetIndex < 0 || targetIndex >= sorted.length) return;
     final a = sorted[index];
@@ -85,7 +144,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
       context: context,
       backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       builder: (ctx) => Padding(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -93,7 +153,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('design_ui.select_category_icon'.tr(),
+            Text(
+              'design_ui.select_category_icon'.tr(),
               style: const TextStyle(
                 color: AppTheme.textPrimary,
                 fontWeight: FontWeight.bold,
@@ -153,10 +214,13 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     );
   }
 
-  void _showEditDialog(AppProvider provider, {AcademicCategoryModel? existing}) {
+  void _showEditDialog(AppProvider provider,
+      {AcademicCategoryModel? existing}) {
     final idController = TextEditingController(text: existing?.id ?? '');
-    final nameEnController = TextEditingController(text: existing?.nameEn ?? '');
-    final nameArController = TextEditingController(text: existing?.nameAr ?? '');
+    final nameEnController =
+        TextEditingController(text: existing?.nameEn ?? '');
+    final nameArController =
+        TextEditingController(text: existing?.nameAr ?? '');
     final iconController =
         TextEditingController(text: existing?.iconName ?? 'school');
     bool isActive = existing?.isActive ?? true;
@@ -226,20 +290,27 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                         ),
                         const SizedBox(width: 8),
                         Padding(
-                          padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
+                          padding:
+                              const EdgeInsets.only(bottom: AppTheme.spaceSm),
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
                               backgroundColor: AppTheme.surfaceAlt,
                               foregroundColor: AppTheme.primary,
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 14),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd),
                                 side: const BorderSide(color: AppTheme.border),
                               ),
                             ),
-                            icon: Icon(iconForCategoryIconName(iconController.text), size: 18),
-                            label: Text('design_ui.pick_icon'.tr(), style: const TextStyle(fontSize: 12)),
-                            onPressed: () => _showIconPickerModal(context, (name) {
+                            icon: Icon(
+                                iconForCategoryIconName(iconController.text),
+                                size: 18),
+                            label: Text('design_ui.pick_icon'.tr(),
+                                style: const TextStyle(fontSize: 12)),
+                            onPressed: () =>
+                                _showIconPickerModal(context, (name) {
                               setDialogState(() {
                                 iconController.text = name;
                               });
@@ -280,7 +351,9 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                   final id = (existing?.id ?? idController.text.trim())
                       .toLowerCase()
                       .replaceAll(RegExp(r'\s+'), '_');
-                  if (id.isEmpty || nameEnController.text.trim().isEmpty) return;
+                  if (id.isEmpty || nameEnController.text.trim().isEmpty) {
+                    return;
+                  }
                   Navigator.pop(dialogContext);
                   _run(
                     id,
@@ -327,7 +400,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               labelText: label,
               hintText: hint,
               labelStyle: const TextStyle(color: AppTheme.textSecondary),
-              hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+              hintStyle:
+                  const TextStyle(color: AppTheme.textMuted, fontSize: 11),
               filled: true,
               fillColor: AppTheme.surfaceAlt,
               border: OutlineInputBorder(
@@ -375,7 +449,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
+                backgroundColor: AppTheme.danger,
+                foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
               _run(
@@ -405,7 +480,10 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Icon(Icons.category_rounded,
                   color: AppTheme.primary, size: 20),
@@ -418,7 +496,6 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Spacer(),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.primary,
@@ -434,8 +511,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
             child: sorted.isEmpty
                 ? Center(
                     child: Text('admin.no_categories'.tr(),
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary)))
+                        style: const TextStyle(color: AppTheme.textSecondary)))
                 : ListView.separated(
                     itemCount: sorted.length,
                     separatorBuilder: (_, __) =>
@@ -447,7 +523,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                         padding: const EdgeInsets.all(AppTheme.spaceMd),
                         decoration: BoxDecoration(
                           color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
                           border: Border.all(color: AppTheme.border),
                         ),
                         child: Row(
@@ -498,20 +575,22 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                                     size: 16, color: AppTheme.textSecondary),
                                 onPressed: index == 0
                                     ? null
-                                    : () => _reorder(provider, sorted, index, -1),
+                                    : () =>
+                                        _reorder(provider, sorted, index, -1),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.arrow_downward_rounded,
                                     size: 16, color: AppTheme.textSecondary),
                                 onPressed: index == sorted.length - 1
                                     ? null
-                                    : () => _reorder(provider, sorted, index, 1),
+                                    : () =>
+                                        _reorder(provider, sorted, index, 1),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.edit_rounded,
                                     size: 16, color: AppTheme.primary),
-                                onPressed: () =>
-                                    _showEditDialog(provider, existing: category),
+                                onPressed: () => _showEditDialog(provider,
+                                    existing: category),
                               ),
                               IconButton(
                                 icon: const Icon(Icons.delete_outline_rounded,

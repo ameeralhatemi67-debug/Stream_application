@@ -34,9 +34,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
       final appProvider = Provider.of<AppProvider>(context, listen: false);
       final streamer = appProvider.getStreamerById(widget.streamerId);
-      final handle = streamer?.youtubeHandle ?? 'ahmedamercaller';
+      if (streamer == null) return;
+      final handle = streamer.youtubeHandle;
       appProvider.loadYouTubeChannelData(
         streamerId: widget.streamerId,
         handle: handle,
@@ -65,14 +67,19 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     final appProvider = Provider.of<AppProvider>(context);
     final lang = context.locale.languageCode;
 
-    // Lookup streamer or fallback to default primary scholar
-    final streamer = appProvider.getStreamerById(widget.streamerId) ??
-        appProvider.streamers.first;
+    // Missing channels have an explicit unavailable state.
+    final streamer = appProvider.getStreamerById(widget.streamerId);
+    if (streamer == null) {
+      return Scaffold(
+        appBar: AppBar(),
+        body: Center(child: Text('profile.channel_unavailable'.tr())),
+      );
+    }
 
     final isFollowing = appProvider.isFollowing(streamer.streamerId);
     final hasReminder = appProvider.hasReminder(streamer.streamerId);
 
-    // Dynamic VODs and Playlists (Live YouTube API or fallback to mock pool)
+    // Only recordings loaded for this channel are shown.
     final allVods = appProvider.getVodsForStreamer(streamer.streamerId);
     final activePlaylists =
         appProvider.getPlaylistsForStreamer(streamer.streamerId);
@@ -391,9 +398,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 14, vertical: 10),
                           side: BorderSide(
-                            color: hasReminder
-                                ? AppTheme.accent
-                                : AppTheme.border,
+                            color:
+                                hasReminder ? AppTheme.accent : AppTheme.border,
                           ),
                           shape: RoundedRectangleBorder(
                             borderRadius:
@@ -529,7 +535,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           color: AppTheme.accent,
                         ),
                         const SizedBox(width: 4),
-                        Text('design_ui.join_an_organization'.tr(),
+                        Text(
+                          'design_ui.join_an_organization'.tr(),
                           style: const TextStyle(
                             color: AppTheme.accent,
                             fontSize: 10,
@@ -645,9 +652,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
-                      backgroundColor: isFollowing
-                          ? AppTheme.surfaceAlt
-                          : AppTheme.primary,
+                      backgroundColor:
+                          isFollowing ? AppTheme.surfaceAlt : AppTheme.primary,
                       foregroundColor: AppTheme.onMedia,
                       side: isFollowing
                           ? const BorderSide(
@@ -678,8 +684,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           ? 'profile.following_btn'.tr()
                           : 'profile.reminder_btn'.tr(),
                       style: TextStyle(
-                        color:
-                            hasReminder ? AppTheme.accent : AppTheme.primary,
+                        color: hasReminder ? AppTheme.accent : AppTheme.primary,
                         fontSize: 12,
                       ),
                     ),
@@ -687,9 +692,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 10),
                       side: BorderSide(
-                        color: hasReminder
-                            ? AppTheme.accent
-                            : AppTheme.border,
+                        color: hasReminder ? AppTheme.accent : AppTheme.border,
                       ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -809,9 +812,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           : AppTheme.bg,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       border: Border.all(
-                        color: isSelected
-                            ? AppTheme.warning
-                            : AppTheme.border,
+                        color: isSelected ? AppTheme.warning : AppTheme.border,
                         width: isSelected ? 1.8 : 1.0,
                       ),
                     ),

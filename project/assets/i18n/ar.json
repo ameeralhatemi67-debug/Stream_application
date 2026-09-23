@@ -141,7 +141,8 @@
     "speaker_profile_title": "بيانات المدرب",
     "featured_channels_hint": "اضغط على أي مدرب أو قناة لعرض محاضراته وقوائم تشغيله",
     "filter_active_badge": "محدد كفلتر",
-    "view_channel_content": "عرض الدروس"
+    "view_channel_content": "عرض الدروس",
+    "channel_unavailable": "القناة غير متاحة."
   },
   "live": {
     "title": "غرفة البث المباشر",
@@ -304,7 +305,9 @@
     "report_invalid_toast": "تعذّر قبول هذا البلاغ. اختر سبباً وحاول مرة أخرى.",
     "report_not_permitted_toast": "سجّل الدخول بحساب نشط للإبلاغ عن الرسائل.",
     "report_failed_toast": "تعذّر إرسال البلاغ. تحقّق من الاتصال وحاول مرة أخرى.",
-    "chat_composer_platform_paused": "الدردشة متوقفة مؤقتاً على مستوى المنصة حالياً."
+    "chat_composer_platform_paused": "الدردشة متوقفة مؤقتاً على مستوى المنصة حالياً.",
+    "not_live": "غير مباشر",
+    "watch_url_required": "أدخل رابط مشاهدة يوتيوب ليتمكن المشاهدون من متابعة البث والمحادثة."
   },
   "language": {
     "en": "English",
@@ -1265,6 +1268,58 @@
     "action_chatReportDismissed": "تجاهل بلاغ دردشة",
     "action_chatMessageDeleted": "حذف رسالة دردشة",
     "action_chatSenderMuted": "كتم مرسل",
-    "action_chatSenderBanned": "حظر مرسل"
+    "action_chatSenderBanned": "حظر مرسل",
+    "audit_actor": "بريد منفّذ الإجراء (مطابقة تامة)",
+    "audit_apply": "تطبيق",
+    "audit_dates": "الفترة الزمنية",
+    "audit_clear": "مسح عوامل التصفية"
+  },
+  "broadcast_approval_required": "يتطلب البث الموافقة على طلبك وتوثيق الحساب. قدّم طلبك أو راجع حالته.",
+  "roles": {
+    "master_admin": "المشرف الرئيسي",
+    "admin": "مشرف",
+    "org_owner": "مشرف مفوّض (مالك المؤسسة)",
+    "org_co_owner": "مشرف مفوّض (شريك المالك)",
+    "masters": "المشرفون الرئيسيون",
+    "admins": "المشرفون",
+    "owners": "المشرفون المفوّضون (ملاك المؤسسات وشركاؤهم)",
+    "no_masters": "لا يوجد مشرفون رئيسيون بعد.",
+    "no_admins": "لا يوجد مشرفون بعد.",
+    "no_owners": "لا يوجد ملاك مؤسسات بعد.",
+    "email": "البريد الإلكتروني للحساب…",
+    "revoke": "سحب الدور",
+    "grant_failed": "تعذر منح هذا الدور.",
+    "revoke_failed": "تعذر سحب هذا الدور.",
+    "permission_failed": "تعذر تحديث هذه الصلاحية.",
+    "account_missing": "يجب تسجيل الدخول بهذا الحساب قبل منحه دوراً.",
+    "revoked": "تم سحب الدور.",
+    "granted": "تم منح الدور.",
+    "edit_terms": "تعديل الشروط",
+    "moderate_chat_platform_wide": "الإشراف على محادثات المنصة",
+    "manage_admins": "إدارة المشرفين",
+    "stream": "البث",
+    "organization": "المؤسسة",
+    "global": "على مستوى المنصة"
+  },
+  "moderation": {
+    "failed": "تعذر إتمام هذا الإجراء.",
+    "ten_minutes": "١٠ دقائق",
+    "one_hour": "ساعة واحدة",
+    "mute_title": "كتم المرسل؟",
+    "mute": "كتم",
+    "search": "ابحث بالمرسل أو المبلّغ أو البث أو السبب…",
+    "dismissed": "تم إغلاق البلاغ.",
+    "delete_title": "حذف هذه الرسالة؟",
+    "delete_body": "سيتم حذف الرسالة من المحادثة. لا يمكن التراجع عن ذلك.",
+    "delete": "حذف",
+    "deleted": "تم حذف الرسالة.",
+    "mute_body": "لن يتمكن {name} من إرسال رسائل في هذا البث طوال المدة المحددة.",
+    "muted": "تم كتم المرسل في هذا البث.",
+    "ban_body": "سيُمنع {name} من إجراءات الحساب المحمية. تعرض الجلسات المتصلة شاشة الإيقاف عند تحديث حالة الحساب.",
+    "banned": "تم حظر الحساب من الإجراءات المحمية.",
+    "stream_count": "{count} بث",
+    "reported": "المبلّغ عنه: {name}",
+    "reason": "السبب: {reason}",
+    "metadata": "المبلّغ: {name} • البث: {stream} • {date}"
   }
 }

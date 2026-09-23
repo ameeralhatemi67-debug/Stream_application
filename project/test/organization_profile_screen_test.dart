@@ -66,7 +66,8 @@ Widget createTestWidget({
   );
 }
 
-Future<void> pumpTestApp(WidgetTester tester, Widget child, AppProvider provider) async {
+Future<void> pumpTestApp(
+    WidgetTester tester, Widget child, AppProvider provider) async {
   await tester.pumpWidget(createTestWidget(child: child, provider: provider));
   await tester.pump();
   await tester.pump();
@@ -83,8 +84,11 @@ void main() {
     await EasyLocalization.ensureInitialized();
   });
 
-  group('Organization Feature Phase 2: Profile Screen & Speaker Filter Tests', () {
-    testWidgets('TC-ORG-UI-01: Organization Profile renders Org badge & branches button', (tester) async {
+  group('Organization Feature Phase 2: Profile Screen & Speaker Filter Tests',
+      () {
+    testWidgets(
+        'TC-ORG-UI-01: Organization Profile renders Org badge & branches button',
+        (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -105,7 +109,9 @@ void main() {
       expect(find.byIcon(Icons.location_city_rounded), findsWidgets);
     });
 
-    testWidgets('TC-ORG-UI-02: Header card renders top-right action buttons and featured channels', (tester) async {
+    testWidgets(
+        'TC-ORG-UI-02: Header card renders top-right action buttons and featured channels',
+        (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -130,7 +136,9 @@ void main() {
       expect(find.text('@dalilk4english_podcast'), findsOneWidget);
     });
 
-    testWidgets('TC-ORG-UI-03: Tapping a Featured Channel card filters VODs and Playlists', (tester) async {
+    testWidgets(
+        'TC-ORG-UI-03: Tapping a Featured Channel card filters VODs and Playlists',
+        (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
@@ -138,6 +146,12 @@ void main() {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
+      await pumpTestApp(
+        tester,
+        const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
+        provider,
+      );
+
       // Recordings come from the backend now, so the test supplies them
       // instead of relying on a sample archive inside lib/.
       provider.setStreamerMediaForTests(
@@ -149,11 +163,7 @@ void main() {
             .where((pl) => pl.streamerId == 'org_dalilk_04')
             .toList(),
       );
-      await pumpTestApp(
-        tester,
-        const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
-        provider,
-      );
+      await tester.pumpAndSettle();
 
       // Tap on Dr. Sarah Al-Dosari channel card (@dalilk4english)
       final sarahCard = find.text('@dalilk4english');
@@ -165,7 +175,9 @@ void main() {
       expect(find.textContaining('IELTS Speaking Part 2 & 3'), findsOneWidget);
     });
 
-    testWidgets('TC-ORG-UI-04: OrgBranchesModalSheet renders all 3 campus locations', (tester) async {
+    testWidgets(
+        'TC-ORG-UI-04: OrgBranchesModalSheet renders all 3 campus locations',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
@@ -200,7 +212,9 @@ void main() {
       expect(find.textContaining('100'), findsOneWidget);
     });
 
-    testWidgets('TC-ORG-UI-05: OrgSpeakerInspectionSheet displays instructor details & bio', (tester) async {
+    testWidgets(
+        'TC-ORG-UI-05: OrgSpeakerInspectionSheet displays instructor details & bio',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
@@ -229,7 +243,8 @@ void main() {
       // Verify speaker details rendered
       expect(find.text('Abdulrahman Hejazi'), findsOneWidget);
       expect(find.text('Founder & Lead IELTS Strategist'), findsOneWidget);
-      expect(find.textContaining('over 10 years of experience'), findsOneWidget);
+      expect(
+          find.textContaining('over 10 years of experience'), findsOneWidget);
     });
   });
 }

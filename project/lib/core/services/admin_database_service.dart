@@ -41,26 +41,40 @@ bool _looksLikeUuid(String? value) =>
 /// signature is unchanged from the SharedPreferences-only version.
 class AdminDatabaseService {
   /// These admin paths never fall back to local data or simulated success.
-  Future<List<Map<String, dynamic>>> searchAdminUsers(String query, int offset) async {
+  Future<List<Map<String, dynamic>>> searchAdminUsers(
+      String query, int offset) async {
     if (!_useSupabase) throw StateError('Backend unavailable');
     final rows = await _client.rpc('admin_user_directory', params: {
-      'p_query': query, 'p_offset': offset,
+      'p_query': query,
+      'p_offset': offset,
     });
-    return (rows as List).map((row) => Map<String, dynamic>.from(row as Map)).toList();
+    return (rows as List)
+        .map((row) => Map<String, dynamic>.from(row as Map))
+        .toList();
   }
 
   Future<Map<String, dynamic>> loadAdminUserDetail(String profileId) async {
     if (!_useSupabase) throw StateError('Backend unavailable');
-    final row = await _client.rpc('admin_user_detail', params: {'p_profile_id': profileId});
+    final row = await _client
+        .rpc('admin_user_detail', params: {'p_profile_id': profileId});
     return Map<String, dynamic>.from(row as Map);
   }
 
-  Future<void> updateAdminAccount(String profileId, String action, String reason) async {
+  Future<void> updateAdminAccount(
+      String profileId, String action, String reason) async {
     if (!_useSupabase) throw StateError('Backend unavailable');
-    final rpc = {'delete_account', 'revoke_sessions', 'force_end', 'remove_from_feed'}.contains(action)
-        ? 'admin_auth_account_action' : 'admin_update_account';
+    final rpc = {
+      'delete_account',
+      'revoke_sessions',
+      'force_end',
+      'remove_from_feed'
+    }.contains(action)
+        ? 'admin_auth_account_action'
+        : 'admin_update_account';
     await _client.rpc(rpc, params: {
-      'p_profile_id': profileId, 'p_action': action, 'p_reason': reason,
+      'p_profile_id': profileId,
+      'p_action': action,
+      'p_reason': reason,
     });
   }
 
@@ -317,14 +331,19 @@ class AdminDatabaseService {
     try {
       final row = await _client
           .from('profiles')
-          .select('is_streamer')
+          .select('is_streamer,is_verified')
           .eq('id', profileId)
           .maybeSingle();
-      return row?['is_streamer'] == true;
+      return row?['is_streamer'] == true && row?['is_verified'] == true;
     } catch (e) {
       debugPrint('checkIsProfileStreamer failed: $e');
       return false;
     }
+  }
+
+  Future<Map<String, dynamic>?> loadOwnProfile(String profileId) async {
+    if (!_useSupabase) return null;
+    return _client.from('profiles').select().eq('id', profileId).maybeSingle();
   }
 
   Future<bool> revokeStreamer(String streamerIdOrProfileId) async {
@@ -1074,7 +1093,6 @@ class AdminDatabaseService {
     }).toList();
   }
 
-
   // ==========================================
   // Organization Venues & Speakers Repository (Checkpoint 3 Phase 2)
   //
@@ -1366,8 +1384,12 @@ class AdminDatabaseService {
             latitude: lat,
             longitude: lng,
             isCurrentlyLive: isLive,
-            broadcastType:
-                isLive ? BroadcastType.liveAudio : BroadcastType.offline,
+            broadcastType: isLive
+                ? (row['broadcast_type'] == 'liveAudio'
+                    ? BroadcastType.liveAudio
+                    : BroadcastType.liveVideo)
+                : BroadcastType.offline,
+            activeStreamId: row['active_stream_id'] as String?,
             isOrganization: false,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
@@ -1431,8 +1453,12 @@ class AdminDatabaseService {
             latitude: 26.2871,
             longitude: 50.2125,
             isCurrentlyLive: isLive,
-            broadcastType:
-                isLive ? BroadcastType.liveAudio : BroadcastType.offline,
+            broadcastType: isLive
+                ? (row['broadcast_type'] == 'liveAudio'
+                    ? BroadcastType.liveAudio
+                    : BroadcastType.liveVideo)
+                : BroadcastType.offline,
+            activeStreamId: row['active_stream_id'] as String?,
             isOrganization: true,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
@@ -1684,7 +1710,6 @@ class AdminDatabaseService {
       );
     }).toList();
   }
-
 
   /// Appends a platform-scope audit entry for a chat-moderation action (P6.3).
   ///
@@ -2697,8 +2722,10 @@ class AdminDatabaseService {
     final uid = _client.auth.currentUser?.id;
     if (uid == null) return {};
     try {
-      final rows =
-          await _client.from('bookmarks').select('vod_id').eq('profile_id', uid);
+      final rows = await _client
+          .from('bookmarks')
+          .select('vod_id')
+          .eq('profile_id', uid);
       return (rows as List)
           .map((r) => (r as Map<String, dynamic>)['vod_id'] as String)
           .toSet();
@@ -2770,6 +2797,15 @@ class AdminDatabaseService {
       .stream(primaryKey: ['user_id', 'device_id'])
       .eq('user_id', userId)
       .map((rows) => rows.map(DeviceSessionModel.fromJson).toList());
+
+  Future<bool> canBroadcast({String? orgId, required String type}) async {
+    if (!_useSupabase) return false;
+    return await _client.rpc('can_broadcast', params: {
+          'p_org_id': orgId,
+          'p_type': type,
+        }) ==
+        true;
+  }
 
   Future<void> setLiveState(
       {required bool live,

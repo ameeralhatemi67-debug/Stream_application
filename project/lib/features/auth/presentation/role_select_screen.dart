@@ -30,14 +30,18 @@ class RoleSelectScreen extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   // Greeting & Avatar Header
-                  CircleAvatar(
-                    radius: 32,
-                    backgroundImage: provider.googleUserAvatar != null
-                        ? (provider.googleUserAvatar!.startsWith('http')
-                            ? NetworkImage(provider.googleUserAvatar!)
-                            : AssetImage(provider.googleUserAvatar!) as ImageProvider)
-                        : const AssetImage('assets/images/Amir_Alhatemi/amir_person_pic.jpg'),
-                  ),
+                  ClipOval(
+                      child: SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: (provider.googleUserAvatar ?? '')
+                                  .startsWith('http')
+                              ? Image.network(provider.googleUserAvatar!,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, error, stack) => const Icon(
+                                      Icons.person_rounded,
+                                      size: 40))
+                              : const Icon(Icons.person_rounded, size: 40))),
                   const SizedBox(height: AppTheme.spaceMd),
                   Text(
                     'role_select.welcome_user'.tr(args: [userName]),
@@ -114,7 +118,8 @@ class RoleSelectScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: accentColor.withValues(alpha: 0.35), width: 1.5),
+        border:
+            Border.all(color: accentColor.withValues(alpha: 0.35), width: 1.5),
         boxShadow: [
           BoxShadow(
             color: accentColor.withValues(alpha: 0.08),
@@ -153,7 +158,8 @@ class RoleSelectScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
                         color: accentColor.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),

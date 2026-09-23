@@ -73,15 +73,18 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   color: AppTheme.primary,
                 ),
                 const SizedBox(width: AppTheme.spaceSm),
-                Text(
+                Expanded(
+                    child: Text(
                   'live.ghost_audience'.tr(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.textPrimary,
                       ),
-                ),
-                const Spacer(),
+                )),
+                const SizedBox(width: AppTheme.spaceSm),
                 _ConnectionStatusChip(state: widget.connectionState),
                 const SizedBox(width: 6),
                 Container(
@@ -228,9 +231,8 @@ class _ChatTile extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: 14,
-              backgroundColor: message.isCurrentUser
-                  ? AppTheme.primary
-                  : AppTheme.surface,
+              backgroundColor:
+                  message.isCurrentUser ? AppTheme.primary : AppTheme.surface,
               backgroundImage:
                   (message.senderAvatarUrl?.startsWith('assets/') ?? false)
                       ? AssetImage(message.senderAvatarUrl!) as ImageProvider
@@ -281,8 +283,8 @@ class _ChatTile extends StatelessWidget {
                             color: AppTheme.primary.withValues(alpha: 0.2),
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusXs),
-                            border: Border.all(
-                                color: AppTheme.primary, width: 0.8),
+                            border:
+                                Border.all(color: AppTheme.primary, width: 0.8),
                           ),
                           child: Text(
                             'live.you'.tr(),
@@ -320,8 +322,7 @@ class _ChatTile extends StatelessWidget {
                         if (message.isEdited)
                           TextSpan(
                             text: ' ${'live.message_edited_badge'.tr()}',
-                            style:
-                                const TextStyle(color: AppTheme.textMuted),
+                            style: const TextStyle(color: AppTheme.textMuted),
                           ),
                       ],
                     ),
@@ -348,12 +349,14 @@ class _ChatTile extends StatelessWidget {
 Widget _buildSenderBadge(BuildContext context, ChatSenderBadge badge) {
   final isAr = context.locale.languageCode == 'ar';
   if (badge != ChatSenderBadge.admin && badge != ChatSenderBadge.moderator) {
-    return Icon(badge.icon, size: 13, color: AppTheme.primary, semanticLabel: isAr ? badge.labelAr : badge.labelEn);
+    return Icon(badge.icon,
+        size: 13,
+        color: AppTheme.primary,
+        semanticLabel: isAr ? badge.labelAr : badge.labelEn);
   }
 
   final isAdminBadge = badge == ChatSenderBadge.admin;
-  final accentColor =
-      isAdminBadge ? AppTheme.warning : AppTheme.primary;
+  final accentColor = isAdminBadge ? AppTheme.warning : AppTheme.primary;
 
   return Container(
     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),

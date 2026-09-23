@@ -14,7 +14,7 @@ import '../../../../core/widgets/interactive_toast_overlay.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/stream_privacy_models.dart';
-import '../../services/rtmp_publish_engine.dart'show BroadcastQualityPreset;
+import '../../services/rtmp_publish_engine.dart' show BroadcastQualityPreset;
 import '../screens/phone_broadcast_screen.dart';
 import 'streamer_setup_guide_modal.dart';
 
@@ -367,7 +367,8 @@ class _LiveBroadcasterStudioSheetState
               Row(
                 children: [
                   Expanded(
-                    child: _pillTab(StudioMode.obs, Icons.laptop_mac_rounded, 'OBS'),
+                    child: _pillTab(
+                        StudioMode.obs, Icons.laptop_mac_rounded, 'OBS'),
                   ),
                   Expanded(
                     child: _pillTab(
@@ -467,7 +468,8 @@ class _LiveBroadcasterStudioSheetState
         prefixIcon: Icon(Icons.title_rounded, color: _modeColor, size: 20),
         filled: true,
         fillColor: AppTheme.surfaceAlt,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           borderSide: const BorderSide(color: AppTheme.border),
@@ -487,7 +489,8 @@ class _LiveBroadcasterStudioSheetState
         hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
         filled: true,
         fillColor: AppTheme.surfaceAlt,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           borderSide: const BorderSide(color: AppTheme.border),
@@ -530,7 +533,8 @@ class _LiveBroadcasterStudioSheetState
   /// streamer sees here updates immediately once the guide closes.
   Widget _infoButton() {
     return IconButton(
-      icon: const Icon(Icons.info_outline_rounded, color: AppTheme.live, size: 20),
+      icon: const Icon(Icons.info_outline_rounded,
+          color: AppTheme.live, size: 20),
       tooltip: 'live_studio.setup_guide_tooltip'.tr(),
       onPressed: () => StreamerSetupGuideModal.show(
         context,
@@ -566,27 +570,13 @@ class _LiveBroadcasterStudioSheetState
         const SizedBox(height: AppTheme.spaceMd),
         Row(
           children: [
-            Expanded(child: _sectionLabel('design_copy.youtube_live_link'.tr())),
+            Expanded(
+                child: _sectionLabel('design_copy.youtube_live_link'.tr())),
             _infoButton(),
           ],
         ),
         const SizedBox(height: AppTheme.spaceSm),
-        TextField(
-          controller: _youtubeUrlController,
-          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-          decoration: InputDecoration(
-            hintText: 'https://youtube.com/watch?v=... or Video ID',
-            hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
-            prefixIcon: Icon(Icons.link_rounded, color: _modeColor, size: 18),
-            filled: true,
-            fillColor: AppTheme.surfaceAlt,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              borderSide: const BorderSide(color: AppTheme.border),
-            ),
-          ),
-        ),
+        _watchUrlField(),
         const SizedBox(height: AppTheme.spaceSm),
         _buildAutoDetectButton(),
         const SizedBox(height: AppTheme.spaceMd),
@@ -604,6 +594,24 @@ class _LiveBroadcasterStudioSheetState
     );
   }
 
+  Widget _watchUrlField() => TextField(
+        controller: _youtubeUrlController,
+        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+        decoration: InputDecoration(
+          hintText: 'https://youtube.com/watch?v=... or Video ID',
+          hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
+          prefixIcon: Icon(Icons.link_rounded, color: _modeColor, size: 18),
+          filled: true,
+          fillColor: AppTheme.surfaceAlt,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+            borderSide: const BorderSide(color: AppTheme.border),
+          ),
+        ),
+      );
+
   Widget _buildAutoDetectButton() {
     return Consumer<AppProvider>(
       builder: (context, provider, _) {
@@ -616,10 +624,12 @@ class _LiveBroadcasterStudioSheetState
                     final found = await provider.autoDetectAmirLiveVideo();
                     if (!context.mounted) return;
                     if (found) {
-                      _youtubeUrlController.text = provider.customYouTubeLiveUrl;
+                      _youtubeUrlController.text =
+                          provider.customYouTubeLiveUrl;
                       InteractiveToastOverlay.show(
                         context,
-                        title: 'live_studio.toast_broadcast_detected_title'.tr(),
+                        title:
+                            'live_studio.toast_broadcast_detected_title'.tr(),
                         message: 'live_studio.toast_broadcast_detected_message'
                             .tr(args: [provider.customYouTubeVideoId]),
                         icon: Icons.sensors_rounded,
@@ -640,11 +650,14 @@ class _LiveBroadcasterStudioSheetState
                 ? SizedBox(
                     width: 14,
                     height: 14,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: _modeColor),
+                    child: CircularProgressIndicator(
+                        strokeWidth: 2, color: _modeColor),
                   )
                 : Icon(Icons.sensors_rounded, size: 16, color: _modeColor),
             label: Text(
-              provider.isDetectingAmirLiveVideo ? 'Detecting...' : 'Auto-Detect Live Video',
+              provider.isDetectingAmirLiveVideo
+                  ? 'Detecting...'
+                  : 'Auto-Detect Live Video',
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
@@ -688,7 +701,9 @@ class _LiveBroadcasterStudioSheetState
           ),
           IconButton(
             icon: Icon(
-              _streamKeyVisible ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+              _streamKeyVisible
+                  ? Icons.visibility_off_rounded
+                  : Icons.visibility_rounded,
               size: 16,
               color: AppTheme.textMuted,
             ),
@@ -700,7 +715,8 @@ class _LiveBroadcasterStudioSheetState
           ),
           const SizedBox(width: 6),
           IconButton(
-            icon: const Icon(Icons.copy_rounded, size: 14, color: AppTheme.textMuted),
+            icon: const Icon(Icons.copy_rounded,
+                size: 14, color: AppTheme.textMuted),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: key.isEmpty
@@ -708,7 +724,9 @@ class _LiveBroadcasterStudioSheetState
                 : () {
                     Clipboard.setData(ClipboardData(text: key));
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('design_ui.stream_key_copied_to_clipboard'.tr())),
+                      SnackBar(
+                          content: Text(
+                              'design_ui.stream_key_copied_to_clipboard'.tr())),
                     );
                   },
           ),
@@ -743,13 +761,16 @@ class _LiveBroadcasterStudioSheetState
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.copy_rounded, size: 14, color: AppTheme.textMuted),
+            icon: const Icon(Icons.copy_rounded,
+                size: 14, color: AppTheme.textMuted),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
             onPressed: () {
               Clipboard.setData(ClipboardData(text: url));
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('design_ui.ingest_url_copied_to_clipboard'.tr())),
+                SnackBar(
+                    content:
+                        Text('design_ui.ingest_url_copied_to_clipboard'.tr())),
               );
             },
           ),
@@ -766,6 +787,10 @@ class _LiveBroadcasterStudioSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        _sectionLabel('design_copy.youtube_live_link'.tr()),
+        const SizedBox(height: AppTheme.spaceSm),
+        _watchUrlField(),
+        const SizedBox(height: AppTheme.spaceMd),
         _sectionLabel('design_copy.broadcast_title'.tr()),
         const SizedBox(height: AppTheme.spaceSm),
         _titleField(),
@@ -780,7 +805,8 @@ class _LiveBroadcasterStudioSheetState
         const SizedBox(height: AppTheme.spaceMd),
         Row(
           children: [
-            Expanded(child: _sectionLabel('design_copy.youtube_stream_key'.tr())),
+            Expanded(
+                child: _sectionLabel('design_copy.youtube_stream_key'.tr())),
             _infoButton(),
           ],
         ),
@@ -788,22 +814,30 @@ class _LiveBroadcasterStudioSheetState
         TextField(
           controller: _streamKeyController,
           obscureText: !_streamKeyVisible,
-          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13, fontFamily: 'monospace'),
+          style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontFamily: 'monospace'),
           decoration: InputDecoration(
             hintText: 'xxxx-xxxx-xxxx-xxxx-xxxx',
-            hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
+            hintStyle:
+                const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
             prefixIcon: Icon(Icons.key_rounded, color: _modeColor, size: 18),
             suffixIcon: IconButton(
               icon: Icon(
-                _streamKeyVisible ? Icons.visibility_off_rounded : Icons.visibility_rounded,
+                _streamKeyVisible
+                    ? Icons.visibility_off_rounded
+                    : Icons.visibility_rounded,
                 color: AppTheme.textMuted,
                 size: 18,
               ),
-              onPressed: () => setState(() => _streamKeyVisible = !_streamKeyVisible),
+              onPressed: () =>
+                  setState(() => _streamKeyVisible = !_streamKeyVisible),
             ),
             filled: true,
             fillColor: AppTheme.surfaceAlt,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               borderSide: const BorderSide(color: AppTheme.border),
@@ -841,7 +875,9 @@ class _LiveBroadcasterStudioSheetState
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: isSelected ? _modeColor.withValues(alpha: 0.15) : AppTheme.surfaceAlt,
+                  color: isSelected
+                      ? _modeColor.withValues(alpha: 0.15)
+                      : AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   border: Border.all(
                     color: isSelected ? _modeColor : AppTheme.border,
@@ -861,7 +897,8 @@ class _LiveBroadcasterStudioSheetState
                     const SizedBox(height: 2),
                     Text(
                       bandwidth,
-                      style: const TextStyle(color: AppTheme.textMuted, fontSize: 9.5),
+                      style: const TextStyle(
+                          color: AppTheme.textMuted, fontSize: 9.5),
                     ),
                   ],
                 ),
@@ -883,7 +920,9 @@ class _LiveBroadcasterStudioSheetState
       children: [
         Row(
           children: [
-            Expanded(child: _sectionLabel('design_copy.laptop_local_ip_address'.tr())),
+            Expanded(
+                child:
+                    _sectionLabel('design_copy.laptop_local_ip_address'.tr())),
             _infoButton(),
           ],
         ),
@@ -891,14 +930,19 @@ class _LiveBroadcasterStudioSheetState
         TextField(
           controller: _ipController,
           keyboardType: TextInputType.url,
-          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13, fontFamily: 'monospace'),
+          style: const TextStyle(
+              color: AppTheme.textPrimary,
+              fontSize: 13,
+              fontFamily: 'monospace'),
           decoration: InputDecoration(
             hintText: 'e.g. 192.168.1.100',
-            hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
+            hintStyle:
+                const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
             prefixIcon: Icon(Icons.laptop_rounded, color: _modeColor, size: 18),
             filled: true,
             fillColor: AppTheme.surfaceAlt,
-            contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               borderSide: const BorderSide(color: AppTheme.border),
@@ -916,7 +960,8 @@ class _LiveBroadcasterStudioSheetState
               selected: isSelected,
               selectedColor: _modeColor.withValues(alpha: 0.25),
               backgroundColor: AppTheme.surfaceAlt,
-              side: BorderSide(color: isSelected ? _modeColor : AppTheme.border),
+              side:
+                  BorderSide(color: isSelected ? _modeColor : AppTheme.border),
               labelStyle: TextStyle(
                 color: isSelected ? _modeColor : AppTheme.textSecondary,
                 fontSize: 10.5,
@@ -957,7 +1002,8 @@ class _LiveBroadcasterStudioSheetState
                 ),
               ),
               IconButton(
-                icon: const Icon(Icons.copy_rounded, size: 14, color: AppTheme.textMuted),
+                icon: const Icon(Icons.copy_rounded,
+                    size: 14, color: AppTheme.textMuted),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
                 onPressed: () {
@@ -965,7 +1011,9 @@ class _LiveBroadcasterStudioSheetState
                     text: 'rtmp://${_ipController.text.trim()}/live/demo',
                   ));
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('design_ui.rtmp_url_copied_to_clipboard'.tr())),
+                    SnackBar(
+                        content: Text(
+                            'design_ui.rtmp_url_copied_to_clipboard'.tr())),
                   );
                 },
               ),
@@ -1013,7 +1061,8 @@ class _LiveBroadcasterStudioSheetState
                         child: _posterOption(
                           icon: Icons.graphic_eq_rounded,
                           label: 'design_copy.default'.tr(),
-                          selected: _posterChoice == _PosterChoice.defaultVisualizer,
+                          selected:
+                              _posterChoice == _PosterChoice.defaultVisualizer,
                           onTap: () => setState(() {
                             _posterChoice = _PosterChoice.defaultVisualizer;
                           }),
@@ -1030,7 +1079,8 @@ class _LiveBroadcasterStudioSheetState
                       ),
                     ],
                   ),
-                  if (_posterChoice == _PosterChoice.custom && _posterPath != null) ...[
+                  if (_posterChoice == _PosterChoice.custom &&
+                      _posterPath != null) ...[
                     const SizedBox(height: AppTheme.spaceSm),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -1061,13 +1111,15 @@ class _LiveBroadcasterStudioSheetState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? _modeColor.withValues(alpha: 0.15) : AppTheme.surface,
+          color:
+              selected ? _modeColor.withValues(alpha: 0.15) : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(color: selected ? _modeColor : AppTheme.border),
         ),
         child: Column(
           children: [
-            Icon(icon, size: 18, color: selected ? _modeColor : AppTheme.textMuted),
+            Icon(icon,
+                size: 18, color: selected ? _modeColor : AppTheme.textMuted),
             const SizedBox(height: 4),
             Text(
               label,
@@ -1085,7 +1137,8 @@ class _LiveBroadcasterStudioSheetState
 
   Future<void> _pickPoster() async {
     try {
-      final image = await _picker.pickImage(source: ImageSource.gallery, imageQuality: 85);
+      final image = await _picker.pickImage(
+          source: ImageSource.gallery, imageQuality: 85);
       if (image == null || !mounted) return;
       setState(() {
         _posterChoice = _PosterChoice.custom;
@@ -1151,7 +1204,9 @@ class _LiveBroadcasterStudioSheetState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: selected ? _modeColor.withValues(alpha: 0.15) : AppTheme.surfaceAlt,
+          color: selected
+              ? _modeColor.withValues(alpha: 0.15)
+              : AppTheme.surfaceAlt,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(
             color: selected ? _modeColor : AppTheme.border,
@@ -1197,14 +1252,17 @@ class _LiveBroadcasterStudioSheetState
               Expanded(
                 child: TextField(
                   controller: _whitelistInputController,
-                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12.5),
+                  style: const TextStyle(
+                      color: AppTheme.textPrimary, fontSize: 12.5),
                   decoration: InputDecoration(
                     hintText: '@sarah, @khalid',
-                    hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
+                    hintStyle: const TextStyle(
+                        color: AppTheme.textMuted, fontSize: 11.5),
                     isDense: true,
                     filled: true,
                     fillColor: AppTheme.surface,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 10, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       borderSide: const BorderSide(color: AppTheme.border),
@@ -1230,10 +1288,13 @@ class _LiveBroadcasterStudioSheetState
                   backgroundColor: AppTheme.surface,
                   label: Text(
                     handle,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 11),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 11),
                   ),
-                  deleteIcon: const Icon(Icons.close_rounded, size: 14, color: AppTheme.danger),
-                  onDeleted: () => setState(() => _whitelistHandles.remove(handle)),
+                  deleteIcon: const Icon(Icons.close_rounded,
+                      size: 14, color: AppTheme.danger),
+                  onDeleted: () =>
+                      setState(() => _whitelistHandles.remove(handle)),
                 );
               }).toList(),
             ),
@@ -1244,7 +1305,8 @@ class _LiveBroadcasterStudioSheetState
               Expanded(
                 child: Text(
                   'design_copy.require_host_knock_approval_for_new_guests'.tr(),
-                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12),
+                  style: const TextStyle(
+                      color: AppTheme.textPrimary, fontSize: 12),
                 ),
               ),
               Switch(
@@ -1348,14 +1410,17 @@ class _LiveBroadcasterStudioSheetState
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         decoration: BoxDecoration(
-          color: selected ? _modeColor.withValues(alpha: 0.18) : AppTheme.surfaceAlt,
+          color: selected
+              ? _modeColor.withValues(alpha: 0.18)
+              : AppTheme.surfaceAlt,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(color: selected ? _modeColor : AppTheme.border),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 16, color: selected ? _modeColor : AppTheme.textMuted),
+            Icon(icon,
+                size: 16, color: selected ? _modeColor : AppTheme.textMuted),
             const SizedBox(height: 2),
             Text(
               label,
@@ -1431,7 +1496,8 @@ class _LiveBroadcasterStudioSheetState
                     const Icon(Icons.stop_circle_rounded,
                         size: 18, color: AppTheme.onMedia),
                   const SizedBox(width: 8),
-                  Text('design_ui.end_stream'.tr(),
+                  Text(
+                    'design_ui.end_stream'.tr(),
                     style: const TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 13.5,
@@ -1489,7 +1555,8 @@ class _LiveBroadcasterStudioSheetState
                     const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.onMedia),
+                      child: CircularProgressIndicator(
+                          strokeWidth: 2, color: AppTheme.onMedia),
                     )
                   else
                     Icon(icon, size: 18, color: AppTheme.onMedia),
@@ -1540,7 +1607,8 @@ class _LiveBroadcasterStudioSheetState
       _posterChoice == _PosterChoice.custom ? _posterPath : null,
     );
     provider.configureStreamPrivacy(
-      visibility: _isPrivate ? StreamVisibility.private : StreamVisibility.public,
+      visibility:
+          _isPrivate ? StreamVisibility.private : StreamVisibility.public,
       whitelistHandles: _whitelistHandles,
       requireKnockApproval: _requireKnockApproval,
     );
@@ -1585,9 +1653,8 @@ class _LiveBroadcasterStudioSheetState
       message: videoId.isEmpty
           ? 'Paste the watch or live URL from YouTube Studio.'
           : 'Active Video ID: $videoId',
-      icon: videoId.isEmpty
-          ? Icons.error_outline_rounded
-          : Icons.sensors_rounded,
+      icon:
+          videoId.isEmpty ? Icons.error_outline_rounded : Icons.sensors_rounded,
       accentColor: videoId.isEmpty ? AppTheme.danger : _modeColor,
     );
   }
@@ -1607,6 +1674,13 @@ class _LiveBroadcasterStudioSheetState
       return;
     }
 
+    final watchUrl = _youtubeUrlController.text.trim();
+    if (AppProvider.extractYouTubeId(watchUrl).isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('live.watch_url_required'.tr())));
+      return;
+    }
+    provider.setCustomStreamerYouTubeUrl(watchUrl);
     _persistSharedMeta(provider);
     provider.updatePhoneBroadcastTarget(
       rtmpUrl: _ingestUrlController.text.trim().isEmpty
@@ -1640,7 +1714,8 @@ class _LiveBroadcasterStudioSheetState
 
     provider.updateRtmpLaptopIp(rawIp);
     provider.configureStreamPrivacy(
-      visibility: _isPrivate ? StreamVisibility.private : StreamVisibility.public,
+      visibility:
+          _isPrivate ? StreamVisibility.private : StreamVisibility.public,
       whitelistHandles: _whitelistHandles,
       requireKnockApproval: _requireKnockApproval,
     );

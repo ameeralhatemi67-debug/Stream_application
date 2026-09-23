@@ -67,3 +67,18 @@ Observations captured during task-oriented work.
 **Principle:** Validate a measurement's units and scope as well as its age.
 
 2026-09-23 Admin Hub deliverable checkpoint: no new skill observation. Existing observation 3 covers the URL-aware browser and Flutter accessibility workflow.
+
+### Observation 5: Separate an initial data snapshot from Realtime subscription readiness
+
+**Status:** OPEN
+**Date:** 2026-09-23
+**Session context:** A local two-session acceptance probe initially missed a transfer event, then passed after the existing channel joined.
+**Skill:** New candidate for a reusable realtime verification workflow
+**Type:** open-source
+**Phase/Area:** Runtime verification
+
+**Issue:** A stream API can emit an HTTP snapshot before its event channel is subscribed. Treating the snapshot as readiness can misclassify a startup timing window as a missing publication or listener.
+
+**Suggested improvement:** Verify snapshot readiness and channel subscription separately; test a mutation after join, then test the startup window and documented fallback without adding duplicate listeners.
+
+**Principle:** A successful initial read does not establish readiness to receive subsequent events.

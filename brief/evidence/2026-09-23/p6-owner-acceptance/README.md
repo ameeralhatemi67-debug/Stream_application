@@ -2,23 +2,25 @@
 
 Use this sheet during the test. Put labelled screenshots in [`screenshots/`](screenshots/) and write the result beside each check. Do not add passwords, session tokens, API keys, RTMP URLs or stream keys to this file or a screenshot.
 
-**Status at preparation:** P6 is **not accepted**. Commit `11d0b09` added the Admin Hub side navigation, Arabic toggle, honest analytics states and `/admin` loading fix. Commit `23b1f43` recorded 514 passing Flutter tests, analyzer 0 and 283 local SQL assertions. Those are local results, not physical-device evidence. The known gates remain G6=554 and G11a=9 in older nested worktrees. P6S has not started.
+**Current remediation status (2026-09-23):** P6 remains **NOT accepted**, P6S remains **NOT complete**. See [the dated addendum](REMEDIATION_2026-09-23.md) for the full evidence matrix, 530 passing Flutter tests, analyzer 0, 288 local SQL assertions, fixes and owner retest steps. The owner’s original reports/results below are preserved; their “conditionally accepted” wording does not complete the blank checks or the required two-phone evidence. Partial phone source repairs do not accept P6S. Gates are G6=565 (+11 translated calls counted by the regex), G11a=9 unchanged, G7=0. Windows compile is currently blocked by the reproduced STL1011 error. No production action was performed by this remediation task.
 
-**A code gap remains:** the P6 work plan requires audit filters by actor, action and date. Only the action filter exists. Record the action-filter test below, but do not mark P6 complete until actor/date filters are implemented and checked, or the owner explicitly removes them from P6 scope in the plan and ledger.
+**Historical status at preparation (before remediation):** P6 is **not accepted**. Commit `11d0b09` added the Admin Hub side navigation, Arabic toggle, honest analytics states and `/admin` loading fix. Commit `23b1f43` recorded 514 passing Flutter tests, analyzer 0 and 283 local SQL assertions. Those are local results, not physical-device evidence. The known gates remain G6=554 and G11a=9 in older nested worktrees. P6S has not started.
+
+**Audit code gap repaired locally:** actor-email, action and date filters now use server queries and stable cursor paging. The combined signed-in admin check below remains required; do not treat local tests as owner acceptance.
 
 ## 1. Confirm the backend before changing anything
 
 **Verified on 2026-09-23:** `project/dart_define.local.json` points to the repo's **linked production Supabase project**. The reference in that file matches `supabase/.temp/project-ref`, and `brief/OWNER_ACTIONS.md` calls that linked project production. The file is *not* the disposable local database used for the 283 SQL assertions. Its exact hosted migration state has not been checked here, and prior notes say production may differ from the locally rebuilt schema. The filename `local.json` only means the file is stored locally; it does not make its backend local. Do not paste its URL or keys into this document.
 
-**Current stop point:** Do not run P6-02 through P6-10 with that file yet. Those checks change global flags, moderation state, accounts, audit rows or live streams. A successful app launch is not proof that production has the required migrations. First choose one safe test target:
+**Target authorization still required:** Do not run P6-02 through P6-10 with that file yet. Those checks change global flags, moderation state, accounts, audit rows or live streams. A successful app launch is not proof that production has the required migrations. First choose one safe test target:
 
 1. **Disposable local Supabase on this laptop, preferred because it uses no third cloud project:** an agent must prepare a physical-phone-accessible local stack, Google OAuth callback/secret, and Android debug network configuration, then verify real Google sign-in on both phones. The repo has a local Google OAuth template, but the required local secret is not present in this shell and Android currently forbids cleartext traffic. Do not assume it works just because local password-grant API tests passed.
-2. **Controlled test on the existing production project:** the owner must explicitly authorize production schema review/migration and a test window, after checking the pending migration/production-drift items in `brief/OWNER_ACTIONS.md` and the read-only queries in `brief/evidence/2026-09-23/p6-keyword-audit-migration-review.md`. Apply `20260923130000` and `20260923140000` together only after that review. Real users may see registration/chat pauses. Do not treat this checklist as authorization to push migrations.
+2. **Controlled test on the existing production project:** the owner must explicitly authorize production schema review/migration and a test window, after checking the pending migration/production-drift items in `brief/OWNER_ACTIONS.md` and the read-only queries in `brief/evidence/2026-09-23/p6-keyword-audit-migration-review.md`. The later owner report records a production migration run; do not repeat its 36-migration push. Check actual history and review any pending migration, including new `20260923200000_scope_asset_listing.sql`, before a separately authorized rollout. Real users may see registration/chat pauses. Do not treat this checklist as authorization to push migrations.
 
 Until one target is ready, use this file to prepare accounts/devices and record **NOT RUN** for server-changing checks. Non-mutating visual inspection of P6-01 on an already-authorized session is possible, but it does not accept P6.
 
 - [ ] A disposable local target is working with real phone Google sign-in, or the owner has explicitly authorized production review/migration and a controlled live test window.
-- [ ] The target database has the required migrations through `20260923140000_revoke_api_truncate_trigger_references.sql`. The local SQL result does not prove the hosted database has them.
+- [ ] The target database has the required migrations through the tested local scope, including `20260923200000_scope_asset_listing.sql` for the new storage check. The local SQL result does not prove the hosted database has them.
 - [ ] Google sign-in is enabled for this project. Its Android callback is allowed, and the browser origin shown in Chrome is on Supabase Auth's redirect allow-list.
 - [ ] The Master Admin and verified broadcaster roles are present for the test accounts.
 - [ ] There are no real users whose access would be disrupted when the global chat or registrations switches are paused.
@@ -143,7 +145,7 @@ Result: ____  Time: ____  Screenshot(s): `P6-05-report-queue.png`, `P6-05-messag
 1. M opens **Safety → Chat keywords**, adds a unique disposable word, changes its match mode to **Anywhere in text**, then has B try to send it. The send must be refused.
 2. Remove the word. Confirm B can send it afterward.
 3. In **Safety → Audit log**, find the add, change and remove entries with M as actor, the correct action and time. Use the action filter; unrelated actions should disappear.
-4. **Actor and date filters are currently absent.** Record this as a code blocker, not a failed tap. They must be implemented and tested, or explicitly removed from P6 scope by the owner.
+4. Enter M’s exact actor email and apply it; choose a date range and combine it with an action. Page beyond 50 matching rows, including equal timestamps, and check for duplicates, omissions and unrelated actors/actions/dates. Clear/change a filter and confirm paging resets. Dates use inclusive local start and exclusive next-day end converted to UTC. These controls are implemented and locally tested; record the real-session result separately.
 
 Result: PASS (Post-migration)  Time: 2026-09-23 22:16 UTC+3  Screenshot(s): `good/P6-06-desktop-keywords-testword-added-whole-word.png`  Actor/date status: Action filter functional; keyword added successfully with match_mode; 'hell' whole word mode active.  Notes: Unblocked by migration 20260921120000.
 
@@ -180,7 +182,7 @@ Result: ____  Time: ____  Screenshot(s): `P6-09-guest.png`, `P6-09-new-message.p
 
 ### P6-10. Final audit and cleanup
 
-1. M checks the audit log for switch changes, moderation, end/remove, keywords and directory actions. Each must show the actual actor, action, reason and time. Action filtering must work.
+1. M checks the audit log for switch changes, moderation, end/remove, keywords and directory actions. Each must show the actual actor, action, reason and time. Actor, action and date filtering plus paging must work.
 2. Confirm registrations and chat are **on**, temporary keywords/blocks/mutes/bans are removed, disposable streams have ended, and the test account state is documented.
 3. Capture any failure before closing the app. Label it with test ID, device, time, expected result and actual result. Redact keys, email addresses and private data.
 
@@ -193,7 +195,7 @@ Result: ____  Time: ____  Screenshot(s): `P6-10-final-audit.png`  Cleanup comple
 | Real Google sign-in on both phones and Master Admin browser | ____ |
 | P6-01 through P6-10 required checks passed or have an approved, recorded scope decision | ____ |
 | Physical broadcaster responds correctly to End broadcast and Remove from feed | ____ |
-| Audit actor/date filters implemented and tested, or explicitly removed from P6 scope | ____ |
+| Audit actor/action/date filters: implemented and locally tested; owner real-session paging/date check | ____ |
 | All failures fixed and rechecked on the affected devices | ____ |
 | Global switches and disposable test state restored | ____ |
 

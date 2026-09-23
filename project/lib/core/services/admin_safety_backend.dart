@@ -108,7 +108,13 @@ class AdminSafetyException implements Exception {
 /// to local or sample data, so an unreachable backend shows as an error.
 abstract class AdminSafetyBackend {
   Future<List<LiveBroadcastRow>> loadLiveBroadcasts();
-  Future<AuditPage> loadAudit({String? action, int offset = 0});
+  Future<AuditPage> loadAudit(
+      {String? action,
+      String? actorEmail,
+      DateTime? since,
+      DateTime? until,
+      AdminAuditEntry? after,
+      int offset = 0});
   Future<List<BlocklistKeyword>> loadKeywords();
   Future<void> addKeyword(String keyword, String matchMode);
   Future<void> setKeywordMode(String id, String matchMode);
@@ -116,11 +122,13 @@ abstract class AdminSafetyBackend {
 }
 
 class SupabaseAdminSafetyBackend implements AdminSafetyBackend {
-  const SupabaseAdminSafetyBackend();
+  const SupabaseAdminSafetyBackend({SupabaseClient? client})
+      : _injectedClient = client;
+  final SupabaseClient? _injectedClient;
 
   static const auditPageSize = 50;
 
-  SupabaseClient get _client => Supabase.instance.client;
+  SupabaseClient get _client => _injectedClient ?? Supabase.instance.client;
 
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
@@ -151,8 +159,8 @@ class SupabaseAdminSafetyBackend implements AdminSafetyBackend {
         final counts = <String, int>{};
         if (streamIds.isNotEmpty) {
           try {
-            final res = await _client.rpc('get_viewer_counts',
-                params: {'p_stream_ids': streamIds});
+            final res = await _client
+                .rpc('get_viewer_counts', params: {'p_stream_ids': streamIds});
             for (final c in (res as List).cast<Map<String, dynamic>>()) {
               counts[c['stream_id'] as String] = c['viewer_count'] as int;
             }
@@ -174,13 +182,35 @@ class SupabaseAdminSafetyBackend implements AdminSafetyBackend {
       });
 
   @override
-  Future<AuditPage> loadAudit({String? action, int offset = 0}) =>
+  Future<AuditPage> loadAudit(
+          {String? action,
+          String? actorEmail,
+          DateTime? since,
+          DateTime? until,
+          AdminAuditEntry? after,
+          int offset = 0}) =>
       _guard(() async {
         var query = _client.from('audit_logs').select();
         if (action != null) query = query.eq('action', action);
+        if (actorEmail != null && actorEmail.trim().isNotEmpty) {
+          query = query.eq('actor_email', actorEmail.trim());
+        }
+        if (since != null) {
+          query = query.gte('created_at', since.toUtc().toIso8601String());
+        }
+        if (until != null) {
+          query = query.lt('created_at', until.toUtc().toIso8601String());
+        }
+        if (after != null) {
+          final time = after.createdAt.toUtc().toIso8601String();
+          query = query.or(
+              'created_at.lt.$time,and(created_at.eq.$time,id.lt.${after.id})');
+        }
         final rows = await query
             .order('created_at', ascending: false)
-            .range(offset, offset + auditPageSize);
+            .order('id', ascending: false)
+            .range(after == null ? offset : 0,
+                (after == null ? offset : 0) + auditPageSize);
         final list = (rows as List)
             .cast<Map<String, dynamic>>()
             .map(AdminAuditEntry.fromRow)
@@ -218,8 +248,7 @@ class SupabaseAdminSafetyBackend implements AdminSafetyBackend {
   /// RLS turns a refused update or delete into zero affected rows rather than
   /// an error, so both ask for the rows back and treat none as a refusal.
   @override
-  Future<void> setKeywordMode(String id, String matchMode) =>
-      _guard(() async {
+  Future<void> setKeywordMode(String id, String matchMode) => _guard(() async {
         final rows = await _client
             .from('chat_banned_keywords')
             .update({'match_mode': matchMode})

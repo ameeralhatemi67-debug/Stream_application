@@ -65,10 +65,8 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    globalEnData =
-        jsonDecode(await File('assets/i18n/en.json').readAsString());
-    globalArData =
-        jsonDecode(await File('assets/i18n/ar.json').readAsString());
+    globalEnData = jsonDecode(await File('assets/i18n/en.json').readAsString());
+    globalArData = jsonDecode(await File('assets/i18n/ar.json').readAsString());
     await EasyLocalization.ensureInitialized();
   });
 
@@ -162,7 +160,7 @@ void main() {
         await tester.pumpAndSettle();
         expect(findByHint('e.g. 192.168.1.100'), findsNothing);
         expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
-            findsNothing);
+            findsOneWidget);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsOneWidget);
 
         await tester.tap(find.text(obsLabel));
@@ -186,8 +184,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Broadcaster Studio'), findsOneWidget);
-      expect(find.text('Choose how you want to broadcast today'),
-          findsOneWidget);
+      expect(
+          find.text('Choose how you want to broadcast today'), findsOneWidget);
       // The raw (untranslated) keys must never leak onto screen.
       expect(find.text('live_studio.director_title'), findsNothing);
       expect(find.text('live_studio.director_subtitle'), findsNothing);
@@ -223,7 +221,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Open Camera'), findsOneWidget);
       expect(find.text('Quality Preset'), findsOneWidget);
-      expect(find.text('YouTube Live Link'), findsNothing);
+      expect(find.text('YouTube Live Link'), findsOneWidget);
 
       await tester.tap(find.text('Local'));
       await tester.pumpAndSettle();
@@ -243,11 +241,14 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final videoIdBefore = provider.customYouTubeVideoId;
+      const watchId = 'abcdefghijk';
 
       await tester.tap(find.text('Phone'));
       await tester.pumpAndSettle();
 
+      await tester.enterText(
+          findByHint('https://youtube.com/watch?v=... or Video ID'),
+          'https://youtube.com/watch?v=$watchId');
       final keyField = findByHint('xxxx-xxxx-xxxx-xxxx-xxxx');
       expect(keyField, findsOneWidget);
       await tester.enterText(keyField, 'real-key-from-youtube-studio');
@@ -260,7 +261,7 @@ void main() {
           equals('real-key-from-youtube-studio'));
       // startQuickPhoneBroadcast (the simulated path) was never called --
       // the viewer-facing video id is untouched by a fresh "sim_..."id.
-      expect(provider.customYouTubeVideoId, equals(videoIdBefore));
+      expect(provider.customYouTubeVideoId, equals(watchId));
 
       // PhoneBroadcastScreen's camera/permission setup needs real platform
       // channels this test environment doesn't provide.
@@ -445,8 +446,8 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final screenHeight = tester.view.physicalSize.height /
-          tester.view.devicePixelRatio;
+      final screenHeight =
+          tester.view.physicalSize.height / tester.view.devicePixelRatio;
       final obsSheetSize =
           tester.getSize(find.byType(LiveBroadcasterStudioSheet));
 
@@ -507,7 +508,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(provider.customLiveTitle, equals('OBS Lecture Title'));
-      expect(provider.customLiveDescription, equals('A short OBS description.'));
+      expect(
+          provider.customLiveDescription, equals('A short OBS description.'));
       expect(provider.isBroadcastingLive, isFalse);
       expect(provider.broadcastSessionError, 'broadcast_primary_required');
 
@@ -599,12 +601,13 @@ void main() {
 
       final keyField = findByHint('xxxx-xxxx-xxxx-xxxx-xxxx');
       final fieldWidget = tester.widget<TextField>(keyField);
-      expect(fieldWidget.controller?.text,
-          equals('clipboard-pasted-stream-key'));
+      expect(
+          fieldWidget.controller?.text, equals('clipboard-pasted-stream-key'));
     });
 
     testWidgets(
-        'TC-STUDIO-15: private controls are hidden without server entitlements', (tester) async {
+        'TC-STUDIO-15: private controls are hidden without server entitlements',
+        (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -622,7 +625,8 @@ void main() {
     });
 
     testWidgets(
-        'TC-STUDIO-16: saved whitelist remains editable as data but has no private UI', (tester) async {
+        'TC-STUDIO-16: saved whitelist remains editable as data but has no private UI',
+        (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -639,7 +643,8 @@ void main() {
     });
 
     testWidgets(
-        'TC-STUDIO-17: OBS Go Live cannot enable private mode through provider state', (tester) async {
+        'TC-STUDIO-17: OBS Go Live cannot enable private mode through provider state',
+        (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -658,8 +663,7 @@ void main() {
       provider.dispose();
     });
 
-    testWidgets(
-        'TC-STUDIO-18: Local mode cannot enable private streaming',
+    testWidgets('TC-STUDIO-18: Local mode cannot enable private streaming',
         (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(

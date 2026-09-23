@@ -40,10 +40,10 @@ class RtmpPublisherView(
                 // v0.7 Checkpoint 3 Phase 2 -- backgrounding/locking the
                 // screen destroys this Surface (standard SurfaceView
                 // behavior) without disposing this PlatformView. Only drop
-                // the preview binding here; bridge.detach() (which actually
+                // the preview binding here; bridge.onSurfaceLost(openGlView) (which actually
                 // stops the broadcast) belongs to dispose() below, when the
                 // screen is genuinely going away.
-                bridge.onSurfaceLost()
+                bridge.onSurfaceLost(openGlView)
             }
         })
     }
@@ -51,6 +51,6 @@ class RtmpPublisherView(
     override fun getView() = container
 
     override fun dispose() {
-        bridge.detach()
+        bridge.onSurfaceLost(openGlView)
     }
 }

@@ -245,7 +245,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           bannedUsersCount: p.bannedUsers.length,
         ));
     final isAr = context.locale.languageCode == 'ar';
-    final isDesktop = MediaQuery.of(context).size.width >= AppBreakpoints.expanded;
+    final isDesktop =
+        MediaQuery.of(context).size.width >= AppBreakpoints.expanded;
     if (_isMasterAdminForTabs != provider.isMasterAdmin) {
       final oldIndex = _tabController.index;
       const rolesIndex = 11 + (kDebugMode ? 1 : 0);
@@ -257,8 +258,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       if (!hadMaster && oldIndex >= rolesIndex) index++;
       _tabController.dispose();
       _tabController = TabController(
-        length: (_isMasterAdminForTabs ? 14 : 13) + (kDebugMode ? 1 : 0),
-        initialIndex: index, vsync: this);
+          length: (_isMasterAdminForTabs ? 14 : 13) + (kDebugMode ? 1 : 0),
+          initialIndex: index,
+          vsync: this);
     }
 
     // Access Guard
@@ -274,7 +276,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
           title: Text('design_ui.access_denied'.tr()),
         ),
-        body: SingleChildScrollView(child: Center(
+        body: SingleChildScrollView(
+            child: Center(
           child: Container(
             constraints: const BoxConstraints(maxWidth: 450),
             padding: const EdgeInsets.all(AppTheme.spaceXl),
@@ -282,8 +285,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border:
-                  Border.all(color: AppTheme.danger.withValues(alpha: 0.5)),
+              border: Border.all(color: AppTheme.danger.withValues(alpha: 0.5)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -291,7 +293,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 const Icon(Icons.gpp_bad_rounded,
                     color: AppTheme.danger, size: 54),
                 const SizedBox(height: AppTheme.spaceMd),
-                Text('design_ui.admin_access_required'.tr(),
+                Text(
+                  'design_ui.admin_access_required'.tr(),
                   style: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontSize: 18,
@@ -299,7 +302,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
-                Text('design_ui.your_account_does_not_have_admin_or_master_admin_access_ask_a_mas'.tr(),
+                Text(
+                  'design_ui.your_account_does_not_have_admin_or_master_admin_access_ask_a_mas'
+                      .tr(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: AppTheme.textSecondary,
@@ -347,14 +352,24 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       backgroundColor: AppTheme.bg,
       appBar: AppBar(
         leading: isDesktop
-            ? IconButton(icon: const Icon(Icons.arrow_back_rounded),
-                tooltip: 'common.back'.tr(), onPressed: () => context.go('/feed'))
+            ? IconButton(
+                icon: const Icon(Icons.arrow_back_rounded),
+                tooltip: 'common.back'.tr(),
+                onPressed: () => context.go('/feed'))
             : null,
-        title: Text('admin.title'.tr(), maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: const [LanguageSwitcher(), SizedBox(width: AppTheme.spaceMd)],
+        title: Text('admin.title'.tr(),
+            maxLines: 1, overflow: TextOverflow.ellipsis),
+        actions: const [
+          Padding(
+              padding: EdgeInsetsDirectional.only(end: AppTheme.spaceMd),
+              child: Center(child: LanguageSwitcher()))
+        ],
       ),
-      drawer: isDesktop ? null : Drawer(
-        child: SafeArea(child: _buildNavigation(provider, closeDrawer: true))),
+      drawer: isDesktop
+          ? null
+          : Drawer(
+              child: SafeArea(
+                  child: _buildNavigation(provider, closeDrawer: true))),
       body: Row(children: [
         if (isDesktop) ...[
           SizedBox(width: 260, child: _buildNavigation(provider)),
@@ -368,18 +383,50 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   Widget _buildNavigation(AppProvider provider, {bool closeDrawer = false}) {
     final entries = <({String label, IconData icon, int count})>[
       (label: 'admin.tab_overview', icon: Icons.dashboard_outlined, count: 0),
-      (label: 'admin.tab_verification', icon: Icons.how_to_reg_outlined, count: provider.pendingApplications.length),
+      (
+        label: 'admin.tab_verification',
+        icon: Icons.how_to_reg_outlined,
+        count: provider.pendingApplications.length
+      ),
       (label: 'admin.tab_streamers', icon: Icons.groups_outlined, count: 0),
-      (label: 'admin.tab_organizations', icon: Icons.apartment_outlined, count: 0),
+      (
+        label: 'admin.tab_organizations',
+        icon: Icons.apartment_outlined,
+        count: 0
+      ),
       (label: 'admin.tab_viewers', icon: Icons.analytics_outlined, count: 0),
       (label: 'admin.tab_terms', icon: Icons.gavel_outlined, count: 0),
-      (label: 'admin.tab_chat_moderation', icon: Icons.report_outlined, count: provider.chatReports.length),
-      (label: 'admin.tab_custom_cards', icon: Icons.image_outlined, count: provider.pendingCustomPlaceholders.length),
+      (
+        label: 'admin.tab_chat_moderation',
+        icon: Icons.report_outlined,
+        count: provider.chatReports.length
+      ),
+      (
+        label: 'admin.tab_custom_cards',
+        icon: Icons.image_outlined,
+        count: provider.pendingCustomPlaceholders.length
+      ),
       (label: 'admin.tab_categories', icon: Icons.school_outlined, count: 0),
-      (label: 'admin.tab_tags', icon: Icons.label_outline, count: provider.allTagsForModeration.where((t) => t.status == TagStatus.pending).length),
-      (label: 'admin.tab_banned_accounts', icon: Icons.person_off_outlined, count: provider.bannedUsers.length),
-      if (kDebugMode) (label: 'admin.tab_testing', icon: Icons.science_outlined, count: 0),
-      if (_isMasterAdminForTabs) (label: 'admin.tab_roles', icon: Icons.admin_panel_settings_outlined, count: 0),
+      (
+        label: 'admin.tab_tags',
+        icon: Icons.label_outline,
+        count: provider.allTagsForModeration
+            .where((t) => t.status == TagStatus.pending)
+            .length
+      ),
+      (
+        label: 'admin.tab_banned_accounts',
+        icon: Icons.person_off_outlined,
+        count: provider.bannedUsers.length
+      ),
+      if (kDebugMode)
+        (label: 'admin.tab_testing', icon: Icons.science_outlined, count: 0),
+      if (_isMasterAdminForTabs)
+        (
+          label: 'admin.tab_roles',
+          icon: Icons.admin_panel_settings_outlined,
+          count: 0
+        ),
       (label: 'directory.title', icon: Icons.people_outline, count: 0),
       (label: 'safety.tab', icon: Icons.shield_outlined, count: 0),
     ];
@@ -389,10 +436,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         key: const ValueKey('admin-navigation'),
         padding: const EdgeInsets.all(AppTheme.spaceSm),
         children: [
-          if (closeDrawer) ListTile(
-            leading: const Icon(Icons.arrow_back_rounded),
-            title: Text('common.back'.tr()),
-            onTap: () => context.go('/feed')),
+          if (closeDrawer)
+            ListTile(
+                leading: const Icon(Icons.arrow_back_rounded),
+                title: Text('common.back'.tr()),
+                onTap: () => context.go('/feed')),
           for (var i = 0; i < entries.length; i++)
             Padding(
               padding: const EdgeInsets.only(bottom: AppTheme.spaceXs),
@@ -401,10 +449,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 selected: _tabController.index == i,
                 selectedColor: AppTheme.primary,
                 selectedTileColor: AppTheme.surfaceAlt,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                 leading: Icon(entries[i].icon),
                 title: Text(entries[i].label.tr()),
-                trailing: entries[i].count > 0 ? Text(entries[i].count.toString()) : null,
+                trailing: entries[i].count > 0
+                    ? Text(entries[i].count.toString())
+                    : null,
                 onTap: () {
                   _tabController.animateTo(i);
                   if (closeDrawer) Navigator.of(context).pop();
@@ -453,9 +504,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               border: Border.all(
-                color: isPitchActive
-                    ? AppTheme.danger
-                    : AppTheme.border,
+                color: isPitchActive ? AppTheme.danger : AppTheme.border,
                 width: isPitchActive ? 1.5 : 1.0,
               ),
             ),
@@ -532,8 +581,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   Widget _buildOverviewTab(
       BuildContext context, AppProvider provider, bool isAr) {
     final totalBroadcasters = provider.streamers.length;
-    final verifiedScholars =
-        provider.streamers.where((s) => !s.isOrganization && s.isVerified).length;
+    final verifiedScholars = provider.streamers
+        .where((s) => !s.isOrganization && s.isVerified)
+        .length;
     final orgVenues = provider.streamers.where((s) => s.isOrganization).length;
     final pendingApps = provider.pendingApplications.length;
 
@@ -548,13 +598,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               const Icon(Icons.insights_rounded,
                   color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
-              Expanded(child: Text(
-                'admin.tab_overview'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                )),
+              Expanded(
+                child: Text('admin.tab_overview'.tr(),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    )),
               ),
             ],
           ),
@@ -608,7 +658,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           const SizedBox(height: AppTheme.spaceXl),
 
           // Quick Action Shortcuts
-          Text('design_ui.quick_actions_governance_shortcuts'.tr(),
+          Text(
+            'design_ui.quick_actions_governance_shortcuts'.tr(),
             style: const TextStyle(
               color: AppTheme.textPrimary,
               fontSize: 14,
@@ -678,13 +729,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text(
-                title,
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                )),
+              Expanded(
+                child: Text(title,
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    )),
               ),
               Container(
                 padding: const EdgeInsets.all(6),
@@ -806,7 +857,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Filter Bar
-          Row(
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
             children: [
               if (visiblePendingIds.isNotEmpty)
                 Tooltip(
@@ -826,7 +879,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     }),
                   ),
                 ),
-              Expanded(
+              SizedBox(
+                width: double.infinity,
                 child: TextField(
                   controller: _appSearchController,
                   onChanged: (_) => setState(() {}),
@@ -844,8 +898,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      borderSide:
-                          const BorderSide(color: AppTheme.border),
+                      borderSide: const BorderSide(color: AppTheme.border),
                     ),
                   ),
                 ),
@@ -866,8 +919,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               const SizedBox(width: 8),
               IconButton(
                 tooltip: 'Refresh Applications',
-                icon: const Icon(Icons.refresh_rounded,
-                    color: AppTheme.primary),
+                icon:
+                    const Icon(Icons.refresh_rounded, color: AppTheme.primary),
                 onPressed: () async {
                   await provider.refreshAdminData();
                   setState(() {});
@@ -892,7 +945,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         const Icon(Icons.inbox_rounded,
                             size: 48, color: AppTheme.textSecondary),
                         const SizedBox(height: 12),
-                        Text('design_ui.no_applications_match_the_selected_filter'.tr(),
+                        Text(
+                          'design_ui.no_applications_match_the_selected_filter'
+                              .tr(),
                           style: const TextStyle(color: AppTheme.textSecondary),
                         ),
                       ],
@@ -983,7 +1038,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             side: const BorderSide(color: AppTheme.border),
           ),
-          title: Text('design_ui.approve_selected_applications'.tr(),
+          title: Text(
+            'design_ui.approve_selected_applications'.tr(),
             style: const TextStyle(
                 color: AppTheme.textPrimary,
                 fontWeight: FontWeight.bold,
@@ -991,8 +1047,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
           content: Text(
             'This will approve ${ids.length} pending application${ids.length == 1 ? '' : 's'}, creating a live broadcaster profile for each.',
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
           actions: [
             TextButton(
@@ -1051,26 +1106,27 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('design_ui.this_feedback_note_is_sent_to_every_selected_applicant'.tr(),
-                style:
-                    const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+              Text(
+                'design_ui.this_feedback_note_is_sent_to_every_selected_applicant'
+                    .tr(),
+                style: const TextStyle(
+                    color: AppTheme.textSecondary, fontSize: 12),
               ),
               const SizedBox(height: AppTheme.spaceMd),
               TextField(
                 controller: reasonController,
                 maxLines: 3,
-                style: const TextStyle(
-                    color: AppTheme.textPrimary, fontSize: 13),
+                style:
+                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'admin.reject_dialog_hint'.tr(),
-                  hintStyle: const TextStyle(
-                      color: AppTheme.textMuted, fontSize: 12),
+                  hintStyle:
+                      const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                   filled: true,
                   fillColor: AppTheme.surfaceAlt,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide:
-                        const BorderSide(color: AppTheme.border),
+                    borderSide: const BorderSide(color: AppTheme.border),
                   ),
                 ),
               ),
@@ -1160,8 +1216,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
             children: [
               if (app.status == ApplicationStatus.pending)
                 Padding(
@@ -1195,20 +1252,23 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     : null,
               ),
               const SizedBox(width: AppTheme.spaceMd),
-              Expanded(
+              SizedBox(
+                width: MediaQuery.sizeOf(context).width < 900
+                    ? double.infinity
+                    : 480,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: AppTheme.spaceSm,
+                      runSpacing: AppTheme.spaceSm,
                       children: [
-                        Flexible(
-                          child: Text(
-                            isAr ? app.applicantNameAr : app.applicantNameEn,
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
+                        Text(
+                          isAr ? app.applicantNameAr : app.applicantNameEn,
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -1281,8 +1341,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ),
 
               // Action Buttons
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              Wrap(
+                spacing: AppTheme.spaceSm,
+                runSpacing: AppTheme.spaceSm,
                 children: [
                   if (app.status == ApplicationStatus.pending) ...[
                     ElevatedButton.icon(
@@ -1314,8 +1375,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: AppTheme.primary,
-                        side:
-                            const BorderSide(color: AppTheme.border),
+                        side: const BorderSide(color: AppTheme.border),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 6),
                       ),
@@ -1349,8 +1409,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               decoration: BoxDecoration(
                 color: AppTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                border: Border.all(
-                    color: AppTheme.danger.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -1397,7 +1457,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 const Icon(Icons.verified_user_rounded,
                     color: AppTheme.success, size: 22),
                 const SizedBox(width: 8),
-                Text('design_ui.approving_broadcaster'.tr(),
+                Text(
+                  'design_ui.approving_broadcaster'.tr(),
                   style: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -1424,8 +1485,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   child: LinearProgressIndicator(
                     value: progress,
                     backgroundColor: AppTheme.surfaceAlt,
-                    valueColor: const AlwaysStoppedAnimation<Color>(
-                        AppTheme.success),
+                    valueColor:
+                        const AlwaysStoppedAnimation<Color>(AppTheme.success),
                     minHeight: 8,
                   ),
                 ),
@@ -1491,18 +1552,17 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               TextField(
                 controller: reasonController,
                 maxLines: 3,
-                style: const TextStyle(
-                    color: AppTheme.textPrimary, fontSize: 13),
+                style:
+                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                 decoration: InputDecoration(
                   hintText: 'admin.reject_dialog_hint'.tr(),
-                  hintStyle: const TextStyle(
-                      color: AppTheme.textMuted, fontSize: 12),
+                  hintStyle:
+                      const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                   filled: true,
                   fillColor: AppTheme.surfaceAlt,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide:
-                        const BorderSide(color: AppTheme.border),
+                    borderSide: const BorderSide(color: AppTheme.border),
                   ),
                 ),
               ),
@@ -1599,8 +1659,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       child: Container(
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(
-                              color: AppTheme.surface, width: 3),
+                          border: Border.all(color: AppTheme.surface, width: 3),
                         ),
                         child: CircleAvatar(
                           radius: 34,
@@ -1709,7 +1768,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         const SizedBox(height: AppTheme.spaceSm),
                         const Divider(color: AppTheme.border),
                         const SizedBox(height: AppTheme.spaceSm),
-                        Text('design_ui.research_biography_english'.tr(),
+                        Text(
+                          'design_ui.research_biography_english'.tr(),
                           style: const TextStyle(
                             color: AppTheme.textMuted,
                             fontSize: 11.5,
@@ -1749,8 +1809,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     color: AppTheme.surfaceAlt,
                     borderRadius: BorderRadius.vertical(
                         bottom: Radius.circular(AppTheme.radiusLg)),
-                    border: Border(
-                        top: BorderSide(color: AppTheme.border)),
+                    border: Border(top: BorderSide(color: AppTheme.border)),
                   ),
                   child: Row(
                     children: [
@@ -1802,7 +1861,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       TextButton(
                         onPressed: () => Navigator.pop(dialogContext),
                         child: Text('design_ui.close'.tr(),
-                            style: const TextStyle(color: AppTheme.textPrimary)),
+                            style:
+                                const TextStyle(color: AppTheme.textPrimary)),
                       ),
                     ],
                   ),
@@ -1877,9 +1937,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Filter Bar
-          Row(
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
             children: [
-              Expanded(
+              SizedBox(
+                width: double.infinity,
                 child: TextField(
                   controller: _streamerSearchController,
                   onChanged: (_) => setState(() {}),
@@ -1897,8 +1960,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      borderSide:
-                          const BorderSide(color: AppTheme.border),
+                      borderSide: const BorderSide(color: AppTheme.border),
                     ),
                   ),
                 ),
@@ -1930,7 +1992,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(color: AppTheme.border),
                   ),
-                  child: Row(
+                  child: Wrap(
+                    spacing: AppTheme.spaceSm,
+                    runSpacing: AppTheme.spaceSm,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       CircleAvatar(
                         radius: 20,
@@ -1942,11 +2007,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         ),
                       ),
                       const SizedBox(width: AppTheme.spaceMd),
-                      Expanded(
+                      SizedBox(
+                        width: MediaQuery.sizeOf(context).width < 600
+                            ? MediaQuery.sizeOf(context).width - 160
+                            : 320,
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
+                              crossAxisAlignment: WrapCrossAlignment.center,
                               children: [
                                 Text(
                                   isAr ? s.fullNameAr : s.fullNameEn,
@@ -2079,20 +2148,19 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                     ),
                                     ElevatedButton(
                                       style: ElevatedButton.styleFrom(
-                                          backgroundColor:
-                                              AppTheme.warning),
+                                          backgroundColor: AppTheme.warning),
                                       onPressed: () =>
                                           Navigator.pop(dialogContext, true),
-                                      child: Text('admin.hide_from_map_toggle'
-                                          .tr()),
+                                      child: Text(
+                                          'admin.hide_from_map_toggle'.tr()),
                                     ),
                                   ],
                                 ),
                               );
                               if (confirmed != true) return;
                             }
-                            final success = await provider
-                                .setStreamerHiddenFromMap(
+                            final success =
+                                await provider.setStreamerHiddenFromMap(
                                     streamerId: s.streamerId, hidden: hidden);
                             if (!success) {
                               _showErrorNotification(
@@ -2172,7 +2240,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spaceXl),
       child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text('admin.tab_viewers'.tr(), style: Theme.of(context).textTheme.titleLarge),
+        Text('admin.tab_viewers'.tr(),
+            style: Theme.of(context).textTheme.titleLarge),
         const SizedBox(height: AppTheme.spaceLg),
         Text('admin.analytics_unavailable'.tr()),
       ]),
@@ -2190,10 +2259,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          Wrap(
+            spacing: AppTheme.spaceMd,
+            runSpacing: AppTheme.spaceMd,
             children: [
-              Row(
+              Wrap(
+                spacing: AppTheme.spaceSm,
+                crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
                   const Icon(Icons.gavel_rounded,
                       color: AppTheme.primary, size: 20),
@@ -2287,10 +2359,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             ),
           ),
           const SizedBox(height: AppTheme.spaceMd),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          Wrap(
+            spacing: AppTheme.spaceMd,
+            runSpacing: AppTheme.spaceMd,
             children: [
-              Expanded(
+              SizedBox(
+                width: MediaQuery.sizeOf(context).width < 900
+                    ? double.infinity
+                    : 320,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2311,8 +2387,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         border: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          borderSide: const BorderSide(
-                              color: AppTheme.border),
+                          borderSide: const BorderSide(color: AppTheme.border),
                         ),
                       ),
                     ),
@@ -2320,7 +2395,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 ),
               ),
               const SizedBox(width: AppTheme.spaceMd),
-              Expanded(
+              SizedBox(
+                width: MediaQuery.sizeOf(context).width < 900
+                    ? double.infinity
+                    : 320,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -2341,8 +2419,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         border: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          borderSide: const BorderSide(
-                              color: AppTheme.border),
+                          borderSide: const BorderSide(color: AppTheme.border),
                         ),
                       ),
                     ),

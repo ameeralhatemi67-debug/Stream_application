@@ -1,6 +1,6 @@
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -16,11 +16,12 @@ class PhoneCameraPreview extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!Platform.isAndroid) {
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       return ColoredBox(
         color: AppTheme.media,
         child: Center(
-          child: Text('design_ui.phone_broadcasting_is_android_only_for_now'.tr(),
+          child: Text(
+            'design_ui.phone_broadcasting_is_android_only_for_now'.tr(),
             style: TextStyle(color: AppTheme.onMedia.withValues(alpha: 0.7)),
           ),
         ),

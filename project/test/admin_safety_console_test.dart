@@ -68,6 +68,8 @@ class FakeSafetyBackend implements AdminSafetyBackend {
   Object? writeError;
   final List<String?> auditFilters = [];
   final List<int> auditOffsets = [];
+  final List<({String? actor, DateTime? since, DateTime? until, String? after})>
+      auditRequests = [];
 
   @override
   Future<List<LiveBroadcastRow>> loadLiveBroadcasts() async {
@@ -76,12 +78,27 @@ class FakeSafetyBackend implements AdminSafetyBackend {
   }
 
   @override
-  Future<AuditPage> loadAudit({String? action, int offset = 0}) async {
+  Future<AuditPage> loadAudit(
+      {String? action,
+      String? actorEmail,
+      DateTime? since,
+      DateTime? until,
+      AdminAuditEntry? after,
+      int offset = 0}) async {
     if (error != null) throw error!;
     auditFilters.add(action);
     auditOffsets.add(offset);
-    final matching =
-        audit.where((e) => action == null || e.action == action).toList();
+    auditRequests
+        .add((actor: actorEmail, since: since, until: until, after: after?.id));
+    final matching = audit
+        .where((e) =>
+            (action == null || e.action == action) &&
+            (actorEmail == null ||
+                actorEmail.isEmpty ||
+                e.actorEmail == actorEmail) &&
+            (since == null || !e.createdAt.isBefore(since)) &&
+            (until == null || e.createdAt.isBefore(until)))
+        .toList();
     final page = matching.skip(offset).take(2).toList();
     return AuditPage(page, hasMore: offset + 2 < matching.length);
   }
@@ -180,7 +197,8 @@ void main() {
   }
 
   Future<void> enterReason(WidgetTester tester, String reason) async {
-    await tester.enterText(find.byKey(const Key('safety-reason-field')), reason);
+    await tester.enterText(
+        find.byKey(const Key('safety-reason-field')), reason);
     await tester.pump();
     await tester.tap(find.byKey(const Key('safety-reason-confirm')));
     await tester.pumpAndSettle();
@@ -197,8 +215,7 @@ void main() {
       expect(flags.isKnown(AppFlagKey.chatEnabled), isTrue);
     });
 
-    test('an unreadable table reports failure and locks nobody out',
-        () async {
+    test('an unreadable table reports failure and locks nobody out', () async {
       final flags = AppFlags(store: FakeFlagsStore()..fetchError = 'offline');
       await flags.refresh();
       expect(flags.status, AppFlagsStatus.failed);
@@ -223,8 +240,8 @@ void main() {
       final flags = AppFlags(store: store);
       await expectLater(
           flags.setFlag(AppFlagKey.chatEnabled, false, 'r'),
-          throwsA(isA<AppFlagException>().having((e) => e.failure, 'failure',
-              AppFlagFailure.notPermitted)));
+          throwsA(isA<AppFlagException>().having(
+              (e) => e.failure, 'failure', AppFlagFailure.notPermitted)));
     });
   });
 
@@ -268,8 +285,7 @@ void main() {
 
     // Found in the P6 two-session run: an open room kept showing the pause
     // after a Master Admin switched chat back on.
-    test('a paused room notices chat coming back without a reload',
-        () async {
+    test('a paused room notices chat coming back without a reload', () async {
       final store = FakeFlagsStore()..values['chat_enabled'] = false;
       final flags = AppFlags(store: store);
       await flags.refresh();
@@ -339,8 +355,8 @@ void main() {
       addTearDown(() => tester.binding.setSurfaceSize(null));
       await tester.pumpWidget(app(provider, WelcomeScreen(appFlags: flags)));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('registrations-paused-notice')),
-          findsOneWidget);
+      expect(
+          find.byKey(const Key('registrations-paused-notice')), findsOneWidget);
       final signup = tester
           .widget<ElevatedButton>(find.byKey(const Key('welcome-signup')));
       expect(signup.onPressed, isNull);
@@ -376,7 +392,8 @@ void main() {
     testWidgets('platform switches are Master Admin only', (tester) async {
       final p = admin();
       addTearDown(p.dispose);
-      await tester.pumpWidget(app(p, AdminSafetyView(backend: FakeSafetyBackend())));
+      await tester
+          .pumpWidget(app(p, AdminSafetyView(backend: FakeSafetyBackend())));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('safety-section-switches')), findsNothing);
       expect(find.byKey(const Key('safety-section-keywords')), findsOneWidget);
@@ -455,15 +472,14 @@ void main() {
       expect(find.byKey(const Key('safety-live-empty')), findsOneWidget);
 
       backend.error = Exception('offline');
-      await tester.pumpWidget(app(p, AdminSafetyView(
-          key: const Key('again'), backend: backend)));
+      await tester.pumpWidget(
+          app(p, AdminSafetyView(key: const Key('again'), backend: backend)));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('safety-live-error')), findsOneWidget);
       expect(find.byKey(const Key('safety-live-empty')), findsNothing);
     });
 
-    testWidgets('audit log filters and pages from the server',
-        (tester) async {
+    testWidgets('audit log filters and pages from the server', (tester) async {
       final p = admin();
       addTearDown(p.dispose);
       final backend = FakeSafetyBackend()
@@ -497,6 +513,28 @@ void main() {
       expect(find.byKey(const Key('safety-audit-a1')), findsOneWidget);
       expect(find.byKey(const Key('safety-audit-a3')), findsOneWidget);
       expect(find.byKey(const Key('safety-audit-a2')), findsNothing);
+      await tester.enterText(find.byKey(const Key('safety-audit-actor')),
+          'someone@example.invalid');
+      await tester.tap(find.byKey(const Key('safety-audit-apply')));
+      await tester.pumpAndSettle();
+      expect(backend.auditRequests.last.actor, 'someone@example.invalid');
+      expect(backend.auditRequests.last.after, isNull);
+      expect(find.byKey(const Key('safety-audit-empty')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('safety-audit-dates')));
+      await tester.pumpAndSettle();
+      Navigator.of(tester.element(find.byType(DateRangePickerDialog))).pop(
+          DateTimeRange(
+              start: DateTime(2026, 9, 20), end: DateTime(2026, 9, 23)));
+      await tester.pumpAndSettle();
+      expect(backend.auditRequests.last.since, DateTime(2026, 9, 20));
+      expect(backend.auditRequests.last.until, DateTime(2026, 9, 24));
+      await tester.tap(find.byKey(const Key('safety-audit-clear')));
+      await tester.pumpAndSettle();
+      expect(backend.auditFilters.last, isNull);
+      expect(backend.auditRequests.last.actor, isNull);
+      expect(backend.auditRequests.last.since, isNull);
+      expect(backend.auditRequests.last.until, isNull);
+      expect(backend.auditOffsets.last, 0);
     });
 
     testWidgets('keyword manager adds, changes mode and removes',
@@ -542,8 +580,7 @@ void main() {
       final p = admin();
       addTearDown(p.dispose);
       final backend = FakeSafetyBackend()
-        ..writeError =
-            const AdminSafetyException(AdminSafetyFailure.duplicate);
+        ..writeError = const AdminSafetyException(AdminSafetyFailure.duplicate);
       await tester.pumpWidget(app(p, AdminSafetyView(backend: backend)));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('safety-section-keywords')));
@@ -555,14 +592,13 @@ void main() {
       expect(find.text('That entry already exists.'), findsOneWidget);
     });
 
-    testWidgets('master admin toggles a switch with a reason',
-        (tester) async {
+    testWidgets('master admin toggles a switch with a reason', (tester) async {
       final p = admin(master: true);
       addTearDown(p.dispose);
       final store = FakeFlagsStore();
       final flags = AppFlags(store: store);
-      await tester.pumpWidget(app(p,
-          AdminSafetyView(backend: FakeSafetyBackend(), appFlags: flags)));
+      await tester.pumpWidget(app(
+          p, AdminSafetyView(backend: FakeSafetyBackend(), appFlags: flags)));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('safety-section-switches')));
       await tester.pumpAndSettle();
@@ -574,19 +610,18 @@ void main() {
       expect(find.text('Off'), findsOneWidget);
     });
 
-    testWidgets('unreadable switches cannot be toggled blind',
-        (tester) async {
+    testWidgets('unreadable switches cannot be toggled blind', (tester) async {
       final p = admin(master: true);
       addTearDown(p.dispose);
       final flags = AppFlags(store: FakeFlagsStore()..fetchError = 'offline');
-      await tester.pumpWidget(app(p,
-          AdminSafetyView(backend: FakeSafetyBackend(), appFlags: flags)));
+      await tester.pumpWidget(app(
+          p, AdminSafetyView(backend: FakeSafetyBackend(), appFlags: flags)));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('safety-section-switches')));
       await tester.pumpAndSettle();
       expect(find.byKey(const Key('safety-switches-error')), findsOneWidget);
-      expect(tester.widget<Switch>(find.byType(Switch).first).onChanged,
-          isNull);
+      expect(
+          tester.widget<Switch>(find.byType(Switch).first).onChanged, isNull);
     });
   });
 
@@ -623,8 +658,8 @@ void main() {
           p.updateAdminAccount(s.streamerId, 'delete_account', 'r'),
           throwsA(isA<Exception>()));
       expect(p.isFollowing(s.streamerId), isTrue);
-      expect(p.streamers.where((x) => x.streamerId == s.streamerId),
-          isNotEmpty);
+      expect(
+          p.streamers.where((x) => x.streamerId == s.streamerId), isNotEmpty);
     });
   });
 }
@@ -639,6 +674,5 @@ class _NoBlocks implements ChatBlockStore {
   @override
   Future<void> insertBlock(String blockerId, String blockedId) async {}
   @override
-  Future<Map<String, String>> resolveNames(List<String> profileIds) async =>
-      {};
+  Future<Map<String, String>> resolveNames(List<String> profileIds) async => {};
 }

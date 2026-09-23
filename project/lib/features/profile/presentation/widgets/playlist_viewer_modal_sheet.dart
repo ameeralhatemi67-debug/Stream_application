@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -79,29 +79,15 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
           return;
         }
 
-        // Fallback resolution: the streamer's own cached recordings. There is
-        // no sample pool behind this any more -- an empty result stays empty
-        // and the sheet shows its empty state (P2 truthful data).
-        final allStreamerVods =
-            provider.getVodsForStreamer(widget.streamer.streamerId);
-        List<VodModel> fallbackList = allStreamerVods
-            .where((v) =>
-                v.speakerIds.any((s) => widget.playlist.speakerIds.contains(s)))
-            .toList();
-
-        if (fallbackList.isEmpty) {
-          fallbackList = allStreamerVods;
-        }
-
         setState(() {
-          _videos = fallbackList;
+          _videos = [];
           _isLoading = false;
         });
       }
     } catch (_) {
       if (mounted) {
         setState(() {
-          _videos = provider.getVodsForStreamer(widget.streamer.streamerId);
+          _videos = [];
           _isLoading = false;
         });
       }
@@ -149,8 +135,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
   @override
   Widget build(BuildContext context) {
     final playlistTitle = widget.playlist.getLocalizedTitle(widget.langCode);
-    final broadcasterName =
-        widget.streamer.getLocalizedName(widget.langCode);
+    final broadcasterName = widget.streamer.getLocalizedName(widget.langCode);
 
     return Container(
       constraints: BoxConstraints(
@@ -293,7 +278,8 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                     color: AppTheme.textMuted, size: 40),
                                 const SizedBox(height: 10),
                                 Text(
-                                  'design_copy.no_lectures_available_in_this_playlist_currently'.tr(),
+                                  'design_copy.no_lectures_available_in_this_playlist_currently'
+                                      .tr(),
                                   style: const TextStyle(
                                     color: AppTheme.textSecondary,
                                     fontSize: 13,
@@ -320,8 +306,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                               shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusMd),
-                                side: const BorderSide(
-                                    color: AppTheme.border),
+                                side: const BorderSide(color: AppTheme.border),
                               ),
                               leading: Stack(
                                 alignment: AlignmentDirectional.bottomEnd,
@@ -333,7 +318,8 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                         horizontal: 4, vertical: 1),
                                     margin: const EdgeInsets.all(2),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.media.withValues(alpha: 0.8),
+                                      color:
+                                          AppTheme.media.withValues(alpha: 0.8),
                                       borderRadius: BorderRadius.circular(3),
                                     ),
                                     child: Text(

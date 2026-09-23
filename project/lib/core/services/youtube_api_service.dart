@@ -1,8 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart'as http;
+import 'package:http/http.dart' as http;
 import '../../features/profile/models/vod_models.dart';
-
 
 /// Service for communicating with YouTube Data API v3 REST endpoints.
 class YouTubeApiService {
@@ -28,6 +27,7 @@ class YouTubeApiService {
 
   /// Resolves channel handle or URL (e.g. '@ahmedamercaller'or 'https://www.youtube.com/@dalilk4english_podcast/videos') to channel ID and uploads playlist ID
   Future<Map<String, String>> fetchChannelDetails(String handleOrUrl) async {
+    if (handleOrUrl.trim().isEmpty || apiKey.isEmpty) return {};
     String cleanHandle = handleOrUrl.trim();
     cleanHandle = cleanHandle.replaceAll('https://www.youtube.com/', '');
     cleanHandle = cleanHandle.replaceAll('http://www.youtube.com/', '');
@@ -75,59 +75,23 @@ class YouTubeApiService {
       debugPrint('Error fetching channel details for $handleOrUrl: $e');
     }
 
-    // Default fallback mappings if YouTube API response fails
-    final lower = cleanHandle.toLowerCase();
-    if (lower == 'bidonwaraq') {
-      return {
-        'channelId': 'UC7mCgzz-LYRt-a3mCvUbccg',
-        'uploadsPlaylistId': 'UU7mCgzz-LYRt-a3mCvUbccg',
-      };
-    } else if (lower == 'amiralhatime4831') {
-      return {
-        'channelId': 'UCdPq2Mayw6k-WuvBMKNj44A',
-        'uploadsPlaylistId': 'UUdPq2Mayw6k-WuvBMKNj44A',
-      };
-    } else if (lower == 'dalilk4ielts') {
-      return {
-        'channelId': 'UCtH_J6a0r53rX7Zl2qGz_Qw',
-        'uploadsPlaylistId': 'UUtH_J6a0r53rX7Zl2qGz_Qw',
-      };
-    } else if (lower == 'dalilk4english') {
-      return {
-        'channelId': 'UC4EnglishDalilkSampleId',
-        'uploadsPlaylistId': 'UU4EnglishDalilkSampleId',
-      };
-    } else if (lower == 'dalilk4english_podcast') {
-      return {
-        'channelId': 'UCPodcastDalilkSampleId',
-        'uploadsPlaylistId': 'UUPodcastDalilkSampleId',
-      };
-    } else if (lower == 'alquran4kofficial') {
-      return {
-        'channelId': 'UCQuran4KOfficialSampleId',
-        'uploadsPlaylistId': 'UUQuran4KOfficialSampleId',
-      };
-    }
-
-    return {
-      'channelId': 'UCah56qawts736uNxZA3inLQ',
-      'uploadsPlaylistId': 'UUah56qawts736uNxZA3inLQ',
-    };
+    return {};
   }
 
   /// Fetches recent videos from a YouTube channel's uploads playlist
   Future<List<VodModel>> fetchChannelVideos({
     required String streamerId,
-    String handle = 'ahmedamercaller',
+    String handle = '',
     int maxResults = 25,
   }) async {
-    if (_cachedVods.containsKey(streamerId)) {
-      return _cachedVods[streamerId]!;
+    if (_cachedVods.containsKey('$streamerId:$handle')) {
+      return _cachedVods['$streamerId:$handle']!;
     }
 
     try {
       final channelDetails = await fetchChannelDetails(handle);
-      final uploadsPlaylistId = channelDetails['uploadsPlaylistId']!;
+      final uploadsPlaylistId = channelDetails['uploadsPlaylistId'] ?? '';
+      if (uploadsPlaylistId.isEmpty) return [];
 
       final url = Uri.parse(
         '$_baseUrl/playlistItems?part=snippet,contentDetails&playlistId=$uploadsPlaylistId&maxResults=$maxResults&key=$apiKey',
@@ -164,9 +128,8 @@ class YouTubeApiService {
             }
 
             final publishedAt = snippet?['publishedAt'] as String? ?? '';
-            final dateStr = publishedAt.length >= 10
-                ? publishedAt.substring(0, 10)
-                : '2026-08-01';
+            final dateStr =
+                publishedAt.length >= 10 ? publishedAt.substring(0, 10) : '';
 
             final thumbnails = snippet?['thumbnails'] as Map<String, dynamic>?;
             final thumbUrl = thumbnails?['high']?['url'] as String? ??
@@ -182,10 +145,11 @@ class YouTubeApiService {
                 descriptionEn: description,
                 descriptionAr: description,
                 youtubeVideoId: videoId,
-                durationSeconds: 2400,
+                durationSeconds: 0,
                 recordedDate: dateStr,
                 thumbnailUrl: thumbUrl,
-                viewCount: 0, // Will be hydrated below via statistics batch call
+                viewCount:
+                    0, // Will be hydrated below via statistics batch call
               ),
             );
           }
@@ -199,7 +163,7 @@ class YouTubeApiService {
               return realCount != null ? v.copyWith(viewCount: realCount) : v;
             }).toList();
 
-            _cachedVods[streamerId] = hydratedVods;
+            _cachedVods['$streamerId:$handle'] = hydratedVods;
             return hydratedVods;
           }
         }
@@ -243,9 +207,8 @@ class YouTubeApiService {
             final title = snippet?['title'] as String? ?? 'Playlist Video';
             final description = snippet?['description'] as String? ?? '';
             final publishedAt = snippet?['publishedAt'] as String? ?? '';
-            final dateStr = publishedAt.length >= 10
-                ? publishedAt.substring(0, 10)
-                : '2026-08-01';
+            final dateStr =
+                publishedAt.length >= 10 ? publishedAt.substring(0, 10) : '';
 
             final thumbnails = snippet?['thumbnails'] as Map<String, dynamic>?;
             final thumbUrl = thumbnails?['high']?['url'] as String? ??
@@ -261,10 +224,11 @@ class YouTubeApiService {
                 descriptionEn: description,
                 descriptionAr: description,
                 youtubeVideoId: videoId,
-                durationSeconds: 1800,
+                durationSeconds: 0,
                 recordedDate: dateStr,
                 thumbnailUrl: thumbUrl,
-                viewCount: 0, // Will be hydrated below via statistics batch call
+                viewCount:
+                    0, // Will be hydrated below via statistics batch call
               ),
             );
           }
@@ -343,8 +307,9 @@ class YouTubeApiService {
         final items = data['items'] as List<dynamic>?;
 
         if (items != null && items.isNotEmpty) {
-          final liveDetails = (items.first as Map<String, dynamic>)['liveStreamingDetails']
-              as Map<String, dynamic>?;
+          final liveDetails =
+              (items.first as Map<String, dynamic>)['liveStreamingDetails']
+                  as Map<String, dynamic>?;
           final raw = liveDetails?['concurrentViewers'] as String?;
           if (raw != null) {
             return int.tryParse(raw);
@@ -414,11 +379,13 @@ class YouTubeApiService {
   /// Fetches public playlists from a YouTube channel
   Future<List<PlaylistModel>> fetchChannelPlaylists({
     required String streamerId,
-    String channelId = 'UCah56qawts736uNxZA3inLQ',
+    String channelId = '',
     int maxResults = 10,
   }) async {
-    if (_cachedPlaylists.containsKey(streamerId)) {
-      return _cachedPlaylists[streamerId]!;
+    if (channelId.isEmpty || apiKey.isEmpty) return [];
+    final cacheKey = '$streamerId:$channelId';
+    if (_cachedPlaylists.containsKey(cacheKey)) {
+      return _cachedPlaylists[cacheKey]!;
     }
 
     try {
@@ -446,7 +413,7 @@ class YouTubeApiService {
             final thumbnails = snippet?['thumbnails'] as Map<String, dynamic>?;
             final thumbUrl = thumbnails?['high']?['url'] as String? ??
                 thumbnails?['medium']?['url'] as String? ??
-                'https://i.ytimg.com/vi/default/hqdefault.jpg';
+                '';
 
             playlists.add(
               PlaylistModel(
@@ -470,7 +437,7 @@ class YouTubeApiService {
           }
 
           if (playlists.isNotEmpty) {
-            _cachedPlaylists[streamerId] = playlists;
+            _cachedPlaylists[cacheKey] = playlists;
             return playlists;
           }
         }

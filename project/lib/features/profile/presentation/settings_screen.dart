@@ -125,7 +125,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SizedBox(width: AppTheme.spaceSm),
         ],
       ),
-      body: ContentWidth(child: ListView(
+      body: ContentWidth(
+          child: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         children: [
           //  Top Option: My Account Profile (Protected, cannot be deleted)
@@ -363,7 +364,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               ],
             ),
           ),
-          Flexible(child: Container(
+          Flexible(
+              child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: AppTheme.primary.withValues(alpha: 0.15),
@@ -377,7 +379,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const Icon(Icons.person_rounded,
                     color: AppTheme.primary, size: 13),
                 const SizedBox(width: 4),
-                Flexible(child: Text(
+                Flexible(
+                    child: Text(
                   'settings.viewer_badge'.tr(),
                   style: const TextStyle(
                     color: AppTheme.primary,
@@ -488,8 +491,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   const SizedBox(height: 2),
                   Text(
                     handle,
-                    style: const TextStyle(
-                        color: AppTheme.primary, fontSize: 12),
+                    style:
+                        const TextStyle(color: AppTheme.primary, fontSize: 12),
                   ),
                 ],
                 const SizedBox(height: 4),
@@ -589,7 +592,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           ? (isStreamer
                               ? 'settings.role_streamer_desc'.tr()
                               : 'settings.role_viewer_desc'.tr())
-                          : ('design_copy.viewer_mode_streamer_studio_unlocked_upon_broadcaster_verificatio'.tr()),
+                          : ('design_copy.viewer_mode_streamer_studio_unlocked_upon_broadcaster_verificatio'
+                              .tr()),
                       style: const TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 11,
@@ -621,8 +625,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
               decoration: BoxDecoration(
                 color: AppTheme.surfaceAlt,
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                border: Border.all(
-                    color: AppTheme.danger.withValues(alpha: 0.3)),
+                border:
+                    Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
               ),
               child: Row(
                 children: [
@@ -674,7 +678,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       color: AppTheme.danger.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
                     ),
-                    child: Text('design_ui.broadcaster'.tr(),
+                    child: Text(
+                      'design_ui.broadcaster'.tr(),
                       style: const TextStyle(
                         color: AppTheme.danger,
                         fontSize: 9,
@@ -717,6 +722,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   }
                 }
               },
+            ),
+          ] else if (isLoggedIn) ...[
+            Text('broadcast_approval_required'.tr()),
+            TextButton(
+              onPressed: () => context.go(provider.myApplication == null
+                  ? '/streamer-apply'
+                  : '/application-pending'),
+              child: Text('role_select.streamer_btn'.tr()),
             ),
           ] else ...[
             SizedBox(
@@ -785,8 +798,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border:
-              Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
+          border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -840,8 +852,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border:
-              Border.all(color: AppTheme.accent.withValues(alpha: 0.3)),
+          border: Border.all(color: AppTheme.accent.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [
@@ -896,7 +907,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       children: [
         Icon(icon, size: 16, color: iconColor),
         const SizedBox(width: 8),
-        Expanded(child: Text(
+        Expanded(
+            child: Text(
           title,
           style: const TextStyle(
             color: AppTheme.textSecondary,
@@ -1039,8 +1051,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'settings.custom_cards_desc'.tr(),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style:
-              const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
         ),
         trailing: const Icon(Icons.chevron_right_rounded,
             color: AppTheme.textMuted, size: 20),

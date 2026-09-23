@@ -10,7 +10,9 @@
 
 ## 📅 Roadmap Overview & Version Progression
 
-Admin Hub checkpoint 2026-09-23, commit `11d0b09`: desktop side navigation, narrow-screen drawer, persistent English/Arabic toggle, honest unavailable analytics, and the admin role-loading fix are locally verified. Full Flutter 514 passed, analyzer 0, fresh local SQL 283 assertions passed. Browser UI evidence covers Welcome pause, Safety end/remove, audit reasons/actor/action filter, keyword lifecycle, history/recovery and refresh-based block synchronization. Gates are NOT green: G6=554 and G11a=9 in pre-existing nested worktrees. P6 remains NOT accepted; no physical Android devices or real Google OAuth were tested. Actor/date audit filter controls remain absent. P6S has not started. Separate P2/player truthfulness work remains open. Evidence and exact owner steps: `brief/evidence/2026-09-23/admin-hub/README.md`.
+Owner-evidence remediation, 2026-09-23: account-scoped role hydration, viewer/transfer cleanup, server-confirmed LIVE, actor/action/date audit paging, phone/RTL layouts, admin localization, profile/VOD truthfulness and asset-listing restrictions are implemented locally. Final Flutter **530 passed**, analyzer **0 issues**, disposable SQL **288 assertions / 16 files passed**. Two local password sessions verified Realtime transfer and server denial of the displaced device; the initial snapshot/join window still uses the existing 20-second heartbeat fallback. G6=565 (+11 localized `.tr()` matches), G11a=9 unchanged, G7=0. **P6 is NOT accepted; P6S is NOT complete; the app is not release-ready.** Partial phone lifecycle repairs compile, but two physical phones, Google OAuth and YouTube ingest were not tested. Windows STL1011 was reproduced; signed-in blank-web and exact avatar-429 behavior remain owner retests. Evidence, issue-by-issue outcomes and exact retest steps: `brief/evidence/2026-09-23/p6-owner-acceptance/REMEDIATION_2026-09-23.md`. No push, deploy or production operation.
+
+Prior checkpoint (historical): Admin Hub checkpoint 2026-09-23, commit `11d0b09`: desktop side navigation, narrow-screen drawer, persistent English/Arabic toggle, honest unavailable analytics, and the admin role-loading fix are locally verified. Full Flutter 514 passed, analyzer 0, fresh local SQL 283 assertions passed. Browser UI evidence covers Welcome pause, Safety end/remove, audit reasons/actor/action filter, keyword lifecycle, history/recovery and refresh-based block synchronization. Gates are NOT green: G6=554 and G11a=9 in pre-existing nested worktrees. P6 remains NOT accepted; no physical Android devices or real Google OAuth were tested. Actor/date audit filter controls remain absent. P6S has not started. Separate P2/player truthfulness work remains open. Evidence and exact owner steps: `brief/evidence/2026-09-23/admin-hub/README.md`.
 
 
 *Updated 2026-09-23. Sources: git history, the latest RESUME block in `brief/LEDGER.md`, `brief/03_WORK_PLAN.md`, `brief/06_VERIFICATION.md`, recorded analyzer/test evidence, and the current gate report. Future dates are estimates. The app is not release-ready.*
@@ -45,7 +47,7 @@ gantt
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d
     tickInterval 1day
-    section Done or implemented (SQL and devices still unverified)
+    section Done or implemented (physical acceptance remains open)
     Briefing framework and budget tooling       :done, brief, 2026-09-19, 2026-09-20
     P0 Preflight and baseline                   :done, p0, 2026-09-20, 1d
     P1a Guards, uploads, applications, bans     :done, p1a, 2026-09-20, 1d
@@ -59,9 +61,9 @@ gantt
     P8A Android identity and branding (partial)  :crit, p8a, 2026-09-22, 1d
     P6.2 to 6.3 Chat UX and moderation linkage  :done, p6a, 2026-09-21, 1d
     section Current next phase
-    P6.4 Admin tools, acceptance prep (not accepted) :active, p64, 2026-09-22, 2d
+    P6.4 Admin fixes and acceptance (not accepted) :active, p64, 2026-09-22, 3d
     section Planned
-    P6S Broadcast and navigation reliability     :crit, p6s, after p64, 2d
+    P6S Remaining broadcast and navigation checks :crit, p6s, after p64, 2d
     P5 Map and offline experience                :p5, after p6s, 2d
     P7 Organizations                             :p7, after p5, 2d
     P8B Store and compliance package             :p8b, after p7, 1d
@@ -93,21 +95,21 @@ gantt
 
 | Phase | Status | Evidence | Roadmap link |
 |---|---|---|---|
-| P0 Preflight | Complete | Baseline, brief, tag and protected owner state are recorded. Local SQL execution remains environment-limited. | 1.0.0 |
-| P1 Access control, RLS and secrets | Partial | Source, migration and recorded local SQL evidence are present. This audit could not rerun Docker/Supabase; device scenarios, production comparison and release scan remain open. | 1.0.1 |
-| P2 Truthful data | Reopened | Gates G1a-e and G5a-c remain zero, but the P6 run found the admin Overview KPIs are hard-coded samples (`ViewerAnalyticsModel.createDefault`: 1420/185/365/342) that also reach `platform_analytics`. Needs real KPI sources or an honest empty state. | 1.0.2 |
+| P0 Preflight | Complete | Baseline and protected owner state recorded; disposable SQL now runs successfully. | 1.0.0 |
+| P1 Access control, RLS and secrets | Partial | 288 local SQL assertions pass. Asset enumeration restricted by new forward migration; public download probe passes. Two documented public-view advisor exceptions remain. Hosted comparison, password protection and release scan are open. | 1.0.1 |
+| P2 Truthful data | Partial repairs verified | Admin metrics use honest unavailable states from the earlier checkpoint. This task removes fabricated own profiles, unrelated channel/VOD fallbacks and invented durations, and hydrates saved own-profile data. Cross-client media and real playback acceptance remain open. | 1.0.2 |
 | P3 Viewer presence | Partial | Server-backed heartbeat/count code and grants are present. Guest, deduplication, expiry and multi-client device scenarios remain unrun. | 1.0.3 |
 | P4 Design and responsive UI | Complete to recorded E1/E2 evidence | Scheme A, bundled IBM Plex fonts, white theme, localization and responsive/layout tests are present. No physical-device visual QA. | 1.0.4 |
 | P8A Android identity and branding | Partial, complete to available owner inputs | Identity, permissions, launcher, splash, target SDK, 16 KB checks and fail-closed signing are done. No keystore, AAB, release scan or device smoke test. | 1.0.5 |
 | P6.1-P6.3 Chat and moderation | Partial | Server rate limits, slow mode, report validation and viewer blocks have local evidence. Client blocks are now server-owned with failure states and refresh-based sync (`bb285c8`); two-device acceptance remains. Real-session UI run (2026-09-23): block, cross-device and unblock sync passed; history-order and paused-room defects fixed. Real-device owner steps remain. Guided follow-up: an enabled room learns of a pause from a refused send, re-entry or resume (instruction corrected); toast prefix fixed (`1ed891c`). Evidence so far is browser sessions only, with no physical devices. | 1.0.6 |
-| P6.4 Admin tools | Partial | Directory actions, Safety tab (live list, audit log, keyword manager with audit trigger), Master Admin switches, availability states and deleted-account cache cleanup are locally verified (`1eb5d71`: 504 Flutter, 278 SQL). Owner migration review and real-session acceptance remain. Real-session run: chat switch UI and API, sign-ups switch, force end and remove from feed passed via API with audit; migration review and the TRUNCATE hardening `20260923140000` done; UI end/remove, Welcome notice and audit view need owner steps. | 1.0.6 |
-| P6S Broadcast and navigation reliability | Blocked | Waits for P6 acceptance. Physical sender/viewer tests, direct laptop, Local transport, private access, live-media PiP and exit paths remain open. | 1.0.6 |
+| P6.4 Admin tools | Implemented locally; NOT accepted | Actor/action/date filters with server cursor paging, account hydration, approval guards, viewer/transfer cleanup, en/ar admin layouts and labels pass local tests. Owner reports record a production migration run, but this task did not certify hosted state. Two-phone real-session acceptance remains open. | 1.0.6 |
+| P6S Broadcast and navigation reliability | Partial repairs; acceptance blocked by P6 | Landscape crash, preview ownership, native/server LIVE confirmation and chat watch-ID alignment repaired locally. Physical sender/viewer/rotation, YouTube ingest, laptop/Local transport, private access, PiP and exit matrix remain open. | 1.0.6 |
 | P5 Map and offline | Not started | No implementation or evidence yet. | 1.0.7 |
 | P7 Organizations | Not started | Co-owner designation, invitations, public organization profile and scoped controls remain open. | 1.0.8 |
 | P8B Store and compliance package | Not started | No store package exists. Drafting would not equal legal certification. | 1.0.9 |
 | P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
-The latest 2026-09-23 checkpoint was fast-forwarded from `p6-client-safety` into `master` at `0d6b7a1`. It passed 504 Flutter tests, `flutter analyze` with 0 issues, and 278 local SQL assertions across 15 files on a fresh disposable database. G6 flags 552 matches (the +24 over 528 are localized `.tr()` calls the regex also counts); its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the older counts below where they differ.
+An earlier 2026-09-23 checkpoint was fast-forwarded from `p6-client-safety` into `master` at `0d6b7a1`. It passed 504 Flutter tests, `flutter analyze` with 0 issues, and 278 local SQL assertions across 15 files on a fresh disposable database. G6 flags 552 matches (the +24 over 528 are localized `.tr()` calls the regex also counts); its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These historical results are superseded by the owner-remediation summary above.
 
 Workflow note, 2026-09-23: after the owner waived Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K, the Claude Opus P6 client run completed on branch `p6-client-safety` and was fast-forwarded into `master`. The Codex 5% cap remains separate in §J. P6 acceptance remains open; P6S stays blocked.
 

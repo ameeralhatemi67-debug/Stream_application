@@ -54,6 +54,10 @@ class _AppSplashScreenState extends State<AppSplashScreen>
     _navigationTimer = Timer(const Duration(milliseconds: 1350), () {
       if (!mounted) return;
       final provider = context.read<AppProvider>();
+      if (provider.authHydrating) {
+        _scheduleNavigation();
+        return;
+      }
       // Warm up live polling
       provider.ensureLivePollingActive();
 
@@ -75,7 +79,6 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: AppTheme.bg,
       body: Container(

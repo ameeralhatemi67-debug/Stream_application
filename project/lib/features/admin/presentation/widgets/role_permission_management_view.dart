@@ -35,11 +35,11 @@ class _RolePermissionManagementViewState
   }
 
   void _showToast(String message, {bool isError = false}) {
+    if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor:
-            isError ? AppTheme.danger : AppTheme.success,
+        backgroundColor: isError ? AppTheme.danger : AppTheme.success,
       ),
     );
   }
@@ -53,7 +53,7 @@ class _RolePermissionManagementViewState
       final profile = await provider.findProfileByEmail(email);
       if (profile == null) {
         _showToast(
-          'No account found for "$email" -- they must sign in at least once before a role can be granted.',
+          'roles.account_missing'.tr(),
           isError: true,
         );
         return;
@@ -63,9 +63,9 @@ class _RolePermissionManagementViewState
         role: _grantRole,
       );
       _grantEmailController.clear();
-      _showToast('${_grantRole == 'master_admin' ? 'Master Admin' : 'Admin'} role granted to $email.');
+      _showToast('roles.granted'.tr());
     } catch (e) {
-      _showToast('Failed to grant role: $e', isError: true);
+      _showToast('roles.grant_failed'.tr(), isError: true);
     } finally {
       if (mounted) setState(() => _isGranting = false);
     }
@@ -81,9 +81,9 @@ class _RolePermissionManagementViewState
         role: assignment.role,
         organizationId: assignment.organizationId,
       );
-      _showToast('${assignment.displayName}\'s ${_roleLabel(assignment.role)} role revoked.');
+      _showToast('roles.revoked'.tr());
     } catch (e) {
-      _showToast('Failed to revoke role: $e', isError: true);
+      _showToast('roles.revoke_failed'.tr(), isError: true);
     }
   }
 
@@ -100,20 +100,20 @@ class _RolePermissionManagementViewState
         granted: granted,
       );
     } catch (e) {
-      _showToast('Failed to update permission: $e', isError: true);
+      _showToast('roles.permission_failed'.tr(), isError: true);
     }
   }
 
   String _roleLabel(String role) {
     switch (role) {
       case 'master_admin':
-        return 'Master Admin';
+        return 'roles.master_admin'.tr();
       case 'admin':
-        return 'Admin';
+        return 'roles.admin'.tr();
       case 'org_owner':
-        return 'Permitted Admin (Org Owner)';
+        return 'roles.org_owner'.tr();
       case 'org_co_owner':
-        return 'Permitted Admin (Co-Owner)';
+        return 'roles.org_co_owner'.tr();
       default:
         return role;
     }
@@ -140,19 +140,24 @@ class _RolePermissionManagementViewState
     final masterAdmins =
         assignments.where((a) => a.role == 'master_admin').toList();
     final admins = assignments.where((a) => a.role == 'admin').toList();
-    final permittedAdmins = assignments.where((a) => a.isPermittedAdmin).toList();
+    final permittedAdmins =
+        assignments.where((a) => a.isPermittedAdmin).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(AppTheme.spaceXl),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Icon(Icons.admin_panel_settings_rounded,
                   color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
-              Text('design_ui.roles_permissions'.tr(),
+              Text(
+                'design_ui.roles_permissions'.tr(),
                 style: const TextStyle(
                   color: AppTheme.textPrimary,
                   fontSize: 16,
@@ -162,38 +167,34 @@ class _RolePermissionManagementViewState
             ],
           ),
           const SizedBox(height: AppTheme.spaceSm),
-          Text('design_ui.master_admin_can_grant_revoke_admin_or_master_admin_and_toggle_ex'.tr(),
+          Text(
+            'design_ui.master_admin_can_grant_revoke_admin_or_master_admin_and_toggle_ex'
+                .tr(),
             style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
-
           _buildGrantRoleCard(provider),
           const SizedBox(height: AppTheme.spaceXl),
-
-          _buildSectionHeader('Master Admins', masterAdmins.length),
+          _buildSectionHeader('roles.masters'.tr(), masterAdmins.length),
           const SizedBox(height: AppTheme.spaceMd),
           if (masterAdmins.isEmpty)
-            _buildEmptyRow('No Master Admins yet.')
+            _buildEmptyRow('roles.no_masters'.tr())
           else
             ...masterAdmins.map((a) => _buildAssignmentCard(provider, a)),
-
           const SizedBox(height: AppTheme.spaceXl),
-          _buildSectionHeader('Admins', admins.length),
+          _buildSectionHeader('roles.admins'.tr(), admins.length),
           const SizedBox(height: AppTheme.spaceMd),
           if (admins.isEmpty)
-            _buildEmptyRow('No Admins yet.')
+            _buildEmptyRow('roles.no_admins'.tr())
           else
             ...admins.map((a) => _buildAssignmentCard(provider, a)),
-
           const SizedBox(height: AppTheme.spaceXl),
-          _buildSectionHeader('Permitted Admins (Org Owners & Co-Owners)',
-              permittedAdmins.length),
+          _buildSectionHeader('roles.owners'.tr(), permittedAdmins.length),
           const SizedBox(height: AppTheme.spaceMd),
           if (permittedAdmins.isEmpty)
-            _buildEmptyRow('No organization owners yet.')
+            _buildEmptyRow('roles.no_owners'.tr())
           else
             ...permittedAdmins.map((a) => _buildAssignmentCard(provider, a)),
-
           const SizedBox(height: AppTheme.spaceXl),
           _buildModeratorDelegationSection(provider),
         ],
@@ -233,8 +234,7 @@ class _RolePermissionManagementViewState
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                headingRowColor:
-                    WidgetStateProperty.all(AppTheme.surfaceAlt),
+                headingRowColor: WidgetStateProperty.all(AppTheme.surfaceAlt),
                 columns: [
                   DataColumn(
                       label: Text('admin.moderator_col_user'.tr(),
@@ -270,7 +270,7 @@ class _RolePermissionManagementViewState
                           color: AppTheme.textSecondary, fontSize: 12),
                     )),
                     DataCell(Text(
-                      m.scopeLabel,
+                      'roles.${m.scope.name}'.tr(),
                       style: const TextStyle(
                           color: AppTheme.textSecondary, fontSize: 12),
                     )),
@@ -287,12 +287,7 @@ class _RolePermissionManagementViewState
                         try {
                           await provider.revokeStreamModeratorById(m.id);
                         } catch (e) {
-                          if (!mounted) return;
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                                content: Text('$e'),
-                                backgroundColor: AppTheme.danger),
-                          );
+                          _showToast('roles.revoke_failed'.tr(), isError: true);
                         }
                       },
                     )),
@@ -347,8 +342,7 @@ class _RolePermissionManagementViewState
         border: Border.all(color: AppTheme.border),
       ),
       child: Text(message,
-          style: const TextStyle(
-              color: AppTheme.textSecondary, fontSize: 12)),
+          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
     );
   }
 
@@ -363,7 +357,8 @@ class _RolePermissionManagementViewState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('design_ui.grant_a_platform_role'.tr(),
+          Text(
+            'design_ui.grant_a_platform_role'.tr(),
             style: const TextStyle(
               color: AppTheme.textPrimary,
               fontWeight: FontWeight.bold,
@@ -380,7 +375,7 @@ class _RolePermissionManagementViewState
                   style: const TextStyle(
                       color: AppTheme.textPrimary, fontSize: 13),
                   decoration: InputDecoration(
-                    hintText: 'Account email...',
+                    hintText: 'roles.email'.tr(),
                     hintStyle: const TextStyle(
                         color: AppTheme.textSecondary, fontSize: 12),
                     prefixIcon: const Icon(Icons.email_outlined,
@@ -391,8 +386,7 @@ class _RolePermissionManagementViewState
                         horizontal: 12, vertical: 10),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      borderSide:
-                          const BorderSide(color: AppTheme.border),
+                      borderSide: const BorderSide(color: AppTheme.border),
                     ),
                   ),
                 ),
@@ -402,12 +396,14 @@ class _RolePermissionManagementViewState
                 isExpanded: true,
                 value: _grantRole,
                 dropdownColor: AppTheme.surfaceAlt,
-                style: const TextStyle(
-                    color: AppTheme.textPrimary, fontSize: 13),
+                style:
+                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
                 items: [
-                  DropdownMenuItem(value: 'admin', child: Text('design_ui.admin'.tr())),
                   DropdownMenuItem(
-                      value: 'master_admin', child: Text('design_ui.master_admin'.tr())),
+                      value: 'admin', child: Text('design_ui.admin'.tr())),
+                  DropdownMenuItem(
+                      value: 'master_admin',
+                      child: Text('design_ui.master_admin'.tr())),
                 ],
                 onChanged: (value) {
                   if (value != null) setState(() => _grantRole = value);
@@ -418,8 +414,8 @@ class _RolePermissionManagementViewState
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primary,
                   foregroundColor: AppTheme.onMedia,
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                 ),
                 icon: _isGranting
                     ? const SizedBox(
@@ -445,7 +441,8 @@ class _RolePermissionManagementViewState
     final tierColor = _roleColor(assignment.role);
     final canTogglePermissions =
         assignment.role == 'master_admin' || assignment.role == 'admin';
-    final grantedPermissions = provider.permissionsForProfile(assignment.profileId);
+    final grantedPermissions =
+        provider.permissionsForProfile(assignment.profileId);
 
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
@@ -458,7 +455,10 @@ class _RolePermissionManagementViewState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               CircleAvatar(
                 radius: 18,
@@ -473,7 +473,8 @@ class _RolePermissionManagementViewState
                     : null,
               ),
               const SizedBox(width: AppTheme.spaceMd),
-              Expanded(
+              SizedBox(
+                width: 180,
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -495,8 +496,7 @@ class _RolePermissionManagementViewState
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
                   color: tierColor.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -515,7 +515,7 @@ class _RolePermissionManagementViewState
               IconButton(
                 icon: const Icon(Icons.remove_circle_outline_rounded,
                     size: 18, color: AppTheme.danger),
-                tooltip: 'Revoke role',
+                tooltip: 'roles.revoke'.tr(),
                 onPressed: () => _handleRevokeRole(provider, assignment),
               ),
             ],
@@ -541,11 +541,12 @@ class _RolePermissionManagementViewState
                         onChanged: (checked) => _handleTogglePermission(
                             provider, assignment, capability, checked == true),
                       ),
-                      Text(
-                        capability,
+                      Flexible(
+                          child: Text(
+                        'roles.$capability'.tr(),
                         style: const TextStyle(
                             color: AppTheme.textSecondary, fontSize: 11.5),
-                      ),
+                      )),
                     ],
                   ),
                 );

@@ -56,7 +56,8 @@ class VodGridTile extends StatelessWidget {
                       ? Image.asset(
                           vod.thumbnailUrl,
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
                             color: AppTheme.surfaceAlt,
                             child: const Center(
                               child: Icon(Icons.video_library_rounded,
@@ -69,7 +70,8 @@ class VodGridTile extends StatelessWidget {
                               ? vod.thumbnailUrl
                               : 'https://img.youtube.com/vi/${vod.youtubeVideoId}/hqdefault.jpg',
                           fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => Container(
+                          errorBuilder: (context, error, stackTrace) =>
+                              Container(
                             color: AppTheme.surfaceAlt,
                             child: const Center(
                               child: Icon(Icons.video_library_rounded,
@@ -109,26 +111,31 @@ class VodGridTile extends StatelessWidget {
                   ),
 
                   // Duration Pill Overlay on Bottom Right
-                  PositionedDirectional(
-                    bottom: 8,
-                    end: 8,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: AppTheme.media.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                        border: Border.all(color: AppTheme.onMedia.withValues(alpha: 0.24), width: 0.5),
-                      ),
-                      child: Text(
-                        vod.formattedDuration,
-                        style: const TextStyle(
-                          color: AppTheme.onMedia,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                  if (vod.durationSeconds > 0)
+                    PositionedDirectional(
+                      bottom: 8,
+                      end: 8,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          color: AppTheme.media.withValues(alpha: 0.85),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusXs),
+                          border: Border.all(
+                              color: AppTheme.onMedia.withValues(alpha: 0.24),
+                              width: 0.5),
+                        ),
+                        child: Text(
+                          vod.formattedDuration,
+                          style: const TextStyle(
+                            color: AppTheme.onMedia,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),

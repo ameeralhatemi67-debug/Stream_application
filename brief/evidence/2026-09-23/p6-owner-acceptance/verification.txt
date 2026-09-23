@@ -1,0 +1,74 @@
+2026-09-23 owner evidence remediation: sanitized verification outcomes.
+E2 = automated/local tests; E3 = local runtime/session; no E4.
+Raw outputs are ignored in brief/.runtime/. No production operations.
+
+Analyzer: flutter analyze
+No issues found! (ran in 13.6s)
+
+Full suite: flutter test (final full run: 530; first 526 passed / 2 failed corrected, second 529 passed before pending-start/exit fix)
+02:37 +530: All tests passed!
+
+Focused auth/studio/profile
+00:09 +34: All tests passed!
+
+SQL: local disposable workdir; suite run once
+All tests successful.
+Files=16, Tests=288,  3 wallclock secs ( 0.16 usr  0.11 sys +  0.34 cusr  0.27 csys =  0.88 CPU)
+Result: PASS
+
+Android debug: flutter build apk --debug --no-pub (no backend defines)
+√ Built build\app\outputs\flutter-apk\app-debug.apk
+
+Web debug: flutter build web --debug --no-pub (no backend defines)
+√ Built build\web
+
+Two local authenticated sessions (not physical phones)
+Local Realtime subscription joined.
+PASS LOCAL ONLY: two independent password sessions; A primary; B non-forced claim refused; forced B transfer received by A Realtime stream; A heartbeat false; server live cleared; A restart denied 42501; B released.
+Synthetic auth user and sessions removed. No credentials persisted.
+
+Local Storage API: synthetic PNG
+LOCAL ONLY: synthetic upload succeeded; unauthenticated public URL returned 200; anonymous listing returned zero objects.
+Synthetic probe object removed through Storage API.
+
+Windows: flutter build windows --debug --no-pub failed (exit 1).
+MSVC 14.51.36231; C2338 / STL1011; experimental/coroutine deprecated /await path in permission_handler_windows_plugin.vcxproj. No compiler flags changed.
+
+Browser E3: final unconfigured web build at localhost:5188/#/welcome rendered welcome text, Google sign-in/log-in buttons, guest entry and Arabic control on initial load and reload. Guest entry opened consent; consent was not accepted. No Google session tested.
+
+Gates (reported numeric values; FAIL is not overridden by exit code):
+G1a=0 PASS
+G1b=0 PASS
+G1c=0 PASS
+G1d=0 PASS
+G1e=0 PASS
+G2a=0 PASS
+G2b=0 PASS
+G2c=0 INFO
+G2d=0 PASS
+G3=0 PASS
+G4a=0 PASS
+G4b=0 PASS
+G5a=0 PASS
+G5b=0 PASS
+G5c=0 PASS
+G6=565 FAIL
+G7=0 PASS
+G8=0 PASS
+G9=0 PASS
+G10a=0 PASS
+G10b=2 INFO
+G10c=0 PASS
+G10d=0 PASS
+G10e=3 INFO
+G11a=9 FAIL
+G11b=0 PASS
+G11c=0 INFO
+G11d=0 PASS
+G11e=0 PASS
+G11f=0 PASS
+G11g=0 INFO
+
+G6 regex diagnostic vs HEAD before this task: total 554 -> 565; immediate .tr() 553 -> 564; non-immediate match 1 -> 1. No gate definition changes. G11a=9 in pre-existing nested worktrees.
+
+Local security advisors: 2 ERROR rows, both security_definer_view: streamer_public_profiles, organization_public_profiles. Documented intentional public non-PII projections; no other local advisor findings. Hosted Auth configuration not assessed.

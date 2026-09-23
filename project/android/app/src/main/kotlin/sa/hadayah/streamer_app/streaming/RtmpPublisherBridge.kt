@@ -23,6 +23,8 @@ class RtmpPublisherBridge(
 
     private var openGlView: OpenGlView? = null
     private var camera: RtmpCamera2? = null
+    private var prepared = false
+    private var audioOnly = false
 
     private var eventSink: EventChannel.EventSink? = null
     private val mainHandler = Handler(Looper.getMainLooper())
@@ -38,16 +40,24 @@ class RtmpPublisherBridge(
         } else {
             camera?.replaceView(view)
         }
-        if (camera?.isStreaming == true && camera?.isOnPreview != true) {
+        if (audioOnly) camera?.glInterface?.muteVideo()
+        if (prepared && camera?.isOnPreview != true) {
             camera?.startPreview()
         }
     }
 
-    fun onSurfaceLost() {
+    fun onSurfaceLost(view: OpenGlView) {
+        if (openGlView !== view) return
+        // Transfer GL rendering to the encoder's offscreen view. Rotation,
+        // keyboard and backgrounding can replace a PlatformView mid-stream.
+        camera?.replaceView(appContext)
+        if (audioOnly) camera?.glInterface?.muteVideo()
         openGlView = null
     }
 
     fun detach() {
+        isStoppingIntentionally = true
+        prepared = false
         val cam = camera
         if (cam != null) {
             if (cam.isStreaming) cam.stopStream()
@@ -59,17 +69,29 @@ class RtmpPublisherBridge(
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
+        // Cleanup must work even when Flutter has destroyed the surface.
+        if (call.method == "dispose") {
+            detach()
+            result.success(null)
+            return
+        }
+        if (call.method == "stopStream") {
+            val cam = camera
+            if (cam != null) handleStopStream(result, cam)
+            else { stopForegroundService(); result.success(null) }
+            return
+        }
         val view = openGlView
-        if (view == null) {
+        if (view == null && (call.method == "prepare" || camera == null)) {
             result.error("NOT_READY", "Camera preview is not attached yet.", null)
             return
         }
         if (camera == null) {
-            camera = RtmpCamera2(view, this)
+            camera = RtmpCamera2(view!!, this)
         }
         val cam = camera!!
         when (call.method) {
-            "prepare" -> handlePrepare(call, result, cam, view)
+            "prepare" -> handlePrepare(call, result, cam)
             "switchCamera" -> handleSwitchCamera(result, cam)
             "setAudioOnly" -> handleSetAudioOnly(call, result, cam)
             "startStream" -> handleStartStream(call, result, cam)
@@ -87,8 +109,7 @@ class RtmpPublisherBridge(
     private fun handlePrepare(
         call: MethodCall,
         result: MethodChannel.Result,
-        cam: RtmpCamera2,
-        view: OpenGlView
+        cam: RtmpCamera2
     ) {
         val width = call.argument<Int>("width") ?: 1280
         val height = call.argument<Int>("height") ?: 720
@@ -100,6 +121,7 @@ class RtmpPublisherBridge(
             val videoPrepared = cam.prepareVideo(width, height, videoBitrate)
             val audioPrepared = cam.prepareAudio(128_000, 44100, true)
             if (videoPrepared && audioPrepared) {
+                prepared = true
                 cam.startPreview()
                 result.success(null)
             } else {
@@ -128,7 +150,7 @@ class RtmpPublisherBridge(
         result: MethodChannel.Result,
         cam: RtmpCamera2
     ) {
-        val audioOnly = call.argument<Boolean>("audioOnly") ?: false
+        audioOnly = call.argument<Boolean>("audioOnly") ?: false
         try {
             if (audioOnly) {
                 cam.glInterface?.muteVideo()
@@ -163,7 +185,7 @@ class RtmpPublisherBridge(
             result.success(null)
         } catch (e: Exception) {
             stopForegroundService()
-            result.error("START_FAILED", e.message, null)
+            result.error("START_FAILED", "Could not start the encoder.", null)
         }
     }
 
@@ -247,7 +269,7 @@ class RtmpPublisherBridge(
         // just the initial connect), so this is also the recovery path for
         // "network switch / weak signal" -- distinct from onAuthError,
         // which means retrying with the same stream key won't help.
-        attemptReconnect(reason)
+        if (!isStoppingIntentionally) attemptReconnect(reason)
     }
 
     override fun onDisconnect() {
@@ -277,7 +299,7 @@ class RtmpPublisherBridge(
             emit(
                 mapOf(
                     "type" to "error",
-                    "message" to "Lost connection and could not reconnect: $reason"
+                    "message" to "Lost connection and could not reconnect."
                 )
             )
             stopForegroundService()
@@ -297,6 +319,7 @@ class RtmpPublisherBridge(
         // internals don't tolerate that. Posting keeps this consistent with
         // emit() regardless of which thread attemptReconnect was entered on.
         mainHandler.post {
+            if (isStoppingIntentionally) return@post
             val initiated = camera?.getStreamClient()?.reTry(delayMs, reason) ?: false
             if (!initiated) {
                 // reTry() declined to schedule anything (e.g. the stream
@@ -306,7 +329,7 @@ class RtmpPublisherBridge(
                 emit(
                     mapOf(
                         "type" to "error",
-                        "message" to "Lost connection and could not reconnect: $reason"
+                        "message" to "Lost connection and could not reconnect."
                     )
                 )
                 stopForegroundService()

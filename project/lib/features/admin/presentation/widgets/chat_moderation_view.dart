@@ -65,7 +65,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
       await action();
       _showToast(successMessage);
     } catch (e) {
-      _showToast('Action failed: $e', isError: true);
+      _showToast('moderation.failed'.tr(), isError: true);
     } finally {
       if (mounted) setState(() => _actingOnReportIds.remove(report.id));
     }
@@ -93,8 +93,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
         content: Text(body,
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12)),
+            style:
+                const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
@@ -103,7 +103,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: confirmColor, foregroundColor: AppTheme.onMedia),
+                backgroundColor: confirmColor,
+                foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
               onConfirm();
@@ -134,7 +135,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
               padding: const EdgeInsets.all(AppTheme.spaceLg),
               child: Align(
                 alignment: AlignmentDirectional.centerStart,
-                child: Text('design_ui.mute_duration'.tr(),
+                child: Text(
+                  'design_ui.mute_duration'.tr(),
                   style: const TextStyle(
                       color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
@@ -143,13 +145,13 @@ class _ChatModerationViewState extends State<ChatModerationView> {
               ),
             ),
             ListTile(
-              title: const Text('10 minutes',
-                  style: TextStyle(color: AppTheme.textPrimary)),
+              title: Text('moderation.ten_minutes'.tr(),
+                  style: const TextStyle(color: AppTheme.textPrimary)),
               onTap: () => Navigator.pop(sheetContext, 10 / 60),
             ),
             ListTile(
-              title: const Text('1 hour',
-                  style: TextStyle(color: AppTheme.textPrimary)),
+              title: Text('moderation.one_hour'.tr(),
+                  style: const TextStyle(color: AppTheme.textPrimary)),
               onTap: () => Navigator.pop(sheetContext, 1.0),
             ),
             ListTile(
@@ -168,16 +170,16 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     if (!mounted || durationHours == null) return;
     _confirmAndRun(
       context: context,
-      title: 'Mute Sender?',
-      body:
-          '${report.reportedDisplayName} will not be able to send messages in stream "${report.streamId}"for the selected duration. This is enforced server-side, not just hidden client-side.',
-      confirmLabel: 'Mute',
+      title: 'moderation.mute_title'.tr(),
+      body: 'moderation.mute_body'
+          .tr(namedArgs: {'name': report.reportedDisplayName}),
+      confirmLabel: 'moderation.mute'.tr(),
       confirmColor: AppTheme.warning,
       onConfirm: () => _runAction(
         report,
         () => provider.muteChatSenderAndResolveReport(report,
             muteDurationHours: durationHours == 0 ? null : durationHours),
-        '${report.reportedDisplayName} muted from stream "${report.streamId}".',
+        'moderation.muted'.tr(),
       ),
     );
   }
@@ -205,9 +207,10 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              '${report.reportedDisplayName} will be signed out of every device and redirected to a suspension screen platform-wide.',
-              style: const TextStyle(
-                  color: AppTheme.textSecondary, fontSize: 12),
+              'moderation.ban_body'
+                  .tr(namedArgs: {'name': report.reportedDisplayName}),
+              style:
+                  const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
             ),
             const SizedBox(height: AppTheme.spaceMd),
             TextField(
@@ -233,8 +236,10 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
-            onPressed: () => Navigator.pop(dialogContext, reasonController.text.trim()),
+                backgroundColor: AppTheme.danger,
+                foregroundColor: AppTheme.onMedia),
+            onPressed: () =>
+                Navigator.pop(dialogContext, reasonController.text.trim()),
             child: Text('design_ui.ban_platform_wide'.tr()),
           ),
         ],
@@ -244,7 +249,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     await _runAction(
       report,
       () => provider.banChatSenderAndResolveReport(report, reason: reason),
-      '${report.reportedDisplayName} banned platform-wide.',
+      'moderation.banned'.tr(),
     );
   }
 
@@ -270,12 +275,16 @@ class _ChatModerationViewState extends State<ChatModerationView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               const Icon(Icons.report_gmailerrorred_rounded,
                   color: AppTheme.danger, size: 20),
               const SizedBox(width: 8),
-              Text('design_ui.chat_moderation'.tr(),
+              Text(
+                'design_ui.chat_moderation'.tr(),
                 style: const TextStyle(
                   color: AppTheme.textPrimary,
                   fontSize: 16,
@@ -301,19 +310,20 @@ class _ChatModerationViewState extends State<ChatModerationView> {
             ],
           ),
           const SizedBox(height: AppTheme.spaceSm),
-          Text('design_ui.reported_live_chat_messages_platform_wide_dismiss_a_report_delete'.tr(),
+          Text(
+            'design_ui.reported_live_chat_messages_platform_wide_dismiss_a_report_delete'
+                .tr(),
             style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
-
           TextField(
             controller: _searchController,
             onChanged: (_) => setState(() {}),
             style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: InputDecoration(
-              hintText: 'Search by sender, reporter, stream, or reason...',
-              hintStyle: const TextStyle(
-                  color: AppTheme.textSecondary, fontSize: 12),
+              hintText: 'moderation.search'.tr(),
+              hintStyle:
+                  const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
               prefixIcon: const Icon(Icons.search_rounded,
                   color: AppTheme.textSecondary, size: 18),
               filled: true,
@@ -329,7 +339,6 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           const SizedBox(height: AppTheme.spaceLg),
           _buildMutedChattersAuditSection(context),
           const SizedBox(height: AppTheme.spaceLg),
-
           Expanded(
             child: filtered.isEmpty
                 ? Center(
@@ -343,8 +352,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                           reports.isEmpty
                               ? 'No open chat reports.'
                               : 'No reports match your search.',
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary),
+                          style: const TextStyle(color: AppTheme.textSecondary),
                         ),
                       ],
                     ),
@@ -382,9 +390,13 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           initiallyExpanded: false,
           leading: const Icon(Icons.volume_off_rounded,
               color: AppTheme.warning, size: 20),
-          title: Row(
+          title: Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('design_ui.muted_chatters_audit_log'.tr(),
+              Text(
+                'design_ui.muted_chatters_audit_log'.tr(),
                 style: const TextStyle(
                   color: AppTheme.textPrimary,
                   fontSize: 13.5,
@@ -393,7 +405,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
               ),
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
                 decoration: BoxDecoration(
                   color: AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(10),
@@ -412,7 +425,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
             if (entries.isEmpty)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
-                child: Text('design_ui.no_chatters_have_been_muted_yet'.tr(),
+                child: Text(
+                  'design_ui.no_chatters_have_been_muted_yet'.tr(),
                   style: const TextStyle(
                       color: AppTheme.textSecondary, fontSize: 12),
                 ),
@@ -452,7 +466,9 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
-                                '${e.streamsMutedCount} streams',
+                                'moderation.stream_count'.tr(namedArgs: {
+                                  'count': '${e.streamsMutedCount}'
+                                }),
                                 style: const TextStyle(
                                     color: AppTheme.warning,
                                     fontSize: 10,
@@ -519,7 +535,9 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                         const SizedBox(width: 4),
                         Flexible(
                           child: Text(
-                            'Reported: ${report.reportedDisplayName}',
+                            'moderation.reported'.tr(namedArgs: {
+                              'name': report.reportedDisplayName
+                            }),
                             style: const TextStyle(
                               color: AppTheme.textPrimary,
                               fontWeight: FontWeight.bold,
@@ -554,13 +572,20 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Reason: ${_reasonLabel(report.reason)}',
+                      'moderation.reason'.tr(
+                          namedArgs: {'reason': _reasonLabel(report.reason)}),
                       style: const TextStyle(
                           color: AppTheme.warning, fontSize: 11.5),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Reported by ${report.reporterDisplayName} • Stream: ${report.streamId} • ${DateFormat('yyyy-MM-dd HH:mm').format(report.createdAt)}',
+                      'moderation.metadata'.tr(namedArgs: {
+                        'name': report.reporterDisplayName,
+                        'stream': report.streamId,
+                        'date': DateFormat(
+                                'yyyy-MM-dd HH:mm', context.locale.languageCode)
+                            .format(report.createdAt.toLocal())
+                      }),
                       style: const TextStyle(
                           color: AppTheme.textMuted, fontSize: 10.5),
                     ),
@@ -590,23 +615,23 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.textSecondary,
                     side: const BorderSide(color: AppTheme.border),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   icon: const Icon(Icons.done_rounded, size: 15),
                   label: Text('design_ui.dismiss'.tr()),
                   onPressed: () => _runAction(
                     report,
                     () => provider.dismissChatReport(report.id),
-                    'Report dismissed.',
+                    'moderation.dismissed'.tr(),
                   ),
                 ),
                 OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.warning,
                     side: const BorderSide(color: AppTheme.warning),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   icon: const Icon(Icons.volume_off_rounded, size: 15),
                   label: Text('design_ui.mute_in_stream'.tr()),
@@ -616,8 +641,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.danger,
                     side: const BorderSide(color: AppTheme.danger),
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   icon: const Icon(Icons.person_off_rounded, size: 15),
                   label: Text('design_ui.ban_platform_wide'.tr()),
@@ -627,22 +652,21 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.danger,
                     foregroundColor: AppTheme.onMedia,
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 8),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                   ),
                   icon: const Icon(Icons.delete_forever_rounded, size: 15),
                   label: Text('design_ui.delete_message'.tr()),
                   onPressed: () => _confirmAndRun(
                     context: context,
-                    title: 'Delete This Message?',
-                    body:
-                        'This removes the message from every viewer\'s chat in real time. This cannot be undone.',
-                    confirmLabel: 'Delete',
+                    title: 'moderation.delete_title'.tr(),
+                    body: 'moderation.delete_body'.tr(),
+                    confirmLabel: 'moderation.delete'.tr(),
                     confirmColor: AppTheme.danger,
                     onConfirm: () => _runAction(
                       report,
                       () => provider.deleteChatMessageAndResolveReport(report),
-                      'Message deleted.',
+                      'moderation.deleted'.tr(),
                     ),
                   ),
                 ),

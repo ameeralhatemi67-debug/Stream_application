@@ -312,9 +312,8 @@ class _LiveSectionState extends State<_LiveSection> {
                               .tr(),
                           r.viewerCount == null
                               ? 'safety.live_viewers_unknown'.tr()
-                              : 'safety.live_viewers'.tr(namedArgs: {
-                                  'count': '${r.viewerCount}'
-                                }),
+                              : 'safety.live_viewers'
+                                  .tr(namedArgs: {'count': '${r.viewerCount}'}),
                         ].join(' · '),
                         style: const TextStyle(
                             color: AppTheme.textSecondary, fontSize: 12),
@@ -384,6 +383,9 @@ class _AuditSection extends StatefulWidget {
 
 class _AuditSectionState extends State<_AuditSection> {
   final List<AdminAuditEntry> _entries = [];
+  final _actor = TextEditingController();
+  DateTimeRange? _dates;
+  String? _actorFilter;
   String? _action;
   bool _hasMore = false;
   bool _loading = true;
@@ -396,6 +398,23 @@ class _AuditSectionState extends State<_AuditSection> {
     _load(reset: true);
   }
 
+  @override
+  void dispose() {
+    _actor.dispose();
+    super.dispose();
+  }
+
+  Future<void> _pickDates() async {
+    final dates = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now(),
+        initialDateRange: _dates);
+    if (!mounted || dates == null) return;
+    setState(() => _dates = dates);
+    await _load(reset: true);
+  }
+
   Future<void> _load({required bool reset}) async {
     final request = ++_request;
     setState(() {
@@ -404,8 +423,16 @@ class _AuditSectionState extends State<_AuditSection> {
       if (reset) _entries.clear();
     });
     try {
-      final page = await widget.backend
-          .loadAudit(action: _action, offset: reset ? 0 : _entries.length);
+      final page = await widget.backend.loadAudit(
+          action: _action,
+          actorEmail: _actorFilter,
+          since: _dates?.start,
+          until: _dates == null
+              ? null
+              : DateTime(
+                  _dates!.end.year, _dates!.end.month, _dates!.end.day + 1),
+          after: reset || _entries.isEmpty ? null : _entries.last,
+          offset: reset ? 0 : _entries.length);
       if (!mounted || request != _request) return;
       setState(() {
         _entries.addAll(page.entries);
@@ -430,6 +457,49 @@ class _AuditSectionState extends State<_AuditSection> {
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+          child: Wrap(
+              spacing: AppTheme.spaceSm,
+              runSpacing: AppTheme.spaceSm,
+              children: [
+                SizedBox(
+                    width: 280,
+                    child: TextField(
+                      key: const Key('safety-audit-actor'),
+                      controller: _actor,
+                      decoration:
+                          InputDecoration(labelText: 'safety.audit_actor'.tr()),
+                      onSubmitted: (_) {
+                        _actorFilter = _actor.text.trim();
+                        _load(reset: true);
+                      },
+                    )),
+                TextButton(
+                    key: const Key('safety-audit-apply'),
+                    onPressed: () {
+                      _actorFilter = _actor.text.trim();
+                      _load(reset: true);
+                    },
+                    child: Text('safety.audit_apply'.tr())),
+                TextButton(
+                    key: const Key('safety-audit-dates'),
+                    onPressed: _pickDates,
+                    child: Text(_dates == null
+                        ? 'safety.audit_dates'.tr()
+                        : '${DateFormat.yMd(context.locale.languageCode).format(_dates!.start)} – ${DateFormat.yMd(context.locale.languageCode).format(_dates!.end)}')),
+                TextButton(
+                    key: const Key('safety-audit-clear'),
+                    onPressed: () {
+                      _actor.clear();
+                      _actorFilter = null;
+                      _dates = null;
+                      _action = null;
+                      _load(reset: true);
+                    },
+                    child: Text('safety.audit_clear'.tr())),
+              ]),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
           child: DropdownButton<String?>(
             key: const Key('safety-audit-filter'),
             isExpanded: true,
@@ -438,7 +508,8 @@ class _AuditSectionState extends State<_AuditSection> {
               DropdownMenuItem(
                   value: null, child: Text('safety.audit_all'.tr())),
               for (final a in safetyAuditActions)
-                DropdownMenuItem(value: a, child: Text('safety.action_$a'.tr())),
+                DropdownMenuItem(
+                    value: a, child: Text('safety.action_$a'.tr())),
             ],
             onChanged: (value) {
               setState(() => _action = value);
@@ -462,8 +533,7 @@ class _AuditSectionState extends State<_AuditSection> {
                           itemBuilder: (context, i) {
                             if (i == _entries.length) {
                               if (_error != null) {
-                                return _StatusMessage(
-                                    safetyFailureKey(_error!),
+                                return _StatusMessage(safetyFailureKey(_error!),
                                     onRetry: () => _load(reset: false));
                               }
                               if (!_hasMore) return const SizedBox.shrink();
@@ -473,8 +543,7 @@ class _AuditSectionState extends State<_AuditSection> {
                                     : TextButton(
                                         key: const Key('safety-audit-more'),
                                         onPressed: () => _load(reset: false),
-                                        child:
-                                            Text('safety.audit_more'.tr()),
+                                        child: Text('safety.audit_more'.tr()),
                                       ),
                               );
                             }
@@ -597,8 +666,8 @@ class _KeywordSectionState extends State<_KeywordSection> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    await _run(() => widget.backend.removeKeyword(k.id),
-        'safety.keyword_removed');
+    await _run(
+        () => widget.backend.removeKeyword(k.id), 'safety.keyword_removed');
   }
 
   Widget _modeMenu(String value, ValueChanged<String> onChanged, {Key? key}) {
@@ -623,7 +692,8 @@ class _KeywordSectionState extends State<_KeywordSection> {
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       children: [
         Text('safety.keyword_hint'.tr(),
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            style:
+                const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         const SizedBox(height: AppTheme.spaceSm),
         Wrap(
           spacing: AppTheme.spaceSm,
@@ -723,8 +793,7 @@ class _SwitchesSectionState extends State<_SwitchesSection> {
     final reason = await askSafetyReason(
       context,
       title: 'safety.switch_${key.column}'.tr(),
-      body: (enabled ? 'safety.switch_on_body' : 'safety.switch_off_body')
-          .tr(),
+      body: (enabled ? 'safety.switch_on_body' : 'safety.switch_off_body').tr(),
     );
     if (reason == null || !mounted) return;
     setState(() => _busy.add(key));
@@ -746,11 +815,11 @@ class _SwitchesSectionState extends State<_SwitchesSection> {
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       children: [
         Text('safety.switches_hint'.tr(),
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            style:
+                const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
         if (flags.status == AppFlagsStatus.failed)
           _StatusMessage('safety.switches_unknown',
-              key: const Key('safety-switches-error'),
-              onRetry: flags.refresh),
+              key: const Key('safety-switches-error'), onRetry: flags.refresh),
         const SizedBox(height: AppTheme.spaceSm),
         for (final key in AppFlagKey.values)
           SwitchListTile(

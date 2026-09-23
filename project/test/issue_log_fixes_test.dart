@@ -76,7 +76,9 @@ void main() {
       // User chooses to transfer broadcaster to current device
       await provider.transferBroadcasterToCurrentDevice();
       expect(provider.currentDeviceSession!.isPrimaryBroadcaster, isFalse);
-      expect(provider.remoteBroadcasterSession, isNotNull);
+      // Continue as Viewer dismisses the conflict; a refused transfer must
+      // not reopen it or silently re-enable broadcaster mode.
+      expect(provider.remoteBroadcasterSession, isNull);
       provider.applyDeviceSessions([
         provider.currentDeviceSession!.copyWith(isPrimaryBroadcaster: true)
       ]);

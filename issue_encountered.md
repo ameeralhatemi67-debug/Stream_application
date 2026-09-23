@@ -15,6 +15,11 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Malformed single-dollar pgTAP quoting in `admin_user_directory.test.sql`** — FIXED; all 33 assertions passed locally.
 
 - **Admin direct link redirects before backend role loading** — FIXED locally; router regression and browser session passed.
+- **Role choice repeats or leaks across accounts** — FIXED locally; account-scoped hydration and generation tests pass.
+- **Phone landscape ParentData crash and preview disposal** — layout crash FIXED locally; native lifecycle compiled, physical camera retest open.
+- **Phone LIVE before encoder/server confirmation** — FIXED locally; native-event and RPC denial tests pass, real ingest unverified.
+- **Windows STL1011 in permission_handler_windows** — UNRESOLVED compiler/plugin compatibility; reproduced without flag changes.
+- **Realtime initial snapshot precedes first channel join** — known SDK timing window; existing 20-second heartbeat fallback, physical timing check open.
 
 ## Recording format
 
@@ -98,3 +103,45 @@ Cause: the redirect interpreted an unresolved role as a denied role; the route b
 Fix: AppProvider exposes role-loading state, the redirect waits, and the route observes loading before building the role-gated Hub.
 Verification: focused router regression, 514 full Flutter tests, analyzer zero, visible local GoTrue Master Admin direct-link browser load. No physical-device or production evidence.
 Evidence: brief/evidence/2026-09-23/admin-hub/README.md.
+
+2026-09-23 owner-remediation follow-up: the router now also waits for full auth/profile/device hydration and preserves the requested path through splash. Per-account role choice and account-generation guards prevent a stale session from making the routing decision. Final Flutter suite: 530 passed; analyzer 0. Real Google/admin deep-link acceptance remains open.
+
+## Role choice repeats or leaks across accounts
+Status: FIXED locally.
+Observed: existing viewers were sent back to role selection, while fresh users could bypass it after OAuth; late profile loads could cross account boundaries.
+Cause: memory-only role choice, routing before hydration, incomplete account clearing and stale asynchronous results.
+Fix: account-keyed preference, hydration routing gate, clearing account-owned fields and auth-generation guards (including sign-out/back-in to the same account). Duplicate refresh does not reclaim a displaced device.
+Verification: owner_acceptance_regression_test.dart covers restart, A-to-B and same-account races; final full suite 530 passed. Real Google/F5 remains an owner check.
+Evidence: brief/evidence/2026-09-23/p6-owner-acceptance/REMEDIATION_2026-09-23.md.
+
+## Phone landscape ParentData crash and preview disposal
+Status: layout crash FIXED locally; physical preview UNVERIFIED.
+Observed: landscape widget test reproduced incorrect ParentDataWidget use; owner screenshots showed black portrait/landscape preview.
+Cause: PositionedDirectional nested below AnimatedOpacity/IgnorePointer instead of directly under Stack; native preview-view disposal also destroyed the encoder.
+Fix: correct Stack positioning; detach GL offscreen on surface loss, reattach replacement view, keep encoder destruction under explicit engine disposal.
+Verification: en/ar portrait/landscape/keyboard widget tests and Android debug compilation pass. No attached physical phone or real ingest was tested; screenshots alone do not prove the native cause on that device.
+Evidence: dated owner remediation addendum.
+
+## Phone LIVE before encoder/server confirmation
+Status: FIXED locally; external ingest UNVERIFIED.
+Observed: phone looked LIVE while server/feed were offline and Studio had no incoming encoder data.
+Cause: optimistic client live flag and treating the native start command return as a connection acknowledgement; phone chat also used a different fabricated room ID.
+Fix: wait for actual native live event, then successful set_live_state RPC; serialize start/stop updates, fail closed, stop on ownership loss, use the actual watch ID for chat. Phone studio collects watch link plus private ingest key separately.
+Verification: native-event/error/dispose and server-denial tests; local two-session transfer clears server live and denies displaced restart. Real YouTube ingest remains an owner-authorized physical test.
+Evidence: dated owner remediation addendum.
+
+## Windows STL1011 in permission_handler_windows
+Status: UNRESOLVED environment/dependency compatibility.
+Observed: flutter build windows --debug --no-pub failed under MSVC 14.51.36231 with C2338 / STL1011 in experimental/coroutine, building permission_handler_windows_plugin.vcxproj.
+Cause: the installed compiler rejects the plugin's deprecated /await experimental coroutine path. This is a build failure before app launch, not a demonstrated Dart runtime defect.
+Fix/workaround: none applied. Confirm a supported upstream plugin/toolchain resolution; do not add suppression/compiler flags speculatively.
+Verification: reproduced once with no backend defines. Android and web builds are separate evidence and do not resolve Windows.
+Evidence: brief/.runtime/owner-windows-build.log (ignored); sanitized verification.txt in the remediation folder.
+
+## Realtime initial snapshot precedes first channel join
+Status: KNOWN TIMING LIMIT; existing heartbeat fallback retained.
+Observed: local device-transfer probe got the initial rows, transferred immediately, then timed out waiting for that Realtime event. After waiting for the same channel to join, transfer delivery and server denials passed.
+Cause: installed supabase 2.16.1 stream builder fetches initial HTTP data before channel join and re-fetches on subsequent joins only. Initial data is not proof that Realtime is subscribed.
+Fix/workaround: no duplicate listener. Existing primary-device heartbeat every 20 seconds demotes on false/error, bounding missed-event detection. The owner must measure the initial-join and active-publisher stop paths on two phones.
+Verification: two local password sessions, same stream primary keys/filter as the app; publication exists; joined transfer delivered, displaced heartbeat false, live cleared and restart denied 42501. No E4 evidence.
+Evidence: dated owner remediation addendum and verification.txt.
