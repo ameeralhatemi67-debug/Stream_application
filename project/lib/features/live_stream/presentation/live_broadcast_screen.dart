@@ -26,6 +26,8 @@ import 'widgets/live_multi_speaker_overlay.dart';
 import 'widgets/live_audio_stage_multi_speaker.dart';
 import 'widgets/private_stream_viewer_gate.dart';
 import 'widgets/stream_state_placeholder_overlay.dart';
+import 'widgets/live_room_connection_view.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../admin/models/streamer_custom_placeholder_model.dart';
 import 'widgets/rtmp_ip_dialog.dart';
 
@@ -350,6 +352,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   @override
   Widget build(BuildContext context) {
     final appProvider = context.watch<AppProvider>();
+    final networkStatus =
+        context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
+    if (networkStatus != NetworkStatus.online) {
+      return Scaffold(
+        backgroundColor: AppTheme.bg,
+        body: SafeArea(child: LiveRoomConnectionView(status: networkStatus)),
+      );
+    }
     final mediaQuery = MediaQuery.of(context);
     final isDesktop = mediaQuery.size.width >= 900;
     final isLandscape = mediaQuery.orientation == Orientation.landscape;

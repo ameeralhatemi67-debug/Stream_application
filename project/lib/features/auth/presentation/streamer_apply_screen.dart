@@ -230,6 +230,10 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   }
 
   Future<void> _submitApplication() async {
+    if (!context.read<AppProvider>().isOnline) {
+      _showValidationToast('offline_experience.form_preserved'.tr());
+      return;
+    }
     if (!_agreedToTerms) {
       _showValidationToast('You must agree to the Terms & Conditions before submitting.');
       return;
@@ -328,7 +332,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       context.go('/application-pending');
     } catch (e) {
       if (!mounted) return;
-      _showValidationToast('Submission error: $e');
+      _showValidationToast('offline_experience.form_preserved'.tr());
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }

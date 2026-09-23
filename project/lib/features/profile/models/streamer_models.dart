@@ -171,6 +171,7 @@ class StreamerModel {
     BroadcastType? broadcastType,
     bool? isOrganization,
     String? activeStreamId,
+    bool clearLiveState = false,
     int? activeViewerCount,
     List<String>? upcomingScheduleEn,
     List<String>? upcomingScheduleAr,
@@ -209,7 +210,8 @@ class StreamerModel {
       isCurrentlyLive: isCurrentlyLive ?? this.isCurrentlyLive,
       broadcastType: broadcastType ?? this.broadcastType,
       isOrganization: isOrganization ?? this.isOrganization,
-      activeStreamId: activeStreamId ?? this.activeStreamId,
+      activeStreamId:
+          clearLiveState ? null : activeStreamId ?? this.activeStreamId,
       activeViewerCount: activeViewerCount ?? this.activeViewerCount,
       upcomingScheduleEn: upcomingScheduleEn ?? this.upcomingScheduleEn,
       upcomingScheduleAr: upcomingScheduleAr ?? this.upcomingScheduleAr,

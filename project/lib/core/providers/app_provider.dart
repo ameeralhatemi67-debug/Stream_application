@@ -1429,11 +1429,19 @@ class AppProvider extends ChangeNotifier {
           !backendIds.contains(s.streamerId));
 
       for (final bs in backendStreamers) {
+        final displayStreamer = isOnline
+            ? bs
+            : bs.copyWith(
+                isCurrentlyLive: false,
+                broadcastType: BroadcastType.offline,
+                activeViewerCount: 0,
+                clearLiveState: true,
+              );
         final idx = _streamers.indexWhere((s) => s.streamerId == bs.streamerId);
         if (idx != -1) {
-          _streamers[idx] = bs;
+          _streamers[idx] = displayStreamer;
         } else {
-          _streamers.add(bs);
+          _streamers.add(displayStreamer);
         }
       }
       _isUsingCachedCatalog = false;
@@ -1648,13 +1656,17 @@ class AppProvider extends ChangeNotifier {
     _connectivityService ??= ConnectivityService();
     _connectivitySub?.cancel();
     final generation = ++_connectivityGeneration;
+    var eventRevision = 0;
     _connectivitySub = _connectivityService!.onStatusChange.listen((status) {
+      eventRevision++;
       if (generation == _connectivityGeneration) _applyConnectivity(status);
     });
     // After subscribing, so a status change that lands while the initial
     // probe is still in flight is not overwritten by its staler answer.
     _connectivityService!.checkNow().then((status) {
-      if (generation == _connectivityGeneration) _applyConnectivity(status);
+      if (generation == _connectivityGeneration && eventRevision == 0) {
+        _applyConnectivity(status);
+      }
     });
   }
 
@@ -1662,6 +1674,17 @@ class AppProvider extends ChangeNotifier {
     final wasUnavailable = !isOnline;
     if (_networkStatus == status) return;
     _networkStatus = status;
+    if (status != NetworkStatus.online) {
+      if (_publicCatalogUpdatedAt != null) _isUsingCachedCatalog = true;
+      _streamers = _streamers
+          .map((s) => s.copyWith(
+                isCurrentlyLive: false,
+                broadcastType: BroadcastType.offline,
+                activeViewerCount: 0,
+                clearLiveState: true,
+              ))
+          .toList();
+    }
     notifyListeners();
     if (wasUnavailable && isOnline) {
       loadVerifiedStreamersFromBackend();
@@ -1686,8 +1709,8 @@ class AppProvider extends ChangeNotifier {
   /// without touching the real `connectivity_plus` platform channel.
   @visibleForTesting
   void debugSetOnlineForTests(bool online) {
-    _networkStatus = online ? NetworkStatus.online : NetworkStatus.offline;
-    notifyListeners();
+    _applyConnectivity(
+        online ? NetworkStatus.online : NetworkStatus.offline);
   }
 
   Future<void> _loadMapMarkerCacheFromDisk() async {
@@ -4264,7 +4287,7 @@ class AppProvider extends ChangeNotifier {
   /// AcademicCategoryModel.defaultPool (via the getter above) when empty --
   /// covers both "not loaded yet"and "Supabase unreachable".
   Future<void> ensureAcademicCategoriesLoaded() async {
-    if (_academicCategoriesLoaded) return;
+    if (_academicCategoriesLoaded && _publicCategoriesLoaded) return;
     _academicCategoriesLoaded = true;
     await _refreshAcademicCategories();
   }

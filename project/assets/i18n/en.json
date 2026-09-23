@@ -3,6 +3,23 @@
   "broadcast_primary_required": "Claim the primary broadcaster device before going live.",
   "broadcast_state_failed": "The broadcast session could not be updated. Check your connection and try again.",
   "sign_out_other_devices": "Sign out other devices",
+  "offline_experience": {
+    "offline_title": "You're offline",
+    "degraded_title": "The service is hard to reach",
+    "cached_title": "Showing saved listings",
+    "body": "Showing saved public listings. Live status and viewer counts are unavailable.",
+    "cached_card": "Saved listing · live status unavailable",
+    "status_unavailable": "Live status unavailable",
+    "live_unavailable": "A live connection is required for this action.",
+    "form_preserved": "Connection unavailable. Your form is still here. Retry when connected.",
+    "retry": "Retry",
+    "retrying": "Checking…",
+    "last_updated": "Saved {time}",
+    "no_snapshot": "No saved catalog yet",
+    "room_title": "Live room unavailable",
+    "room_body": "Reconnect to check this broadcast and join the room.",
+    "back_to_feed": "Back to Feed"
+  },
   "app": {
     "title": "Educational Streamer",
     "region": "AlSharqia - Al Khobar",

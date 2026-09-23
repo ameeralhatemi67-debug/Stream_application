@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/services/connectivity_service.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
 import '../models/map_models.dart';
@@ -132,6 +133,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     final online = await provider.refreshConnectivityNow();
     if (online) {
       await provider.loadVerifiedStreamersFromBackend();
+      await provider.ensureAcademicCategoriesLoaded();
     }
     if (!mounted) return;
     setState(() => _isRetryingConnectivity = false);
@@ -934,6 +936,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   /// venues), shows when the cache was last refreshed, and offers a manual
   /// retry on top of the automatic recovery.
   Widget _buildOfflineBanner(BuildContext context) {
+    final status = context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
     final updatedAt = context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
     final lastUpdatedText = updatedAt == null
         ? 'map.offline_last_updated_never'.tr()
@@ -958,7 +961,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'map.offline_banner_title'.tr(),
+                  (status == NetworkStatus.degraded
+                          ? 'offline_experience.degraded_title'
+                          : 'map.offline_banner_title')
+                      .tr(),
                   style: const TextStyle(
                     color: AppTheme.textPrimary,
                     fontWeight: FontWeight.bold,
@@ -967,7 +973,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  'map.offline_banner_body'.tr(),
+                  (status == NetworkStatus.degraded
+                          ? 'offline_experience.body'
+                          : 'map.offline_banner_body')
+                      .tr(),
                   style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11.5, height: 1.4),
                 ),
                 const SizedBox(height: 4),

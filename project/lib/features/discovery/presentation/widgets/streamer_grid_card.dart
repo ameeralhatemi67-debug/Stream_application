@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../profile/models/streamer_models.dart';
@@ -41,14 +42,19 @@ class StreamerGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = context.watch<AppProvider?>();
+    final appProvider = context.read<AppProvider?>();
+    final (networkStatus, cached) = context.select<
+        AppProvider,
+        (NetworkStatus, bool)>((p) =>
+        (p.networkStatus, p.isUsingCachedCatalog));
     final isOwnCard = appProvider != null &&
         (appProvider.isLoggedInStreamer || appProvider.isStreamerModeEnabled) &&
         appProvider.isOwnStreamerProfile(streamer.streamerId);
 
-    final isLive = streamer.isCurrentlyLive;
-    final isAudio = streamer.isAudioLive;
-    final isVideo = streamer.isVideoLive;
+    final isLive = networkStatus == NetworkStatus.online &&
+        !cached && streamer.isCurrentlyLive;
+    final isAudio = isLive && streamer.isAudioLive;
+    final isVideo = isLive && streamer.isVideoLive;
 
     Color borderColor;
     double borderWidth;
@@ -115,6 +121,33 @@ class StreamerGridCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     _buildBanner(streamer.bannerUrl),
+                    if (cached || networkStatus != NetworkStatus.online)
+                      PositionedDirectional(
+                        top: 6,
+                        start: 6,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 160),
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: AppTheme.surface,
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusXs),
+                            ),
+                            child: Padding(
+                              padding: const EdgeInsets.all(4),
+                              child: Text((cached
+                                      ? 'offline_experience.cached_card'
+                                      : 'offline_experience.status_unavailable')
+                                  .tr(),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                      color: AppTheme.textPrimary,
+                                      fontSize: 9)),
+                            ),
+                          ),
+                        ),
+                      ),
                     // Subtle bottom scrim, so the badges and the name below
                     // keep their contrast over any frame without hiding it.
                     const DecoratedBox(

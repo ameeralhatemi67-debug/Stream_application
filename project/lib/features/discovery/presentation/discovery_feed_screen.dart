@@ -7,6 +7,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
+import '../../../core/widgets/connectivity_banner.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
 import 'widgets/streamer_grid_card.dart';
@@ -51,6 +52,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   void _refreshVisibleViewerCounts() {
     if (!mounted) return;
     final provider = context.read<AppProvider>();
+    if (!provider.isOnline) return;
     final ids = provider.streamers
         .where((s) => s.isCurrentlyLive && (s.activeStreamId ?? '').isNotEmpty)
         .map((s) => s.activeStreamId!)
@@ -178,6 +180,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
           p.selectedTagFilter,
         ));
     final langCode = context.locale.languageCode;
+    final isOnline = context.select<AppProvider, bool>((p) => p.isOnline);
+    final availableLiveStreamers = isOnline ? liveStreamers : <StreamerModel>[];
     final screenWidth = MediaQuery.of(context).size.width;
     final isDesktop = screenWidth >= 900;
     final streamerGridColumns = isDesktop ? 4 : (screenWidth > 600 ? 3 : 2);
@@ -279,6 +283,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceSm),
         children: [
+          const ConnectivityBanner(),
           //  Search Bar + Tag Filter Action Row
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
@@ -365,11 +370,11 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
           const SizedBox(height: AppTheme.spaceLg),
 
           //  Top Featured Live Stream Hero (Only shown if a streamer is live!)
-          if (liveStreamers.isNotEmpty) ...[
+          if (availableLiveStreamers.isNotEmpty) ...[
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
               child: _buildHeroLiveCarousel(
-                  context, liveStreamers.first, langCode),
+                  context, availableLiveStreamers.first, langCode),
             ),
             const SizedBox(height: AppTheme.spaceXl),
 
@@ -401,7 +406,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                     ],
                   ),
                   Text(
-                    '${liveStreamers.length} ${'feed.active_streams'.tr()}',
+                    '${availableLiveStreamers.length} ${'feed.active_streams'.tr()}',
                     style: const TextStyle(
                         color: AppTheme.danger,
                         fontSize: 12,
@@ -418,9 +423,9 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 scrollDirection: Axis.horizontal,
                 padding:
                     const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-                itemCount: liveStreamers.length,
+                itemCount: availableLiveStreamers.length,
                 itemBuilder: (context, index) {
-                  final streamer = liveStreamers[index];
+                  final streamer = availableLiveStreamers[index];
                   return _buildHorizontalLiveCard(context, streamer, langCode);
                 },
               ),
