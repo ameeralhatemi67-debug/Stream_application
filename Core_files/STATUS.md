@@ -84,3 +84,7 @@ The following feature and test inventory is historical. Its "Online" labels and 
 - **Static Analysis:** `flutter analyze` $\rightarrow$ **0 issues (100% clean)**.
 - **Automated Tests:** `flutter test` $\rightarrow$ **83/83 tests passing across all suites**.
 - **Localization:** 100% symmetric JSON dictionaries (`ar.json` / `en.json`).
+
+## 2026-09-23 checkpoint: weekly budget preflight repaired
+
+The owner authorized weekly-only budgeting with a 5% absolute ceiling, aiming lower. Codex exposes a 10,080-minute weekly window and no five-hour window. The meter now classifies by duration, preserves 1% as 1%, rejects stale/missing weekly readings, and supports `--plan weekly --cap 5` with a 4% soft stop. Focused Node tests passed. Entry usage 1%, implementation entry 2%; no app/SQL/Flutter evidence added yet. P6.4 item 1 remains verified in `1832b3e`; P6 safety implementation is next and P6S remains blocked. Owner edits and both stashes are preserved. See brief/04_BUDGET_PROTOCOL.md section J. No push/deploy/production operations.

@@ -729,3 +729,7 @@ For all future additions to this roadmap, use this sizing decision rule:
 3. **Make it a Checkpoint** if, once all its phases land, the application reaches a distinct, demoable state worthy of a GitHub push, or if it resolves critical dependencies that require a clean rollback point.
 4. **Avoid Emojis in prose:** Maintain clean, professional documentation standards without unnecessary emoji characters in task bodies or filenames.
 5. **Log Major Architectural Findings in the Modification Section:** Document audit findings, effects, and suggested structural adjustments with dated entries before modifying existing roadmap milestones.
+
+## 2026-09-23 checkpoint: weekly budget preflight repaired
+
+The owner authorized weekly-only budgeting with a 5% absolute ceiling, aiming lower. Codex exposes a 10,080-minute weekly window and no five-hour window. The meter now classifies by duration, preserves 1% as 1%, rejects stale/missing weekly readings, and supports `--plan weekly --cap 5` with a 4% soft stop. Focused Node tests passed. Entry usage 1%, implementation entry 2%; no app/SQL/Flutter evidence added yet. P6.4 item 1 remains verified in `1832b3e`; P6 safety implementation is next and P6S remains blocked. Owner edits and both stashes are preserved. See brief/04_BUDGET_PROTOCOL.md section J. No push/deploy/production operations.

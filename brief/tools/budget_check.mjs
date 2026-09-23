@@ -130,9 +130,9 @@ function normWindow(w, evTs) {
   for (const k of ['used_percent', 'used_percentage', 'percent_used', 'usedPercent']) if (Number.isFinite(Number(w[k])) && w[k] !== null) { used = Number(w[k]); break; }
   if (used === null) for (const k of ['remaining_percent', 'remaining_percentage', 'percent_remaining']) if (Number.isFinite(Number(w[k])) && w[k] !== null) { used = 100 - Number(w[k]); break; }
   if (used === null) return null;
-  if (used <= 1 && used > 0 && w.used_percent === undefined && w.remaining_percent === undefined) used *= 100; // fraction form
   let minutes = null;
   if (Number.isFinite(Number(w.window_minutes))) minutes = Number(w.window_minutes);
+  else if (Number.isFinite(Number(w.windowDurationMins))) minutes = Number(w.windowDurationMins);
   else if (Number.isFinite(Number(w.limit_window_seconds))) minutes = Number(w.limit_window_seconds) / 60;
   else if (Number.isFinite(Number(w.window_seconds))) minutes = Number(w.window_seconds) / 60;
   let resets = null;
@@ -180,13 +180,13 @@ function readCodexSnapshot(now) {
       const near = (w, lo, hi) => w.minutes !== null && w.minutes >= lo && w.minutes <= hi;
       let five = entries.find(([, w]) => near(w, 240, 360));
       let week = entries.find(([, w]) => near(w, 9000, 11000));
-      if (!five) five = entries.find(([k]) => /primary/i.test(k));
-      if (!week) week = entries.find(([k]) => /secondary/i.test(k));
-      if (!five || !five[1].resets_at) continue;
+      if (!five) five = entries.find(([k, w]) => /primary/i.test(k) && w.minutes === null);
+      if (!week) week = entries.find(([k, w]) => /secondary/i.test(k) && w.minutes === null);
+      if (!five && !week) continue;
       return {
         harness: 'codex',
         written_at: evTs,
-        five_hour: { used_percentage: five[1].used, resets_at: five[1].resets_at },
+        five_hour: five ? { used_percentage: five[1].used, resets_at: five[1].resets_at } : null,
         seven_day: week ? { used_percentage: week[1].used, resets_at: week[1].resets_at } : null,
         prompt_cache: { ttl: '30m(assumed)', warm: now - evTs < 1800, expires_at: evTs + 1800 },
         _probe: { file: path.basename(f.p), keys: entries.map(([k, w]) => `${k}:used=${w.used.toFixed(1)},min=${w.minutes},resets_in_min=${w.resets_at ? Math.round((w.resets_at - now) / 60) : '?'}`) },
@@ -223,6 +223,27 @@ function readClaudeSnapshot() {
   }
 
   // --- optional live reading + argument checks (see header) ---
+  // Owner-authorized weekly-only run, 2026-09-23. No invented five-hour window
+  // or runtime-state reset. Leave one percentage point for verification/closing.
+  if (plan === 'weekly') {
+    const w = snap?.seven_day;
+    const age = now - (snap?.written_at || 0);
+    const cap = Number(capRaw);
+    if (capRaw === null || !Number.isFinite(cap) || cap <= 0 || cap > 5
+        || !w || !Number.isFinite(w.used_percentage) || w.used_percentage < 0
+        || w.used_percentage > 100 || !Number.isFinite(w.resets_at)
+        || w.resets_at <= now || age < 0 || age > STALE_SNAPSHOT_S) {
+      emit({ status: 'UNKNOWN', plan, reason: 'invalid_weekly_meter_or_cap',
+        action: 'Start nothing. Require a fresh weekly reading and --cap between 0 and 5.' });
+      return;
+    }
+    const status = w.used_percentage >= cap ? 'STOP' : w.used_percentage >= cap - 1 ? 'SOFT' : 'OK';
+    emit({ status, harness: snap.harness, plan, weekly: w.used_percentage,
+      cap, soft: cap - 1, headroom: cap - w.used_percentage,
+      resets_in_min: Math.round((w.resets_at - now) / 60), snapshot_age_s: age,
+      action: status === 'OK' ? 'continue_efficiently' : 'Finish no new slice; verify and record safe stop.' });
+    return;
+  }
   const fileFive = (s) => s && s.five_hour && Number.isFinite(s.five_hour.used_percentage) && Number.isFinite(s.five_hour.resets_at);
   const fmt1 = (v) => (Number.isFinite(v) ? Number(v).toFixed(1) : '');
   const staleInfo = fileFive(snap)

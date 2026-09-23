@@ -428,3 +428,7 @@ updated: 2026-09-23
 - [x] Complete Full Arabic / RTL Localization & Typography.
 - [x] Verify Zero Static Analyzer Errors (`flutter analyze`).
 - [x] Run Complete Test Suite (`flutter test` $\rightarrow$ 42/42 passing).
+
+## 2026-09-23 checkpoint: weekly budget preflight repaired
+
+The owner authorized weekly-only budgeting with a 5% absolute ceiling, aiming lower. Codex exposes a 10,080-minute weekly window and no five-hour window. The meter now classifies by duration, preserves 1% as 1%, rejects stale/missing weekly readings, and supports `--plan weekly --cap 5` with a 4% soft stop. Focused Node tests passed. Entry usage 1%, implementation entry 2%; no app/SQL/Flutter evidence added yet. P6.4 item 1 remains verified in `1832b3e`; P6 safety implementation is next and P6S remains blocked. Owner edits and both stashes are preserved. See brief/04_BUDGET_PROTOCOL.md section J. No push/deploy/production operations.
