@@ -2,7 +2,7 @@
 
 > **Operational Git & Release Protocol:**
 > - **Versions:** Major stable working releases of the application.
-> - **Checkpoints:** Working snapshots combining multiple phases. **Rule: Each time a Checkpoint ends, push to GitHub.**
+> - **Checkpoints:** Working snapshots combining multiple phases. The current release brief prohibits agent pushes; the owner controls publication and remote updates.
 > - **Phases:** Focused functional features or major architecture edits. **Rule: Each time a Phase ends, make a Git commit.**
 > - **Tasks:** Granular, atomic tasks executed step-by-step.
 
@@ -10,7 +10,7 @@
 
 ## 📅 Roadmap Overview & Version Progression
 
-*Updated 2026-09-22. Sources: git history, the 2026-09-22 audit, the latest RESUME block in `brief/LEDGER.md`, `brief/03_WORK_PLAN.md`, `brief/06_VERIFICATION.md`, `brief/OWNER_ACTIONS.md`, recorded analyzer/test evidence, and the current static gate report. Future dates are estimates. The app is not release-ready.*
+*Updated 2026-09-23. Sources: git history, the latest RESUME block in `brief/LEDGER.md`, `brief/03_WORK_PLAN.md`, `brief/06_VERIFICATION.md`, recorded analyzer/test evidence, and the current gate report. Future dates are estimates. The app is not release-ready.*
 
 ```mermaid
 gantt
@@ -56,9 +56,10 @@ gantt
     P8A Android identity and branding (partial)  :crit, p8a, 2026-09-22, 1d
     P6.2 to 6.3 Chat UX and moderation linkage  :done, p6a, 2026-09-21, 1d
     section Current next phase
-    P6.4 Admin tools                             :active, p64, 2026-09-22, 2d
+    P6.4 Admin tools, item 1 verified locally    :active, p64, 2026-09-22, 2d
     section Planned
-    P5 Map and offline experience                :p5, after p64, 2d
+    P6S Broadcast and navigation reliability     :crit, p6s, after p64, 2d
+    P5 Map and offline experience                :p5, after p6s, 2d
     P7 Organizations                             :p7, after p5, 2d
     P8B Store and compliance package             :p8b, after p7, 1d
     P9 Closeout and final gates                  :p9, after p8b, 2d
@@ -85,7 +86,7 @@ gantt
     Version 1.1 iOS integration                 :r5, 2026-10-10, 2026-10-24
 ```
 
-### Where the hardening run stands (2026-09-22)
+### Where the hardening run stands (2026-09-23)
 
 | Phase | Status | Evidence | Roadmap link |
 |---|---|---|---|
@@ -96,13 +97,14 @@ gantt
 | P4 Design and responsive UI | Complete to recorded E1/E2 evidence | Scheme A, bundled IBM Plex fonts, white theme, localization and responsive/layout tests are present. No physical-device visual QA. | 1.0.4 |
 | P8A Android identity and branding | Partial, complete to available owner inputs | Identity, permissions, launcher, splash, target SDK, 16 KB checks and fail-closed signing are done. No keystore, AAB, release scan or device smoke test. | 1.0.5 |
 | P6.1-P6.3 Chat and moderation | Partial | Server rate limits, slow mode, keyword normalization, composer states, live report linkage and audit scope are implemented. Report-reason enum and server-side blocks remain open. | 1.0.6 |
-| P6.4 Admin tools | Not started | User directory is the next implementation item; the remaining five admin tools are also open. | 1.0.6 |
+| P6.4 Admin tools | Partial | Item 1's implemented directory actions and device reads passed 33 local assertions; the full SQL suite passed 212. Account deletion and Auth-session revocation remain open, as do items 2-6. | 1.0.6 |
+| P6S Broadcast and navigation reliability | Not started | Physical sender/viewer tests, direct laptop, Local transport, private access, live-media PiP and exit paths remain open. | 1.0.6 |
 | P5 Map and offline | Not started | No implementation or evidence yet. | 1.0.7 |
 | P7 Organizations | Not started | Co-owner designation, invitations, public organization profile and scoped controls remain open. | 1.0.8 |
 | P8B Store and compliance package | Not started | No store package exists. Drafting would not equal legal certification. | 1.0.9 |
 | P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
-The current gate run has one failing gate, G6 with 505 matches. The audit independently verified that all 505 are translated `.tr()` calls and that there are zero real untranslated literals. P4 and P8A are therefore not blocked by G6, but neither has physical-device evidence. The recorded Flutter suite has 439 passing tests, the layout sweep has 120 passing cases, and rendered contrast has 30 passing checks. The SQL evidence records 48 migrations and 179 pgTAP assertions across 11 files, but this audit could not rerun Docker or Supabase.
+The 2026-09-23 checkpoint passed 463 Flutter tests, `flutter analyze` with 0 issues, and 212 local SQL assertions across 12 files. G6 still flags 528 localization matches; its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the 2026-09-22 counts below where they differ.
 ---
 
 ## 📝 Modification
@@ -504,7 +506,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 ---
 ## Version 1.0 — hardening and release
 
-> Status on 2026-09-22: the app is in a truthfulness and security hardening run. P0, P2, P4 and the available P8A work are complete to their evidence limits. P1 and P3 remain partial because SQL/runtime and device evidence is incomplete. P6.1-P6.3 are implemented, while P6.4 is the next engineering phase. The recorded Flutter suite passed 439 tests, the layout sweep passed 120 cases, and rendered contrast passed 30 checks. The app is not release-ready.
+> Status on 2026-09-23: P6.4 item 1's implemented directory actions and device access are locally verified. The remaining P6 work comes next, followed by P6S. The latest checkpoint passed 463 Flutter tests and 212 local SQL assertions; G6 remains a known scan failure. Physical streaming, signing and other release gates remain open. The app is not release-ready.
 
 ### Checkpoint 1.0.0: P0 hardening foundation `[Backend & Security Track]`
 
@@ -619,7 +621,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 
 #### Phase 1.0.6.3: admin tools
 
-- [ ] Task 1.0.6.3.1: Add the server-backed user directory, account detail, ban/unban and revoke actions.
+- [/] Task 1.0.6.3.1: The implemented server-backed directory, account detail, ban/unban and revoke actions passed 33 local SQL assertions in commit `1832b3e`. Account deletion and Auth-session revocation remain open.
 - [ ] Task 1.0.6.3.2: Add live-stream force-end/remove-from-feed controls.
 - [ ] Task 1.0.6.3.3: Add the audit-log viewer and keyword manager.
 - [ ] Task 1.0.6.3.4: Add app kill switches and invalidate deleted-account cache entries.
@@ -676,7 +678,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 | 1.0.3 P3 true viewer presence | Partial | Presence service, count RPCs and grants are present. SQL runtime, expiry and multi-client device probes remain open. |
 | 1.0.4 P4 design and responsive app pass | Complete to recorded E1/E2 evidence | Scheme A, white theme, fonts, localization and responsive tests are complete. Physical-device visual QA remains open. |
 | 1.0.5 P8A Android release identity and branding | Partial, complete to available inputs | Identity, assets, permissions, target SDK, 16 KB checks and fail-closed signing are complete. No keystore, AAB, release scan or device smoke test exists. |
-| 1.0.6 P6 chat, moderation and admin | Partial | P6.1-P6.3 are implemented. The report-reason enum, server-side blocks and all P6.4 tools remain open. |
+| 1.0.6 P6 chat, moderation and admin | Partial | P6.1-P6.3 are implemented. P6.4 item 1's implemented actions passed local SQL tests; account deletion, report-reason enum, server-side blocks and P6.4 items 2-6 remain open. |
 | 1.0.7 P5 map and offline experience | Not started | Connectivity, cache, offline map and licensing work remain open. |
 | 1.0.8 P7 organizations | Not started | Co-owner roles, invitations, public organization profile and audit scope remain open. |
 | 1.0.9 P8B store and Saudi-compliance package | Not started | Store documents, data export, counsel questions and listing draft remain open. |
@@ -684,7 +686,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 
 ### Release gate
 
-Version 1.0 is not release-ready. The next engineering phase is P6.4, starting with the server-backed admin user directory and the `device_sessions` admin-read migration. The owner has decided that exact coordinates are public venue coordinates for map navigation, not home addresses. The release track still needs venue-only data-entry verification, a production schema comparison before any `db push`, physical-device verification, an owner-supplied keystore and signed AAB, and the P8B legal/store package. Do not mark the version complete from static code review or widget tests alone.
+Version 1.0 is not release-ready. Finish the remaining P6 work, then P6S broadcast, access, playback and exit-path reliability before P5, P7, P8B and P9. The owner has decided that exact coordinates are public venue coordinates for map navigation, not home addresses. The release track still needs venue-only data-entry verification, a production schema comparison before any owner-approved `db push`, physical-device verification, an owner-supplied keystore and signed AAB, and the P8B legal/store package. Do not mark the version complete from static code review or widget tests alone.
 
 ---
 

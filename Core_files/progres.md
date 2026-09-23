@@ -1,12 +1,21 @@
 ---
 type: progress
 project: Streamer_app
-updated: 2026-08-17
+updated: 2026-09-23
 ---
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
 
 > Historical log of accomplishments, design iterations, and active sprint milestones.
+
+---
+
+## 2026-09-23: P6.4 item 1 locally verified
+
+- Commit `1832b3e` repaired the admin device-session read policy and verified the implemented server-backed user directory actions. A disposable local Supabase database passed all 33 directory assertions, 86 assertions across four targeted files, and 212 assertions across the full 12-file SQL suite.
+- `flutter analyze` found 0 issues; all 463 Flutter tests passed. G6 remains a known localization scan failure with 528 matches. These results are local evidence, not production or physical-device acceptance.
+- Account deletion and Auth-session revocation remain unimplemented. P6.4 items 2-6, P6S broadcast/access/playback/exit work and later release phases remain open. Next: finish the remaining P6 work under `brief/03_WORK_PLAN.md`.
+- The latest RESUME block in `brief/LEDGER.md` records the commands and evidence limits. The application is not publish-ready.
 
 ---
 

@@ -1,18 +1,24 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-08-17
-phase: active_feature_polish_sprint
-health: 100
+updated: 2026-09-23
+phase: release_hardening
+health: release_blocked
 ---
 
-# 📊 Project Status: Streamer App (Educational Knowledge Streaming Platform)
+# Project status: Streamer App
 
-> High-level operational status, architecture health, and test coverage metrics.
+## Current release status (2026-09-23)
+
+The app is not publish-ready. P6.4 item 1's implemented admin directory actions and device-session policy repair were verified on a disposable local Supabase database and committed as `1832b3e`. The directory file passed 33 assertions; the full SQL suite passed 212 assertions across 12 files. `flutter analyze` found 0 issues and all 463 Flutter tests passed. The G6 localization scan still reports 528 matches.
+
+Remaining work includes account deletion and Auth-session revocation, P6 admin tools, P6S physical broadcast and access tests, P5, P7, P8B and P9. There is no signed release AAB or physical-device streaming acceptance. See `brief/README.md`, `brief/03_WORK_PLAN.md` and the latest RESUME block in `brief/LEDGER.md` for the active plan and evidence limits.
 
 ---
 
-## 🟢 Operational Health: 100% (All Systems Operational)
+## Historical feature snapshot (2026-08-17)
+
+The following feature and test inventory is historical. Its "Online" labels and older counts do not establish current release readiness; use the current release status above for that decision.
 
 | Subsystem | Status | Details |
 | :--- | :---: | :--- |
