@@ -65,3 +65,5 @@ Observations captured during task-oriented work.
 **Issue:** A fresh parser result said OK while its assumed window duration contradicted the provider's explicit metadata. Freshness alone did not establish a valid budget reading.
 **Suggested improvement:** Compare window duration and percent units with the authoritative provider response before accepting any budget status. Reject mismatches and obtain authorization before changing protected budget rules.
 **Principle:** Validate a measurement's units and scope as well as its age.
+
+2026-09-23 Admin Hub deliverable checkpoint: no new skill observation. Existing observation 3 covers the URL-aware browser and Flutter accessibility workflow.

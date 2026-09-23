@@ -14,6 +14,8 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **`device_sessions` SELECT permission denied for `is_banned(uuid)`** — FIXED; disposable local SQL suite passed.
 - **Malformed single-dollar pgTAP quoting in `admin_user_directory.test.sql`** — FIXED; all 33 assertions passed locally.
 
+- **Admin direct link redirects before backend role loading** — FIXED locally; router regression and browser session passed.
+
 ## Recording format
 
 Use one entry per distinct root cause. Keep it searchable and actionable:
@@ -88,3 +90,11 @@ Cause: the Claude status-line snapshot had not been written in those sessions; w
 Fix/workaround: the owner explicitly removed Claude Opus 5.5 usage-meter and percentage-cap requirements in `brief/04_BUDGET_PROTOCOL.md` §K. Opus can resume the P6 task without a snapshot while following the unchanged repository safety and technical verification rules. The Codex 5% weekly cap remains in §J.
 Verification: policy and project instructions were updated; a new Opus session has not yet tested the continuation. Do not claim that the meter itself was repaired.
 Evidence: the two reported `UNKNOWN reason=no_snapshot` readings and `brief/04_BUDGET_PROTOCOL.md` §K.
+
+## Admin direct link redirects before backend role loading
+Status: FIXED locally.
+Observed: /admin redirected to the feed while its authenticated role lookup was still pending. A first loading-screen implementation stayed on its spinner because a router refresh did not rebuild the same route.
+Cause: the redirect interpreted an unresolved role as a denied role; the route builder did not subscribe to loading state.
+Fix: AppProvider exposes role-loading state, the redirect waits, and the route observes loading before building the role-gated Hub.
+Verification: focused router regression, 514 full Flutter tests, analyzer zero, visible local GoTrue Master Admin direct-link browser load. No physical-device or production evidence.
+Evidence: brief/evidence/2026-09-23/admin-hub/README.md.

@@ -1,0 +1,5 @@
+flag 403 42501 Not permitted
+end 403 42501 Not permitted
+remove 403 42501 Not permitted
+keyword 403 42501 new row violates row-level security policy for table "chat_banned_keywords"
+audit read 200 visible_rows 0

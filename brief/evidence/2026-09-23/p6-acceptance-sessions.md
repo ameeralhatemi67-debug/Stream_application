@@ -99,3 +99,10 @@ G3. **Remove from feed (UI).** Choose Remove from feed with a reason. *Expected:
 G4. **Audit log (UI).** Safety › Audit log. *Expected:* entries for the switch changes, the end and the removal, each with "By Master Admin P6" and your reasons; the filter narrows to one action.
 G5. **Keywords (UI).** Safety › Chat keywords: add a word, change it to "Anywhere in text", remove it. *Expected:* three matching entries in the audit log. Viewer B sending that word while it is listed is refused.
 G6. **Optional repeat of blocks:** Viewer A blocks B in session 1, checks session 2's Blocked accounts list, unblocks there, then re-enters the room in session 1.
+
+
+## Newer Codex acceptance checkpoint, 2026-09-23
+
+Admin Hub checkpoint 2026-09-23, commit `11d0b09`: desktop side navigation, narrow-screen drawer, persistent English/Arabic toggle, honest unavailable analytics, and the admin role-loading fix are locally verified. Full Flutter 514 passed, analyzer 0, fresh local SQL 283 assertions passed. Browser UI evidence covers Welcome pause, Safety end/remove, audit reasons/actor/action filter, keyword lifecycle, history/recovery and refresh-based block synchronization. Gates are NOT green: G6=554 and G11a=9 in pre-existing nested worktrees. P6 remains NOT accepted; no physical Android devices or real Google OAuth were tested. Actor/date audit filter controls remain absent. P6S has not started. Separate P2/player truthfulness work remains open. Evidence and exact owner steps: `brief/evidence/2026-09-23/admin-hub/README.md`.
+
+The earlier prepared-server links and temporary Opus helper commands above are historical. This run used a fresh P6_admin_20260923 disposable stack and fresh sessions, and disposed its stack after verification. The old P6_accept_disposable containers were found running and left untouched because their recorded workdir was absent. Do not reuse old session files as acceptance evidence.

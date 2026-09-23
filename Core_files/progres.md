@@ -6,6 +6,9 @@ updated: 2026-09-23
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
 
+Admin Hub checkpoint 2026-09-23, commit `11d0b09`: desktop side navigation, narrow-screen drawer, persistent English/Arabic toggle, honest unavailable analytics, and the admin role-loading fix are locally verified. Full Flutter 514 passed, analyzer 0, fresh local SQL 283 assertions passed. Browser UI evidence covers Welcome pause, Safety end/remove, audit reasons/actor/action filter, keyword lifecycle, history/recovery and refresh-based block synchronization. Gates are NOT green: G6=554 and G11a=9 in pre-existing nested worktrees. P6 remains NOT accepted; no physical Android devices or real Google OAuth were tested. Actor/date audit filter controls remain absent. P6S has not started. Separate P2/player truthfulness work remains open. Evidence and exact owner steps: `brief/evidence/2026-09-23/admin-hub/README.md`.
+
+
 > Historical log of accomplishments, design iterations, and active sprint milestones.
 
 ---

@@ -1,0 +1,5 @@
+new signup 500
+existing session refresh 200
+Existing local user password login while registrations paused: 200
+new signup 200
+existing session refresh 200

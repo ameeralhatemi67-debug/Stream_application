@@ -1,0 +1,5 @@
+claim_broadcaster_device 200
+set_live_state 403
+Stream removed by moderation
+claim_broadcaster_device 200
+set_live_state 204
