@@ -62,9 +62,40 @@ After the chat-switch checks, Chrome's window reported `document.visibilityState
 Use two real Google accounts (A and B) plus a Master Admin account, on two devices or two browsers, against a **local or staging** stack that has `20260923130000` and `20260923140000` applied. Do not use production until you have decided on the migrations.
 
 1. **Blocks across devices.** A and B join the same live room; B sends "one". A long-presses (or holds the mouse on) B's message and chooses Block User. *Expected:* the message disappears and the toast says so; B's next message never appears for A. On A's second device, open Settings › Blocked accounts. *Expected:* B is listed by name. Tap Unblock. *Expected:* the toast appears and the list is empty. On A's first device, leave and re-enter the room, or switch away from the app and back. *Expected:* B's messages are visible, **oldest at the top**.
-2. **Chat pause.** Master Admin: Admin Hub › Safety › Platform switches › turn off "Chat across the platform" with a reason. *Expected:* A's open room shows "Chat is paused across the platform right now." within about 30 seconds, or at once on re-entry. Turn it back on. *Expected:* A's open room gets its composer back within about 30 seconds **without reloading**.
+2. **Chat pause.** Master Admin: Admin Hub › Safety › Platform switches › turn off "Chat across the platform" with a reason. *Expected (corrected 2026-09-23):* a room that was already open with chat on does **not** change by itself; polling runs only while paused. When A next sends, the message fails with "Chat is paused across the platform right now." and only Discard (no retry), and the composer switches to the paused notice. A room entered after the pause shows the notice at once, and so does returning to the app. Turn chat back on. *Expected:* A's paused room gets its composer back within about 30 seconds **without reloading**.
 3. **Sign-ups pause.** Turn off "New account sign-ups" with a reason. On a signed-out browser, open Welcome. *Expected:* the paused notice is shown, Sign up is disabled and Log in still works for an existing account. A brand-new Google account's sign-in fails. Turn it back on.
 4. **Live actions.** A broadcaster goes live from the phone. Master Admin: Safety › Live now shows them with a viewer count. Choose End broadcast and give a reason. *Expected:* the "ended in the app" toast appears, the row disappears and the broadcaster's app leaves the live state; the YouTube stream itself keeps running (documented limit). Go live again, then choose Remove from feed. *Expected:* the same video ID cannot go live again in the app; a new video ID can.
 5. **Audit.** Safety › Audit log. *Expected:* each action above appears with your name, the reason and the time; the filter narrows by action. Safety › Chat keywords: add, change and remove a word, then check that three keyword entries appear in the audit log.
 
 Record pass or fail for each step in `brief/LEDGER.md`. P6 can be marked accepted only once steps 1–5 pass.
+
+## Correction and guided session, 2026-09-23 (later)
+
+**Instruction mismatch corrected.** The earlier step 2 said an open room with chat on would show the pause within about 30 seconds. The code polls `app_flags` only while a room is already paused. An enabled open room learns of a pause from a refused send, re-entry or app resume. I kept the implementation and corrected the step. Evidence:
+- Widget test `an open room with chat on does not poll app_flags`: no fetches while enabled; the composer changes only after the refresh that a refused send performs.
+- On screen (browser session, Viewer A on `:8081`): chat was paused through the Master Admin's real session at 13:48:11 UTC. After 40 seconds the open room still showed the normal composer. Sending "Sent while paused" produced the failed message with the reason and Discard only, and the composer switched to the paused notice.
+
+**Both earlier fixes confirmed on screen** (browser session): history loaded oldest first ("order check one" above "order check three"); after chat resumed at 13:58:29 UTC, the paused room got its composer back without a reload.
+
+**New defect fixed:** the refused-send toast read "Exception: Chat is paused …". The controller now throws `ChatSendException`, whose text is the reason alone, for every refused send. Test: `a refused send reads as the reason alone`.
+
+Browser sessions here are separate origins in one desktop Chrome, not separate physical devices. Physical Android checks (a phone broadcaster reacting to force end, two phones with real Google accounts) remain separate owner work.
+
+## Guided checklist for the prepared local environment
+
+Disposable stack `P6_accept_disposable` with both migrations; test users Viewer A, Viewer B, Master Admin P6 and Caster P6 (live on `P6acceptVid`, heartbeat running). Open each link in Chrome; each port keeps its own sign-in.
+
+| Session | Link |
+|---|---|
+| Viewer A, browser session 1 | `http://127.0.0.1:8081/p6-login.html?u=viewerA` |
+| Viewer B | `http://127.0.0.1:8082/p6-login.html?u=viewerB` |
+| Master Admin | `http://127.0.0.1:8083/p6-login.html?u=master&to=/%23/feed`, then the sidebar **Admin Hub** (a direct `/#/admin` link bounces before the role loads) |
+| Viewer A, browser session 2 | `http://127.0.0.1:8084/p6-login.html?u=viewerA2` |
+| Signed-out guest | `http://127.0.0.1:8085/#/welcome` |
+
+G1. **Sign-ups notice.** Master: Safety › Platform switches › turn off "New account sign-ups" with a reason. Guest tab: reload Welcome. *Expected:* the paused notice, Sign up disabled, Log in enabled. Turn it back on and reload. *Expected:* the notice is gone.
+G2. **End broadcast (UI).** Master: Safety › Live now shows "Caster P6". Choose End broadcast, give a reason and confirm. *Expected:* the "Broadcast ended in the app." toast appears and the list becomes empty. Put the caster back on air: `! node "C:/Users/User/.claude/jobs/679cf4c4/tmp/caster_loop.mjs" relive P6acceptVid`, then pull to refresh or reopen Live now.
+G3. **Remove from feed (UI).** Choose Remove from feed with a reason. *Expected:* the "Stream removed from the feed." toast. Then run `! node "C:/Users/User/.claude/jobs/679cf4c4/tmp/caster_loop.mjs" relive P6acceptVid`. *Expected:* the output shows `set_live_state 403 … Stream removed by moderation`. Running it with `relive P6acceptV3` is expected to show 204 and the caster is listed again.
+G4. **Audit log (UI).** Safety › Audit log. *Expected:* entries for the switch changes, the end and the removal, each with "By Master Admin P6" and your reasons; the filter narrows to one action.
+G5. **Keywords (UI).** Safety › Chat keywords: add a word, change it to "Anywhere in text", remove it. *Expected:* three matching entries in the audit log. Viewer B sending that word while it is listed is refused.
+G6. **Optional repeat of blocks:** Viewer A blocks B in session 1, checks session 2's Blocked accounts list, unblocks there, then re-enters the room in session 1.
