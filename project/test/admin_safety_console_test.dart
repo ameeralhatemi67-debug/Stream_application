@@ -293,6 +293,32 @@ void main() {
       expect(store.fetches, after);
     });
 
+    // The acceptance steps once promised an open room would notice a new
+    // pause within 30 s. It does not: polling runs only while paused, and an
+    // enabled room learns of a pause from a refused send, re-entry or resume.
+    test('an open room with chat on does not poll app_flags', () async {
+      final store = FakeFlagsStore();
+      final flags = AppFlags(store: store);
+      await flags.refresh();
+      final c = LiveChatController(
+          streamId: 's',
+          appFlags: flags,
+          blockList: ChatBlockList(store: _NoBlocks()),
+          platformPausePollInterval: const Duration(milliseconds: 20));
+      addTearDown(c.dispose);
+      c.debugSetStateForTests(
+          currentUserId: 'me', connectionState: ChatConnectionState.live);
+      final before = store.fetches;
+      store.values['chat_enabled'] = false;
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(store.fetches, before);
+      expect(c.composerState, ChatComposerState.ready);
+
+      // What does surface it: the refresh a refused send performs.
+      await flags.refresh();
+      expect(c.composerState, ChatComposerState.platformPaused);
+    });
+
     test('a server refusal from the switch is not offered for retry', () {
       final c = controller(AppFlags());
       final f = c.debugClassifyForTests(

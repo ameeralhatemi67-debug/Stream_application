@@ -290,6 +290,14 @@ void main() {
     });
   });
 
+  // Seen in the P6 guided run: the room toasts a refused send with '$e', and
+  // a plain Exception showed "Exception: Chat is paused ...".
+  test('a refused send reads as the reason alone', () {
+    const e = ChatSendException('Chat is paused across the platform right now.');
+    expect('$e', 'Chat is paused across the platform right now.');
+    expect(e, isA<Exception>());
+  });
+
   // Found in the P6 two-session run: postgrest orders descending by default,
   // so a room's history was shown newest-first above live messages.
   test('room history is shown oldest first, like live inserts', () {

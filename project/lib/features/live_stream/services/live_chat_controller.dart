@@ -10,6 +10,16 @@ import 'chat_block_list.dart';
 
 enum ChatConnectionState { connecting, live, reconnecting }
 
+/// A refused send. Its text is the reason alone, because the room shows it
+/// in a toast as is; a plain `Exception` would prefix "Exception: " (seen in
+/// the P6 guided acceptance run).
+class ChatSendException implements Exception {
+  const ChatSendException(this.message);
+  final String message;
+  @override
+  String toString() => message;
+}
+
 /// The only report codes the server accepts for new reports
 /// (`chat_reports_reason_code`, 20260923120000). Older rows may still hold
 /// free text, which the admin queue shows as written.
@@ -115,6 +125,10 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   /// paused composer offers no send that could surface the change, and the
   /// table is not on the Realtime publication, so without this a room stayed
   /// paused after chat was switched back on (found in the P6 two-session run).
+  ///
+  /// Polling runs only while paused. An open room with chat on learns of a
+  /// new pause when its next send is refused (the refusal re-reads the flags
+  /// and the composer switches), on re-entry, or on app resume.
   final Duration platformPausePollInterval;
   Timer? _pausePoll;
 
@@ -606,6 +620,10 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     _profileCache.remove(profileId);
   }
 
+  /// Oldest first, the order live inserts are appended in.
+  static List<ChatMessageModel> chronological(List<ChatMessageModel> list) =>
+      [...list]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
   /// The newest 100 messages, oldest first like live inserts. postgrest's
   /// `order` defaults to descending, which is what keeps the newest 100 here;
   /// the history is then put back in chronological order before display
@@ -905,7 +923,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
       await _refreshSelfStatus();
       await _loadChatSettings();
       await _appFlags.refresh();
-      throw Exception(failure.message);
+      throw ChatSendException(failure.message);
     }
   }
 
@@ -962,11 +980,6 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   /// The rules themselves are what these tests are about; the server-side
   /// enforcement of each rule is covered by supabase/tests/chat_rate_limit.test.sql
   /// and chat_keyword_filter.test.sql.
-  /// Oldest first, the order live inserts are appended in.
-  @visibleForTesting
-  static List<ChatMessageModel> chronological(List<ChatMessageModel> list) =>
-      [...list]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
-
   @visibleForTesting
   void debugSetStateForTests({
     String? currentUserId,
