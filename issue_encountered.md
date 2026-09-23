@@ -8,6 +8,7 @@ Agents: when investigating an error, scan only these short names for a match. If
 
 - **Docker Inference manager `dockerInference` socket bind collision** — currently operational; earlier root cause unresolved.
 - **Supabase CLI telemetry temp-file `EPERM`** — workaround: `DO_NOT_TRACK=1`.
+- **Weekly-only budget window mislabeled five-hour** — FIXED with owner-authorized weekly mode and focused tests.
 - **Git `.git/index.lock` access denied** — resolved by approved staging outside the sandbox.
 - **`device_sessions` SELECT permission denied for `is_banned(uuid)`** — FIXED; disposable local SQL suite passed.
 - **Malformed single-dollar pgTAP quoting in `admin_user_directory.test.sql`** — FIXED; all 33 assertions passed locally.
@@ -68,6 +69,12 @@ Status: **FIXED AND VERIFIED ON A DISPOSABLE LOCAL DATABASE**.
 
 The 2026-09-22 verification report recorded that `device_sessions_select_admin` called the revoked `is_banned(uuid)` function directly in an RLS policy. An authenticated SELECT raised `permission denied for function is_banned`, including ordinary users reading their own devices. The new `20260923100000_admin_device_sessions_read_guard.sql` migration replaces the own and admin SELECT policies with the client-callable `is_current_user_banned()` check. On the disposable project, `supabase test db --local` passed the directory file (33 assertions), the four targeted files (86 assertions), and the complete 12-file SQL suite (212 assertions). The directory file checks own-row access, admin cross-account reads, and banned-admin denial.
 
+2026-09-23 P6 continuation recurrence: the new block INSERT policy initially called the same server-only helper. Focused pgTAP caught permission denial and a missing block. Changed the not-yet-committed migration to use `is_current_user_banned()`; all 26 block/flag assertions and the final 263-assertion SQL suite passed.
+
 ### Malformed single-dollar pgTAP quoting in `admin_user_directory.test.sql`
 
 Five assertions in `supabase/tests/admin_user_directory.test.sql` used malformed single-dollar strings. They now use `$$...$$`. The expanded file has 33 pgTAP calls, matching `plan(33)`, and covers authorization, self/Master Admin protection, ban, revocation, and audit cases. Its full `finish()` run passed on the disposable local database: `Files=1, Tests=33, Result: PASS`.
+
+## Weekly-only budget window mislabeled five-hour
+
+Status: FIXED. Codex primary duration was 10,080 minutes with no secondary window, but the meter treated primary as five-hour. With explicit owner authorization, classify known durations correctly, preserve percentage-valued 1 as 1%, and add weekly-only mode with cap 5 / soft 4. Two Node tests cover thresholds, stale readings and missing weekly data. The live check returned weekly=3, cap=5, status=OK. No five-hour data was invented.

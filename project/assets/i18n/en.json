@@ -1160,7 +1160,15 @@
     "reason": "Reason (required)",
     "confirm": "Confirm",
     "action_error": "Action failed. Check your permissions and connection.",
-    "scope_note": "Personal revocation does not remove organization roles or permissions. Account deletion and Auth session revocation are not available here.",
-    "close": "Close"
+    "scope_note": "Personal revocation preserves organization permissions. Account deletion requires organization and storage ownership to be resolved first.",
+    "close": "Close",
+    "delete_account": "Delete account",
+    "revoke_sessions": "Revoke Auth sessions",
+    "force_end": "End app live session",
+    "remove_from_feed": "Remove stream from feed",
+    "delete_account_warning": "Permanently deletes this account and its personal data. Transfer owned organizations and remove owned storage first. This cannot be undone.",
+    "revoke_sessions_warning": "Revokes all refresh sessions and ends the app live session. Issued access tokens may work until expiry. The account can sign in again.",
+    "force_end_warning": "Ends the app live session and releases its broadcaster device. This does not stop YouTube ingest or playback outside this app.",
+    "remove_from_feed_warning": "Ends the app live session and prevents this video ID from going live in the app again. This does not remove the video from YouTube."
   }
 }

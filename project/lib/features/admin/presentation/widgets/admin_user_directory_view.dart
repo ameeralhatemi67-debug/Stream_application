@@ -173,12 +173,16 @@ class _AccountDetailState extends State<_AccountDetail> {
         context: context,
         builder: (dialogContext) => AlertDialog(
                 title: Text('directory.$action'.tr()),
-                content: TextField(
+                content: Column(mainAxisSize: MainAxisSize.min, children: [
+                  if (action == 'delete_account' || action == 'revoke_sessions' || action == 'force_end' || action == 'remove_from_feed')
+                    Text('directory.${action}_warning'.tr()),
+                  TextField(
                     controller: reason,
                     maxLength: 500,
                     maxLines: 3,
                     decoration:
                         InputDecoration(labelText: 'directory.reason'.tr())),
+                ]),
                 actions: [
                   TextButton(
                       onPressed: () => Navigator.pop(dialogContext, false),
@@ -201,7 +205,13 @@ class _AccountDetailState extends State<_AccountDetail> {
       await context
           .read<AppProvider>()
           .updateAdminAccount(widget.id, action, text);
-      if (mounted) setState(_reload);
+      if (mounted) {
+        if (action == 'delete_account') {
+          Navigator.pop(context);
+        } else {
+          setState(_reload);
+        }
+      }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -286,7 +296,11 @@ class _AccountDetailState extends State<_AccountDetail> {
                                     if (row['is_streamer'] == true)
                                       'revoke_streamer',
                                     if (row['is_verified'] == true)
-                                      'revoke_verified'
+                                      'revoke_verified',
+                                      'revoke_sessions',
+                                      'delete_account',
+                                      'force_end',
+                                      'remove_from_feed'
                                   ])
                                     OutlinedButton(
                                         onPressed:

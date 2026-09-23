@@ -123,4 +123,18 @@ void main() {
     expect(service.actions,['account-0:ban:Test reason']);
     expect(find.text('Action failed. Check your permissions and connection.'),findsOneWidget);
   });
+  testWidgets('deletion confirms warning and closes details after success',(tester) async {
+    final service=DirectoryService(); await pump(tester,service);
+    await tester.tap(find.text('Test account 0')); await tester.pumpAndSettle();
+    await tester.ensureVisible(find.text('Delete account'));
+    await tester.tap(find.text('Delete account')); await tester.pumpAndSettle();
+    expect(find.textContaining('Permanently deletes'),findsOneWidget);
+    await tester.enterText(find.byType(TextField).last,'Approved erasure');
+    await tester.tap(find.text('Confirm')); await tester.pumpAndSettle();
+    await tester.pump(const Duration(seconds:1)); await tester.pumpAndSettle();
+    expect(service.actions,['account-0:delete_account:Approved erasure']);
+    expect(find.text('Test phone (android)'),findsNothing);
+    expect(service.searches.length,greaterThan(1));
+  });
+
 }

@@ -197,3 +197,11 @@ function writing to the deny-all `stream_viewers` table.
    for the first time; that file now uses `Salaam` so it tests the rate limiter
    rather than the filter. The fix (word boundaries, plus the Arabic-aware
    normalisation already listed as a P6.1 remainder) is P6 work.
+
+## P6 safety policy additions (2026-09-23)
+
+- `removed_live_streams`: RLS enabled, no policies and no client grants. Only the authorized admin action writes it; the internal trigger reads it. Deliberate deny-all, now named in the catalog probe.
+- `chat_user_blocks`: authenticated SELECT/INSERT/DELETE only for the caller's rows; inserts reject banned callers and self-blocks. Restrictive chat SELECT policy applies blocks at the database. Current client block action still needs server persistence/cache synchronization before end-to-end completion.
+- `app_flags`: public SELECT of two booleans only; no direct client writes. Master-admin, active-session RPC updates atomically with a server-only audit event. Global chat and Auth registration INSERT triggers enforce disabled flags, including trusted writes.
+- `admin_auth_account_action`: authenticated execute; active-session platform admin required, banned callers/self/master targets rejected, plain admins cannot target admins. Owned organizations/storage block deletion. Deletes Auth sessions/refresh tokens; issued JWT expiry remains a documented limit outside session-checked paths. Clears app live state/device ownership; feed removal blocks republication of that video ID. Does not stop YouTube media ingestion.
+- `log_audit_event_internal`: no client execute. Public logger rejects new reserved privileged event names so clients cannot forge their success records.

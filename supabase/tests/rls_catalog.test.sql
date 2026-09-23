@@ -27,7 +27,7 @@ select plan(20);
 -- is named here, so widening the surface means editing this file too.
 -- ---------------------------------------------------------------------------
 create temporary table expected_deny_all(relname text) on commit drop;
-insert into expected_deny_all values ('stream_viewers');
+insert into expected_deny_all values ('stream_viewers'), ('removed_live_streams');
 
 create temporary table expected_anon_select(relname text) on commit drop;
 insert into expected_anon_select values
@@ -36,6 +36,7 @@ insert into expected_anon_select values
   ('terms_and_conditions'),          -- legal text must be readable pre-sign-in
   ('chat_messages'),                 -- public chat is readable by guests
   ('chat_stream_settings'),          -- guests must see that chat is off
+  ('app_flags'),                     -- public feature availability, no client writes
   ('streamer_custom_placeholders'),  -- approved custom cards
   ('streamer_public_profiles'),      -- non-PII view
   ('organization_public_profiles');  -- non-PII view

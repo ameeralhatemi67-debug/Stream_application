@@ -52,3 +52,16 @@ Observations captured during task-oriented work.
 **Suggested improvement:** Prefer a URL-aware browser connector for web app testing. If it is unavailable, keep the policy block explicit and continue independent authorized engineering work. Separate native Chrome launch evidence from in-app browser interaction evidence.
 
 **Principle:** Verification reports must identify both the runtime and the interface actually used to observe it.
+
+### Observation 4: Validate usage-window duration before trusting a budget status
+
+**Status:** OPEN
+**Date:** 2026-09-23
+**Session context:** A coding preflight exposed a weekly-only usage window mislabeled as five-hour by a local meter.
+**Skill:** task-observer
+**Type:** open-source
+**Phase/Area:** Budget preflight
+
+**Issue:** A fresh parser result said OK while its assumed window duration contradicted the provider's explicit metadata. Freshness alone did not establish a valid budget reading.
+**Suggested improvement:** Compare window duration and percent units with the authoritative provider response before accepting any budget status. Reject mismatches and obtain authorization before changing protected budget rules.
+**Principle:** Validate a measurement's units and scope as well as its age.

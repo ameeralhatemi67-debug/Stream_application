@@ -57,7 +57,9 @@ class AdminDatabaseService {
 
   Future<void> updateAdminAccount(String profileId, String action, String reason) async {
     if (!_useSupabase) throw StateError('Backend unavailable');
-    await _client.rpc('admin_update_account', params: {
+    final rpc = {'delete_account', 'revoke_sessions', 'force_end', 'remove_from_feed'}.contains(action)
+        ? 'admin_auth_account_action' : 'admin_update_account';
+    await _client.rpc(rpc, params: {
       'p_profile_id': profileId, 'p_action': action, 'p_reason': reason,
     });
   }
