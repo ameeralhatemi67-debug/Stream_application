@@ -1316,8 +1316,12 @@ class AdminDatabaseService {
 
   /// Fetches all verified broadcasters and organizations from Supabase public views/tables.
   /// Used to populate Discovery feed and Spatial Map on cold-start and sync across devices.
-  Future<List<StreamerModel>> loadVerifiedStreamersFromBackend() async {
-    if (!_useSupabase) return const [];
+  Future<List<StreamerModel>> loadVerifiedStreamersFromBackend(
+      {bool requireSuccess = false}) async {
+    if (!_useSupabase) {
+      if (requireSuccess) throw StateError('Backend unavailable');
+      return const [];
+    }
     final List<StreamerModel> results = [];
 
     // 1. Fetch verified individual scholars from streamer_public_profiles
@@ -1400,6 +1404,7 @@ class AdminDatabaseService {
       }
     } catch (e) {
       debugPrint('Error loading streamer_public_profiles: $e');
+      if (requireSuccess) rethrow;
     }
 
     // 2. Fetch verified organizations from organization_public_profiles
@@ -1469,6 +1474,7 @@ class AdminDatabaseService {
       }
     } catch (e) {
       debugPrint('Error loading organization_public_profiles: $e');
+      if (requireSuccess) rethrow;
     }
 
     return results;
@@ -1913,8 +1919,12 @@ class AdminDatabaseService {
   // back to AcademicCategoryModel.defaultPool at the AppProvider layer.
   // ==========================================
 
-  Future<List<AcademicCategoryModel>> loadAcademicCategories() async {
-    if (!_useSupabase) return const [];
+  Future<List<AcademicCategoryModel>> loadAcademicCategories(
+      {bool requireSuccess = false}) async {
+    if (!_useSupabase) {
+      if (requireSuccess) throw StateError('Backend unavailable');
+      return const [];
+    }
     try {
       final rows = await _client
           .from('academic_categories')
@@ -1924,9 +1934,11 @@ class AdminDatabaseService {
     } on PostgrestException catch (e) {
       debugPrint(
           'AdminDatabaseService.loadAcademicCategories PostgrestException: ${e.code} ${e.message}');
+      if (requireSuccess) rethrow;
       return const [];
     } catch (e) {
       debugPrint('AdminDatabaseService.loadAcademicCategories error: $e');
+      if (requireSuccess) rethrow;
       return const [];
     }
   }

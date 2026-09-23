@@ -13,6 +13,7 @@ import '../services/youtube_api_service.dart';
 import '../services/supabase_auth_service.dart';
 import '../services/admin_database_service.dart';
 import '../services/connectivity_service.dart';
+import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
 import '../../features/map/models/map_models.dart';
 import '../../features/organization/models/org_speaker_model.dart';
@@ -93,6 +94,7 @@ class AppProvider extends ChangeNotifier {
           s.youtubeVideoId,
     };
     _streamers.removeWhere((s) => matches(s.streamerId));
+    _lastLoadedPublicStreamers?.removeWhere((s) => matches(s.streamerId));
     _cachedMapMarkers.removeWhere((m) => matches(m.streamerId));
     _followedStreamerIds.removeWhere(matches);
     _reminderStreamerIds.removeWhere(matches);
@@ -107,6 +109,7 @@ class AppProvider extends ChangeNotifier {
     ChatBlockList.instance.forget(profileId);
     notifyListeners();
     unawaited(_persistMapMarkerCache());
+    unawaited(_persistPublicCatalogIfReady());
   }
 
   // Starts empty: the catalog comes from the backend
@@ -114,6 +117,14 @@ class AppProvider extends ChangeNotifier {
   // compiled in and merged with real data, so an offline or empty backend
   // still showed five fictional channels (P2 truthful data).
   List<StreamerModel> _streamers = [];
+  final PublicCatalogCache _publicCatalogCache = PublicCatalogCache();
+  List<StreamerModel>? _lastLoadedPublicStreamers;
+  bool _publicCategoriesLoaded = false;
+  bool _isUsingCachedCatalog = false;
+  DateTime? _publicCatalogUpdatedAt;
+
+  bool get isUsingCachedCatalog => _isUsingCachedCatalog;
+  DateTime? get publicCatalogUpdatedAt => _publicCatalogUpdatedAt;
 
   // --- UI-08: Spatial Map offline experience -------------------------------
   // Device network reachability, not proof any given request will succeed --
@@ -377,6 +388,7 @@ class AppProvider extends ChangeNotifier {
     // show cached venues immediately if the app opens with no network at
     // all, before main.dart gets a chance to call anything.
     _loadMapMarkerCacheFromDisk();
+    restorePublicCatalogFromDisk();
   }
 
   /// Picks up any session Supabase already restored on cold start, then
@@ -1406,8 +1418,9 @@ class AppProvider extends ChangeNotifier {
         _lastLiveFlagSweepAt = now;
         await _adminDbService!.sweepStaleLiveFlags();
       }
-      final backendStreamers =
-          await _adminDbService!.loadVerifiedStreamersFromBackend();
+      final backendStreamers = await _adminDbService!
+          .loadVerifiedStreamersFromBackend(requireSuccess: true);
+      _lastLoadedPublicStreamers = List.of(backendStreamers);
 
       final backendIds = backendStreamers.map((s) => s.streamerId).toSet();
       // Remove any previously-loaded backend streamer that is no longer verified in DB
@@ -1423,7 +1436,9 @@ class AppProvider extends ChangeNotifier {
           _streamers.add(bs);
         }
       }
+      _isUsingCachedCatalog = false;
       notifyListeners();
+      unawaited(_persistPublicCatalogIfReady());
       // UI-08: refresh the offline fallback snapshot every time a backend
       // load actually succeeds.
       unawaited(_persistMapMarkerCache());
@@ -1681,6 +1696,7 @@ class AppProvider extends ChangeNotifier {
       final raw = prefs.getString(_mapCacheKey);
       final updatedAtRaw = prefs.getString(_mapCacheUpdatedAtKey);
       if (raw == null || raw.isEmpty) return;
+      if (_isUsingCachedCatalog) return;
       final decoded = jsonDecode(raw) as List<dynamic>;
       _cachedMapMarkers = decoded
           .map((e) => MapMarkerModel.fromCachedJson(e as Map<String, dynamic>))
@@ -1690,6 +1706,36 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('_loadMapMarkerCacheFromDisk failed: $e');
+    }
+  }
+
+  Future<void> restorePublicCatalogFromDisk() async {
+    final snapshot = await _publicCatalogCache.load();
+    if (snapshot == null || _lastLoadedPublicStreamers != null) return;
+    _streamers = List.of(snapshot.streamers);
+    _academicCategories = List.of(snapshot.categories);
+    _isUsingCachedCatalog = true;
+    _publicCatalogUpdatedAt = snapshot.updatedAt;
+    _cachedMapMarkers = snapshot.streamers
+        .where((s) => (s.latitude != 0 || s.longitude != 0) &&
+            !s.isTemporarilyHiddenFromMap)
+        .map((s) => MapMarkerModel.fromCachedJson(
+            MapMarkerModel.fromStreamer(s).toJson()))
+        .toList();
+    _mapCacheUpdatedAt = snapshot.updatedAt;
+    notifyListeners();
+  }
+
+  Future<void> _persistPublicCatalogIfReady() async {
+    final streamers = _lastLoadedPublicStreamers;
+    if (streamers == null || !_publicCategoriesLoaded) return;
+    final now = DateTime.now();
+    try {
+      await _publicCatalogCache.save(streamers, _academicCategories,
+          updatedAt: now);
+      _publicCatalogUpdatedAt = now;
+    } catch (e) {
+      debugPrint('_persistPublicCatalogIfReady failed: $e');
     }
   }
 
@@ -4205,9 +4251,9 @@ class AppProvider extends ChangeNotifier {
   // ==========================================
 
   List<AcademicCategoryModel> get academicCategories =>
-      _academicCategories.isEmpty
-          ? AcademicCategoryModel.defaultPool
-          : List.unmodifiable(_academicCategories);
+      _isUsingCachedCatalog || _publicCategoriesLoaded
+          ? List.unmodifiable(_academicCategories)
+          : AcademicCategoryModel.defaultPool;
 
   String? get selectedCategoryId =>
       _currentCategoryFilter == 'all' ? null : _currentCategoryFilter;
@@ -4226,7 +4272,10 @@ class AppProvider extends ChangeNotifier {
   Future<void> _refreshAcademicCategories() async {
     _adminDbService ??= await AdminDatabaseService.create();
     try {
-      _academicCategories = await _adminDbService!.loadAcademicCategories();
+      _academicCategories = await _adminDbService!
+          .loadAcademicCategories(requireSuccess: true);
+      _publicCategoriesLoaded = true;
+      unawaited(_persistPublicCatalogIfReady());
       notifyListeners();
     } catch (e) {
       debugPrint('_refreshAcademicCategories failed: $e');

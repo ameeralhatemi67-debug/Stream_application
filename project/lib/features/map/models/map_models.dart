@@ -132,7 +132,6 @@ class MapMarkerModel {
         'longitude': longitude,
         'cityId': cityId,
         'categoryId': categoryId,
-        'viewerCount': viewerCount,
         'avatarUrl': avatarUrl,
         'isOrganization': isOrganization,
       };
