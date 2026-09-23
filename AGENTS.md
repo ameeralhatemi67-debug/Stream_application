@@ -24,6 +24,7 @@ This is a vault-style project folder, not a bare Flutter repo — the actual Flu
 
 ```
 Streamer_app/               <-- repo root (this file, Core_files/, doc/, supabase/)
+├── issue_encountered.md      Core troubleshooting record; scan its issue-name index first
 ├── Core_files/              5 mandatory docs: README.md, STATUS.md, progres.md, decisions.md, Desgin.md
 │   └── agents/               project-specific subagent personas (architecture, UI/UX, YouTube, GIS)
 ├── doc/Audit/                security/permissions/compliance/performance audit reports
@@ -39,6 +40,8 @@ Streamer_app/               <-- repo root (this file, Core_files/, doc/, supabas
 Always `cd project` before running Flutter/Dart tooling — `pubspec.yaml`, `analysis_options.yaml`, and `lib/` all live there, not at the repo root.
 
 Read `Core_files/STATUS.md` and `Core_files/decisions.md` before large changes — they track what's currently working and the accepted architecture decisions (ADRs), and are more current than anything inferred from code alone.
+
+**Recurring issue knowledge:** when troubleshooting an error, first scan only the short issue-name index at the top of repository-root `issue_encountered.md`. If an entry matches, read that section for the known cause/fix/status; avoid scanning the full file unless needed. When you fix a new issue, append one concise, searchable entry using its recording format and add the same simple error name to the index. State verification limits honestly, update matching entries instead of duplicating them, and never include secrets. This file is a core project reference.
 
 ## Commands
 

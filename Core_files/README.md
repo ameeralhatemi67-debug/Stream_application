@@ -72,6 +72,7 @@ Ideas/Current/Streamer_app/
 │   ├── progres.md                          (Milestone logs & sprint timeline)
 │   ├── decisions.md                        (Architecture decision records / ADRs)
 │   └── Desgin.md                           (Design system tokens, contracts, UI rules)
+├── issue_encountered.md                    <-- Core troubleshooting index and resolved-issue notes
 ├── Core_files/agents/                      <-- Project-Specific Subagent Personas
 │   ├── 01_lead_architect_agent.md          (Architecture & contract enforcement)
 │   ├── 02_ui_ux_design_specialist.md        (Visual hierarchy & Impeccable quality)
@@ -83,6 +84,8 @@ Ideas/Current/Streamer_app/
     │   └── features/                       (discovery, live_stream, map, profile)
     └── pubspec.yaml                        (Flutter dependencies)
 ```
+
+`issue_encountered.md` lives at the repository root and is the sixth core operational reference. Before diagnosing an error, agents scan only its **Issue-name index**; when an entry matches, read that entry's section. After fixing a new issue, add a short searchable name to the index and a concise entry with cause, fix and verification limits. Keep unresolved/unverified status explicit and never store credentials there. The root `AGENTS.md` makes this lookup and update rule part of the standard workflow.
 
 ---
 
