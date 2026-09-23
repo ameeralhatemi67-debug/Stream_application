@@ -1261,6 +1261,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           color: AppTheme.danger,
           message: 'live.chat_composer_banned'.tr(),
         );
+      case ChatComposerState.platformPaused:
+        return _buildChatComposerNotice(
+          icon: Icons.pause_circle_outline_rounded,
+          color: AppTheme.warning,
+          message: 'live.chat_composer_platform_paused'.tr(),
+        );
       case ChatComposerState.muted:
         return _buildChatComposerNotice(
           icon: Icons.volume_off_rounded,

@@ -196,6 +196,15 @@ class ChatBlockList extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Drops a deleted account locally. The server has already removed the
+  /// row through its `on delete cascade`, so there is nothing left to write.
+  void forget(String profileId) {
+    if (!_blocked.remove(profileId)) return;
+    final userId = _userId;
+    if (userId != null) _writeCache(userId);
+    notifyListeners();
+  }
+
   Future<Map<String, String>> resolveNames(List<String> ids) =>
       _store.resolveNames(ids);
 

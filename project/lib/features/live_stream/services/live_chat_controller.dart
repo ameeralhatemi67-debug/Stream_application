@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../../core/providers/app_flags.dart';
 import '../../../core/utils/id_generator.dart';
 import '../models/chat_message_model.dart';
 import 'chat_block_list.dart';
@@ -54,6 +55,9 @@ String reportFailureKey(Object error) {
 /// letting the viewer type into a box whose insert is going to be refused:
 ///
 /// * [banned]        `banned_users` / the restrictive `*_not_banned` policies.
+/// * [platformPaused] `app_flags.chat_enabled = false`, enforced for every
+///                   sender by the `enforce_global_chat` trigger (P6), so
+///                   unlike [chatDisabled] moderators are not exempt.
 /// * [guest]         `chat_messages_insert_own` needs `auth.uid()`.
 /// * [chatDisabled]  `chat_stream_settings.chat_enabled = false`, enforced by
 ///                   the `chat_enforce_rate_limit` trigger (P6.1). Moderators
@@ -69,6 +73,7 @@ String reportFailureKey(Object error) {
 /// out a slow-mode countdown.
 enum ChatComposerState {
   banned,
+  platformPaused,
   guest,
   chatDisabled,
   muted,
@@ -95,9 +100,14 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     required this.streamId,
     this.onReaction,
     ChatBlockList? blockList,
-  }) : _blockList = blockList ?? ChatBlockList.instance {
+    AppFlags? appFlags,
+  })  : _blockList = blockList ?? ChatBlockList.instance,
+        _appFlags = appFlags ?? AppFlags.instance {
     _blockList.addListener(_onBlocksChanged);
+    _appFlags.addListener(_onBlocksChanged);
   }
+
+  final AppFlags _appFlags;
 
   final String streamId;
 
@@ -129,6 +139,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed && !_disposed) {
       _blockList.refresh();
+      _appFlags.refresh();
     }
   }
 
@@ -237,6 +248,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   /// The widget renders from this; it never re-derives the rules itself.
   ChatComposerState get composerState {
     if (_isSelfBanned) return ChatComposerState.banned;
+    if (!_appFlags.chatEnabled) return ChatComposerState.platformPaused;
     if (isGuest) return ChatComposerState.guest;
     if (!_chatEnabled && !_canModerate) return ChatComposerState.chatDisabled;
     if (_isSelfMuted) return ChatComposerState.muted;
@@ -339,6 +351,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _observingLifecycle = true;
     await _blockList.refresh();
+    await _appFlags.refresh();
     await _loadHiddenMessages();
     await _loadCanModerate();
     await _loadChatSettings();
@@ -861,6 +874,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
       // inviting them to try again.
       await _refreshSelfStatus();
       await _loadChatSettings();
+      await _appFlags.refresh();
       throw Exception(failure.message);
     }
   }
@@ -873,6 +887,10 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
       // Deterministic: the same body will be refused every time.
       return const _SendFailure(
           "Message blocked: that language isn't allowed here.", false);
+    }
+    if (raw.contains('Feature temporarily disabled')) {
+      return const _SendFailure(
+          'Chat is paused across the platform right now.', false);
     }
     if (raw.contains('Chat is turned off')) {
       return const _SendFailure(
@@ -962,6 +980,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   void dispose() {
     _disposed = true;
     _blockList.removeListener(_onBlocksChanged);
+    _appFlags.removeListener(_onBlocksChanged);
     if (_observingLifecycle) WidgetsBinding.instance.removeObserver(this);
     _slowModeTicker?.cancel();
     _slowModeTicker = null;

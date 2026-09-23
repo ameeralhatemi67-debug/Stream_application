@@ -39,6 +39,7 @@ import '../../features/discovery/models/academic_category_model.dart';
 import '../models/device_session_model.dart';
 import '../config/feature_flags.dart';
 import '../../features/live_stream/services/stream_decay_engine.dart';
+import '../../features/live_stream/services/chat_block_list.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kDebugMode, visibleForTesting;
 
@@ -66,8 +67,45 @@ class AppProvider extends ChangeNotifier {
     if (!isAdminUser) throw StateError('Not permitted');
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.updateAdminAccount(id, action, reason);
+    if (action == 'delete_account') purgeDeletedAccountFromCaches(id);
     await _refreshBannedUsers();
     await refreshAdminData();
+    if (action == 'delete_account' ||
+        action == 'force_end' ||
+        action == 'remove_from_feed') {
+      await loadVerifiedStreamersFromBackend();
+    }
+  }
+
+  /// Drops every client-side trace of an account the server has just
+  /// deleted (P6), so no screen keeps offering a follow, a mini-player, a
+  /// report or a role row for a profile that no longer exists. Called only
+  /// after the server confirmed the deletion; the backend reload that follows
+  /// is what other lists rely on, and this covers the time until it lands or
+  /// the case where it fails.
+  void purgeDeletedAccountFromCaches(String profileId) {
+    bool matches(String id) =>
+        id == profileId || id == 'streamer_$profileId';
+    final removedVideoIds = {
+      for (final s in _streamers)
+        if (matches(s.streamerId) && s.youtubeVideoId.isNotEmpty)
+          s.youtubeVideoId,
+    };
+    _streamers.removeWhere((s) => matches(s.streamerId));
+    _cachedMapMarkers.removeWhere((m) => matches(m.streamerId));
+    _followedStreamerIds.removeWhere(matches);
+    _reminderStreamerIds.removeWhere(matches);
+    _chatReports.removeWhere(
+        (r) => r.reportedSenderId == profileId || r.reporterId == profileId);
+    _roleAssignments.removeWhere((r) => r.profileId == profileId);
+    _streamModerators.removeWhere((m) => m.profileId == profileId);
+    _bannedUsers.removeWhere((b) => b.profileId == profileId);
+    if (_isMiniPlayerActive && removedVideoIds.contains(_miniPlayerVideoId)) {
+      _isMiniPlayerActive = false;
+    }
+    ChatBlockList.instance.forget(profileId);
+    notifyListeners();
+    unawaited(_persistMapMarkerCache());
   }
 
   // Starts empty: the catalog comes from the backend

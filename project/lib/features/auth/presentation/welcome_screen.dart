@@ -5,13 +5,17 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/providers/app_flags.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/consent_dialog.dart';
 
 /// Master Welcome & Authentication Landing Screen
 class WelcomeScreen extends StatefulWidget {
-  const WelcomeScreen({super.key});
+  const WelcomeScreen({super.key, this.appFlags});
+
+  /// Defaults to the app-wide switches; tests pass their own.
+  final AppFlags? appFlags;
 
   @override
   State<WelcomeScreen> createState() => _WelcomeScreenState();
@@ -19,6 +23,54 @@ class WelcomeScreen extends StatefulWidget {
 
 class _WelcomeScreenState extends State<WelcomeScreen> {
   bool _isLoading = false;
+  late final AppFlags _flags = widget.appFlags ?? AppFlags.instance;
+
+  @override
+  void initState() {
+    super.initState();
+    _flags.addListener(_onFlagsChanged);
+    _flags.refresh();
+  }
+
+  @override
+  void dispose() {
+    _flags.removeListener(_onFlagsChanged);
+    super.dispose();
+  }
+
+  void _onFlagsChanged() {
+    if (mounted) setState(() {});
+  }
+
+  /// `registrations_open` is enforced on Auth user creation, so a new account
+  /// cannot be made while it is off; existing accounts still sign in.
+  Widget _buildRegistrationsPausedNotice() {
+    return Container(
+      key: const Key('registrations-paused-notice'),
+      margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      decoration: BoxDecoration(
+        color: AppTheme.warning.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.pause_circle_outline_rounded,
+              size: 18, color: AppTheme.warning),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Text(
+              'auth_welcome.registrations_paused'.tr(),
+              style: const TextStyle(
+                  color: AppTheme.textPrimary, fontSize: 12, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   /// PDPL onboarding consent gate (v0.9 Checkpoint 3 Phase 1) -- both the
   /// Google sign-in and guest flows route through this before gathering any
@@ -144,8 +196,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                         ),
                         const SizedBox(height: AppTheme.spaceLg),
 
+                        if (!_flags.registrationsOpen)
+                          _buildRegistrationsPausedNotice(),
+
                         //  1. Sign Up Primary Action (Google)
                         ElevatedButton(
+                          key: const Key('welcome-signup'),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppTheme.onMedia,
                             foregroundColor: AppTheme.textPrimary,
@@ -156,8 +212,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             ),
                             elevation: 2,
                           ),
-                          onPressed:
-                              _isLoading ? null : () => _handleGoogleAuth(),
+                          onPressed: _isLoading || !_flags.registrationsOpen
+                              ? null
+                              : () => _handleGoogleAuth(),
                           child: _isLoading
                               ? const SizedBox(
                                   height: 20,
