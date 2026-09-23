@@ -523,7 +523,7 @@ Branch `p6-acceptance` (from `f581329`): reviewed migration `20260923130000` (pa
 
 ## RESUME block (2026-09-23, Claude Opus 5.5, guided P6 acceptance in progress)
 
-- `master` = `6e63f5d` (p6-acceptance fast-forwarded). Branch `p6-acceptance` is ahead with `1ed891c` (toast prefix fix) plus this docs commit; integrate with `git merge --ff-only p6-acceptance` from the main checkout.
+- `master` = `e6cd3b8`: `p6-acceptance` was fast-forwarded twice (`6e63f5d`, then `1ed891c` toast fix plus the docs commit). Nothing is pending integration beyond this ledger correction.
 - The local environment runs from this session: the stack `P6_accept_disposable`, static servers on 127.0.0.1:8081–8085 and a caster heartbeat. Session files and the login helper sit in the ignored `project/build/web`. Stop with `npx supabase stop --no-backup --workdir brief/.runtime/p6-accept-disposable-20260923` and delete `project/build/web/p6s_*.json` and `p6-login.html` when finished.
 - Evidence labels: UI (browser sessions in desktop Chrome, not devices), API (real sessions), tests. No physical-device evidence exists for P6.
 - Next: the owner runs G1–G5 (G6 optional) and the physical-device steps, and records pass/fail here. Only then mark P6 accepted and unblock P6S. Reopened P2: admin KPI samples. Separate follow-ups: `/admin` deep-link timing, `is_admin_tier()` and bans, desktop discoverability of the message action sheet.
