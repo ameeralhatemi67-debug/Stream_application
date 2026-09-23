@@ -96,15 +96,15 @@ gantt
 | P3 Viewer presence | Partial | Server-backed heartbeat/count code and grants are present. Guest, deduplication, expiry and multi-client device scenarios remain unrun. | 1.0.3 |
 | P4 Design and responsive UI | Complete to recorded E1/E2 evidence | Scheme A, bundled IBM Plex fonts, white theme, localization and responsive/layout tests are present. No physical-device visual QA. | 1.0.4 |
 | P8A Android identity and branding | Partial, complete to available owner inputs | Identity, permissions, launcher, splash, target SDK, 16 KB checks and fail-closed signing are done. No keystore, AAB, release scan or device smoke test. | 1.0.5 |
-| P6.1-P6.3 Chat and moderation | Partial | Server rate limits, slow mode, keyword normalization, composer states, live report linkage and audit scope are implemented. Report-reason enum and server-side blocks remain open. | 1.0.6 |
-| P6.4 Admin tools | Partial | Item 1's implemented directory actions and device reads passed 33 local assertions; the full SQL suite passed 212. Account deletion and Auth-session revocation remain open, as do items 2-6. | 1.0.6 |
+| P6.1-P6.3 Chat and moderation | Partial | Server rate limits, slow mode, report validation and viewer block policies have local evidence. The client Block action still uses local preferences and needs server sync. | 1.0.6 |
+| P6.4 Admin tools | Partial | Directory deletion/session revocation and live end/feed removal have audited backend controls. Flag enforcement exists on the server; client controls, live list, audit/keyword views and cache acceptance remain open. | 1.0.6 |
 | P6S Broadcast and navigation reliability | Not started | Physical sender/viewer tests, direct laptop, Local transport, private access, live-media PiP and exit paths remain open. | 1.0.6 |
 | P5 Map and offline | Not started | No implementation or evidence yet. | 1.0.7 |
 | P7 Organizations | Not started | Co-owner designation, invitations, public organization profile and scoped controls remain open. | 1.0.8 |
 | P8B Store and compliance package | Not started | No store package exists. Drafting would not equal legal certification. | 1.0.9 |
 | P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
-The 2026-09-23 checkpoint passed 463 Flutter tests, `flutter analyze` with 0 issues, and 212 local SQL assertions across 12 files. G6 still flags 528 localization matches; its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the 2026-09-22 counts below where they differ.
+The latest 2026-09-23 checkpoint passed 464 Flutter tests, `flutter analyze` with 0 issues, and 263 local SQL assertions across 14 files. G6 still flags 528 localization matches; its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the older counts below where they differ.
 ---
 
 ## 📝 Modification
@@ -506,7 +506,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 ---
 ## Version 1.0 — hardening and release
 
-> Status on 2026-09-23: P6.4 item 1's implemented directory actions and device access are locally verified. The remaining P6 work comes next, followed by P6S. The latest checkpoint passed 463 Flutter tests and 212 local SQL assertions; G6 remains a known scan failure. Physical streaming, signing and other release gates remain open. The app is not release-ready.
+> Status on 2026-09-23: the P6 safety backend now includes audited account/session actions, live end/feed removal, chat blocks, report validation and global flags. Client wiring and admin views remain, so P6S has not started. The latest checkpoint passed 464 Flutter tests and 263 local SQL assertions; G6 remains a known scan failure. Physical streaming, signing and other release gates remain open. The app is not release-ready.
 
 ### Checkpoint 1.0.0: P0 hardening foundation `[Backend & Security Track]`
 
@@ -611,8 +611,8 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 #### Phase 1.0.6.1: chat client and moderation UX
 
 - [x] Task 1.0.6.1.1: Enforce the 1.2-second message floor, slow mode and chat-off state on the server.
-- [/] Task 1.0.6.1.2: Complete Arabic-aware keyword normalization and the report-reason enum. Arabic normalization and boundary matching are implemented; the report-reason enum is still open.
-- [x] Task 1.0.6.1.3: Add guest read-only mode, muted/slow/offline/banned composer states, retry behavior and the report/block action sheet. Client behavior is implemented; server-side blocks remain open.
+- [/] Task 1.0.6.1.2: Complete Arabic-aware keyword normalization and report-reason validation. Arabic normalization and server validation of new report codes are implemented; verify the client reason choices against the server list.
+- [/] Task 1.0.6.1.3: Add guest read-only mode, muted/slow/offline/banned composer states, retry behavior and the report/block action sheet. The backend block policy exists; the client Block action still needs server persistence and synchronization.
 
 #### Phase 1.0.6.2: live moderation linkage
 
@@ -621,10 +621,10 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 
 #### Phase 1.0.6.3: admin tools
 
-- [/] Task 1.0.6.3.1: The implemented server-backed directory, account detail, ban/unban and revoke actions passed 33 local SQL assertions in commit `1832b3e`. Account deletion and Auth-session revocation remain open.
-- [ ] Task 1.0.6.3.2: Add live-stream force-end/remove-from-feed controls.
+- [/] Task 1.0.6.3.1: Directory actions and device reads passed 33 local SQL assertions in `1832b3e`. Account deletion and Auth-session revocation now have locally verified, audited backend actions in `4f1dbda`; real Auth HTTP and storage cases remain unverified.
+- [/] Task 1.0.6.3.2: Audited live end/feed removal works from the directory against app state. A dedicated live list/count view and physical broadcaster reaction remain open; the action does not stop external YouTube ingest.
 - [ ] Task 1.0.6.3.3: Add the audit-log viewer and keyword manager.
-- [ ] Task 1.0.6.3.4: Add app kill switches and invalidate deleted-account cache entries.
+- [/] Task 1.0.6.3.4: Server-enforced chat/registration flags exist. Build admin and availability UI, then verify deleted-account cache invalidation beyond the directory.
 - [ ] Task 1.0.6.3.5: Complete the tag explorer and broadcaster mapping.
 
 ### Checkpoint 1.0.7: P5 map and offline experience `[GIS & Spatial Track]`
@@ -678,7 +678,7 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 | 1.0.3 P3 true viewer presence | Partial | Presence service, count RPCs and grants are present. SQL runtime, expiry and multi-client device probes remain open. |
 | 1.0.4 P4 design and responsive app pass | Complete to recorded E1/E2 evidence | Scheme A, white theme, fonts, localization and responsive tests are complete. Physical-device visual QA remains open. |
 | 1.0.5 P8A Android release identity and branding | Partial, complete to available inputs | Identity, assets, permissions, target SDK, 16 KB checks and fail-closed signing are complete. No keystore, AAB, release scan or device smoke test exists. |
-| 1.0.6 P6 chat, moderation and admin | Partial | P6.1-P6.3 are implemented. P6.4 item 1's implemented actions passed local SQL tests; account deletion, report-reason enum, server-side blocks and P6.4 items 2-6 remain open. |
+| 1.0.6 P6 chat, moderation and admin | Partial | Local safety backend passed 263 SQL assertions. Client blocks/flags, dedicated live list, audit/keyword views and deleted-account cache acceptance remain open. |
 | 1.0.7 P5 map and offline experience | Not started | Connectivity, cache, offline map and licensing work remain open. |
 | 1.0.8 P7 organizations | Not started | Co-owner roles, invitations, public organization profile and audit scope remain open. |
 | 1.0.9 P8B store and Saudi-compliance package | Not started | Store documents, data export, counsel questions and listing draft remain open. |

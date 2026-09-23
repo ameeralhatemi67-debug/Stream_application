@@ -10,6 +10,14 @@ updated: 2026-09-23
 
 ---
 
+## 2026-09-23: P6 account, live and chat safety backend
+
+- Commit `034aaf9` repaired the weekly usage meter. Commit `4f1dbda` added audited admin account deletion/Auth-session revocation and app live-end/feed-removal actions, plus backend chat blocks, report validation and global chat/registration flags.
+- A disposable local database passed 263 SQL assertions across 14 files. All 464 Flutter tests passed and `flutter analyze` found 0 issues. G6 remains at 528 matches. The latest evidence and limits are in `brief/evidence/2026-09-23/p6-safety.md`.
+- P6 remains incomplete: connect client blocks and flag availability, build the dedicated live list and remaining admin views, and verify global deleted-account cache behavior. P6S has not started. No production migration, external YouTube stop, real Auth HTTP flow or physical-device acceptance is claimed.
+
+---
+
 ## 2026-09-23: P6.4 item 1 locally verified
 
 - Commit `1832b3e` repaired the admin device-session read policy and verified the implemented server-backed user directory actions. A disposable local Supabase database passed all 33 directory assertions, 86 assertions across four targeted files, and 212 assertions across the full 12-file SQL suite.
