@@ -289,4 +289,20 @@ void main() {
       addTearDown(c.dispose);
     });
   });
+
+  // Found in the P6 two-session run: postgrest orders descending by default,
+  // so a room's history was shown newest-first above live messages.
+  test('room history is shown oldest first, like live inserts', () {
+    ChatMessageModel m(String id, int minute) => ChatMessageModel(
+          id: id,
+          streamId: 'stream-1',
+          senderId: 'u',
+          senderName: 'U',
+          body: id,
+          createdAt: DateTime.utc(2026, 9, 23, 12, minute),
+        );
+    final newestFirst = [m('c', 3), m('b', 2), m('a', 1)];
+    expect(LiveChatController.chronological(newestFirst).map((e) => e.id),
+        ['a', 'b', 'c']);
+  });
 }

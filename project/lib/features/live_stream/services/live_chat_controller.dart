@@ -101,13 +101,39 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     this.onReaction,
     ChatBlockList? blockList,
     AppFlags? appFlags,
+    this.platformPausePollInterval = const Duration(seconds: 30),
   })  : _blockList = blockList ?? ChatBlockList.instance,
         _appFlags = appFlags ?? AppFlags.instance {
     _blockList.addListener(_onBlocksChanged);
-    _appFlags.addListener(_onBlocksChanged);
+    _appFlags.addListener(_onFlagsChanged);
+    _syncPausePoll();
   }
 
   final AppFlags _appFlags;
+
+  /// How often a room showing the platform pause re-reads `app_flags`. The
+  /// paused composer offers no send that could surface the change, and the
+  /// table is not on the Realtime publication, so without this a room stayed
+  /// paused after chat was switched back on (found in the P6 two-session run).
+  final Duration platformPausePollInterval;
+  Timer? _pausePoll;
+
+  void _onFlagsChanged() {
+    _syncPausePoll();
+    _onBlocksChanged();
+  }
+
+  void _syncPausePoll() {
+    final paused = !_disposed && !_appFlags.chatEnabled;
+    if (paused && _pausePoll == null) {
+      _pausePoll = Timer.periodic(platformPausePollInterval, (_) {
+        if (!_disposed) _appFlags.refresh();
+      });
+    } else if (!paused && _pausePoll != null) {
+      _pausePoll?.cancel();
+      _pausePoll = null;
+    }
+  }
 
   final String streamId;
 
@@ -580,19 +606,23 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     _profileCache.remove(profileId);
   }
 
+  /// The newest 100 messages, oldest first like live inserts. postgrest's
+  /// `order` defaults to descending, which is what keeps the newest 100 here;
+  /// the history is then put back in chronological order before display
+  /// (found in the P6 two-session run: history rendered upside down).
   Future<void> _loadRecentMessages() async {
     try {
       final rows = await _client
           .from('chat_messages')
           .select()
           .eq('stream_id', streamId)
-          .order('created_at')
+          .order('created_at', ascending: false)
           .limit(100);
       final resolved = await _rowsToMessages(rows.cast<Map<String, dynamic>>());
       if (_disposed) return;
       _messages
         ..clear()
-        ..addAll(resolved);
+        ..addAll(chronological(resolved));
       notifyListeners();
     } catch (e) {
       debugPrint('LiveChatController: failed to load recent messages: $e');
@@ -932,6 +962,11 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   /// The rules themselves are what these tests are about; the server-side
   /// enforcement of each rule is covered by supabase/tests/chat_rate_limit.test.sql
   /// and chat_keyword_filter.test.sql.
+  /// Oldest first, the order live inserts are appended in.
+  @visibleForTesting
+  static List<ChatMessageModel> chronological(List<ChatMessageModel> list) =>
+      [...list]..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
   @visibleForTesting
   void debugSetStateForTests({
     String? currentUserId,
@@ -980,7 +1015,9 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   void dispose() {
     _disposed = true;
     _blockList.removeListener(_onBlocksChanged);
-    _appFlags.removeListener(_onBlocksChanged);
+    _appFlags.removeListener(_onFlagsChanged);
+    _pausePoll?.cancel();
+    _pausePoll = null;
     if (_observingLifecycle) WidgetsBinding.instance.removeObserver(this);
     _slowModeTicker?.cancel();
     _slowModeTicker = null;

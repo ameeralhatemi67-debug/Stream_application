@@ -40,9 +40,11 @@ class FakeFlagsStore implements AppFlagsStore {
   Object? fetchError;
   Object? setError;
   final List<String> writes = [];
+  int fetches = 0;
 
   @override
   Future<Map<String, ({bool enabled, DateTime? updatedAt})>> fetch() async {
+    fetches++;
     if (fetchError != null) throw fetchError!;
     return {
       for (final e in values.entries)
@@ -262,6 +264,33 @@ void main() {
       flags.debugSetValues({AppFlagKey.chatEnabled: false});
       expect(notified, greaterThan(0));
       expect(c.canSend, isFalse);
+    });
+
+    // Found in the P6 two-session run: an open room kept showing the pause
+    // after a Master Admin switched chat back on.
+    test('a paused room notices chat coming back without a reload',
+        () async {
+      final store = FakeFlagsStore()..values['chat_enabled'] = false;
+      final flags = AppFlags(store: store);
+      await flags.refresh();
+      final c = LiveChatController(
+          streamId: 's',
+          appFlags: flags,
+          blockList: ChatBlockList(store: _NoBlocks()),
+          platformPausePollInterval: const Duration(milliseconds: 20));
+      addTearDown(c.dispose);
+      c.debugSetStateForTests(
+          currentUserId: 'me', connectionState: ChatConnectionState.live);
+      expect(c.composerState, ChatComposerState.platformPaused);
+
+      store.values['chat_enabled'] = true;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(c.composerState, ChatComposerState.ready);
+
+      // Polling stops once chat is back on.
+      final after = store.fetches;
+      await Future<void>.delayed(const Duration(milliseconds: 80));
+      expect(store.fetches, after);
     });
 
     test('a server refusal from the switch is not offered for retry', () {
