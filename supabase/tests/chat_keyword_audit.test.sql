@@ -34,5 +34,12 @@ select is((select count(*)::int from public.chat_banned_keywords where keyword='
 select set_config('request.jwt.claims','',true);
 select lives_ok($$insert into public.chat_banned_keywords(keyword) values('kwmaintenance')$$,'privileged maintenance write allowed');
 select is((select actor_email from public.audit_logs where action='chatKeywordAdded' and metadata->>'keyword'='kwmaintenance'),'system','maintenance write audited as system');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"67000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
+select throws_ok($$truncate public.chat_banned_keywords$$,'42501',null,'admin API role cannot truncate the blocklist');
+select throws_ok($$truncate public.audit_logs$$,'42501',null,'API role cannot truncate audit logs');
+reset role;
+select lives_ok($$truncate public.chat_banned_keywords$$,'privileged truncate still possible');
+select is((select count(*)::int from public.audit_logs where action='chatKeywordRemoved' and (metadata->>'truncate')::boolean),1,'privileged truncate audited once');
 select * from finish();
 rollback;

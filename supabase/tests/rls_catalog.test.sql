@@ -20,7 +20,7 @@
 -- `security_definer_view` ERRORs for the two documented public views, and
 -- nothing else; R4 below is the in-database half of that check.
 begin;
-select plan(20);
+select plan(21);
 
 -- ---------------------------------------------------------------------------
 -- Intent lists. Everything that is deliberately wider than "signed-in only"
@@ -117,6 +117,18 @@ select is(
         or has_table_privilege('anon', c.oid, 'update')
         or has_table_privilege('anon', c.oid, 'delete'))),
   0, 'R3c anon has no write privilege on any table');
+
+-- R3d: TRUNCATE, TRIGGER and REFERENCES bypass RLS (TRUNCATE also skips row
+-- triggers such as the keyword audit), so no API role may hold them.
+select is(
+  (select count(*)::int from pg_class c
+    cross join unnest(array['anon','authenticated']) r(role)
+    where c.relnamespace = 'public'::regnamespace
+      and c.relkind in ('r','p')
+      and (has_table_privilege(r.role, c.oid, 'truncate')
+        or has_table_privilege(r.role, c.oid, 'trigger')
+        or has_table_privilege(r.role, c.oid, 'references'))),
+  0, 'R3d API roles hold no TRUNCATE, TRIGGER or REFERENCES on any table');
 
 -- ---------------------------------------------------------------------------
 -- R4 — views. `security_invoker = false` bypasses the base table's RLS, so
