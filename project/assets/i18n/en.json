@@ -296,7 +296,14 @@
     "permission_camera_title": "Camera access needed",
     "permission_microphone_title": "Microphone access needed",
     "permission_camera_body": "This app uses your phone's camera to capture video for your broadcast. Nothing is recorded until you start going live.",
-    "permission_microphone_body": "This app uses your phone's microphone to capture audio for your broadcast. Nothing is recorded until you start going live."
+    "permission_microphone_body": "This app uses your phone's microphone to capture audio for your broadcast. Nothing is recorded until you start going live.",
+    "block_sign_in_toast": "Sign in to block accounts.",
+    "block_not_permitted_toast": "This account can't block users right now.",
+    "block_target_gone_toast": "That account no longer exists.",
+    "block_failed_toast": "Couldn't reach the server. The user was not blocked.",
+    "report_invalid_toast": "This report couldn't be accepted. Pick a reason and try again.",
+    "report_not_permitted_toast": "Sign in with an active account to report messages.",
+    "report_failed_toast": "Couldn't send the report. Check your connection and try again."
   },
   "language": {
     "en": "English",
@@ -481,7 +488,15 @@
     "consent_record_accepted": "You accepted version {version} of the privacy notice on {date}.",
     "consent_record_outdated": "Your recorded consent is for version {version}, which is no longer the current notice. You will be asked to review it again.",
     "consent_record_none": "No consent has been recorded for this account yet.",
-    "consent_withdraw_note": "To withdraw consent, delete your account below. Deleting removes the data this consent covers; there is no separate withdrawal that keeps the account open."
+    "consent_withdraw_note": "To withdraw consent, delete your account below. Deleting removes the data this consent covers; there is no separate withdrawal that keeps the account open.",
+    "blocked_accounts_title": "Blocked accounts",
+    "blocked_accounts_hint": "You won't see chat messages from these accounts on any device you sign in to.",
+    "blocked_accounts_empty": "You haven't blocked anyone.",
+    "blocked_accounts_stale": "Showing the last saved list. It may be out of date.",
+    "blocked_accounts_count": "{count} blocked",
+    "blocked_account_unknown": "Unknown account",
+    "unblock": "Unblock",
+    "unblocked_toast": "Unblocked. You'll see their messages again."
   },
   "onboarding": {
     "subtitle": "AlSharqia Educational Knowledge Hub",
@@ -733,7 +748,8 @@
     "delete": "Delete",
     "edit": "Edit",
     "arrange": "Arrange",
-    "change": "Change"
+    "change": "Change",
+    "retry": "Retry"
   },
   "consent": {
     "title": "Before You Continue",

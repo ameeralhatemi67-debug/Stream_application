@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/chat_message_model.dart';
+import '../../services/chat_block_list.dart';
 import '../../services/live_chat_controller.dart';
 
 /// Long-press action sheet for a chat message (Cluster 4 Task 13). Branches
@@ -51,11 +52,7 @@ Future<void> showChatMessageActionsSheet(
     case _ChatMessageAction.report:
       await _handleReport(context, message: message, controller: controller);
     case _ChatMessageAction.block:
-      await controller.blockUser(message.senderId);
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('live.user_blocked_toast'.tr())),
-      );
+      await _handleBlock(context, message: message, controller: controller);
     case _ChatMessageAction.mute:
       await _runModerationAction(
         context,
@@ -199,6 +196,38 @@ Future<bool?> _confirmDelete(BuildContext context, {required String title}) {
   );
 }
 
+/// The block holds only once the server accepts it, so a refusal is shown
+/// and the sender stays visible rather than being hidden on this device alone.
+Future<void> _handleBlock(
+  BuildContext context, {
+  required ChatMessageModel message,
+  required LiveChatController controller,
+}) async {
+  String? errorKey;
+  try {
+    await controller.blockUser(message.senderId);
+  } on ChatBlockException catch (e) {
+    errorKey = chatBlockFailureKey(e.failure);
+  } catch (_) {
+    errorKey = chatBlockFailureKey(ChatBlockFailure.network);
+  }
+  if (!context.mounted) return;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text((errorKey ?? 'live.user_blocked_toast').tr()),
+      backgroundColor: errorKey == null ? null : AppTheme.danger,
+    ),
+  );
+}
+
+/// Localization key for a refused block or unblock.
+String chatBlockFailureKey(ChatBlockFailure failure) => switch (failure) {
+      ChatBlockFailure.signedOut => 'live.block_sign_in_toast',
+      ChatBlockFailure.notPermitted => 'live.block_not_permitted_toast',
+      ChatBlockFailure.targetGone => 'live.block_target_gone_toast',
+      ChatBlockFailure.network => 'live.block_failed_toast',
+    };
+
 Future<void> _handleReport(
   BuildContext context, {
   required ChatMessageModel message,
@@ -227,12 +256,11 @@ Future<void> _handleReport(
     );
   } catch (e) {
     if (!context.mounted) return;
-    final isDuplicate = '$e'.contains('duplicate key');
+    final key = reportFailureKey(e);
+    final isDuplicate = key == 'live.report_already_submitted_toast';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(
-          isDuplicate ? 'live.report_already_submitted_toast'.tr() : '$e',
-        ),
+        content: Text(key.tr()),
         backgroundColor: isDuplicate ? null : AppTheme.danger,
       ),
     );
@@ -393,10 +421,10 @@ class _ReportReasonMenu extends StatelessWidget {
   // the code is what's persisted, so admin review isn't a mix of whatever
   // language each reporter's device happened to be in.
   static const _reasons = [
-    ('spam', 'report_reason_spam'),
-    ('harassment', 'report_reason_harassment'),
-    ('hate_speech', 'report_reason_hate'),
-    ('other', 'report_reason_other'),
+    (ChatReportReason.spam, 'report_reason_spam'),
+    (ChatReportReason.harassment, 'report_reason_harassment'),
+    (ChatReportReason.hateSpeech, 'report_reason_hate'),
+    (ChatReportReason.other, 'report_reason_other'),
   ];
 
   @override

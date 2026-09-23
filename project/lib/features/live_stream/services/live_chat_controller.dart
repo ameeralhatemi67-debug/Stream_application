@@ -1,12 +1,53 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../core/utils/id_generator.dart';
 import '../models/chat_message_model.dart';
+import 'chat_block_list.dart';
 
 enum ChatConnectionState { connecting, live, reconnecting }
+
+/// The only report codes the server accepts for new reports
+/// (`chat_reports_reason_code`, 20260923120000). Older rows may still hold
+/// free text, which the admin queue shows as written.
+abstract final class ChatReportReason {
+  static const spam = 'spam';
+  static const harassment = 'harassment';
+  static const hateSpeech = 'hate_speech';
+  static const other = 'other';
+  static const all = {spam, harassment, hateSpeech, other};
+
+  /// Localization key for a stored reason, or null for historical free text.
+  static String? labelKey(String reason) => switch (reason) {
+        spam => 'live.report_reason_spam',
+        harassment => 'live.report_reason_harassment',
+        hateSpeech => 'live.report_reason_hate',
+        other => 'live.report_reason_other',
+        _ => null,
+      };
+}
+
+/// Maps a failed report to a localization key instead of raw server text.
+String reportFailureKey(Object error) {
+  if (error is PostgrestException) {
+    switch (error.code) {
+      case '23505':
+        return 'live.report_already_submitted_toast';
+      case '23514':
+      case '22023':
+        return 'live.report_invalid_toast';
+      case '42501':
+        return 'live.report_not_permitted_toast';
+    }
+  }
+  if (error is ArgumentError) return 'live.report_invalid_toast';
+  if ('$error'.contains('duplicate key')) {
+    return 'live.report_already_submitted_toast';
+  }
+  return 'live.report_failed_toast';
+}
 
 /// Why the composer is (or is not) usable right now (P6.2). Every value maps
 /// to a real server-side rule, so the composer can explain itself instead of
@@ -49,8 +90,14 @@ enum ChatComposerState {
 /// quota). Reactions aren't gated behind sign-in like sending a chat message
 /// is: broadcast isn't covered by chat_messages'RLS at all, and there's no
 /// reason a guest viewer shouldn't be able to react.
-class LiveChatController extends ChangeNotifier {
-  LiveChatController({required this.streamId, this.onReaction});
+class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
+  LiveChatController({
+    required this.streamId,
+    this.onReaction,
+    ChatBlockList? blockList,
+  }) : _blockList = blockList ?? ChatBlockList.instance {
+    _blockList.addListener(_onBlocksChanged);
+  }
 
   final String streamId;
 
@@ -65,10 +112,25 @@ class LiveChatController extends ChangeNotifier {
 
   final List<ChatMessageModel> _messages = [];
 
-  /// Senders the current viewer has blocked (Checkpoint 3 Phase 1) --
-  /// per-viewer and client-side only, never a platform-wide action, so it's
-  /// filtered here rather than server-side.
-  final Set<String> _blockedSenderIds = {};
+  /// Senders the current viewer has blocked (P6). Server-owned in
+  /// `chat_user_blocks` and shared across rooms through [ChatBlockList]; the
+  /// server also withholds their rows, and this filter covers messages that
+  /// were already on screen when the block landed.
+  final ChatBlockList _blockList;
+
+  void _onBlocksChanged() {
+    if (!_disposed) notifyListeners();
+  }
+
+  bool _observingLifecycle = false;
+
+  /// Picks up blocks made on another device while this one was backgrounded.
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && !_disposed) {
+      _blockList.refresh();
+    }
+  }
 
   /// Messages the current viewer has hidden (Cluster 4 Task 13) -- like
   /// blocking, this is a per-viewer client-side preference with no server
@@ -94,11 +156,11 @@ class LiveChatController extends ChangeNotifier {
 
   List<ChatMessageModel> get messages => List.unmodifiable(
         _messages.where((m) =>
-            !_blockedSenderIds.contains(m.senderId) &&
+            !_blockList.isBlocked(m.senderId) &&
             !_hiddenMessageIds.contains(m.id)),
       );
 
-  bool isBlocked(String senderId) => _blockedSenderIds.contains(senderId);
+  bool isBlocked(String senderId) => _blockList.isBlocked(senderId);
   bool isHidden(String messageId) => _hiddenMessageIds.contains(messageId);
 
   /// Whether the current viewer is this stream's owner or an admin tier --
@@ -274,7 +336,9 @@ class LiveChatController extends ChangeNotifier {
       notifyListeners();
       return;
     }
-    await _loadBlockedUsers();
+    WidgetsBinding.instance.addObserver(this);
+    _observingLifecycle = true;
+    await _blockList.refresh();
     await _loadHiddenMessages();
     await _loadCanModerate();
     await _loadChatSettings();
@@ -295,39 +359,12 @@ class LiveChatController extends ChangeNotifier {
     }
   }
 
-  static const _blockedUsersPrefsPrefix = 'chat_blocked_users_';
+  /// Blocks this sender for the current viewer on every device. Throws
+  /// [ChatBlockException] when the server refuses; nothing changes locally
+  /// until the server has accepted the block.
+  Future<void> blockUser(String senderId) => _blockList.block(senderId);
 
-  Future<void> _loadBlockedUsers() async {
-    final userId = _currentUserId;
-    if (userId == null) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final stored = prefs.getStringList('$_blockedUsersPrefsPrefix$userId');
-      if (stored != null) _blockedSenderIds.addAll(stored);
-    } catch (e) {
-      debugPrint('LiveChatController: failed to load blocked users: $e');
-    }
-  }
-
-  /// Hides this sender's messages (past and future) for the current viewer
-  /// only. Persisted per-viewer so it survives leaving and re-entering the
-  /// stream.
-  Future<void> blockUser(String senderId) async {
-    if (!_blockedSenderIds.add(senderId)) return;
-    notifyListeners();
-
-    final userId = _currentUserId;
-    if (userId == null) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(
-        '$_blockedUsersPrefsPrefix$userId',
-        _blockedSenderIds.toList(),
-      );
-    } catch (e) {
-      debugPrint('LiveChatController: failed to persist blocked users: $e');
-    }
-  }
+  Future<void> unblockUser(String senderId) => _blockList.unblock(senderId);
 
   static const _hiddenMessagesPrefsPrefix = 'chat_hidden_messages_';
 
@@ -374,7 +411,11 @@ class LiveChatController extends ChangeNotifier {
   }) async {
     final reporterId = _currentUserId;
     if (reporterId == null) {
-      throw Exception('Sign in to report a message.');
+      throw const PostgrestException(
+          message: 'Sign in to report', code: '42501');
+    }
+    if (!ChatReportReason.all.contains(reason)) {
+      throw ArgumentError.value(reason, 'reason');
     }
     await _client.from('chat_reports').insert({
       'message_id': messageId,
@@ -920,6 +961,8 @@ class LiveChatController extends ChangeNotifier {
   @override
   void dispose() {
     _disposed = true;
+    _blockList.removeListener(_onBlocksChanged);
+    if (_observingLifecycle) WidgetsBinding.instance.removeObserver(this);
     _slowModeTicker?.cancel();
     _slowModeTicker = null;
     final channel = _channel;

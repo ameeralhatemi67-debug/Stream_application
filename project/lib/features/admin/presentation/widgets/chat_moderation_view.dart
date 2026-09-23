@@ -5,6 +5,8 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/chat_report_model.dart';
 import '../../models/chat_mute_audit_entry.dart';
+import '../../../live_stream/services/live_chat_controller.dart'
+    show ChatReportReason;
 
 /// Platform-Wide Chat Moderation Dashboard (v0.8 Checkpoint 4 Phase 1).
 /// Admin-tier surface (any AdminHubScreen viewer, not Master-Admin-only like
@@ -15,6 +17,10 @@ import '../../models/chat_mute_audit_entry.dart';
 /// chat_muted_users_insert_owner_or_admin, chat_reports_delete_admin -- see
 /// 20260827120000) -- this is UX for an admin-tier account, not the
 /// security boundary itself.
+/// Stored report codes read as labels; historical free text stays as written.
+String _reasonLabel(String reason) =>
+    ChatReportReason.labelKey(reason)?.tr() ?? reason;
+
 class ChatModerationView extends StatefulWidget {
   const ChatModerationView({super.key});
 
@@ -181,7 +187,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
   /// /account-banned).
   Future<void> _showBanDialog(
       AppProvider provider, ChatReportModel report) async {
-    final reasonController = TextEditingController(text: report.reason);
+    final reasonController =
+        TextEditingController(text: _reasonLabel(report.reason));
     final reason = await showDialog<String>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -547,7 +554,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Reason: ${report.reason}',
+                      'Reason: ${_reasonLabel(report.reason)}',
                       style: const TextStyle(
                           color: AppTheme.warning, fontSize: 11.5),
                     ),

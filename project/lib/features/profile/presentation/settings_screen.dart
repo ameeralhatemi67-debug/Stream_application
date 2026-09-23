@@ -19,6 +19,7 @@ import '../models/user_account_model.dart';
 import '../../admin/models/broadcaster_application_model.dart';
 import '../../admin/models/terms_and_conditions_model.dart';
 import '../../../core/services/notifications/notification_models.dart';
+import 'settings/blocked_accounts_sheet.dart';
 import 'widgets/broadcaster_application_sheet.dart';
 import 'widgets/custom_stream_cards_section.dart';
 import 'widgets/viewer_profile_editor_dialog.dart';
@@ -174,6 +175,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 : '${appProvider.notificationPreferences.maxPer10Min} alerts / 10min',
             onTap: () =>
                 _showNotificationPreferencesSheet(context, appProvider),
+          ),
+          const SizedBox(height: AppTheme.spaceMd),
+
+          // Section 3.6: Chat blocks, server-owned and shared across devices.
+          _buildSummaryRow(
+            icon: Icons.block_rounded,
+            iconColor: AppTheme.textSecondary,
+            title: 'settings.blocked_accounts_title'.tr(),
+            subtitle: 'settings.blocked_accounts_hint'.tr(),
+            onTap: () => BlockedAccountsSheet.show(context),
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
