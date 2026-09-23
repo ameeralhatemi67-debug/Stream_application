@@ -6,6 +6,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
+import { findHardCodedText } from './g6_scanner.mjs';
 
 const root = process.cwd();
 const projectDir = path.join(root, 'project');
@@ -141,8 +142,10 @@ for (const [id, title, re] of [
 
 // G6 hard-coded English UI strings (report only until P4)
 {
-  const r = countMatches(libFiles, /Text\(\s*'[A-Za-z][^'$]{3,}'/g);
-  add('G6', "hard-coded English Text('...') literals (should move to i18n)", r.n, 0, r.top.map(([f, c]) => `${f}:${c}`).join(', '));
+  const where = libFiles.map((f) => [rel(f), findHardCodedText(read(f)).length]).filter(([, count]) => count);
+  const n = where.reduce((total, [, count]) => total + count, 0);
+  const top = where.sort((a, b) => b[1] - a[1]).slice(0, 5);
+  add('G6', "hard-coded English Text('...') literals (should move to i18n)", n, 0, top.map(([f, c]) => `${f}:${c}`).join(', '));
 }
 
 // G7 i18n key symmetry
