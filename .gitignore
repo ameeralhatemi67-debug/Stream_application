@@ -1,5 +1,7 @@
 ﻿# Flutter build & runtime artifacts
 project/build/
+/.vercel/
+/.vercel-flutter/
 project/.dart_tool/
 project/.pub-cache/
 project/.pub/
