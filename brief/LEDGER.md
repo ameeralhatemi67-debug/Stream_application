@@ -499,3 +499,9 @@ Verification: focused 19 + 21 new Flutter tests; `flutter analyze` 0 issues; ful
 - Evidence: full Flutter 504 passed; analyzer 0; SQL 15 files and 278 assertions on the fresh disposable project `P6_client_disposable` (stopped with backup=false afterwards); gates exit 0 with G6=552 (explained +24 localized calls), everything else PASS or INFO.
 - Next: owner review of migration `20260923130000_audit_chat_keyword_changes.sql` and of the Safety tab UX. P6 safety acceptance means a two-device or real-session check of block sync, flag pauses and admin live actions. Only then does P6S start. Remaining limits: no server push for blocks; other clients drop deleted accounts on their next reload; issued JWT expiry; YouTube media is not stopped by app-side end or remove.
 - DO NOT start P6S until P6 safety acceptance passes. No linked/production Supabase, push or deploy.
+
+## RESUME block (2026-09-23, P6 client/admin branch integrated)
+
+- Fast-forwarded `p6-client-safety` into `master` at `0d6b7a1` with `git merge --ff-only p6-client-safety`. `AGENTS.md`, `Core_files/README.md`, and both stashes were untouched. No push, production database access, or deploy.
+- The branch's local evidence remains 504 passing Flutter tests, analyzer 0 issues, 278 SQL assertions across 15 files, and G6=552 (24 additional translated calls). The merge added no code changes beyond the already verified branch; tests were not rerun for this documentation checkpoint.
+- Next: independent review of `supabase/migrations/20260923130000_audit_chat_keyword_changes.sql` and focused P6 safety acceptance with two real signed-in sessions/devices. Record exact pass/fail evidence and any remaining owner action. Do not mark P6 accepted or start P6S until those checks pass.

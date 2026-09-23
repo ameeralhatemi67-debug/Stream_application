@@ -104,9 +104,9 @@ gantt
 | P8B Store and compliance package | Not started | No store package exists. Drafting would not equal legal certification. | 1.0.9 |
 | P9 Closeout | Not started | Full re-verification, diff review, final report and release gate remain open. | 1.0.10 |
 
-The latest 2026-09-23 checkpoint (branch `p6-client-safety`) passed 504 Flutter tests, `flutter analyze` with 0 issues, and 278 local SQL assertions across 15 files on a fresh disposable database. G6 flags 552 matches (the +24 over 528 are localized `.tr()` calls the regex also counts); its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the older counts below where they differ.
+The latest 2026-09-23 checkpoint was fast-forwarded from `p6-client-safety` into `master` at `0d6b7a1`. It passed 504 Flutter tests, `flutter analyze` with 0 issues, and 278 local SQL assertions across 15 files on a fresh disposable database. G6 flags 552 matches (the +24 over 528 are localized `.tr()` calls the regex also counts); its cause and disposition remain recorded in the brief. Physical streaming and release build evidence remain open. These newer results supersede the older counts below where they differ.
 
-Workflow note, 2026-09-23: after the owner waived Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K, the Claude Opus P6 client run completed on branch `p6-client-safety`; the Codex 5% cap remains separate in §J.
+Workflow note, 2026-09-23: after the owner waived Opus metering in `brief/04_BUDGET_PROTOCOL.md` §K, the Claude Opus P6 client run completed on branch `p6-client-safety` and was fast-forwarded into `master`. The Codex 5% cap remains separate in §J. P6 acceptance remains open; P6S stays blocked.
 ---
 
 ## 📝 Modification

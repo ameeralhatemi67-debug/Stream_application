@@ -10,6 +10,14 @@ updated: 2026-09-23
 
 ---
 
+## 2026-09-23: P6 client and admin work merged into master
+
+- Fast-forwarded `p6-client-safety` into `master` at `0d6b7a1`; owner edits to `AGENTS.md` and `Core_files/README.md` and both stashes remain untouched. No push or production operation.
+- Local evidence carried with the merge: 504 Flutter tests passed, analyzer 0 issues, and 278 SQL assertions across 15 files on a fresh disposable database. G6 remains 552, including 24 newly counted translated calls.
+- P6 implementation is locally verified, but acceptance remains open: review the keyword-audit migration and run two-device/real-session checks of blocks, platform switches, and live actions. P6S remains blocked.
+
+---
+
 ## 2026-09-23: Claude Opus P6 continuation unblocked
 
 - Two Opus sessions stopped before editing because the Claude usage snapshot was absent. No P6 code or test evidence changed.
