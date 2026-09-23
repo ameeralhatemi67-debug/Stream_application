@@ -121,16 +121,18 @@ class AppProvider extends ChangeNotifier {
   // test that never calls ensureConnectivityMonitoringActive() (matching the
   // ensureLivePollingActive() pattern -- see that method's doc) renders the
   // normal online map, not a false offline state.
-  bool _isOnline = true;
+  NetworkStatus _networkStatus = NetworkStatus.online;
   ConnectivityService? _connectivityService;
-  StreamSubscription<bool>? _connectivitySub;
+  StreamSubscription<NetworkStatus>? _connectivitySub;
+  int _connectivityGeneration = 0;
   static const String _mapCacheKey = 'spatial_map_marker_cache_v1';
   static const String _mapCacheUpdatedAtKey =
       'spatial_map_marker_cache_updated_at_v1';
   List<MapMarkerModel> _cachedMapMarkers = [];
   DateTime? _mapCacheUpdatedAt;
 
-  bool get isOnline => _isOnline;
+  NetworkStatus get networkStatus => _networkStatus;
+  bool get isOnline => _networkStatus == NetworkStatus.online;
   List<MapMarkerModel> get cachedMapMarkers =>
       List.unmodifiable(_cachedMapMarkers);
   DateTime? get mapCacheUpdatedAt => _mapCacheUpdatedAt;
@@ -357,9 +359,12 @@ class AppProvider extends ChangeNotifier {
       : this.withServices(adminDbService: adminDbService);
 
   AppProvider.withServices(
-      {AdminDatabaseService? adminDbService, SupabaseAuthService? authService})
+      {AdminDatabaseService? adminDbService,
+      SupabaseAuthService? authService,
+      ConnectivityService? connectivityService})
       : _adminDbService = adminDbService,
-        _authService = authService ?? SupabaseAuthService() {
+        _authService = authService ?? SupabaseAuthService(),
+        _connectivityService = connectivityService {
     _initAdminDatabase();
     _initAuthListener();
     // NOTE: Live viewer polling is NOT started in the constructor to keep
@@ -1627,20 +1632,23 @@ class AppProvider extends ChangeNotifier {
   void ensureConnectivityMonitoringActive() {
     _connectivityService ??= ConnectivityService();
     _connectivitySub?.cancel();
-    _connectivitySub = _connectivityService!.onStatusChange.listen((online) {
-      _applyConnectivity(online);
+    final generation = ++_connectivityGeneration;
+    _connectivitySub = _connectivityService!.onStatusChange.listen((status) {
+      if (generation == _connectivityGeneration) _applyConnectivity(status);
     });
     // After subscribing, so a status change that lands while the initial
     // probe is still in flight is not overwritten by its staler answer.
-    _connectivityService!.checkNow().then(_applyConnectivity);
+    _connectivityService!.checkNow().then((status) {
+      if (generation == _connectivityGeneration) _applyConnectivity(status);
+    });
   }
 
-  void _applyConnectivity(bool online) {
-    final wasOffline = !_isOnline;
-    if (_isOnline == online) return;
-    _isOnline = online;
+  void _applyConnectivity(NetworkStatus status) {
+    final wasUnavailable = !isOnline;
+    if (_networkStatus == status) return;
+    _networkStatus = status;
     notifyListeners();
-    if (wasOffline && online) {
+    if (wasUnavailable && isOnline) {
       loadVerifiedStreamersFromBackend();
     }
   }
@@ -1654,16 +1662,16 @@ class AppProvider extends ChangeNotifier {
   /// Retry -- the banner's own escape hatch could not actually escape.
   Future<bool> refreshConnectivityNow() async {
     _connectivityService ??= ConnectivityService();
-    final online = await _connectivityService!.checkNow();
-    _applyConnectivity(online);
-    return online;
+    final status = await _connectivityService!.checkNow();
+    _applyConnectivity(status);
+    return status == NetworkStatus.online;
   }
 
   /// Test-only hook: lets widget tests simulate an offline/online transition
   /// without touching the real `connectivity_plus` platform channel.
   @visibleForTesting
   void debugSetOnlineForTests(bool online) {
-    _isOnline = online;
+    _networkStatus = online ? NetworkStatus.online : NetworkStatus.offline;
     notifyListeners();
   }
 

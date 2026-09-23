@@ -2,43 +2,102 @@ import 'dart:async';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 
-/// Thin wrapper around `connectivity_plus` so the rest of the app depends on
-/// a plain `bool` online/offline signal, not the plugin's own result enum.
-///
-/// This reports *device network reachability* (Wi-Fi/mobile data attached),
-/// not proof that a specific backend request will succeed -- it is
-/// deliberately conservative: a device can report "connected" to a Wi-Fi
-/// network with no real internet behind it. UI-08 treats this as the trigger
-/// to switch to the offline map experience and to retry when it flips back;
-/// individual network calls still handle their own failures independently.
+import '../config/supabase_config.dart';
+
+enum NetworkStatus { online, degraded, offline }
+
+/// Transport attachment and a bounded request to this app's backend.
+/// A response of any HTTP status proves reachability; a timeout does not.
 class ConnectivityService {
-  final Connectivity _connectivity;
+  ConnectivityService({
+    Connectivity? connectivity,
+    Future<List<ConnectivityResult>> Function()? checkConnectivity,
+    Stream<List<ConnectivityResult>>? connectivityChanges,
+    Future<bool> Function(Uri)? probe,
+    Uri? endpoint,
+    this.debounce = const Duration(milliseconds: 400),
+    this.probeTimeout = const Duration(seconds: 2),
+  }) : _checkConnectivity =
+           checkConnectivity ??
+           (connectivity ?? Connectivity()).checkConnectivity,
+       _connectivityChanges =
+           connectivityChanges ??
+           (connectivity ?? Connectivity()).onConnectivityChanged,
+       _probe = probe,
+       endpoint =
+           endpoint ??
+           (SupabaseConfig.isConfigured
+               ? Uri.tryParse(SupabaseConfig.url)?.resolve('/rest/v1/')
+               : null);
 
-  ConnectivityService({Connectivity? connectivity})
-      : _connectivity = connectivity ?? Connectivity();
+  final Future<List<ConnectivityResult>> Function() _checkConnectivity;
+  final Stream<List<ConnectivityResult>> _connectivityChanges;
+  final Future<bool> Function(Uri)? _probe;
+  final Uri? endpoint;
+  final Duration debounce;
+  final Duration probeTimeout;
 
-  bool _isOnline(List<ConnectivityResult> results) =>
-      results.any((r) => r != ConnectivityResult.none);
-
-  Future<bool> checkNow() async {
+  Future<NetworkStatus> checkNow() async {
     try {
-      final results = await _connectivity.checkConnectivity();
-      return _isOnline(results);
+      return await _classify(await _checkConnectivity());
     } catch (e) {
       debugPrint('ConnectivityService.checkNow failed: $e');
-      // Fail open: an unreadable connectivity API must not itself lock the
-      // app into a false "offline" state.
-      return true;
+      return NetworkStatus.degraded;
     }
   }
 
-  Stream<bool> get onStatusChange {
-    try {
-      return _connectivity.onConnectivityChanged.map(_isOnline);
-    } catch (e) {
-      debugPrint('ConnectivityService.onStatusChange failed: $e');
-      return const Stream.empty();
+  Future<NetworkStatus> _classify(List<ConnectivityResult> results) async {
+    if (!results.any((r) => r != ConnectivityResult.none)) {
+      return NetworkStatus.offline;
     }
+    final target = endpoint;
+    if (target == null) return NetworkStatus.degraded;
+    try {
+      final reachable = await (_probe?.call(target) ?? _httpProbe(target))
+          .timeout(probeTimeout);
+      return reachable ? NetworkStatus.online : NetworkStatus.degraded;
+    } catch (_) {
+      return NetworkStatus.degraded;
+    }
+  }
+
+  Future<bool> _httpProbe(Uri target) async {
+    final client = http.Client();
+    try {
+      await client.get(target).timeout(probeTimeout);
+      return true;
+    } finally {
+      client.close();
+    }
+  }
+
+  /// Debounce transport changes, then probe the latest network state.
+  Stream<NetworkStatus> get onStatusChange {
+    late StreamController<NetworkStatus> controller;
+    StreamSubscription<List<ConnectivityResult>>? subscription;
+    Timer? timer;
+    var generation = 0;
+    controller = StreamController<NetworkStatus>(
+      onListen: () {
+        subscription = _connectivityChanges.listen((results) {
+          final current = ++generation;
+          timer?.cancel();
+          timer = Timer(debounce, () async {
+            final status = await _classify(results);
+            if (!controller.isClosed && current == generation) {
+              controller.add(status);
+            }
+          });
+        }, onError: controller.addError);
+      },
+      onCancel: () async {
+        generation++;
+        timer?.cancel();
+        await subscription?.cancel();
+      },
+    );
+    return controller.stream;
   }
 }
