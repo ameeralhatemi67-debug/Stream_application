@@ -45,7 +45,7 @@ class StreamerApp extends StatefulWidget {
   State<StreamerApp> createState() => _StreamerAppState();
 }
 
-class _StreamerAppState extends State<StreamerApp> {
+class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   late final AppProvider _appProvider;
   late final GoRouter _router;
   bool _deviceConflictDialogShown = false;
@@ -54,6 +54,7 @@ class _StreamerAppState extends State<StreamerApp> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _appProvider = AppProvider();
     // Start real-time live viewer polling now that the provider exists.
     // This is intentionally NOT done inside AppProvider's constructor so that
@@ -68,6 +69,12 @@ class _StreamerAppState extends State<StreamerApp> {
     // -- GoRouter must not be rebuilt on every frame.
     _router = AppRouter.build(_appProvider);
     _appProvider.addListener(_maybeShowDeviceConflictDialog);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    _appProvider.setConnectivityForeground(state == AppLifecycleState.resumed ||
+        state == AppLifecycleState.inactive);
   }
 
   /// Shows DeviceSessionConflictDialog once per detected conflict --
@@ -121,6 +128,7 @@ class _StreamerAppState extends State<StreamerApp> {
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _appProvider.removeListener(_maybeShowDeviceConflictDialog);
     _appProvider.dispose();
     super.dispose();

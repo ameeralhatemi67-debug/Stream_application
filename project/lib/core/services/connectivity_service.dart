@@ -19,18 +19,19 @@ class ConnectivityService {
     Uri? endpoint,
     this.debounce = const Duration(milliseconds: 400),
     this.probeTimeout = const Duration(seconds: 2),
-  }) : _checkConnectivity =
-           checkConnectivity ??
-           (connectivity ?? Connectivity()).checkConnectivity,
-       _connectivityChanges =
-           connectivityChanges ??
-           (connectivity ?? Connectivity()).onConnectivityChanged,
-       _probe = probe,
-       endpoint =
-           endpoint ??
-           (SupabaseConfig.isConfigured
-               ? Uri.tryParse(SupabaseConfig.url)?.resolve('/rest/v1/')
-               : null);
+    this.pollInterval = const Duration(seconds: 15),
+    Timer Function(Duration, void Function())? createTimer,
+  })  : _checkConnectivity = checkConnectivity ??
+            (connectivity ?? Connectivity()).checkConnectivity,
+        _connectivityChanges = connectivityChanges ??
+            (connectivity ?? Connectivity()).onConnectivityChanged,
+        _probe = probe,
+        _createTimer =
+            createTimer ?? ((duration, callback) => Timer(duration, callback)),
+        endpoint = endpoint ??
+            (SupabaseConfig.isConfigured
+                ? Uri.tryParse(SupabaseConfig.url)?.resolve('/rest/v1/')
+                : null);
 
   final Future<List<ConnectivityResult>> Function() _checkConnectivity;
   final Stream<List<ConnectivityResult>> _connectivityChanges;
@@ -38,8 +39,24 @@ class ConnectivityService {
   final Uri? endpoint;
   final Duration debounce;
   final Duration probeTimeout;
+  final Duration pollInterval;
+  final Timer Function(Duration, void Function()) _createTimer;
+  int _revision = 0;
+  bool _foreground = true;
+  void Function()? _resumeMonitoring;
+
+  /// Changes to this value invalidate older manual and monitored probes.
+  int get revision => _revision;
+
+  void setForeground(bool foreground) {
+    if (_foreground == foreground) return;
+    _foreground = foreground;
+    ++_revision;
+    _resumeMonitoring?.call();
+  }
 
   Future<NetworkStatus> checkNow() async {
+    ++_revision;
     try {
       return await _classify(await _checkConnectivity());
     } catch (e) {
@@ -77,24 +94,54 @@ class ConnectivityService {
   Stream<NetworkStatus> get onStatusChange {
     late StreamController<NetworkStatus> controller;
     StreamSubscription<List<ConnectivityResult>>? subscription;
-    Timer? timer;
-    var generation = 0;
+    Timer? debounceTimer;
+    Timer? pollTimer;
+    var active = true;
+    Future<void> sample([List<ConnectivityResult>? known]) async {
+      if (!_foreground || !active) return;
+      final current = ++_revision;
+      NetworkStatus status;
+      try {
+        status = await _classify(known ?? await _checkConnectivity());
+      } catch (_) {
+        status = NetworkStatus.degraded;
+      }
+      if (!controller.isClosed &&
+          active &&
+          _foreground &&
+          current == _revision) {
+        controller.add(status);
+      }
+      if (active && _foreground) {
+        pollTimer?.cancel();
+        pollTimer = _createTimer(pollInterval, () => unawaited(sample()));
+      }
+    }
+
     controller = StreamController<NetworkStatus>(
       onListen: () {
+        _resumeMonitoring = () {
+          debounceTimer?.cancel();
+          pollTimer?.cancel();
+          if (_foreground) unawaited(sample());
+        };
+        pollTimer = _createTimer(pollInterval, () => unawaited(sample()));
         subscription = _connectivityChanges.listen((results) {
-          final current = ++generation;
-          timer?.cancel();
-          timer = Timer(debounce, () async {
-            final status = await _classify(results);
-            if (!controller.isClosed && current == generation) {
-              controller.add(status);
-            }
-          });
+          ++_revision;
+          debounceTimer?.cancel();
+          pollTimer?.cancel();
+          if (_foreground) {
+            debounceTimer =
+                _createTimer(debounce, () => unawaited(sample(results)));
+          }
         }, onError: controller.addError);
       },
       onCancel: () async {
-        generation++;
-        timer?.cancel();
+        active = false;
+        ++_revision;
+        _resumeMonitoring = null;
+        debounceTimer?.cancel();
+        pollTimer?.cancel();
         await subscription?.cancel();
       },
     );

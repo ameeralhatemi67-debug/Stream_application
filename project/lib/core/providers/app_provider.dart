@@ -1663,11 +1663,20 @@ class AppProvider extends ChangeNotifier {
     });
     // After subscribing, so a status change that lands while the initial
     // probe is still in flight is not overwritten by its staler answer.
-    _connectivityService!.checkNow().then((status) {
-      if (generation == _connectivityGeneration && eventRevision == 0) {
+    final initialCheck = _connectivityService!.checkNow();
+    final probeRevision = _connectivityService!.revision;
+    initialCheck.then((status) {
+      if (generation == _connectivityGeneration &&
+          eventRevision == 0 &&
+          probeRevision == _connectivityService!.revision) {
         _applyConnectivity(status);
       }
     });
+  }
+
+  /// The app root calls this when Flutter hides or resumes the app.
+  void setConnectivityForeground(bool foreground) {
+    _connectivityService?.setForeground(foreground);
   }
 
   void _applyConnectivity(NetworkStatus status) {
@@ -1700,17 +1709,18 @@ class AppProvider extends ChangeNotifier {
   /// Retry -- the banner's own escape hatch could not actually escape.
   Future<bool> refreshConnectivityNow() async {
     _connectivityService ??= ConnectivityService();
-    final status = await _connectivityService!.checkNow();
-    _applyConnectivity(status);
-    return status == NetworkStatus.online;
+    final check = _connectivityService!.checkNow();
+    final revision = _connectivityService!.revision;
+    final status = await check;
+    if (revision == _connectivityService!.revision) _applyConnectivity(status);
+    return isOnline;
   }
 
   /// Test-only hook: lets widget tests simulate an offline/online transition
   /// without touching the real `connectivity_plus` platform channel.
   @visibleForTesting
   void debugSetOnlineForTests(bool online) {
-    _applyConnectivity(
-        online ? NetworkStatus.online : NetworkStatus.offline);
+    _applyConnectivity(online ? NetworkStatus.online : NetworkStatus.offline);
   }
 
   Future<void> _loadMapMarkerCacheFromDisk() async {
@@ -1740,7 +1750,8 @@ class AppProvider extends ChangeNotifier {
     _isUsingCachedCatalog = true;
     _publicCatalogUpdatedAt = snapshot.updatedAt;
     _cachedMapMarkers = snapshot.streamers
-        .where((s) => (s.latitude != 0 || s.longitude != 0) &&
+        .where((s) =>
+            (s.latitude != 0 || s.longitude != 0) &&
             !s.isTemporarilyHiddenFromMap)
         .map((s) => MapMarkerModel.fromCachedJson(
             MapMarkerModel.fromStreamer(s).toJson()))
@@ -4295,8 +4306,8 @@ class AppProvider extends ChangeNotifier {
   Future<void> _refreshAcademicCategories() async {
     _adminDbService ??= await AdminDatabaseService.create();
     try {
-      _academicCategories = await _adminDbService!
-          .loadAcademicCategories(requireSuccess: true);
+      _academicCategories =
+          await _adminDbService!.loadAcademicCategories(requireSuccess: true);
       _publicCategoriesLoaded = true;
       unawaited(_persistPublicCatalogIfReady());
       notifyListeners();
