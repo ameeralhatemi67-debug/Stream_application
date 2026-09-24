@@ -29,7 +29,10 @@ class _LiveRoomConnectionViewState extends State<LiveRoomConnectionView> {
 
   Future<void> _retry() async {
     setState(() => _retrying = true);
-    await context.read<AppProvider>().refreshConnectivityNow();
+    final provider = context.read<AppProvider>();
+    if (await provider.refreshConnectivityNow()) {
+      await provider.loadVerifiedStreamersFromBackend();
+    }
     if (mounted) setState(() => _retrying = false);
   }
 

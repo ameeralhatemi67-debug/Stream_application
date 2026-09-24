@@ -191,7 +191,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
               spec.subtitleKey.tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                color: AppTheme.textSecondary,
+                color: AppTheme.onMedia,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -204,7 +204,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: AppTheme.textMuted,
+                  color: AppTheme.onMedia,
                   fontSize: 10.5,
                 ),
               ),

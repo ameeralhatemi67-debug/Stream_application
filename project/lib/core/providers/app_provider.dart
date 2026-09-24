@@ -120,6 +120,10 @@ class AppProvider extends ChangeNotifier {
   final PublicCatalogCache _publicCatalogCache = PublicCatalogCache();
   List<StreamerModel>? _lastLoadedPublicStreamers;
   bool _publicCategoriesLoaded = false;
+  Future<void>? _publicCatalogLoad;
+  int _publicCatalogLoadEpoch = -1;
+  int _catalogEpoch = 0;
+  bool _disposed = false;
   bool _isUsingCachedCatalog = false;
   DateTime? _publicCatalogUpdatedAt;
   int _successfulCatalogRevision = 0;
@@ -222,7 +226,8 @@ class AppProvider extends ChangeNotifier {
   // to AcademicCategoryModel.defaultPool via the getter, covering both
   // "not loaded yet"and "Supabase unreachable".
   List<AcademicCategoryModel> _academicCategories = [];
-  bool _academicCategoriesLoaded = false;
+  Future<void>? _categoriesLoad;
+  int _categoryRequestGeneration = 0;
 
   // Tag Moderation (Cluster 3 Task 12) -- see ensureTagsLoaded/approvedTags.
   List<String> _approvedTags = [];
@@ -1411,7 +1416,23 @@ class AppProvider extends ChangeNotifier {
   DateTime? _lastLiveFlagSweepAt;
   static const Duration _liveFlagSweepInterval = Duration(seconds: 60);
 
-  Future<void> loadVerifiedStreamersFromBackend() async {
+  Future<void> loadVerifiedStreamersFromBackend() {
+    if (!isOnline) return Future<void>.value();
+    final active = _publicCatalogLoad;
+    if (active != null && _publicCatalogLoadEpoch == _catalogEpoch) {
+      return active;
+    }
+    final epoch = _catalogEpoch;
+    final request = _fetchVerifiedStreamers(epoch);
+    _publicCatalogLoad = request;
+    _publicCatalogLoadEpoch = epoch;
+    request.whenComplete(() {
+      if (identical(_publicCatalogLoad, request)) _publicCatalogLoad = null;
+    });
+    return request;
+  }
+
+  Future<void> _fetchVerifiedStreamers(int epoch) async {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
       final now = DateTime.now();
@@ -1422,6 +1443,7 @@ class AppProvider extends ChangeNotifier {
       }
       final backendStreamers = await _adminDbService!
           .loadVerifiedStreamersFromBackend(requireSuccess: true);
+      if (_disposed || epoch != _catalogEpoch || !isOnline) return;
       _lastLoadedPublicStreamers = List.of(backendStreamers);
 
       final backendIds = backendStreamers.map((s) => s.streamerId).toSet();
@@ -1567,7 +1589,7 @@ class AppProvider extends ChangeNotifier {
     _subscribeToPublicStreamerChanges();
     _subscribeToAcademicCategoryChanges();
     await loadVerifiedStreamersFromBackend();
-    await refreshAdminData();
+    await refreshAdminData(includePublicCatalog: false);
     // Categories/approved-tags are public data (Cluster 3 Tasks 10/12) --
     // loaded for every viewer, including guests, not just admin tiers.
     await ensureAcademicCategoriesLoaded();
@@ -1613,7 +1635,7 @@ class AppProvider extends ChangeNotifier {
 
   /// Reloads all admin-tier data (applications, audit logs, analytics, affiliation requests)
   /// from the Supabase backend.
-  Future<void> refreshAdminData() async {
+  Future<void> refreshAdminData({bool includePublicCatalog = true}) async {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
       _applications = List.from(await _adminDbService!.loadApplications());
@@ -1622,7 +1644,7 @@ class AppProvider extends ChangeNotifier {
       _auditLogs = List.from(await _adminDbService!.loadAuditLogs());
       _affiliationRequests =
           List.from(await _adminDbService!.loadAffiliationRequests());
-      await loadVerifiedStreamersFromBackend();
+      if (includePublicCatalog) await loadVerifiedStreamersFromBackend();
       notifyListeners();
     } catch (e) {
       debugPrint('refreshAdminData failed: $e');
@@ -1683,11 +1705,15 @@ class AppProvider extends ChangeNotifier {
   }
 
   void _applyConnectivity(NetworkStatus status) {
+    if (_disposed) return;
     final wasUnavailable = !isOnline;
     if (_networkStatus == status) return;
+    _catalogEpoch++;
+    _categoryRequestGeneration++;
+    _categoriesLoad = null;
     _networkStatus = status;
     if (status != NetworkStatus.online) {
-      if (_publicCatalogUpdatedAt != null) _isUsingCachedCatalog = true;
+      _isUsingCachedCatalog = true;
       _streamers = _streamers
           .map((s) => s.copyWith(
                 isCurrentlyLive: false,
@@ -1877,6 +1903,10 @@ class AppProvider extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
+    _catalogEpoch++;
+    _categoryRequestGeneration++;
+    _connectivityGeneration++;
     _deviceGeneration++;
     _deviceHeartbeatTimer?.cancel();
     _deviceSubscription?.cancel();
@@ -4300,17 +4330,29 @@ class AppProvider extends ChangeNotifier {
   /// session, same caching shape as ensureChatReportsLoaded). Falls back to
   /// AcademicCategoryModel.defaultPool (via the getter above) when empty --
   /// covers both "not loaded yet"and "Supabase unreachable".
-  Future<void> ensureAcademicCategoriesLoaded() async {
-    if (_academicCategoriesLoaded && _publicCategoriesLoaded) return;
-    _academicCategoriesLoaded = true;
-    await _refreshAcademicCategories();
+  Future<void> ensureAcademicCategoriesLoaded() {
+    if (!isOnline) return Future<void>.value();
+    if (_publicCategoriesLoaded) return Future<void>.value();
+    final active = _categoriesLoad;
+    if (active != null) return active;
+    final request = _refreshAcademicCategories();
+    _categoriesLoad = request;
+    request.whenComplete(() {
+      if (identical(_categoriesLoad, request)) _categoriesLoad = null;
+    });
+    return request;
   }
 
   Future<void> _refreshAcademicCategories() async {
+    final generation = ++_categoryRequestGeneration;
     _adminDbService ??= await AdminDatabaseService.create();
     try {
-      _academicCategories =
+      final categories =
           await _adminDbService!.loadAcademicCategories(requireSuccess: true);
+      if (_disposed || generation != _categoryRequestGeneration || !isOnline) {
+        return;
+      }
+      _academicCategories = categories;
       _publicCategoriesLoaded = true;
       unawaited(_persistPublicCatalogIfReady());
       notifyListeners();

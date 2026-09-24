@@ -20,6 +20,7 @@ import 'package:streamer_app/features/live_stream/presentation/abstract_video_pl
 import 'package:streamer_app/features/live_stream/services/live_chat_controller.dart';
 import 'package:streamer_app/features/live_stream/services/viewer_presence_service.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
+import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
 
 import 'fixtures/streamer_fixtures.dart';
 import 'support/localized_app.dart';
@@ -95,6 +96,23 @@ class _RoomCatalog extends AdminDatabaseService {
   }
 }
 
+class _CategoryCatalog extends AdminDatabaseService {
+  final pending = <Completer<List<AcademicCategoryModel>>>[];
+  @override
+  Future<int> sweepStaleLiveFlags() async => 0;
+  @override
+  Future<List<StreamerModel>> loadVerifiedStreamersFromBackend(
+          {bool requireSuccess = false}) async =>
+      [];
+  @override
+  Future<List<AcademicCategoryModel>> loadAcademicCategories(
+      {bool requireSuccess = false}) {
+    final request = Completer<List<AcademicCategoryModel>>();
+    pending.add(request);
+    return request.future;
+  }
+}
+
 Widget harness(AppProvider provider, String language, Widget home) =>
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ar')],
@@ -154,7 +172,7 @@ void main() {
     });
   }
 
-  testWidgets('retry clears the degraded banner when the backend recovers',
+  testWidgets('retry keeps the banner until a fresh catalog succeeds',
       (tester) async {
     var reachable = false;
     final service = ConnectivityService(
@@ -173,7 +191,8 @@ void main() {
     await tester.tap(find.text('Retry'));
     await tester.pumpAndSettle();
     expect(provider.networkStatus, NetworkStatus.online);
-    expect(find.byKey(const ValueKey('connectivity_banner')), findsNothing);
+    expect(provider.isUsingCachedCatalog, isTrue);
+    expect(find.byKey(const ValueKey('connectivity_banner')), findsOneWidget);
     await tester.pumpWidget(const SizedBox.shrink());
     provider.dispose();
   });
@@ -197,7 +216,8 @@ void main() {
             height: 300,
             child: StreamerGridCard(streamer: staleLive, langCode: 'en'))));
     await tester.pumpAndSettle();
-    expect(find.text('Live status unavailable'), findsOneWidget);
+    expect(
+        find.text('Saved listing · live status unavailable'), findsOneWidget);
     expect(find.text('LIVE'), findsNothing);
     await tester.pumpWidget(const SizedBox.shrink());
     provider.dispose();
@@ -299,7 +319,7 @@ void main() {
     provider.debugSetOnlineForTests(true);
     await tester.pump();
     await tester.pump();
-    expect(catalog.pending, isNotEmpty);
+    expect(catalog.pending, hasLength(1));
     expect(counts.playersStarted, 1);
     expect(find.text('Checking this live room'), findsOneWidget);
     for (final request in List.of(catalog.pending)) {
@@ -317,7 +337,7 @@ void main() {
     provider.debugSetOnlineForTests(true);
     await tester.pump();
     await tester.pump();
-    expect(catalog.pending, isNotEmpty);
+    expect(catalog.pending, hasLength(1));
     for (final request in List.of(catalog.pending)) {
       request.complete([
         live.copyWith(
@@ -335,6 +355,92 @@ void main() {
     expect(counts.chatsDisposed, 2);
     expect(counts.presenceDisposed, 2);
     await tester.pumpWidget(const SizedBox.shrink());
+    provider.dispose();
+  });
+
+  testWidgets('banner Retry coalesces recovery and ignores stale catalog',
+      (tester) async {
+    var reachable = false;
+    final service = ConnectivityService(
+      endpoint: Uri.parse('http://127.0.0.1:1/rest/v1/'),
+      checkConnectivity: () async => [ConnectivityResult.wifi],
+      connectivityChanges: const Stream.empty(),
+      probe: (_) async => reachable,
+    );
+    final catalog = _RoomCatalog();
+    final provider = AppProvider.withServices(
+        adminDbService: catalog, connectivityService: service);
+    final live = mockStreamers.first.copyWith(
+      isCurrentlyLive: true,
+      broadcastType: BroadcastType.liveVideo,
+      activeStreamId: 'outage-room',
+    );
+    provider.addStreamer(live);
+    await tester.pumpWidget(harness(
+        provider, 'en', const Column(children: [ConnectivityBanner()])));
+    await tester.pump();
+    expect(catalog.pending, hasLength(1));
+    final oldRequest = catalog.pending.removeAt(0);
+
+    await provider.refreshConnectivityNow();
+    await tester.pump();
+    expect(provider.networkStatus, NetworkStatus.degraded);
+    expect(provider.isUsingCachedCatalog, isTrue);
+    expect(provider.streamers.single.isCurrentlyLive, isFalse);
+
+    reachable = true;
+    await tester.tap(find.text('Retry'));
+    await tester.pump();
+    await tester.pump();
+    expect(provider.networkStatus, NetworkStatus.online);
+    expect(catalog.pending, hasLength(1));
+    final recoveryRequest = catalog.pending.removeAt(0);
+    final duplicate = provider.loadVerifiedStreamersFromBackend();
+    expect(catalog.pending, isEmpty);
+
+    oldRequest.complete([live]);
+    await tester.pump();
+    expect(provider.isUsingCachedCatalog, isTrue);
+    expect(provider.streamers.single.isCurrentlyLive, isFalse);
+
+    recoveryRequest.completeError(StateError('backend outage'));
+    await duplicate;
+    await tester.pump();
+    await tester.pump();
+    expect(provider.isUsingCachedCatalog, isTrue);
+    expect(find.text('Retry'), findsOneWidget);
+
+    await tester.tap(find.text('Retry'));
+    await tester.pump();
+    expect(catalog.pending, hasLength(1));
+    catalog.pending.removeAt(0).complete([live]);
+    await tester.pump();
+    await tester.pump();
+    expect(provider.isUsingCachedCatalog, isFalse);
+    expect(provider.streamers.single.isCurrentlyLive, isTrue);
+    expect(find.byKey(const ValueKey('connectivity_banner')), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    provider.dispose();
+  });
+
+  test('category loading shares one request and retries after failure',
+      () async {
+    final catalog = _CategoryCatalog();
+    final provider = AppProvider.withServices(adminDbService: catalog);
+    final first = provider.ensureAcademicCategoriesLoaded();
+    final duplicate = provider.ensureAcademicCategoriesLoaded();
+    expect(catalog.pending, hasLength(1));
+    catalog.pending.removeAt(0).completeError(StateError('offline'));
+    await Future.wait([first, duplicate]);
+    expect(provider.isUsingCachedCatalog, isFalse);
+    final retry = provider.ensureAcademicCategoriesLoaded();
+    expect(catalog.pending, hasLength(1));
+    catalog.pending.removeAt(0).complete([
+      const AcademicCategoryModel(
+          id: 'science', nameEn: 'Science', nameAr: 'علوم')
+    ]);
+    await retry;
+    expect(provider.academicCategories.single.id, 'science');
     provider.dispose();
   });
 }

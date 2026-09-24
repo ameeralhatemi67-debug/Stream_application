@@ -270,8 +270,9 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     DateTime? lastOwn;
     for (final m in _messages) {
       if (!m.isCurrentUser || m.isFailed) continue;
-      if (lastOwn == null || m.createdAt.isAfter(lastOwn))
+      if (lastOwn == null || m.createdAt.isAfter(lastOwn)) {
         lastOwn = m.createdAt;
+      }
     }
     if (lastOwn == null) return null;
     return lastOwn.add(Duration(seconds: _slowModeSeconds));
@@ -615,8 +616,9 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
         'stream_id': streamId,
       });
     } on PostgrestException catch (e) {
-      if (e.code != '23505')
+      if (e.code != '23505') {
         rethrow; // 23505 = unique_violation, already a moderator
+      }
     }
     _profileCache.remove(profileId); // force badge re-resolution on next fetch
   }

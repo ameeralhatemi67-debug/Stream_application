@@ -20,6 +20,7 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Phone LIVE before encoder/server confirmation** — FIXED locally; native-event and RPC denial tests pass, real ingest unverified.
 - **Windows STL1011 in permission_handler_windows** — UNRESOLVED compiler/plugin compatibility; reproduced without flag changes.
 - **Realtime initial snapshot precedes first channel join** — known SDK timing window; existing 20-second heartbeat fallback, physical timing check open.
+- **Live-room connecting subtitle fails contrast** — FIXED locally; initializing overlay uses media text color.
 
 ## Recording format
 
@@ -36,6 +37,14 @@ Evidence: relevant local path or link, if available.
 ```
 
 Add resolved issues to the index using the same simple error name. Keep the index brief; details belong in the matching section below. Never record secrets, tokens, private keys, or credentials.
+
+## Live-room connecting subtitle fails contrast
+Status: FIXED locally.
+Observed: The English and Arabic `rendered_contrast_test.dart` live-room cases measured the connecting subtitle at 1.65:1 against the media background after offline recovery exposed the initializing state.
+Cause: The placeholder used `AppTheme.textSecondary`, a dark foreground token, over `AppTheme.media`.
+Fix/workaround: Use `AppTheme.onMedia` for placeholder subtitle and error detail.
+Verification: The focused 38-case rendered contrast suite passed. Physical-device display and real WebView playback remain unverified.
+Evidence: `brief/evidence/2026-09-24/p5-hardening-worktree.md`.
 
 ## Docker Inference manager `dockerInference` socket bind collision
 
