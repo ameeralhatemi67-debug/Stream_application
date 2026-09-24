@@ -1,7 +1,6 @@
 import '../../../core/widgets/safe_image_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'dart:math'as math;
-import 'dart:ui'as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -20,19 +19,18 @@ import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
 
-/// Free Light GIS Basemap (Esri World Light Gray Canvas & OpenStreetMap
-/// fallback). Completely free of watermarks or API key requirements.
+/// Online light raster basemap (Esri World Light Gray Canvas) with an
+/// OpenStreetMap network fallback. Both sources require visible attribution.
 ///
 /// UI-07: this used to be the dark-canvas sibling tile set
 /// (`World_Dark_Gray_Base`), which read as dark/low-contrast/noisy against
 /// the rest of the app's light theme (brief/Ui_issues/Map_when_wifi_on.jpg).
-/// The light-canvas set is the same Esri service, same terms, same zero-key
-/// zero-watermark access -- only the palette differs -- so it's a drop-in
-/// swap, not a provider change.
+/// The light-canvas service replaced the dark-canvas sibling to match the
+/// app's white theme. See store/map_licensing.md before changing providers.
 const String kSpatialMapTileUrlTemplate =
     'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 
-/// Zero-API-key fallback used when the primary tile request fails.
+/// Network fallback used when the primary tile request fails. No prefetch.
 const String kSpatialMapTileFallbackUrl =
     'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
@@ -606,7 +604,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     // in map_models.dart), not third-party tiles, so no
                     // tile-provider attribution applies to it.
                     //
-                    // A plain Text in a bounded, ellipsizing box rather than
+                    // A plain Text in a bounded, wrapping box rather than
                     // flutter_map's own SimpleAttributionWidget: that widget
                     // sizes its Row to its own intrinsic content with no
                     // width constraint, which overflowed on a narrow Arabic
@@ -623,19 +621,22 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                         // Core_files/Desgin.md.
                         alignment: AlignmentDirectional.bottomStart,
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 190),
-                          child: Container(
-                            color: AppTheme.surface.withValues(alpha: 0.75),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            child: const Text(
-                              'Esri, HERE, Garmin, OpenStreetMap contributors',
-                              maxLines: 1,
-                              softWrap: false,
-                              overflow: TextOverflow.ellipsis,
-                              textDirection: ui.TextDirection.ltr,
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 9,
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: InkWell(
+                            onTap: () => launchUrl(
+                              Uri.parse('https://www.openstreetmap.org/copyright'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Container(
+                              color: AppTheme.surface.withValues(alpha: 0.75),
+                              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                              child: Text(
+                                'map.attribution_esri'.tr(),
+                                softWrap: true,
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 10,
+                                ),
                               ),
                             ),
                           ),

@@ -67,7 +67,8 @@
     "offline_retry": "إعادة المحاولة",
     "offline_retrying": "جارٍ إعادة المحاولة…",
     "offline_marker_details_unavailable": "التفاصيل الكاملة وحالة البث المباشر غير متاحة بدون اتصال.",
-    "open_in_maps": "فتح في الخرائط"
+    "open_in_maps": "فتح في الخرائط",
+    "attribution_esri": "المصادر: Esri، HERE، Garmin، \u00A9 مساهمو OpenStreetMap، ومجتمع مستخدمي GIS"
   },
   "feed": {
     "title": "دليل البث المباشر",

@@ -67,7 +67,8 @@
     "offline_retry": "Retry",
     "offline_retrying": "Retrying…",
     "offline_marker_details_unavailable": "Full details and live status aren't available offline.",
-    "open_in_maps": "Open in Maps"
+    "open_in_maps": "Open in Maps",
+    "attribution_esri": "Sources: Esri, HERE, Garmin, \u00A9 OpenStreetMap contributors, and the GIS User Community"
   },
   "feed": {
     "title": "Discovery Feed",
