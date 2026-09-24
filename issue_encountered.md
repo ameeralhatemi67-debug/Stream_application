@@ -1,6 +1,6 @@
 # Issues encountered during release hardening
 
-Updated: 2026-09-23. This is a local troubleshooting record, not proof that the database tests passed.
+Updated: 2026-09-24. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
 
@@ -19,7 +19,15 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Phone landscape ParentData crash and preview disposal** — layout crash FIXED locally; native lifecycle compiled, physical camera retest open.
 - **Phone LIVE before encoder/server confirmation** — FIXED locally; native-event and RPC denial tests pass, real ingest unverified.
 - **Windows STL1011 in permission_handler_windows** — UNRESOLVED compiler/plugin compatibility; reproduced without flag changes.
-- **Realtime initial snapshot precedes first channel join** — known SDK timing window; existing 20-second heartbeat fallback, physical timing check open.
+- **Realtime initial snapshot precedes first channel join** — FIXED locally for device sessions (read after join); physical timing check open.
+- **Device conflict dialog removed by splash navigation** — FIXED locally; router-level test and two-client probe pass, two phones open.
+- **Studio errors hidden behind the bottom sheet** — FIXED locally; in-sheet errors, studio tests pass, device retest open.
+- **Map visibility false success and unaudited revocation** — FIXED locally; audited RPCs, 26 SQL assertions, owner retest open.
+- **Filtered Realtime DELETE not delivered (unban)** — WORKAROUND: poll while banned; ban INSERT delivered.
+- **Application status screen had no way back** — FIXED locally; router test passes, device retest open.
+- **Supabase CLI `start` crashes (Bun) in the sandbox** — workaround: wrapper from the worktree root, unsandboxed, relative `--workdir`.
+- **Restarting the local Realtime container breaks joins until Kong restarts** — workaround: restart the local Kong container too.
+- **Signed-in long-lived Chrome reload hang** — UNRESOLVED, not reproduced; capture steps in the 2026-09-24 repair note.
 - **Live-room connecting subtitle fails contrast** — FIXED locally; initializing overlay uses media text color.
 
 ## Recording format
@@ -148,9 +156,73 @@ Verification: reproduced once with no backend defines. Android and web builds ar
 Evidence: brief/.runtime/owner-windows-build.log (ignored); sanitized verification.txt in the remediation folder.
 
 ## Realtime initial snapshot precedes first channel join
-Status: KNOWN TIMING LIMIT; existing heartbeat fallback retained.
-Observed: local device-transfer probe got the initial rows, transferred immediately, then timed out waiting for that Realtime event. After waiting for the same channel to join, transfer delivery and server denials passed.
+Status: FIXED locally for `device_sessions` (2026-09-24); other `.stream()` users unchanged. Physical timing UNVERIFIED.
+Observed: local device-transfer probe got the initial rows, transferred immediately, then timed out waiting for that Realtime event. After waiting for the same channel to join, transfer delivery and server denials passed. 2026-09-24 two-client probe: old `stream()` did not deliver an early transfer within 25 s.
 Cause: installed supabase 2.16.1 stream builder fetches initial HTTP data before channel join and re-fetches on subsequent joins only. Initial data is not proof that Realtime is subscribed.
-Fix/workaround: no duplicate listener. Existing primary-device heartbeat every 20 seconds demotes on false/error, bounding missed-event detection. The owner must measure the initial-join and active-publisher stop paths on two phones.
+Fix/workaround: `AdminDatabaseService.watchDevices` subscribes first and reads the rows after every (re)join and change event; only the newest read is emitted. The 20-second heartbeat remains as a second line, and app resume heartbeats immediately. The owner must still measure the initial-join and active-publisher stop paths on two phones.
 Verification: two local password sessions, same stream primary keys/filter as the app; publication exists; joined transfer delivered, displaced heartbeat false, live cleared and restart denied 42501. No E4 evidence.
-Evidence: dated owner remediation addendum and verification.txt.
+Evidence: dated owner remediation addendum and verification.txt; 2026-09-24 probe: early transfer seen after 35 ms with read-after-join (`brief/evidence/2026-09-24/p6-retest-repair/README.md`).
+
+## Device conflict dialog removed by splash navigation
+Status: FIXED locally (2026-09-24); two-phone retest open.
+Observed: P6-R02 on two physical phones and phone+laptop: signing the same approved broadcaster into a second device showed no "Multiple Device Login Detected" dialog.
+Cause: reproduced with the real router: the conflict is detected inside sign-in hydration while `/splash` is showing. The dialog, a pageless route on that page, was removed when the router replaced the page (`dialog shown at /splash hydrating=true` → `completed choice=null at /feed`). Contributing: a primary silent for 90 s (frozen Android app, throttled tab) was taken over with no prompt; the client read then claimed in two steps and treated a failed read as "no conflict".
+Fix/workaround: `DeviceSessionPresenter` presents after hydration and off `/splash`, and re-presents if navigation removes it. `claim_broadcaster_device_state` (20260924100000) claims or reports the primary device, fresh or stale, in one locked transaction.
+Verification: `test/device_session_presenter_test.dart` 6 passed; SQL 16 passed; local two-client probe passed. No physical-device evidence.
+Evidence: `brief/evidence/2026-09-24/p6-retest-repair/README.md`.
+
+## Studio errors hidden behind the bottom sheet
+Status: FIXED locally (2026-09-24); device retest open.
+Observed: P6-R06/R08/S01: OBS "Go Live", Phone "Open Camera" and Local "Stream" appeared to do nothing.
+Cause: reproduced: refusals (missing watch link, non-primary device, approval, server refusal) were SnackBars on the page's ScaffoldMessenger, painted underneath the modal studio sheet. Local only saved an `rtmp://` address; no transport exists.
+Fix/workaround: errors render inside the sheet with preflight for approval, primary device (with a "use this device" action), key, watch link and platform; double-tap guard; OBS reports server-confirmed app listing only; Local is shown as unavailable.
+Verification: `test/broadcaster_studio_entry_test.dart` 12 passed, older studio/contrast tests 60 passed. Real ingest UNVERIFIED.
+Evidence: `brief/evidence/2026-09-24/p6-retest-repair/README.md`.
+
+## Map visibility false success and unaudited revocation
+Status: FIXED locally (2026-09-24); owner retest and hosted migration open.
+Observed: P6-R09: hide-from-map and streamer revocation missing from the audit log; older checklist "Failed to update map visibility".
+Cause: the provider caught backend failures, changed local state and returned success; the service wrote the flag directly. The registry "Delete Streamer" removed the row locally, then made unaudited multi-table writes and deleted the user's organizations.
+Fix/workaround: `admin_moderate_broadcaster` (20260924110000) with a guard trigger against direct API writes of the flag; personal revocation through audited `admin_update_account('revoke_streamer')`; client changes state only after server success; UI requires a reason and says revocation is not deletion.
+Verification: SQL 26 passed (including forced audit failure → no change); `test/admin_broadcaster_moderation_test.dart` 4 passed; local API probe passed.
+Evidence: `brief/evidence/2026-09-24/p6-retest-repair/README.md`.
+
+## Filtered Realtime DELETE not delivered (unban)
+Status: WORKAROUND (2026-09-24).
+Observed: ban/unban took effect only after app restart.
+Cause: ban state was read only at sign-in. Realtime delivered a filtered `banned_users` INSERT in ~0.45 s locally, but 0 events for the filtered DELETE of an unban.
+Fix/workaround: subscribe to the account's `banned_users` row; while banned, re-read every 20 s; re-read on resume.
+Verification: local API probe. Device timing UNVERIFIED.
+Evidence: `brief/.runtime/r09-probe.log` (ignored), summarized in the 2026-09-24 repair note.
+
+## Application status screen had no way back
+Status: FIXED locally (2026-09-24).
+Observed: P6-R09 note: "Apply to Stream (5-Step Form)" left the user without a back button.
+Cause: Settings used `context.go()` and sent any existing application, including rejected/revoked, to the pending screen, which had no app bar. The wizard back arrow only stepped backwards.
+Fix/workaround: push by status (pending → status screen, otherwise wizard); back action on the status screen; wizard close action from any step.
+Verification: `test/p6_retest_navigation_and_avatar_test.dart` passed. Device retest open.
+Evidence: `brief/evidence/2026-09-24/p6-retest-repair/README.md`.
+
+## Supabase CLI `start` crashes (Bun) in the sandbox
+Status: WORKAROUND.
+Observed: `supabase start` via the npm wrapper crashed with a Bun panic (stack overflow / illegal instruction) in the sandbox; `supabase-go.exe` alone does not know `start`.
+Cause: suspected sandbox restriction on the Bun wrapper; not confirmed.
+Fix/workaround: run `node_modules\.bin\supabase.cmd start --workdir <relative path>` from the worktree root, unsandboxed, with `DO_NOT_TRACK=1` and Docker on PATH.
+Verification: disposable stack `P6_retest_repair_20260924` started and applied all migrations.
+Evidence: this session.
+
+## Restarting the local Realtime container breaks joins until Kong restarts
+Status: WORKAROUND (local tooling only).
+Observed: after `docker restart` of the local Realtime container, channel joins timed out although the container reported healthy.
+Cause: suspected stale upstream in the local Kong gateway; not confirmed.
+Fix/workaround: restart the local Kong container as well.
+Verification: probe joins recovered after the Kong restart.
+Evidence: this session.
+
+## Signed-in long-lived Chrome reload hang
+Status: UNRESOLVED; not reproduced.
+Observed: owner P6-R04 note: in long-lived tabs, reload occasionally fails to fetch or hangs until refreshed fresh.
+Cause: unknown. Code facts only: `main()` awaits `Supabase.initialize` (session recovery) before the first frame, and hydration awaits several network calls without timeouts while `/splash` shows. No cause assigned.
+Fix/workaround: none (no speculative fix).
+Verification: not attempted in a signed-in browser in this session (browser selection needed the owner).
+Evidence: capture steps in `brief/evidence/2026-09-24/p6-retest-repair/README.md`, step 10.
