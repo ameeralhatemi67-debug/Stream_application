@@ -19,7 +19,7 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Phone landscape ParentData crash and preview disposal** — layout crash FIXED locally; native lifecycle compiled, physical camera retest open.
 - **Phone LIVE before encoder/server confirmation** — FIXED locally; native-event and RPC denial tests pass, real ingest unverified.
 - **Windows STL1011 in permission_handler_windows** — FIXED locally with plugin-only MSVC compatibility definition; debug build passes.
-- **Android generated plugin registrant missing** — UNVERIFIED intermittent cache failure; current debug APK build passes.
+- **Android generated plugin registrant missing** — RECOVERED locally after Flutter cache regeneration; exact phone launch passes, root cause unconfirmed.
 - **Realtime initial snapshot precedes first channel join** — FIXED locally for device sessions (read after join); physical timing check open.
 - **Device conflict dialog removed by splash navigation** — FIXED locally; router-level test and two-client probe pass, two phones open.
 - **Studio errors hidden behind the bottom sheet** — FIXED locally; in-sheet errors, studio tests pass, device retest open.
@@ -176,11 +176,11 @@ Verification: `flutter build windows --debug --no-pub` succeeded and produced `s
 Evidence: brief/.runtime/owner-windows-build.log (ignored); sanitized verification.txt in the remediation folder.
 
 ## Android generated plugin registrant missing
-Status: UNVERIFIED intermittent build-cache failure; current local build passes.
+Status: RECOVERED locally; original intermittent cause UNVERIFIED.
 Observed: owner Android runs reported `Error when reading '.dart_tool/flutter_build/dart_plugin_registrant.dart': The system cannot find the file specified` during `compileFlutterBuildDebug`.
-Cause: unconfirmed; the generated file exists in the current checkout. A stale or competing generated build is possible.
-Fix/workaround: none applied to app code. Avoid simultaneous Flutter builds from this checkout; if it recurs, capture the command and generated-file state before clearing build caches.
-Verification: `flutter build apk --debug --no-pub` succeeded and produced `app-debug.apk`. Installing/running on either physical phone remains untested.
+Cause: unconfirmed; the generated file existed when inspected. Stale or competing generated build state remains a possibility, not an established cause.
+Fix/workaround: `flutter clean` removed `.dart_tool`, then normal `flutter run` regenerated the registrant. Run one Flutter build at a time from this checkout. If the error recurs, capture verbose build evidence and generated-file state before another clean. The phone's real-config debug APK was rebuilt and installed without launching it.
+Verification: `flutter run` built, installed and launched on SM M307FN without defines; on SM S936B, a normal run with a placeholder define file built, installed and launched before and after `flutter clean`. The clean run took about 115 s for Gradle. `flutter build apk --debug --target-platform android-arm64 --no-pub --dart-define-from-file=dart_define.local.json` then passed, and `adb install -r` on SM S936B returned `Success`. The real-config app was not launched by Codex, so signed-in or hosted behavior remains unverified.
 
 ## Realtime initial snapshot precedes first channel join
 Status: FIXED locally for `device_sessions` (2026-09-24); other `.stream()` users unchanged. Physical timing UNVERIFIED.

@@ -766,3 +766,7 @@ Verification: 8 focused Flutter tests; 25 admin safety + 26 block/flag SQL asser
 ## 2026-09-24 build preflight for third device retest
 
 The local Windows debug build now passes with a compiler compatibility definition scoped to `permission_handler_windows_plugin` (MSVC 14.51). The local Android debug APK also builds; the owner's earlier missing `dart_plugin_registrant.dart` error did not recur and its cause is unconfirmed. These are build checks only, not app launch, signed-in flow, physical-device, P6, or P5 acceptance evidence. P6 and P5 remain NOT ACCEPTED; P6S remains INCOMPLETE. No hosted migration, production access, push, or release action occurred. See `issue_encountered.md` and the latest `brief/LEDGER.md` RESUME block.
+
+## 2026-09-24 Android device build recovery
+
+After the owner's repeat `dart_plugin_registrant.dart` failure, the generated file was present during inspection. `flutter run` launched an unconfigured build on SM M307FN, then a placeholder-config build on the exact failing SM S936B. Following `flutter clean` (which removed `.dart_tool`), a fresh placeholder-config `flutter run` again built, installed and launched on SM S936B. An arm64 debug APK using the owner's local define file then built and was installed on SM S936B without launch. The intermittent cause remains unconfirmed; the real-config app and P6 flows have not been accepted. No backend operation, push, deployment or hosted migration was performed. See `issue_encountered.md`.
