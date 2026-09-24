@@ -8,6 +8,10 @@ health: release_blocked
 
 # Project status: Streamer App
 
+P6 owner retest, 2026-09-24: two physical Android phones and Chrome passed the reported account isolation, unverified broadcast denial, admin layout/filter and profile-sync checks. The two-device broadcaster conflict did **not** appear, and the studio actions did not start a live room; chat, admin live end/remove, camera and YouTube ingest were therefore blocked. Directory/ban/revocation UI passed in part, but ban/unban needed restart and map-hide/legacy revocation audit entries were missing. The setup fields do not identify the tested backend/build. See `brief/evidence/2026-09-24/p6-retest-review.md` for the evidence matrix. **P6 remains NOT ACCEPTED; P6S remains incomplete.**
+
+Local integration, 2026-09-24: P5.1–P5.3 offline work and its reachability/room-recovery hardening were fast-forwarded to local master at `96a67f6`. Worktree verification was 549 Flutter tests and analyzer 0; physical offline acceptance and P5.4/P5.5 remain open. G6 and G11a scanner fixes were cherry-picked as `cf992e2` and `9fbc9a1`; combined focused scanner tests passed, and local gates report G6=1 and G11a=5. The five credential-shaped hits need private owner classification. Nothing was pushed or run against production in this integration.
+
 P8B documentation update, 2026-09-24: seven `store/` compliance and bilingual listing drafts were merged locally at `e151559`. They identify unresolved owner/counsel decisions and export, withdrawal and erasure engineering. **P8B is not accepted.** P6 physical-device/Google acceptance and P6S remain open; no Play Store readiness is claimed.
 
 ## Current release status (2026-09-23)

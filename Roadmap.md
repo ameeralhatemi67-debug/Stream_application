@@ -521,6 +521,8 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 ---
 ## Version 1.0 — hardening and release
 
+> 2026-09-24 owner retest and integration: P6 remains NOT ACCEPTED. Two-phone broadcaster collision failed, and studio actions did not start a live room, blocking chat, live admin end/remove and physical ingest checks. See `brief/evidence/2026-09-24/p6-retest-review.md`. P5.1–P5.3 offline code and hardening are on local master at `96a67f6` with 549 worktree Flutter tests and analyzer 0, but P5 physical acceptance and P5.4/P5.5 remain open. Scanner fixes reduce G6 to 1 and G11a to 5; the latter still needs private owner classification. P6S and release gates remain open. Nothing was pushed or run against production during integration.
+
 > Status on 2026-09-23: the P6 safety backend and its client wiring and admin views (server-owned blocks, availability states, Safety tab, keyword audit, deleted-account cache cleanup) are locally verified. P6 acceptance (owner migration review, real-session checks) is still open, so P6S has not started. The latest checkpoint passed 504 Flutter tests and 278 local SQL assertions; G6 remains a known scan failure (552). Physical streaming, signing and other release gates remain open. The app is not release-ready.
 
 ### Checkpoint 1.0.0: P0 hardening foundation `[Backend & Security Track]`
@@ -693,8 +695,8 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 | 1.0.3 P3 true viewer presence | Partial | Presence service, count RPCs and grants are present. SQL runtime, expiry and multi-client device probes remain open. |
 | 1.0.4 P4 design and responsive app pass | Complete to recorded E1/E2 evidence | Scheme A, white theme, fonts, localization and responsive tests are complete. Physical-device visual QA remains open. |
 | 1.0.5 P8A Android release identity and branding | Partial, complete to available inputs | Identity, assets, permissions, target SDK, 16 KB checks and fail-closed signing are complete. No keystore, AAB, release scan or device smoke test exists. |
-| 1.0.6 P6 chat, moderation and admin | Partial | Backend, client blocks/flags, live list, audit/keyword views and deleted-account cache cleanup are locally verified (504 Flutter, 278 SQL). Owner migration review and real-session acceptance remain open. Acceptance attempt 2026-09-23 (`p6-acceptance`): 506 Flutter, 283 SQL; not accepted until owner steps in `p6-acceptance-sessions.md` pass. |
-| 1.0.7 P5 map and offline experience | Not started | Connectivity, cache, offline map and licensing work remain open. |
+| 1.0.6 P6 chat, moderation and admin | Not accepted | 2026-09-24 physical retest found failed broadcaster conflict and studio actions, blocking live chat/admin/ingest acceptance. Several other flows passed by owner observation; see the dated review matrix. |
+| 1.0.7 P5 map and offline experience | Partial | P5.1–P5.3 offline code and hardening are merged locally with 549 worktree Flutter tests and analyzer 0. Physical offline acceptance, basemap/licensing and map improvements remain open. |
 | 1.0.8 P7 organizations | Not started | Co-owner roles, invitations, public organization profile and audit scope remain open. |
 | 1.0.9 P8B store and Saudi-compliance package | Drafts prepared; not accepted | Seven `store/` drafts exist; complete export/withdrawal/deletion work and owner/counsel review remain open. |
 | 1.0.10 P9 final verification and release gate | Not started | Full re-verification, gates, SQL, devices, release diff, store package and owner approvals remain open. |
