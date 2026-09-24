@@ -191,8 +191,8 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
 
   final Map<String, ({String senderId, String senderName, int count})>
       _moderationAlerts = {};
-  List<({String senderId, String senderName, int count})> get moderationAlerts =>
-      _moderationAlerts.values.toList();
+  List<({String senderId, String senderName, int count})>
+      get moderationAlerts => _moderationAlerts.values.toList();
 
   void dismissModerationAlert(String senderId) {
     if (_moderationAlerts.remove(senderId) != null) {
@@ -270,7 +270,8 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     DateTime? lastOwn;
     for (final m in _messages) {
       if (!m.isCurrentUser || m.isFailed) continue;
-      if (lastOwn == null || m.createdAt.isAfter(lastOwn)) lastOwn = m.createdAt;
+      if (lastOwn == null || m.createdAt.isAfter(lastOwn))
+        lastOwn = m.createdAt;
     }
     if (lastOwn == null) return null;
     return lastOwn.add(Duration(seconds: _slowModeSeconds));
@@ -381,6 +382,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
       _profileCache = {};
 
   Future<void> start() async {
+    if (_disposed) return;
     try {
       Supabase.instance;
     } catch (_) {
@@ -391,12 +393,19 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     WidgetsBinding.instance.addObserver(this);
     _observingLifecycle = true;
     await _blockList.refresh();
+    if (_disposed) return;
     await _appFlags.refresh();
+    if (_disposed) return;
     await _loadHiddenMessages();
+    if (_disposed) return;
     await _loadCanModerate();
+    if (_disposed) return;
     await _loadChatSettings();
+    if (_disposed) return;
     await _refreshSelfStatus();
+    if (_disposed) return;
     await _loadRecentMessages();
+    if (_disposed) return;
     _subscribe();
   }
 
@@ -405,6 +414,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     try {
       final result = await _client
           .rpc('chat_can_moderate', params: {'p_stream_id': streamId});
+      if (_disposed) return;
       _canModerate = result as bool? ?? false;
       notifyListeners();
     } catch (e) {
@@ -605,7 +615,8 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
         'stream_id': streamId,
       });
     } on PostgrestException catch (e) {
-      if (e.code != '23505') rethrow; // 23505 = unique_violation, already a moderator
+      if (e.code != '23505')
+        rethrow; // 23505 = unique_violation, already a moderator
     }
     _profileCache.remove(profileId); // force badge re-resolution on next fetch
   }
@@ -698,6 +709,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
             value: streamId,
           ),
           callback: (payload) {
+            if (_disposed) return;
             final row = payload.newRecord;
             _applyChatSettings(row.isEmpty ? null : row);
           },
@@ -705,6 +717,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
         ..onBroadcast(
           event: 'reaction',
           callback: (payload) {
+            if (_disposed) return;
             final type = payload['reaction_type'] as String?;
             if (type != null) onReaction?.call(type);
           },
@@ -749,6 +762,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _handleDelete(Map<String, dynamic> oldRow) {
+    if (_disposed) return;
     final id = oldRow['id'] as String?;
     if (id == null) return;
     final idx = _messages.indexWhere((m) => m.id == id);

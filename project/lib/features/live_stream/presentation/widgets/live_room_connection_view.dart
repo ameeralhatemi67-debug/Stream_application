@@ -9,9 +9,16 @@ import '../../../../core/theme/app_theme.dart';
 
 /// A local recovery view. It does not change chat or publisher lifecycles.
 class LiveRoomConnectionView extends StatefulWidget {
-  const LiveRoomConnectionView({super.key, required this.status});
+  const LiveRoomConnectionView({
+    super.key,
+    required this.status,
+    this.awaitingFreshCatalog = false,
+    this.liveNotConfirmed = false,
+  });
 
   final NetworkStatus status;
+  final bool awaitingFreshCatalog;
+  final bool liveNotConfirmed;
 
   @override
   State<LiveRoomConnectionView> createState() => _LiveRoomConnectionViewState();
@@ -36,16 +43,26 @@ class _LiveRoomConnectionViewState extends State<LiveRoomConnectionView> {
               const Icon(Icons.wifi_off_rounded,
                   color: AppTheme.warning, size: 42),
               const SizedBox(height: AppTheme.spaceMd),
-              Text('offline_experience.room_title'.tr(),
+              Text(
+                  (widget.awaitingFreshCatalog
+                          ? widget.liveNotConfirmed
+                              ? 'offline_experience.room_not_live'
+                              : 'offline_experience.room_rechecking'
+                          : 'offline_experience.room_title')
+                      .tr(),
                   style: const TextStyle(
                       color: AppTheme.textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: AppTheme.spaceSm),
               Text(
-                  (widget.status == NetworkStatus.degraded
-                          ? 'offline_experience.degraded_title'
-                          : 'offline_experience.room_body')
+                  (widget.awaitingFreshCatalog
+                          ? widget.liveNotConfirmed
+                              ? 'offline_experience.room_not_live_body'
+                              : 'offline_experience.room_rechecking_body'
+                          : widget.status == NetworkStatus.degraded
+                              ? 'offline_experience.degraded_title'
+                              : 'offline_experience.room_body')
                       .tr(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(color: AppTheme.textSecondary)),

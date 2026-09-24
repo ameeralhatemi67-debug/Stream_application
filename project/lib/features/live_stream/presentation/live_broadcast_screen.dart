@@ -36,6 +36,12 @@ class LiveBroadcastScreen extends StatefulWidget {
 
   const LiveBroadcastScreen({super.key, required this.streamId});
 
+  @visibleForTesting
+  static LiveChatController Function(String, void Function(String))?
+      debugChatFactory;
+  @visibleForTesting
+  static ViewerPresenceService Function(String)? debugPresenceFactory;
+
   @override
   State<LiveBroadcastScreen> createState() => _LiveBroadcastScreenState();
 }
@@ -46,7 +52,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       FloatingReactionsOverlayController();
   final TextEditingController _chatTextController = TextEditingController();
   final ScrollController _chatScrollController = ScrollController();
-  late final LiveChatController _chatController;
+  late LiveChatController _chatController;
 
   late TabController _tabController;
   // Fixed to the YouTube embed engine (ADR-002). The overlay's selector no
@@ -61,27 +67,93 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   bool _isHandRaised = false;
   bool _isReactionMenuOpen = false;
   StreamQualityLevel _selectedQuality = StreamQualityLevel.auto;
-  late final ViewerPresenceService _presenceService;
+  late ViewerPresenceService _presenceService;
+  AppProvider? _roomProvider;
+  bool _roomActive = false;
+  int? _requiredCatalogRevision;
+  int _roomGeneration = 0;
 
   @override
   void initState() {
     super.initState();
     // 3 Tabs: Chat, Sources, Venue
     _tabController = TabController(length: 3, vsync: this);
-    _chatController = LiveChatController(
-      streamId: widget.streamId,
-      onReaction: (type) => _reactionsController.spawnReaction(type),
-    )..start();
-    _chatController.addListener(_handleChatConnectionChange);
     _chatScrollController.addListener(_handleChatScroll);
-    // Real audience presence (P3 / 05 D-08): this device reports itself as
-    // one viewer while the room is open and the app is foregrounded, and
-    // polls the server's count back. It replaces the number that used to
-    // come from a fixture or a stand-in literal.
-    _presenceService = ViewerPresenceService(streamId: widget.streamId);
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final provider = context.read<AppProvider>();
+    if (identical(provider, _roomProvider)) return;
+    _roomProvider?.removeListener(_syncRoomConnection);
+    _roomProvider = provider..addListener(_syncRoomConnection);
+    _syncRoomConnection();
+  }
+
+  void _syncRoomConnection() {
+    final provider = _roomProvider;
+    if (provider == null) return;
+    if (!provider.isOnline) {
+      _requiredCatalogRevision ??= provider.successfulCatalogRevision;
+      _stopRoom();
+      return;
+    }
+    if (_requiredCatalogRevision case final revision?) {
+      if (provider.successfulCatalogRevision <= revision) {
+        _stopRoom();
+        return;
+      }
+      final confirmedLive = provider.streamers.any((s) =>
+          s.isCurrentlyLive &&
+          (s.streamerId == widget.streamId ||
+              s.activeStreamId == widget.streamId ||
+              s.youtubeVideoId == widget.streamId));
+      if (!confirmedLive) {
+        _stopRoom();
+        return;
+      }
+      _requiredCatalogRevision = null;
+    }
+    _startRoom();
+  }
+
+  void _startRoom() {
+    if (_roomActive) return;
+    _roomActive = true;
+    _roomGeneration++;
+    _streamState = StreamState.initializing;
+    _chatController = LiveBroadcastScreen.debugChatFactory?.call(
+            widget.streamId,
+            (type) => _reactionsController.spawnReaction(type)) ??
+        LiveChatController(
+          streamId: widget.streamId,
+          onReaction: (type) => _reactionsController.spawnReaction(type),
+        );
+    _chatController.addListener(_handleChatConnectionChange);
+    _presenceService =
+        LiveBroadcastScreen.debugPresenceFactory?.call(widget.streamId) ??
+            ViewerPresenceService(streamId: widget.streamId);
     _presenceService.addListener(_onPresenceChanged);
-    unawaited(_presenceService.start());
+    final generation = _roomGeneration;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted || !_roomActive || generation != _roomGeneration) return;
+      unawaited(_chatController.start());
+      unawaited(_presenceService.start());
+    });
     _setWakelock(true);
+  }
+
+  void _stopRoom() {
+    if (!_roomActive) return;
+    _roomActive = false;
+    _roomGeneration++;
+    _streamState = StreamState.offline;
+    _setWakelock(false);
+    _chatController.removeListener(_handleChatConnectionChange);
+    _chatController.dispose();
+    _presenceService.removeListener(_onPresenceChanged);
+    _presenceService.dispose();
   }
 
   void _onPresenceChanged() {
@@ -110,7 +182,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   @override
   void dispose() {
-    _setWakelock(false);
+    _roomProvider?.removeListener(_syncRoomConnection);
+    _stopRoom();
     // Always restore portrait + the normal system chrome, even if the user
     // backed out of the room while still in fullscreen landscape -- leaving
     // the app locked to landscape after this screen is gone would strand
@@ -120,10 +193,6 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _chatTextController.dispose();
     _chatScrollController.removeListener(_handleChatScroll);
     _chatScrollController.dispose();
-    _chatController.removeListener(_handleChatConnectionChange);
-    _chatController.dispose();
-    _presenceService.removeListener(_onPresenceChanged);
-    _presenceService.dispose();
     super.dispose();
   }
 
@@ -354,10 +423,16 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final appProvider = context.watch<AppProvider>();
     final networkStatus =
         context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
-    if (networkStatus != NetworkStatus.online) {
+    if (!_roomActive) {
       return Scaffold(
         backgroundColor: AppTheme.bg,
-        body: SafeArea(child: LiveRoomConnectionView(status: networkStatus)),
+        body: SafeArea(
+            child: LiveRoomConnectionView(
+          status: networkStatus,
+          awaitingFreshCatalog: networkStatus == NetworkStatus.online,
+          liveNotConfirmed: _requiredCatalogRevision != null &&
+              appProvider.successfulCatalogRevision > _requiredCatalogRevision!,
+        )),
       );
     }
     final mediaQuery = MediaQuery.of(context);
@@ -466,6 +541,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       int? viewerCount, String langCode,
       {required bool isSideBySide}) {
     final isAudioLive = streamer.isAudioLive;
+    final roomGeneration = _roomGeneration;
 
     final videoWidget = Container(
       color: AppTheme.media,
@@ -487,14 +563,20 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             preferredQuality: _selectedQuality.value,
             onStateChanged: (state) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && _streamState != state) {
+                if (mounted &&
+                    _roomActive &&
+                    roomGeneration == _roomGeneration &&
+                    _streamState != state) {
                   setState(() => _streamState = state);
                 }
               });
             },
             onError: (_) {
               WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted && _streamState != StreamState.fallbackError) {
+                if (mounted &&
+                    _roomActive &&
+                    roomGeneration == _roomGeneration &&
+                    _streamState != StreamState.fallbackError) {
                   setState(() => _streamState = StreamState.fallbackError);
                 }
               });

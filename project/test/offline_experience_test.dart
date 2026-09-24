@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' as ui;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
@@ -8,14 +9,91 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/connectivity_service.dart';
+import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/widgets/connectivity_banner.dart';
 import 'package:streamer_app/features/discovery/presentation/widgets/streamer_grid_card.dart';
 import 'package:streamer_app/features/auth/presentation/streamer_apply_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_room_connection_view.dart';
+import 'package:streamer_app/features/live_stream/presentation/live_broadcast_screen.dart';
+import 'package:streamer_app/features/live_stream/presentation/abstract_video_player.dart';
+import 'package:streamer_app/features/live_stream/services/live_chat_controller.dart';
+import 'package:streamer_app/features/live_stream/services/viewer_presence_service.dart';
+import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 import 'fixtures/streamer_fixtures.dart';
 import 'support/localized_app.dart';
+
+class _RoomCounts {
+  int playersStarted = 0;
+  int playersDisposed = 0;
+  int chatsStarted = 0;
+  int chatsDisposed = 0;
+  int presenceStarted = 0;
+  int presenceDisposed = 0;
+}
+
+class _RoomPlayer extends AbstractVideoPlayer {
+  const _RoomPlayer(
+      {required super.streamUrl, required this.counts, super.key});
+  final _RoomCounts counts;
+  @override
+  State<_RoomPlayer> createState() => _RoomPlayerState();
+}
+
+class _RoomPlayerState extends State<_RoomPlayer> {
+  @override
+  void initState() {
+    super.initState();
+    widget.counts.playersStarted++;
+  }
+
+  @override
+  void dispose() {
+    widget.counts.playersDisposed++;
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.expand();
+}
+
+class _RoomChat extends LiveChatController {
+  _RoomChat(String streamId, this.counts) : super(streamId: streamId);
+  final _RoomCounts counts;
+  @override
+  Future<void> start() async => counts.chatsStarted++;
+  @override
+  void dispose() {
+    counts.chatsDisposed++;
+    super.dispose();
+  }
+}
+
+class _RoomPresence extends ViewerPresenceService {
+  _RoomPresence(String streamId, this.counts) : super(streamId: streamId);
+  final _RoomCounts counts;
+  @override
+  Future<void> start() async => counts.presenceStarted++;
+  @override
+  void dispose() {
+    counts.presenceDisposed++;
+    super.dispose();
+  }
+}
+
+class _RoomCatalog extends AdminDatabaseService {
+  final pending = <Completer<List<StreamerModel>>>[];
+  @override
+  Future<int> sweepStaleLiveFlags() async => 0;
+  @override
+  Future<List<StreamerModel>> loadVerifiedStreamersFromBackend(
+      {bool requireSuccess = false}) {
+    final request = Completer<List<StreamerModel>>();
+    pending.add(request);
+    return request.future;
+  }
+}
 
 Widget harness(AppProvider provider, String language, Widget home) =>
     EasyLocalization(
@@ -87,8 +165,8 @@ void main() {
     );
     final provider = AppProvider.withServices(connectivityService: service);
     await provider.refreshConnectivityNow();
-    await tester.pumpWidget(harness(provider, 'en',
-        const Column(children: [ConnectivityBanner()])));
+    await tester.pumpWidget(harness(
+        provider, 'en', const Column(children: [ConnectivityBanner()])));
     await tester.pumpAndSettle();
     expect(find.text('The service is hard to reach'), findsOneWidget);
     reachable = true;
@@ -149,14 +227,113 @@ void main() {
   testWidgets('wizard input survives a recoverable connection loss',
       (tester) async {
     final provider = AppProvider();
-    await tester.pumpWidget(harness(provider, 'en',
-        const StreamerApplyScreen()));
+    await tester
+        .pumpWidget(harness(provider, 'en', const StreamerApplyScreen()));
     await tester.pumpAndSettle();
     final nameField = find.byType(TextField).first;
     await tester.enterText(nameField, 'Unsent applicant name');
     provider.debugSetOnlineForTests(false);
     await tester.pump();
     expect(find.text('Unsent applicant name'), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    provider.dispose();
+  });
+
+  testWidgets('whole room stops media and services, then cleanly restarts',
+      (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final counts = _RoomCounts();
+    final catalog = _RoomCatalog();
+    final provider = AppProvider.withServices(adminDbService: catalog);
+    final live = mockStreamers.first.copyWith(
+      isCurrentlyLive: true,
+      broadcastType: BroadcastType.liveVideo,
+      activeStreamId: 'verified-room',
+      avatarUrl: '',
+      bannerUrl: '',
+    );
+    provider.addStreamer(live);
+    LiveBroadcastScreen.debugChatFactory =
+        (id, reaction) => _RoomChat(id, counts);
+    LiveBroadcastScreen.debugPresenceFactory =
+        (id) => _RoomPresence(id, counts);
+    AbstractVideoPlayer.debugPlayerFactory = ({
+      Key? key,
+      required StreamSourceType sourceType,
+      required String streamUrl,
+      bool autoPlay = true,
+      VoidCallback? onPlayerReady,
+      ValueChanged<StreamState>? onStateChanged,
+      ValueChanged<String>? onError,
+      double aspectRatio = 16 / 9,
+      String preferredQuality = 'auto',
+      List<String> fallbackUrls = const [],
+    }) =>
+        _RoomPlayer(key: key, streamUrl: streamUrl, counts: counts);
+    addTearDown(() {
+      LiveBroadcastScreen.debugChatFactory = null;
+      LiveBroadcastScreen.debugPresenceFactory = null;
+      AbstractVideoPlayer.debugPlayerFactory = null;
+    });
+
+    await tester.pumpWidget(harness(
+        provider, 'en', const LiveBroadcastScreen(streamId: 'verified-room')));
+    await tester.pump();
+    expect(catalog.pending, hasLength(1));
+    catalog.pending.removeAt(0).complete([live]);
+    await tester.pump();
+    expect(counts.playersStarted, 1);
+    expect(counts.chatsStarted, 1);
+    expect(counts.presenceStarted, 1);
+
+    provider.debugSetOnlineForTests(false);
+    await tester.pump();
+    expect(find.byType(LiveRoomConnectionView), findsOneWidget);
+    expect(counts.playersDisposed, 1);
+    expect(counts.chatsDisposed, 1);
+    expect(counts.presenceDisposed, 1);
+
+    provider.debugSetOnlineForTests(true);
+    await tester.pump();
+    await tester.pump();
+    expect(catalog.pending, isNotEmpty);
+    expect(counts.playersStarted, 1);
+    expect(find.text('Checking this live room'), findsOneWidget);
+    for (final request in List.of(catalog.pending)) {
+      request.complete([live]);
+    }
+    catalog.pending.clear();
+    await tester.pump();
+    await tester.pump();
+    expect(counts.playersStarted, 2);
+    expect(counts.chatsStarted, 2);
+    expect(counts.presenceStarted, 2);
+
+    provider.debugSetOnlineForTests(false);
+    await tester.pump();
+    provider.debugSetOnlineForTests(true);
+    await tester.pump();
+    await tester.pump();
+    expect(catalog.pending, isNotEmpty);
+    for (final request in List.of(catalog.pending)) {
+      request.complete([
+        live.copyWith(
+            isCurrentlyLive: false,
+            broadcastType: BroadcastType.offline,
+            clearLiveState: true)
+      ]);
+    }
+    catalog.pending.clear();
+    await tester.pump();
+    await tester.pump();
+    expect(find.text('Broadcast not confirmed live'), findsOneWidget);
+    expect(counts.playersStarted, 2);
+    expect(counts.playersDisposed, 2);
+    expect(counts.chatsDisposed, 2);
+    expect(counts.presenceDisposed, 2);
     await tester.pumpWidget(const SizedBox.shrink());
     provider.dispose();
   });

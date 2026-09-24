@@ -122,9 +122,11 @@ class AppProvider extends ChangeNotifier {
   bool _publicCategoriesLoaded = false;
   bool _isUsingCachedCatalog = false;
   DateTime? _publicCatalogUpdatedAt;
+  int _successfulCatalogRevision = 0;
 
   bool get isUsingCachedCatalog => _isUsingCachedCatalog;
   DateTime? get publicCatalogUpdatedAt => _publicCatalogUpdatedAt;
+  int get successfulCatalogRevision => _successfulCatalogRevision;
 
   // --- UI-08: Spatial Map offline experience -------------------------------
   // Device network reachability, not proof any given request will succeed --
@@ -1445,6 +1447,7 @@ class AppProvider extends ChangeNotifier {
         }
       }
       _isUsingCachedCatalog = false;
+      _successfulCatalogRevision++;
       notifyListeners();
       unawaited(_persistPublicCatalogIfReady());
       // UI-08: refresh the offline fallback snapshot every time a backend

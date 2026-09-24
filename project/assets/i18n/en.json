@@ -18,6 +18,10 @@
     "no_snapshot": "No saved catalog yet",
     "room_title": "Live room unavailable",
     "room_body": "Reconnect to check this broadcast and join the room.",
+    "room_rechecking": "Checking this live room",
+    "room_rechecking_body": "Waiting for a fresh broadcast status before restarting playback and chat.",
+    "room_not_live": "Broadcast not confirmed live",
+    "room_not_live_body": "A fresh check did not confirm this broadcast is live. Retry or return to the feed.",
     "back_to_feed": "Back to Feed"
   },
   "app": {
