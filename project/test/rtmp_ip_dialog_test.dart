@@ -144,28 +144,28 @@ void main() {
         // the stream-key *obscured* field is Phone-only -- each is a
         // reliable, locale-independent fingerprint (hardcoded hint text)
         // for exactly one mode.
-        expect(findByHint('e.g. 192.168.1.100'), findsNothing);
+        expect(find.byKey(const ValueKey('local-unavailable')), findsNothing);
         expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
             findsOneWidget);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
 
         await tester.tap(find.text(localLabel));
         await tester.pumpAndSettle();
-        expect(findByHint('e.g. 192.168.1.100'), findsOneWidget);
+        expect(find.byKey(const ValueKey('local-unavailable')), findsOneWidget);
         expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
             findsNothing);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
 
         await tester.tap(find.text(phoneLabel));
         await tester.pumpAndSettle();
-        expect(findByHint('e.g. 192.168.1.100'), findsNothing);
+        expect(find.byKey(const ValueKey('local-unavailable')), findsNothing);
         expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
             findsOneWidget);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsOneWidget);
 
         await tester.tap(find.text(obsLabel));
         await tester.pumpAndSettle();
-        expect(findByHint('e.g. 192.168.1.100'), findsNothing);
+        expect(find.byKey(const ValueKey('local-unavailable')), findsNothing);
         expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
             findsOneWidget);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
@@ -225,15 +225,15 @@ void main() {
 
       await tester.tap(find.text('Local'));
       await tester.pumpAndSettle();
-      expect(find.text('Stream'), findsOneWidget);
-      expect(find.text('Stream URL Preview'), findsOneWidget);
+      expect(find.text('Not available'), findsOneWidget);
+      expect(find.text('Stream URL Preview'), findsNothing);
       expect(find.text('Quality Preset'), findsNothing);
     });
 
     testWidgets(
-        'TC-STUDIO-04: root-cause regression -- Open Camera in Phone mode '
-        'never touches the simulated YouTubeLiveService session, only the '
-        'real user-typed stream key', (tester) async {
+        'TC-STUDIO-04: Open Camera without broadcaster approval is refused in '
+        'the sheet and stores neither the key nor a watch target',
+        (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -241,36 +241,28 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      const watchId = 'abcdefghijk';
-
       await tester.tap(find.text('Phone'));
       await tester.pumpAndSettle();
 
       await tester.enterText(
           findByHint('https://youtube.com/watch?v=... or Video ID'),
-          'https://youtube.com/watch?v=$watchId');
-      final keyField = findByHint('xxxx-xxxx-xxxx-xxxx-xxxx');
-      expect(keyField, findsOneWidget);
-      await tester.enterText(keyField, 'real-key-from-youtube-studio');
+          'https://youtube.com/watch?v=abcdefghijk');
+      await tester.enterText(
+          findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), 'real-key-from-youtube-studio');
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Open Camera'));
       await tester.pump();
 
-      expect(provider.phoneBroadcastStreamKey,
-          equals('real-key-from-youtube-studio'));
-      // startQuickPhoneBroadcast (the simulated path) was never called --
-      // the viewer-facing video id is untouched by a fresh "sim_..."id.
-      expect(provider.customYouTubeVideoId, equals(watchId));
-
-      // PhoneBroadcastScreen's camera/permission setup needs real platform
-      // channels this test environment doesn't provide.
-      tester.takeException();
+      expect(find.text('broadcast_approval_required'.tr()), findsOneWidget);
+      expect(provider.phoneBroadcastStreamKey, isEmpty);
+      expect(provider.customYouTubeVideoId, isEmpty);
+      expect(provider.isBroadcastingLive, isFalse);
     });
 
     testWidgets(
-        'TC-STUDIO-05: an empty stream key blocks Open Camera before it '
-        'ever reaches AppProvider', (tester) async {
+        'TC-STUDIO-05: an empty stream key never reaches AppProvider',
+        (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -288,14 +280,38 @@ void main() {
       await tester.tap(find.text('Open Camera'));
       await tester.pump();
 
-      expect(find.text('Stream Key Required'), findsOneWidget);
+      // The account check comes first here; the missing-key message for an
+      // approved broadcaster is covered in broadcaster_studio_entry_test.
+      expect(find.byKey(const ValueKey('studio-cta-error')), findsOneWidget);
+      expect(provider.phoneBroadcastStreamKey, isEmpty);
       expect(provider.isBroadcastingLive, isFalse);
-
-      // See TC-STUDIO-06 -- cancel the error toast's own pending Timer.
-      InteractiveToastOverlay.dismiss();
     });
 
-    testWidgets('TC-STUDIO-06: Local mode updates the laptop RTMP IP',
+    testWidgets(
+        'TC-STUDIO-06: Local mode is visibly unavailable (no local transport '
+        'exists) and does not save an address', (tester) async {
+      useTallTestSurface(tester);
+      await tester.pumpWidget(
+        createTestWidget(
+            child: const LiveBroadcasterStudioSheet(), provider: provider),
+      );
+      await tester.pumpAndSettle();
+      final ipBefore = provider.rtmpLaptopIp;
+
+      await tester.tap(find.text('Local'));
+      await tester.pumpAndSettle();
+      expect(findByHint('e.g. 192.168.1.100'), findsNothing);
+      expect(find.text('Same-Wi-Fi streaming is not available yet'),
+          findsOneWidget);
+
+      await tester.tap(find.text('Not available'));
+      await tester.pump();
+      expect(find.byKey(const ValueKey('studio-cta-error')), findsOneWidget);
+      expect(provider.rtmpLaptopIp, equals(ipBefore));
+    });
+
+    testWidgets(
+        'TC-STUDIO-07: switching away from Local clears its explanation',
         (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
@@ -306,49 +322,13 @@ void main() {
 
       await tester.tap(find.text('Local'));
       await tester.pumpAndSettle();
-
-      final ipField = findByHint('e.g. 192.168.1.100');
-      await tester.enterText(ipField, '10.0.0.42');
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Stream'));
-      await tester.pumpAndSettle();
-
-      expect(provider.rtmpLaptopIp, equals('10.0.0.42'));
-
-      // The success toast's own 4-second auto-dismiss Timer would otherwise
-      // still be pending when this test function returns, which
-      // flutter_test treats as a leaked-timer test failure.
-      InteractiveToastOverlay.dismiss();
-    });
-
-    testWidgets(
-        'TC-STUDIO-07: an empty laptop IP blocks Stream before it ever '
-        'reaches AppProvider', (tester) async {
-      useTallTestSurface(tester);
-      await tester.pumpWidget(
-        createTestWidget(
-            child: const LiveBroadcasterStudioSheet(), provider: provider),
-      );
-      await tester.pumpAndSettle();
-
-      final ipBefore = provider.rtmpLaptopIp;
-
-      await tester.tap(find.text('Local'));
-      await tester.pumpAndSettle();
-
-      final ipField = findByHint('e.g. 192.168.1.100');
-      await tester.enterText(ipField, '');
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Stream'));
+      await tester.tap(find.text('Not available'));
       await tester.pump();
+      expect(find.byKey(const ValueKey('studio-cta-error')), findsOneWidget);
 
-      expect(find.text('Laptop IP Required'), findsOneWidget);
-      expect(provider.rtmpLaptopIp, equals(ipBefore));
-
-      // See TC-STUDIO-06 -- cancel the error toast's own pending Timer.
-      InteractiveToastOverlay.dismiss();
+      await tester.tap(find.text('OBS'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('studio-cta-error')), findsNothing);
     });
 
     testWidgets('TC-STUDIO-08: category chips are selectable in Phone mode',
@@ -482,12 +462,12 @@ void main() {
 
       await tester.tap(find.text('Local'));
       await tester.pumpAndSettle();
-      expect(find.text('Stream'), findsOneWidget);
+      expect(find.text('Not available'), findsOneWidget);
     });
 
     testWidgets(
         'TC-STUDIO-11: OBS Go Live persists title/description/category and '
-        'denies going live without a primary session', (tester) async {
+        'explains the refusal in the sheet', (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -511,7 +491,8 @@ void main() {
       expect(
           provider.customLiveDescription, equals('A short OBS description.'));
       expect(provider.isBroadcastingLive, isFalse);
-      expect(provider.broadcastSessionError, 'broadcast_primary_required');
+      expect(find.text('broadcast_approval_required'.tr()), findsOneWidget);
+      expect(find.byType(LiveBroadcasterStudioSheet), findsOneWidget);
 
       // See TC-STUDIO-06 -- cancel the "YouTube Live Target Updated"toast's
       // own pending Timer before tearing the provider down.
@@ -675,12 +656,8 @@ void main() {
       await tester.tap(find.text('Local'));
       await tester.pumpAndSettle();
 
-      final ipField = findByHint('e.g. 192.168.1.100');
-      await tester.enterText(ipField, '10.0.0.42');
       expect(find.text('Private'), findsNothing);
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Stream'));
+      await tester.tap(find.text('Not available'));
       await tester.pumpAndSettle();
 
       expect(provider.streamVisibility, equals(StreamVisibility.public));

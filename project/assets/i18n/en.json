@@ -1,6 +1,6 @@
 {
   "broadcast_session_lost": "Broadcasting stopped because this device lost its primary session. Reconnect or transfer broadcasting to this device.",
-  "broadcast_primary_required": "Claim the primary broadcaster device before going live.",
+  "broadcast_primary_required": "This device is not your broadcaster device. Choose \"Use this device for broadcasting\"; if another device holds that role you will be asked before it is transferred.",
   "broadcast_state_failed": "The broadcast session could not be updated. Check your connection and try again.",
   "sign_out_other_devices": "Sign out other devices",
   "offline_experience": {
@@ -960,7 +960,16 @@
     "toast_stream_key_required_message": "Paste the stream key from YouTube Studio, under Go Live > Stream.",
     "toast_laptop_ip_required_title": "Laptop IP Required",
     "toast_laptop_ip_required_message": "Enter your laptop's local network IP address to continue.",
-    "toast_rtmp_target_updated_title": "Local RTMP Target Updated"
+    "toast_rtmp_target_updated_title": "Local RTMP Target Updated",
+    "btn_open_camera": "Open Camera",
+    "btn_local_unavailable": "Not available",
+    "local_unavailable_title": "Same-Wi-Fi streaming is not available yet",
+    "local_unavailable_body": "This version has no local video transport, so it cannot stream over Wi-Fi. Use Phone or OBS to go live.",
+    "action_use_this_device": "Use this device for broadcasting",
+    "error_watch_id_required": "Paste the YouTube watch link or 11-character video ID of the broadcast you started in OBS.",
+    "error_phone_unsupported": "Phone camera broadcasting works only in the Android app. On this device, use OBS.",
+    "obs_listed_live_title": "Listed as live in the app",
+    "obs_listed_live_body": "The server accepted video ID {}. The app cannot see OBS or YouTube ingest. Check that YouTube Studio is receiving your stream."
   },
   "design_ui": {
     "access_denied": "Access Denied",

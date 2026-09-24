@@ -701,6 +701,7 @@ class AppProvider extends ChangeNotifier {
   Future<void> initDeviceSession() async {
     final generation = ++_deviceGeneration;
     _deviceHeartbeatTimer?.cancel();
+    _heartbeatFailingSince = null;
     await _deviceSubscription?.cancel();
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -715,20 +716,14 @@ class AppProvider extends ChangeNotifier {
       final deviceName = '$platform Device';
 
       final userId = _authService.currentSession?.user.id;
-      DeviceSessionModel? remote;
-      if (userId != null) {
-        try {
-          _adminDbService ??= await AdminDatabaseService.create();
-          remote = await _adminDbService!.findActiveRemoteBroadcasterSession(
-            userId: userId,
-            currentDeviceId: deviceId,
-          );
-        } catch (e) {
-          debugPrint('Remote device session lookup failed: $e');
-        }
+      // A viewer choice (or a displacement) on this install survives app
+      // restarts and token refreshes; only an explicit broadcaster-mode or
+      // transfer action clears it.
+      if (userId != null && prefs.getBool(_viewerChoiceKey(userId)) == true) {
+        _viewerDeviceChoice = true;
       }
+      if (_viewerDeviceChoice) _isStreamerModeEnabled = false;
 
-      if (generation != _deviceGeneration) return;
       _currentDeviceSession = DeviceSessionModel(
         deviceId: deviceId,
         deviceName: deviceName,
@@ -736,29 +731,61 @@ class AppProvider extends ChangeNotifier {
         lastActiveAt: DateTime.now(),
         isPrimaryBroadcaster: false,
       );
-      _remoteBroadcasterSession = remote;
+      _remoteBroadcasterSession = null;
 
       if (userId != null) {
-        final claimed = !_viewerDeviceChoice &&
-            remote == null &&
-            await _adminDbService!.claimDevice(_currentDeviceSession!);
-        if (generation != _deviceGeneration) return;
+        _adminDbService ??= await AdminDatabaseService.create();
+        var claimed = false;
+        if (!_viewerDeviceChoice) {
+          try {
+            final result =
+                await _adminDbService!.claimDeviceState(_currentDeviceSession!);
+            if (generation != _deviceGeneration) return;
+            claimed = result.claimed;
+            _remoteBroadcasterSession = claimed ? null : result.primary;
+          } catch (e) {
+            if (generation != _deviceGeneration) return;
+            // Unknown ownership stays non-primary; the studio explains it and
+            // broadcaster mode or app resume retries.
+            debugPrint('Broadcaster device claim failed: $e');
+            _broadcastSessionError = 'broadcast_state_failed';
+          }
+        }
         _currentDeviceSession =
             _currentDeviceSession!.copyWith(isPrimaryBroadcaster: claimed);
-        await _deviceSubscription?.cancel();
+        if (claimed) _broadcastSessionError = null;
         _deviceSubscription =
             _adminDbService!.watchDevices(userId).listen((sessions) {
           if (generation == _deviceGeneration) applyDeviceSessions(sessions);
         }, onError: (Object error) {
-          if (generation == _deviceGeneration) _loseBroadcastDevice();
+          // A Realtime channel error is not a server ownership answer. Ask the
+          // server instead of demoting a device that may still be primary.
+          if (generation == _deviceGeneration) unawaited(_heartbeatDevice());
         });
-        _deviceHeartbeatTimer?.cancel();
         _deviceHeartbeatTimer = Timer.periodic(
             const Duration(seconds: 20), (_) => _heartbeatDevice());
       }
       notifyListeners();
     } catch (e) {
       debugPrint('initDeviceSession failed: $e');
+    }
+  }
+
+  static String _viewerChoiceKey(String userId) =>
+      'broadcaster_viewer_device_$userId';
+
+  Future<void> _persistViewerChoice(bool viewer) async {
+    final userId = _sessionUserId ?? _authService.currentSession?.user.id;
+    if (userId == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (viewer) {
+        await prefs.setBool(_viewerChoiceKey(userId), true);
+      } else {
+        await prefs.remove(_viewerChoiceKey(userId));
+      }
+    } catch (e) {
+      debugPrint('Viewer device choice not persisted: $e');
     }
   }
 
@@ -772,19 +799,33 @@ class AppProvider extends ChangeNotifier {
     final generation = _deviceGeneration;
     if (device == null || _adminDbService == null) return;
     try {
-      if (!await _adminDbService!.claimDevice(device, force: true)) return;
+      final result =
+          await _adminDbService!.claimDeviceState(device, force: true);
       if (generation != _deviceGeneration) return;
+      if (!result.claimed) {
+        _broadcastSessionError = 'broadcast_state_failed';
+        notifyListeners();
+        return;
+      }
       _currentDeviceSession = device.copyWith(isPrimaryBroadcaster: true);
       _remoteBroadcasterSession = null;
       _broadcastSessionError = null;
+      _heartbeatFailingSince = null;
       _viewerDeviceChoice = false;
       _isStreamerModeEnabled = true;
+      unawaited(_persistViewerChoice(false));
       notifyListeners();
     } catch (_) {
-      if (generation == _deviceGeneration) _loseBroadcastDevice();
+      if (generation != _deviceGeneration) return;
+      _broadcastSessionError = 'broadcast_state_failed';
+      notifyListeners();
     }
   }
 
+  /// Asks the server whether this device still holds the primary role. Only
+  /// a definite "no" demotes it. Network errors demote only after the server
+  /// itself would have treated the device as silent (90 s), so a brief
+  /// connection drop does not end a broadcast the server still accepts.
   Future<void> _heartbeatDevice() async {
     final device = _currentDeviceSession;
     final generation = _deviceGeneration;
@@ -797,27 +838,41 @@ class AppProvider extends ChangeNotifier {
     _deviceHeartbeatBusy = true;
     try {
       final primary = await _adminDbService!.heartbeatDevice(device.deviceId);
-      if (generation == _deviceGeneration && !primary) _loseBroadcastDevice();
+      if (generation != _deviceGeneration) return;
+      _heartbeatFailingSince = null;
+      if (!primary) _loseBroadcastDevice();
     } catch (_) {
-      if (generation == _deviceGeneration) _loseBroadcastDevice();
+      if (generation != _deviceGeneration) return;
+      final since = _heartbeatFailingSince ??= DateTime.now();
+      if (DateTime.now().difference(since) >= _deviceSilenceLimit) {
+        _loseBroadcastDevice();
+      }
     } finally {
       _deviceHeartbeatBusy = false;
     }
   }
+
+  DateTime? _heartbeatFailingSince;
+  static const Duration _deviceSilenceLimit = Duration(seconds: 90);
 
   @visibleForTesting
   void applyDeviceSessions(List<DeviceSessionModel> sessions) {
     final device = _currentDeviceSession;
     if (device == null) return;
     final primary = sessions.where((s) => s.isPrimaryBroadcaster).firstOrNull;
-    _remoteBroadcasterSession =
-        _viewerDeviceChoice || primary?.deviceId == device.deviceId
-            ? null
-            : primary;
     if (primary?.deviceId == device.deviceId) {
-      _currentDeviceSession = device.copyWith(isPrimaryBroadcaster: true);
-    } else if (device.isPrimaryBroadcaster || _isBroadcastingLive) {
-      _loseBroadcastDevice();
+      // Promotion only follows this device's own claim; a viewer choice is
+      // never overridden by a row it did not write.
+      if (!_viewerDeviceChoice) {
+        _currentDeviceSession = device.copyWith(isPrimaryBroadcaster: true);
+      }
+      _remoteBroadcasterSession = null;
+    } else {
+      _remoteBroadcasterSession = _viewerDeviceChoice ? null : primary;
+      if (device.isPrimaryBroadcaster || _isBroadcastingLive) {
+        _loseBroadcastDevice();
+        return;
+      }
     }
     notifyListeners();
   }
@@ -834,6 +889,9 @@ class AppProvider extends ChangeNotifier {
     _isBroadcastingLive = false;
     _isStreamerModeEnabled = false;
     _viewerDeviceChoice = true;
+    _heartbeatFailingSince = null;
+    // A displaced device must not reclaim on restart or reconnect.
+    unawaited(_persistViewerChoice(true));
     _stopLiveViewerPolling();
     if (changed) notifyListeners();
   }
@@ -854,12 +912,32 @@ class AppProvider extends ChangeNotifier {
           _currentDeviceSession!.copyWith(isPrimaryBroadcaster: false);
     }
     _isStreamerModeEnabled = false;
+    unawaited(_persistViewerChoice(true));
     notifyListeners();
 
     final userId = _authService.currentSession?.user.id;
     final device = _currentDeviceSession;
     if (userId != null && device != null) {
       _adminDbService?.upsertDeviceSession(userId: userId, session: device);
+    }
+  }
+
+  /// Called when the app returns to the foreground. Android may freeze a
+  /// backgrounded app and a browser may pause a hidden tab, so Realtime
+  /// events and timers can be missed. Re-check the server-owned state now:
+  /// ban status, approval, and whether this device is still primary.
+  Future<void> onAppResumed() async {
+    if (_sessionUserId == null || _authHydrating) return;
+    await _refreshCurrentUserBanStatus();
+    await refreshMyApplicationAndStreamerStatus();
+    final device = _currentDeviceSession;
+    if (device == null) return;
+    if (device.isPrimaryBroadcaster) {
+      await _heartbeatDevice();
+    } else if (isApprovedStreamer &&
+        !_viewerDeviceChoice &&
+        _remoteBroadcasterSession == null) {
+      await initDeviceSession();
     }
   }
 
@@ -1167,9 +1245,10 @@ class AppProvider extends ChangeNotifier {
     final generation = _authGeneration;
     final user = _authService.currentSession?.user;
     if (user == null) return;
+    final wasApproved = isApprovedStreamer;
     try {
       _adminDbService ??= await AdminDatabaseService.create();
-      final isStreamer = await _adminDbService!.checkIsProfileStreamer(user.id);
+      var isStreamer = await _adminDbService!.checkIsProfileStreamer(user.id);
       final myApp = await _adminDbService!.loadMyApplication(user.id);
       final profile = await _adminDbService!.loadOwnProfile(user.id);
       if (_authGeneration != generation) return;
@@ -1191,6 +1270,16 @@ class AppProvider extends ChangeNotifier {
             profile['is_currently_live'] != true) {
           _loseBroadcastDevice();
         }
+      }
+
+      // checkIsProfileStreamer reports a failed read as "not a streamer". A
+      // revocation is only applied when the profile row itself shows it.
+      if (!isStreamer &&
+          _isApprovedStreamer &&
+          profile != null &&
+          profile['is_streamer'] == true &&
+          profile['is_verified'] == true) {
+        isStreamer = true;
       }
 
       final previousApp = _myApplication;
@@ -1268,11 +1357,42 @@ class AppProvider extends ChangeNotifier {
           );
         }
       }
+      // Hydration applies its own mode and device claim; afterwards an
+      // approval or revocation takes effect immediately instead of after a
+      // restart.
+      if (!_authHydrating && _authGeneration == generation) {
+        if (!wasApproved && isApprovedStreamer) {
+          _isStreamerModeEnabled = !_viewerDeviceChoice;
+          unawaited(initDeviceSession());
+        } else if (wasApproved && !isApprovedStreamer) {
+          _revokeLocalBroadcastState();
+        }
+      }
       await loadVerifiedStreamersFromBackend();
       notifyListeners();
     } catch (e) {
       debugPrint('refreshMyApplicationAndStreamerStatus failed: $e');
     }
+  }
+
+  /// Broadcaster approval was withdrawn by the server. Stop claiming LIVE,
+  /// drop the device claim (the server has already demoted it) and leave
+  /// broadcaster mode; the phone screen listens and releases camera/mic.
+  void _revokeLocalBroadcastState() {
+    _deviceGeneration++;
+    _deviceHeartbeatTimer?.cancel();
+    _deviceSubscription?.cancel();
+    _deviceSubscription = null;
+    if (_currentDeviceSession != null) {
+      _currentDeviceSession =
+          _currentDeviceSession!.copyWith(isPrimaryBroadcaster: false);
+    }
+    _remoteBroadcasterSession = null;
+    _isBroadcastingLive = false;
+    _isStreamerModeEnabled = false;
+    _liveStateBusy = false;
+    _broadcastSessionError = 'broadcast_approval_required';
+    _stopLiveViewerPolling();
   }
 
   RealtimeChannel? _userStatusChannel;
@@ -1310,6 +1430,20 @@ class AppProvider extends ChangeNotifier {
               // Never print profile payloads containing account data.
               refreshMyApplicationAndStreamerStatus();
             },
+          )
+          // A ban arrives as an INSERT/UPDATE on the account's own row.
+          // Filtered DELETE events are not delivered by Realtime, so an unban
+          // is picked up by the polling in _refreshCurrentUserBanStatus.
+          .onPostgresChanges(
+            event: PostgresChangeEvent.all,
+            schema: 'public',
+            table: 'banned_users',
+            filter: PostgresChangeFilter(
+              type: PostgresChangeFilterType.eq,
+              column: 'profile_id',
+              value: userId,
+            ),
+            callback: (_) => _refreshCurrentUserBanStatus(),
           )
           .subscribe();
     } catch (e) {
@@ -1521,6 +1655,7 @@ class AppProvider extends ChangeNotifier {
     _permittedAdminOrgIds = [];
     _isCurrentUserBanned = false;
     _currentUserBanReason = null;
+    _syncBanPolling();
     // The signed-in account's library goes with the session (05 D-07); the
     // next account must not inherit its follows and saved recordings.
     _followedStreamerIds.clear();
@@ -1910,6 +2045,7 @@ class AppProvider extends ChangeNotifier {
     _deviceGeneration++;
     _deviceHeartbeatTimer?.cancel();
     _deviceSubscription?.cancel();
+    _banPollTimer?.cancel();
     _currentDeviceSession = null;
     _stopLiveViewerPolling();
     _authStateSub?.cancel();
@@ -2746,6 +2882,9 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> logout() async {
     final device = _currentDeviceSession;
+    // An explicit sign-out ends this install's viewer choice; the next
+    // sign-in asks the server again.
+    await _persistViewerChoice(false);
     if (device != null) {
       await _adminDbService?.upsertDeviceSession(
           userId: _authService.currentSession?.user.id ?? '',
@@ -2853,8 +2992,17 @@ class AppProvider extends ChangeNotifier {
     // Enabling Streamer Mode requires an already-authenticated session that is
     // an approved broadcaster or admin -- role changes go through the real backend.
     if (isStreamer && !isApprovedStreamer) return;
-    if (isStreamer && _viewerDeviceChoice) {
+    // Turning broadcaster mode on is the explicit way back from a viewer
+    // choice or a displacement: ask the server again. Another active primary
+    // is reported as a conflict, never taken over silently.
+    if (isStreamer &&
+        (_viewerDeviceChoice ||
+            _currentDeviceSession?.isPrimaryBroadcaster != true)) {
       _viewerDeviceChoice = false;
+      if (_broadcastSessionError == 'broadcast_session_lost') {
+        _broadcastSessionError = null;
+      }
+      unawaited(_persistViewerChoice(false));
       unawaited(initDeviceSession());
     }
     _isStreamerModeEnabled = isStreamer;
@@ -3039,6 +3187,20 @@ class AppProvider extends ChangeNotifier {
       return streamer;
     }).toList();
     notifyListeners();
+  }
+
+  /// Account and device preconditions for starting a broadcast from the
+  /// studio, as an i18n key, or null when the server may be asked. The
+  /// server re-checks both in set_live_state; this only lets the studio
+  /// explain a refusal before anything starts.
+  String? get broadcastPreflightErrorKey {
+    if (_authService.currentSession == null || !isApprovedStreamer) {
+      return 'broadcast_approval_required';
+    }
+    if (_currentDeviceSession?.isPrimaryBroadcaster != true) {
+      return 'broadcast_primary_required';
+    }
+    return null;
   }
 
   Future<bool> checkBroadcastPermission() async {
@@ -4488,9 +4650,24 @@ class AppProvider extends ChangeNotifier {
           (expiresAt == null || expiresAt.isAfter(DateTime.now()));
       _isCurrentUserBanned = isBanned;
       _currentUserBanReason = isBanned ? row['reason'] as String? : null;
+      _syncBanPolling();
       notifyListeners();
     } catch (e) {
       debugPrint('_refreshCurrentUserBanStatus failed: $e');
+    }
+  }
+
+  Timer? _banPollTimer;
+
+  /// While this account is banned, re-read its ban row so an unban restores
+  /// access without a restart.
+  void _syncBanPolling() {
+    if (_isCurrentUserBanned && !_disposed) {
+      _banPollTimer ??= Timer.periodic(
+          const Duration(seconds: 20), (_) => _refreshCurrentUserBanStatus());
+    } else {
+      _banPollTimer?.cancel();
+      _banPollTimer = null;
     }
   }
 

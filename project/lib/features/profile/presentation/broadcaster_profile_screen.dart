@@ -113,6 +113,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
           // tower."
           if (appProvider.isLoggedInStreamer &&
               appProvider.isApprovedStreamer &&
+              appProvider.isStreamerModeEnabled &&
               appProvider.isOwnStreamerProfile(streamer.streamerId))
             IconButton(
               icon: Icon(

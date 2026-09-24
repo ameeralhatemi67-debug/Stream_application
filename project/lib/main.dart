@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'core/config/app_identity.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -9,7 +11,7 @@ import 'core/config/supabase_config.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
-import 'core/widgets/device_session_conflict_dialog.dart';
+import 'core/widgets/device_session_presenter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -48,8 +50,7 @@ class StreamerApp extends StatefulWidget {
 class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   late final AppProvider _appProvider;
   late final GoRouter _router;
-  bool _deviceConflictDialogShown = false;
-  bool _broadcastLossShown = false;
+  late final DeviceSessionPresenter _deviceSessionPresenter;
 
   @override
   void initState() {
@@ -68,68 +69,26 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     // app_router.dart) can react to auth state changes via refreshListenable
     // -- GoRouter must not be rebuilt on every frame.
     _router = AppRouter.build(_appProvider);
-    _appProvider.addListener(_maybeShowDeviceConflictDialog);
+    _deviceSessionPresenter =
+        DeviceSessionPresenter(provider: _appProvider, router: _router)
+          ..attach();
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     _appProvider.setConnectivityForeground(state == AppLifecycleState.resumed ||
         state == AppLifecycleState.inactive);
-  }
-
-  /// Shows DeviceSessionConflictDialog once per detected conflict --
-  /// AppProvider.initDeviceSession() populates remoteBroadcasterSession when
-  /// another device already holds broadcaster rights on this account
-  /// (issue_log.md multi-device collision). Global (root navigator) so it
-  /// fires regardless of which screen the user lands on after sign-in.
-  void _maybeShowDeviceConflictDialog() {
-    final lost = _appProvider.broadcastSessionError == 'broadcast_session_lost';
-    if (lost && !_broadcastLossShown) {
-      _broadcastLossShown = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (!mounted) return;
-        _router.go('/feed');
-        final context = AppRouter.rootNavigatorKey.currentContext;
-        if (context != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text('broadcast_session_lost'.tr())));
-        }
-      });
-    } else if (!lost) {
-      _broadcastLossShown = false;
+    // Android can freeze a backgrounded app and skip Realtime events and
+    // heartbeats; re-check ownership, approval and ban state on return.
+    if (state == AppLifecycleState.resumed) {
+      unawaited(_appProvider.onAppResumed());
     }
-    final remote = _appProvider.remoteBroadcasterSession;
-    final current = _appProvider.currentDeviceSession;
-    if (remote == null || current == null) {
-      _deviceConflictDialogShown = false;
-      return;
-    }
-    if (_deviceConflictDialogShown) return;
-    _deviceConflictDialogShown = true;
-
-    final context = AppRouter.rootNavigatorKey.currentContext;
-    if (context == null) {
-      _deviceConflictDialogShown = false;
-      return;
-    }
-    DeviceSessionConflictDialog.show(
-      context: context,
-      currentDevice: current,
-      existingDevice: remote,
-    ).then((choice) {
-      if (choice == DeviceSessionChoice.transferBroadcaster) {
-        _appProvider.transferBroadcasterToCurrentDevice();
-      } else if (choice == DeviceSessionChoice.continueAsViewer) {
-        _appProvider.continueAsViewerOnCurrentDevice();
-        _router.go('/feed');
-      }
-    });
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _appProvider.removeListener(_maybeShowDeviceConflictDialog);
+    _deviceSessionPresenter.dispose();
     _appProvider.dispose();
     super.dispose();
   }

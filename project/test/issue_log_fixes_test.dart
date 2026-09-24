@@ -79,11 +79,14 @@ void main() {
       // Continue as Viewer dismisses the conflict; a refused transfer must
       // not reopen it or silently re-enable broadcaster mode.
       expect(provider.remoteBroadcasterSession, isNull);
+      // P6-R02: a device row cannot re-promote a device whose user chose
+      // Viewer; only an explicit transfer or broadcaster-mode action can.
       provider.applyDeviceSessions([
         provider.currentDeviceSession!.copyWith(isPrimaryBroadcaster: true)
       ]);
+      expect(provider.currentDeviceSession!.isPrimaryBroadcaster, isFalse);
       provider.applyDeviceSessions([remoteDevice]);
-      expect(provider.broadcastSessionError, 'broadcast_session_lost');
+      expect(provider.remoteBroadcasterSession, isNull);
       expect(provider.isBroadcastingLive, isFalse);
       provider.dispose();
     });

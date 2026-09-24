@@ -1,6 +1,6 @@
 {
   "broadcast_session_lost": "توقف البث لأن هذا الجهاز فقد الجلسة الأساسية. أعد الاتصال أو انقل البث إلى هذا الجهاز.",
-  "broadcast_primary_required": "اجعل هذا الجهاز جهاز البث الأساسي قبل بدء البث.",
+  "broadcast_primary_required": "هذا الجهاز ليس جهاز البث لحسابك. اختر \"استخدم هذا الجهاز للبث\"؛ وإذا كان جهاز آخر يحمل هذا الدور فسيُطلب منك التأكيد قبل نقله.",
   "broadcast_state_failed": "تعذر تحديث جلسة البث. تحقق من اتصالك وحاول مرة أخرى.",
   "sign_out_other_devices": "تسجيل الخروج من الأجهزة الأخرى",
   "offline_experience": {
@@ -960,7 +960,16 @@
     "toast_stream_key_required_message": "الصق مفتاح البث من استوديو يوتيوب، من \"بدء البث\" ثم \"البث\".",
     "toast_laptop_ip_required_title": "عنوان IP للحاسوب مطلوب",
     "toast_laptop_ip_required_message": "أدخل عنوان IP المحلي لحاسوبك للمتابعة.",
-    "toast_rtmp_target_updated_title": "تم تحديث وجهة RTMP المحلية"
+    "toast_rtmp_target_updated_title": "تم تحديث وجهة RTMP المحلية",
+    "btn_open_camera": "افتح الكاميرا",
+    "btn_local_unavailable": "غير متاح",
+    "local_unavailable_title": "البث عبر نفس شبكة Wi-Fi غير متاح بعد",
+    "local_unavailable_body": "لا يحتوي هذا الإصدار على نقل فيديو محلي، لذلك لا يمكنه البث عبر شبكة Wi-Fi. استخدم الهاتف أو OBS لبدء البث.",
+    "action_use_this_device": "استخدم هذا الجهاز للبث",
+    "error_watch_id_required": "الصق رابط مشاهدة YouTube أو معرّف الفيديو المكوّن من 11 حرفًا للبث الذي بدأته في OBS.",
+    "error_phone_unsupported": "البث بكاميرا الهاتف متاح فقط في تطبيق Android. استخدم OBS على هذا الجهاز.",
+    "obs_listed_live_title": "مُدرج كبث مباشر في التطبيق",
+    "obs_listed_live_body": "قبل الخادم معرّف الفيديو {}. لا يستطيع التطبيق رؤية OBS أو استقبال YouTube للبث. تأكد من أن YouTube Studio يستقبل بثك."
   },
   "design_ui": {
     "access_denied": "الوصول مرفوض",

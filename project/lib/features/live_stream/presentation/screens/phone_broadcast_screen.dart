@@ -237,13 +237,35 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   void _onBroadcastSessionChanged() {
-    if (!mounted || !_weStartedBroadcast) return;
+    if (!mounted) return;
+    // Another device took the broadcaster role, or approval was withdrawn:
+    // this device may not keep the camera open or publish, so leave.
+    if (_appProvider.broadcastSessionError == 'broadcast_session_lost' ||
+        !_appProvider.isApprovedStreamer) {
+      _leaveAfterDisplacement();
+      return;
+    }
+    if (!_weStartedBroadcast) return;
     if (!_appProvider.isStreamerModeEnabled ||
-        _appProvider.currentDeviceSession?.isPrimaryBroadcaster != true ||
-        _appProvider.broadcastSessionError == 'broadcast_session_lost') {
+        _appProvider.currentDeviceSession?.isPrimaryBroadcaster != true) {
       _stopBroadcast();
     }
     setState(() {});
+  }
+
+  bool _leavingAfterDisplacement = false;
+
+  /// Stops the encoder, then removes this route; dispose() releases the
+  /// camera, microphone, wakelock and orientation lock.
+  Future<void> _leaveAfterDisplacement() async {
+    if (_leavingAfterDisplacement) return;
+    _leavingAfterDisplacement = true;
+    await _stopBroadcast();
+    if (!mounted) return;
+    final route = ModalRoute.of(context);
+    if (route != null && route.isActive) {
+      Navigator.of(context).removeRoute(route);
+    }
   }
 
   Future<void> _stopBroadcast() async {

@@ -2621,6 +2621,58 @@ class AdminDatabaseService {
         true;
   }
 
+  /// Claims the primary broadcaster role, or reports which other device holds
+  /// it (20260924100000_broadcaster_device_claim_state.sql). The read and the
+  /// claim happen in one locked server transaction, so a failed or racing
+  /// read can no longer turn into "no conflict". On a backend that does not
+  /// have that migration yet, the older read-then-claim path is used, and a
+  /// refused claim is still reported as a conflict rather than dropped.
+  Future<DeviceClaimResult> claimDeviceState(DeviceSessionModel device,
+      {bool force = false}) async {
+    if (!_useSupabase) {
+      return DeviceClaimResult(claimed: await claimDevice(device, force: force));
+    }
+    try {
+      final result = await _client.rpc('claim_broadcaster_device_state', params: {
+        'p_device_id': device.deviceId,
+        'p_name': device.deviceName,
+        'p_platform': device.platform,
+        'p_force': force,
+      });
+      final map = Map<String, dynamic>.from(result as Map);
+      final primary = map['primary'] == null
+          ? null
+          : Map<String, dynamic>.from(map['primary'] as Map);
+      return DeviceClaimResult(
+        claimed: map['claimed'] == true,
+        primary: primary == null
+            ? null
+            : DeviceSessionModel.fromJson(
+                {...primary, 'is_primary_broadcaster': true}),
+        primaryIsStale: primary?['stale'] == true,
+      );
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202') rethrow;
+    }
+    final remote = force
+        ? null
+        : await findActiveRemoteBroadcasterSession(
+            userId: _client.auth.currentUser?.id ?? '',
+            currentDeviceId: device.deviceId);
+    if (remote != null) return DeviceClaimResult(claimed: false, primary: remote);
+    if (await claimDevice(device, force: force)) {
+      return const DeviceClaimResult(claimed: true);
+    }
+    return DeviceClaimResult(
+      claimed: false,
+      primary: DeviceSessionModel(
+          deviceId: '',
+          deviceName: 'Unknown Device',
+          platform: 'unknown',
+          lastActiveAt: DateTime.now()),
+    );
+  }
+
   // -------------------------------------------------------------------------
   // Viewer presence (P3 / 05 D-08). The stream_viewers table is deny-all:
   // these two RPCs are the only way in or out of it.
@@ -2804,11 +2856,68 @@ class AdminDatabaseService {
         true;
   }
 
-  Stream<List<DeviceSessionModel>> watchDevices(String userId) => _client
-      .from('device_sessions')
-      .stream(primaryKey: ['user_id', 'device_id'])
-      .eq('user_id', userId)
-      .map((rows) => rows.map(DeviceSessionModel.fromJson).toList());
+  /// This account's device rows, re-read after every Realtime (re)join and
+  /// after every change event. `SupabaseQueryBuilder.stream()` reads its first
+  /// snapshot before the channel joins, so a transfer landing in that gap was
+  /// never delivered (issue_encountered.md, "Realtime initial snapshot
+  /// precedes first channel join"). Reading only once the channel is joined
+  /// closes that gap. Only the newest read is emitted, so a slow older read
+  /// cannot overwrite a newer ownership state.
+  Stream<List<DeviceSessionModel>> watchDevices(String userId) {
+    late final StreamController<List<DeviceSessionModel>> controller;
+    RealtimeChannel? channel;
+    var latestRead = 0;
+
+    Future<void> read() async {
+      final read = ++latestRead;
+      try {
+        final rows = await _client
+            .from('device_sessions')
+            .select()
+            .eq('user_id', userId);
+        if (read != latestRead || controller.isClosed) return;
+        controller.add(
+            (rows as List).map((r) => DeviceSessionModel.fromJson(r)).toList());
+      } catch (error, stack) {
+        if (read == latestRead && !controller.isClosed) {
+          controller.addError(error, stack);
+        }
+      }
+    }
+
+    controller = StreamController<List<DeviceSessionModel>>(
+      onListen: () {
+        channel = _client
+            .channel('device_sessions:$userId:${DateTime.now().microsecondsSinceEpoch}')
+            .onPostgresChanges(
+              event: PostgresChangeEvent.all,
+              schema: 'public',
+              table: 'device_sessions',
+              filter: PostgresChangeFilter(
+                type: PostgresChangeFilterType.eq,
+                column: 'user_id',
+                value: userId,
+              ),
+              callback: (_) => read(),
+            )
+            .subscribe((status, [error]) {
+          if (status == RealtimeSubscribeStatus.subscribed) {
+            read();
+          } else if ((status == RealtimeSubscribeStatus.channelError ||
+                  status == RealtimeSubscribeStatus.timedOut) &&
+              !controller.isClosed) {
+            controller.addError(StateError('Device channel ${status.name}'));
+          }
+        });
+      },
+      onCancel: () async {
+        final joined = channel;
+        channel = null;
+        if (joined != null) await _client.removeChannel(joined);
+      },
+    );
+    return controller.stream;
+  }
 
   Future<bool> canBroadcast({String? orgId, required String type}) async {
     if (!_useSupabase) return false;

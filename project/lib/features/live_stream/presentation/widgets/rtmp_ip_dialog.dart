@@ -1,6 +1,8 @@
 import 'dart:ui';
 import '../../../../core/config/feature_flags.dart';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -107,19 +109,11 @@ class _LiveBroadcasterStudioSheetState
     'general_edu': 'الثقافة والتعليم العام',
   };
 
-  static const List<String> _presetIps = [
-    '127.0.0.1',
-    '192.168.1.100',
-    '192.168.0.105',
-    '10.0.0.5',
-  ];
-
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
   late final TextEditingController _streamKeyController;
   late final TextEditingController _ingestUrlController;
   late final TextEditingController _youtubeUrlController;
-  late final TextEditingController _ipController;
 
   StudioMode _mode = StudioMode.obs;
   String _selectedCategory = 'cs_tech';
@@ -127,6 +121,15 @@ class _LiveBroadcasterStudioSheetState
   BroadcastQualityPreset _quality = BroadcastQualityPreset.medium;
   bool _streamKeyVisible = false;
   bool _isSubmitting = false;
+  // Re-entrancy guard: a double tap must not start two go-live requests or
+  // pop the sheet and then the page under it.
+  bool _ctaBusy = false;
+  // Visible inside the sheet. Earlier failures went to the page's
+  // ScaffoldMessenger, which renders underneath this modal sheet, so the
+  // buttons looked inert (P6-R06/R08/S01).
+  String? _ctaErrorTitleKey;
+  String? _ctaErrorKey;
+  bool _ctaErrorOffersDeviceClaim = false;
   _PosterChoice _posterChoice = _PosterChoice.defaultVisualizer;
   String? _posterPath;
 
@@ -154,7 +157,6 @@ class _LiveBroadcasterStudioSheetState
           ? provider.customYouTubeLiveUrl
           : provider.customYouTubeVideoId,
     );
-    _ipController = TextEditingController(text: provider.rtmpLaptopIp);
     _selectedCategory =
         _categoryLabelsEn.containsKey(provider.customLiveCategory)
             ? provider.customLiveCategory
@@ -173,13 +175,28 @@ class _LiveBroadcasterStudioSheetState
       _titleController,
       _streamKeyController,
       _ingestUrlController,
-      _ipController,
+      _youtubeUrlController,
     ]) {
       c.addListener(_onFieldChanged);
     }
   }
 
-  void _onFieldChanged() => setState(() {});
+  void _onFieldChanged() => setState(_clearCtaError);
+
+  void _clearCtaError() {
+    _ctaErrorTitleKey = null;
+    _ctaErrorKey = null;
+    _ctaErrorOffersDeviceClaim = false;
+  }
+
+  void _showCtaError(String key, {String? titleKey}) {
+    if (!mounted) return;
+    setState(() {
+      _ctaErrorTitleKey = titleKey;
+      _ctaErrorKey = key;
+      _ctaErrorOffersDeviceClaim = key == 'broadcast_primary_required';
+    });
+  }
 
   @override
   void dispose() {
@@ -187,7 +204,7 @@ class _LiveBroadcasterStudioSheetState
       _titleController,
       _streamKeyController,
       _ingestUrlController,
-      _ipController,
+      _youtubeUrlController,
     ]) {
       c.removeListener(_onFieldChanged);
     }
@@ -196,7 +213,6 @@ class _LiveBroadcasterStudioSheetState
     _streamKeyController.dispose();
     _ingestUrlController.dispose();
     _youtubeUrlController.dispose();
-    _ipController.dispose();
     _whitelistInputController.dispose();
     super.dispose();
   }
@@ -207,7 +223,10 @@ class _LiveBroadcasterStudioSheetState
   void _selectMode(StudioMode mode) {
     if (mode == _mode) return;
     HapticFeedback.selectionClick();
-    setState(() => _mode = mode);
+    setState(() {
+      _mode = mode;
+      _clearCtaError();
+    });
   }
 
   @override
@@ -261,6 +280,10 @@ class _LiveBroadcasterStudioSheetState
                   child: _buildMiddleCard(isAr),
                 ),
               ),
+              if (_ctaErrorKey != null) ...[
+                const SizedBox(height: AppTheme.spaceSm),
+                _buildCtaError(),
+              ],
               const SizedBox(height: AppTheme.spaceMd),
               _buildBottomRow(isAr),
             ],
@@ -914,114 +937,112 @@ class _LiveBroadcasterStudioSheetState
   // Local RTMP mode
   // ---------------------------------------------------------------------
 
+  /// Same-Wi-Fi streaming has no media transport in this build: the old form
+  /// only saved an rtmp:// address and started nothing. Say so plainly until
+  /// P6S implements and verifies a real local transport.
   Widget _buildLocalFields(bool isAr) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Expanded(
-                child:
-                    _sectionLabel('design_copy.laptop_local_ip_address'.tr())),
-            _infoButton(),
-          ],
-        ),
-        const SizedBox(height: AppTheme.spaceSm),
-        TextField(
-          controller: _ipController,
-          keyboardType: TextInputType.url,
-          style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontSize: 13,
-              fontFamily: 'monospace'),
-          decoration: InputDecoration(
-            hintText: 'e.g. 192.168.1.100',
-            hintStyle:
-                const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
-            prefixIcon: Icon(Icons.laptop_rounded, color: _modeColor, size: 18),
-            filled: true,
-            fillColor: AppTheme.surfaceAlt,
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              borderSide: const BorderSide(color: AppTheme.border),
+    return Container(
+      key: const ValueKey('local-unavailable'),
+      padding: const EdgeInsets.all(AppTheme.spaceMd),
+      decoration: BoxDecoration(
+        color: AppTheme.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.wifi_off_rounded,
+              color: AppTheme.textSecondary, size: 20),
+          const SizedBox(width: AppTheme.spaceSm),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'live_studio.local_unavailable_title'.tr(),
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceXs),
+                Text(
+                  'live_studio.local_unavailable_body'.tr(),
+                  style: const TextStyle(
+                      color: AppTheme.textSecondary, fontSize: 12),
+                ),
+              ],
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCtaError() {
+    final titleKey = _ctaErrorTitleKey;
+    return Semantics(
+      container: true,
+      liveRegion: true,
+      child: Container(
+        key: const ValueKey('studio-cta-error'),
+        padding: const EdgeInsets.all(AppTheme.spaceSm),
+        decoration: BoxDecoration(
+          color: AppTheme.danger.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+          border: Border.all(color: AppTheme.danger.withValues(alpha: 0.5)),
         ),
-        const SizedBox(height: AppTheme.spaceSm),
-        Wrap(
-          spacing: 6,
-          runSpacing: 6,
-          children: _presetIps.map((ip) {
-            final isSelected = _ipController.text.trim() == ip;
-            return ChoiceChip(
-              label: Text(ip),
-              selected: isSelected,
-              selectedColor: _modeColor.withValues(alpha: 0.25),
-              backgroundColor: AppTheme.surfaceAlt,
-              side:
-                  BorderSide(color: isSelected ? _modeColor : AppTheme.border),
-              labelStyle: TextStyle(
-                color: isSelected ? _modeColor : AppTheme.textSecondary,
-                fontSize: 10.5,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              onSelected: (selected) {
-                if (selected) setState(() => _ipController.text = ip);
-              },
-            );
-          }).toList(),
-        ),
-        const SizedBox(height: AppTheme.spaceSm),
-        _sectionLabel('design_copy.stream_url_preview'.tr()),
-        const SizedBox(height: AppTheme.spaceSm),
-        Container(
-          padding: const EdgeInsets.all(AppTheme.spaceSm),
-          decoration: BoxDecoration(
-            color: AppTheme.bg,
-            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-            border: Border.all(color: _modeColor.withValues(alpha: 0.4)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.link_rounded, color: _modeColor, size: 16),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  'rtmp://${_ipController.text.trim().isEmpty ? "..." : _ipController.text.trim()}/live/demo',
-                  style: TextStyle(
-                    color: _ipController.text.trim().isEmpty
-                        ? AppTheme.textMuted
-                        : AppTheme.textPrimary,
-                    fontSize: 11,
-                    fontFamily: 'monospace',
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.error_outline_rounded,
+                    color: AppTheme.danger, size: 18),
+                const SizedBox(width: AppTheme.spaceSm),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (titleKey != null)
+                        Text(
+                          titleKey.tr(),
+                          style: const TextStyle(
+                            color: AppTheme.danger,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12.5,
+                          ),
+                        ),
+                      Text(
+                        _ctaErrorKey!.tr(),
+                        style: const TextStyle(
+                            color: AppTheme.textPrimary, fontSize: 12),
+                      ),
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+            if (_ctaErrorOffersDeviceClaim)
+              Align(
+                alignment: AlignmentDirectional.centerEnd,
+                child: TextButton.icon(
+                  icon: const Icon(Icons.phonelink_setup_rounded, size: 16),
+                  label: Text('live_studio.action_use_this_device'.tr()),
+                  onPressed: () {
+                    // The server either grants the role or reports the
+                    // device holding it; the conflict dialog handles that.
+                    context.read<AppProvider>().setRoleMode(true);
+                    setState(_clearCtaError);
+                  },
                 ),
               ),
-              IconButton(
-                icon: const Icon(Icons.copy_rounded,
-                    size: 14, color: AppTheme.textMuted),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () {
-                  Clipboard.setData(ClipboardData(
-                    text: 'rtmp://${_ipController.text.trim()}/live/demo',
-                  ));
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                        content: Text(
-                            'design_ui.rtmp_url_copied_to_clipboard'.tr())),
-                  );
-                },
-              ),
-            ],
-          ),
+          ],
         ),
-        _buildStreamAccessSection(isAr),
-      ],
+      ),
     );
   }
 
@@ -1496,12 +1517,17 @@ class _LiveBroadcasterStudioSheetState
                     const Icon(Icons.stop_circle_rounded,
                         size: 18, color: AppTheme.onMedia),
                   const SizedBox(width: 8),
-                  Text(
-                    'design_ui.end_stream'.tr(),
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
-                      color: AppTheme.onMedia,
+                  Flexible(
+                    child: Text(
+                      'design_ui.end_stream'.tr(),
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.5,
+                        color: AppTheme.onMedia,
+                      ),
                     ),
                   ),
                 ],
@@ -1513,9 +1539,15 @@ class _LiveBroadcasterStudioSheetState
     }
 
     final (label, icon) = switch (_mode) {
-      StudioMode.obs => ('Go Live', Icons.sensors_rounded),
-      StudioMode.phone => ('Open Camera', Icons.photo_camera_rounded),
-      StudioMode.local => ('Stream', Icons.bolt_rounded),
+      StudioMode.obs => ('live_studio.btn_go_live'.tr(), Icons.sensors_rounded),
+      StudioMode.phone => (
+          'live_studio.btn_open_camera'.tr(),
+          Icons.photo_camera_rounded
+        ),
+      StudioMode.local => (
+          'live_studio.btn_local_unavailable'.tr(),
+          Icons.block_rounded
+        ),
     };
 
     return AnimatedSwitcher(
@@ -1561,12 +1593,17 @@ class _LiveBroadcasterStudioSheetState
                   else
                     Icon(icon, size: 18, color: AppTheme.onMedia),
                   const SizedBox(width: 8),
-                  Text(
-                    label,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13.5,
-                      color: AppTheme.onMedia,
+                  Flexible(
+                    child: Text(
+                      label,
+                      maxLines: 2,
+                      textAlign: TextAlign.center,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13.5,
+                        color: AppTheme.onMedia,
+                      ),
                     ),
                   ),
                 ],
@@ -1579,16 +1616,20 @@ class _LiveBroadcasterStudioSheetState
   }
 
   Future<void> _handleCtaPressed() async {
-    switch (_mode) {
-      case StudioMode.obs:
-        await _handleObsGoLive();
-        break;
-      case StudioMode.phone:
-        _handlePhoneOpenCamera();
-        break;
-      case StudioMode.local:
-        _handleLocalStream();
-        break;
+    if (_ctaBusy) return;
+    _ctaBusy = true;
+    try {
+      switch (_mode) {
+        case StudioMode.obs:
+          await _handleObsGoLive();
+        case StudioMode.phone:
+          _handlePhoneOpenCamera();
+        case StudioMode.local:
+          _showCtaError('live_studio.local_unavailable_body',
+              titleKey: 'live_studio.local_unavailable_title');
+      }
+    } finally {
+      _ctaBusy = false;
     }
   }
 
@@ -1614,16 +1655,24 @@ class _LiveBroadcasterStudioSheetState
     );
   }
 
+  /// OBS: the app cannot see OBS or YouTube ingest. It only asks the server
+  /// to list this account as live for the given watch video ID, and reports
+  /// exactly that -- never "live on YouTube".
   Future<void> _handleObsGoLive() async {
     final provider = context.read<AppProvider>();
-    setState(() => _isSubmitting = true);
-
     _persistSharedMeta(provider);
-
-    final rawYoutube = _youtubeUrlController.text.trim();
-    if (rawYoutube.isNotEmpty) {
-      provider.setCustomStreamerYouTubeUrl(rawYoutube);
+    final preflight = provider.broadcastPreflightErrorKey;
+    if (preflight != null) {
+      _showCtaError(preflight);
+      return;
     }
+    final rawYoutube = _youtubeUrlController.text.trim();
+    final videoId = AppProvider.extractYouTubeId(rawYoutube);
+    if (videoId.isEmpty) {
+      _showCtaError('live_studio.error_watch_id_required');
+      return;
+    }
+    provider.setCustomStreamerYouTubeUrl(rawYoutube);
     provider.updatePhoneBroadcastTarget(
       rtmpUrl: _ingestUrlController.text.trim().isEmpty
           ? provider.phoneBroadcastRtmpUrl
@@ -1631,53 +1680,50 @@ class _LiveBroadcasterStudioSheetState
       streamKey: _streamKeyController.text.trim(),
     );
 
+    setState(() => _isSubmitting = true);
     if (!provider.isBroadcastingLive) {
-      await provider.toggleBroadcasterGoLive(context);
+      await provider.setBroadcasterLive(true);
     }
-
+    // Closed while the request was in flight: the provider already holds the
+    // server's answer; there is nothing left to show here.
     if (!mounted) return;
     setState(() => _isSubmitting = false);
-    if (!provider.isBroadcastingLive) return;
+    if (!provider.isBroadcastingLive) {
+      _showCtaError(provider.broadcastSessionError ?? 'broadcast_state_failed');
+      return;
+    }
     Navigator.of(context).pop();
-
-    final videoId = AppProvider.extractYouTubeId(
-        rawYoutube.isEmpty ? provider.customYouTubeLiveUrl : rawYoutube);
-    // An unparseable URL yields an empty id now instead of a hardcoded video
-    // (P2): say so, rather than reporting a target that was never set. The
-    // server's set_live_state rejects an invalid id in any case.
     InteractiveToastOverlay.show(
       context,
-      title: videoId.isEmpty
-          ? 'No YouTube Video Detected'
-          : 'YouTube Live Target Updated',
-      message: videoId.isEmpty
-          ? 'Paste the watch or live URL from YouTube Studio.'
-          : 'Active Video ID: $videoId',
-      icon:
-          videoId.isEmpty ? Icons.error_outline_rounded : Icons.sensors_rounded,
-      accentColor: videoId.isEmpty ? AppTheme.danger : _modeColor,
+      title: 'live_studio.obs_listed_live_title'.tr(),
+      message: 'live_studio.obs_listed_live_body'.tr(args: [videoId]),
+      icon: Icons.sensors_rounded,
+      accentColor: _modeColor,
     );
   }
 
+  /// Phone: validate everything the phone screen needs before leaving the
+  /// sheet, so a refusal is explained here instead of after navigation.
   void _handlePhoneOpenCamera() {
     final provider = context.read<AppProvider>();
-    final streamKey = _streamKeyController.text.trim();
-
-    if (streamKey.isEmpty) {
-      InteractiveToastOverlay.show(
-        context,
-        title: 'live_studio.toast_stream_key_required_title'.tr(),
-        message: 'live_studio.toast_stream_key_required_message'.tr(),
-        icon: Icons.error_outline_rounded,
-        accentColor: AppTheme.danger,
-      );
+    if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
+      _showCtaError('live_studio.error_phone_unsupported');
       return;
     }
-
+    final preflight = provider.broadcastPreflightErrorKey;
+    if (preflight != null) {
+      _showCtaError(preflight);
+      return;
+    }
+    final streamKey = _streamKeyController.text.trim();
+    if (streamKey.isEmpty) {
+      _showCtaError('live_studio.toast_stream_key_required_message',
+          titleKey: 'live_studio.toast_stream_key_required_title');
+      return;
+    }
     final watchUrl = _youtubeUrlController.text.trim();
     if (AppProvider.extractYouTubeId(watchUrl).isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('live.watch_url_required'.tr())));
+      _showCtaError('live.watch_url_required');
       return;
     }
     provider.setCustomStreamerYouTubeUrl(watchUrl);
@@ -1689,44 +1735,12 @@ class _LiveBroadcasterStudioSheetState
       streamKey: streamKey,
     );
 
-    Navigator.of(context).pop();
-    Navigator.of(context).push(
+    final navigator = Navigator.of(context);
+    navigator.pop();
+    navigator.push(
       MaterialPageRoute(
         builder: (_) => PhoneBroadcastScreen(quickLaunchPreset: _quality),
       ),
-    );
-  }
-
-  void _handleLocalStream() {
-    final provider = context.read<AppProvider>();
-    final rawIp = _ipController.text.trim();
-
-    if (rawIp.isEmpty) {
-      InteractiveToastOverlay.show(
-        context,
-        title: 'live_studio.toast_laptop_ip_required_title'.tr(),
-        message: 'live_studio.toast_laptop_ip_required_message'.tr(),
-        icon: Icons.error_outline_rounded,
-        accentColor: AppTheme.danger,
-      );
-      return;
-    }
-
-    provider.updateRtmpLaptopIp(rawIp);
-    provider.configureStreamPrivacy(
-      visibility:
-          _isPrivate ? StreamVisibility.private : StreamVisibility.public,
-      whitelistHandles: _whitelistHandles,
-      requireKnockApproval: _requireKnockApproval,
-    );
-    Navigator.of(context).pop();
-
-    InteractiveToastOverlay.show(
-      context,
-      title: 'live_studio.toast_rtmp_target_updated_title'.tr(),
-      message: 'rtmp://${provider.rtmpLaptopIp}/live/demo',
-      icon: Icons.cell_tower_rounded,
-      accentColor: _modeColor,
     );
   }
 }

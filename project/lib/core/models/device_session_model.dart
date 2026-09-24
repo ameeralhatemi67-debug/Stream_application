@@ -89,3 +89,16 @@ class DeviceSessionModel {
   String toString() =>
       'DeviceSessionModel(deviceId: $deviceId, deviceName: $deviceName, platform: $platform, isPrimaryBroadcaster: $isPrimaryBroadcaster)';
 }
+
+/// Server answer to a broadcaster-device claim: either this device now holds
+/// the primary role, or [primary] is the other device that still holds it.
+/// [primaryIsStale] means that device has not sent a heartbeat for 90 s; the
+/// user still decides whether to take over.
+class DeviceClaimResult {
+  final bool claimed;
+  final DeviceSessionModel? primary;
+  final bool primaryIsStale;
+
+  const DeviceClaimResult(
+      {required this.claimed, this.primary, this.primaryIsStale = false});
+}
