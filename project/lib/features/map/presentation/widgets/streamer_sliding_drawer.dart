@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/models/streamer_models.dart';
-import '../../models/map_models.dart';
 import 'venue_navigation_sheet.dart';
 
 class StreamerSlidingDrawer extends StatelessWidget {
@@ -37,8 +36,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
               decoration: const BoxDecoration(
                 color: AppTheme.surfaceAlt,
                 border: Border(
-                  bottom:
-                      BorderSide(color: AppTheme.border, width: 1.0),
+                  bottom: BorderSide(color: AppTheme.border, width: 1.0),
                 ),
               ),
               child: Row(
@@ -134,8 +132,8 @@ class StreamerSlidingDrawer extends StatelessWidget {
             ),
             const Divider(color: AppTheme.border, height: 1),
             ListTile(
-              leading: const Icon(Icons.settings_outlined,
-                  color: AppTheme.primary),
+              leading:
+                  const Icon(Icons.settings_outlined, color: AppTheme.primary),
               title: Text('nav.settings'.tr(),
                   style: const TextStyle(
                       color: AppTheme.textPrimary, fontSize: 14)),
@@ -197,8 +195,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: statusColor,
                       shape: BoxShape.circle,
-                      border:
-                          Border.all(color: AppTheme.surface, width: 1.5),
+                      border: Border.all(color: AppTheme.surface, width: 1.5),
                     ),
                     child: isAudio
                         ? const Icon(Icons.mic_rounded,
@@ -302,10 +299,6 @@ class StreamerSlidingDrawer extends StatelessWidget {
   /// Maps (native app if installed, browser fallback otherwise). Silently
   /// no-ops if no maps handler exists on the device.
   static Future<void> _openInGoogleMaps(StreamerModel streamer) async {
-    final url = Uri.parse(
-        buildGoogleMapsSearchUrl(streamer.latitude, streamer.longitude));
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
+    await launchVenueDirections(streamer.latitude, streamer.longitude);
   }
 }

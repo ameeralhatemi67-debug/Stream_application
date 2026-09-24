@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:provider/provider.dart';
-import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
+import '../map_visible_catalog.dart';
 
 class SearchResultItem {
   final String title;
@@ -13,6 +13,7 @@ class SearchResultItem {
   final bool isLive;
   final LatLng coordinates;
   final double zoomLevel;
+  final String? streamerId;
 
   SearchResultItem({
     required this.title,
@@ -21,16 +22,21 @@ class SearchResultItem {
     this.isLive = false,
     required this.coordinates,
     required this.zoomLevel,
+    this.streamerId,
   });
 }
 
 class TopSpatialSearchBar extends StatefulWidget {
+  final List<StreamerModel> visibleStreamers;
   final Function(LatLng coordinates, double zoom, String label)
       onSearchResultSelected;
+  final ValueChanged<String>? onStreamerSelected;
 
   const TopSpatialSearchBar({
     super.key,
+    this.visibleStreamers = const [],
     required this.onSearchResultSelected,
+    this.onStreamerSelected,
   });
 
   @override
@@ -40,10 +46,8 @@ class TopSpatialSearchBar extends StatefulWidget {
 class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
-  bool _isSearching = false;
   bool _isFocused = false;
-
-  List<SearchResultItem> _results = [];
+  bool _showResults = false;
 
   @override
   void initState() {
@@ -52,30 +56,33 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
   }
 
   void _onFocusChanged() {
-    if (mounted) setState(() => _isFocused = _focusNode.hasFocus);
+    if (mounted) {
+      setState(() {
+        _isFocused = _focusNode.hasFocus;
+        if (_isFocused && _searchController.text.trim().isNotEmpty) {
+          _showResults = true;
+        }
+      });
+    }
   }
 
   void _onQueryChanged(String query) {
-    if (query.trim().isEmpty) {
-      setState(() {
-        _isSearching = false;
-        _results = [];
-      });
-      return;
-    }
+    setState(() => _showResults = query.trim().isNotEmpty);
+  }
 
+  List<SearchResultItem> _resultsFor(String query) {
+    if (query.trim().isEmpty) return const [];
     final q = query.toLowerCase();
     final List<SearchResultItem> matches = [];
-    final langCode = context.locale.languageCode;
+    final langCode = EasyLocalization.of(context)?.locale.languageCode ?? 'en';
 
-    // Search Cities
-    for (final region in alSharqiaRegions) {
+    for (final region in saudiMapPresets) {
       final name = region.getLocalizedName(langCode);
       if (region.nameEn.toLowerCase().contains(q) ||
           region.nameAr.toLowerCase().contains(q)) {
         matches.add(SearchResultItem(
           title: name,
-          subtitle: 'City in AlSharqia',
+          subtitle: 'map.place_preset'.tr(),
           icon: Icons.location_city_rounded,
           coordinates: region.centerCoordinates,
           zoomLevel: region.zoomLevelTarget,
@@ -83,32 +90,25 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
       }
     }
 
-    // Search Streamers & Venues -- the live catalog the provider holds, not a
-    // compiled-in sample list (P2 truthful data).
-    for (final streamer in context.read<AppProvider>().streamers) {
+    // Recompute from the current visible catalog on every build. A provider
+    // refresh removes withdrawn/hidden/unverified results immediately.
+    for (final streamer in searchMapStreamers(widget.visibleStreamers, q)) {
       final name = streamer.getLocalizedName(langCode);
       final venue = streamer.getLocalizedVenue(langCode);
-
-      if (name.toLowerCase().contains(q) ||
-          venue.toLowerCase().contains(q) ||
-          streamer.organizationEn.toLowerCase().contains(q)) {
-        matches.add(SearchResultItem(
-          title: name,
-          subtitle: venue,
-          icon: streamer.isCurrentlyLive
-              ? Icons.sensors_rounded
-              : Icons.place_rounded,
-          isLive: streamer.isCurrentlyLive,
-          coordinates: LatLng(streamer.latitude, streamer.longitude),
-          zoomLevel: 14.5,
-        ));
-      }
+      matches.add(SearchResultItem(
+        title: name,
+        subtitle: venue,
+        icon: streamer.isCurrentlyLive
+            ? Icons.sensors_rounded
+            : Icons.place_rounded,
+        isLive: streamer.isCurrentlyLive,
+        coordinates: LatLng(streamer.latitude, streamer.longitude),
+        zoomLevel: 14.5,
+        streamerId: streamer.streamerId,
+      ));
     }
 
-    setState(() {
-      _results = matches;
-      _isSearching = matches.isNotEmpty;
-    });
+    return matches;
   }
 
   @override
@@ -121,6 +121,8 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
 
   @override
   Widget build(BuildContext context) {
+    final results = _resultsFor(_searchController.text);
+    final hasQuery = _searchController.text.trim().isNotEmpty;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -184,7 +186,7 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
         ),
 
         // Autocomplete Results Dropdown Card
-        if (_isSearching)
+        if (hasQuery && _showResults)
           Container(
             margin: const EdgeInsets.only(top: 8),
             constraints: const BoxConstraints(maxHeight: 240),
@@ -202,13 +204,20 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
             ),
             child: ListView.separated(
               shrinkWrap: true,
-              itemCount: _results.length,
+              itemCount: results.isEmpty ? 1 : results.length,
               separatorBuilder: (context, index) => const Divider(
                 height: 1,
                 color: AppTheme.border,
               ),
               itemBuilder: (context, index) {
-                final result = _results[index];
+                if (results.isEmpty) {
+                  return ListTile(
+                    title: Text('map.no_search_results'.tr()),
+                    leading: const Icon(Icons.search_off_rounded,
+                        color: AppTheme.textMuted),
+                  );
+                }
+                final result = results[index];
                 return ListTile(
                   dense: true,
                   leading: Container(
@@ -222,9 +231,7 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                     child: Icon(
                       result.icon,
                       size: 16,
-                      color: result.isLive
-                          ? AppTheme.danger
-                          : AppTheme.primary,
+                      color: result.isLive ? AppTheme.danger : AppTheme.primary,
                     ),
                   ),
                   title: Text(
@@ -252,7 +259,8 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                             color: AppTheme.danger,
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text('design_ui.live'.tr(),
+                          child: Text(
+                            'design_ui.live'.tr(),
                             style: const TextStyle(
                               color: AppTheme.onMedia,
                               fontSize: 9,
@@ -262,15 +270,15 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                         )
                       : null,
                   onTap: () {
-                    widget.onSearchResultSelected(
-                      result.coordinates,
-                      result.zoomLevel,
-                      result.title,
-                    );
+                    if (result.streamerId != null &&
+                        widget.onStreamerSelected != null) {
+                      widget.onStreamerSelected!(result.streamerId!);
+                    } else {
+                      widget.onSearchResultSelected(
+                          result.coordinates, result.zoomLevel, result.title);
+                    }
                     _searchController.text = result.title;
-                    setState(() {
-                      _isSearching = false;
-                    });
+                    setState(() => _showResults = false);
                     _focusNode.unfocus();
                   },
                 );

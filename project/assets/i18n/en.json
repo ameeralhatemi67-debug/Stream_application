@@ -40,14 +40,14 @@
     "search": "Search"
   },
   "map": {
-    "search_placeholder": "Search cities or venues in Al Khobar...",
+    "search_placeholder": "Search Saudi cities, broadcasters or venues...",
     "select_city": "Select City",
     "select_topic": "Select Academic Topic",
     "all_topics": "All Topics",
     "khobar": "Al Khobar",
     "dhahran": "Dhahran",
     "dammam": "Dammam",
-    "drawer_title": "Broadcasters in AlSharqia",
+    "drawer_title": "Broadcasters on the map",
     "live_badge": "LIVE NOW",
     "offline_badge": "Offline",
     "filter_venues": "Filter Venues",
@@ -68,7 +68,19 @@
     "offline_retrying": "Retrying…",
     "offline_marker_details_unavailable": "Full details and live status aren't available offline.",
     "open_in_maps": "Open in Maps",
-    "attribution_esri": "Sources: Esri, HERE, Garmin, \u00A9 OpenStreetMap contributors, and the GIS User Community"
+    "attribution_esri": "Sources: Esri, HERE, Garmin, \u00A9 OpenStreetMap contributors, and the GIS User Community",
+    "choose_place": "Choose a region or city",
+    "place_preset": "Map location",
+    "no_search_results": "No current map results",
+    "cluster_label": "{count} venues. Tap to zoom or choose one.",
+    "marker_accessibility": "{name}, {venue}. Tap for details.",
+    "my_channel": "Your channel",
+    "reset_khobar": "Reset to Al Khobar",
+    "broadcasters_list": "Broadcasters list",
+    "empty_title": "No verified venues on the map",
+    "empty_body": "Try another topic or refresh the map.",
+    "offline_empty_body": "No saved verified venues are available here. Reconnect to refresh.",
+    "tile_error": "Map detail could not load. Venue pins still work."
   },
   "feed": {
     "title": "Discovery Feed",

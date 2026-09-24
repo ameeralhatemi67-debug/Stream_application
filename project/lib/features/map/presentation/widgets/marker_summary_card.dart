@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../profile/models/streamer_models.dart';
-import '../../models/map_models.dart';
 import 'venue_navigation_sheet.dart';
 
 class MarkerSummaryCard extends StatelessWidget {
@@ -196,9 +195,7 @@ class MarkerSummaryCard extends StatelessWidget {
                         height: 5,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: isVideo
-                              ? AppTheme.danger
-                              : AppTheme.textMuted,
+                          color: isVideo ? AppTheme.danger : AppTheme.textMuted,
                         ),
                       ),
                       const SizedBox(width: 5),
@@ -209,9 +206,7 @@ class MarkerSummaryCard extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: isVideo
-                              ? AppTheme.danger
-                              : AppTheme.textMuted,
+                          color: isVideo ? AppTheme.danger : AppTheme.textMuted,
                         ),
                       ),
                     ],
@@ -261,7 +256,8 @@ class MarkerSummaryCard extends StatelessWidget {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     side: isAudio
-                        ? const BorderSide(color: AppTheme.textMuted, width: 1.0)
+                        ? const BorderSide(
+                            color: AppTheme.textMuted, width: 1.0)
                         : BorderSide.none,
                   ),
                   elevation: 0,
@@ -302,10 +298,6 @@ class MarkerSummaryCard extends StatelessWidget {
   /// way to navigate (VenueNavigationSheet's own button remains the
   /// full-featured path with a clipboard fallback).
   static Future<void> _openInGoogleMaps(StreamerModel streamer) async {
-    final url = Uri.parse(
-        buildGoogleMapsSearchUrl(streamer.latitude, streamer.longitude));
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-    }
+    await launchVenueDirections(streamer.latitude, streamer.longitude);
   }
 }

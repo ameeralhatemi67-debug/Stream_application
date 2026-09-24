@@ -40,14 +40,14 @@
     "search": "البحث"
   },
   "map": {
-    "search_placeholder": "ابحث عن المدن أو القاعات في الخبر...",
+    "search_placeholder": "ابحث عن مدن السعودية أو الباثين أو الأماكن...",
     "select_city": "اختر المدينة",
     "select_topic": "اختر التخصص الأكاديمي",
     "all_topics": "جميع المواضيع",
     "khobar": "الخبر",
     "dhahran": "الظهران",
     "dammam": "الدمام",
-    "drawer_title": "المحاضرون في الشرقية",
+    "drawer_title": "الباثون على الخريطة",
     "live_badge": "مباشر الآن",
     "offline_badge": "غير متصل",
     "filter_venues": "تصفية القاعات",
@@ -68,7 +68,19 @@
     "offline_retrying": "جارٍ إعادة المحاولة…",
     "offline_marker_details_unavailable": "التفاصيل الكاملة وحالة البث المباشر غير متاحة بدون اتصال.",
     "open_in_maps": "فتح في الخرائط",
-    "attribution_esri": "المصادر: Esri، HERE، Garmin، \u00A9 مساهمو OpenStreetMap، ومجتمع مستخدمي GIS"
+    "attribution_esri": "المصادر: Esri، HERE، Garmin، \u00A9 مساهمو OpenStreetMap، ومجتمع مستخدمي GIS",
+    "choose_place": "اختر منطقة أو مدينة",
+    "place_preset": "موقع على الخريطة",
+    "no_search_results": "لا توجد نتائج حالية على الخريطة",
+    "cluster_label": "{count} أماكن. اضغط للتقريب أو اختيار مكان.",
+    "marker_accessibility": "{name}، {venue}. اضغط للتفاصيل.",
+    "my_channel": "قناتك",
+    "reset_khobar": "العودة إلى الخبر",
+    "broadcasters_list": "قائمة الباثين",
+    "empty_title": "لا توجد أماكن موثقة على الخريطة",
+    "empty_body": "جرّب موضوعًا آخر أو حدّث الخريطة.",
+    "offline_empty_body": "لا توجد أماكن موثقة محفوظة هنا. اتصل بالإنترنت للتحديث.",
+    "tile_error": "تعذر تحميل تفاصيل الخريطة. ما زالت علامات الأماكن تعمل."
   },
   "feed": {
     "title": "دليل البث المباشر",
