@@ -2386,19 +2386,31 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  Future<bool> deleteStreamer(String streamerId) async {
-    _streamers.removeWhere((s) =>
-        s.streamerId == streamerId || s.streamerId == 'streamer_$streamerId');
-    _adminDbService ??= await AdminDatabaseService.create();
-    final success = await _adminDbService!.revokeStreamer(streamerId);
+  /// Admin: withdraw a channel's broadcaster approval (P6-R09). The server
+  /// action is authorized, atomic and audited; local state changes only
+  /// after it succeeds. This is not account deletion (User Directory).
+  Future<bool> revokeBroadcasterApproval(String streamerId,
+      {required String reason}) async {
+    final isOrganization = getStreamerById(streamerId)?.isOrganization ?? false;
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      await _adminDbService!.revokeBroadcasterApproval(
+          streamerId: streamerId,
+          isOrganization: isOrganization,
+          reason: reason);
+    } catch (e) {
+      debugPrint('revokeBroadcasterApproval failed: $e');
+      return false;
+    }
+    if (!isOrganization) {
+      _streamers.removeWhere((s) =>
+          s.streamerId == streamerId || s.streamerId == 'streamer_$streamerId');
+    }
 
-    // If revoking self, downgrade state
     final currentUserId = _authService.currentSession?.user.id;
     if (currentUserId != null &&
         (streamerId == currentUserId ||
             streamerId == 'streamer_$currentUserId')) {
-      _isApprovedStreamer = false;
-      _isStreamerModeEnabled = false;
       await refreshMyApplicationAndStreamerStatus();
     }
 
@@ -2407,7 +2419,7 @@ class AppProvider extends ChangeNotifier {
       await refreshAdminData();
     }
     notifyListeners();
-    return success;
+    return true;
   }
 
   StreamerModel? getStreamerById(String streamerIdOrStreamId) {
@@ -4776,9 +4788,13 @@ class AppProvider extends ChangeNotifier {
   // Temporary Map Visibility (Cluster 4 Task 18)
   // ==========================================
 
+  /// Admin: hide or show a channel on the map through the audited server
+  /// action. A refused or failed call changes nothing locally and returns
+  /// false -- the toggle must not report a change the server did not make.
   Future<bool> setStreamerHiddenFromMap({
     required String streamerId,
     required bool hidden,
+    required String reason,
   }) async {
     final streamer = getStreamerById(streamerId);
     if (streamer == null) return false;
@@ -4788,15 +4804,11 @@ class AppProvider extends ChangeNotifier {
         streamerId: streamerId,
         isOrganization: streamer.isOrganization,
         hidden: hidden,
+        reason: reason,
       );
     } catch (e) {
-      // Task 18: the remote call failing (offline, PGRST205, RLS not yet
-      // migrated) must not surface "Failed to update map visibility"to the
-      // admin -- apply the toggle locally so the UI reflects the intended
-      // state immediately, same resilience pattern as the academic
-      // categories / stream_moderators fallbacks.
-      debugPrint(
-          'setStreamerHiddenFromMap remote call failed, applying local fallback: $e');
+      debugPrint('setStreamerHiddenFromMap refused: $e');
+      return false;
     }
     _streamers = _streamers.map((s) {
       return s.streamerId == streamerId

@@ -103,7 +103,7 @@ void main() {
       expect(provider.isProtectedStreamer('prof_alghamdi_01'), isFalse);
 
       final deleteSeededResult =
-          await provider.deleteStreamer('prof_alghamdi_01');
+          await provider.revokeBroadcasterApproval('prof_alghamdi_01', reason: 'test');
       expect(deleteSeededResult, isTrue);
       expect(provider.streamers.length, equals(4));
 
@@ -149,7 +149,7 @@ void main() {
       expect(updated?.fullNameEn, equals('Dr. Fahad M. Al-Mutairi'));
 
       // Delete custom streamer
-      final deleteResult = await provider.deleteStreamer('custom_dr_fahad');
+      final deleteResult = await provider.revokeBroadcasterApproval('custom_dr_fahad', reason: 'test');
       expect(deleteResult, isTrue);
       expect(provider.streamers.length, equals(5));
     });

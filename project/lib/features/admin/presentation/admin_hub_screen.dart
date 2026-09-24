@@ -2115,56 +2115,28 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           value: s.isTemporarilyHiddenFromMap,
                           activeThumbColor: AppTheme.warning,
                           onChanged: (hidden) async {
-                            if (hidden) {
-                              final confirmed = await showDialog<bool>(
-                                context: context,
-                                builder: (dialogContext) => AlertDialog(
-                                  backgroundColor: AppTheme.surface,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(
-                                        AppTheme.radiusMd),
-                                    side: const BorderSide(
-                                        color: AppTheme.border),
-                                  ),
-                                  title: Text(
-                                    'admin.hide_from_map_confirm_title'.tr(),
-                                    style: const TextStyle(
-                                        color: AppTheme.textPrimary,
-                                        fontWeight: FontWeight.bold),
-                                  ),
-                                  content: Text(
-                                    'admin.hide_from_map_confirm_body'.tr(),
-                                    style: const TextStyle(
-                                        color: AppTheme.textSecondary,
-                                        fontSize: 12),
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dialogContext, false),
-                                      child: Text('common.cancel'.tr(),
-                                          style: const TextStyle(
-                                              color: AppTheme.textMuted)),
-                                    ),
-                                    ElevatedButton(
-                                      style: ElevatedButton.styleFrom(
-                                          backgroundColor: AppTheme.warning),
-                                      onPressed: () =>
-                                          Navigator.pop(dialogContext, true),
-                                      child: Text(
-                                          'admin.hide_from_map_toggle'.tr()),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirmed != true) return;
-                            }
+                            // The server records who changed map visibility
+                            // and why; it refuses a blank reason.
+                            final reason = await askSafetyReason(
+                              context,
+                              title: (hidden
+                                      ? 'admin.hide_from_map_confirm_title'
+                                      : 'admin.show_on_map_title')
+                                  .tr(),
+                              body: (hidden
+                                      ? 'admin.hide_from_map_confirm_body'
+                                      : 'admin.show_on_map_body')
+                                  .tr(),
+                            );
+                            if (reason == null || !context.mounted) return;
                             final success =
                                 await provider.setStreamerHiddenFromMap(
-                                    streamerId: s.streamerId, hidden: hidden);
+                                    streamerId: s.streamerId,
+                                    hidden: hidden,
+                                    reason: reason);
                             if (!success) {
                               _showErrorNotification(
-                                  'Failed to update map visibility.');
+                                  'admin.map_visibility_failed'.tr());
                               return;
                             }
                             _showSuccessNotification(hidden
@@ -2183,21 +2155,31 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             StreamerEditorSheet.show(context, streamer: s),
                       ),
 
-                      // Delete Button (Non-Protected)
+                      // Revoke broadcaster approval (Non-Protected). This
+                      // withdraws broadcasting rights through the audited
+                      // server action; it does not delete the account --
+                      // account deletion lives in User Directory (P6-R09).
                       if (!isProtected)
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded,
+                          icon: const Icon(Icons.person_off_rounded,
                               size: 16, color: AppTheme.danger),
-                          tooltip: 'Delete Streamer',
+                          tooltip: 'admin.revoke_broadcaster_tooltip'.tr(),
                           onPressed: () async {
-                            final success =
-                                await provider.deleteStreamer(s.streamerId);
+                            final reason = await askSafetyReason(
+                              context,
+                              title: 'admin.revoke_broadcaster_title'.tr(),
+                              body: 'admin.revoke_broadcaster_body'.tr(),
+                            );
+                            if (reason == null || !context.mounted) return;
+                            final success = await provider
+                                .revokeBroadcasterApproval(s.streamerId,
+                                    reason: reason);
                             if (success) {
                               _showSuccessNotification(
-                                  'Broadcaster profile removed.');
+                                  'admin.revoke_broadcaster_done'.tr());
                             } else {
                               _showErrorNotification(
-                                  'Failed to remove broadcaster profile.');
+                                  'admin.revoke_broadcaster_failed'.tr());
                             }
                           },
                         ),

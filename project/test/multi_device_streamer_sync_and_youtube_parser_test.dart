@@ -65,7 +65,7 @@ void main() {
       provider.addStreamer(customStreamer);
       expect(provider.streamers.any((s) => s.streamerId == customStreamer.streamerId), isTrue);
 
-      final success = await provider.deleteStreamer(customStreamer.streamerId);
+      final success = await provider.revokeBroadcasterApproval(customStreamer.streamerId, reason: 'test');
       expect(success, isTrue);
       expect(provider.streamers.any((s) => s.streamerId == customStreamer.streamerId), isFalse);
     });
@@ -79,7 +79,7 @@ void main() {
       expect(provider.streamers.any((s) => s.streamerId == seededId), isTrue);
       expect(provider.isProtectedStreamer(seededId), isFalse);
 
-      final success = await provider.deleteStreamer(seededId);
+      final success = await provider.revokeBroadcasterApproval(seededId, reason: 'test');
       expect(success, isTrue);
       expect(provider.streamers.any((s) => s.streamerId == seededId), isFalse);
     });

@@ -346,78 +346,45 @@ class AdminDatabaseService {
     return _client.from('profiles').select().eq('id', profileId).maybeSingle();
   }
 
-  Future<bool> revokeStreamer(String streamerIdOrProfileId) async {
+  /// Withdraws broadcaster approval through audited server actions
+  /// (P6-R09): admin_update_account('revoke_streamer') for a personal channel,
+  /// admin_moderate_broadcaster('revoke_organization') for an organization.
+  /// Revocation is not deletion -- the account, its organizations and data
+  /// stay. Throws when the server refuses, so the caller never reports a
+  /// revocation that did not happen.
+  Future<void> revokeBroadcasterApproval({
+    required String streamerId,
+    required bool isOrganization,
+    required String reason,
+  }) async {
+    final cleanId = streamerId.replaceFirst('streamer_', '').trim();
     if (_useSupabase) {
-      try {
-        final cleanId =
-            streamerIdOrProfileId.replaceFirst('streamer_', '').trim();
-        if (_looksLikeUuid(cleanId)) {
-          await _client.from('profiles').update({
-            'is_streamer': false,
-            'is_verified': false,
-          }).eq('id', cleanId);
-
-          await _client.from('broadcaster_applications').update({
-            'status': 'rejected',
-            'admin_review_notes':
-                'Streamer privileges revoked by administration.',
-          }).eq('applicant_profile_id', cleanId);
-
-          try {
-            await _client
-                .from('organizations')
-                .delete()
-                .eq('owner_profile_id', cleanId);
-            await _client.from('organizations').delete().eq('id', cleanId);
-          } catch (_) {}
-        } else {
-          final appRow = await _client
-              .from('broadcaster_applications')
-              .select('id, applicant_profile_id')
-              .or('id.eq.$cleanId,applicant_profile_id.eq.$cleanId')
-              .maybeSingle();
-
-          final applicantProfileId = appRow?['applicant_profile_id'] as String?;
-          final actualAppId = appRow?['id'] as String? ?? cleanId;
-
-          if (applicantProfileId != null &&
-              _looksLikeUuid(applicantProfileId)) {
-            await _client.from('profiles').update({
-              'is_streamer': false,
-              'is_verified': false,
-            }).eq('id', applicantProfileId);
-
-            await _client.from('broadcaster_applications').update({
-              'status': 'rejected',
-              'admin_review_notes':
-                  'Streamer privileges revoked by administration.',
-            }).eq('id', actualAppId);
-
-            try {
-              await _client
-                  .from('organizations')
-                  .delete()
-                  .eq('owner_profile_id', applicantProfileId);
-            } catch (_) {}
-          }
-
-          try {
-            await _client.from('organizations').delete().eq('id', cleanId);
-          } catch (_) {}
-        }
-        return true;
-      } catch (e) {
-        debugPrint('Supabase revokeStreamer failed: $e');
-        return false;
+      if (!_looksLikeUuid(cleanId)) {
+        throw ArgumentError.value(streamerId, 'streamerId', 'not a channel id');
       }
+      if (isOrganization) {
+        await _client.rpc('admin_moderate_broadcaster', params: {
+          'p_target_id': cleanId,
+          'p_is_organization': true,
+          'p_action': 'revoke_organization',
+          'p_reason': reason,
+        });
+      } else {
+        await _client.rpc('admin_update_account', params: {
+          'p_profile_id': cleanId,
+          'p_action': 'revoke_streamer',
+          'p_reason': reason,
+        });
+      }
+      return;
     }
 
+    // No backend configured (local demo mode): only the cached list exists.
     _cachedApplications.removeWhere((a) =>
-        a.id == streamerIdOrProfileId ||
-        a.applicantProfileId == streamerIdOrProfileId ||
-        'streamer_${a.id}' == streamerIdOrProfileId);
+        a.id == streamerId ||
+        a.applicantProfileId == streamerId ||
+        'streamer_${a.id}' == streamerId);
     await _saveApplicationsToPrefs();
-    return true;
   }
 
   Future<bool> deleteApplication(String id) async {
@@ -1489,11 +1456,17 @@ class AdminDatabaseService {
     required String streamerId,
     required bool isOrganization,
     required bool hidden,
+    required String reason,
   }) async {
-    if (!_useSupabase) throw Exception('Supabase not available');
-    final table = isOrganization ? 'organizations' : 'profiles';
-    await _client.from(table).update(
-        {'is_temporarily_hidden_from_map': hidden}).eq('id', streamerId);
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    // Audited server action (20260924110000); direct table writes of this
+    // flag are refused so every change carries an actor and a reason.
+    await _client.rpc('admin_moderate_broadcaster', params: {
+      'p_target_id': streamerId.replaceFirst('streamer_', ''),
+      'p_is_organization': isOrganization,
+      'p_action': hidden ? 'hide_from_map' : 'show_on_map',
+      'p_reason': reason,
+    });
   }
 
   // ==========================================
