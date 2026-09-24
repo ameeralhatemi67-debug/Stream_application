@@ -1,8 +1,15 @@
-import 'dart:math'as math;
+import 'dart:math' as math;
 import 'package:latlong2/latlong.dart';
+import 'package:flutter_map/flutter_map.dart' show LatLngBounds;
 import '../../profile/models/streamer_models.dart';
 
 enum MarkerStatus { liveVideo, liveAudio, offline }
+
+/// Generous viewport guard around Saudi Arabia, including the Gulf coast.
+final LatLngBounds saudiMapBounds = LatLngBounds(
+  const LatLng(15.5, 34.0),
+  const LatLng(33.0, 56.0),
+);
 
 class MapRegionModel {
   final String regionId;
@@ -104,11 +111,7 @@ class MapMarkerModel {
       venueNameAr: streamer.venueNameAr,
       latitude: streamer.latitude,
       longitude: streamer.longitude,
-      cityId: streamer.cityEn.toLowerCase().contains('dhahran')
-          ? 'dhahran'
-          : streamer.cityEn.toLowerCase().contains('dammam')
-              ? 'dammam'
-              : 'khobar',
+      cityId: mapCityId(streamer.cityEn),
       categoryId: streamer.categoryId,
       status: markerStatus,
       viewerCount: streamer.activeViewerCount,
@@ -157,6 +160,22 @@ class MapMarkerModel {
       isOrganization: json['isOrganization'] as bool? ?? false,
     );
   }
+}
+
+String mapCityId(String cityEn) {
+  final city = cityEn.toLowerCase();
+  for (final name in [
+    'khobar',
+    'dhahran',
+    'dammam',
+    'jubail',
+    'hofuf',
+    'riyadh',
+    'jeddah'
+  ]) {
+    if (city.contains(name)) return name;
+  }
+  return city.trim().replaceAll(RegExp(r'\s+'), '_');
 }
 
 /// AlSharqia Core Regions & 50% Decimated Clean Geographic Municipal Bounding Coordinates
@@ -239,6 +258,60 @@ const List<MapRegionModel> alSharqiaRegions = [
       LatLng(26.4700, 50.0200),
       LatLng(26.4950, 50.0250),
     ],
+  ),
+];
+
+/// Navigation presets are separate from the three reviewed city polygons.
+/// The offline schematic still covers only those Eastern Province polygons.
+final List<MapRegionModel> saudiMapPresets = [
+  const MapRegionModel(
+    regionId: 'saudi_arabia',
+    nameEn: 'Saudi Arabia',
+    nameAr: 'السعودية',
+    centerCoordinates: LatLng(24.0, 45.0),
+    svgElementId: '',
+    zoomLevelTarget: 5.3,
+  ),
+  const MapRegionModel(
+    regionId: 'eastern_province',
+    nameEn: 'Eastern Province',
+    nameAr: 'المنطقة الشرقية',
+    centerCoordinates: LatLng(26.2, 49.7),
+    svgElementId: '',
+    zoomLevelTarget: 8.0,
+  ),
+  ...alSharqiaRegions,
+  const MapRegionModel(
+    regionId: 'jubail',
+    nameEn: 'Jubail',
+    nameAr: 'الجبيل',
+    centerCoordinates: LatLng(27.004, 49.661),
+    svgElementId: '',
+    zoomLevelTarget: 12.5,
+  ),
+  const MapRegionModel(
+    regionId: 'hofuf',
+    nameEn: 'Hofuf',
+    nameAr: 'الهفوف',
+    centerCoordinates: LatLng(25.3647, 49.587),
+    svgElementId: '',
+    zoomLevelTarget: 12.5,
+  ),
+  const MapRegionModel(
+    regionId: 'riyadh',
+    nameEn: 'Riyadh',
+    nameAr: 'الرياض',
+    centerCoordinates: LatLng(24.7136, 46.6753),
+    svgElementId: '',
+    zoomLevelTarget: 11.5,
+  ),
+  const MapRegionModel(
+    regionId: 'jeddah',
+    nameEn: 'Jeddah',
+    nameAr: 'جدة',
+    centerCoordinates: LatLng(21.5433, 39.1728),
+    svgElementId: '',
+    zoomLevelTarget: 11.5,
   ),
 ];
 

@@ -1,7 +1,5 @@
 import '../../../core/widgets/safe_image_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'dart:math'as math;
-import 'dart:ui'as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -13,6 +11,9 @@ import '../../../core/services/connectivity_service.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
 import '../models/map_models.dart';
+import 'map_cluster_layout.dart';
+import 'map_visible_catalog.dart';
+import 'venue_directions_launcher.dart';
 import 'widgets/spatial_streamer_marker.dart';
 import 'widgets/marker_summary_card.dart';
 import 'widgets/top_spatial_search_bar.dart';
@@ -20,19 +21,18 @@ import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
 
-/// Free Light GIS Basemap (Esri World Light Gray Canvas & OpenStreetMap
-/// fallback). Completely free of watermarks or API key requirements.
+/// Online light raster basemap (Esri World Light Gray Canvas) with an
+/// OpenStreetMap network fallback. Both sources require visible attribution.
 ///
 /// UI-07: this used to be the dark-canvas sibling tile set
 /// (`World_Dark_Gray_Base`), which read as dark/low-contrast/noisy against
 /// the rest of the app's light theme (brief/Ui_issues/Map_when_wifi_on.jpg).
-/// The light-canvas set is the same Esri service, same terms, same zero-key
-/// zero-watermark access -- only the palette differs -- so it's a drop-in
-/// swap, not a provider change.
+/// The light-canvas service replaced the dark-canvas sibling to match the
+/// app's white theme. See store/map_licensing.md before changing providers.
 const String kSpatialMapTileUrlTemplate =
     'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}';
 
-/// Zero-API-key fallback used when the primary tile request fails.
+/// Network fallback used when the primary tile request fails. No prefetch.
 const String kSpatialMapTileFallbackUrl =
     'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
 
@@ -47,23 +47,27 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     with SingleTickerProviderStateMixin {
   late final MapController _mapController;
   late final AnimationController _cameraAnimationController;
+  VoidCallback? _cameraAnimationListener;
 
   // Initial Regional State: AlSharqia Focused View (Zoom 12.0 - 22% more zoomed in)
   static const double kInitialMapZoom = 12.0;
-  static const double kStreamerMarkersZoomThreshold = 11.2;
   static const double kAuditoriumCardZoomThreshold = 13.5;
 
   MapRegionModel _selectedRegion = alSharqiaRegions.first; // Default: Al Khobar
-  StreamerModel? _selectedStreamer;
+  String? _selectedStreamerId;
   late final ValueNotifier<double> _zoomNotifier;
+  late final ValueNotifier<int> _cameraRevision;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isRetryingConnectivity = false;
+  int _tileFailures = 0;
+  bool _tileError = false;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
     _zoomNotifier = ValueNotifier<double>(kInitialMapZoom);
+    _cameraRevision = ValueNotifier<int>(0);
     _cameraAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -73,6 +77,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   @override
   void dispose() {
     _zoomNotifier.dispose();
+    _cameraRevision.dispose();
     _cameraAnimationController.dispose();
     _mapController.dispose();
     super.dispose();
@@ -82,6 +87,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     final startCenter = _mapController.camera.center;
     final startZoom = _mapController.camera.zoom;
 
+    if (_cameraAnimationListener != null) {
+      _cameraAnimationController.removeListener(_cameraAnimationListener!);
+      _cameraAnimationListener = null;
+    }
     _cameraAnimationController.stop();
     _cameraAnimationController.reset();
 
@@ -100,20 +109,20 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       _mapController.move(LatLng(lat, lng), zoom);
     }
 
+    _cameraAnimationListener = listener;
     _cameraAnimationController.addListener(listener);
-    _cameraAnimationController.forward().then((_) {
-      _cameraAnimationController.removeListener(listener);
-    });
+    _cameraAnimationController.forward();
   }
 
   void _selectStreamer(StreamerModel streamer) {
     setState(() {
-      _selectedStreamer = streamer;
+      _selectedStreamerId = streamer.streamerId;
     });
     _animateCameraTo(LatLng(streamer.latitude, streamer.longitude), 14.5);
   }
 
   void _centerOnAlKhobar() {
+    setState(() => _selectedRegion = alSharqiaRegions.first);
     _animateCameraTo(alSharqiaRegions.first.centerCoordinates, 13.5);
   }
 
@@ -125,7 +134,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   /// though recovery is also automatic.
   Future<void> _retryConnectivity() async {
     if (_isRetryingConnectivity) return;
-    setState(() => _isRetryingConnectivity = true);
+    setState(() {
+      _isRetryingConnectivity = true;
+      _tileFailures = 0;
+      _tileError = false;
+    });
     final provider = context.read<AppProvider>();
     // Re-probe first: connectivity_plus only emits on *change*, so without
     // this an app that cold started offline never leaves the offline branch
@@ -151,7 +164,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       context: context,
       backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
@@ -171,7 +185,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               const SizedBox(height: 4),
               Text(
                 marker.getLocalizedVenue(isAr ? 'ar' : 'en'),
-                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+                style: const TextStyle(
+                    color: AppTheme.textSecondary, fontSize: 13),
               ),
               const SizedBox(height: AppTheme.spaceMd),
               Container(
@@ -183,12 +198,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.wifi_off_rounded, color: AppTheme.textMuted, size: 18),
+                    const Icon(Icons.wifi_off_rounded,
+                        color: AppTheme.textMuted, size: 18),
                     const SizedBox(width: AppTheme.spaceSm),
                     Expanded(
                       child: Text(
                         'map.offline_marker_details_unavailable'.tr(),
-                        style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12.5),
+                        style: const TextStyle(
+                            color: AppTheme.textSecondary, fontSize: 12.5),
                       ),
                     ),
                   ],
@@ -207,10 +224,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                   ),
                   onPressed: () {
                     Navigator.of(sheetContext).pop();
-                    launchUrl(
-                      Uri.parse(buildGoogleMapsSearchUrl(marker.latitude, marker.longitude)),
-                      mode: LaunchMode.externalApplication,
-                    );
+                    launchVenueDirections(marker.latitude, marker.longitude);
                   },
                 ),
               ),
@@ -225,51 +239,124 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     return MapMarkerModel.fromStreamer(streamer);
   }
 
+  Widget _buildClusterBadge(MapClusterGroup group, VoidCallback onTap) {
+    return Semantics(
+      button: true,
+      label: 'map.cluster_label'
+          .tr(namedArgs: {'count': '${group.memberIds.length}'}),
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Container(
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: AppTheme.primary,
+            shape: BoxShape.circle,
+            border: Border.all(color: AppTheme.surface, width: 3),
+            boxShadow: const [BoxShadow(color: AppTheme.shadow, blurRadius: 8)],
+          ),
+          child: Text('${group.memberIds.length}',
+              style: const TextStyle(
+                  color: AppTheme.onMedia,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16)),
+        ),
+      ),
+    );
+  }
+
+  void _openCluster<T>(
+    MapClusterGroup group,
+    Map<String, T> byId,
+    String Function(T) label,
+    void Function(T) onPick,
+  ) {
+    final nextZoom = clusterTapZoom(_mapController.camera.zoom);
+    if (nextZoom != null) {
+      _animateCameraTo(group.center, nextZoom);
+      return;
+    }
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: AppTheme.surface,
+      builder: (sheetContext) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          children: group.memberIds.where(byId.containsKey).map((id) {
+            final item = byId[id];
+            if (item == null) return const SizedBox.shrink();
+            return ListTile(
+              leading: const Icon(Icons.place_rounded, color: AppTheme.primary),
+              title: Text(label(item)),
+              onTap: () {
+                Navigator.of(sheetContext).pop();
+                onPick(item);
+              },
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   /// UI-08 offline marker layer: cached venues only, always rendered with
   /// [MarkerStatus.offline] (MapMarkerModel.fromCachedJson forces this), so
   /// there is no risk of replaying a stale "LIVE" badge from before the
-  /// device went offline. No collision-avoidance pass -- the cached set is
-  /// small and this is a reduced-functionality fallback view, not the full
-  /// interactive map.
-  Widget _buildOfflineMarkerLayer(BuildContext context, String categoryFilter) {
-    final cached =
-        context.select<AppProvider, List<MapMarkerModel>>((p) => p.cachedMapMarkers);
+  /// device went offline. Cached points use the same bounded cluster layout
+  /// and only render IDs still eligible in the current provider catalog.
+  Widget _buildOfflineMarkerLayer(
+    BuildContext context,
+    String categoryFilter,
+    Set<String>? currentVisibleIds,
+  ) {
+    final cached = context
+        .select<AppProvider, List<MapMarkerModel>>((p) => p.cachedMapMarkers);
     // The topic dropdown is pure local filtering -- it needs no network, so
     // it must keep working offline rather than looking functional and doing
     // nothing. Same matcher the online path uses (map_models.dart), so the
     // two views can't filter differently.
-    final visible = cached
+    final visible = visibleCachedMapMarkers(
+      cached,
+      currentVisibleIds: currentVisibleIds,
+    )
         .where((m) => categoryFilterMatches(categoryFilter, m.categoryId))
         .toList();
 
-    return ValueListenableBuilder<double>(
-      valueListenable: _zoomNotifier,
-      builder: (context, currentZoom, child) {
-        // Cached markers are all offline status, and this layer runs no
-        // collision-avoidance pass, so without the same LOD threshold the
-        // online path uses for offline streamers a zoomed-out view would be
-        // a pile of overlapping discs (UI-12 marker readability).
-        if (currentZoom < kStreamerMarkersZoomThreshold) {
-          return const SizedBox.shrink();
-        }
+    return ValueListenableBuilder<int>(
+      valueListenable: _cameraRevision,
+      builder: (context, revision, child) {
+        final camera = MapCamera.of(context);
+        final groups = clusterMapPoints(
+          visible.map((m) => MapClusterPoint(m.streamerId, m.coordinates)),
+          project: camera.project,
+          unproject: camera.unproject,
+        );
+        final byId = {for (final marker in visible) marker.streamerId: marker};
         return MarkerLayer(
-          markers: visible
-              .map(
-                (marker) => Marker(
-                  key: ValueKey('offline_marker_${marker.streamerId}'),
-                  point: marker.coordinates,
-                  width: 48.0,
-                  height: 48.0,
-                  alignment: Alignment.center,
-                  child: SpatialStreamerMarker(
-                    key: ValueKey('offline_avatar_${marker.streamerId}'),
-                    marker: marker,
-                    onTap: () => _showCachedMarkerInfo(context, marker),
-                    onDoubleTap: () {},
-                  ),
-                ),
-              )
-              .toList(),
+          markers: groups.map((group) {
+            final marker = group.isSingle ? byId[group.memberIds.single] : null;
+            return Marker(
+              key: ValueKey('offline_${group.id}'),
+              point: group.center,
+              width: 56,
+              height: 56,
+              child: marker == null
+                  ? _buildClusterBadge(
+                      group,
+                      () => _openCluster(
+                          group,
+                          byId,
+                          (m) =>
+                              m.getLocalizedName(context.locale.languageCode),
+                          (m) => _showCachedMarkerInfo(context, m)))
+                  : SpatialStreamerMarker(
+                      marker: marker,
+                      onTap: () => _showCachedMarkerInfo(context, marker),
+                      onDoubleTap: () =>
+                          _animateCameraTo(marker.coordinates, 15.5),
+                    ),
+            );
+          }).toList(),
         );
       },
     );
@@ -281,14 +368,33 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     // only rebuilds when the filtered list's actual contents change (streamer
     // added/removed/mutated), not on every unrelated notifyListeners() call
     // elsewhere in the app.
-    final displayedStreamers = context
-        .select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers);
+    final displayedStreamers = visibleMapStreamers(context
+        .select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers));
+    final currentCatalog = visibleMapStreamers(
+        context.select<AppProvider, List<StreamerModel>>((p) => p.streamers));
+    final hasCatalogSnapshot =
+        context.select<AppProvider, bool>((p) => p.hasPublicCatalogSnapshot);
+    final Set<String>? currentVisibleIds = hasCatalogSnapshot
+        ? currentCatalog.map((s) => s.streamerId).toSet()
+        : null;
+    final ownStreamerId =
+        context.select<AppProvider, String?>((p) => p.currentUserStreamerId);
+    final selectedStreamer = displayedStreamers
+        .where((s) => s.streamerId == _selectedStreamerId)
+        .firstOrNull;
+    if (selectedStreamer == null) _selectedStreamerId = null;
     final currentCategoryFilter =
         context.select<AppProvider, String>((p) => p.currentCategoryFilter);
     final isDesktop = MediaQuery.of(context).size.width >= 900;
     // UI-08: everything below branches on this single flag rather than
     // scattering connectivity checks through the widget tree.
     final isOnline = context.select<AppProvider, bool>((p) => p.isOnline);
+    final cachedMarkers = context
+        .select<AppProvider, List<MapMarkerModel>>((p) => p.cachedMapMarkers);
+    final hasOfflineMarkers = visibleCachedMapMarkers(
+      cachedMarkers,
+      currentVisibleIds: currentVisibleIds,
+    ).any((m) => categoryFilterMatches(currentCategoryFilter, m.categoryId));
 
     return Scaffold(
       key: _scaffoldKey,
@@ -308,24 +414,22 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                   options: MapOptions(
                     initialCenter: _selectedRegion.centerCoordinates,
                     initialZoom: kInitialMapZoom,
-                    minZoom: 8.5,
+                    minZoom: 5.0,
                     maxZoom: 17.5,
                     backgroundColor: AppTheme.bg,
-                    cameraConstraint: CameraConstraint.contain(
-                      bounds: LatLngBounds(
-                        const LatLng(25.60, 49.50),
-                        const LatLng(27.10, 50.80),
-                      ),
+                    cameraConstraint: CameraConstraint.containCenter(
+                      bounds: saudiMapBounds,
                     ),
                     onPositionChanged: (camera, hasGesture) {
                       if (_zoomNotifier.value != camera.zoom) {
                         _zoomNotifier.value = camera.zoom;
                       }
+                      _cameraRevision.value++;
                     },
                     onTap: (tapPosition, latLng) {
-                      if (_selectedStreamer != null) {
+                      if (_selectedStreamerId != null) {
                         setState(() {
-                          _selectedStreamer = null;
+                          _selectedStreamerId = null;
                         });
                       }
                     },
@@ -345,6 +449,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                         maxZoom: 19,
                         userAgentPackageName: 'com.streamer.app',
                         tileProvider: NetworkTileProvider(),
+                        errorTileCallback: (tile, error, stackTrace) {
+                          if (++_tileFailures < 3 || _tileError) return;
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted && !_tileError) {
+                              setState(() => _tileError = true);
+                            }
+                          });
+                        },
                         keepBuffer: 6,
                         panBuffer: 2,
                         tileDisplay: const TileDisplay.fadeIn(
@@ -382,7 +494,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                   : AppTheme.surfaceAlt.withValues(alpha: 0.6),
                               borderColor: isSelected
                                   ? AppTheme.primary
-                                  : AppTheme.borderStrong.withValues(alpha: 0.6),
+                                  : AppTheme.borderStrong
+                                      .withValues(alpha: 0.6),
                               borderStrokeWidth: isSelected ? 2.0 : 1.2,
                             );
                           }
@@ -401,202 +514,118 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     ),
 
                     if (!isOnline)
-                      _buildOfflineMarkerLayer(context, currentCategoryFilter),
+                      _buildOfflineMarkerLayer(
+                          context, currentCategoryFilter, currentVisibleIds),
 
                     // Dynamic Level of Detail (LOD) Markers Layer with ValueListenableBuilder (No FlutterMap Rebuilds)
                     if (isOnline)
-                    ValueListenableBuilder<double>(
-                      valueListenable: _zoomNotifier,
-                      builder: (context, currentZoom, child) {
-                        final bool showAuditoriumCards =
-                            currentZoom >= kAuditoriumCardZoomThreshold;
+                      ValueListenableBuilder<int>(
+                        valueListenable: _cameraRevision,
+                        builder: (context, revision, child) {
+                          final currentZoom = MapCamera.of(context).zoom;
+                          final bool showAuditoriumCards =
+                              currentZoom >= kAuditoriumCardZoomThreshold;
+                          if (displayedStreamers.isEmpty) {
+                            return const SizedBox.shrink();
+                          }
+                          final List<Marker> markerList = [];
+                          final camera = MapCamera.of(context);
+                          final groups = clusterMapPoints(
+                            displayedStreamers.map((s) => MapClusterPoint(
+                                s.streamerId, LatLng(s.latitude, s.longitude))),
+                            project: camera.project,
+                            unproject: camera.unproject,
+                          );
+                          final byId = {
+                            for (final s in displayedStreamers) s.streamerId: s
+                          };
 
-                        // Filter visible streamers:
-                        // Live video and audio-only streamers are ALWAYS visible from max zoom out;
-                        // Offline streamers appear once currentZoom >= kStreamerMarkersZoomThreshold.
-                        final visibleStreamers = displayedStreamers.where((s) {
-                          if (s.isCurrentlyLive) return true;
-                          return currentZoom >= kStreamerMarkersZoomThreshold;
-                        }).toList();
-
-                        if (visibleStreamers.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-
-                        // Z-Index Sorting Order:
-                        // 1. Offline Broadcasters (Bottom)
-                        // 2. Live Audio Broadcasters
-                        // 3. Live Video Broadcasters
-                        // 4. Selected Broadcaster
-                        final sortedStreamers = List<StreamerModel>.from(
-                            visibleStreamers)
-                          ..sort((a, b) {
-                            final isASelected =
-                                a.streamerId == _selectedStreamer?.streamerId;
-                            final isBSelected =
-                                b.streamerId == _selectedStreamer?.streamerId;
-                            if (isASelected && !isBSelected) return 1;
-                            if (!isASelected && isBSelected) return -1;
-
-                            int scoreA =
-                                a.isVideoLive ? 3 : (a.isAudioLive ? 2 : 1);
-                            int scoreB =
-                                b.isVideoLive ? 3 : (b.isAudioLive ? 2 : 1);
-                            return scoreA.compareTo(scoreB);
-                          });
-
-                        final List<Marker> markerList = [];
-                        final camera = MapCamera.of(context);
-
-                        // Layout resolution model list
-                        final List<_LayoutMarker> layoutMarkers = [];
-                        final Map<String, LatLng> adjustedPositions = {};
-
-                        for (final streamer in sortedStreamers) {
-                          final isLive = streamer.isCurrentlyLive;
-                          // Kept in sync with SpatialStreamerMarker's own
-                          // outer hit-target size (UI-12).
-                          final double radius = (isLive ? 56.0 : 48.0) / 2.0;
-                          final origLatLng =
-                              LatLng(streamer.latitude, streamer.longitude);
-                          final math.Point<double> pixelPos =
-                              camera.project(origLatLng);
-
-                          layoutMarkers.add(_LayoutMarker(
-                            streamerId: streamer.streamerId,
-                            origPoint: origLatLng,
-                            currentPixel: pixelPos,
-                            radius: radius,
-                          ));
-                        }
-
-                        // Run pairwise collision resolution for 10 iterations (force displacement)
-                        const int iterations = 10;
-                        const double gap =
-                            7.0; // Minimum 7px gap between markers
-
-                        for (int iter = 0; iter < iterations; iter++) {
-                          for (int i = 0; i < layoutMarkers.length; i++) {
-                            for (int j = i + 1; j < layoutMarkers.length; j++) {
-                              final m1 = layoutMarkers[i];
-                              final m2 = layoutMarkers[j];
-
-                              final double dx =
-                                  m2.currentPixel.x - m1.currentPixel.x;
-                              final double dy =
-                                  m2.currentPixel.y - m1.currentPixel.y;
-                              final double distance =
-                                  math.sqrt(dx * dx + dy * dy);
-                              final double minDistance =
-                                  m1.radius + m2.radius + gap;
-
-                              if (distance < minDistance) {
-                                final double overlap = minDistance - distance;
-
-                                double pushX, pushY;
-                                if (distance == 0) {
-                                  // Fan out systematically using index-based angle to avoid stacking in the exact same spot
-                                  final double angle = (i + j) *
-                                      2.0 *
-                                      math.pi /
-                                      layoutMarkers.length;
-                                  pushX = math.cos(angle) * (minDistance / 2.0);
-                                  pushY = math.sin(angle) * (minDistance / 2.0);
-                                } else {
-                                  pushX = (dx / distance) * (overlap / 2.0);
-                                  pushY = (dy / distance) * (overlap / 2.0);
-                                }
-
-                                m1.currentPixel = math.Point(
-                                    m1.currentPixel.x - pushX,
-                                    m1.currentPixel.y - pushY);
-                                m2.currentPixel = math.Point(
-                                    m2.currentPixel.x + pushX,
-                                    m2.currentPixel.y + pushY);
-                              }
+                          for (final group in groups) {
+                            if (!group.isSingle) {
+                              markerList.add(Marker(
+                                key: ValueKey(group.id),
+                                point: group.center,
+                                width: 56,
+                                height: 56,
+                                child: _buildClusterBadge(
+                                    group,
+                                    () => _openCluster(
+                                        group,
+                                        byId,
+                                        (s) => s.getLocalizedName(
+                                            context.locale.languageCode),
+                                        _selectStreamer)),
+                              ));
+                              continue;
                             }
-                          }
-                        }
+                            final streamer = byId[group.memberIds.single]!;
+                            final isSelected =
+                                _selectedStreamerId == streamer.streamerId;
+                            final markerModel = _mapStreamerToMarker(streamer);
+                            final isLive = markerModel.isLive;
 
-                        // Save unprojected adjusted coordinates
-                        for (final m in layoutMarkers) {
-                          adjustedPositions[m.streamerId] =
-                              camera.unproject(m.currentPixel);
-                        }
+                            if (isSelected && showAuditoriumCards) {
+                              // Rendered as Anchored Summary Card at the absolute top of the layer below
+                              continue;
+                            }
 
-                        // 1. Render all Avatar Markers
-                        for (final streamer in sortedStreamers) {
-                          final isSelected = _selectedStreamer?.streamerId ==
-                              streamer.streamerId;
-                          final markerModel = _mapStreamerToMarker(streamer);
-                          final isLive = markerModel.isLive;
-
-                          if (isSelected && showAuditoriumCards) {
-                            // Rendered as Anchored Summary Card at the absolute top of the layer below
-                            continue;
-                          }
-
-                          final adjustedPoint =
-                              adjustedPositions[streamer.streamerId] ??
-                                  LatLng(streamer.latitude, streamer.longitude);
-
-                          markerList.add(
-                            Marker(
-                              key: ValueKey('marker_${streamer.streamerId}'),
-                              point: adjustedPoint,
-                              width: isLive ? 56.0 : 48.0,
-                              height: isLive ? 56.0 : 48.0,
-                              rotate: true,
-                              alignment: Alignment.center,
-                              child: SpatialStreamerMarker(
-                                key: ValueKey('avatar_${streamer.streamerId}'),
-                                marker: markerModel,
-                                isSelected: isSelected,
-                                onTap: () => _selectStreamer(streamer),
-                                onDoubleTap: () => _animateCameraTo(
-                                  LatLng(streamer.latitude, streamer.longitude),
-                                  15.5,
+                            markerList.add(
+                              Marker(
+                                key: ValueKey('marker_${streamer.streamerId}'),
+                                point: group.center,
+                                width: isLive ? 56.0 : 48.0,
+                                height: isLive ? 56.0 : 48.0,
+                                rotate: true,
+                                alignment: Alignment.center,
+                                child: SpatialStreamerMarker(
+                                  key:
+                                      ValueKey('avatar_${streamer.streamerId}'),
+                                  marker: markerModel,
+                                  isSelected: isSelected,
+                                  isMine: ownStreamerId == streamer.streamerId,
+                                  onTap: () => _selectStreamer(streamer),
+                                  onDoubleTap: () => _animateCameraTo(
+                                    LatLng(
+                                        streamer.latitude, streamer.longitude),
+                                    15.5,
+                                  ),
                                 ),
                               ),
-                            ),
-                          );
-                        }
+                            );
+                          }
 
-                        // 2. Render Selected Streamer Summary Card LAST
-                        if (_selectedStreamer != null && showAuditoriumCards) {
-                          final adjustedPoint = adjustedPositions[
-                                  _selectedStreamer!.streamerId] ??
-                              LatLng(_selectedStreamer!.latitude,
-                                  _selectedStreamer!.longitude);
-                          markerList.add(
-                            Marker(
-                              key: ValueKey(
-                                  'card_${_selectedStreamer!.streamerId}'),
-                              point: adjustedPoint,
-                              width: 320.0,
-                              height: 175.0,
-                              rotate: true,
-                              alignment: Alignment.topCenter,
-                              child: MarkerSummaryCard(
+                          // 2. Render Selected Streamer Summary Card LAST
+                          if (selectedStreamer != null && showAuditoriumCards) {
+                            markerList.add(
+                              Marker(
                                 key: ValueKey(
-                                    'summary_card_${_selectedStreamer!.streamerId}'),
-                                streamer: _selectedStreamer!,
-                                onClose: () {
-                                  setState(() {
-                                    _selectedStreamer = null;
-                                  });
-                                },
+                                    'card_${selectedStreamer.streamerId}'),
+                                point: LatLng(selectedStreamer.latitude,
+                                    selectedStreamer.longitude),
+                                width: 320.0,
+                                height: 175.0,
+                                rotate: true,
+                                alignment: Alignment.topCenter,
+                                child: MarkerSummaryCard(
+                                  key: ValueKey(
+                                      'summary_card_${selectedStreamer.streamerId}'),
+                                  streamer: selectedStreamer,
+                                  onClose: () {
+                                    setState(() {
+                                      _selectedStreamerId = null;
+                                    });
+                                  },
+                                ),
                               ),
-                            ),
-                          );
-                        }
+                            );
+                          }
 
-                        return MarkerLayer(
-                          rotate: true,
-                          markers: markerList,
-                        );
-                      },
-                    ),
+                          return MarkerLayer(
+                            rotate: true,
+                            markers: markerList,
+                          );
+                        },
+                      ),
 
                     // UI-07: the basemap's licence requires visible
                     // attribution -- there was none before. Bottom-left so
@@ -606,7 +635,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     // in map_models.dart), not third-party tiles, so no
                     // tile-provider attribution applies to it.
                     //
-                    // A plain Text in a bounded, ellipsizing box rather than
+                    // A plain Text in a bounded, wrapping box rather than
                     // flutter_map's own SimpleAttributionWidget: that widget
                     // sizes its Row to its own intrinsic content with no
                     // width constraint, which overflowed on a narrow Arabic
@@ -623,19 +652,24 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                         // Core_files/Desgin.md.
                         alignment: AlignmentDirectional.bottomStart,
                         child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 190),
-                          child: Container(
-                            color: AppTheme.surface.withValues(alpha: 0.75),
-                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                            child: const Text(
-                              'Esri, HERE, Garmin, OpenStreetMap contributors',
-                              maxLines: 1,
-                              softWrap: false,
-                              overflow: TextOverflow.ellipsis,
-                              textDirection: ui.TextDirection.ltr,
-                              style: TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 9,
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: InkWell(
+                            onTap: () => launchUrl(
+                              Uri.parse(
+                                  'https://www.openstreetmap.org/copyright'),
+                              mode: LaunchMode.externalApplication,
+                            ),
+                            child: Container(
+                              color: AppTheme.surface.withValues(alpha: 0.75),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 4, vertical: 2),
+                              child: Text(
+                                'map.attribution_esri'.tr(),
+                                softWrap: true,
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
+                                  fontSize: 10,
+                                ),
                               ),
                             ),
                           ),
@@ -643,6 +677,63 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       ),
                   ],
                 ),
+
+                if (isOnline ? displayedStreamers.isEmpty : !hasOfflineMarkers)
+                  Align(
+                    alignment: Alignment.center,
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                          top: 96,
+                          left: AppTheme.spaceLg,
+                          right: AppTheme.spaceLg),
+                      child: Container(
+                        padding: const EdgeInsets.all(AppTheme.spaceMd),
+                        decoration: BoxDecoration(
+                          color: AppTheme.surface,
+                          border: Border.all(color: AppTheme.borderStrong),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
+                        ),
+                        child:
+                            Column(mainAxisSize: MainAxisSize.min, children: [
+                          const Icon(Icons.location_off_outlined,
+                              color: AppTheme.textSecondary),
+                          Text('map.empty_title'.tr(),
+                              textAlign: TextAlign.center,
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          Text(
+                              (isOnline
+                                      ? 'map.empty_body'
+                                      : 'map.offline_empty_body')
+                                  .tr(),
+                              textAlign: TextAlign.center),
+                          TextButton(
+                            onPressed: _isRetryingConnectivity
+                                ? null
+                                : _retryConnectivity,
+                            child: Text('map.offline_retry'.tr()),
+                          ),
+                        ]),
+                      ),
+                    ),
+                  ),
+                if (isOnline && _tileError)
+                  PositionedDirectional(
+                    bottom: 84,
+                    start: 16,
+                    end: 76,
+                    child: Material(
+                      color: AppTheme.surface,
+                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      child: Padding(
+                        padding: const EdgeInsets.all(AppTheme.spaceSm),
+                        child: Text('map.tile_error'.tr(),
+                            style:
+                                const TextStyle(color: AppTheme.textPrimary)),
+                      ),
+                    ),
+                  ),
 
                 // Top Spatial Map Controls (Row 1: Full-Width Search + Language, Row 2: City + Topic Dropdowns)
                 PositionedDirectional(
@@ -669,9 +760,19 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             children: [
                               Expanded(
                                 child: TopSpatialSearchBar(
+                                  visibleStreamers: displayedStreamers,
                                   onSearchResultSelected:
                                       (coordinates, zoom, label) {
                                     _animateCameraTo(coordinates, zoom);
+                                  },
+                                  onStreamerSelected: (streamerId) {
+                                    final current = displayedStreamers
+                                        .where(
+                                            (s) => s.streamerId == streamerId)
+                                        .firstOrNull;
+                                    if (current != null) {
+                                      _selectStreamer(current);
+                                    }
                                   },
                                 ),
                               ),
@@ -700,16 +801,16 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                               Expanded(
                                 child: TopicSelectorDropdown(
                                   selectedCategoryId: currentCategoryFilter,
-                                  categories: context.watch<AppProvider>()
+                                  categories: context
+                                      .watch<AppProvider>()
                                       .academicCategories,
                                   onCategorySelected: (categoryId) {
                                     context
                                         .read<AppProvider>()
                                         .setCategoryFilter(categoryId);
-                                    if (_selectedStreamer != null &&
+                                    if (selectedStreamer != null &&
                                         categoryId != 'all') {
-                                      final sCat =
-                                          _selectedStreamer!.categoryId;
+                                      final sCat = selectedStreamer.categoryId;
                                       final bool matches = (categoryId ==
                                               sCat) ||
                                           (categoryId == 'computer_science' &&
@@ -731,7 +832,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                                   sCat == 'innovation'));
                                       if (!matches) {
                                         setState(() {
-                                          _selectedStreamer = null;
+                                          _selectedStreamerId = null;
                                         });
                                       }
                                     }
@@ -756,7 +857,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       // Recenter to Al Khobar Button
                       _buildFloatingMapButton(
                         icon: Icons.my_location_rounded,
-                        tooltip: 'Recenter to Al Khobar',
+                        tooltip: 'map.reset_khobar'.tr(),
                         onTap: _centerOnAlKhobar,
                       ),
                       const SizedBox(height: 10),
@@ -764,7 +865,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       // Open Broadcasters List Drawer Button
                       _buildFloatingMapButton(
                         icon: Icons.format_list_bulleted_rounded,
-                        tooltip: 'Broadcasters List',
+                        tooltip: 'map.broadcasters_list'.tr(),
                         onTap: () {
                           _scaffoldKey.currentState?.openEndDrawer();
                         },
@@ -777,7 +878,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 ValueListenableBuilder<double>(
                   valueListenable: _zoomNotifier,
                   builder: (context, currentZoom, child) {
-                    if (_selectedStreamer == null ||
+                    if (selectedStreamer == null ||
                         currentZoom >= kAuditoriumCardZoomThreshold) {
                       return const SizedBox.shrink();
                     }
@@ -787,10 +888,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       end: 76,
                       child: Center(
                         child: MarkerSummaryCard(
-                          streamer: _selectedStreamer!,
+                          streamer: selectedStreamer,
                           onClose: () {
                             setState(() {
-                              _selectedStreamer = null;
+                              _selectedStreamerId = null;
                             });
                           },
                         ),
@@ -808,8 +909,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               width: 380,
               decoration: const BoxDecoration(
                 color: AppTheme.surface,
-                border:
-                    Border(left: BorderSide(color: AppTheme.border)),
+                border: Border(left: BorderSide(color: AppTheme.border)),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -817,16 +917,19 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                   Container(
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     decoration: const BoxDecoration(
-                      border: Border(
-                          bottom: BorderSide(color: AppTheme.border)),
+                      border:
+                          Border(bottom: BorderSide(color: AppTheme.border)),
                     ),
                     child: Row(
                       children: [
                         const Icon(Icons.hub_rounded,
                             color: AppTheme.danger, size: 20),
                         const SizedBox(width: AppTheme.spaceSm),
-                        Expanded(child: Text(
-                          'design_copy.map_venues'.tr(namedArgs: {'count': '${displayedStreamers.length}'}),
+                        Expanded(
+                            child: Text(
+                          'design_copy.map_venues'.tr(namedArgs: {
+                            'count': '${displayedStreamers.length}'
+                          }),
                           style: const TextStyle(
                             color: AppTheme.textPrimary,
                             fontSize: 15,
@@ -844,8 +947,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                           const SizedBox(height: AppTheme.spaceSm),
                       itemBuilder: (context, index) {
                         final streamer = displayedStreamers[index];
-                        final isSelected = _selectedStreamer?.streamerId ==
-                            streamer.streamerId;
+                        final isSelected =
+                            _selectedStreamerId == streamer.streamerId;
 
                         return Material(
                           color: isSelected
@@ -872,8 +975,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                   CircleAvatar(
                                     radius: 20,
                                     backgroundColor: AppTheme.surface,
-                                    backgroundImage:
-                                        buildSafeImageProvider(path: streamer.avatarUrl),
+                                    backgroundImage: buildSafeImageProvider(
+                                        path: streamer.avatarUrl),
                                   ),
                                   const SizedBox(width: AppTheme.spaceMd),
                                   Expanded(
@@ -907,7 +1010,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                         color: AppTheme.danger,
                                         borderRadius: BorderRadius.circular(4),
                                       ),
-                                      child: Text('design_ui.live'.tr(),
+                                      child: Text(
+                                        'design_ui.live'.tr(),
                                         style: const TextStyle(
                                           color: AppTheme.onMedia,
                                           fontSize: 9,
@@ -936,12 +1040,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   /// venues), shows when the cache was last refreshed, and offers a manual
   /// retry on top of the automatic recovery.
   Widget _buildOfflineBanner(BuildContext context) {
-    final status = context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
-    final updatedAt = context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
+    final status =
+        context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
+    final updatedAt =
+        context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
     final lastUpdatedText = updatedAt == null
         ? 'map.offline_last_updated_never'.tr()
-        : 'map.offline_last_updated'
-            .tr(namedArgs: {'time': DateFormat('yyyy-MM-dd HH:mm').format(updatedAt)});
+        : 'map.offline_last_updated'.tr(namedArgs: {
+            'time': DateFormat('yyyy-MM-dd HH:mm').format(updatedAt)
+          });
 
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
@@ -977,7 +1084,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                           ? 'offline_experience.body'
                           : 'map.offline_banner_body')
                       .tr(),
-                  style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11.5, height: 1.4),
+                  style: const TextStyle(
+                      color: AppTheme.textSecondary,
+                      fontSize: 11.5,
+                      height: 1.4),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -1004,7 +1114,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               _isRetryingConnectivity
                   ? 'map.offline_retrying'.tr()
                   : 'map.offline_retry'.tr(),
-              style: const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
+              style:
+                  const TextStyle(fontSize: 11.5, fontWeight: FontWeight.bold),
             ),
           ),
         ],
@@ -1029,7 +1140,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         boxShadow: AppTheme.mapOverlayShadow,
       ),
       child: Material(
-        color: AppTheme.surfaceAlt.withValues(alpha: AppTheme.mapOverlayFillAlpha),
+        color:
+            AppTheme.surfaceAlt.withValues(alpha: AppTheme.mapOverlayFillAlpha),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
           side: const BorderSide(color: AppTheme.danger, width: 1.2),
@@ -1050,18 +1162,4 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       ),
     );
   }
-}
-
-class _LayoutMarker {
-  final String streamerId;
-  final LatLng origPoint;
-  math.Point<double> currentPixel;
-  final double radius;
-
-  _LayoutMarker({
-    required this.streamerId,
-    required this.origPoint,
-    required this.currentPixel,
-    required this.radius,
-  });
 }

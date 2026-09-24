@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../profile/models/streamer_models.dart';
@@ -444,18 +444,10 @@ class VenueNavigationSheet extends StatelessWidget {
     StreamerModel streamer,
     String fallbackMapUrl,
   ) async {
-    final googleMapsUrl = Uri.parse(
-        buildGoogleMapsSearchUrl(streamer.latitude, streamer.longitude));
-
     Navigator.of(context).pop();
 
-    try {
-      if (await canLaunchUrl(googleMapsUrl)) {
-        await launchUrl(googleMapsUrl, mode: LaunchMode.externalApplication);
-        return;
-      }
-    } catch (e) {
-      debugPrint('[VenueNavigationSheet] Error launching Google Maps: $e');
+    if (await launchVenueDirections(streamer.latitude, streamer.longitude)) {
+      return;
     }
 
     // No maps handler available on this device -- fall back to the old

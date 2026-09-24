@@ -138,8 +138,7 @@ void main() {
       expect(estimateTravelTime(6.92, 'ar'), contains('دقائق بالسيارة'));
     });
 
-    test('Venue information is derived from the streamer own venue fields',
-        () {
+    test('Venue information is derived from the streamer own venue fields', () {
       // The per-streamer address/gate presets described the five sample
       // broadcasters that used to ship inside lib/; they were removed in P2,
       // so every streamer's venue text now comes from its own fields.
@@ -253,7 +252,8 @@ void main() {
           .firstWhere((c) => c.id == 'computer_science');
       expect(cs.getLocalizedName('en'), equals('Computer Science'));
       expect(cs.getLocalizedName('ar'), equals('علوم الحاسب'));
-      expect(iconForCategoryIconName(cs.iconName), equals(Icons.memory_rounded));
+      expect(
+          iconForCategoryIconName(cs.iconName), equals(Icons.memory_rounded));
 
       final islamic = AcademicCategoryModel.defaultPool
           .firstWhere((c) => c.id == 'islamic_studies');
@@ -288,13 +288,16 @@ void main() {
         'Task 9: buildGoogleMapsSearchUrl is a coordinate-only deep link, '
         'not a text search that could resolve to the wrong venue', () {
       final url = buildGoogleMapsSearchUrl(26.3042, 50.1462);
-      expect(url,
-          equals('https://www.google.com/maps/search/?api=1&query=26.3042,50.1462'));
+      expect(
+          url,
+          equals(
+              'https://www.google.com/maps/search/?api=1&query=26.3042,50.1462'));
 
       // Every one of the three Spatial Map launch sites (VenueNavigationSheet,
       // MarkerSummaryCard, StreamerSlidingDrawer) shares this exact builder,
       // so they can never drift into three subtly different URL shapes.
-      expect(Uri.parse(url).queryParameters['query'], equals('26.3042,50.1462'));
+      expect(
+          Uri.parse(url).queryParameters['query'], equals('26.3042,50.1462'));
       expect(Uri.parse(url).queryParameters['api'], equals('1'));
     });
 
@@ -386,7 +389,8 @@ void main() {
       expect(_findStrokeRingMarkerContainer(), findsWidgets);
     });
 
-    testWidgets('Task 8: OfflineMarker renders a stroke ring with transparent gap',
+    testWidgets(
+        'Task 8: OfflineMarker renders a stroke ring with transparent gap',
         (tester) async {
       await tester.pumpWidget(MaterialApp(
         home: Scaffold(
@@ -462,7 +466,7 @@ void main() {
       SharedPreferences.setMockInitialValues({
         // Must match AppProvider's private _mapCacheKey /
         // _mapCacheUpdatedAtKey constants.
-        'spatial_map_marker_cache_v1': jsonEncode([
+        'spatial_map_marker_cache_v2': jsonEncode([
           const MapMarkerModel(
             markerId: 'pin_cached_1',
             streamerId: 'cached_1',
@@ -481,7 +485,7 @@ void main() {
             avatarUrl: '',
           ).toJson(),
         ]),
-        'spatial_map_marker_cache_updated_at_v1':
+        'spatial_map_marker_cache_updated_at_v2':
             DateTime(2026, 1, 1, 12, 0).toIso8601String(),
       });
 
@@ -489,6 +493,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 150));
 
       expect(provider.cachedMapMarkers, hasLength(1));
+      expect(provider.hasPublicCatalogSnapshot, isFalse);
       final cached = provider.cachedMapMarkers.single;
       expect(cached.streamerId, 'cached_1');
       // The core UI-08 safety property: a cached marker is never live.
@@ -497,6 +502,33 @@ void main() {
       expect(cached.viewerCount, 0);
       expect(provider.mapCacheUpdatedAt, DateTime(2026, 1, 1, 12, 0));
 
+      provider.dispose();
+    });
+
+    test('ignores older marker cache that could include hidden venues',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'spatial_map_marker_cache_v1': jsonEncode([
+          const MapMarkerModel(
+            markerId: 'pin_old',
+            streamerId: 'old',
+            displayNameEn: 'Old venue',
+            displayNameAr: 'موقع قديم',
+            venueNameEn: 'Old hall',
+            venueNameAr: 'قاعة قديمة',
+            latitude: 26.3,
+            longitude: 50.1,
+            cityId: 'khobar',
+            categoryId: 'cs_tech',
+            status: MarkerStatus.offline,
+            viewerCount: 0,
+            avatarUrl: '',
+          ).toJson(),
+        ]),
+      });
+      final provider = AppProvider();
+      await Future.delayed(const Duration(milliseconds: 150));
+      expect(provider.cachedMapMarkers, isEmpty);
       provider.dispose();
     });
 
@@ -550,4 +582,3 @@ void main() {
     });
   });
 }
-

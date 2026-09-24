@@ -86,6 +86,7 @@ void main() {
     provider.debugSetOnlineForTests(false);
     await provider.restorePublicCatalogFromDisk();
     expect(provider.isUsingCachedCatalog, isTrue);
+    expect(provider.hasPublicCatalogSnapshot, isTrue);
     expect(provider.streamers.single.fullNameEn, 'Public lecturer');
     expect(provider.streamers.single.isCurrentlyLive, isFalse);
     expect(provider.cachedMapMarkers.single.isLive, isFalse);
@@ -93,6 +94,23 @@ void main() {
     await Future<void>.delayed(const Duration(milliseconds: 50));
     expect((await cache.load())!.streamers.single.streamerId,
         'public-streamer');
+    provider.dispose();
+  });
+
+  test('restored catalog excludes hidden and unverified cached map pins',
+      () async {
+    await PublicCatalogCache().save([
+      streamer,
+      streamer.copyWith(
+        streamerId: 'hidden',
+        isTemporarilyHiddenFromMap: true,
+      ),
+      streamer.copyWith(streamerId: 'unverified', isVerified: false),
+    ], const [], updatedAt: DateTime.utc(2026, 9, 24, 12));
+    final provider = AppProvider();
+    await provider.restorePublicCatalogFromDisk();
+    expect(provider.cachedMapMarkers.map((m) => m.streamerId),
+        ['public-streamer']);
     provider.dispose();
   });
 

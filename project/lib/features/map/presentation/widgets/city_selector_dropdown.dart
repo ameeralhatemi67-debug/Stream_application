@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/map_models.dart';
@@ -18,6 +18,7 @@ class CitySelectorDropdown extends StatelessWidget {
     final langCode = context.locale.languageCode;
 
     return PopupMenuButton<MapRegionModel>(
+      tooltip: 'map.choose_place'.tr(),
       onSelected: onCitySelected,
       color: AppTheme.surface,
       shape: RoundedRectangleBorder(
@@ -26,7 +27,7 @@ class CitySelectorDropdown extends StatelessWidget {
       ),
       offset: const Offset(0, 44),
       itemBuilder: (context) {
-        return alSharqiaRegions.map((region) {
+        return saudiMapPresets.map((region) {
           final isCurrent = region.regionId == selectedCity.regionId;
           return PopupMenuItem<MapRegionModel>(
             value: region,
@@ -43,8 +44,10 @@ class CitySelectorDropdown extends StatelessWidget {
                     region.getLocalizedName(langCode),
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                      color: isCurrent ? AppTheme.primary : AppTheme.textPrimary,
+                      fontWeight:
+                          isCurrent ? FontWeight.bold : FontWeight.normal,
+                      color:
+                          isCurrent ? AppTheme.primary : AppTheme.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,

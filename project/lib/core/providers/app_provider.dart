@@ -129,6 +129,11 @@ class AppProvider extends ChangeNotifier {
   int _successfulCatalogRevision = 0;
 
   bool get isUsingCachedCatalog => _isUsingCachedCatalog;
+
+  /// A successful backend read or restored catalog can authoritatively
+  /// remove cached map pins. A marker-only cache cannot do that.
+  bool get hasPublicCatalogSnapshot =>
+      _lastLoadedPublicStreamers != null || _publicCatalogUpdatedAt != null;
   DateTime? get publicCatalogUpdatedAt => _publicCatalogUpdatedAt;
   int get successfulCatalogRevision => _successfulCatalogRevision;
 
@@ -142,9 +147,11 @@ class AppProvider extends ChangeNotifier {
   ConnectivityService? _connectivityService;
   StreamSubscription<NetworkStatus>? _connectivitySub;
   int _connectivityGeneration = 0;
-  static const String _mapCacheKey = 'spatial_map_marker_cache_v1';
+  // v2 contains only verified, map-visible pins. Do not trust the older
+  // marker-only cache: it could contain a hidden or unverified channel.
+  static const String _mapCacheKey = 'spatial_map_marker_cache_v2';
   static const String _mapCacheUpdatedAtKey =
-      'spatial_map_marker_cache_updated_at_v1';
+      'spatial_map_marker_cache_updated_at_v2';
   List<MapMarkerModel> _cachedMapMarkers = [];
   DateTime? _mapCacheUpdatedAt;
 
@@ -1916,6 +1923,7 @@ class AppProvider extends ChangeNotifier {
     _cachedMapMarkers = snapshot.streamers
         .where((s) =>
             (s.latitude != 0 || s.longitude != 0) &&
+            s.isVerified &&
             !s.isTemporarilyHiddenFromMap)
         .map((s) => MapMarkerModel.fromCachedJson(
             MapMarkerModel.fromStreamer(s).toJson()))
@@ -1946,10 +1954,12 @@ class AppProvider extends ChangeNotifier {
   Future<void> _persistMapMarkerCache() async {
     try {
       final markers = _streamers
-          .where((s) => s.latitude != 0 || s.longitude != 0)
+          .where((s) =>
+              (s.latitude != 0 || s.longitude != 0) &&
+              s.isVerified &&
+              !s.isTemporarilyHiddenFromMap)
           .map(MapMarkerModel.fromStreamer)
           .toList();
-      if (markers.isEmpty) return;
       final now = DateTime.now();
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(

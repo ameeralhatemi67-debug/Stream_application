@@ -14,6 +14,7 @@ class SpatialStreamerMarker extends StatefulWidget {
   final VoidCallback onTap;
   final VoidCallback onDoubleTap;
   final bool isSelected;
+  final bool isMine;
 
   const SpatialStreamerMarker({
     super.key,
@@ -21,6 +22,7 @@ class SpatialStreamerMarker extends StatefulWidget {
     required this.onTap,
     required this.onDoubleTap,
     this.isSelected = false,
+    this.isMine = false,
   });
 
   @override
@@ -87,7 +89,9 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
     }
     return widget.isSelected
         ? AppTheme.primary
-        : AppTheme.borderStrong;
+        : widget.isMine
+            ? AppTheme.accent
+            : AppTheme.borderStrong;
   }
 
   Widget _buildAvatarImage() {
@@ -148,186 +152,210 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
     final isVideo = widget.marker.isVideoLive;
     final isAudio = widget.marker.isAudioLive;
     final primaryAccent = _accentColor;
+    final languageCode = EasyLocalization.of(context)?.locale.languageCode ?? 'en';
 
     return RepaintBoundary(
-      child: GestureDetector(
-        onTap: widget.onTap,
-        onDoubleTap: widget.onDoubleTap,
-        behavior: HitTestBehavior.opaque,
-        child: SizedBox(
-          // UI-12: 44px sat right at (Apple's) minimum touch-target size and
-          // below Android's 48dp recommendation; 48 gives the offline
-          // marker (by far the most common state) a comfortable hit area
-          // without enlarging its visible ring/avatar, which stay centred.
-          width: isLive ? 52.0 : 48.0,
-          height: isLive ? 52.0 : 48.0,
-          child: Stack(
-            alignment: Alignment.center,
-            clipBehavior: Clip.none,
-            children: [
-              // 1. Radar Pulse Ring (Active only when streaming video or audio)
-              if (isLive)
-                AnimatedBuilder(
-                  animation: _pulseController,
-                  builder: (context, child) {
-                    final opacity = _opacityAnimation.value.clamp(0.0, 1.0);
-                    return Transform.scale(
-                      scale: _scaleAnimation.value,
-                      child: Container(
-                        width: 40.0,
-                        height: 40.0,
-                        decoration: BoxDecoration(
-                          shape: isOrg ? BoxShape.rectangle : BoxShape.circle,
-                          borderRadius:
-                              isOrg ? BorderRadius.circular(14.0) : null,
-                          color:
-                              primaryAccent.withValues(alpha: opacity * 0.35),
-                          border: Border.all(
+      child: Semantics(
+        button: true,
+        label: 'map.marker_accessibility'.tr(namedArgs: {
+              'name': widget.marker.getLocalizedName(languageCode),
+              'venue': widget.marker.getLocalizedVenue(languageCode),
+            }) +
+            (widget.isMine ? ' ${'map.my_channel'.tr()}' : ''),
+        child: GestureDetector(
+          onTap: widget.onTap,
+          onDoubleTap: widget.onDoubleTap,
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(
+            // UI-12: 44px sat right at (Apple's) minimum touch-target size and
+            // below Android's 48dp recommendation; 48 gives the offline
+            // marker (by far the most common state) a comfortable hit area
+            // without enlarging its visible ring/avatar, which stay centred.
+            width: isLive ? 52.0 : 48.0,
+            height: isLive ? 52.0 : 48.0,
+            child: Stack(
+              alignment: Alignment.center,
+              clipBehavior: Clip.none,
+              children: [
+                // 1. Radar Pulse Ring (Active only when streaming video or audio)
+                if (isLive)
+                  AnimatedBuilder(
+                    animation: _pulseController,
+                    builder: (context, child) {
+                      final opacity = _opacityAnimation.value.clamp(0.0, 1.0);
+                      return Transform.scale(
+                        scale: _scaleAnimation.value,
+                        child: Container(
+                          width: 40.0,
+                          height: 40.0,
+                          decoration: BoxDecoration(
+                            shape: isOrg ? BoxShape.rectangle : BoxShape.circle,
+                            borderRadius:
+                                isOrg ? BorderRadius.circular(14.0) : null,
                             color:
-                                primaryAccent.withValues(alpha: opacity * 0.75),
-                            width: 1.5,
+                                primaryAccent.withValues(alpha: opacity * 0.35),
+                            border: Border.all(
+                              color: primaryAccent.withValues(
+                                  alpha: opacity * 0.75),
+                              width: 1.5,
+                            ),
                           ),
                         ),
+                      );
+                    },
+                  ),
+
+                // 2. Main Avatar Body Container with Outer Stroke Ring & Transparent Gap
+                Container(
+                  width: isLive ? 48.0 : 42.0,
+                  height: isLive ? 48.0 : 42.0,
+                  padding: const EdgeInsets.all(4.0),
+                  decoration: BoxDecoration(
+                    shape: isOrg ? BoxShape.rectangle : BoxShape.circle,
+                    borderRadius: isOrg ? BorderRadius.circular(14.0) : null,
+                    // Transparent background with outer stroke ring (floating avatar gap)
+                    color: Colors.transparent,
+                    // UI-12: the offline ring used to be a hardcoded
+                    // AppTheme.onMedia (pure white), which only worked against
+                    // the old dark basemap -- on the light basemap (UI-07) a
+                    // white ring on a near-white tile all but disappeared.
+                    // primaryAccent already resolves to AppTheme.borderStrong
+                    // for this exact offline/unselected case, which reads
+                    // clearly against any basemap.
+                    border: Border.all(
+                      color:
+                          widget.isSelected ? AppTheme.primary : primaryAccent,
+                      width: widget.isSelected ? 2.2 : 1.8,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: isLive
+                            ? primaryAccent.withValues(alpha: 0.45)
+                            : AppTheme.media.withValues(alpha: 0.4),
+                        blurRadius: widget.isSelected ? 10 : (isLive ? 8 : 4),
+                        spreadRadius: isLive ? 1 : 0,
                       ),
-                    );
-                  },
-                ),
-
-              // 2. Main Avatar Body Container with Outer Stroke Ring & Transparent Gap
-              Container(
-                width: isLive ? 48.0 : 42.0,
-                height: isLive ? 48.0 : 42.0,
-                padding: const EdgeInsets.all(4.0),
-                decoration: BoxDecoration(
-                  shape: isOrg ? BoxShape.rectangle : BoxShape.circle,
-                  borderRadius: isOrg ? BorderRadius.circular(14.0) : null,
-                  // Transparent background with outer stroke ring (floating avatar gap)
-                  color: Colors.transparent,
-                  // UI-12: the offline ring used to be a hardcoded
-                  // AppTheme.onMedia (pure white), which only worked against
-                  // the old dark basemap -- on the light basemap (UI-07) a
-                  // white ring on a near-white tile all but disappeared.
-                  // primaryAccent already resolves to AppTheme.borderStrong
-                  // for this exact offline/unselected case, which reads
-                  // clearly against any basemap.
-                  border: Border.all(
-                    color: widget.isSelected ? AppTheme.primary : primaryAccent,
-                    width: widget.isSelected ? 2.2 : 1.8,
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: isLive
-                          ? primaryAccent.withValues(alpha: 0.45)
-                          : AppTheme.media.withValues(alpha: 0.4),
-                      blurRadius: widget.isSelected ? 10 : (isLive ? 8 : 4),
-                      spreadRadius: isLive ? 1 : 0,
+                  child: Center(
+                    child: SizedBox(
+                      width: isLive ? 36.0 : 30.0,
+                      height: isLive ? 36.0 : 30.0,
+                      child: _buildAvatarImage(),
                     ),
-                  ],
-                ),
-                child: Center(
-                  child: SizedBox(
-                    width: isLive ? 36.0 : 30.0,
-                    height: isLive ? 36.0 : 30.0,
-                    child: _buildAvatarImage(),
                   ),
                 ),
-              ),
 
-              // 3. Status Badge Pill at Top (Live Video vs Live Audio)
-              if (isLive)
-                Positioned(
-                  top: -3,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 5.0, vertical: 1.5),
-                    decoration: BoxDecoration(
-                      color: isVideo
-                          ? AppTheme.danger
-                          : AppTheme.media,
-                      borderRadius: BorderRadius.circular(8.0),
-                      border: isAudio
-                          ? Border.all(
-                              color: AppTheme.textMuted, width: 0.8)
-                          : null,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: AppTheme.shadow,
-                          blurRadius: 4,
-                          offset: Offset(0, 1),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        if (isVideo) ...[
-                          Container(
-                            width: 4.5,
-                            height: 4.5,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.onMedia,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 3.0),
-                          Text(
-                            widget.marker.viewerCount > 0
-                                ? '${widget.marker.viewerCount}'
-                                : 'LIVE',
-                            style: const TextStyle(
-                              color: AppTheme.onMedia,
-                              fontSize: 8.5,
-                              fontWeight: FontWeight.w700,
-                              height: 1.1,
-                            ),
-                          ),
-                        ] else if (isAudio) ...[
-                          const Icon(
-                            Icons.mic_rounded,
-                            size: 9.0,
-                            color: AppTheme.onMedia,
-                          ),
-                          const SizedBox(width: 2.5),
-                          Text('design_ui.audio'.tr(),
-                            style: const TextStyle(
-                              color: AppTheme.onMedia,
-                              fontSize: 8.0,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.3,
-                              height: 1.1,
-                            ),
+                // 3. Status Badge Pill at Top (Live Video vs Live Audio)
+                if (isLive)
+                  Positioned(
+                    top: -3,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 5.0, vertical: 1.5),
+                      decoration: BoxDecoration(
+                        color: isVideo ? AppTheme.danger : AppTheme.media,
+                        borderRadius: BorderRadius.circular(8.0),
+                        border: isAudio
+                            ? Border.all(color: AppTheme.textMuted, width: 0.8)
+                            : null,
+                        boxShadow: const [
+                          BoxShadow(
+                            color: AppTheme.shadow,
+                            blurRadius: 4,
+                            offset: Offset(0, 1),
                           ),
                         ],
-                      ],
-                    ),
-                  ),
-                ),
-
-              // 4. Organization Indicator Icon at Bottom Right
-              if (isOrg)
-                PositionedDirectional(
-                  bottom: -1,
-                  end: -1,
-                  child: Container(
-                    width: 13.0,
-                    height: 13.0,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: primaryAccent,
-                        width: 1.0,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          if (isVideo) ...[
+                            Container(
+                              width: 4.5,
+                              height: 4.5,
+                              decoration: const BoxDecoration(
+                                color: AppTheme.onMedia,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 3.0),
+                            Text(
+                              widget.marker.viewerCount > 0
+                                  ? '${widget.marker.viewerCount}'
+                                  : 'LIVE',
+                              style: const TextStyle(
+                                color: AppTheme.onMedia,
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w700,
+                                height: 1.1,
+                              ),
+                            ),
+                          ] else if (isAudio) ...[
+                            const Icon(
+                              Icons.mic_rounded,
+                              size: 9.0,
+                              color: AppTheme.onMedia,
+                            ),
+                            const SizedBox(width: 2.5),
+                            Text(
+                              'design_ui.audio'.tr(),
+                              style: const TextStyle(
+                                color: AppTheme.onMedia,
+                                fontSize: 8.0,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.3,
+                                height: 1.1,
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
                     ),
-                    child: Icon(
-                      Icons.apartment_rounded,
-                      size: 8.0,
-                      color: primaryAccent,
+                  ),
+
+                // 4. Organization Indicator Icon at Bottom Right
+                if (isOrg)
+                  PositionedDirectional(
+                    bottom: -1,
+                    end: -1,
+                    child: Container(
+                      width: 13.0,
+                      height: 13.0,
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: primaryAccent,
+                          width: 1.0,
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.apartment_rounded,
+                        size: 8.0,
+                        color: primaryAccent,
+                      ),
                     ),
                   ),
-                ),
-            ],
+                if (widget.isMine)
+                  PositionedDirectional(
+                    bottom: -1,
+                    start: -1,
+                    child: Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: AppTheme.accent,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: AppTheme.surface, width: 1.5),
+                      ),
+                      child: const Icon(Icons.star_rounded,
+                          color: AppTheme.onMedia, size: 11),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
       ),

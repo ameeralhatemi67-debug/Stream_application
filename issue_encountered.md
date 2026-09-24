@@ -29,6 +29,9 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Restarting the local Realtime container breaks joins until Kong restarts** — workaround: restart the local Kong container too.
 - **Signed-in long-lived Chrome reload hang** — UNRESOLVED, not reproduced; capture steps in the 2026-09-24 repair note.
 - **Live-room connecting subtitle fails contrast** — FIXED locally; initializing overlay uses media text color.
+- **Spatial map pairwise marker displacement scales quadratically** — FIXED locally with bounded grid clusters; phone paint timing open.
+- **Map search and cached pins outlive catalog refresh** — FIXED locally for current provider snapshots; offline revocation timing open.
+- **Offline map pins disappear without a public catalog snapshot** — FIXED locally with vetted marker-only cache fallback; phone cold start open.
 
 ## Recording format
 
@@ -53,6 +56,22 @@ Cause: The placeholder used `AppTheme.textSecondary`, a dark foreground token, o
 Fix/workaround: Use `AppTheme.onMedia` for placeholder subtitle and error detail.
 Verification: The focused 38-case rendered contrast suite passed. Physical-device display and real WebView playback remain unverified.
 Evidence: `brief/evidence/2026-09-24/p5-hardening-worktree.md`.
+
+## Spatial map pairwise marker displacement scales quadratically
+Status: FIXED locally; device timing UNVERIFIED.
+Observed: The map ran ten pairwise collision passes on every camera update, so layout comparisons grew quadratically with visible markers.
+Cause: Marker positions were displaced against every other marker in `spatial_map_screen.dart`.
+Fix/workaround: Group projected markers into 72-pixel grid cells with stable member-based IDs; cluster taps zoom and then offer a member list at maximum zoom.
+Verification: The P5.5 focused test projected 1,000 dense points exactly 1,000 times, checked stable identity after reorder, and checked sparse/removed points. Final full Flutter suite passed 557 tests. Physical paint timing remains unmeasured.
+Evidence: `brief/evidence/2026-09-24/p5-5-map-presentation.md`.
+
+## Map search and cached pins outlive catalog refresh
+Status: FIXED for current provider snapshots; offline revocation timing UNVERIFIED.
+Observed: Search results were retained from the last keystroke and cached pins were rendered without matching them to the current public catalog.
+Cause: Search stored a result list, while the cached-marker layer trusted its separate persisted list.
+Fix/workaround: Derive results on each build from verified, visible provider records and intersect cached pins with current eligible streamer IDs. Clear selection when its record leaves the visible catalog.
+Verification: Focused tests cover unverified/hidden removal and refreshed search results; `flutter analyze` reports zero issues and the final 557-test suite passes. A disconnected device cannot know about a revocation made after its last successful sync.
+Evidence: `brief/evidence/2026-09-24/p5-5-map-presentation.md`.
 
 ## Docker Inference manager `dockerInference` socket bind collision
 
@@ -226,3 +245,11 @@ Cause: unknown. Code facts only: `main()` awaits `Supabase.initialize` (session 
 Fix/workaround: none (no speculative fix).
 Verification: not attempted in a signed-in browser in this session (browser selection needed the owner).
 Evidence: capture steps in `brief/evidence/2026-09-24/p6-retest-repair/README.md`, step 10.
+
+## Offline map pins disappear without a public catalog snapshot
+Status: FIXED locally; physical cold start UNVERIFIED.
+Observed: P5.5 filtered all cached pins against the current public catalog, which can be absent on a cold start even when the independently saved marker cache exists.
+Cause: an absent catalog and an authoritative empty catalog were both represented by an empty ID set.
+Fix/workaround: distinguish those states; retain marker-only pins until a catalog is available, then filter by its visible IDs. Version the marker cache to v2 and save only verified, map-visible pins; older unvetted cache entries are ignored.
+Verification: focused map/catalog tests passed, combined Flutter suite 587 passed, analyzer 0. Physical airplane-mode cold start remains open.
+Evidence: local P5/P6 merge checkpoint in `brief/LEDGER.md`.
