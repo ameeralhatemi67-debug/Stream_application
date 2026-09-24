@@ -18,7 +18,8 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Role choice repeats or leaks across accounts** — FIXED locally; account-scoped hydration and generation tests pass.
 - **Phone landscape ParentData crash and preview disposal** — layout crash FIXED locally; native lifecycle compiled, physical camera retest open.
 - **Phone LIVE before encoder/server confirmation** — FIXED locally; native-event and RPC denial tests pass, real ingest unverified.
-- **Windows STL1011 in permission_handler_windows** — UNRESOLVED compiler/plugin compatibility; reproduced without flag changes.
+- **Windows STL1011 in permission_handler_windows** — FIXED locally with plugin-only MSVC compatibility definition; debug build passes.
+- **Android generated plugin registrant missing** — UNVERIFIED intermittent cache failure; current debug APK build passes.
 - **Realtime initial snapshot precedes first channel join** — FIXED locally for device sessions (read after join); physical timing check open.
 - **Device conflict dialog removed by splash navigation** — FIXED locally; router-level test and two-client probe pass, two phones open.
 - **Studio errors hidden behind the bottom sheet** — FIXED locally; in-sheet errors, studio tests pass, device retest open.
@@ -167,12 +168,19 @@ Verification: native-event/error/dispose and server-denial tests; local two-sess
 Evidence: dated owner remediation addendum.
 
 ## Windows STL1011 in permission_handler_windows
-Status: UNRESOLVED environment/dependency compatibility.
+Status: FIXED locally for the installed toolchain; upstream plugin modernization remains open.
 Observed: flutter build windows --debug --no-pub failed under MSVC 14.51.36231 with C2338 / STL1011 in experimental/coroutine, building permission_handler_windows_plugin.vcxproj.
 Cause: the installed compiler rejects the plugin's deprecated /await experimental coroutine path. This is a build failure before app launch, not a demonstrated Dart runtime defect.
-Fix/workaround: none applied. Confirm a supported upstream plugin/toolchain resolution; do not add suppression/compiler flags speculatively.
-Verification: reproduced once with no backend defines. Android and web builds are separate evidence and do not resolve Windows.
+Fix/workaround: `project/windows/CMakeLists.txt` sets `_SILENCE_EXPERIMENTAL_COROUTINE_DEPRECATION_WARNINGS` only on `permission_handler_windows_plugin`. An attempted `/await:strict` override was rejected because the plugin also passes `/await`; it was removed. Track an upstream move to standard C++20 coroutines rather than broadening this compatibility definition.
+Verification: `flutter build windows --debug --no-pub` succeeded and produced `streamer_app.exe` with MSVC 14.51. App launch and signed-in behavior remain untested.
 Evidence: brief/.runtime/owner-windows-build.log (ignored); sanitized verification.txt in the remediation folder.
+
+## Android generated plugin registrant missing
+Status: UNVERIFIED intermittent build-cache failure; current local build passes.
+Observed: owner Android runs reported `Error when reading '.dart_tool/flutter_build/dart_plugin_registrant.dart': The system cannot find the file specified` during `compileFlutterBuildDebug`.
+Cause: unconfirmed; the generated file exists in the current checkout. A stale or competing generated build is possible.
+Fix/workaround: none applied to app code. Avoid simultaneous Flutter builds from this checkout; if it recurs, capture the command and generated-file state before clearing build caches.
+Verification: `flutter build apk --debug --no-pub` succeeded and produced `app-debug.apk`. Installing/running on either physical phone remains untested.
 
 ## Realtime initial snapshot precedes first channel join
 Status: FIXED locally for `device_sessions` (2026-09-24); other `.stream()` users unchanged. Physical timing UNVERIFIED.
