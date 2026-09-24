@@ -6,6 +6,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/language_switcher.dart';
+import '../../../core/widgets/streamer_avatar.dart';
 import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
 import '../models/streamer_models.dart';
 import '../models/vod_models.dart';
@@ -234,31 +235,17 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               // Hero Avatar Image with Status Ring (Squircle for Org, Circle for Scholar)
               Hero(
                 tag: 'avatar_${streamer.streamerId}',
-                child: Container(
-                  width: 76,
-                  height: 76,
-                  decoration: BoxDecoration(
-                    shape: streamer.isOrganization
-                        ? BoxShape.rectangle
-                        : BoxShape.circle,
-                    borderRadius: streamer.isOrganization
-                        ? BorderRadius.circular(16)
-                        : null,
-                    border: Border.all(
-                      color: streamer.isCurrentlyLive
-                          ? AppTheme.danger
-                          : (streamer.isOrganization
-                              ? AppTheme.warning
-                              : AppTheme.primary),
-                      width: 2.5,
-                    ),
-                    image: DecorationImage(
-                      image: streamer.avatarUrl.startsWith('assets/')
-                          ? AssetImage(streamer.avatarUrl) as ImageProvider
-                          : NetworkImage(streamer.avatarUrl),
-                      fit: BoxFit.cover,
-                    ),
-                  ),
+                child: StreamerAvatar(
+                  avatarUrl: streamer.avatarUrl,
+                  name: streamer.getLocalizedName(lang),
+                  radius: 38,
+                  square: streamer.isOrganization,
+                  borderWidth: 2.5,
+                  borderColor: streamer.isCurrentlyLive
+                      ? AppTheme.danger
+                      : (streamer.isOrganization
+                          ? AppTheme.warning
+                          : AppTheme.primary),
                 ),
               ),
               const SizedBox(width: AppTheme.spaceLg),
@@ -822,27 +809,16 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                       children: [
                         Row(
                           children: [
-                            Container(
-                              width: 44,
-                              height: 44,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? AppTheme.warning
-                                      : (speaker.isPermanentStaff
-                                          ? AppTheme.primary
-                                          : AppTheme.textSecondary),
-                                  width: 2,
-                                ),
-                                image: DecorationImage(
-                                  image: speaker.avatarUrl.startsWith('assets/')
-                                      ? AssetImage(speaker.avatarUrl)
-                                          as ImageProvider
-                                      : NetworkImage(speaker.avatarUrl),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
+                            StreamerAvatar(
+                              avatarUrl: speaker.avatarUrl,
+                              name: speaker.getLocalizedName(lang),
+                              radius: 22,
+                              borderWidth: 2,
+                              borderColor: isSelected
+                                  ? AppTheme.warning
+                                  : (speaker.isPermanentStaff
+                                      ? AppTheme.primary
+                                      : AppTheme.textSecondary),
                             ),
                             const SizedBox(width: 10),
                             Expanded(

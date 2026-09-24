@@ -917,7 +917,12 @@
     "step5_agree_btn": "I Understand and Agree",
     "step5_agree_checkbox": "I agree to the ",
     "step5_agree_terms_link": "terms and conditions for streamers",
-    "step5_agree_standards": "and Broadcasting Audio-Visual Standards."
+    "step5_agree_standards": "and Broadcasting Audio-Visual Standards.",
+    "exit_tooltip": "Leave the application",
+    "exit_title": "Leave the application?",
+    "exit_body": "Your answers on this screen are not submitted. You can start again from Settings.",
+    "exit_stay": "Keep editing",
+    "exit_leave": "Leave"
   },
   "wizard_pending": {
     "title": "Application Submitted!",

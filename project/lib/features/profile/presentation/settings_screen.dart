@@ -14,6 +14,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/safe_image_provider.dart';
+import '../../../core/widgets/streamer_avatar.dart';
 import '../../profile/models/streamer_models.dart';
 import '../models/user_account_model.dart';
 import '../../admin/models/broadcaster_application_model.dart';
@@ -92,6 +93,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           NotificationPreferencesModel notificationPreferences,
           bool isPermittedAdmin,
           bool isAdminUser,
+          bool isApprovedStreamer,
+          BroadcasterApplicationModel? myApplication,
         })>((p) => (
           userProfile: p.userProfile,
           isStreamerModeEnabled: p.isStreamerModeEnabled,
@@ -109,6 +112,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           notificationPreferences: p.notificationPreferences,
           isPermittedAdmin: p.isPermittedAdmin,
           isAdminUser: p.isAdminUser,
+          // Approval and revocation must re-render this page immediately.
+          isApprovedStreamer: p.isApprovedStreamer,
+          myApplication: p.myApplication,
         ));
     final currentLocale = context.locale.languageCode;
     final isAr = currentLocale == 'ar';
@@ -334,9 +340,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
       child: Row(
         children: [
-          CircleAvatar(
+          // A failed Google photo shows the initial, not a blank circle.
+          StreamerAvatar(
+            avatarUrl: profile.avatarUrl,
+            name: isAr ? profile.nameAr : profile.nameEn,
             radius: 24,
-            backgroundImage: buildSafeImageProvider(path: profile.avatarUrl),
           ),
           const SizedBox(width: AppTheme.spaceMd),
           Expanded(
@@ -726,9 +734,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ] else if (isLoggedIn) ...[
             Text('broadcast_approval_required'.tr()),
             TextButton(
-              onPressed: () => context.go(provider.myApplication == null
-                  ? '/streamer-apply'
-                  : '/application-pending'),
+              // Push, so Back returns to Settings. Only a pending application
+              // shows the waiting screen; a rejected or revoked one reapplies
+              // (P6-R09: go() replaced the stack and left no way back).
+              onPressed: () => context.push(
+                  provider.myApplication?.status == ApplicationStatus.pending
+                      ? '/application-pending'
+                      : '/streamer-apply'),
               child: Text('role_select.streamer_btn'.tr()),
             ),
           ] else ...[

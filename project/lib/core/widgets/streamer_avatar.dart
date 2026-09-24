@@ -3,16 +3,25 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import 'safe_image_provider.dart';
 
-/// A round avatar that degrades to a neutral mark when there is no picture.
+/// A round (or rounded-square, for organizations) avatar that degrades to a
+/// visible placeholder when there is no picture or the picture fails to load.
 ///
 /// Five widgets each carried their own `_getImageProvider` that ended in
 /// `NetworkImage(url)` with no empty-string guard, so a streamer without an
 /// avatar produced a request for the app's own base URI, an HTTP 400 on every
-/// rebuild, and a blank circle. This renders the person icon instead, and is
-/// the one place that decision lives.
+/// rebuild, and a blank circle. A URL that resolves but then fails (a Google
+/// photo returning 429, a deleted upload) also left only the pale background
+/// -- the "blank white circle" in the P6 retest (S02). The placeholder is the
+/// name's first letter when a name is known, otherwise a person icon.
 class StreamerAvatar extends StatelessWidget {
   final String? avatarUrl;
   final double radius;
+
+  /// Used for the initial shown when there is no usable picture.
+  final String? name;
+
+  /// Organizations use a rounded square instead of a circle.
+  final bool square;
 
   /// Ring drawn around the avatar, used by the feed card's live/offline state.
   final Color? borderColor;
@@ -22,6 +31,8 @@ class StreamerAvatar extends StatelessWidget {
     super.key,
     required this.avatarUrl,
     this.radius = 18,
+    this.name,
+    this.square = false,
     this.borderColor,
     this.borderWidth = 1.2,
   });
@@ -29,26 +40,64 @@ class StreamerAvatar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final provider = resolveImageProviderOrNull(avatarUrl);
-    final avatar = CircleAvatar(
-      radius: radius,
-      backgroundColor: AppTheme.surfaceAlt,
-      backgroundImage: provider,
-      // A URL that resolves but then fails (offline, 404) must not take the
-      // surrounding screen down with it; the neutral circle is the fallback.
-      onBackgroundImageError: provider == null ? null : (_, __) {},
-      child: provider == null
-          ? Icon(Icons.person_outline_rounded,
-              size: radius, color: AppTheme.textMuted)
-          : null,
-    );
+    final size = radius * 2;
+    final placeholder = _Placeholder(name: name, radius: radius);
+    final content = provider == null
+        ? placeholder
+        : Image(
+            image: provider,
+            width: size,
+            height: size,
+            fit: BoxFit.cover,
+            // A URL that resolves but then fails must not leave an empty
+            // shape or take the surrounding screen down with it.
+            errorBuilder: (_, __, ___) => placeholder,
+          );
+    final shaped = square
+        ? ClipRRect(
+            borderRadius: BorderRadius.circular(radius * 0.42),
+            child: SizedBox.square(dimension: size, child: content),
+          )
+        : ClipOval(child: SizedBox.square(dimension: size, child: content));
     final border = borderColor;
-    if (border == null) return avatar;
+    if (border == null) return shaped;
     return Container(
       decoration: BoxDecoration(
-        shape: BoxShape.circle,
+        shape: square ? BoxShape.rectangle : BoxShape.circle,
+        borderRadius:
+            square ? BorderRadius.circular(radius * 0.42 + borderWidth) : null,
         border: Border.all(color: border, width: borderWidth),
       ),
-      child: avatar,
+      child: shaped,
+    );
+  }
+}
+
+class _Placeholder extends StatelessWidget {
+  const _Placeholder({required this.name, required this.radius});
+  final String? name;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final trimmed = name?.trim() ?? '';
+    final initial =
+        trimmed.isEmpty ? null : String.fromCharCodes(trimmed.runes.take(1));
+    return ColoredBox(
+      color: AppTheme.primary.withValues(alpha: 0.12),
+      child: Center(
+        child: initial == null
+            ? Icon(Icons.person_outline_rounded,
+                size: radius, color: AppTheme.primary)
+            : Text(
+                initial.toUpperCase(),
+                style: TextStyle(
+                  color: AppTheme.primary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: radius * 0.9,
+                ),
+              ),
+      ),
     );
   }
 }

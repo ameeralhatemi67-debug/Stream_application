@@ -13,6 +13,18 @@ class ApplicationPendingScreen extends StatelessWidget {
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
+      // Reachable from Settings and after submitting; always offer a way
+      // back instead of only "explore" (P6-R09 wizard trap report).
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const BackButtonIcon(),
+          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
+          onPressed: () =>
+              context.canPop() ? context.pop() : context.go('/settings'),
+        ),
+      ),
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

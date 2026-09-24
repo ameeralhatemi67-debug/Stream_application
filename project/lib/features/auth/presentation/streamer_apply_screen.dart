@@ -211,12 +211,43 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         curve: Curves.easeInOut,
       );
     } else {
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      } else {
-        context.go('/settings');
-      }
+      _leaveWizard();
     }
+  }
+
+  void _leaveWizard() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.of(context).pop();
+    } else {
+      context.go('/settings');
+    }
+  }
+
+  /// Leaves the wizard from any step. Back only steps backwards, so from
+  /// step 5 an exit used to take five taps (P6-R09 "no way out" report).
+  Future<void> _confirmExit() async {
+    if (_currentStep == 0) {
+      _leaveWizard();
+      return;
+    }
+    final leave = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('wizard_steps.exit_title'.tr()),
+        content: Text('wizard_steps.exit_body'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text('wizard_steps.exit_stay'.tr()),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text('wizard_steps.exit_leave'.tr()),
+          ),
+        ],
+      ),
+    );
+    if (leave == true && mounted) _leaveWizard();
   }
 
   void _showValidationToast(String message) {
@@ -480,6 +511,14 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            key: const Key('wizard-exit'),
+            icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary),
+            tooltip: 'wizard_steps.exit_tooltip'.tr(),
+            onPressed: _confirmExit,
+          ),
+        ],
       ),
       body: SafeArea(
         child: Center(
