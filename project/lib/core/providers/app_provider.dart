@@ -3718,6 +3718,10 @@ class AppProvider extends ChangeNotifier {
             deviceId: device.deviceId,
             senderMode: _broadcastSenderMode,
             orgId: _selectedBroadcastOrgId);
+        if (generation != _deviceGeneration ||
+            _currentDeviceSession?.isPrimaryBroadcaster != true) {
+          return;
+        }
         _liveSessionId = session;
         _liveWatchId = watchId;
         // A phone start is recorded as sending by the server itself.
@@ -3738,8 +3742,10 @@ class AppProvider extends ChangeNotifier {
               deviceId: device.deviceId,
               orgId: _selectedBroadcastOrgId);
         }
-        _liveSessionId = null;
-        _liveWatchId = null;
+        if (generation == _deviceGeneration) {
+          _liveSessionId = null;
+          _liveWatchId = null;
+        }
       }
       if (generation != _deviceGeneration ||
           _currentDeviceSession?.isPrimaryBroadcaster != true) {
@@ -6147,11 +6153,12 @@ class WatchLinkCheck {
           verdict == WatchLinkVerdict.upcoming) &&
       !channelVerified;
 
-  /// Whether the studio may list this link.
+  /// Demo and release both fail closed. This is client validation only,
+  /// not a server ownership guarantee or proof of viewer playback.
   bool get allowsStart =>
-      verdict == WatchLinkVerdict.live ||
-      verdict == WatchLinkVerdict.upcoming ||
-      verdict == WatchLinkVerdict.unverified;
+      channelVerified &&
+      (verdict == WatchLinkVerdict.live ||
+          verdict == WatchLinkVerdict.upcoming);
 
   /// Explanation for a refused link, or null when it may be used.
   String? get errorKey => switch (verdict) {
@@ -6162,6 +6169,9 @@ class WatchLinkCheck {
           'live_studio.watch_check_wrong_channel',
         WatchLinkVerdict.scheduledLater =>
           'live_studio.watch_check_scheduled_later',
-        _ => null,
+        WatchLinkVerdict.unverified => 'live_studio.watch_check_unavailable',
+        WatchLinkVerdict.live ||
+        WatchLinkVerdict.upcoming =>
+          channelVerified ? null : 'live_studio.watch_check_channel_required',
       };
 }

@@ -41,11 +41,12 @@ class _Auth extends SupabaseAuthService {
 }
 
 /// Answers YouTube lookups without the network. The default says the link is
-/// live on an unknown channel.
+/// live on the approved test channel.
 class _FakeYouTube extends YouTubeApiService {
   _FakeYouTube(
-      {this.status = const YouTubeWatchStatus(YouTubeWatchState.live),
-      this.channelIdByHandle = const {},
+      {this.status = const YouTubeWatchStatus(YouTubeWatchState.live,
+          channelId: 'UC_mine'),
+      this.channelIdByHandle = const {'my_channel': 'UC_mine'},
       this.liveVideoId,
       this.searchUnavailable = false})
       : super(apiKey: '');
@@ -103,7 +104,8 @@ BroadcasterApplicationModel _approvedApp(String handle) =>
     );
 
 class _StudioDb extends AdminDatabaseService {
-  _StudioDb({this.primary = true, this.app});
+  _StudioDb({this.primary = true, BroadcasterApplicationModel? app})
+      : app = app ?? _approvedApp('my_channel');
   final bool primary;
   final BroadcasterApplicationModel? app;
   final senderModes = <String>[];
@@ -514,9 +516,7 @@ void main() {
       await close(tester, provider!, db);
     });
 
-    testWidgets(
-        'when YouTube cannot be asked, the link is listed with an '
-        'explicit unchecked note', (tester) async {
+    testWidgets('YouTube outage fails closed before listing', (tester) async {
       final db = _StudioDb();
       final yt = _FakeYouTube(
           status: const YouTubeWatchStatus(YouTubeWatchState.unavailable));
@@ -525,10 +525,9 @@ void main() {
       await openSheet(tester, provider!);
       await goLive(tester, 'abcdefghijk');
       await tester.pumpAndSettle();
-      expect(db.liveCalls, 1);
-      expect(provider.isBroadcastingLive, isTrue);
-      expect(
-          find.textContaining('live_studio.watch_check_unverified_note'.tr()),
+      expect(db.liveCalls, 0);
+      expect(provider.isBroadcastingLive, isFalse);
+      expect(find.textContaining('live_studio.watch_check_unavailable'.tr()),
           findsOneWidget);
       await close(tester, provider, db);
     });
@@ -658,7 +657,7 @@ void main() {
 
     testWidgets('Find my live broadcast without a channel on record explains',
         (tester) async {
-      final db = _StudioDb();
+      final db = _StudioDb(app: _approvedApp(''));
       final yt = _FakeYouTube(liveVideoId: 'zyxwvutsrqp');
       final provider =
           await tester.runAsync(() => _broadcaster(db, youTube: yt));
@@ -675,15 +674,14 @@ void main() {
     testWidgets(
         'a live link with no channel on record says the channel was not '
         'matched', (tester) async {
-      final db = _StudioDb();
+      final db = _StudioDb(app: _approvedApp(''));
       final provider = await tester.runAsync(() => _broadcaster(db));
       await openSheet(tester, provider!);
       await goLive(tester, 'abcdefghijk');
       await tester.pumpAndSettle();
-      expect(db.liveCalls, 1);
+      expect(db.liveCalls, 0);
       expect(
-          find.textContaining(
-              'live_studio.watch_check_channel_unconfirmed_note'.tr()),
+          find.textContaining('live_studio.watch_check_channel_required'.tr()),
           findsOneWidget);
       await close(tester, provider, db);
     });
@@ -845,11 +843,11 @@ void main() {
     testWidgets('a handle on record that cannot be looked up gets its own note',
         (tester) async {
       final db = _StudioDb(app: _approvedApp('my_channel'));
-      final provider = await tester.runAsync(() => _broadcaster(db));
+      final provider = await tester.runAsync(() =>
+          _broadcaster(db, youTube: _FakeYouTube(channelIdByHandle: const {})));
       final check =
           await tester.runAsync(() => provider!.verifyWatchLink('abcdefghijk'));
-      expect(
-          check!.noteKey, 'live_studio.watch_check_channel_lookup_failed_note');
+      expect(check!.errorKey, 'live_studio.watch_check_channel_required');
       await close(tester, provider!, db);
     });
 
@@ -890,7 +888,7 @@ void main() {
       });
     }
 
-    testWidgets('Phone: an unchecked link opens the camera with its note',
+    testWidgets('Phone: lookup outage refuses before opening the camera',
         (tester) async {
       final db = _StudioDb();
       final yt = _FakeYouTube(
@@ -904,10 +902,12 @@ void main() {
       await tester.enterText(keyField, 'disposable-key');
       await tapCta(tester, 'live_studio.btn_open_camera');
       await tester.pump(const Duration(milliseconds: 500));
-      expect(find.byType(PhoneBroadcastScreen), findsOneWidget);
-      expect(find.text('live_studio.watch_check_unverified_note'.tr()),
+      expect(find.byType(PhoneBroadcastScreen), findsNothing);
+      expect(find.text('live_studio.watch_check_unavailable'.tr()),
           findsOneWidget);
-      tester.takeException();
+      expect(provider.phoneBroadcastStreamKey, isEmpty);
+      expect(db.liveCalls, 0);
+      expect(tester.takeException(), isNull);
       await close(tester, provider, db);
     });
 

@@ -162,6 +162,7 @@ class _BroadcasterDb extends AdminDatabaseService {
   int statusReads = 0;
   final liveWrites = <bool>[];
   String? sessionToReturn = 'session-1';
+  Completer<String?>? startGate;
   Object? ingestError;
   final ingestReports = <bool>[];
   final endedSessions = <String>[];
@@ -174,6 +175,7 @@ class _BroadcasterDb extends AdminDatabaseService {
       required String senderMode,
       String? orgId}) async {
     liveWrites.add(true);
+    if (startGate != null) return startGate!.future;
     return sessionToReturn;
   }
 
@@ -300,9 +302,7 @@ void main() {
 
     testWidgets('a live room never plays the profile featured video',
         (tester) async {
-      await openRoom(
-          tester,
-          phoneLive.copyWith(youtubeVideoId: 'FEATURED001'),
+      await openRoom(tester, phoneLive.copyWith(youtubeVideoId: 'FEATURED001'),
           phoneLive.streamerId);
       expect(counts.urls, ['LIVEvideo01']);
     });
@@ -383,8 +383,8 @@ void main() {
 
     testWidgets('a broadcast hidden from discovery still plays in its room',
         (tester) async {
-      final hidden = phoneLive.copyWith(
-          isCurrentlyLive: false, isHiddenLiveSession: true);
+      final hidden =
+          phoneLive.copyWith(isCurrentlyLive: false, isHiddenLiveSession: true);
       expect(hidden.isCurrentlyLive, isFalse,
           reason: 'feed and map do not list it as live');
       await openRoom(tester, hidden, 'LIVEvideo01');
@@ -394,8 +394,8 @@ void main() {
 
     testWidgets('a hidden broadcast room recovers after a connection drop',
         (tester) async {
-      final hidden = phoneLive.copyWith(
-          isCurrentlyLive: false, isHiddenLiveSession: true);
+      final hidden =
+          phoneLive.copyWith(isCurrentlyLive: false, isHiddenLiveSession: true);
       final (provider, catalog) = await openRoom(tester, hidden, 'LIVEvideo01');
       provider.debugSetOnlineForTests(false);
       await tester.pump();
@@ -450,15 +450,15 @@ void main() {
       final catalog = _Catalog();
       final provider = AppProvider.withServices(adminDbService: catalog);
       provider.addStreamer(phoneLive);
-      await tester.pumpWidget(_room(provider, phoneLive.streamerId, lang: 'ar'));
+      await tester
+          .pumpWidget(_room(provider, phoneLive.streamerId, lang: 'ar'));
       await tester.pump();
       catalog.pending.removeAt(0).complete([phoneLive]);
       await tester.pump();
       unawaited(provider.loadVerifiedStreamersFromBackend());
       await tester.pump();
-      catalog.pending
-          .removeAt(0)
-          .complete([phoneLive.copyWith(isCurrentlyLive: false, clearLiveState: true)]);
+      catalog.pending.removeAt(0).complete(
+          [phoneLive.copyWith(isCurrentlyLive: false, clearLiveState: true)]);
       await tester.pump();
       await tester.pump();
       expect(find.text('انتهى هذا البث'), findsOneWidget);
@@ -475,8 +475,8 @@ void main() {
       await Future<void>.delayed(Duration.zero);
       expect(catalog.pending, hasLength(1));
       final first = catalog.pending.removeAt(0);
-      final live = mockStreamers.first.copyWith(
-          isCurrentlyLive: true, activeStreamId: 'LIVEvideo01');
+      final live = mockStreamers.first
+          .copyWith(isCurrentlyLive: true, activeStreamId: 'LIVEvideo01');
       final asked = provider.loadVerifiedStreamersFromBackend();
       final askedAgain = provider.loadVerifiedStreamersFromBackend();
       expect(catalog.pending, isEmpty);
@@ -532,8 +532,11 @@ void main() {
       return (provider, router, presenter, auth);
     }
 
-    Future<void> teardown(WidgetTester tester, AppProvider provider,
-        GoRouter router, DeviceSessionPresenter presenter,
+    Future<void> teardown(
+        WidgetTester tester,
+        AppProvider provider,
+        GoRouter router,
+        DeviceSessionPresenter presenter,
         _BroadcasterDb db) async {
       presenter.dispose();
       await tester.pumpWidget(const SizedBox.shrink());
@@ -564,8 +567,8 @@ void main() {
       expect(provider.broadcastSessionError, isNull,
           reason: 'not the "lost its primary session" message');
       expect(provider.remoteBroadcastEndReason, 'admin_end');
-      expect(find.byKey(const Key('broadcast-remote-end-dialog')),
-          findsOneWidget);
+      expect(
+          find.byKey(const Key('broadcast-remote-end-dialog')), findsOneWidget);
       expect(find.textContaining('An administrator ended this broadcast'),
           findsOneWidget);
       expect(find.text('broadcast_session_lost'.tr()), findsNothing);
@@ -626,6 +629,34 @@ void main() {
   });
 
   group('session-fenced broadcasting', () {
+    testWidgets(
+        'a late start response cannot restore a displaced device session',
+        (tester) async {
+      final auth = _Auth();
+      final db = _BroadcasterDb();
+      final provider =
+          AppProvider.withServices(authService: auth, adminDbService: db);
+      auth.signIn('c');
+      await settle(tester);
+      provider.setCustomStreamerYouTubeUrl('LIVEvideo01');
+      db.startGate = Completer<String?>();
+      final starting = provider.setBroadcasterLive(true);
+      await tester.pump();
+      provider.applyDeviceSessions([
+        DeviceSessionModel(
+            deviceId: 'other-device',
+            deviceName: 'Other',
+            platform: 'android',
+            lastActiveAt: DateTime.now(),
+            isPrimaryBroadcaster: true)
+      ]);
+      db.startGate!.complete('displaced-session');
+      await starting;
+      expect(provider.liveSessionId, isNull);
+      expect(provider.isBroadcastingLive, isFalse);
+      provider.dispose();
+      await db.devices.close();
+    });
     Future<(AppProvider, GoRouter, DeviceSessionPresenter)> start(
         WidgetTester tester, _BroadcasterDb db) async {
       final auth = _Auth();
@@ -663,8 +694,11 @@ void main() {
       return (provider, router, presenter);
     }
 
-    Future<void> stop(WidgetTester tester, AppProvider provider,
-        GoRouter router, DeviceSessionPresenter presenter,
+    Future<void> stop(
+        WidgetTester tester,
+        AppProvider provider,
+        GoRouter router,
+        DeviceSessionPresenter presenter,
         _BroadcasterDb db) async {
       presenter.dispose();
       await tester.pumpWidget(const SizedBox.shrink());

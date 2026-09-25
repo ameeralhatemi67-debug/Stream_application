@@ -98,13 +98,21 @@ class AdminDatabaseService {
 
   final SharedPreferences? _prefs;
   final bool _useSupabase;
+  final SupabaseClient? _injectedClient;
   List<BroadcasterApplicationModel> _cachedApplications = [];
   List<OrgAuditLogEntry> _cachedAuditLogs = [];
   List<OrgAffiliationRequestModel> _cachedAffiliationRequests = [];
   TermsAndConditionsModel? _cachedTerms;
   ViewerAnalyticsModel? _cachedAnalytics;
 
-  AdminDatabaseService([this._prefs]) : _useSupabase = _supabaseReady();
+  AdminDatabaseService([this._prefs])
+      : _useSupabase = _supabaseReady(),
+        _injectedClient = null;
+
+  AdminDatabaseService.withClient(SupabaseClient client)
+      : _prefs = null,
+        _useSupabase = true,
+        _injectedClient = client;
 
   static bool _supabaseReady() {
     try {
@@ -114,7 +122,7 @@ class AdminDatabaseService {
     }
   }
 
-  SupabaseClient get _client => Supabase.instance.client;
+  SupabaseClient get _client => _injectedClient ?? Supabase.instance.client;
 
   /// Factory constructor to initialize with SharedPreferences (used as the
   /// fallback store when Supabase isn't available).
@@ -1368,8 +1376,7 @@ class AdminDatabaseService {
         // A live broadcast an admin hid from discovery is not listed as live
         // (feed, map), but keeps its watch ID so the room still plays it.
         final rowLive = (row['is_currently_live'] as bool?) ?? false;
-        final hiddenLive =
-            rowLive && row['is_hidden_from_discovery'] == true;
+        final hiddenLive = rowLive && row['is_hidden_from_discovery'] == true;
         final isLive = rowLive && !hiddenLive;
         final isVerified = (row['is_verified'] as bool?) ?? false;
         final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
@@ -1447,8 +1454,7 @@ class AdminDatabaseService {
         // A live broadcast an admin hid from discovery is not listed as live
         // (feed, map), but keeps its watch ID so the room still plays it.
         final rowLive = (row['is_currently_live'] as bool?) ?? false;
-        final hiddenLive =
-            rowLive && row['is_hidden_from_discovery'] == true;
+        final hiddenLive = rowLive && row['is_hidden_from_discovery'] == true;
         final isLive = rowLive && !hiddenLive;
         final isVerified = (row['is_verified'] as bool?) ?? false;
         final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
@@ -2659,10 +2665,12 @@ class AdminDatabaseService {
   Future<DeviceClaimResult> claimDeviceState(DeviceSessionModel device,
       {bool force = false}) async {
     if (!_useSupabase) {
-      return DeviceClaimResult(claimed: await claimDevice(device, force: force));
+      return DeviceClaimResult(
+          claimed: await claimDevice(device, force: force));
     }
     try {
-      final result = await _client.rpc('claim_broadcaster_device_state', params: {
+      final result =
+          await _client.rpc('claim_broadcaster_device_state', params: {
         'p_device_id': device.deviceId,
         'p_name': device.deviceName,
         'p_platform': device.platform,
@@ -2688,7 +2696,9 @@ class AdminDatabaseService {
         : await findActiveRemoteBroadcasterSession(
             userId: _client.auth.currentUser?.id ?? '',
             currentDeviceId: device.deviceId);
-    if (remote != null) return DeviceClaimResult(claimed: false, primary: remote);
+    if (remote != null) {
+      return DeviceClaimResult(claimed: false, primary: remote);
+    }
     if (await claimDevice(device, force: force)) {
       return const DeviceClaimResult(claimed: true);
     }
@@ -2917,7 +2927,8 @@ class AdminDatabaseService {
     controller = StreamController<List<DeviceSessionModel>>(
       onListen: () {
         channel = _client
-            .channel('device_sessions:$userId:${DateTime.now().microsecondsSinceEpoch}')
+            .channel(
+                'device_sessions:$userId:${DateTime.now().microsecondsSinceEpoch}')
             .onPostgresChanges(
               event: PostgresChangeEvent.all,
               schema: 'public',
@@ -2958,9 +2969,8 @@ class AdminDatabaseService {
   }
 
   /// Starts an app broadcast as one server session (migration
-  /// 20260925100000) and returns its id. Returns null on a backend without
-  /// sessions, after starting it the legacy way; the caller then has no
-  /// late-reconnect fence and must say nothing more than it did before.
+  /// 20260925100000) and returns its id. A missing session RPC fails closed:
+  /// silently falling back to set_live_state would lose the End fence.
   Future<String?> startBroadcastSession(
       {required String type,
       required String streamId,
@@ -2968,25 +2978,17 @@ class AdminDatabaseService {
       required String senderMode,
       String? orgId}) async {
     if (!_useSupabase) throw StateError('Backend unavailable');
-    try {
-      final id = await _client.rpc('start_broadcast_session', params: {
-        'p_type': type,
-        'p_stream_id': streamId,
-        'p_device_id': deviceId,
-        'p_org_id': orgId,
-        'p_sender_mode': senderMode,
-      });
-      return id as String?;
-    } on PostgrestException catch (e) {
-      if (e.code != 'PGRST202') rethrow;
-      await setLiveState(
-          live: true,
-          type: type,
-          streamId: streamId,
-          deviceId: deviceId,
-          orgId: orgId);
-      return null;
+    final id = await _client.rpc('start_broadcast_session', params: {
+      'p_type': type,
+      'p_stream_id': streamId,
+      'p_device_id': deviceId,
+      'p_org_id': orgId,
+      'p_sender_mode': senderMode,
+    });
+    if (id is! String || id.isEmpty) {
+      throw StateError('Missing broadcast session');
     }
+    return id;
   }
 
   /// Reports this phone's encoder connection for its own live session.

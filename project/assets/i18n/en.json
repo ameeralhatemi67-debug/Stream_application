@@ -1084,7 +1084,9 @@
     "audio_only_note": "Viewers hear you and see no camera picture. A custom backdrop image is not sent to YouTube yet.",
     "audio_only_title": "Audio only",
     "audio_only_note_encoder": "In this app viewers see the audio stage. What YouTube viewers see is decided by your sending app.",
-    "error_phone_screen_open": "The phone broadcast screen is already open. Close this sheet to use it."
+    "error_phone_screen_open": "The phone broadcast screen is already open. Close this sheet to use it.",
+    "watch_check_unavailable": "YouTube could not verify this watch link. Nothing was listed. Check the API key or connection, then try again.",
+    "watch_check_channel_required": "The watch link could not be matched to your approved channel. Nothing was listed. Check the channel on your application or organization, then try again."
   },
   "design_ui": {
     "access_denied": "Access Denied",
