@@ -2,6 +2,7 @@
 // Run: node brief/tools/broadcast_session_concurrency.mjs <docker executable>
 import { spawn } from 'node:child_process';
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 
 const docker = process.argv[2] || 'docker';
 const container = 'supabase_db_P6S_astra_20260926';
@@ -47,16 +48,16 @@ class Connection {
   }
   close() { this.proc.stdin.end('rollback;\n\\q\n'); }
 }
-const owner = '69000000-0000-4000-8000-000000000002';
+const owner = randomUUID();
 const claim = `set role authenticated; set request.jwt.claims = '{"sub":"${owner}","role":"authenticated"}'`;
 const admin = new Connection('observer');
 const starter = new Connection('starter');
 const ender = new Connection('ender');
 let failures = 0;
 try {
-  await admin.query(`insert into auth.users(id,email) values ('${owner}','race@example.invalid');
+  await admin.query(`insert into auth.users(id,email) values ('${owner}','${owner}@example.invalid');
     insert into public.profiles(id,email,is_streamer,is_verified)
-      values ('${owner}','race@example.invalid',true,true);
+      values ('${owner}','${owner}@example.invalid',true,true);
     insert into public.device_sessions(user_id,device_id,is_primary_broadcaster,last_active_at)
       values ('${owner}','race-device',true,now())`);
   await starter.query(claim);
@@ -89,6 +90,27 @@ try {
     if (!passed) failures++;
     await starter.query(`select public.end_broadcast_session('${newId}','race-device')`);
   }
+  const staleId = await starter.query(`select public.start_broadcast_session('liveVideo','RACESWEEP01','race-device',null,'phone_direct')`);
+  await admin.query(`update public.device_sessions set last_active_at=now()-interval '5 minutes' where user_id='${owner}'`);
+  await starter.query(`begin; select pg_advisory_xact_lock(20260920,12); select id from public.profiles where id='${owner}' for update`);
+  const sweeping = ender.query('select public.sweep_stale_live_flags()');
+  let sweepBlocked = false;
+  for (let n = 0; n < 100; n++) {
+    const state = await admin.query(`select wait_event_type from pg_stat_activity where pid=${Number(pid)}`);
+    if (state === 'Lock') { sweepBlocked = true; break; }
+    await new Promise(resolve => setTimeout(resolve, 20));
+  }
+  // The corrected sweep uses a nonblocking common lock, so it may already
+  // have returned 0 instead of waiting. Either schedule must preserve Start.
+  await admin.query(`update public.device_sessions set last_active_at=now() where user_id='${owner}'`);
+  const freshId = await starter.query(`select public.start_broadcast_session('liveVideo','RACESWEEP02','race-device',null,'phone_direct')`);
+  await starter.query('commit');
+  await sweeping;
+  const freshLive = await admin.query(`select state from public.broadcast_sessions where id='${freshId}'`);
+  console.log(JSON.stringify({test:'expiry-versus-replacement', sweepObservedWaiting:sweepBlocked, passed:freshLive === 'live', result:freshLive}));
+  if (freshLive !== 'live') failures++;
+  assert.notEqual(freshId, staleId);
+  await starter.query(`select public.end_broadcast_session('${freshId}','race-device')`);
 } finally {
   await starter.query('rollback').catch(() => {});
   await admin.query(`delete from auth.users where id='${owner}'`).catch(() => {});
