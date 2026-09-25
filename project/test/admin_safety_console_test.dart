@@ -146,6 +146,13 @@ class RecordingDbService extends AdminDatabaseService {
     if (fail != null) throw fail!;
     actions.add('$id:$action:$reason');
   }
+
+  @override
+  Future<void> setStreamDiscovery(
+      String profileId, bool hidden, String reason) async {
+    if (fail != null) throw fail!;
+    actions.add('$profileId:${hidden ? 'hide' : 'show'}_discovery:$reason');
+  }
 }
 
 AdminAuditEntry auditEntry(String id, String action) => AdminAuditEntry(
@@ -440,6 +447,65 @@ void main() {
       expect(find.text('Broadcast ended in the app.'), findsOneWidget);
     });
 
+    testWidgets(
+        'P6S wave 3: hiding from discovery is a separate, reversible action '
+        'that does not end the broadcast', (tester) async {
+      final service = RecordingDbService();
+      final p = admin(service: service);
+      addTearDown(p.dispose);
+      final backend = FakeSafetyBackend()
+        ..live = const [
+          LiveBroadcastRow(
+              profileId: 'p1',
+              name: 'Dr Amal',
+              broadcastType: 'liveVideo',
+              streamId: 'v1',
+              viewerCount: 3),
+        ];
+      await tester.pumpWidget(app(p, AdminSafetyView(backend: backend)));
+      await tester.pumpAndSettle();
+      expect(find.text('Hide from app discovery'), findsOneWidget);
+      expect(find.text('End and block link'), findsOneWidget,
+          reason: 'the old "Remove from feed" ended the stream; its label '
+              'now says so');
+      await tester.tap(find.byKey(const Key('safety-discovery-p1')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('this is not private'), findsOneWidget);
+      expect(find.textContaining('people already watching stay'),
+          findsOneWidget);
+      await enterReason(tester, 'off topic');
+      expect(service.actions, ['p1:hide_discovery:off topic']);
+      expect(find.text('Broadcast hidden from app discovery. It is still live.'),
+          findsOneWidget);
+    });
+
+    testWidgets('P6S wave 3: a hidden broadcast shows its state and can be '
+        'shown again', (tester) async {
+      final service = RecordingDbService();
+      final p = admin(service: service);
+      addTearDown(p.dispose);
+      final backend = FakeSafetyBackend()
+        ..live = const [
+          LiveBroadcastRow(
+              profileId: 'p1',
+              name: 'Dr Amal',
+              broadcastType: 'liveVideo',
+              streamId: 'v1',
+              viewerCount: 3,
+              hiddenFromDiscovery: true),
+        ];
+      await tester.pumpWidget(
+          app(p, AdminSafetyView(backend: backend), locale: 'ar'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('safety-hidden-p1')), findsOneWidget);
+      expect(find.text('إظهار في الاكتشاف'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('safety-discovery-p1')));
+      await tester.pumpAndSettle();
+      await enterReason(tester, 'reinstated');
+      expect(service.actions, ['p1:show_discovery:reinstated']);
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('a refused live action says why and changes nothing',
         (tester) async {
       final service = RecordingDbService()
@@ -630,7 +696,8 @@ void main() {
       final service = RecordingDbService();
       final p = admin(service: service);
       addTearDown(p.dispose);
-      final s = mockStreamers.first;
+      // An explicit video: models no longer default to a sample video.
+      final s = mockStreamers.first.copyWith(youtubeVideoId: 'FIXTUREvid1');
       p.addStreamerForTests(s);
       final profileId = s.streamerId.replaceFirst('streamer_', '');
       await p.toggleFollow(s.streamerId);

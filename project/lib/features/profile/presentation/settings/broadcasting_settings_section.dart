@@ -376,10 +376,16 @@ class _BroadcastingSettingsSectionState
 
           TextField(
             controller: _youtubeUrlController,
+            // The live broadcast's watch link cannot change underneath it;
+            // end the broadcast to use another link.
+            enabled: !isBroadcasting,
             style:
                 const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               labelText: 'settings.youtube_url_label'.tr(),
+              helperText: isBroadcasting
+                  ? 'settings.youtube_url_locked_while_live'.tr()
+                  : null,
               prefixIcon: const Icon(Icons.smart_display_rounded,
                   color: AppTheme.danger, size: 20),
             ),

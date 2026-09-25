@@ -83,6 +83,24 @@ class _StudioDb extends AdminDatabaseService {
     await liveGate?.future;
     if (refuseLive != null) throw refuseLive!;
   }
+
+  // Behaves like a backend without broadcast sessions: the start goes through
+  // the legacy live-state call, so these tests keep exercising that path.
+  @override
+  Future<String?> startBroadcastSession(
+      {required String type,
+      required String streamId,
+      required String deviceId,
+      required String senderMode,
+      String? orgId}) async {
+    await setLiveState(
+        live: true,
+        type: type,
+        streamId: streamId,
+        deviceId: deviceId,
+        orgId: orgId);
+    return null;
+  }
 }
 
 Future<AppProvider> _broadcaster(_StudioDb db) async {

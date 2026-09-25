@@ -53,6 +53,25 @@ class StreamerModel {
   /// profiles.is_temporarily_hidden_from_map / organizations.is_temporarily_hidden_from_map.
   final bool isTemporarilyHiddenFromMap;
 
+  /// The server's id for the broadcast now live on this channel
+  /// (broadcast_sessions.id), or null when offline or on an older backend.
+  final String? liveSessionId;
+
+  /// Live, but an admin hid this broadcast from app discovery. It is not
+  /// counted as live by the feed, map or listings ([isCurrentlyLive] is
+  /// false), yet the room and direct links still play it: hiding from
+  /// discovery is not access control and does not remove current viewers.
+  final bool isHiddenLiveSession;
+
+  /// What the sending phone last reported for the live session: `sending`,
+  /// `interrupted` or `unknown` (external senders such as OBS are never
+  /// observed by the app). Null offline or on an older backend.
+  final String? liveIngestState;
+
+  /// The sending phone reported a dropped connection and has not recovered.
+  bool get isIngestInterrupted =>
+      isLiveForRoom && liveIngestState == 'interrupted';
+
   const StreamerModel({
     required this.streamerId,
     required this.fullNameEn,
@@ -82,8 +101,10 @@ class StreamerModel {
     this.activeViewerCount = 0,
     this.upcomingScheduleEn = const [],
     this.upcomingScheduleAr = const [],
-    this.youtubeHandle = 'ahmedamercaller',
-    this.youtubeVideoId = 'dQw4w9WgXcQ',
+    // No sample channel or video: a model built without them has none, so
+    // nothing can ever play or link someone else's content by default.
+    this.youtubeHandle = '',
+    this.youtubeVideoId = '',
     this.fallbackYoutubeVideoIds = const [],
     this.venues = const [],
     this.affiliatedSpeakers = const [],
@@ -91,7 +112,23 @@ class StreamerModel {
     this.activeLiveVenueId,
     this.activeLiveSpeakerIds = const [],
     this.isTemporarilyHiddenFromMap = false,
+    this.liveSessionId,
+    this.isHiddenLiveSession = false,
+    this.liveIngestState,
   });
+
+  /// Live for someone who already has the room or a direct link, whether or
+  /// not the broadcast is listed in discovery.
+  bool get isLiveForRoom => isCurrentlyLive || isHiddenLiveSession;
+
+  /// The exact YouTube watch ID of the broadcast that is live now, or null.
+  /// Never the profile's featured video: a live room must play the live
+  /// broadcast or nothing.
+  String? get liveWatchId {
+    final id = activeStreamId?.trim();
+    if (!isLiveForRoom || id == null) return null;
+    return RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(id) ? id : null;
+  }
 
   BroadcastType get activeBroadcastType {
     if (!isCurrentlyLive) return BroadcastType.offline;
@@ -184,6 +221,9 @@ class StreamerModel {
     String? activeLiveVenueId,
     List<String>? activeLiveSpeakerIds,
     bool? isTemporarilyHiddenFromMap,
+    String? liveSessionId,
+    bool? isHiddenLiveSession,
+    String? liveIngestState,
   }) {
     return StreamerModel(
       streamerId: streamerId ?? this.streamerId,
@@ -225,6 +265,13 @@ class StreamerModel {
       activeLiveSpeakerIds: activeLiveSpeakerIds ?? this.activeLiveSpeakerIds,
       isTemporarilyHiddenFromMap:
           isTemporarilyHiddenFromMap ?? this.isTemporarilyHiddenFromMap,
+      liveSessionId:
+          clearLiveState ? null : liveSessionId ?? this.liveSessionId,
+      isHiddenLiveSession: clearLiveState
+          ? false
+          : isHiddenLiveSession ?? this.isHiddenLiveSession,
+      liveIngestState:
+          clearLiveState ? null : liveIngestState ?? this.liveIngestState,
     );
   }
 }

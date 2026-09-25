@@ -243,9 +243,13 @@ class _LiveSectionState extends State<_LiveSection> {
     setState(() => _busy.add(row.profileId));
     String? errorKey;
     try {
-      await context
-          .read<AppProvider>()
-          .updateAdminAccount(row.profileId, action, reason);
+      final provider = context.read<AppProvider>();
+      if (action == 'hide_from_discovery' || action == 'show_in_discovery') {
+        await provider.setStreamDiscovery(
+            row.profileId, action == 'hide_from_discovery', reason);
+      } else {
+        await provider.updateAdminAccount(row.profileId, action, reason);
+      }
     } catch (e) {
       errorKey = safetyFailureKey(AdminSafetyException.from(e));
     }
@@ -303,6 +307,23 @@ class _LiveSectionState extends State<_LiveSection> {
                           style: const TextStyle(
                               color: AppTheme.textPrimary,
                               fontWeight: FontWeight.bold)),
+                      if (r.hiddenFromDiscovery)
+                        Padding(
+                          padding:
+                              const EdgeInsets.only(top: AppTheme.spaceXs),
+                          child: Row(children: [
+                            const Icon(Icons.visibility_off_outlined,
+                                size: 14, color: AppTheme.warning),
+                            const SizedBox(width: AppTheme.spaceXs),
+                            Flexible(
+                              child: Text('safety.live_hidden_badge'.tr(),
+                                  key: Key('safety-hidden-${r.profileId}'),
+                                  style: const TextStyle(
+                                      color: AppTheme.textSecondary,
+                                      fontSize: 12)),
+                            ),
+                          ]),
+                        ),
                       const SizedBox(height: AppTheme.spaceXs),
                       Text(
                         [
@@ -324,7 +345,20 @@ class _LiveSectionState extends State<_LiveSection> {
                       else
                         Wrap(
                           spacing: AppTheme.spaceSm,
+                          runSpacing: AppTheme.spaceSm,
                           children: [
+                            OutlinedButton(
+                              key: Key('safety-discovery-${r.profileId}'),
+                              onPressed: () => _act(
+                                  r,
+                                  r.hiddenFromDiscovery
+                                      ? 'show_in_discovery'
+                                      : 'hide_from_discovery'),
+                              child: Text((r.hiddenFromDiscovery
+                                      ? 'safety.live_show_in_discovery'
+                                      : 'safety.live_hide_from_discovery')
+                                  .tr()),
+                            ),
                             OutlinedButton(
                               key: Key('safety-end-${r.profileId}'),
                               onPressed: () => _act(r, 'force_end'),
@@ -364,6 +398,8 @@ const safetyAuditActions = [
   'accountVerificationRevoked',
   'streamForceEnded',
   'streamRemovedFromFeed',
+  'streamHiddenFromDiscovery',
+  'streamShownInDiscovery',
   'appFlagChanged',
   'chatKeywordAdded',
   'chatKeywordUpdated',

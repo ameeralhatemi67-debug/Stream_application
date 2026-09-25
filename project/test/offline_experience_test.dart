@@ -271,7 +271,7 @@ void main() {
     final live = mockStreamers.first.copyWith(
       isCurrentlyLive: true,
       broadcastType: BroadcastType.liveVideo,
-      activeStreamId: 'verified-room',
+      activeStreamId: 'verifiedRm1',
       avatarUrl: '',
       bannerUrl: '',
     );
@@ -300,7 +300,7 @@ void main() {
     });
 
     await tester.pumpWidget(harness(
-        provider, 'en', const LiveBroadcastScreen(streamId: 'verified-room')));
+        provider, 'en', const LiveBroadcastScreen(streamId: 'verifiedRm1')));
     await tester.pump();
     expect(catalog.pending, hasLength(1));
     catalog.pending.removeAt(0).complete([live]);
@@ -404,6 +404,12 @@ void main() {
     expect(provider.streamers.single.isCurrentlyLive, isFalse);
 
     recoveryRequest.completeError(StateError('backend outage'));
+    await tester.pump();
+    // The duplicate was asked after the recovery read began, so it is
+    // answered by exactly one fresh read, never by the older response
+    // (P6S wave 3: stale catalog responses).
+    expect(catalog.pending, hasLength(1));
+    catalog.pending.removeAt(0).completeError(StateError('backend outage'));
     await duplicate;
     await tester.pump();
     await tester.pump();

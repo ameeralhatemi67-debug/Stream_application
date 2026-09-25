@@ -41,9 +41,21 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     // it to one round trip per 30 s, and an unknown count renders as "—".
     _viewerCountTimer = Timer.periodic(
         const Duration(seconds: 30), (_) => _refreshVisibleViewerCounts());
+    // LIVE badges expire with the catalog read behind them: other accounts'
+    // live changes never reach this client over Realtime (profiles RLS), so
+    // a stale badge lasts at most about 45 seconds.
+    _catalogFreshnessTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      if (!mounted) return;
+      final provider = context.read<AppProvider>();
+      if (provider.isOnline) {
+        unawaited(provider
+            .refreshCatalogIfOlderThan(const Duration(seconds: 30)));
+      }
+    });
   }
 
   Timer? _viewerCountTimer;
+  Timer? _catalogFreshnessTimer;
 
   void _onSearchFocusChanged() {
     if (mounted) setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
@@ -79,6 +91,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   @override
   void dispose() {
     _viewerCountTimer?.cancel();
+    _catalogFreshnessTimer?.cancel();
     _searchController.dispose();
     _searchFocusNode.removeListener(_onSearchFocusChanged);
     _searchFocusNode.dispose();

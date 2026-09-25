@@ -1682,6 +1682,7 @@ class _LiveBroadcasterStudioSheetState
 
     setState(() => _isSubmitting = true);
     if (!provider.isBroadcastingLive) {
+      provider.setBroadcastSenderMode('obs_laptop');
       await provider.setBroadcasterLive(true);
     }
     // Closed while the request was in flight: the provider already holds the

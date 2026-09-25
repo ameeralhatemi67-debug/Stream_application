@@ -9,6 +9,7 @@ class LiveBroadcastRow {
     required this.streamId,
     this.email,
     this.viewerCount,
+    this.hiddenFromDiscovery = false,
   });
 
   final String profileId;
@@ -19,6 +20,10 @@ class LiveBroadcastRow {
 
   /// Null when the count could not be read; never guessed.
   final int? viewerCount;
+
+  /// An admin hid this live broadcast from app discovery; it is still live
+  /// and its links still work.
+  final bool hiddenFromDiscovery;
 }
 
 class AdminAuditEntry {
@@ -156,6 +161,20 @@ class SupabaseAdminSafetyBackend implements AdminSafetyBackend {
           for (final r in list)
             if (r['active_stream_id'] != null) r['active_stream_id'] as String,
         ];
+        // Which live sessions are hidden from discovery. Older backends have
+        // no broadcast_sessions table; the list still loads without it.
+        final hidden = <String>{};
+        try {
+          final sessions = await _client
+              .from('broadcast_sessions')
+              .select('owner_id, hidden_from_discovery')
+              .eq('state', 'live');
+          for (final r in (sessions as List).cast<Map<String, dynamic>>()) {
+            if (r['hidden_from_discovery'] == true) {
+              hidden.add(r['owner_id'] as String);
+            }
+          }
+        } catch (_) {}
         final counts = <String, int>{};
         if (streamIds.isNotEmpty) {
           try {
@@ -177,6 +196,7 @@ class SupabaseAdminSafetyBackend implements AdminSafetyBackend {
               broadcastType: r['broadcast_type'] as String,
               streamId: (r['active_stream_id'] as String?) ?? '',
               viewerCount: counts[r['active_stream_id']],
+              hiddenFromDiscovery: hidden.contains(r['id']),
             ),
         ];
       });

@@ -58,6 +58,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   bool _weStartedBroadcast = false;
   bool _starting = false;
   bool _syncingLive = false;
+  int _seenRemoteEnd = 0;
 
   @override
   void didChangeDependencies() {
@@ -65,6 +66,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (!_appProviderCaptured) {
       _appProvider = Provider.of<AppProvider>(context, listen: false);
       _appProviderCaptured = true;
+      _seenRemoteEnd = _appProvider.remoteBroadcastEndGeneration;
       _appProvider.addListener(_onBroadcastSessionChanged);
     }
   }
@@ -221,6 +223,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         await _stopBroadcast();
         return;
       }
+      _appProvider.setBroadcastSenderMode('phone_direct');
       await _appProvider.setBroadcasterLive(true, context);
       if (!_appProvider.isBroadcastingLive) await _stopBroadcast();
     } on Exception {
@@ -243,6 +246,18 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (_appProvider.broadcastSessionError == 'broadcast_session_lost' ||
         !_appProvider.isApprovedStreamer) {
       _leaveAfterDisplacement();
+      return;
+    }
+    // The server ended this broadcast (admin End, expiry). The device keeps
+    // its role; stop sending once and never re-assert LIVE for it. The app
+    // root explains the reason.
+    if (_appProvider.remoteBroadcastEndGeneration != _seenRemoteEnd) {
+      _seenRemoteEnd = _appProvider.remoteBroadcastEndGeneration;
+      if (_weStartedBroadcast || _starting) {
+        _weStartedBroadcast = false;
+        _engine.stopPublishing();
+      }
+      setState(() {});
       return;
     }
     if (!_weStartedBroadcast) return;
@@ -284,6 +299,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   Future<void> _syncEncoderLiveState() async {
+    if (_appProvider.hasLiveBroadcastSession) return _syncSessionIngest();
     _syncingLive = true;
     try {
       // Reconcile again if a disconnect arrives while the RPC is in flight.
@@ -298,6 +314,54 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       if (_engine.state == RtmpPublishState.error ||
           _appProvider.broadcastSessionError != null) {
         await _stopBroadcast();
+      }
+    } finally {
+      _syncingLive = false;
+    }
+  }
+
+  /// With a server session the encoder's drops and recoveries are reported on
+  /// that session; LIVE is not withdrawn and re-asserted on every blip. If
+  /// the server says the session may no longer send (an admin ended it, the
+  /// role moved to another device, it expired), the encoder stops here and
+  /// only a new, explicit start can go live again.
+  Future<void> _syncSessionIngest() async {
+    _syncingLive = true;
+    try {
+      while (mounted && _weStartedBroadcast) {
+        final state = _engine.state;
+        if (state == RtmpPublishState.error) {
+          await _stopBroadcast();
+          return;
+        }
+        final bool sending;
+        if (state == RtmpPublishState.live) {
+          sending = true;
+        } else if (state == RtmpPublishState.reconnecting ||
+            state == RtmpPublishState.connecting) {
+          sending = false;
+        } else {
+          // The encoder stopped on its own (idle/ready while this screen
+          // still owns a broadcast): end the session rather than leave it
+          // listed as sending.
+          await _stopBroadcast();
+          return;
+        }
+        final allowed =
+            await _appProvider.reportBroadcastIngest(sending: sending);
+        if (!allowed) {
+          _weStartedBroadcast = false;
+          await _engine.stopPublishing();
+          if (mounted) setState(() {});
+          return;
+        }
+        // Report again only if the encoder moved on while the call was out.
+        final now = _engine.state;
+        final nowSending = now == RtmpPublishState.live;
+        if (now != RtmpPublishState.error &&
+            (now == state || nowSending == sending)) {
+          return;
+        }
       }
     } finally {
       _syncingLive = false;

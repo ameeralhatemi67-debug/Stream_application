@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../../../core/widgets/safe_image_provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -72,10 +73,22 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       vsync: this,
       duration: const Duration(milliseconds: 1000),
     );
+    // Live markers expire with the catalog read behind them: other accounts'
+    // live changes never reach this client over Realtime (profiles RLS).
+    _catalogFreshnessTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      final provider = context.read<AppProvider>();
+      if (provider.isOnline) {
+        unawaited(provider
+            .refreshCatalogIfOlderThan(const Duration(seconds: 30)));
+      }
+    });
   }
+
+  Timer? _catalogFreshnessTimer;
 
   @override
   void dispose() {
+    _catalogFreshnessTimer?.cancel();
     _zoomNotifier.dispose();
     _cameraRevision.dispose();
     _cameraAnimationController.dispose();

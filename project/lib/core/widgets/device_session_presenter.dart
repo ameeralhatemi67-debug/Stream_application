@@ -6,10 +6,11 @@ import '../providers/app_provider.dart';
 import '../routing/app_router.dart';
 import 'device_session_conflict_dialog.dart';
 
-/// Presents broadcaster-device ownership changes on the root navigator:
+/// Presents account and broadcaster-device changes on the root navigator:
 /// DeviceSessionConflictDialog when another device holds the primary
-/// broadcaster role on this account, and the lost-session notice when this
-/// device is displaced. Owned by the app root (main.dart) and attached as an
+/// broadcaster role on this account, the lost-session notice when this
+/// device is displaced, the reason when the server ended this device's
+/// broadcast, and an explicit refusal when a Google sign-in was refused. Owned by the app root (main.dart) and attached as an
 /// [AppProvider] listener.
 class DeviceSessionPresenter {
   DeviceSessionPresenter({required this.provider, required this.router});
@@ -19,6 +20,9 @@ class DeviceSessionPresenter {
   bool _conflictDialogShown = false;
   bool _broadcastLossShown = false;
   bool _disposed = false;
+  int? _remoteEndSeen;
+  int _authRefusalSeen = 0;
+  int _miniEndedSeen = 0;
 
   void attach() {
     provider.addListener(_onProviderChanged);
@@ -41,7 +45,105 @@ class DeviceSessionPresenter {
     return path != '/splash' && path != '/login-callback';
   }
 
+  /// Localized explanation for a broadcast the server ended while this
+  /// device kept its broadcaster role.
+  static String remoteEndMessageKey(String? reason) => switch (reason) {
+        'admin_end' => 'broadcast_ended.admin_end',
+        'admin_remove' => 'broadcast_ended.admin_remove',
+        'stale_expired' => 'broadcast_ended.stale_expired',
+        'replaced' => 'broadcast_ended.replaced',
+        'ingest_lost' => 'broadcast_ended.ingest_lost',
+        'organization_revoked' => 'broadcast_ended.organization_revoked',
+        _ => 'broadcast_ended.generic',
+      };
+
+  void _presentRemoteEnd() {
+    final generation = provider.remoteBroadcastEndGeneration;
+    _remoteEndSeen ??= generation;
+    if (generation == _remoteEndSeen || !_pageIsSettled) return;
+    _remoteEndSeen = generation;
+    final key = remoteEndMessageKey(provider.remoteBroadcastEndReason);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_disposed) return;
+      final context = AppRouter.rootNavigatorKey.currentContext;
+      if (context == null) return;
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          key: const Key('broadcast-remote-end-dialog'),
+          title: Text('broadcast_ended.title'.tr()),
+          content: Text(key.tr()),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('broadcast_ended.ok'.tr()),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  /// A refused Google sign-in. Always explicit: says that no account was
+  /// created and, when another account is still signed in, names it.
+  void _presentAuthRefusal() {
+    final generation = provider.authRefusalGeneration;
+    if (generation == _authRefusalSeen || !_pageIsSettled) return;
+    _authRefusalSeen = generation;
+    final key = provider.authRefusalKey ?? 'auth_refusal.generic';
+    final signedInAs = provider.authRefusalSignedInAs;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_disposed) return;
+      final context = AppRouter.rootNavigatorKey.currentContext;
+      if (context == null) return;
+      showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          key: const Key('auth-refusal-dialog'),
+          title: Text('auth_refusal.title'.tr()),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(key.tr()),
+              if (signedInAs != null && signedInAs.isNotEmpty) ...[
+                const SizedBox(height: 12),
+                Text('auth_refusal.still_signed_in'
+                    .tr(namedArgs: {'account': signedInAs})),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text('common.ok'.tr()),
+            ),
+          ],
+        ),
+      );
+    });
+  }
+
+  /// The mini-player closed because its broadcast ended; a snackbar says so
+  /// (and is announced by screen readers) instead of it silently vanishing.
+  void _presentMiniPlayerEnded() {
+    final generation = provider.miniPlayerEndedGeneration;
+    if (generation == _miniEndedSeen) return;
+    _miniEndedSeen = generation;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_disposed) return;
+      final context = AppRouter.rootNavigatorKey.currentContext;
+      if (context == null) return;
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+          key: const Key('mini-player-ended-notice'),
+          content: Text('live.mini_player_broadcast_ended'.tr())));
+    });
+  }
+
   void _onProviderChanged() {
+    _presentMiniPlayerEnded();
+    _presentAuthRefusal();
+    _presentRemoteEnd();
     final lost = provider.broadcastSessionError == 'broadcast_session_lost';
     if (lost && !_broadcastLossShown) {
       _broadcastLossShown = true;

@@ -73,6 +73,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   int? _requiredCatalogRevision;
   int _roomGeneration = 0;
 
+  // What this room was opened for. A room opened on a live broadcast plays
+  // that exact watch ID; once fresh catalog data says the broadcast ended (or
+  // a different broadcast replaced it) the room closes instead of leaving a
+  // player and a LIVE badge running (P6S wave 3, stale LIVE after transfer).
+  bool _openedLive = false;
+  String? _openedWatchId;
+  String? _openedStreamerId;
+  int _openedCatalogRevision = 0;
+  bool _roomEnded = false;
+  Timer? _liveStateTimer;
+  Timer? _lookupTimer;
+
   @override
   void initState() {
     super.initState();
@@ -93,7 +105,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   void _syncRoomConnection() {
     final provider = _roomProvider;
-    if (provider == null) return;
+    if (provider == null || _roomEnded) return;
     if (!provider.isOnline) {
       _requiredCatalogRevision ??= provider.successfulCatalogRevision;
       _stopRoom();
@@ -105,7 +117,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         return;
       }
       final confirmedLive = provider.streamers.any((s) =>
-          s.isCurrentlyLive &&
+          s.isLiveForRoom &&
           (s.streamerId == widget.streamId ||
               s.activeStreamId == widget.streamId ||
               s.youtubeVideoId == widget.streamId));
@@ -115,7 +127,54 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       }
       _requiredCatalogRevision = null;
     }
+    final current = _findStreamer(provider);
+    if (current == null && !_roomActive) {
+      // Nothing to join yet (or at all): no chat or presence for a room that
+      // names no known channel. Keep looking, since a link opened right after
+      // go-live can arrive before this device's catalog has the broadcast.
+      _scheduleLookup();
+      return;
+    }
+    _lookupTimer?.cancel();
+    _lookupTimer = null;
+    if (_roomActive && _openedLive) {
+      final fresh =
+          provider.successfulCatalogRevision > _openedCatalogRevision;
+      if (fresh &&
+          (current == null ||
+              !current.isLiveForRoom ||
+              current.liveWatchId != _openedWatchId)) {
+        _endRoom();
+        return;
+      }
+    }
     _startRoom();
+  }
+
+  // Looking for a room's channel backs off 10, 20, 40 then every 60 s.
+  Duration _lookupDelay = const Duration(seconds: 10);
+
+  void _scheduleLookup() {
+    if (_lookupTimer != null) return;
+    _lookupTimer = Timer(_lookupDelay, () {
+      _lookupTimer = null;
+      final next = _lookupDelay * 2;
+      _lookupDelay =
+          next > const Duration(seconds: 60) ? const Duration(seconds: 60) : next;
+      final p = _roomProvider;
+      if (p != null && p.isOnline) {
+        unawaited(p.loadVerifiedStreamersFromBackend());
+      }
+      if (mounted && p != null && _findStreamer(p) == null) _scheduleLookup();
+    });
+  }
+
+  /// The broadcast this room was opened for is over. Stops chat, presence
+  /// and the player; the viewer gets an explicit ended state with a way back.
+  void _endRoom() {
+    _roomEnded = true;
+    _stopRoom();
+    if (mounted) setState(() {});
   }
 
   void _startRoom() {
@@ -123,6 +182,21 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _roomActive = true;
     _roomGeneration++;
     _streamState = StreamState.initializing;
+    final provider = _roomProvider;
+    final opened = provider == null ? null : _findStreamer(provider);
+    _openedStreamerId = opened?.streamerId;
+    _openedLive = opened?.isLiveForRoom ?? false;
+    _openedWatchId = opened?.liveWatchId;
+    _openedCatalogRevision = provider?.successfulCatalogRevision ?? 0;
+    // Viewers get no Realtime event when another account's broadcast ends,
+    // so the room re-reads the catalog itself; an ended broadcast closes the
+    // room within about 20 seconds.
+    _liveStateTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+      final p = _roomProvider;
+      if (p != null && p.isOnline) {
+        unawaited(p.loadVerifiedStreamersFromBackend());
+      }
+    });
     _chatController = LiveBroadcastScreen.debugChatFactory?.call(
             widget.streamId,
             (type) => _reactionsController.spawnReaction(type)) ??
@@ -147,6 +221,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   void _stopRoom() {
     if (!_roomActive) return;
     _roomActive = false;
+    _liveStateTimer?.cancel();
+    _liveStateTimer = null;
     _roomGeneration++;
     _streamState = StreamState.offline;
     _setWakelock(false);
@@ -182,6 +258,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   @override
   void dispose() {
+    _lookupTimer?.cancel();
     _roomProvider?.removeListener(_syncRoomConnection);
     _stopRoom();
     // Always restore portrait + the normal system chrome, even if the user
@@ -234,7 +311,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   void _minimizeToMiniPlayer(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
     appProvider.openMiniPlayer(
-      videoId: _getStreamUrl(appProvider),
+      videoId: _getStreamUrl(streamer),
       title: streamer.getLocalizedTitle(langCode),
       streamerName: streamer.getLocalizedName(langCode),
       streamId: widget.streamId,
@@ -302,16 +379,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
   }
 
-  StreamerModel _resolveStreamer(AppProvider appProvider) {
-    return appProvider.getStreamerById(widget.streamId) ??
-        appProvider.streamers.firstWhere(
-          (s) =>
-              s.streamerId == widget.streamId ||
-              s.activeStreamId == widget.streamId ||
-              s.youtubeVideoId == widget.streamId,
-          orElse: () =>
-              appProvider.activeStreamer ?? appProvider.streamers.first,
-        );
+  /// The channel this room belongs to, or null. Never another streamer: the
+  /// room used to fall back to the "active" or first catalog entry, which
+  /// could put a stranger's broadcast behind this room's chat and title.
+  StreamerModel? _findStreamer(AppProvider appProvider) {
+    final direct = appProvider.getStreamerById(widget.streamId);
+    if (direct != null) return direct;
+    final opened = _openedStreamerId;
+    return opened == null ? null : appProvider.getStreamerById(opened);
   }
 
   /// Which of the three streamer-brandable states (Task 4b) the current
@@ -366,14 +441,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     });
   }
 
-  bool _hasYouTubeId(AppProvider appProvider) =>
-      _getStreamUrl(appProvider).trim().isNotEmpty;
+  bool _hasYouTubeId(StreamerModel streamer) =>
+      _getStreamUrl(streamer).isNotEmpty;
 
   /// Task 5 -- same escape hatch the YouTube adapter offers inside its own
   /// error view, surfaced here too so it is reachable from the unified
   /// placeholder regardless of which layer noticed the failure.
-  Future<void> _openStreamInYouTube(AppProvider appProvider) async {
-    final videoId = _getStreamUrl(appProvider).trim();
+  Future<void> _openStreamInYouTube(StreamerModel streamer) async {
+    final videoId = _getStreamUrl(streamer);
     if (videoId.isEmpty) return;
 
     // 1. Try launching native YouTube app via custom scheme
@@ -400,22 +475,17 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
   }
 
-  String _getStreamUrl(AppProvider appProvider) {
-    final streamer = _resolveStreamer(appProvider);
-
-    if (_sourceType == StreamSourceType.youtubeEmbed) {
-      // The custom studio video id only ever overrides the caller's own
-      // channel, never a sample id (P1.6).
-      if (appProvider.isOwnStreamerProfile(streamer.streamerId) &&
-          appProvider.customYouTubeVideoId.isNotEmpty) {
-        return appProvider.customYouTubeVideoId;
-      }
-      return streamer.youtubeVideoId;
-    } else if (_sourceType == StreamSourceType.localRtmp) {
-      return appProvider.rtmpStreamUrl;
-    } else {
-      return streamer.cloudStreamUrl;
-    }
+  /// The exact video this room plays, or '' when there is nothing valid to
+  /// play. While the channel is live that is the server's live watch ID
+  /// (profiles.active_stream_id) and nothing else: the room used to play the
+  /// profile's youtube_video_id, which a phone broadcast never sets, and the
+  /// player then substituted a sample video (owner retest 2026-09-25, viewer
+  /// screenshot of "YouTube Developers Live: Embedded Web Player
+  /// Customization", video M7lc1UVf-VE).
+  String _getStreamUrl(StreamerModel streamer) {
+    if (streamer.isLiveForRoom) return streamer.liveWatchId ?? '';
+    final featured = streamer.youtubeVideoId.trim();
+    return RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(featured) ? featured : '';
   }
 
   @override
@@ -423,6 +493,26 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final appProvider = context.watch<AppProvider>();
     final networkStatus =
         context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
+    if (_roomEnded) {
+      return const _RoomStatusScaffold(
+        key: Key('live-room-ended'),
+        icon: Icons.stop_circle_outlined,
+        titleKey: 'live.room_ended_title',
+        bodyKey: 'live.room_ended_body',
+      );
+    }
+    // Once a catalog has loaded, a room that names no known channel says so
+    // instead of waiting or borrowing another streamer.
+    if (_findStreamer(appProvider) == null &&
+        appProvider.successfulCatalogRevision > 0) {
+      return const _RoomStatusScaffold(
+        key: Key('live-room-unavailable'),
+        icon: Icons.videocam_off_outlined,
+        titleKey: 'live.room_unavailable_title',
+        bodyKey: 'live.room_unavailable_body',
+        showRetry: true,
+      );
+    }
     if (!_roomActive) {
       return Scaffold(
         backgroundColor: AppTheme.bg,
@@ -441,7 +531,17 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final isSideBySide = isDesktop || isLandscape;
     final langCode = context.locale.languageCode;
 
-    final streamer = _resolveStreamer(appProvider);
+    final resolved = _findStreamer(appProvider);
+    if (resolved == null) {
+      return const _RoomStatusScaffold(
+        key: Key('live-room-unavailable'),
+        icon: Icons.videocam_off_outlined,
+        titleKey: 'live.room_unavailable_title',
+        bodyKey: 'live.room_unavailable_body',
+        showRetry: true,
+      );
+    }
+    final streamer = resolved;
     // Platform presence, counted server-side (P3). Null until the first
     // successful read, and rendered as "—". YouTube's own concurrent-viewer
     // number is a different figure and stays in the broadcaster studio,
@@ -540,8 +640,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   Widget _buildVideoViewport(AppProvider appProvider, StreamerModel streamer,
       int? viewerCount, String langCode,
       {required bool isSideBySide}) {
-    final isAudioLive = streamer.isAudioLive;
+    final isAudioLive = streamer.isLiveForRoom &&
+        streamer.broadcastType == BroadcastType.liveAudio;
     final roomGeneration = _roomGeneration;
+    final streamUrl = _getStreamUrl(streamer);
+    // Nothing valid to play: no player at all, and an honest offline card
+    // rather than a substitute video.
+    final viewportState =
+        streamUrl.isEmpty ? StreamState.offline : _streamState;
 
     final videoWidget = Container(
       color: AppTheme.media,
@@ -549,12 +655,16 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         alignment: Alignment.center,
         children: [
           // 1. The Video/Audio Player Engine (Always mounted so Android WebView never suspends audio)
+          if (streamUrl.isNotEmpty)
           AbstractVideoPlayer.fromSource(
             key: ValueKey(
-                '${_sourceType.name}_${appProvider.rtmpLaptopIp}_${appProvider.streamReloadCount}'),
+                '${_sourceType.name}_${streamUrl}_${appProvider.streamReloadCount}'),
             sourceType: _sourceType,
-            streamUrl: _getStreamUrl(appProvider),
-            fallbackUrls: streamer.fallbackYoutubeVideoIds,
+            streamUrl: streamUrl,
+            // A live room never fails over to another video.
+            fallbackUrls: streamer.isLiveForRoom
+                ? const []
+                : streamer.fallbackYoutubeVideoIds,
             // Audio-only broadcasts always autoplay: LiveAudioStageMultiSpeaker
             // paints over the player entirely, so there is no visible
             // transport for the viewer to un-pause -- the engine underneath
@@ -620,6 +730,37 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           // 3. Floating Reactions
           FloatingReactionsOverlay(controller: _reactionsController),
 
+          if (streamer.isIngestInterrupted)
+            PositionedDirectional(
+              bottom: 52,
+              start: 12,
+              end: 12,
+              child: Semantics(
+                liveRegion: true,
+                child: Container(
+                  key: const Key('live-room-reconnecting'),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceSm, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppTheme.media.withValues(alpha: 0.85),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                  child: Row(children: [
+                    const Icon(Icons.wifi_tethering_error_rounded,
+                        size: 16, color: AppTheme.warning),
+                    const SizedBox(width: AppTheme.spaceXs),
+                    Expanded(
+                      child: Text(
+                        'live.broadcaster_reconnecting'.tr(),
+                        style: const TextStyle(
+                            color: AppTheme.onMedia, fontSize: 12),
+                      ),
+                    ),
+                  ]),
+                ),
+              ),
+            ),
+
           // 4. Raise Hand Video Overlay Badge (Bottom-Right)
           if (_isHandRaised)
             PositionedDirectional(
@@ -659,7 +800,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
           // 5. Controls Overlay
           LivePlayerOverlayControls(
-            streamState: _streamState,
+            streamState: viewportState,
+            // The sending phone lost its connection: say so instead of a
+            // LIVE badge over a stalled player.
+            showLiveBadge:
+                streamer.isLiveForRoom && !streamer.isIngestInterrupted,
             viewerCount: viewerCount,
             isPlaying: _isPlaying,
             isMuted: _isMuted,
@@ -689,12 +834,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           // states, so nothing is lost by covering them. Renders nothing at
           // all while the feed is playing.
           StreamStatePlaceholderOverlay(
-            streamState: _streamState,
+            streamState: viewportState,
             customImageUrl: _customPlaceholderUrl(appProvider, streamer),
             onRetry: _retryStream,
             onOpenInYouTube: _sourceType == StreamSourceType.youtubeEmbed &&
-                    _hasYouTubeId(appProvider)
-                ? () => _openStreamInYouTube(appProvider)
+                    _hasYouTubeId(streamer)
+                ? () => _openStreamInYouTube(streamer)
                 : null,
           ),
 
@@ -1924,6 +2069,76 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Full-screen status for a room that cannot or no longer plays anything:
+/// the broadcast ended, or the link names no known channel.
+class _RoomStatusScaffold extends StatelessWidget {
+  const _RoomStatusScaffold({
+    super.key,
+    required this.icon,
+    required this.titleKey,
+    required this.bodyKey,
+    this.showRetry = false,
+  });
+
+  final bool showRetry;
+  final IconData icon;
+  final String titleKey;
+  final String bodyKey;
+
+  @override
+  Widget build(BuildContext context) {
+    final provider = context.read<AppProvider>();
+    return Scaffold(
+      backgroundColor: AppTheme.bg,
+      appBar: AppBar(backgroundColor: AppTheme.bg),
+      body: SafeArea(
+        child: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, color: AppTheme.textMuted, size: 42),
+                const SizedBox(height: AppTheme.spaceMd),
+                Text(titleKey.tr(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold)),
+                const SizedBox(height: AppTheme.spaceSm),
+                Text(bodyKey.tr(),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppTheme.textSecondary)),
+                const SizedBox(height: AppTheme.spaceLg),
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: AppTheme.spaceSm,
+                  runSpacing: AppTheme.spaceSm,
+                  children: [
+                    FilledButton(
+                      onPressed: () =>
+                          context.canPop() ? context.pop() : context.go('/'),
+                      child: Text('live.room_back_to_feed'.tr()),
+                    ),
+                    if (showRetry)
+                      OutlinedButton(
+                        key: const Key('live-room-check-again'),
+                        onPressed: () =>
+                            provider.loadVerifiedStreamersFromBackend(),
+                        child: Text('live.room_check_again'.tr()),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -33,9 +33,11 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
   }
 
   void _expandToFullScreen(BuildContext context, AppProvider provider) {
-    final streamId = provider.miniPlayerStreamId ?? 'stream_live_992';
+    final streamId = provider.miniPlayerStreamId;
     provider.closeMiniPlayer();
-    context.push('/live/$streamId');
+    if (streamId != null && streamId.isNotEmpty) {
+      context.push('/live/$streamId');
+    }
   }
 
   @override

@@ -54,6 +54,16 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
     _initializeWebPlayer();
   }
 
+  /// Nothing loads without a valid video ID. The adapter used to substitute
+  /// the IFrame API sample video (M7lc1UVf-VE), which is how a viewer room
+  /// played "YouTube Developers Live: Embedded Web Player Customization"
+  /// instead of a phone broadcast (owner retest 2026-09-25).
+  void _showMissingVideo() {
+    _isLoading = false;
+    _hasError = true;
+    _errorMessage = 'live.no_valid_watch_id'.tr();
+  }
+
   void _initializeWebPlayer() {
     late final PlatformWebViewControllerCreationParams params;
     if (!kIsWeb && WebViewPlatform.instance is WebKitWebViewPlatform) {
@@ -131,13 +141,20 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
         androidController.setMediaPlaybackRequiresUserGesture(false);
       }
     } else {
-      // On Web: navigation callbacks are handled by browser iframe, mark loaded
+      // On Web: navigation callbacks are handled by browser iframe, mark
+      // loaded. The iframe gives this adapter no playback events, so "live"
+      // here only means "show the player"; the room's LIVE badge follows
+      // the server's live state, not this.
       _isLoading = false;
       widget.onPlayerReady?.call();
       widget.onStateChanged?.call(StreamState.live);
     }
 
     _webViewController = controller;
+    if (_currentVideoId.isEmpty) {
+      _showMissingVideo();
+      return;
+    }
     _loadVideoEmbed(_currentVideoId);
   }
 
@@ -180,6 +197,10 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
     if (_currentFallbackIndex < fallbacks.length) {
       final nextId = _extractVideoId(fallbacks[_currentFallbackIndex]);
       _currentFallbackIndex++;
+      if (nextId.isEmpty) {
+        _handleStreamFailure(reason);
+        return;
+      }
       debugPrint('[YouTubePlayerAdapter] Failover to fallback stream ($nextId): $reason');
       _currentVideoId = nextId;
       _loadVideoEmbed(_currentVideoId);
@@ -286,7 +307,16 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
       final newVideoId = _extractVideoId(widget.streamUrl);
       if (newVideoId != _currentVideoId) {
         _currentVideoId = newVideoId;
-        _loadVideoEmbed(_currentVideoId);
+        _currentFallbackIndex = 0;
+        if (newVideoId.isEmpty) {
+          setState(_showMissingVideo);
+        } else {
+          setState(() {
+            _hasError = false;
+            _isLoading = true;
+          });
+          _loadVideoEmbed(_currentVideoId);
+        }
       }
     }
     if (widget.preferredQuality != oldWidget.preferredQuality) {
@@ -337,9 +367,11 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
     }
   }
 
+  /// The 11-character video ID in [url], or '' when there is none. Never a
+  /// substitute video.
   String _extractVideoId(String url) {
     final trimmed = url.trim();
-    if (trimmed.isEmpty) return 'M7lc1UVf-VE';
+    if (trimmed.isEmpty) return '';
 
     // 1. Raw 11-char video ID (e.g. 8Y1RaecJ-mo or M7lc1UVf-VE)
     if (RegExp(r'^[a-zA-Z0-9_-]{11}$').hasMatch(trimmed)) {
@@ -370,7 +402,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
       return vMatch.group(1)!;
     }
 
-    return trimmed.length == 11 ? trimmed : 'M7lc1UVf-VE';
+    return '';
   }
 
   @override
@@ -398,8 +430,12 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
                         ? _errorMessage
                         : 'Video ID: $_currentVideoId')
                     : null,
-                onRetry: _hasError ? _retryPlayback : null,
-                onOpenInYouTube: _hasError ? _openInYouTubeApp : null,
+                onRetry: _hasError && _currentVideoId.isNotEmpty
+                    ? _retryPlayback
+                    : null,
+                onOpenInYouTube: _hasError && _currentVideoId.isNotEmpty
+                    ? _openInYouTubeApp
+                    : null,
               ),
 
             // Engine badge overlay
@@ -442,6 +478,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter> {
   }
 
   void _retryPlayback() {
+    if (_currentVideoId.isEmpty) return;
     setState(() {
       _hasError = false;
       _isLoading = true;

@@ -78,6 +78,18 @@ class AdminDatabaseService {
     });
   }
 
+  /// Hides or shows a live broadcast in app discovery (audited, admin-only,
+  /// migration 20260925100000). The broadcast keeps running either way.
+  Future<void> setStreamDiscovery(
+      String profileId, bool hidden, String reason) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    await _client.rpc('admin_set_stream_discovery', params: {
+      'p_profile_id': profileId,
+      'p_hidden': hidden,
+      'p_reason': reason,
+    });
+  }
+
   static const String _kApplicationsKey = 'streamer_admin_applications_v1';
   static const String _kTermsKey = 'streamer_admin_terms_v1';
   static const String _kAnalyticsKey = 'streamer_admin_analytics_v1';
@@ -1281,6 +1293,32 @@ class AdminDatabaseService {
     }).eq('id', profileId);
   }
 
+  /// The caller's own broadcast status from my_broadcast_status(): whether a
+  /// session is live, its watch ID, and the last ended session's reason.
+  /// Backends without that function (before migration 20260925100000) fall
+  /// back to the caller's own profile row, which has no end reason.
+  Future<Map<String, dynamic>> loadMyBroadcastStatus() async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    try {
+      final row = await _client.rpc('my_broadcast_status');
+      return Map<String, dynamic>.from(row as Map);
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202') rethrow;
+      final uid = _client.auth.currentUser?.id;
+      if (uid == null) rethrow;
+      final profile = await _client
+          .from('profiles')
+          .select('is_currently_live, active_stream_id')
+          .eq('id', uid)
+          .single();
+      return {
+        'live': profile['is_currently_live'] == true,
+        'stream_id': profile['active_stream_id'],
+        'last_ended': null,
+      };
+    }
+  }
+
   /// Fetches all verified broadcasters and organizations from Supabase public views/tables.
   /// Used to populate Discovery feed and Spatial Map on cold-start and sync across devices.
   Future<List<StreamerModel>> loadVerifiedStreamersFromBackend(
@@ -1327,7 +1365,12 @@ class AdminDatabaseService {
         final lng = (row['longitude'] as num?)?.toDouble() ?? 0;
         final ytHandle = (row['youtube_handle'] as String?) ?? '';
         final ytVideoId = (row['youtube_video_id'] as String?) ?? '';
-        final isLive = (row['is_currently_live'] as bool?) ?? false;
+        // A live broadcast an admin hid from discovery is not listed as live
+        // (feed, map), but keeps its watch ID so the room still plays it.
+        final rowLive = (row['is_currently_live'] as bool?) ?? false;
+        final hiddenLive =
+            rowLive && row['is_hidden_from_discovery'] == true;
+        final isLive = rowLive && !hiddenLive;
         final isVerified = (row['is_verified'] as bool?) ?? false;
         final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
 
@@ -1355,12 +1398,16 @@ class AdminDatabaseService {
             latitude: lat,
             longitude: lng,
             isCurrentlyLive: isLive,
-            broadcastType: isLive
+            broadcastType: rowLive
                 ? (row['broadcast_type'] == 'liveAudio'
                     ? BroadcastType.liveAudio
                     : BroadcastType.liveVideo)
                 : BroadcastType.offline,
             activeStreamId: row['active_stream_id'] as String?,
+            liveSessionId: rowLive ? row['live_session_id'] as String? : null,
+            isHiddenLiveSession: hiddenLive,
+            liveIngestState:
+                rowLive ? row['live_ingest_state'] as String? : null,
             isOrganization: false,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
@@ -1397,7 +1444,12 @@ class AdminDatabaseService {
             const <String>[];
         final ytHandle = (row['youtube_handle'] as String?) ?? '';
         final ytVideoId = (row['youtube_video_id'] as String?) ?? '';
-        final isLive = (row['is_currently_live'] as bool?) ?? false;
+        // A live broadcast an admin hid from discovery is not listed as live
+        // (feed, map), but keeps its watch ID so the room still plays it.
+        final rowLive = (row['is_currently_live'] as bool?) ?? false;
+        final hiddenLive =
+            rowLive && row['is_hidden_from_discovery'] == true;
+        final isLive = rowLive && !hiddenLive;
         final isVerified = (row['is_verified'] as bool?) ?? false;
         final followerCount = (row['follower_count'] as num?)?.toInt() ?? 0;
 
@@ -1425,12 +1477,16 @@ class AdminDatabaseService {
             latitude: 26.2871,
             longitude: 50.2125,
             isCurrentlyLive: isLive,
-            broadcastType: isLive
+            broadcastType: rowLive
                 ? (row['broadcast_type'] == 'liveAudio'
                     ? BroadcastType.liveAudio
                     : BroadcastType.liveVideo)
                 : BroadcastType.offline,
             activeStreamId: row['active_stream_id'] as String?,
+            liveSessionId: rowLive ? row['live_session_id'] as String? : null,
+            isHiddenLiveSession: hiddenLive,
+            liveIngestState:
+                rowLive ? row['live_ingest_state'] as String? : null,
             isOrganization: true,
             youtubeHandle: ytHandle,
             youtubeVideoId: ytVideoId,
@@ -2899,6 +2955,62 @@ class AdminDatabaseService {
           'p_type': type,
         }) ==
         true;
+  }
+
+  /// Starts an app broadcast as one server session (migration
+  /// 20260925100000) and returns its id. Returns null on a backend without
+  /// sessions, after starting it the legacy way; the caller then has no
+  /// late-reconnect fence and must say nothing more than it did before.
+  Future<String?> startBroadcastSession(
+      {required String type,
+      required String streamId,
+      required String deviceId,
+      required String senderMode,
+      String? orgId}) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    try {
+      final id = await _client.rpc('start_broadcast_session', params: {
+        'p_type': type,
+        'p_stream_id': streamId,
+        'p_device_id': deviceId,
+        'p_org_id': orgId,
+        'p_sender_mode': senderMode,
+      });
+      return id as String?;
+    } on PostgrestException catch (e) {
+      if (e.code != 'PGRST202') rethrow;
+      await setLiveState(
+          live: true,
+          type: type,
+          streamId: streamId,
+          deviceId: deviceId,
+          orgId: orgId);
+      return null;
+    }
+  }
+
+  /// Reports this phone's encoder connection for its own live session.
+  /// Throws a PostgrestException with code 55000 when the session has ended.
+  Future<void> reportBroadcastIngest(
+      {required String sessionId,
+      required String deviceId,
+      required bool sending}) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    await _client.rpc('report_broadcast_ingest', params: {
+      'p_session_id': sessionId,
+      'p_device_id': deviceId,
+      'p_state': sending ? 'sending' : 'interrupted',
+    });
+  }
+
+  /// Ends exactly [sessionId]; a no-op when it already ended.
+  Future<void> endBroadcastSession(
+      {required String sessionId, required String deviceId}) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    await _client.rpc('end_broadcast_session', params: {
+      'p_session_id': sessionId,
+      'p_device_id': deviceId,
+    });
   }
 
   Future<void> setLiveState(

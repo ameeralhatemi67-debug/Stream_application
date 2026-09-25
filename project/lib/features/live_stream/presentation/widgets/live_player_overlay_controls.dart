@@ -73,6 +73,11 @@ extension StreamQualityLevelInfo on StreamQualityLevel {
 /// own controls while one of those states is on screen.
 class LivePlayerOverlayControls extends StatefulWidget {
   final StreamState streamState;
+
+  /// Whether the server says this room's broadcast is live. The LIVE badge
+  /// follows that, not the player: a playing video is not proof of a live
+  /// broadcast.
+  final bool showLiveBadge;
   /// Live viewers counted by the server, or null while unknown (P3 /
   /// 05 D-08). Null renders as "—": the app never shows a number it does not
   /// have.
@@ -100,6 +105,7 @@ class LivePlayerOverlayControls extends StatefulWidget {
   const LivePlayerOverlayControls({
     super.key,
     required this.streamState,
+    this.showLiveBadge = true,
     required this.viewerCount,
     required this.isPlaying,
     required this.isMuted,
@@ -178,6 +184,7 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         // Pulsing Red Live Badge
+                        if (widget.showLiveBadge)
                         FadeTransition(
                           opacity: _pulseAnimation,
                           child: Container(

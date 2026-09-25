@@ -341,7 +341,16 @@
     "report_failed_toast": "Couldn't send the report. Check your connection and try again.",
     "chat_composer_platform_paused": "Chat is paused across the platform right now.",
     "not_live": "Not live",
-    "watch_url_required": "Enter the YouTube watch URL so viewers and chat can join this broadcast."
+    "watch_url_required": "Enter the YouTube watch URL so viewers and chat can join this broadcast.",
+    "room_ended_title": "This broadcast has ended",
+    "room_ended_body": "The broadcaster is no longer live in the app. Chat and playback for this broadcast have stopped.",
+    "room_unavailable_title": "Broadcast not found",
+    "room_unavailable_body": "This link does not match a channel in the app right now. Nothing is playing.",
+    "room_back_to_feed": "Back",
+    "no_valid_watch_id": "This broadcast has no valid YouTube watch link, so nothing can play.",
+    "room_check_again": "Check again",
+    "broadcaster_reconnecting": "The broadcaster's connection dropped. Waiting for it to come back; the video may freeze meanwhile.",
+    "mini_player_broadcast_ended": "The broadcast you minimized has ended, so the small player closed."
   },
   "language": {
     "en": "English",
@@ -534,7 +543,9 @@
     "blocked_accounts_count": "{count} blocked",
     "blocked_account_unknown": "Unknown account",
     "unblock": "Unblock",
-    "unblocked_toast": "Unblocked. You'll see their messages again."
+    "unblocked_toast": "Unblocked. You'll see their messages again.",
+    "opening_google_sign_in": "Opening Google sign-in. You will return here when it finishes.",
+    "youtube_url_locked_while_live": "Locked while you are live. End the broadcast to use another link."
   },
   "onboarding": {
     "subtitle": "AlSharqia Educational Knowledge Hub",
@@ -806,7 +817,8 @@
     "edit": "Edit",
     "arrange": "Arrange",
     "change": "Change",
-    "retry": "Retry"
+    "retry": "Retry",
+    "ok": "OK"
   },
   "consent": {
     "title": "Before You Continue",
@@ -1252,12 +1264,12 @@
     "close": "Close",
     "delete_account": "Delete account",
     "revoke_sessions": "Revoke Auth sessions",
-    "force_end": "End app live session",
-    "remove_from_feed": "Remove stream from feed",
+    "force_end": "End app broadcast",
+    "remove_from_feed": "End and block this watch link",
     "delete_account_warning": "Permanently deletes this account and its personal data. Transfer owned organizations and remove owned storage first. This cannot be undone.",
     "revoke_sessions_warning": "Revokes all refresh sessions and ends the app live session. Issued access tokens may work until expiry. The account can sign in again.",
-    "force_end_warning": "Ends the app live session and releases its broadcaster device. This does not stop YouTube ingest or playback outside this app.",
-    "remove_from_feed_warning": "Ends the app live session and prevents this video ID from going live in the app again. This does not remove the video from YouTube."
+    "force_end_warning": "Ends the current broadcast in the app. The broadcaster keeps their approval and broadcasting device and can start again. This does not stop YouTube ingest or playback outside this app.",
+    "remove_from_feed_warning": "Ends the current broadcast in the app and blocks this YouTube watch link from being listed again. The broadcaster keeps their approval and can go live with a new broadcast. This does not remove the video from YouTube."
   },
   "safety": {
     "tab": "Safety",
@@ -1278,11 +1290,11 @@
     "live_viewers": "{count} watching",
     "live_viewers_unknown": "Viewer count unavailable",
     "live_force_end": "End broadcast",
-    "live_force_end_body": "End {name}'s live broadcast in the app. This does not stop their stream on YouTube.",
+    "live_force_end_body": "End {name}'s live broadcast in the app. They keep their approval and broadcasting device and can start again. This does not stop their stream on YouTube.",
     "live_force_end_done": "Broadcast ended in the app.",
-    "live_remove_from_feed": "Remove from feed",
-    "live_remove_from_feed_body": "Remove this stream by {name} from the feed and block the same video from going live in the app again. This does not remove it from YouTube.",
-    "live_remove_from_feed_done": "Stream removed from the feed.",
+    "live_remove_from_feed": "End and block link",
+    "live_remove_from_feed_body": "End {name}'s broadcast in the app and block this YouTube watch link from being listed again. They keep their approval and can start a new broadcast. This does not remove it from YouTube.",
+    "live_remove_from_feed_done": "Broadcast ended and its link blocked.",
     "audit_all": "All events",
     "audit_empty": "No audit entries match.",
     "audit_more": "Load more",
@@ -1316,7 +1328,7 @@
     "action_accountStreamerRevoked": "Broadcaster access revoked",
     "action_accountVerificationRevoked": "Verification revoked",
     "action_streamForceEnded": "Broadcast ended by admin",
-    "action_streamRemovedFromFeed": "Stream removed from feed",
+    "action_streamRemovedFromFeed": "Broadcast ended and link blocked",
     "action_appFlagChanged": "Platform switch changed",
     "action_chatKeywordAdded": "Chat keyword added",
     "action_chatKeywordUpdated": "Chat keyword changed",
@@ -1328,7 +1340,16 @@
     "audit_actor": "Actor email (exact)",
     "audit_apply": "Apply",
     "audit_dates": "Date range",
-    "audit_clear": "Clear filters"
+    "audit_clear": "Clear filters",
+    "live_hide_from_discovery": "Hide from app discovery",
+    "live_hide_from_discovery_body": "Hide {name}'s current broadcast from the feed, map and live listings. It keeps running and people already watching stay. Anyone with the YouTube watch link or the room link can still watch: this is not private. It applies to this broadcast only; a new broadcast is listed normally. You can show it again at any time.",
+    "live_hide_from_discovery_done": "Broadcast hidden from app discovery. It is still live.",
+    "live_show_in_discovery": "Show in app discovery",
+    "live_show_in_discovery_body": "List {name}'s broadcast in the feed, map and live listings again.",
+    "live_show_in_discovery_done": "Broadcast listed in app discovery again.",
+    "live_hidden_badge": "Hidden from discovery for this broadcast — link still works",
+    "action_streamHiddenFromDiscovery": "Broadcast hidden from discovery",
+    "action_streamShownInDiscovery": "Broadcast shown in discovery"
   },
   "broadcast_approval_required": "Broadcaster approval and verification are required. Submit or review your application.",
   "roles": {
@@ -1377,5 +1398,23 @@
     "reported": "Reported: {name}",
     "reason": "Reason: {reason}",
     "metadata": "Reported by {name} • Stream: {stream} • {date}"
-  }
+  },
+  "broadcast_ended": {
+    "title": "Broadcast ended",
+    "admin_end": "An administrator ended this broadcast in the app. This phone has stopped sending. Your broadcaster approval and this device's broadcasting role are unchanged, so you can start a new broadcast.",
+    "admin_remove": "An administrator ended this broadcast and blocked its watch link from being listed in the app again. This phone has stopped sending. To go live, create a new broadcast in YouTube Studio and use its new watch link.",
+    "stale_expired": "The broadcast was ended because this device stopped reaching the server. Check your connection, then start again.",
+    "replaced": "Another broadcast on your account replaced this one. This phone has stopped sending.",
+    "generic": "This broadcast was ended outside this device. This phone has stopped sending.",
+    "ok": "OK",
+    "ingest_lost": "This phone could not reconnect to YouTube for two minutes, so the broadcast was ended in the app. Check your connection, then start a new broadcast.",
+    "organization_revoked": "An administrator revoked the organization's verification, so its broadcast ended. Your personal broadcaster approval is unchanged."
+  },
+  "auth_refusal": {
+    "title": "No new account was created",
+    "signups_paused": "New sign-ups are paused right now, so this Google account could not create an account. If you already have an account, sign in with the Google account you used before.",
+    "generic": "Google sign-in was refused, so you were not signed in with that account. Try again, or use another account.",
+    "still_signed_in": "You are still signed in as {account}. That account was not changed."
+  },
+  "broadcast_watch_link_blocked": "An administrator blocked this watch link from being listed in the app. Your broadcaster approval is unchanged. Create a new broadcast in YouTube Studio and use its new watch link."
 }

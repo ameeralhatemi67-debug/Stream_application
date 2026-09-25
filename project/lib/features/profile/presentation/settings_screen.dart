@@ -768,14 +768,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 label: Text('settings.signin_as_streamer'.tr()),
-                onPressed: () {
-                  provider.loginWithGoogle();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('settings.signed_in_toast'.tr()),
+                onPressed: () async {
+                  // Only the browser opens here; sign-in completes (or is
+                  // refused) later, so nothing may claim success yet.
+                  final messenger = ScaffoldMessenger.of(context);
+                  try {
+                    await provider.loginWithGoogle();
+                    messenger.showSnackBar(SnackBar(
+                        content: Text('settings.opening_google_sign_in'.tr())));
+                  } catch (_) {
+                    messenger.showSnackBar(SnackBar(
+                      content: Text('auth_welcome.sign_in_failed'.tr()),
                       backgroundColor: AppTheme.danger,
-                    ),
-                  );
+                    ));
+                  }
                 },
               ),
             ),

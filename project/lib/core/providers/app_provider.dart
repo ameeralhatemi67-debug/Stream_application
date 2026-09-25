@@ -38,6 +38,7 @@ import '../../features/admin/models/stream_moderator_model.dart';
 import '../../features/admin/models/tag_moderation_model.dart';
 import '../../features/discovery/models/academic_category_model.dart';
 import '../models/device_session_model.dart';
+import 'app_flags.dart';
 import '../config/feature_flags.dart';
 import '../../features/live_stream/services/stream_decay_engine.dart';
 import '../../features/live_stream/services/chat_block_list.dart';
@@ -80,6 +81,16 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  /// Hides a live broadcast from app discovery or lists it again. Not access
+  /// control: the broadcast, its viewers and its links are unaffected.
+  Future<void> setStreamDiscovery(
+      String profileId, bool hidden, String reason) async {
+    if (!isAdminUser) throw StateError('Not permitted');
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.setStreamDiscovery(profileId, hidden, reason);
+    await refreshAdminData();
+  }
+
   /// Drops every client-side trace of an account the server has just
   /// deleted (P6), so no screen keeps offering a follow, a mini-player, a
   /// report or a role row for a profile that no longer exists. Called only
@@ -90,8 +101,10 @@ class AppProvider extends ChangeNotifier {
     bool matches(String id) => id == profileId || id == 'streamer_$profileId';
     final removedVideoIds = {
       for (final s in _streamers)
-        if (matches(s.streamerId) && s.youtubeVideoId.isNotEmpty)
-          s.youtubeVideoId,
+        if (matches(s.streamerId)) ...[
+          if (s.youtubeVideoId.isNotEmpty) s.youtubeVideoId,
+          if (s.activeStreamId?.isNotEmpty == true) s.activeStreamId!,
+        ],
     };
     _streamers.removeWhere((s) => matches(s.streamerId));
     _lastLoadedPublicStreamers?.removeWhere((s) => matches(s.streamerId));
@@ -424,12 +437,107 @@ class AppProvider extends ChangeNotifier {
         }
         final isFreshSignIn = data.event == AuthChangeEvent.signedIn ||
             data.event == AuthChangeEvent.initialSession;
+        if (data.event == AuthChangeEvent.signedIn) {
+          unawaited(_markOAuthAttempt(false));
+        }
         _applySessionUser(session.user, isFreshSignIn: isFreshSignIn);
+      }, onError: (Object error, StackTrace _) {
+        // A refused OAuth redirect (for example a new Google account while
+        // sign-ups are paused) arrives here as an AuthException. It used to
+        // be dropped, so the app silently stayed on whatever account was
+        // already signed in (owner retest 2026-09-25, Test 8).
+        unawaited(_handleAuthRedirectError(error));
       });
     } catch (e) {
       debugPrint(
           'Supabase auth listener not attached (Supabase not initialized?): $e');
     }
+  }
+
+  String? _authRefusalKey;
+  String? _authRefusalSignedInAs;
+  int _authRefusalGeneration = 0;
+
+  /// Why the last Google sign-in was refused, as a translation key, or null.
+  String? get authRefusalKey => _authRefusalKey;
+
+  /// The account that is still signed in after the refusal, if any, so the
+  /// user is never left to assume the refused account signed in.
+  String? get authRefusalSignedInAs => _authRefusalSignedInAs;
+  int get authRefusalGeneration => _authRefusalGeneration;
+
+  static const _oauthAttemptKey = 'oauth_sign_in_attempt_at';
+  static const _oauthAttemptWindow = Duration(minutes: 5);
+
+  /// Remembers that this client opened Google sign-in, so only an error that
+  /// answers that attempt is shown as a refusal. Stored, because on web the
+  /// OAuth redirect reloads the page.
+  Future<void> _markOAuthAttempt(bool pending) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (pending) {
+        await prefs.setString(
+            _oauthAttemptKey, DateTime.now().toUtc().toIso8601String());
+      } else {
+        await prefs.remove(_oauthAttemptKey);
+      }
+    } catch (_) {}
+  }
+
+  Future<bool> _consumeOAuthAttempt() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final at = DateTime.tryParse(prefs.getString(_oauthAttemptKey) ?? '');
+      await prefs.remove(_oauthAttemptKey);
+      return at != null &&
+          DateTime.now().toUtc().difference(at) < _oauthAttemptWindow;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> _handleAuthRedirectError(Object error) async {
+    if (error is! AuthException) {
+      debugPrint('Auth redirect error: ${error.runtimeType}');
+      return;
+    }
+    // Token refresh failures and expired sessions travel on the same stream.
+    // They are not sign-in refusals and must never be shown as one (P6S
+    // wave 3 critic: a signed-in broadcaster on a flaky network would have
+    // been told "No new account was created").
+    if (error is AuthRetryableFetchException ||
+        error is AuthSessionMissingException ||
+        error.code == 'session_expired' ||
+        error.code == 'refresh_token_not_found' ||
+        error.code == 'refresh_token_already_used') {
+      debugPrint('Auth session error: ${error.runtimeType}');
+      return;
+    }
+    if (!await _consumeOAuthAttempt()) {
+      debugPrint('Auth error without a sign-in attempt: ${error.runtimeType}');
+      return;
+    }
+    bool? registrationsOpen;
+    try {
+      await AppFlags.instance.refresh();
+      if (AppFlags.instance.isKnown(AppFlagKey.registrationsOpen)) {
+        registrationsOpen = AppFlags.instance.registrationsOpen;
+      }
+    } catch (_) {}
+    applyAuthRefusal(error, registrationsOpen: registrationsOpen);
+  }
+
+  /// GoTrue reports a refused account creation as a generic database error,
+  /// so the platform switch decides which explanation is true. Nothing here
+  /// signs anyone in or out.
+  @visibleForTesting
+  void applyAuthRefusal(Object error, {required bool? registrationsOpen}) {
+    _authRefusalKey = registrationsOpen == false
+        ? 'auth_refusal.signups_paused'
+        : 'auth_refusal.generic';
+    _authRefusalSignedInAs = _authService.currentSession?.user.email;
+    _authRefusalGeneration++;
+    notifyListeners();
   }
 
   /// Populates auth/display state from a live Supabase session. On a fresh
@@ -684,6 +792,39 @@ class AppProvider extends ChangeNotifier {
   int _deviceGeneration = 0;
   bool _liveStateBusy = false;
   Completer<void>? _liveStateCompletion;
+  // Bumped whenever this device asserts or withdraws LIVE, so a status read
+  // that started before the assertion cannot be mistaken for a remote end.
+  int _liveAssertionEpoch = 0;
+  String? _remoteBroadcastEndReason;
+  int _remoteBroadcastEndGeneration = 0;
+  // The server session and exact watch ID this device went live with. The
+  // studio's URL field can change while live; these cannot.
+  String? _liveSessionId;
+  String? _liveWatchId;
+  String _broadcastSenderMode = 'unspecified';
+  (String, bool)? _lastReportedIngest;
+
+  /// Which sender the next broadcast uses: `phone_direct` (this phone's
+  /// camera), `obs_laptop` (OBS Studio on a computer) or `external_phone`
+  /// (another phone app). Recorded on the server session so the modes are
+  /// never confused with one another.
+  void setBroadcastSenderMode(String mode) {
+    const allowed = {'phone_direct', 'obs_laptop', 'external_phone'};
+    _broadcastSenderMode = allowed.contains(mode) ? mode : 'unspecified';
+  }
+
+  String get broadcastSenderMode => _broadcastSenderMode;
+  String? get liveSessionId => _liveSessionId;
+
+  /// Whether this broadcast has a server session to report ingest to.
+  bool get hasLiveBroadcastSession => _liveSessionId != null;
+
+  /// Why the server ended this device's broadcast, when it was not this
+  /// device's own action: `admin_end`, `admin_remove`, `stale_expired`,
+  /// `replaced` or `ended`. Device transfer, revocation and bans keep their
+  /// own paths. Cleared when a new broadcast starts.
+  String? get remoteBroadcastEndReason => _remoteBroadcastEndReason;
+  int get remoteBroadcastEndGeneration => _remoteBroadcastEndGeneration;
   String? _broadcastSessionError;
   String? get broadcastSessionError => _broadcastSessionError;
   DeviceSessionModel? get currentDeviceSession => _currentDeviceSession;
@@ -822,6 +963,11 @@ class AppProvider extends ChangeNotifier {
       _isStreamerModeEnabled = true;
       unawaited(_persistViewerChoice(false));
       notifyListeners();
+      // The claim just cleared the previous device's broadcast. Read the
+      // catalog now instead of waiting for a Realtime event this device may
+      // never receive (owner retest 2026-09-25: the receiving phone kept a
+      // stale LIVE until restart).
+      unawaited(loadVerifiedStreamersFromBackend());
     } catch (_) {
       if (generation != _deviceGeneration) return;
       _broadcastSessionError = 'broadcast_state_failed';
@@ -847,7 +993,12 @@ class AppProvider extends ChangeNotifier {
       final primary = await _adminDbService!.heartbeatDevice(device.deviceId);
       if (generation != _deviceGeneration) return;
       _heartbeatFailingSince = null;
-      if (!primary) _loseBroadcastDevice();
+      if (!primary) {
+        _loseBroadcastDevice();
+      } else if (_isBroadcastingLive) {
+        // Realtime can miss an admin End; the heartbeat bounds that to 20 s.
+        await _checkRemoteBroadcastEnd();
+      }
     } catch (_) {
       if (generation != _deviceGeneration) return;
       final since = _heartbeatFailingSince ??= DateTime.now();
@@ -867,6 +1018,12 @@ class AppProvider extends ChangeNotifier {
     final device = _currentDeviceSession;
     if (device == null) return;
     final primary = sessions.where((s) => s.isPrimaryBroadcaster).firstOrNull;
+    if (primary?.deviceId != _lastSeenPrimaryDeviceId) {
+      _lastSeenPrimaryDeviceId = primary?.deviceId;
+      // Ownership moved, so the account's public live state may have changed
+      // with it. Re-read rather than trust whatever this device last saw.
+      unawaited(loadVerifiedStreamersFromBackend());
+    }
     if (primary?.deviceId == device.deviceId) {
       // Promotion only follows this device's own claim; a viewer choice is
       // never overridden by a row it did not write.
@@ -884,9 +1041,14 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  String? _lastSeenPrimaryDeviceId;
+
   void _loseBroadcastDevice() {
     _remoteBroadcasterSession = null;
     if (_currentDeviceSession == null) return;
+    if (_isBroadcastingLive) _clearOwnLiveProjection();
+    _liveSessionId = null;
+    _liveWatchId = null;
     final changed = _currentDeviceSession!.isPrimaryBroadcaster ||
         _isBroadcastingLive ||
         _broadcastSessionError != 'broadcast_session_lost';
@@ -901,6 +1063,139 @@ class AppProvider extends ChangeNotifier {
     unawaited(_persistViewerChoice(true));
     _stopLiveViewerPolling();
     if (changed) notifyListeners();
+    unawaited(loadVerifiedStreamersFromBackend());
+  }
+
+  /// This device showed its own channel as live (setBroadcasterLive writes
+  /// that into the catalog copy). Once the broadcast is over, that copy must
+  /// not outlive it; the next catalog read replaces it with the server's.
+  void _clearOwnLiveProjection() {
+    final ownId = primaryOwnedStreamerId;
+    if (ownId == null) return;
+    _streamers = _streamers
+        .map((s) => s.streamerId == ownId && s.isLiveForRoom
+            ? s.copyWith(
+                isCurrentlyLive: false,
+                broadcastType: BroadcastType.offline,
+                activeViewerCount: 0,
+                clearLiveState: true)
+            : s)
+        .toList();
+  }
+
+  /// Asks the server whether this device's broadcast is still live. Only a
+  /// definite answer that was read after this device's last LIVE assertion
+  /// counts; a failed read changes nothing (the next heartbeat retries).
+  Future<void> _checkRemoteBroadcastEnd() async {
+    final epoch = _liveAssertionEpoch;
+    final generation = _deviceGeneration;
+    final expected = _liveWatchId ?? _customYouTubeVideoId;
+    final expectedSession = _liveSessionId;
+    if (!_isBroadcastingLive || _liveStateBusy || _adminDbService == null) {
+      return;
+    }
+    final Map<String, dynamic> status;
+    try {
+      status = await _adminDbService!.loadMyBroadcastStatus();
+    } catch (e) {
+      debugPrint('Broadcast status check failed: $e');
+      return;
+    }
+    if (epoch != _liveAssertionEpoch ||
+        generation != _deviceGeneration ||
+        !_isBroadcastingLive ||
+        _liveStateBusy) {
+      return;
+    }
+    final sameSession = expectedSession == null ||
+        status['session_id'] == null ||
+        status['session_id'] == expectedSession;
+    if (status['live'] == true &&
+        status['stream_id'] == expected &&
+        sameSession) {
+      return;
+    }
+    final lastEnded = status['last_ended'];
+    final reason = status['live'] == true
+        ? 'replaced'
+        : (lastEnded is Map ? lastEnded['reason'] as String? : null) ??
+            'ended';
+    if (reason == 'device_transfer') {
+      _loseBroadcastDevice();
+      return;
+    }
+    if (reason == 'approval_revoked' || reason == 'ban') {
+      // Their own refresh paths explain these; just stop claiming LIVE.
+      _isBroadcastingLive = false;
+      _clearOwnLiveProjection();
+      notifyListeners();
+      return;
+    }
+    _endBroadcastRemotely(reason);
+  }
+
+  /// The server ended this device's broadcast (an admin End, an expired
+  /// heartbeat, another broadcast replacing it). Unlike a device transfer
+  /// this keeps the device's primary role, broadcaster mode and approval;
+  /// the phone screen stops its encoder and the user may start again.
+  void _endBroadcastRemotely(String reason) {
+    _isBroadcastingLive = false;
+    _liveSessionId = null;
+    _liveWatchId = null;
+    _remoteBroadcastEndReason = reason;
+    _remoteBroadcastEndGeneration++;
+    _clearOwnLiveProjection();
+    _stopLiveViewerPolling();
+    notifyListeners();
+    unawaited(loadVerifiedStreamersFromBackend());
+  }
+
+  /// The sending phone reports its encoder connection for its own session.
+  /// Returns false when the server says this session may no longer send
+  /// (ended by an admin, a transfer or expiry): the caller must stop its
+  /// encoder and must not start a new broadcast on its own. Unknown failures
+  /// return true; the heartbeat decides those.
+  Future<bool> reportBroadcastIngest({required bool sending}) async {
+    final session = _liveSessionId;
+    final device = _currentDeviceSession;
+    if (session == null || device == null || _adminDbService == null) {
+      return true;
+    }
+    // Only a change is reported. The encoder notifies on every bitrate
+    // sample (about once a second); re-sending an unchanged state would be
+    // one database write per second per broadcaster.
+    if (_lastReportedIngest == (session, sending)) return true;
+    try {
+      await _adminDbService!.reportBroadcastIngest(
+          sessionId: session, deviceId: device.deviceId, sending: sending);
+      if (_liveSessionId == session) _lastReportedIngest = (session, sending);
+      return true;
+    } on PostgrestException catch (e) {
+      if (_liveSessionId != session) return false;
+      if (e.code == '55000') {
+        await _checkRemoteBroadcastEnd();
+        if (_liveSessionId == session) _endBroadcastRemotely('ended');
+        return false;
+      }
+      if (e.code == '42501') {
+        await _heartbeatDevice();
+        return _liveSessionId == session &&
+            _currentDeviceSession?.isPrimaryBroadcaster == true;
+      }
+      return true;
+    } catch (_) {
+      return true;
+    }
+  }
+
+  @visibleForTesting
+  void endBroadcastRemotelyForTesting(String reason) =>
+      _endBroadcastRemotely(reason);
+
+  @visibleForTesting
+  void setBroadcastingLiveForTesting(bool live) {
+    _isBroadcastingLive = live;
+    notifyListeners();
   }
 
   Future<void> signOutOtherDevices() async {
@@ -941,6 +1236,7 @@ class AppProvider extends ChangeNotifier {
     if (device == null) return;
     if (device.isPrimaryBroadcaster) {
       await _heartbeatDevice();
+      await loadVerifiedStreamersFromBackend();
     } else if (isApprovedStreamer &&
         !_viewerDeviceChoice &&
         _remoteBroadcasterSession == null) {
@@ -1272,10 +1568,12 @@ class AppProvider extends ChangeNotifier {
           youtubeChannelUrl: profile['youtube_handle'] as String? ?? '',
           isVerifiedScholar: profile['is_verified'] == true,
         );
-        if (_isBroadcastingLive &&
-            _selectedBroadcastOrgId == null &&
-            profile['is_currently_live'] != true) {
-          _loseBroadcastDevice();
+        // The row says not live while this device thinks it is. That may be
+        // an admin End, an expiry, or simply a read that raced this device's
+        // own start; ask the server which, instead of assuming the device
+        // was displaced (owner retest 2026-09-25, Test 6 Issue A).
+        if (_isBroadcastingLive && profile['is_currently_live'] != true) {
+          unawaited(_checkRemoteBroadcastEnd());
         }
       }
 
@@ -1396,6 +1694,8 @@ class AppProvider extends ChangeNotifier {
     }
     _remoteBroadcasterSession = null;
     _isBroadcastingLive = false;
+    _liveSessionId = null;
+    _liveWatchId = null;
     _isStreamerModeEnabled = false;
     _liveStateBusy = false;
     _broadcastSessionError = 'broadcast_approval_required';
@@ -1555,13 +1855,34 @@ class AppProvider extends ChangeNotifier {
   /// to be cleared server-side; every client that reads the feed nudges that
   /// sweep at most once a minute.
   DateTime? _lastLiveFlagSweepAt;
+  Future<void>? _catalogFollowUp;
+  DateTime? _lastCatalogSuccessAt;
+
+  /// Re-reads the public catalog when the last successful read is older than
+  /// [maxAge]. Live state of other broadcasters never reaches a non-admin
+  /// client over Realtime (profiles RLS lets an account read only its own
+  /// row), so screens that show LIVE must keep it fresh themselves.
+  Future<void> refreshCatalogIfOlderThan(Duration maxAge) {
+    final last = _lastCatalogSuccessAt;
+    if (last != null && DateTime.now().difference(last) < maxAge) {
+      return Future<void>.value();
+    }
+    return loadVerifiedStreamersFromBackend();
+  }
   static const Duration _liveFlagSweepInterval = Duration(seconds: 60);
 
   Future<void> loadVerifiedStreamersFromBackend() {
     if (!isOnline) return Future<void>.value();
     final active = _publicCatalogLoad;
     if (active != null && _publicCatalogLoadEpoch == _catalogEpoch) {
-      return active;
+      // A load is already running, but it may have read the catalog before
+      // the change that triggered this call (a Realtime event arriving
+      // mid-request). Queue exactly one more read after it, so the newest
+      // request is always answered by data read after it was made.
+      return _catalogFollowUp ??= active.then((_) {
+        _catalogFollowUp = null;
+        return loadVerifiedStreamersFromBackend();
+      });
     }
     final epoch = _catalogEpoch;
     final request = _fetchVerifiedStreamers(epoch);
@@ -1611,6 +1932,8 @@ class AppProvider extends ChangeNotifier {
       }
       _isUsingCachedCatalog = false;
       _successfulCatalogRevision++;
+      _lastCatalogSuccessAt = DateTime.now();
+      _closeMiniPlayerIfBroadcastEnded();
       notifyListeners();
       unawaited(_persistPublicCatalogIfReady());
       // UI-08: refresh the offline fallback snapshot every time a backend
@@ -1639,6 +1962,10 @@ class AppProvider extends ChangeNotifier {
     _currentDeviceSession = null;
     _remoteBroadcasterSession = null;
     _isBroadcastingLive = false;
+    _liveSessionId = null;
+    _liveWatchId = null;
+    _broadcastSenderMode = 'unspecified';
+    _remoteBroadcastEndReason = null;
     _unsubscribeFromUserStatusChanges();
     _broadcastSessionError = null;
     _liveStateBusy = false;
@@ -2620,7 +2947,15 @@ class AppProvider extends ChangeNotifier {
   /// fabricated session). Actual auth state is populated by the
   /// onAuthStateChange listener (see _initAuthListener) once the OAuth
   /// redirect completes.
-  Future<void> loginWithGoogle() => _authService.signInWithGoogle();
+  Future<void> loginWithGoogle() async {
+    await _markOAuthAttempt(true);
+    try {
+      await _authService.signInWithGoogle();
+    } catch (_) {
+      await _markOAuthAttempt(false);
+      rethrow;
+    }
+  }
 
   /// Uploads binary media (avatar/banner) to Supabase Storage 'streamer-assets'bucket
   Future<String?> uploadStreamerMediaAsset({
@@ -3050,8 +3385,18 @@ class AppProvider extends ChangeNotifier {
     _miniPlayerStreamerName = streamerName;
     _miniPlayerStreamId = streamId;
     _isMiniPlayerAudioOnly = isAudioOnly;
+    final source = streamId == null ? null : getStreamerById(streamId);
+    _miniPlayerIsLive =
+        source != null && source.isLiveForRoom && source.liveWatchId == videoId;
     notifyListeners();
   }
+
+  bool _miniPlayerIsLive = false;
+  int _miniPlayerEndedGeneration = 0;
+
+  /// Bumped when the mini-player closed because its broadcast ended, so the
+  /// app can say why it disappeared.
+  int get miniPlayerEndedGeneration => _miniPlayerEndedGeneration;
 
   /// Alias kept for the Cluster 1 Task 6 call site naming; identical
   /// behaviour to [launchMiniPlayer].
@@ -3069,6 +3414,19 @@ class AppProvider extends ChangeNotifier {
         streamId: streamId,
         isAudioOnly: isAudioOnly,
       );
+
+  /// A mini-player opened from a live room belongs to that broadcast. Once a
+  /// fresh catalog says it ended (or became a different broadcast), the card
+  /// closes instead of advertising a live stream that is over.
+  void _closeMiniPlayerIfBroadcastEnded() {
+    final streamId = _miniPlayerStreamId;
+    if (!_isMiniPlayerActive || !_miniPlayerIsLive || streamId == null) return;
+    final s = getStreamerById(streamId);
+    if (s == null || !s.isLiveForRoom || s.liveWatchId != _miniPlayerVideoId) {
+      _isMiniPlayerActive = false;
+      _miniPlayerEndedGeneration++;
+    }
+  }
 
   void closeMiniPlayer() {
     _isMiniPlayerActive = false;
@@ -3130,19 +3488,11 @@ class AppProvider extends ChangeNotifier {
         return false;
       }
 
+      // Only fills in the watch link. Nothing is live until the server
+      // accepts a start; this used to mark the caller's card live locally
+      // with a made-up stream id.
       _customYouTubeVideoId = videoId;
       _customYouTubeLiveUrl = 'https://www.youtube.com/watch?v=$videoId';
-      final ownId = primaryOwnedStreamerId;
-      _streamers = _streamers.map((s) {
-        if (ownId != null && s.streamerId == ownId) {
-          return s.copyWith(
-            youtubeVideoId: videoId,
-            isCurrentlyLive: true,
-            activeStreamId: 'stream_live_992',
-          );
-        }
-        return s;
-      }).toList();
       return true;
     } finally {
       _isDetectingAmirLiveVideo = false;
@@ -3274,17 +3624,43 @@ class AppProvider extends ChangeNotifier {
     }
     final nextLive = live;
     final previousLive = _isBroadcastingLive;
+    _liveAssertionEpoch++;
     _liveStateBusy = true;
     final completion = Completer<void>();
     _liveStateCompletion = completion;
     notifyListeners();
     try {
-      await _adminDbService!.setLiveState(
-          live: nextLive,
-          type: _customBroadcastType.name,
-          streamId: nextLive ? _customYouTubeVideoId : null,
-          deviceId: device.deviceId,
-          orgId: _selectedBroadcastOrgId);
+      if (nextLive) {
+        final watchId = _customYouTubeVideoId;
+        final session = await _adminDbService!.startBroadcastSession(
+            type: _customBroadcastType.name,
+            streamId: watchId,
+            deviceId: device.deviceId,
+            senderMode: _broadcastSenderMode,
+            orgId: _selectedBroadcastOrgId);
+        _liveSessionId = session;
+        _liveWatchId = watchId;
+        // A phone start is recorded as sending by the server itself.
+        _lastReportedIngest = session == null ||
+                _broadcastSenderMode != 'phone_direct'
+            ? null
+            : (session, true);
+      } else {
+        final session = _liveSessionId;
+        if (session != null) {
+          await _adminDbService!.endBroadcastSession(
+              sessionId: session, deviceId: device.deviceId);
+        } else {
+          await _adminDbService!.setLiveState(
+              live: false,
+              type: _customBroadcastType.name,
+              streamId: null,
+              deviceId: device.deviceId,
+              orgId: _selectedBroadcastOrgId);
+        }
+        _liveSessionId = null;
+        _liveWatchId = null;
+      }
       if (generation != _deviceGeneration ||
           _currentDeviceSession?.isPrimaryBroadcaster != true) {
         return;
@@ -3294,10 +3670,14 @@ class AppProvider extends ChangeNotifier {
       if (generation != _deviceGeneration) return;
       _isBroadcastingLive =
           previousLive && _currentDeviceSession?.isPrimaryBroadcaster == true;
-      _broadcastSessionError =
-          error is PostgrestException && error.code == '42501'
-              ? 'broadcast_approval_required'
-              : 'broadcast_state_failed';
+      _broadcastSessionError = error is PostgrestException &&
+              error.code == '42501'
+          ? (error.message.contains('removed by moderation')
+              // guard_removed_live_stream: this watch link was ended and
+              // blocked by an admin; approval itself is unchanged.
+              ? 'broadcast_watch_link_blocked'
+              : 'broadcast_approval_required')
+          : 'broadcast_state_failed';
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(_broadcastSessionError!.tr())));
@@ -3306,9 +3686,11 @@ class AppProvider extends ChangeNotifier {
       return;
     } finally {
       if (generation == _deviceGeneration) _liveStateBusy = false;
+      _liveAssertionEpoch++;
       completion.complete();
     }
     _isBroadcastingLive = nextLive;
+    if (nextLive) _remoteBroadcastEndReason = null;
 
     final orgId = _selectedBroadcastOrgId;
     // Non-null here: the guard above already returned unless an authenticated

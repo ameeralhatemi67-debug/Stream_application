@@ -90,6 +90,24 @@ class SessionDb extends AdminDatabaseService {
           message: 'Broadcast not permitted', code: '42501');
     }
   }
+
+  // Behaves like a backend without broadcast sessions: the start goes through
+  // the legacy live-state call, so these tests keep exercising that path.
+  @override
+  Future<String?> startBroadcastSession(
+      {required String type,
+      required String streamId,
+      required String deviceId,
+      required String senderMode,
+      String? orgId}) async {
+    await setLiveState(
+        live: true,
+        type: type,
+        streamId: streamId,
+        deviceId: deviceId,
+        orgId: orgId);
+    return null;
+  }
 }
 
 Future<void> hydrated(AppProvider p) async {
