@@ -796,6 +796,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         isSideBySide: false, streamer: streamer),
                     _buildTitleAndDescriptionStrip(
                         title, description, streamer, langCode),
+                  ] else ...[
+                    Padding(
+                      padding: const EdgeInsets.all(AppTheme.spaceSm),
+                      child: _endControl(),
+                    ),
                   ],
                   Expanded(child: _buildCinemaTabPanel(langCode)),
                 ],

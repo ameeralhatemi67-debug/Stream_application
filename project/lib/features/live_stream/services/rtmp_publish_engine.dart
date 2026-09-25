@@ -250,7 +250,10 @@ class RtmpPublishEngine extends ChangeNotifier {
     }
   }
 
+  bool _stopRequested = false;
+
   Future<void> startPublishing(String url) async {
+    _stopRequested = false;
     _setState(RtmpPublishState.connecting);
     try {
       await _channel.invokeMethod<void>('startStream', {'url': url});
@@ -286,6 +289,7 @@ class RtmpPublishEngine extends ChangeNotifier {
 
   Future<void> stopPublishing() async {
     if (_disposed) return;
+    _stopRequested = true;
     try {
       await _channel.invokeMethod<void>('stopStream');
     } on PlatformException catch (e) {
@@ -351,6 +355,13 @@ class RtmpPublishEngine extends ChangeNotifier {
   void _onEvent(dynamic event) {
     if (event is! Map) return;
     final type = event['type'] as String?;
+    if (_stopRequested &&
+        (type == 'connecting' ||
+            type == 'live' ||
+            type == 'reconnecting' ||
+            type == 'bitrate')) {
+      return;
+    }
     switch (type) {
       case 'connecting':
         _setState(RtmpPublishState.connecting);

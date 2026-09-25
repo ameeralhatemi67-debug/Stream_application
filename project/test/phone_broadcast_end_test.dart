@@ -44,6 +44,34 @@ class _Db extends AdminDatabaseService {
   int starts = 0;
   int stops = 0;
   bool failStop = false;
+  bool useSession = false;
+  bool rejectIngest = false;
+  final reports = <bool>[];
+
+  @override
+  Future<void> reportBroadcastIngest(
+      {required String sessionId,
+      required String deviceId,
+      required bool sending}) async {
+    reports.add(sending);
+    if (rejectIngest) {
+      throw const PostgrestException(message: 'Ended', code: '55000');
+    }
+  }
+
+  @override
+  Future<Map<String, dynamic>> loadMyBroadcastStatus() async => {
+        'live': !rejectIngest,
+        'stream_id': 'abcdefghijk',
+        'session_id': 'phone-session',
+        'last_ended': {'reason': 'admin_end'},
+      };
+
+  @override
+  Future<void> endBroadcastSession(
+      {required String sessionId, required String deviceId}) async {
+    stops++;
+  }
 
   @override
   Future<bool> checkIsProfileStreamer(String id) async => true;
@@ -83,7 +111,7 @@ class _Db extends AdminDatabaseService {
       required String senderMode,
       String? orgId}) async {
     starts++;
-    return null;
+    return useSession ? 'phone-session' : null;
   }
 }
 
@@ -396,6 +424,67 @@ void main() {
     expect(p.isBroadcastingLive, isFalse, reason: 'not re-listed');
     expect(find.descendant(of: endButton, matching: find.text('Leave')),
         findsOneWidget);
+    await close(tester, p, db);
+  });
+
+  testWidgets(
+      'remote End stops encoder, changes End to Leave and cannot relist',
+      (tester) async {
+    final db = _Db()..useSession = true;
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!);
+    await goLive(tester);
+    p.endBroadcastRemotelyForTesting('admin_end');
+    await tester.pump();
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 30)));
+    await tester.pump();
+    expect(calls, contains('stopStream'));
+    expect(find.descendant(of: endButton, matching: find.text('Leave')),
+        findsOneWidget);
+    await goLive(tester);
+    expect(db.starts, 1,
+        reason: 'a late encoder event cannot create a new session');
+    expect(p.isBroadcastingLive, isFalse);
+    expect(find.descendant(of: endButton, matching: find.text('Leave')),
+        findsOneWidget);
+    await close(tester, p, db);
+  });
+
+  testWidgets('portrait End remains reachable above the keyboard',
+      (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!);
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pump();
+    expect(endButton.hitTestable(), findsOneWidget);
+    expect(tester.getBottomLeft(endButton).dy, lessThan(615));
+    expect(tester.takeException(), isNull);
+    await close(tester, p, db);
+  });
+
+  testWidgets(
+      'a session ingest rejection stops the encoder without another start',
+      (tester) async {
+    final db = _Db()..useSession = true;
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!);
+    await goLive(tester);
+    db.rejectIngest = true;
+    await tester.runAsync(() => messenger.handlePlatformMessage(
+        events.name,
+        events.codec
+            .encodeSuccessEnvelope({'type': 'reconnecting', 'attempt': 1}),
+        (_) {}));
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump();
+    expect(db.reports, [false]);
+    expect(calls, contains('stopStream'));
+    expect(db.starts, 1);
+    expect(p.isBroadcastingLive, isFalse);
+    expect(p.currentDeviceSession?.isPrimaryBroadcaster, isTrue);
     await close(tester, p, db);
   });
 
