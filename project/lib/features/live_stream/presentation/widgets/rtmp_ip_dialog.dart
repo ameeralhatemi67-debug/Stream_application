@@ -6,23 +6,20 @@ import 'package:flutter/foundation.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/interactive_toast_overlay.dart';
-import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/stream_privacy_models.dart';
-import '../../services/rtmp_publish_engine.dart' show BroadcastQualityPreset;
+import '../../services/rtmp_publish_engine.dart'
+    show BroadcastQualityPreset, BroadcastQualityPresetConfig;
 import '../screens/phone_broadcast_screen.dart';
 import 'streamer_setup_guide_modal.dart';
 
 enum StudioMode { obs, phone, local }
-
-enum _PosterChoice { defaultVisualizer, custom }
 
 /// 70% glassmorphic Broadcaster Studio bottom sheet -- the single unified
 /// go-live entry point (v0.9 redesign). Replaces the old RtmpIpSettingsDialog
@@ -47,12 +44,18 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
   @visibleForTesting
   final StudioMode initialMode;
 
+  /// Set when the studio is opened from the phone broadcast screen: End
+  /// goes through that screen, which stops its encoder and leaves.
+  final Future<void> Function()? onEndBroadcast;
+
   const LiveBroadcasterStudioSheet({
     super.key,
     @visibleForTesting this.initialMode = StudioMode.obs,
+    this.onEndBroadcast,
   });
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context,
+      {Future<void> Function()? onEndBroadcast}) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -71,9 +74,9 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
                 ),
               ),
             ),
-            const Align(
+            Align(
               alignment: Alignment.bottomCenter,
-              child: LiveBroadcasterStudioSheet(),
+              child: LiveBroadcasterStudioSheet(onEndBroadcast: onEndBroadcast),
             ),
           ],
         );
@@ -135,15 +138,11 @@ class _LiveBroadcasterStudioSheetState
   String? _ctaErrorTitleKey;
   String? _ctaErrorKey;
   bool _ctaErrorOffersDeviceClaim = false;
-  _PosterChoice _posterChoice = _PosterChoice.defaultVisualizer;
-  String? _posterPath;
 
   bool _isPrivate = false;
   final List<String> _whitelistHandles = [];
   bool _requireKnockApproval = true;
   late final TextEditingController _whitelistInputController;
-
-  final ImagePicker _picker = ImagePicker();
 
   @override
   void initState() {
@@ -167,11 +166,6 @@ class _LiveBroadcasterStudioSheetState
             ? provider.customLiveCategory
             : 'cs_tech';
     _isAudioOnly = provider.customBroadcastType == BroadcastType.liveAudio;
-    final posterPath = provider.customAudioOnlyPosterPath;
-    if (posterPath != null && posterPath.isNotEmpty) {
-      _posterChoice = _PosterChoice.custom;
-      _posterPath = posterPath;
-    }
     _isPrivate = provider.streamVisibility == StreamVisibility.private;
     _whitelistHandles.addAll(provider.streamWhitelistHandles);
     _requireKnockApproval = provider.requireKnockApproval;
@@ -866,15 +860,13 @@ class _LiveBroadcasterStudioSheetState
     return Row(
       children: BroadcastQualityPreset.values.map((preset) {
         final isSelected = _quality == preset;
-        final (shortLabel, bandwidth) = switch (preset) {
-          BroadcastQualityPreset.low => ('480p', '~1.2 Mbps'),
-          BroadcastQualityPreset.medium => ('720p', '~2.5 Mbps'),
-          BroadcastQualityPreset.high => ('1080p', '~4.5 Mbps'),
-        };
+        final shortLabel = '${preset.height}p';
+        final bandwidth = 'live_studio.preset_bitrate'
+            .tr(args: [(preset.videoBitrateBps / 1e6).toStringAsFixed(1)]);
         return Expanded(
           child: Padding(
-            padding: EdgeInsets.only(
-              right: preset == BroadcastQualityPreset.high ? 0 : 8,
+            padding: EdgeInsetsDirectional.only(
+              end: preset == BroadcastQualityPreset.high ? 0 : 8,
             ),
             child: InkWell(
               onTap: () => setState(() => _quality = preset),
@@ -1041,6 +1033,7 @@ class _LiveBroadcasterStudioSheetState
       alignment: Alignment.topCenter,
       child: _isAudioOnly
           ? Container(
+              key: const Key('studio-audio-only-section'),
               margin: const EdgeInsets.only(top: AppTheme.spaceSm),
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
@@ -1052,109 +1045,32 @@ class _LiveBroadcasterStudioSheetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'design_copy.audio_only_backdrop'.tr(),
+                    'live_studio.audio_only_title'.tr(),
                     style: const TextStyle(
                       color: AppTheme.textPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  const SizedBox(height: AppTheme.spaceSm),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: _posterOption(
-                          icon: Icons.graphic_eq_rounded,
-                          label: 'design_copy.default'.tr(),
-                          selected:
-                              _posterChoice == _PosterChoice.defaultVisualizer,
-                          onTap: () => setState(() {
-                            _posterChoice = _PosterChoice.defaultVisualizer;
-                          }),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: _posterOption(
-                          icon: Icons.image_rounded,
-                          label: 'design_copy.custom_poster'.tr(),
-                          selected: _posterChoice == _PosterChoice.custom,
-                          onTap: _pickPoster,
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: AppTheme.spaceXs),
+                  Text(
+                    // The phone's own encoder hides its video; an external
+                    // sender decides for itself what YouTube shows.
+                    (_mode == StudioMode.phone
+                            ? 'live_studio.audio_only_note'
+                            : 'live_studio.audio_only_note_encoder')
+                        .tr(),
+                    key: const Key('studio-audio-only-note'),
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary,
+                        fontSize: 11.5,
+                        height: 1.4),
                   ),
-                  if (_posterChoice == _PosterChoice.custom &&
-                      _posterPath != null) ...[
-                    const SizedBox(height: AppTheme.spaceSm),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      child: Image(
-                        image: buildSafeImageProvider(path: _posterPath),
-                        height: 90,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                  ],
                 ],
               ),
             )
           : const SizedBox.shrink(),
     );
-  }
-
-  Widget _posterOption({
-    required IconData icon,
-    required String label,
-    required bool selected,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        decoration: BoxDecoration(
-          color:
-              selected ? _modeColor.withValues(alpha: 0.15) : AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: Border.all(color: selected ? _modeColor : AppTheme.border),
-        ),
-        child: Column(
-          children: [
-            Icon(icon,
-                size: 18, color: selected ? _modeColor : AppTheme.textMuted),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: selected ? _modeColor : AppTheme.textSecondary,
-                fontSize: 10.5,
-                fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickPoster() async {
-    try {
-      final image = await _picker.pickImage(
-          source: ImageSource.gallery, imageQuality: 85);
-      if (image == null || !mounted) return;
-      setState(() {
-        _posterChoice = _PosterChoice.custom;
-        _posterPath = image.path;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Could not read image: $e')),
-      );
-    }
   }
 
   // ---------------------------------------------------------------------
@@ -1455,6 +1371,13 @@ class _LiveBroadcasterStudioSheetState
             onTap: _isSubmitting
                 ? null
                 : () async {
+                    final endHere = widget.onEndBroadcast;
+                    if (endHere != null) {
+                      setState(() => _isSubmitting = true);
+                      Navigator.of(context).pop();
+                      await endHere();
+                      return;
+                    }
                     setState(() => _isSubmitting = true);
                     await provider.toggleBroadcasterGoLive(context);
                     if (!mounted) return;
@@ -1628,9 +1551,9 @@ class _LiveBroadcasterStudioSheetState
     provider.setBroadcastType(
       _isAudioOnly ? BroadcastType.liveAudio : BroadcastType.liveVideo,
     );
-    provider.setCustomAudioOnlyPosterPath(
-      _posterChoice == _PosterChoice.custom ? _posterPath : null,
-    );
+    // No backdrop image reaches the encoder yet (the phone hides its video
+    // track); nothing is stored that would suggest otherwise.
+    provider.setCustomAudioOnlyPosterPath(null);
     provider.configureStreamPrivacy(
       visibility:
           _isPrivate ? StreamVisibility.private : StreamVisibility.public,
@@ -1709,6 +1632,12 @@ class _LiveBroadcasterStudioSheetState
   /// sheet, so a refusal is explained here instead of after navigation.
   Future<void> _handlePhoneOpenCamera() async {
     final provider = context.read<AppProvider>();
+    // Opened from the phone broadcast screen: that screen already owns the
+    // camera; a second one would stack another encoder on top.
+    if (widget.onEndBroadcast != null) {
+      _showCtaError('live_studio.error_phone_screen_open');
+      return;
+    }
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       _showCtaError('live_studio.error_phone_unsupported');
       return;

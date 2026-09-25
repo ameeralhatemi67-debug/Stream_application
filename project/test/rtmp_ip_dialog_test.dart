@@ -389,7 +389,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Audio-Only Backdrop'), findsNothing);
+      expect(find.byKey(const Key('studio-audio-only-section')), findsNothing);
 
       await tester.tap(find.text('Audio'));
       // The Audio toggle's selection now drives a repeating breathing-glow
@@ -398,9 +398,11 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(milliseconds: 500));
 
-      expect(find.textContaining('Audio-Only Backdrop'), findsOneWidget);
-      expect(find.text('Default'), findsOneWidget);
-      expect(find.text('Custom Poster'), findsOneWidget);
+      expect(
+          find.byKey(const Key('studio-audio-only-section')), findsOneWidget);
+      // No backdrop image reaches the encoder, so none is offered (P6S G3).
+      expect(find.byKey(const Key('studio-audio-only-note')), findsOneWidget);
+      expect(find.text('Custom Poster'), findsNothing);
 
       // Switching back to Video must stop the pulse controller cleanly --
       // otherwise this pumpAndSettle() would hang, proving the animation
@@ -408,7 +410,7 @@ void main() {
       await tester.tap(find.text('Video'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Audio-Only Backdrop'), findsNothing);
+      expect(find.byKey(const Key('studio-audio-only-section')), findsNothing);
     });
 
     testWidgets(

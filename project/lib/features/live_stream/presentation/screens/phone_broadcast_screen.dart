@@ -164,7 +164,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       }
     } catch (e) {
       if (!mounted) return;
-      setState(() => _setupError = 'Could not start the camera: $e');
+      debugPrint('[PhoneBroadcastScreen] camera setup failed: $e');
+      setState(() => _setupError = 'live.camera_setup_failed'.tr());
     }
   }
 
@@ -283,6 +284,22 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       return;
     }
     if (!_weStartedBroadcast) return;
+    if (_appProvider.isBroadcastingLive) {
+      _wasListed = true;
+    } else if (_wasListed &&
+        !_starting &&
+        !_syncingLive &&
+        _engine.state == RtmpPublishState.live &&
+        _appProvider.broadcastSessionError == null) {
+      // Something else in this app ended the listing (for example the
+      // studio's End) while the encoder is still sending: stop sending too,
+      // instead of re-listing on the next encoder event.
+      _wasListed = false;
+      _weStartedBroadcast = false;
+      _engine.stopPublishing();
+      setState(() {});
+      return;
+    }
     if (!_appProvider.isStreamerModeEnabled ||
         _appProvider.currentDeviceSession?.isPrimaryBroadcaster != true) {
       _stopBroadcast();
@@ -291,6 +308,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   bool _leavingAfterDisplacement = false;
+  bool _wasListed = false;
 
   /// Stops the encoder, then removes this route; dispose() releases the
   /// camera, microphone, wakelock and orientation lock.
@@ -301,13 +319,118 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (!mounted) return;
     final route = ModalRoute.of(context);
     if (route != null && route.isActive) {
+      // An open "End this broadcast?" dialog would otherwise be left over
+      // the previous page.
+      if (!route.isCurrent) {
+        Navigator.of(context).popUntil((r) => r == route);
+      }
       Navigator.of(context).removeRoute(route);
     }
+  }
+
+  /// Whether this screen is sending, or about to. Leaving then ends the
+  /// broadcast: capture is owned by this screen, and a foreground service
+  /// that keeps broadcasting in the background is not built or verified yet.
+  bool get _isSending =>
+      _weStartedBroadcast ||
+      _starting ||
+      _engine.state == RtmpPublishState.connecting ||
+      _engine.state == RtmpPublishState.live ||
+      _engine.state == RtmpPublishState.reconnecting;
+
+  bool _endDialogOpen = false;
+
+  /// Set once End or Leave is under way: the button is disabled, Back is
+  /// ignored and a second tap cannot pop the page underneath.
+  bool _closing = false;
+
+  /// Asks before ending a broadcast. Only the dialog; nothing is stopped.
+  Future<bool> _askEnd() async {
+    _endDialogOpen = true;
+    final end = await showDialog<bool>(
+          context: context,
+          builder: (dialogContext) => AlertDialog(
+            key: const Key('phone-end-confirm'),
+            backgroundColor: AppTheme.surface,
+            title: Text('live.end_confirm_title'.tr(),
+                style: const TextStyle(color: AppTheme.textPrimary)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('live.end_confirm_body'.tr(),
+                    style: const TextStyle(color: AppTheme.textSecondary)),
+                const SizedBox(height: AppTheme.spaceSm),
+                Text('live.end_confirm_background_note'.tr(),
+                    style: const TextStyle(
+                        color: AppTheme.textMuted, fontSize: 12)),
+              ],
+            ),
+            actions: [
+              TextButton(
+                key: const Key('phone-end-stay'),
+                onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text('live.end_confirm_stay'.tr()),
+              ),
+              ElevatedButton(
+                key: const Key('phone-end-confirm-end'),
+                onPressed: () => Navigator.pop(dialogContext, true),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.danger,
+                  foregroundColor: AppTheme.onPrimary,
+                ),
+                child: Text('live.end_confirm_end'.tr()),
+              ),
+            ],
+          ),
+        ) ??
+        false;
+    _endDialogOpen = false;
+    return end;
+  }
+
+  /// The End control, the studio's End and the Back gesture all come here.
+  Future<void> _handleEndOrLeave() async {
+    if (_closing || _endDialogOpen || _leavingAfterDisplacement) return;
+    if (_isSending) {
+      final end = await _askEnd();
+      if (!end || !mounted || _closing || _leavingAfterDisplacement) return;
+    }
+    setState(() => _closing = true);
+    var confirmed = true;
+    // Only an end this screen asked the server for can fail to be confirmed;
+    // a Leave with nothing listed makes no server call at all.
+    final owned = _weStartedBroadcast;
+    try {
+      await _stopBroadcast();
+      // The camera has stopped either way. A failed end call leaves the
+      // listing in place (the provider restores it), so say so instead of
+      // implying the listing is gone.
+      confirmed = !owned || !_appProvider.isBroadcastingLive;
+    } catch (e) {
+      debugPrint('[PhoneBroadcastScreen] end failed: ${e.runtimeType}');
+      confirmed = false;
+    }
+    if (!mounted) return;
+    if (!confirmed) {
+      InteractiveToastOverlay.show(
+        context,
+        title: 'live.end_unconfirmed_title'.tr(),
+        message: 'live.end_unconfirmed_body'.tr(),
+        icon: Icons.warning_amber_rounded,
+        accentColor: AppTheme.warning,
+        duration: const Duration(seconds: 10),
+        messageMaxLines: 6,
+      );
+    }
+    final route = ModalRoute.of(context);
+    if (route != null && route.isCurrent) Navigator.of(context).pop();
   }
 
   Future<void> _stopBroadcast() async {
     final owned = _weStartedBroadcast;
     _weStartedBroadcast = false;
+    _wasListed = false;
     await _engine.stopPublishing();
     if (owned) await _appProvider.setBroadcasterLive(false);
   }
@@ -469,6 +592,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   @override
   Widget build(BuildContext context) {
+    return PopScope(
+      canPop: !_isSending && !_closing,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _handleEndOrLeave();
+      },
+      child: _buildScreen(context),
+    );
+  }
+
+  Widget _buildScreen(BuildContext context) {
     final title = _appProvider.customLiveTitle.isEmpty
         ? 'live.phone_broadcast_default_title'.tr()
         : _appProvider.customLiveTitle;
@@ -508,7 +641,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           icon: const Icon(Icons.arrow_back_rounded,
               color: AppTheme.textPrimary, size: 22),
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: () => Navigator.of(context).pop(),
+          onPressed: _handleEndOrLeave,
         ),
         titleSpacing: 0,
         title: Row(
@@ -623,8 +756,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             child: IconButton(
               icon: const Icon(Icons.cell_tower_rounded,
                   color: AppTheme.danger, size: 20),
-              tooltip: 'Broadcaster Studio & End Stream',
-              onPressed: () => LiveBroadcasterStudioSheet.show(context),
+              tooltip: 'live.tooltip_studio'.tr(),
+              onPressed: () => LiveBroadcasterStudioSheet.show(context,
+                  onEndBroadcast: _handleEndOrLeave),
             ),
           ),
         ],
@@ -679,10 +813,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         color: AppTheme.media,
         alignment: Alignment.center,
         padding: const EdgeInsets.all(AppTheme.spaceLg),
-        child: Text(
-          _setupError!,
-          textAlign: TextAlign.center,
-          style: const TextStyle(color: AppTheme.danger),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              _setupError!,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppTheme.danger),
+            ),
+            const SizedBox(height: AppTheme.spaceMd),
+            _endControl(),
+          ],
         ),
       );
     }
@@ -703,60 +844,66 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               Container(
                 color: AppTheme.bg,
                 alignment: Alignment.center,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    CircleAvatar(
-                      radius: 34,
-                      backgroundColor: AppTheme.surface,
-                      backgroundImage:
-                          resolveImageProviderOrNull(streamer.avatarUrl),
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.warning.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        border: Border.all(
-                            color: AppTheme.warning.withValues(alpha: 0.5)),
+                // Keeps the poster's button clear of the pinned End control.
+                padding: const EdgeInsets.only(bottom: 56),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      CircleAvatar(
+                        radius: 34,
+                        backgroundColor: AppTheme.surface,
+                        backgroundImage:
+                            resolveImageProviderOrNull(streamer.avatarUrl),
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(Icons.videocam_off_rounded,
-                              size: 14, color: AppTheme.warning),
-                          const SizedBox(width: 6),
-                          Text(
-                            'design_ui.camera_is_off_audio_only'.tr(),
-                            style: const TextStyle(
-                              color: AppTheme.warning,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: () => _engine.toggleCamera(false),
-                      icon: const Icon(Icons.videocam_rounded, size: 16),
-                      label: Text('design_ui.turn_on_camera'.tr(),
-                          style: const TextStyle(
-                              fontSize: 12, fontWeight: FontWeight.bold)),
-                      style: TextButton.styleFrom(
-                        // surfaceAlt is a near-white tint, not a media
-                        // surface, so the label takes the primary accent
-                        // rather than `onMedia` white on near-white.
-                        foregroundColor: AppTheme.primary,
-                        backgroundColor: AppTheme.surfaceAlt,
+                      const SizedBox(height: 10),
+                      Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                            horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppTheme.warning.withValues(alpha: 0.2),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          border: Border.all(
+                              color: AppTheme.warning.withValues(alpha: 0.5)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(Icons.videocam_off_rounded,
+                                size: 14, color: AppTheme.warning),
+                            const SizedBox(width: 6),
+                            Text(
+                              'live.video_hidden_badge'.tr(),
+                              style: const TextStyle(
+                                color: AppTheme.warning,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () => _engine.toggleCamera(false),
+                        icon: const Icon(Icons.videocam_rounded, size: 16),
+                        label: Text('design_ui.turn_on_camera'.tr(),
+                            style: const TextStyle(
+                                fontSize: 12, fontWeight: FontWeight.bold)),
+                        style: TextButton.styleFrom(
+                          // surfaceAlt is a near-white tint, not a media
+                          // surface, so the label takes the primary accent
+                          // rather than `onMedia` white on near-white.
+                          foregroundColor: AppTheme.primary,
+                          backgroundColor: AppTheme.surfaceAlt,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               )
             else
@@ -817,7 +964,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         child: IconButton(
                           icon: const Icon(Icons.more_vert_rounded,
                               color: AppTheme.onMedia, size: 20),
-                          tooltip: 'Streamer Controls',
+                          tooltip: 'live.tooltip_controls'.tr(),
                           onPressed: () => _showStreamerControlsSheet(streamer),
                         ),
                       ),
@@ -839,16 +986,18 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         child: IconButton(
                           icon: const Icon(Icons.fullscreen_rounded,
                               color: AppTheme.onMedia, size: 20),
-                          tooltip: 'Fullscreen',
+                          tooltip: 'live.tooltip_fullscreen'.tr(),
                           onPressed: _handleToggleFullscreen,
                         ),
                       ),
                     ),
 
                     // Mic Muted Pill
-                    if (_engine.isMuted)
+                    // Hidden while the audio-only poster shows: it would sit
+                    // over the poster's button.
+                    if (_engine.isMuted && !_engine.isCameraOff)
                       PositionedDirectional(
-                        bottom: AppTheme.spaceSm,
+                        bottom: 60,
                         start: AppTheme.spaceSm,
                         child: _StatusPill(
                           label: 'live.mic_muted_badge'.tr(),
@@ -858,6 +1007,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   ],
                 ),
               ),
+            ),
+
+            // End is never faded with the other controls.
+            PositionedDirectional(
+              bottom: AppTheme.spaceSm,
+              start: 0,
+              end: 0,
+              child: Center(child: _endControl()),
             ),
 
             // 4. Reconnecting Banner
@@ -963,12 +1120,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         const Icon(Icons.tune_rounded,
                             color: AppTheme.danger, size: 20),
                         const SizedBox(width: 8),
-                        Text(
-                          'design_ui.streamer_quick_controls'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Text(
+                            'design_ui.streamer_quick_controls'.tr(),
+                            style: const TextStyle(
+                              color: AppTheme.onMedia,
+                              fontSize: 15,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ],
@@ -988,16 +1147,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         color: isMuted ? AppTheme.danger : AppTheme.success,
                       ),
                       title: Text(
-                        isMuted ? 'Unmute Microphone' : 'Mute Microphone',
+                        (isMuted ? 'live.ctrl_unmute' : 'live.ctrl_mute').tr(),
                         style: const TextStyle(
                             color: AppTheme.onMedia,
                             fontWeight: FontWeight.w600,
                             fontSize: 13.5),
                       ),
                       subtitle: Text(
-                        isMuted
-                            ? 'Your mic is currently silent'
-                            : 'Live audio input active',
+                        (isMuted
+                                ? 'live.ctrl_mic_muted_sub'
+                                : 'live.ctrl_mic_active_sub')
+                            .tr(),
                         style: const TextStyle(
                             color: AppTheme.textSecondary, fontSize: 11),
                       ),
@@ -1027,18 +1187,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       leading: const Icon(Icons.flip_camera_ios_rounded,
                           color: AppTheme.primary),
                       title: Text(
-                        isFrontCamera
-                            ? 'Switch to Back Camera'
-                            : 'Switch to Front Camera',
+                        (isFrontCamera
+                                ? 'live.ctrl_switch_to_back'
+                                : 'live.ctrl_switch_to_front')
+                            .tr(),
                         style: const TextStyle(
                             color: AppTheme.onMedia,
                             fontWeight: FontWeight.w600,
                             fontSize: 13.5),
                       ),
                       subtitle: Text(
-                        isFrontCamera
-                            ? 'Front selfie camera active'
-                            : 'Rear environment camera active',
+                        (isFrontCamera
+                                ? 'live.ctrl_front_active_sub'
+                                : 'live.ctrl_back_active_sub')
+                            .tr(),
                         style: const TextStyle(
                             color: AppTheme.textSecondary, fontSize: 11),
                       ),
@@ -1070,18 +1232,20 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             isCameraOff ? AppTheme.warning : AppTheme.primary,
                       ),
                       title: Text(
-                        isCameraOff
-                            ? 'Turn On Camera'
-                            : 'Close Camera (Audio-Only)',
+                        (isCameraOff
+                                ? 'live.ctrl_show_video'
+                                : 'live.ctrl_hide_video')
+                            .tr(),
                         style: const TextStyle(
                             color: AppTheme.onMedia,
                             fontWeight: FontWeight.w600,
                             fontSize: 13.5),
                       ),
                       subtitle: Text(
-                        isCameraOff
-                            ? 'Displaying profile poster to viewers'
-                            : 'Live camera video stream active',
+                        (isCameraOff
+                                ? 'live.ctrl_video_hidden_sub'
+                                : 'live.ctrl_video_shown_sub')
+                            .tr(),
                         style: const TextStyle(
                             color: AppTheme.textSecondary, fontSize: 11),
                       ),
@@ -1113,14 +1277,18 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         leading: const Icon(Icons.people_alt_rounded,
                             color: AppTheme.warning),
                         title: Text(
-                          'Manage Attendees (${_appProvider.admittedAttendees.length})',
+                          'live.ctrl_manage_attendees'.tr(args: [
+                            '${_appProvider.admittedAttendees.length}'
+                          ]),
                           style: const TextStyle(
                               color: AppTheme.onMedia,
                               fontWeight: FontWeight.w600,
                               fontSize: 13.5),
                         ),
                         subtitle: Text(
-                          '${_appProvider.pendingKnockRequests.length} waiting in admission queue',
+                          'live.ctrl_waiting_queue'.tr(args: [
+                            '${_appProvider.pendingKnockRequests.length}'
+                          ]),
                           style: const TextStyle(
                               color: AppTheme.textSecondary, fontSize: 11),
                         ),
@@ -1159,7 +1327,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           color: AppTheme.danger, size: 14),
                       onTap: () {
                         Navigator.of(sheetContext).pop();
-                        LiveBroadcasterStudioSheet.show(context);
+                        LiveBroadcasterStudioSheet.show(context,
+                            onEndBroadcast: _handleEndOrLeave);
                       },
                     ),
                   ],
@@ -1172,16 +1341,43 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
-  String get _presetCompactLabel {
-    switch (_preset) {
-      case BroadcastQualityPreset.low:
-        return '480p SD';
-      case BroadcastQualityPreset.medium:
-        return '720p HD';
-      case BroadcastQualityPreset.high:
-        return '1080p FHD';
-    }
+  /// Always visible while this screen is open, in both orientations. While
+  /// nothing is sending it reads "Leave" and closes without asking.
+  Widget _endControl() {
+    final sending = _isSending;
+    return FilledButton.icon(
+      key: const Key('phone-end-broadcast'),
+      onPressed: _closing ? null : _handleEndOrLeave,
+      icon: _closing
+          ? const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                  strokeWidth: 2, color: AppTheme.onPrimary),
+            )
+          : Icon(sending ? Icons.stop_circle_rounded : Icons.logout_rounded,
+              size: 18),
+      label: Text(
+          (_closing
+                  ? 'live.ending'
+                  : sending
+                      ? 'live.end_broadcast'
+                      : 'live.leave_screen')
+              .tr(),
+          style: const TextStyle(fontWeight: FontWeight.bold)),
+      style: FilledButton.styleFrom(
+        backgroundColor: sending ? AppTheme.danger : AppTheme.surfaceAlt,
+        foregroundColor: sending ? AppTheme.onPrimary : AppTheme.textPrimary,
+        // "Ending..." keeps the danger colour and stays readable.
+        disabledBackgroundColor: AppTheme.danger.withValues(alpha: 0.75),
+        disabledForegroundColor: AppTheme.onPrimary,
+        minimumSize: const Size(48, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+      ),
+    );
   }
+
+  String get _presetCompactLabel => '${_preset.height}p';
 
   Widget _buildTitleAndDescriptionStrip(String title, String description,
       StreamerModel streamer, String langCode) {
@@ -1607,7 +1803,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           color: AppTheme.warning.withValues(alpha: 0.5)),
                     ),
                     child: Text(
-                      'design_ui.camera_is_off_audio_only'.tr(),
+                      'live.video_hidden_badge'.tr(),
                       style: const TextStyle(
                         color: AppTheme.warning,
                         fontSize: 12,
@@ -1647,7 +1843,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       IconButton(
                         icon: const Icon(Icons.fullscreen_exit_rounded,
                             color: AppTheme.onMedia, size: 24),
-                        tooltip: 'Exit Fullscreen',
+                        tooltip: 'live.tooltip_exit_fullscreen'.tr(),
                         onPressed: _handleToggleFullscreen,
                       ),
                       const SizedBox(width: AppTheme.spaceSm),
@@ -1672,7 +1868,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       IconButton(
                         icon: const Icon(Icons.more_vert_rounded,
                             color: AppTheme.onMedia, size: 22),
-                        tooltip: 'Streamer Controls',
+                        tooltip: 'live.tooltip_controls'.tr(),
                         onPressed: () => _showStreamerControlsSheet(streamer),
                       ),
                       IconButton(
@@ -1685,7 +1881,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               : AppTheme.onMedia,
                           size: 22,
                         ),
-                        tooltip: 'Toggle Live Chat',
+                        tooltip: 'live.tooltip_toggle_chat'.tr(),
                         onPressed: () {
                           setState(() => _isSideChatOpen = !_isSideChatOpen);
                         },
@@ -1695,6 +1891,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 ),
               ),
             ),
+          ),
+
+          // End is never faded with the other controls.
+          PositionedDirectional(
+            bottom: AppTheme.spaceMd,
+            end: AppTheme.spaceMd,
+            child: SafeArea(child: _endControl()),
           ),
 
           // 4. Side Chat Drawer Overlay (when active in fullscreen)
@@ -1741,7 +1944,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    ' ${provider.admittedAttendees.length} Attendees',
+                    'live.attendees_count'
+                        .tr(args: ['${provider.admittedAttendees.length}']),
                     style: const TextStyle(
                       color: AppTheme.onMedia,
                       fontSize: 16,
@@ -1757,7 +1961,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           style: const TextStyle(
                               color: AppTheme.onMedia, fontSize: 13),
                           decoration: InputDecoration(
-                            hintText: 'Search or add @username',
+                            hintText: 'live.attendee_search_hint'.tr(),
                             hintStyle: const TextStyle(
                                 color: AppTheme.textMuted, fontSize: 12),
                             filled: true,
@@ -2092,7 +2296,7 @@ class _KnockingBanner extends StatelessWidget {
           if (queueLength > 1) ...[
             TextButton(
               onPressed: onAdmitAll,
-              child: Text('Admit All ($queueLength)',
+              child: Text('live.admit_all'.tr(args: ['$queueLength']),
                   style:
                       const TextStyle(color: AppTheme.success, fontSize: 11)),
             ),
@@ -2101,13 +2305,13 @@ class _KnockingBanner extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.close_rounded,
                 color: AppTheme.danger, size: 20),
-            tooltip: 'Deny',
+            tooltip: 'live.tooltip_deny'.tr(),
             onPressed: onDeny,
           ),
           IconButton(
             icon: const Icon(Icons.check_circle_rounded,
                 color: AppTheme.success, size: 20),
-            tooltip: 'Admit',
+            tooltip: 'live.tooltip_admit'.tr(),
             onPressed: onAdmit,
           ),
         ],
