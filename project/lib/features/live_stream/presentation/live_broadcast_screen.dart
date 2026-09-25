@@ -24,7 +24,6 @@ import 'widgets/chat_message_actions_sheet.dart';
 import 'widgets/floating_reactions_overlay.dart';
 import 'widgets/live_player_overlay_controls.dart';
 import 'widgets/live_multi_speaker_overlay.dart';
-import 'widgets/live_audio_stage_multi_speaker.dart';
 import 'widgets/private_stream_viewer_gate.dart';
 import 'widgets/stream_state_placeholder_overlay.dart';
 import 'widgets/live_room_connection_view.dart';
@@ -492,10 +491,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       // about a player that no longer exists.
       if (!mounted || key != _playerKey) return;
       if (!sent) return _explainNotReady();
-      setState(() {
-        _isPlaying = !playing;
-        _streamState = _isPlaying ? StreamState.live : StreamState.paused;
-      });
+      // Delivery is not playback confirmation. The player's state callback
+      // updates the icon, including when autoplay is blocked.
     } finally {
       _commandInFlight = false;
     }
@@ -512,7 +509,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       final sent = await transport.setMuted(!muted);
       if (!mounted || key != _playerKey) return;
       if (!sent) return _explainNotReady();
-      setState(() => _isMuted = !muted);
+      // The player's mutedListenable confirms the actual mute state.
     } finally {
       _commandInFlight = false;
     }
@@ -784,11 +781,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               fallbackUrls: streamer.isLiveForRoom
                   ? const []
                   : streamer.fallbackYoutubeVideoIds,
-              // Audio-only broadcasts always autoplay: LiveAudioStageMultiSpeaker
-              // paints over the player entirely, so there is no visible
-              // transport for the viewer to un-pause -- the engine underneath
-              // has to start (and stay) playing on its own (Task 1).
-              autoPlay: isAudioLive || _isPlaying,
+              autoPlay: _isPlaying,
               // A new player (Retry, reload) keeps the viewer's mute choice.
               initialMuted: _isMuted,
               // The new player starts from initialMuted; the room only needs
@@ -825,25 +818,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               },
             ),
 
-          // 2. Audio-Only Presenter Stage Overlay with Kinetic Pulse Dynamics
-          if (isAudioLive)
-            LiveAudioStageMultiSpeaker(
-              streamer: streamer,
-              langCode: langCode,
-              viewerCount: viewerCount,
-              speakers: streamer.affiliatedSpeakers,
-              allVods: appProvider.getVodsForStreamer(streamer.streamerId),
-              isPlaying: _isPlaying,
-              streamState: _streamState,
-              onStageTap: () {
-                if (!_isPlaying) {
-                  setState(() {
-                    _isPlaying = true;
-                    _streamState = StreamState.live;
-                  });
-                }
-              },
-            ),
+          // Camera-off senders still use a visible YouTube player. Its own
+          // controls must remain reachable, including on Chrome.
 
           // 2b. Multi-Speaker Floating Video Overlay
           if (!isAudioLive &&
@@ -945,6 +921,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             isStreamerMicMuted: appProvider.isStreamerMicMuted,
             selectedQuality: _selectedQuality,
             showTransportControls: _transportAvailable,
+            // YouTube removed setPlaybackQuality; its own settings own ABR.
+            showQualitySelector: false,
             onTogglePlayPause: _togglePlayPause,
             onToggleMute: _toggleMute,
             onToggleFullscreen: _handleToggleFullscreen,

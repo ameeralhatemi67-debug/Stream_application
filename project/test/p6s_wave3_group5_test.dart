@@ -30,6 +30,8 @@ import 'fixtures/streamer_fixtures.dart';
 import 'support/localized_app.dart';
 
 class _Log {
+  int playerTaps = 0;
+  bool confirmCommands = true;
   int created = 0;
   int disposed = 0;
   final commands = <String>[];
@@ -73,6 +75,10 @@ class _PlayerState extends State<_Player> implements PlayerTransport {
   Future<bool> _send(String c) async {
     if (widget.log.refuse) return false;
     widget.log.commands.add(c);
+    if (widget.log.confirmCommands && (c == 'play' || c == 'pause')) {
+      widget.onStateChanged
+          ?.call(c == 'play' ? StreamState.live : StreamState.paused);
+    }
     return true;
   }
 
@@ -83,7 +89,11 @@ class _PlayerState extends State<_Player> implements PlayerTransport {
     final gate = widget.log.pauseGate;
     if (gate != null) {
       widget.log.commands.add('pause');
-      return gate.future;
+      final sent = await gate.future;
+      if (sent && widget.log.confirmCommands) {
+        widget.onStateChanged?.call(StreamState.paused);
+      }
+      return sent;
     }
     return _send('pause');
   }
@@ -121,7 +131,11 @@ class _PlayerState extends State<_Player> implements PlayerTransport {
   }
 
   @override
-  Widget build(BuildContext context) => const SizedBox.expand();
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => widget.log.playerTaps++,
+        child: const SizedBox.expand(),
+      );
 }
 
 class _Chat extends LiveChatController {
@@ -246,6 +260,18 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
     }
 
+    testWidgets(
+        'embedded controls receive taps when app transport is unavailable',
+        (tester) async {
+      log.transport = false;
+      await open(tester);
+      await tester.tapAt(tester.getCenter(find.byType(_Player)));
+      await tester.pump();
+      expect(log.playerTaps, 1);
+      expect(find.byKey(const Key('room-play-pause')), findsNothing);
+      await close(tester);
+    });
+
     testWidgets('pause, play and mute are sent to the player', (tester) async {
       await open(tester);
       await tester.pump();
@@ -253,6 +279,7 @@ void main() {
       await tester.tap(find.byKey(const Key('room-play-pause')));
       await tester.pump();
       expect(log.commands, ['pause']);
+      await tester.pump();
       expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
       await tester.tap(find.byKey(const Key('room-play-pause')));
       await tester.pump();
@@ -275,6 +302,23 @@ void main() {
           reason: 'still playing: nothing was sent');
       expect(find.text('live.player_not_ready'.tr()), findsOneWidget,
           reason: 'the refusal is said, not silent');
+      await close(tester);
+    });
+
+    testWidgets('a delivered command cannot invent a playback state',
+        (tester) async {
+      log.confirmCommands = false;
+      await open(tester);
+      await tester.pump();
+      await showControls(tester);
+      await tester.tap(find.byKey(const Key('room-play-pause')));
+      await tester.pump();
+      expect(log.commands, ['pause']);
+      expect(find.byIcon(Icons.pause_rounded), findsOneWidget);
+      log.emit?.call(StreamState.paused);
+      await tester.pump();
+      await tester.pump();
+      expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
       await close(tester);
     });
 
@@ -368,6 +412,7 @@ void main() {
       await tester.pump();
       expect(log.commands, ['pause']);
       log.pauseGate!.complete(true);
+      await tester.pump();
       await tester.pump();
       expect(find.byIcon(Icons.play_arrow_rounded), findsOneWidget);
       await close(tester);

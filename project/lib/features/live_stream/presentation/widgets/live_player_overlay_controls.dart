@@ -95,6 +95,7 @@ class LivePlayerOverlayControls extends StatefulWidget {
   /// play/pause and mute buttons are hidden instead of shown inert, and the
   /// player's own controls are used.
   final bool showTransportControls;
+  final bool showQualitySelector;
 
   /// True while the broadcaster's own microphone is muted or has been silent
   /// long enough to count as intentional silence -- viewers get an explicit
@@ -122,6 +123,7 @@ class LivePlayerOverlayControls extends StatefulWidget {
     required this.onRetryConnection,
     this.isAudioOnly = false,
     this.showTransportControls = true,
+    this.showQualitySelector = true,
     this.isStreamerMicMuted = false,
     this.selectedQuality = StreamQualityLevel.auto,
     required this.onSelectQuality,
@@ -174,8 +176,10 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
     final controlsVisible = _showControls && !isPlaceholderVisible;
 
     return GestureDetector(
-      onTap: _toggleControlsVisibility,
-      behavior: HitTestBehavior.opaque,
+      onTap: widget.showTransportControls ? _toggleControlsVisibility : null,
+      behavior: widget.showTransportControls
+          ? HitTestBehavior.translucent
+          : HitTestBehavior.deferToChild,
       child: Stack(
         children: [
           // Top Header Overlay: Live Badge, Viewer count pill, Quality Selector (Video only)
@@ -255,7 +259,7 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                   ),
 
                   // Quality Selector -- video renditions only
-                  _buildQualitySelector(),
+                  if (widget.showQualitySelector) _buildQualitySelector(),
                 ],
               ),
             ),

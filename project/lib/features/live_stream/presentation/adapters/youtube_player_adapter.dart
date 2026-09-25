@@ -63,8 +63,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
   @override
   ValueListenable<bool> get mutedListenable => _mutedNotifier;
 
-  /// Set by the first event from the embedded player. Until then the page
-  /// keeps asking it to report (the `listening` handshake).
+  /// Set only by the supported IFrame API's onReady callback.
   bool _heardFromPlayer = false;
 
   /// A playback state (not just "ready") has been reported.
@@ -83,30 +82,20 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
   // iframe (no channel), and desktop has no web view.
   @override
   bool get supportsCommands =>
+      _heardFromPlayer &&
+      !_hasError &&
       !kIsWeb &&
       (defaultTargetPlatform == TargetPlatform.android ||
           defaultTargetPlatform == TargetPlatform.iOS);
 
-  /// Posts an IFrame API command to the loaded embed. Returns true only when
-  /// the page has finished loading and the embed's iframe was there to take
-  /// it; a command before that is refused, not reported as sent. Playback
-  /// changes are then confirmed by the embed's own onStateChange events
-  /// (after the `listening` handshake in the page), which the room follows.
+  /// Sends a command only after the supported IFrame API reports ready.
+  /// Delivery does not prove playback: the room follows onStateChange.
   Future<bool> _postCommand(String func) async {
     if (!supportsCommands || _isLoading || _hasError) return false;
-    final js = '''
-(function() {
-  var frame = document.querySelector('iframe');
-  if (!frame || !frame.contentWindow) return 'none';
-  frame.contentWindow.postMessage(JSON.stringify({
-    event: 'command', func: '$func', args: []
-  }), '*');
-  return 'ok';
-})();
-''';
+    final js = "playerCommand('$func');";
     try {
       final result = await _webViewController.runJavaScriptReturningResult(js);
-      return '$result'.contains('ok');
+      return result == 'ok' || result == '"ok"';
     } catch (e) {
       debugPrint('[YouTubePlayerAdapter] $func failed: ${e.runtimeType}');
       return false;
@@ -124,7 +113,6 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
     final sent = await _postCommand(muted ? 'mute' : 'unMute');
     if (sent) {
       _viewerMuted = muted;
-      _mutedNotifier.value = muted;
     }
     return sent;
   }
@@ -203,21 +191,9 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
                 _silentPlayerTimer?.cancel();
                 _silentPlayerTimer = Timer(const Duration(seconds: 10), () {
                   if (mounted && !_heardFromPlayer && !_hasError) {
-                    widget.onStateChanged?.call(StreamState.live);
+                    widget.onStateChanged?.call(StreamState.paused);
                   }
                 });
-                // The iframe only exists once the document is parsed, so a
-                // quality chosen before this point is applied here.
-                _applyPreferredQuality();
-                if (widget.autoPlay) {
-                  if (_viewerMuted) {
-                    // The embed already starts muted (mute=1); keep it so.
-                    _postCommand('mute');
-                    _postCommand('playVideo');
-                  } else {
-                    unMuteAndPlay();
-                  }
-                }
               }
             },
             onWebResourceError: (WebResourceError error) {
@@ -239,14 +215,6 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
             controller.platform as AndroidWebViewController;
         androidController.setMediaPlaybackRequiresUserGesture(false);
       }
-    } else {
-      // On Web: navigation callbacks are handled by browser iframe, mark
-      // loaded. The iframe gives this adapter no playback events, so "live"
-      // here only means "show the player"; the room's LIVE badge follows
-      // the server's live state, not this.
-      _isLoading = false;
-      widget.onPlayerReady?.call();
-      widget.onStateChanged?.call(StreamState.live);
     }
 
     _webViewController = controller;
@@ -261,8 +229,14 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
     try {
       final Map<String, dynamic> data = jsonDecode(jsonStr);
       final type = data['type'] as String?;
-      _heardFromPlayer = true;
+      if (!mounted ||
+          !const {'ready', 'muted', 'state', 'error'}.contains(type)) {
+        return;
+      }
       if (type == 'ready') {
+        _heardFromPlayer = true;
+        _silentPlayerTimer?.cancel();
+        widget.onPlayerReady?.call();
         // The player answered but has not reported a playback state yet
         // (for example autoplay was blocked). Show it as paused, with its
         // own play button reachable, rather than "starting" forever or
@@ -336,15 +310,10 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
     }
   }
 
-  void unMuteAndPlay() {
-    try {
-      _webViewController.runJavaScript('forceUnmuteAndPlay();');
-    } catch (e) {
-      debugPrint('[YouTubePlayerAdapter] unMuteAndPlay failed: $e');
-    }
-  }
-
   void _loadVideoEmbed(String videoId) {
+    _silentPlayerTimer?.cancel();
+    _heardFromPlayer = false;
+    _reportedState = false;
     if (kIsWeb) {
       // No `origin` on web: the real origin there is the host page, which
       // this adapter cannot know, and a mismatched origin is exactly what
@@ -352,9 +321,22 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
       final embedUrl =
           'https://www.youtube-nocookie.com/embed/$videoId?autoplay=${widget.autoPlay ? 1 : 0}&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&mute=${_viewerMuted ? 1 : 0}';
       try {
-        _webViewController.loadRequest(Uri.parse(embedUrl));
+        _webViewController.loadRequest(Uri.parse(embedUrl)).then((_) {
+          if (!mounted || _currentVideoId != videoId) return;
+          // The web plugin sets iframe.src and has no page-finished callback.
+          // Remove our loading cover on every load, including Retry/watch
+          // changes, so YouTube can show its own controls or error. This is
+          // not a playback acknowledgement; app transport remains disabled.
+          setState(() => _isLoading = false);
+          widget.onPlayerReady?.call();
+          widget.onStateChanged?.call(StreamState.paused);
+        }).catchError((Object error) {
+          if (mounted && _currentVideoId == videoId) {
+            _handleStreamFailure('live.player_not_ready'.tr());
+          }
+        });
       } catch (e) {
-        debugPrint('[YouTubePlayerAdapter] Web loadRequest error: $e');
+        _handleStreamFailure('live.player_not_ready'.tr());
       }
     } else {
       final html = buildYouTubeEmbedHtml(
@@ -385,52 +367,6 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
           _loadVideoEmbed(_currentVideoId);
         }
       }
-    }
-    if (widget.preferredQuality != oldWidget.preferredQuality) {
-      _applyPreferredQuality();
-    }
-  }
-
-  /// YouTube's rendition names for the resolutions the overlay selector
-  /// offers. `auto` maps to `default`, which hands control back to
-  /// YouTube's own adaptive logic.
-  static const Map<String, String> _youtubeQualityNames = {
-    'auto': 'default',
-    '1080': 'hd1080',
-    '720': 'hd720',
-    '480': 'large',
-    '360': 'medium',
-  };
-
-  /// Pushes the viewer's chosen rendition to the embedded player over the
-  /// `enablejsapi=1` postMessage channel -- the same protocol the IFrame
-  /// Player API itself uses, so it needs no extra script in the page and,
-  /// crucially, does not reload the embed (which would interrupt a live
-  /// broadcast every time someone touched the selector).
-  ///
-  /// YouTube treats `setPlaybackQuality` as a *request*: it will refuse a
-  /// rendition the current stream does not publish, or override it when
-  /// bandwidth drops. That is the documented behaviour of the platform, not
-  /// a gap here -- the selector expresses a preference, it does not promise
-  /// a bitrate.
-  void _applyPreferredQuality() {
-    final quality = _youtubeQualityNames[widget.preferredQuality];
-    if (quality == null) return;
-    final js = '''
-(function() {
-  var frame = document.querySelector('iframe');
-  if (!frame || !frame.contentWindow) return;
-  frame.contentWindow.postMessage(JSON.stringify({
-    event: 'command',
-    func: 'setPlaybackQuality',
-    args: ['$quality']
-  }), '*');
-})();
-''';
-    try {
-      _webViewController.runJavaScript(js);
-    } catch (e) {
-      debugPrint('[YouTubePlayerAdapter] setPlaybackQuality failed: $e');
     }
   }
 
@@ -587,8 +523,8 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
 }
 
 /// The page the Android and iOS web views load: the youtube-nocookie embed
-/// (ADR-006 origin and referrer policy), the IFrame widget `listening`
-/// handshake, and the bridge that forwards player events to the app.
+/// (ADR-006 origin and referrer policy), the supported IFrame API, and the
+/// bridge that forwards player events to the app.
 @visibleForTesting
 String buildYouTubeEmbedHtml({
   required String videoId,
@@ -610,7 +546,7 @@ String buildYouTubeEmbedHtml({
 </head>
 <body>
   <div class="video-container">
-    <iframe
+    <iframe id="youtube-player"
       src="https://www.youtube-nocookie.com/embed/$videoId?autoplay=${autoPlay ? 1 : 0}&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1&mute=${muted ? 1 : 0}&origin=$_embedBaseUrl"
       referrerpolicy="strict-origin-when-cross-origin"
       allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
@@ -618,64 +554,57 @@ String buildYouTubeEmbedHtml({
     </iframe>
   </div>
   <script>
-    // The IFrame widget protocol only posts player events (onReady,
-    // onStateChange, onError) to a page that has said it is listening.
-    // It is repeated until the player answers (as YouTube's own IFrame API
-    // does), because a single early message can be missed.
-    var heardFromPlayer = false;
-    (function() {
-      var frame = document.querySelector('iframe');
-      if (!frame) return;
-      var tries = 0;
-      function ping() {
-        if (heardFromPlayer || tries++ > 40) return;
-        try {
-          frame.contentWindow.postMessage(
-            JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), '*');
-        } catch (e) {}
-        setTimeout(ping, 250);
+    // Use the supported IFrame API. No application message listener accepts
+    // cross-window events, and commands remain disabled until onReady.
+    var player = null;
+    var playerReady = false;
+    var lastMuted;
+    function bridge(message) {
+      if (window.FlutterYouTubeBridge) {
+        FlutterYouTubeBridge.postMessage(JSON.stringify(message));
       }
-      frame.addEventListener('load', ping);
-    })();
-    window.addEventListener('message', function(event) {
-      try {
-        var data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-        if (data && data.event) heardFromPlayer = true;
-        if (data && (data.event === 'onReady' || data.event === 'initialDelivery') &&
-            window.FlutterYouTubeBridge) {
-          FlutterYouTubeBridge.postMessage(JSON.stringify({ type: 'ready' }));
-        }
-        // infoDelivery carries the player's own state, including a mute
-        // made with its built-in controls.
-        if (data && data.event === 'infoDelivery' && data.info &&
-            typeof data.info.muted === 'boolean' && window.FlutterYouTubeBridge) {
-          FlutterYouTubeBridge.postMessage(JSON.stringify({ type: 'muted', value: data.info.muted }));
-        }
-        if (data && data.event === 'onStateChange') {
-          // -1: unstarted, 0: ended, 1: playing, 2: paused, 3: buffering, 5: cued
-          if (window.FlutterYouTubeBridge) {
-            FlutterYouTubeBridge.postMessage(JSON.stringify({ type: 'state', value: data.info }));
-          }
-        }
-        if (data && data.event === 'onError') {
-          // 2: invalid param, 5: HTML5 error, 100: not found, 101/150: embed blocked
-          if (window.FlutterYouTubeBridge) {
-            FlutterYouTubeBridge.postMessage(JSON.stringify({ type: 'error', code: data.info }));
-          }
-        }
-      } catch(e) {}
-    });
-
-    function forceUnmuteAndPlay() {
-      try {
-        var frame = document.querySelector('iframe');
-        if (frame && frame.contentWindow) {
-          frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'unMute', args: [] }), '*');
-          frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: 'playVideo', args: [] }), '*');
-        }
-      } catch(e) {}
     }
+    function reportMute() {
+      if (!playerReady) return;
+      var value = player.isMuted();
+      if (typeof value === 'boolean' && value !== lastMuted) {
+        lastMuted = value;
+        bridge({type: 'muted', value: value});
+      }
+    }
+    function playerCommand(command) {
+      if (!playerReady || !['playVideo','pauseVideo','mute','unMute'].includes(command)) return 'none';
+      player[command]();
+      reportMute();
+      return 'ok';
+    }
+    function onYouTubeIframeAPIReady() {
+      player = new YT.Player('youtube-player', {
+        events: {
+          onReady: function(event) {
+            if (event.target !== player) return;
+            playerReady = true;
+            if ($muted) player.mute();
+            bridge({type: 'ready'});
+            bridge({type: 'state', value: player.getPlayerState()});
+            reportMute();
+            if ($autoPlay) player.playVideo();
+          },
+          onStateChange: function(event) {
+            if (event.target === player) bridge({type: 'state', value: event.data});
+          },
+          onError: function(event) {
+            if (event.target === player) bridge({type: 'error', code: event.data});
+          },
+          onAutoplayBlocked: function(event) {
+            if (event.target === player) bridge({type: 'state', value: player.getPlayerState()});
+          }
+        }
+      });
+    }
+    setInterval(reportMute, 500);
   </script>
+  <script src="https://www.youtube.com/iframe_api" async></script>
 </body>
 </html>
 ''';
