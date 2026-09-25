@@ -162,18 +162,14 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
         ),
       ];
 
+  // No Local transport exists (P6S G4, owner decision D3): the guide says
+  // so instead of describing a same-Wi-Fi flow the app cannot perform.
   List<_Quest> _localQuests(bool isAr) => [
         _Quest(
-          questName: 'design_copy.same_room_network'.tr(),
-          icon: Icons.wifi_rounded,
-          heading: 'design_copy.join_the_same_wi_fi'.tr(),
-          body: 'design_copy.this_mode_streams_straight_over_your_local_wi_fi_no_internet_need'.tr(),
-        ),
-        _Quest(
-          questName: 'design_copy.plug_play'.tr(),
-          icon: Icons.bolt_rounded,
-          heading: 'design_copy.enter_the_laptop_ip'.tr(),
-          body: 'design_copy.find_your_laptop_s_local_ip_address_usually_starts_with_192_168_t'.tr(),
+          questName: 'design_copy.local'.tr(),
+          icon: Icons.wifi_off_rounded,
+          heading: 'live_studio.local_unavailable_title'.tr(),
+          body: 'live_studio.local_unavailable_body'.tr(),
         ),
       ];
 

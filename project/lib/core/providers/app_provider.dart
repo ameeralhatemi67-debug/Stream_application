@@ -300,7 +300,6 @@ class AppProvider extends ChangeNotifier {
   String _currentCategoryFilter = 'all';
   String _selectedTagFilter = 'all';
   String _searchQuery = '';
-  String _rtmpLaptopIp = '192.168.1.100';
   // Phone-to-YouTube broadcast target (v0.7 Checkpoint 2 Phase 2) -- the
   // ingest URL + stream key a streamer pastes from YouTube Studio's "Go
   // Live" > Stream tab so this phone's own camera/mic can publish there,
@@ -2454,14 +2453,12 @@ class AppProvider extends ChangeNotifier {
   String get currentCategoryFilter => _currentCategoryFilter;
   String get selectedTagFilter => _selectedTagFilter;
   String get searchQuery => _searchQuery;
-  String get rtmpLaptopIp => _rtmpLaptopIp;
   String get phoneBroadcastRtmpUrl => _phoneBroadcastRtmpUrl;
   String get phoneBroadcastStreamKey => _phoneBroadcastStreamKey;
   String get phoneBroadcastFullUrl => _phoneBroadcastStreamKey.isEmpty
       ? _phoneBroadcastRtmpUrl
       : '$_phoneBroadcastRtmpUrl/$_phoneBroadcastStreamKey';
   int get streamReloadCount => _streamReloadCount;
-  String get rtmpStreamUrl => 'http://$_rtmpLaptopIp:8888/live/demo/';
   String get selectedStreamingQuality => _selectedStreamingQuality;
 
   // Mini Player Getters
@@ -4306,11 +4303,6 @@ class AppProvider extends ChangeNotifier {
 
   void setSearchQuery(String query) {
     _searchQuery = query;
-    notifyListeners();
-  }
-
-  void updateRtmpLaptopIp(String newIp) {
-    _rtmpLaptopIp = newIp.trim();
     notifyListeners();
   }
 

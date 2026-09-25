@@ -293,18 +293,17 @@ void main() {
             child: const LiveBroadcasterStudioSheet(), provider: provider),
       );
       await tester.pumpAndSettle();
-      final ipBefore = provider.rtmpLaptopIp;
 
       await tester.tap(find.text('Local'));
       await tester.pumpAndSettle();
       expect(findByHint('e.g. 192.168.1.100'), findsNothing);
-      expect(find.text('Same-Wi-Fi streaming is not available yet'),
+      expect(find.text('live_studio.local_unavailable_title'.tr()),
           findsOneWidget);
 
       await tester.tap(find.text('Not available'));
       await tester.pump();
       expect(find.byKey(const ValueKey('studio-cta-error')), findsOneWidget);
-      expect(provider.rtmpLaptopIp, equals(ipBefore));
+      expect(find.byType(TextField), findsNothing);
     });
 
     testWidgets(

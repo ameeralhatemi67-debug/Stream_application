@@ -1008,7 +1008,6 @@ void main() {
 
   testWidgets('Local is visibly unavailable and saves nothing', (tester) async {
     final provider = AppProvider();
-    final ipBefore = provider.rtmpLaptopIp;
     await openSheet(tester, provider);
     await tester.tap(find.text('Local'));
     await tester.pumpAndSettle();
@@ -1024,7 +1023,7 @@ void main() {
         find.descendant(
             of: find.byKey(const ValueKey('studio-cta-error')),
             matching: find.text('live_studio.local_unavailable_body'.tr())));
-    expect(provider.rtmpLaptopIp, ipBefore);
+    expect(find.byType(TextField), findsNothing);
     await close(tester, provider);
   });
 }

@@ -75,19 +75,6 @@ void main() {
       expect(restoredVod.titleEn, equals(sample.titleEn));
     });
 
-    test('TC-RTMP-01: AppProvider RTMP Laptop IP Override State', () {
-      final provider = AppProvider();
-
-      expect(provider.rtmpLaptopIp, equals('192.168.1.100'));
-      expect(provider.rtmpStreamUrl,
-          equals('http://192.168.1.100:8888/live/demo/'));
-
-      provider.updateRtmpLaptopIp('10.0.0.5');
-      expect(provider.rtmpLaptopIp, equals('10.0.0.5'));
-      expect(provider.rtmpStreamUrl,
-          equals('http://10.0.0.5:8888/live/demo/'));
-    });
-
     test(
       'TC-RTMP-02: AppProvider Phone-to-YouTube Broadcast Target State (v0.7 CP2 Phase 2)',
       () {

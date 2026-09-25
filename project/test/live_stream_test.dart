@@ -90,28 +90,6 @@ void main() {
       expect(onErrorCalled, isFalse);
       expect(lastError, isEmpty);
     });
-
-    test('TC-RTMP-DIALOG-01: RTMP IP Settings Override & Stream URL Generation',
-        () {
-      final appProvider = AppProvider();
-
-      // Test default IP settings
-      expect(appProvider.rtmpLaptopIp, equals('192.168.1.100'));
-      expect(appProvider.rtmpStreamUrl,
-          equals('http://192.168.1.100:8888/live/demo/'));
-
-      // Test dynamic IP update to local loopback
-      appProvider.updateRtmpLaptopIp('127.0.0.1');
-      expect(appProvider.rtmpLaptopIp, equals('127.0.0.1'));
-      expect(appProvider.rtmpStreamUrl,
-          equals('http://127.0.0.1:8888/live/demo/'));
-
-      // Test dynamic IP update to custom Wi-Fi address
-      appProvider.updateRtmpLaptopIp('192.168.0.105');
-      expect(appProvider.rtmpLaptopIp, equals('192.168.0.105'));
-      expect(appProvider.rtmpStreamUrl,
-          equals('http://192.168.0.105:8888/live/demo/'));
-    });
   });
 
   group('Cluster 1 -- Player Quality, Placeholders & Mini-Player', () {
@@ -271,15 +249,21 @@ void main() {
       );
     });
 
-    test('TC-FALLBACK-01: Al Quran 4K has active stream and valid fallback streams', () {
-      final quranStreamer = mockStreamers.firstWhere((s) => s.streamerId == 'quran_4k_05');
+    test(
+        'TC-FALLBACK-01: Al Quran 4K has active stream and valid fallback streams',
+        () {
+      final quranStreamer =
+          mockStreamers.firstWhere((s) => s.streamerId == 'quran_4k_05');
       expect(quranStreamer.youtubeVideoId, equals('jjBoecWjAnw'));
       expect(quranStreamer.fallbackYoutubeVideoIds, isNotEmpty);
       expect(quranStreamer.fallbackYoutubeVideoIds.length, equals(2));
-      expect(quranStreamer.fallbackYoutubeVideoIds, containsAll(['PLkCnLrKN8Q', 'hPeOq1Dz5xI']));
+      expect(quranStreamer.fallbackYoutubeVideoIds,
+          containsAll(['PLkCnLrKN8Q', 'hPeOq1Dz5xI']));
     });
 
-    test('TC-FALLBACK-02: AbstractVideoPlayer forwards fallbackUrls to YouTube adapter', () {
+    test(
+        'TC-FALLBACK-02: AbstractVideoPlayer forwards fallbackUrls to YouTube adapter',
+        () {
       final player = AbstractVideoPlayer.fromSource(
         sourceType: StreamSourceType.youtubeEmbed,
         streamUrl: 'jjBoecWjAnw',

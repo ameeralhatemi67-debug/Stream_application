@@ -58,18 +58,6 @@ void main() {
       expect(drAbdullah.activeViewerCount, greaterThanOrEqualTo(0));
     });
 
-    test('TC-V04-SET-03: Local RTMP Laptop IP Update & Stream URL Generation',
-        () {
-      expect(provider.rtmpLaptopIp, equals('192.168.1.100'));
-      expect(provider.rtmpStreamUrl,
-          equals('http://192.168.1.100:8888/live/demo/'));
-
-      provider.updateRtmpLaptopIp('10.0.0.55');
-      expect(provider.rtmpLaptopIp, equals('10.0.0.55'));
-      expect(
-          provider.rtmpStreamUrl, equals('http://10.0.0.55:8888/live/demo/'));
-    });
-
     test(
         'TC-V04-SET-04: Settings Localization Keys Symmetry in en.json and ar.json',
         () async {
@@ -102,8 +90,8 @@ void main() {
       // are test fixtures, and real deletions are authorized by RLS.
       expect(provider.isProtectedStreamer('prof_alghamdi_01'), isFalse);
 
-      final deleteSeededResult =
-          await provider.revokeBroadcasterApproval('prof_alghamdi_01', reason: 'test');
+      final deleteSeededResult = await provider
+          .revokeBroadcasterApproval('prof_alghamdi_01', reason: 'test');
       expect(deleteSeededResult, isTrue);
       expect(provider.streamers.length, equals(4));
 
@@ -149,7 +137,8 @@ void main() {
       expect(updated?.fullNameEn, equals('Dr. Fahad M. Al-Mutairi'));
 
       // Delete custom streamer
-      final deleteResult = await provider.revokeBroadcasterApproval('custom_dr_fahad', reason: 'test');
+      final deleteResult = await provider
+          .revokeBroadcasterApproval('custom_dr_fahad', reason: 'test');
       expect(deleteResult, isTrue);
       expect(provider.streamers.length, equals(5));
     });

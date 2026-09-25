@@ -62,7 +62,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   // Testing Tools / Pitch Director controls (v0.9 Checkpoint 1 Phase 1 --
   // moved here from the general Settings screen; only admin-tier viewers
   // reach this hub at all).
-  late final TextEditingController _rtmpIpController;
 
   @override
   void initState() {
@@ -105,7 +104,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     _privacyEnController = TextEditingController(text: terms.privacyPolicyEn);
     _privacyArController = TextEditingController(text: terms.privacyPolicyAr);
 
-    _rtmpIpController = TextEditingController(text: provider.rtmpLaptopIp);
   }
 
   @override
@@ -119,7 +117,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     _guidelinesArController.dispose();
     _privacyEnController.dispose();
     _privacyArController.dispose();
-    _rtmpIpController.dispose();
     super.dispose();
   }
 
@@ -226,7 +223,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           TermsAndConditionsModel termsAndConditions,
           List<ChatReportModel> chatReports,
           bool isPitchDirectorModeEnabled,
-          String rtmpLaptopIp,
           List<TagModerationModel> allTagsForModeration,
           int bannedUsersCount,
         })>((p) => (
@@ -240,7 +236,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           termsAndConditions: p.termsAndConditions,
           chatReports: p.chatReports,
           isPitchDirectorModeEnabled: p.isPitchDirectorModeEnabled,
-          rtmpLaptopIp: p.rtmpLaptopIp,
           allTagsForModeration: p.allTagsForModeration,
           bannedUsersCount: p.bannedUsers.length,
         ));
@@ -534,18 +529,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   'settings.pitch_mode_desc'.tr(),
                   style: const TextStyle(
                       color: AppTheme.textSecondary, fontSize: 11),
-                ),
-                const SizedBox(height: AppTheme.spaceMd),
-                TextField(
-                  controller: _rtmpIpController,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    labelText: 'settings.rtmp_ip'.tr(),
-                    prefixIcon: const Icon(Icons.wifi_tethering_rounded,
-                        color: AppTheme.primary, size: 20),
-                  ),
-                  onSubmitted: (val) => provider.updateRtmpLaptopIp(val),
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
                 SizedBox(

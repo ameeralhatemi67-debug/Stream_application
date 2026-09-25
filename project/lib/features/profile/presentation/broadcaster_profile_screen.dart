@@ -106,7 +106,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         title: Text(streamer.getLocalizedName(lang)),
         actions: [
           // Broadcaster Studio Access -- single unified entry point (v0.9)
-          // for going live via OBS, phone camera, or local RTMP. Strictly
+          // for going live with an encoder or the phone camera. Strictly
           // the broadcaster's own profile page, zero admin override --
           // issue_log.md: "an admin account does not give ability to see
           // and use others accounts cell tower", "no one other than the

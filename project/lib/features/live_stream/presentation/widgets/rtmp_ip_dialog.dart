@@ -25,7 +25,8 @@ enum StudioMode { obs, phone, local }
 /// go-live entry point (v0.9 redesign). Replaces the old RtmpIpSettingsDialog
 /// (three-tab AlertDialog behind a gray cell tower icon) and QuickGoLiveSheet
 /// (a second, separate sheet behind a green cell tower icon): both are now
-/// one sheet with three modes (OBS / Phone / Local RTMP) behind one icon.
+/// one sheet with three modes (Encoder / Phone / Local, which is
+/// unavailable) behind one icon.
 ///
 /// Root-cause fix for the phone-stream bug (see
 /// doc/Roadmap/Go_Live_Studio_BottomSheet_Redesign_Plan.md): QuickGoLiveSheet
@@ -402,10 +403,14 @@ class _LiveBroadcasterStudioSheetState
                     ),
                   ),
                   Expanded(
-                    child: _pillTab(
-                      StudioMode.local,
-                      Icons.bolt_rounded,
-                      'design_copy.local'.tr(),
+                    // Announced as unavailable before it is selected.
+                    child: Semantics(
+                      hint: 'live_studio.btn_local_unavailable'.tr(),
+                      child: _pillTab(
+                        StudioMode.local,
+                        Icons.bolt_rounded,
+                        'design_copy.local'.tr(),
+                      ),
                     ),
                   ),
                 ],
@@ -419,36 +424,40 @@ class _LiveBroadcasterStudioSheetState
 
   Widget _pillTab(StudioMode mode, IconData icon, String label) {
     final selected = _mode == mode;
-    return InkWell(
-      onTap: () => _selectMode(mode),
-      borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-      child: Center(
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              size: 15,
-              color: selected ? _modeColor : AppTheme.textSecondary,
-            ),
-            const SizedBox(width: 6),
-            Flexible(
-              child: Text(
-                label,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  // UI-02: the selected pill is a light tint of _modeColor, so
-                  // white (onMedia) text on it was near-invisible. _modeColor
-                  // itself (already used for the icon) reads clearly on that
-                  // tint, matching the pattern the category chips already use.
-                  color: selected ? _modeColor : AppTheme.textSecondary,
-                  fontSize: 12,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+    return Semantics(
+      button: true,
+      selected: selected,
+      child: InkWell(
+        onTap: () => _selectMode(mode),
+        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(
+                icon,
+                size: 15,
+                color: selected ? _modeColor : AppTheme.textSecondary,
+              ),
+              const SizedBox(width: 6),
+              Flexible(
+                child: Text(
+                  label,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    // UI-02: the selected pill is a light tint of _modeColor, so
+                    // white (onMedia) text on it was near-invisible. _modeColor
+                    // itself (already used for the icon) reads clearly on that
+                    // tint, matching the pattern the category chips already use.
+                    color: selected ? _modeColor : AppTheme.textSecondary,
+                    fontSize: 12,
+                    fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -910,7 +919,7 @@ class _LiveBroadcasterStudioSheetState
   }
 
   // ---------------------------------------------------------------------
-  // Local RTMP mode
+  // Local mode (unavailable: no local transport, owner decision D3)
   // ---------------------------------------------------------------------
 
   /// Same-Wi-Fi streaming has no media transport in this build: the old form

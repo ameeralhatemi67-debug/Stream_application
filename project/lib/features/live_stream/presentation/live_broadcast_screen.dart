@@ -572,7 +572,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       _minimizeToMiniPlayer(appProvider, streamer, langCode),
                 ),
                 // Broadcaster Studio Access -- single unified entry point
-                // (v0.9) for going live via OBS, phone camera, or local RTMP.
+                // (v0.9) for going live with an encoder or the phone camera.
                 if (appProvider.isLoggedInStreamer &&
                     appProvider.isStreamerModeEnabled)
                   IconButton(
