@@ -18,7 +18,8 @@ void main() {
   });
 
   group('Quick Fix QF-01: Fullscreen Button on Audio-Only Streams', () {
-    testWidgets('LivePlayerOverlayControls renders fullscreen toggle button on audio-only streams',
+    testWidgets(
+        'LivePlayerOverlayControls renders fullscreen toggle button on audio-only streams',
         (WidgetTester tester) async {
       bool fullscreenToggled = false;
 
@@ -63,7 +64,8 @@ void main() {
       expect(fullscreenToggled, isTrue);
     });
 
-    testWidgets('Fullscreen toggle displays exit icon when isFullscreen is true on audio streams',
+    testWidgets(
+        'Fullscreen toggle displays exit icon when isFullscreen is true on audio streams',
         (WidgetTester tester) async {
       await tester.pumpWidget(
         MaterialApp(
@@ -96,18 +98,9 @@ void main() {
   });
 
   group('Quick Fix QF-02: Compact Picture-in-Picture Mini-Player Redesign', () {
-    test('AppProvider mini-player mute state toggles cleanly', () {
-      final provider = AppProvider();
-      expect(provider.isMiniPlayerMuted, isFalse);
-
-      provider.toggleMiniPlayerMute();
-      expect(provider.isMiniPlayerMuted, isTrue);
-
-      provider.toggleMiniPlayerMute();
-      expect(provider.isMiniPlayerMuted, isFalse);
-    });
-
-    testWidgets('FloatingStreamMiniPlayer renders compact card with Mute and Close overlay buttons',
+    testWidgets(
+        'FloatingStreamMiniPlayer is an honest return shortcut with a Close '
+        'button (P6S G5: no fake video, no dead mute)',
         (WidgetTester tester) async {
       final provider = AppProvider();
       provider.launchMiniPlayer(
@@ -134,33 +127,25 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      // Verify mini-player is visible
-      expect(find.byType(FloatingStreamMiniPlayer), findsOneWidget);
-
-      // Verify Mute button and Close button are present
-      expect(find.byKey(const ValueKey('mini_player_mute_button')), findsOneWidget);
-      expect(find.byKey(const ValueKey('mini_player_close_button')), findsOneWidget);
-
-      // Verify Pause button is removed per live stream ergonomics
+      expect(find.byKey(const ValueKey('mini_player_return_chip')),
+          findsOneWidget);
+      expect(
+          find.byKey(const ValueKey('mini_player_mute_button')), findsNothing);
+      expect(find.byKey(const ValueKey('mini_player_close_button')),
+          findsOneWidget);
       expect(find.byIcon(Icons.pause_rounded), findsNothing);
 
-      // Toggle Mute
-      provider.toggleMiniPlayerMute();
-      await tester.pumpAndSettle();
-      expect(provider.isMiniPlayerMuted, isTrue);
-      expect(find.byIcon(Icons.volume_off_rounded), findsOneWidget);
-
-      // Close Mini-Player
       provider.closeMiniPlayer();
       await tester.pumpAndSettle();
       expect(provider.isMiniPlayerActive, isFalse);
-      expect(find.byKey(const ValueKey('mini_player_mute_button')), findsNothing);
-      expect(find.byKey(const ValueKey('mini_player_close_button')), findsNothing);
+      expect(
+          find.byKey(const ValueKey('mini_player_close_button')), findsNothing);
     });
   });
 
   group('Quick Fix QF-04: Database Error Resilience & Offline Fallbacks', () {
-    test('AdminDatabaseService methods degrade gracefully without Supabase', () async {
+    test('AdminDatabaseService methods degrade gracefully without Supabase',
+        () async {
       final service = await AdminDatabaseService.create();
 
       final categories = await service.loadAcademicCategories();
@@ -179,7 +164,8 @@ void main() {
       expect(bannedUsers, isEmpty);
     });
 
-    test('AcademicCategoryModel.defaultPool provides full fallback taxonomy', () {
+    test('AcademicCategoryModel.defaultPool provides full fallback taxonomy',
+        () {
       expect(AcademicCategoryModel.defaultPool.length, greaterThanOrEqualTo(8));
       for (final cat in AcademicCategoryModel.defaultPool) {
         expect(cat.id, isNotEmpty);
@@ -190,7 +176,8 @@ void main() {
     });
   });
 
-  group('Quick Fix QF-05: Category Bilingual Script Validation & Icon Picker', () {
+  group('Quick Fix QF-05: Category Bilingual Script Validation & Icon Picker',
+      () {
     test('Arabic regex detects Arabic script in English name field', () {
       final arabicRegex = RegExp(r'[\u0600-\u06FF]');
 

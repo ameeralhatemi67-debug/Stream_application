@@ -51,6 +51,7 @@ class StubVideoPlayer extends AbstractVideoPlayer {
       double aspectRatio = 16 / 9,
       String preferredQuality = 'auto',
       List<String> fallbackUrls = const [],
+      bool initialMuted = false,
     }) =>
         StubVideoPlayer(
           key: key,

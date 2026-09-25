@@ -322,7 +322,6 @@ class AppProvider extends ChangeNotifier {
   // Floating Mini-Player State
   bool _isMiniPlayerActive = false;
   bool _isMiniPlayerPlaying = true;
-  bool _isMiniPlayerMuted = false;
   // Empty until a real stream is minimized into the mini-player: it used to
   // start holding an unrelated YouTube video, an invented lecture title and a
   // real person's name (P2 truthful data).
@@ -2464,7 +2463,6 @@ class AppProvider extends ChangeNotifier {
   // Mini Player Getters
   bool get isMiniPlayerActive => _isMiniPlayerActive;
   bool get isMiniPlayerPlaying => _isMiniPlayerPlaying;
-  bool get isMiniPlayerMuted => _isMiniPlayerMuted;
   String get miniPlayerVideoId => _miniPlayerVideoId;
   String get miniPlayerTitle => _miniPlayerTitle;
   String get miniPlayerStreamerName => _miniPlayerStreamerName;
@@ -3434,11 +3432,6 @@ class AppProvider extends ChangeNotifier {
 
   void toggleMiniPlayerPlayPause() {
     _isMiniPlayerPlaying = !_isMiniPlayerPlaying;
-    notifyListeners();
-  }
-
-  void toggleMiniPlayerMute() {
-    _isMiniPlayerMuted = !_isMiniPlayerMuted;
     notifyListeners();
   }
 

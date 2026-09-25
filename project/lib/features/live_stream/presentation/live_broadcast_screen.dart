@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show ValueListenable;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -63,6 +64,23 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   StreamState _streamState = StreamState.live;
   bool _isPlaying = true;
   bool _isMuted = false;
+
+  /// One player instance per watch identity. A GlobalKey keeps the same
+  /// player (and its web view) when the viewport moves between the portrait
+  /// column, the side-by-side row and fullscreen, so rotating or entering
+  /// fullscreen does not restart the video. A new identity (another watch
+  /// ID, a provider reload, or Retry) gets a fresh key and a fresh player.
+  GlobalKey _playerKey = GlobalKey(debugLabel: 'room-player');
+  String? _playerIdentity;
+  int _playerReloads = 0;
+
+  /// Whether the current player can take play/pause/mute commands; the
+  /// buttons are shown only then (otherwise the player's own controls are
+  /// the transport). Known once the player is built.
+  bool _transportAvailable = false;
+
+  /// A play/pause/mute command is on its way; further taps wait for it.
+  bool _commandInFlight = false;
   bool _isFullscreen = false;
   bool _isHandRaised = false;
   bool _isReactionMenuOpen = false;
@@ -138,8 +156,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _lookupTimer?.cancel();
     _lookupTimer = null;
     if (_roomActive && _openedLive) {
-      final fresh =
-          provider.successfulCatalogRevision > _openedCatalogRevision;
+      final fresh = provider.successfulCatalogRevision > _openedCatalogRevision;
       if (fresh &&
           (current == null ||
               !current.isLiveForRoom ||
@@ -159,8 +176,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _lookupTimer = Timer(_lookupDelay, () {
       _lookupTimer = null;
       final next = _lookupDelay * 2;
-      _lookupDelay =
-          next > const Duration(seconds: 60) ? const Duration(seconds: 60) : next;
+      _lookupDelay = next > const Duration(seconds: 60)
+          ? const Duration(seconds: 60)
+          : next;
       final p = _roomProvider;
       if (p != null && p.isOnline) {
         unawaited(p.loadVerifiedStreamersFromBackend());
@@ -258,6 +276,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   @override
   void dispose() {
+    _mutedSource?.removeListener(_onPlayerMutedChanged);
     _lookupTimer?.cancel();
     _roomProvider?.removeListener(_syncRoomConnection);
     _stopRoom();
@@ -303,11 +322,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
   }
 
-  /// Cluster 1 Task 6 -- hand the running stream to the floating mini-player
-  /// and drop back to whichever tab (Feed or Map) the viewer came from.
-  /// Popping rather than pushing is what keeps the audio going: the
-  /// mini-player lives in the app shell above the navigator, so it survives
-  /// the route change.
+  /// Leave the room with a shortcut back ("Return to broadcast") and drop
+  /// back to whichever tab (Feed or Map) the viewer came from. The room's
+  /// player is owned by this screen, so playback stops here; the shortcut
+  /// only reopens the room (P6S G5). It used to be described as a mini-player
+  /// that kept the audio going, which it never did.
   void _minimizeToMiniPlayer(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
     appProvider.openMiniPlayer(
@@ -434,11 +453,112 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     return url;
   }
 
+  /// Retry reloads the player; it used to only change the label.
   void _retryStream() {
     setState(() {
-      _streamState = StreamState.live;
+      _playerReloads++;
+      _streamState = StreamState.initializing;
       _isPlaying = true;
     });
+  }
+
+  PlayerTransport? get _transport {
+    final state = _playerKey.currentState;
+    if (state is PlayerTransport) {
+      final transport = state as PlayerTransport;
+      if (transport.supportsCommands) return transport;
+    }
+    return null;
+  }
+
+  void _explainNoTransport() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('live.player_controls_use_youtube'.tr())),
+    );
+  }
+
+  /// Sends play or pause to the player, and shows the new state only once
+  /// the command went through.
+  Future<void> _togglePlayPause() async {
+    if (_commandInFlight) return;
+    final transport = _transport;
+    if (transport == null) return _explainNoTransport();
+    final key = _playerKey;
+    final playing = _isPlaying;
+    _commandInFlight = true;
+    try {
+      final sent = playing ? await transport.pause() : await transport.play();
+      // A Retry or reload replaced the player meanwhile: this answer is
+      // about a player that no longer exists.
+      if (!mounted || key != _playerKey) return;
+      if (!sent) return _explainNotReady();
+      setState(() {
+        _isPlaying = !playing;
+        _streamState = _isPlaying ? StreamState.live : StreamState.paused;
+      });
+    } finally {
+      _commandInFlight = false;
+    }
+  }
+
+  Future<void> _toggleMute() async {
+    if (_commandInFlight) return;
+    final transport = _transport;
+    if (transport == null) return _explainNoTransport();
+    final key = _playerKey;
+    final muted = _isMuted;
+    _commandInFlight = true;
+    try {
+      final sent = await transport.setMuted(!muted);
+      if (!mounted || key != _playerKey) return;
+      if (!sent) return _explainNotReady();
+      setState(() => _isMuted = !muted);
+    } finally {
+      _commandInFlight = false;
+    }
+  }
+
+  ValueListenable<bool>? _mutedSource;
+
+  /// Re-reads whether the player takes commands (after it is built), and
+  /// follows its mute state, including its own built-in mute button.
+  void _refreshTransportAvailability() {
+    if (!mounted) return;
+    final transport = _transport;
+    final source = transport?.mutedListenable;
+    if (!identical(source, _mutedSource)) {
+      _mutedSource?.removeListener(_onPlayerMutedChanged);
+      _mutedSource = source;
+      source?.addListener(_onPlayerMutedChanged);
+    }
+    final available = transport != null;
+    if (available != _transportAvailable) {
+      setState(() => _transportAvailable = available);
+    }
+  }
+
+  void _onPlayerMutedChanged() {
+    final muted = _mutedSource?.value;
+    if (!mounted || muted == null || muted == _isMuted) return;
+    setState(() => _isMuted = muted);
+  }
+
+  /// A command the player could not take yet (still loading) is said, not
+  /// silently dropped.
+  void _explainNotReady() {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('live.player_not_ready'.tr())),
+    );
+  }
+
+  GlobalKey _playerKeyFor(String identity) {
+    if (identity != _playerIdentity) {
+      _playerIdentity = identity;
+      _playerKey = GlobalKey(debugLabel: 'room-player');
+      // Known again once the new player is built.
+      _transportAvailable = false;
+    }
+    return _playerKey;
   }
 
   bool _hasYouTubeId(StreamerModel streamer) =>
@@ -563,10 +683,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 overflow: TextOverflow.ellipsis,
               ),
               actions: [
-                // Minimize to the floating in-app PiP mini-player (Task 6)
+                // Leave with a "Return to broadcast" shortcut (playback stops)
                 IconButton(
-                  icon: const Icon(Icons.picture_in_picture_alt_rounded,
-                      size: 20),
+                  icon: const Icon(Icons.minimize_rounded, size: 20),
                   tooltip: 'live.minimize_tooltip'.tr(),
                   onPressed: () =>
                       _minimizeToMiniPlayer(appProvider, streamer, langCode),
@@ -656,42 +775,55 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         children: [
           // 1. The Video/Audio Player Engine (Always mounted so Android WebView never suspends audio)
           if (streamUrl.isNotEmpty)
-          AbstractVideoPlayer.fromSource(
-            key: ValueKey(
-                '${_sourceType.name}_${streamUrl}_${appProvider.streamReloadCount}'),
-            sourceType: _sourceType,
-            streamUrl: streamUrl,
-            // A live room never fails over to another video.
-            fallbackUrls: streamer.isLiveForRoom
-                ? const []
-                : streamer.fallbackYoutubeVideoIds,
-            // Audio-only broadcasts always autoplay: LiveAudioStageMultiSpeaker
-            // paints over the player entirely, so there is no visible
-            // transport for the viewer to un-pause -- the engine underneath
-            // has to start (and stay) playing on its own (Task 1).
-            autoPlay: isAudioLive || _isPlaying,
-            preferredQuality: _selectedQuality.value,
-            onStateChanged: (state) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted &&
-                    _roomActive &&
-                    roomGeneration == _roomGeneration &&
-                    _streamState != state) {
-                  setState(() => _streamState = state);
-                }
-              });
-            },
-            onError: (_) {
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (mounted &&
-                    _roomActive &&
-                    roomGeneration == _roomGeneration &&
-                    _streamState != StreamState.fallbackError) {
-                  setState(() => _streamState = StreamState.fallbackError);
-                }
-              });
-            },
-          ),
+            AbstractVideoPlayer.fromSource(
+              key: _playerKeyFor(
+                  '${_sourceType.name}_${streamUrl}_${appProvider.streamReloadCount}_$_playerReloads'),
+              sourceType: _sourceType,
+              streamUrl: streamUrl,
+              // A live room never fails over to another video.
+              fallbackUrls: streamer.isLiveForRoom
+                  ? const []
+                  : streamer.fallbackYoutubeVideoIds,
+              // Audio-only broadcasts always autoplay: LiveAudioStageMultiSpeaker
+              // paints over the player entirely, so there is no visible
+              // transport for the viewer to un-pause -- the engine underneath
+              // has to start (and stay) playing on its own (Task 1).
+              autoPlay: isAudioLive || _isPlaying,
+              // A new player (Retry, reload) keeps the viewer's mute choice.
+              initialMuted: _isMuted,
+              // The new player starts from initialMuted; the room only needs
+              // to learn whether it takes commands.
+              onPlayerReady: () => WidgetsBinding.instance
+                  .addPostFrameCallback((_) => _refreshTransportAvailability()),
+              preferredQuality: _selectedQuality.value,
+              onStateChanged: (state) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted &&
+                      _roomActive &&
+                      roomGeneration == _roomGeneration &&
+                      _streamState != state) {
+                    _refreshTransportAvailability();
+                    setState(() {
+                      _streamState = state;
+                      // Follow the player: a pause from its own controls or
+                      // the system shows as paused here too.
+                      if (state == StreamState.paused) _isPlaying = false;
+                      if (state == StreamState.live) _isPlaying = true;
+                    });
+                  }
+                });
+              },
+              onError: (_) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  if (mounted &&
+                      _roomActive &&
+                      roomGeneration == _roomGeneration &&
+                      _streamState != StreamState.fallbackError) {
+                    setState(() => _streamState = StreamState.fallbackError);
+                  }
+                });
+              },
+            ),
 
           // 2. Audio-Only Presenter Stage Overlay with Kinetic Pulse Dynamics
           if (isAudioLive)
@@ -812,14 +944,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             isAudioOnly: isAudioLive,
             isStreamerMicMuted: appProvider.isStreamerMicMuted,
             selectedQuality: _selectedQuality,
-            onTogglePlayPause: () {
-              setState(() {
-                _isPlaying = !_isPlaying;
-                _streamState =
-                    _isPlaying ? StreamState.live : StreamState.paused;
-              });
-            },
-            onToggleMute: () => setState(() => _isMuted = !_isMuted),
+            showTransportControls: _transportAvailable,
+            onTogglePlayPause: _togglePlayPause,
+            onToggleMute: _toggleMute,
             onToggleFullscreen: _handleToggleFullscreen,
             onSelectQuality: (quality) =>
                 setState(() => _selectedQuality = quality),

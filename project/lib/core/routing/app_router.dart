@@ -501,7 +501,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
           else
             navigationShell,
 
-          // Global Floating Picture-in-Picture Mini-Player Overlay
+          // Global "Return to broadcast" shortcut (not a player; no PiP)
           const FloatingStreamMiniPlayer(),
         ],
       ),

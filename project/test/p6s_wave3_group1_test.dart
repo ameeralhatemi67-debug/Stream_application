@@ -252,6 +252,7 @@ void main() {
         double aspectRatio = 16 / 9,
         String preferredQuality = 'auto',
         List<String> fallbackUrls = const [],
+        bool initialMuted = false,
       }) =>
           _Player(key: key, streamUrl: streamUrl, counts: counts);
     });

@@ -78,6 +78,7 @@ class LivePlayerOverlayControls extends StatefulWidget {
   /// follows that, not the player: a playing video is not proof of a live
   /// broadcast.
   final bool showLiveBadge;
+
   /// Live viewers counted by the server, or null while unknown (P3 /
   /// 05 D-08). Null renders as "—": the app never shows a number it does not
   /// have.
@@ -89,6 +90,11 @@ class LivePlayerOverlayControls extends StatefulWidget {
   /// Audio-only broadcasts have no video track to pick a rendition for, so
   /// the quality selector is hidden outright rather than shown inert.
   final bool isAudioOnly;
+
+  /// False where the app cannot command the player (the web iframe): the
+  /// play/pause and mute buttons are hidden instead of shown inert, and the
+  /// player's own controls are used.
+  final bool showTransportControls;
 
   /// True while the broadcaster's own microphone is muted or has been silent
   /// long enough to count as intentional silence -- viewers get an explicit
@@ -115,13 +121,15 @@ class LivePlayerOverlayControls extends StatefulWidget {
     required this.onToggleFullscreen,
     required this.onRetryConnection,
     this.isAudioOnly = false,
+    this.showTransportControls = true,
     this.isStreamerMicMuted = false,
     this.selectedQuality = StreamQualityLevel.auto,
     required this.onSelectQuality,
   });
 
   @override
-  State<LivePlayerOverlayControls> createState() => _LivePlayerOverlayControlsState();
+  State<LivePlayerOverlayControls> createState() =>
+      _LivePlayerOverlayControlsState();
 }
 
 class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
@@ -185,25 +193,26 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                       children: [
                         // Pulsing Red Live Badge
                         if (widget.showLiveBadge)
-                        FadeTransition(
-                          opacity: _pulseAnimation,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                            decoration: BoxDecoration(
-                              color: AppTheme.danger,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              'live.live_indicator'.tr(),
-                              style: const TextStyle(
-                                color: AppTheme.onMedia,
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.8,
+                          FadeTransition(
+                            opacity: _pulseAnimation,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: AppTheme.danger,
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Text(
+                                'live.live_indicator'.tr(),
+                                style: const TextStyle(
+                                  color: AppTheme.onMedia,
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.8,
+                                ),
                               ),
                             ),
                           ),
-                        ),
                         const SizedBox(width: 8),
 
                         // Viewer Counter Pill. It gives way before the LIVE
@@ -213,7 +222,8 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                         // room is live.
                         Flexible(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: AppTheme.media.withValues(alpha: 0.78),
                               borderRadius: BorderRadius.circular(4),
@@ -221,7 +231,8 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.remove_red_eye_outlined, size: 12, color: AppTheme.onMedia),
+                                const Icon(Icons.remove_red_eye_outlined,
+                                    size: 12, color: AppTheme.onMedia),
                                 const SizedBox(width: 5),
                                 Flexible(
                                   child: Text(
@@ -268,50 +279,31 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  if (!widget.isAudioOnly)
+                  if (!widget.isAudioOnly && widget.showTransportControls)
                     Row(
                       children: [
-                        // Play / Pause Button
-                        InkWell(
-                          onTap: () {
-                            FocusScope.of(context).unfocus();
-                            widget.onTogglePlayPause();
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.media.withValues(alpha: 0.6),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              widget.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                              color: AppTheme.onMedia,
-                              size: 20,
-                            ),
-                          ),
+                        _mediaButton(
+                          key: const Key('room-play-pause'),
+                          icon: widget.isPlaying
+                              ? Icons.pause_rounded
+                              : Icons.play_arrow_rounded,
+                          tooltip: (widget.isPlaying
+                                  ? 'live.tooltip_pause'
+                                  : 'live.tooltip_play')
+                              .tr(),
+                          onPressed: widget.onTogglePlayPause,
                         ),
-                        const SizedBox(width: 8),
-
-                        // Mute / Unmute Button
-                        InkWell(
-                          onTap: () {
-                            FocusScope.of(context).unfocus();
-                            widget.onToggleMute();
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.media.withValues(alpha: 0.6),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              widget.isMuted ? Icons.volume_off_rounded : Icons.volume_up_rounded,
-                              color: AppTheme.onMedia,
-                              size: 20,
-                            ),
-                          ),
+                        const SizedBox(width: 4),
+                        _mediaButton(
+                          key: const Key('room-mute'),
+                          icon: widget.isMuted
+                              ? Icons.volume_off_rounded
+                              : Icons.volume_up_rounded,
+                          tooltip: (widget.isMuted
+                                  ? 'live.tooltip_unmute'
+                                  : 'live.tooltip_mute')
+                              .tr(),
+                          onPressed: widget.onToggleMute,
                         ),
                       ],
                     )
@@ -320,29 +312,44 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
 
                   // Fullscreen Toggle Button -- rotates the device into
                   // landscape immersive mode (available on all streams).
-                  InkWell(
-                    onTap: () {
-                      FocusScope.of(context).unfocus();
-                      widget.onToggleFullscreen();
-                    },
-                    borderRadius: BorderRadius.circular(20),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.media.withValues(alpha: 0.6),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        widget.isFullscreen ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
-                        color: AppTheme.onMedia,
-                        size: 20,
-                      ),
-                    ),
+                  _mediaButton(
+                    key: const Key('room-fullscreen'),
+                    icon: widget.isFullscreen
+                        ? Icons.fullscreen_exit_rounded
+                        : Icons.fullscreen_rounded,
+                    tooltip: (widget.isFullscreen
+                            ? 'live.tooltip_exit_fullscreen'
+                            : 'live.tooltip_fullscreen')
+                        .tr(),
+                    onPressed: widget.onToggleFullscreen,
                   ),
                 ],
               ),
             ),
         ],
+      ),
+    );
+  }
+
+  /// A 48 dp media control with a tooltip (also its screen-reader label).
+  Widget _mediaButton({
+    required Key key,
+    required IconData icon,
+    required String tooltip,
+    required VoidCallback onPressed,
+  }) {
+    return IconButton(
+      key: key,
+      tooltip: tooltip,
+      onPressed: () {
+        FocusScope.of(context).unfocus();
+        onPressed();
+      },
+      icon: Icon(icon, color: AppTheme.onMedia, size: 20),
+      style: IconButton.styleFrom(
+        backgroundColor: AppTheme.media.withValues(alpha: 0.6),
+        minimumSize: const Size(48, 48),
+        shape: const CircleBorder(),
       ),
     );
   }
@@ -362,7 +369,8 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         decoration: BoxDecoration(
           color: AppTheme.media.withValues(alpha: 0.65),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: AppTheme.primary.withValues(alpha: 0.6), width: 0.8),
+          border: Border.all(
+              color: AppTheme.primary.withValues(alpha: 0.6), width: 0.8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -377,7 +385,8 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                 fontWeight: FontWeight.bold,
               ),
             ),
-            Icon(Icons.arrow_drop_down, size: 14, color: AppTheme.onMedia.withValues(alpha: 0.7)),
+            Icon(Icons.arrow_drop_down,
+                size: 14, color: AppTheme.onMedia.withValues(alpha: 0.7)),
           ],
         ),
       ),
@@ -421,7 +430,8 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.mic_off_rounded, size: 13, color: AppTheme.warning),
+            const Icon(Icons.mic_off_rounded,
+                size: 13, color: AppTheme.warning),
             const SizedBox(width: 6),
             Text(
               '${'live.mic_muted_badge'.tr()} · ${'live.mic_silent_badge'.tr()}',

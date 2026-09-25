@@ -574,9 +574,7 @@ class _LiveBroadcasterStudioSheetState
       onPressed: () => StreamerSetupGuideModal.show(
         context,
         mode: _mode,
-        onStreamKeyPasted: (key) {
-          setState(() => _streamKeyController.text = key);
-        },
+        externalSender: _externalSender,
       ),
       constraints: const BoxConstraints(),
       padding: EdgeInsets.zero,

@@ -499,9 +499,8 @@ void main() {
     });
 
     testWidgets(
-        'TC-STUDIO-12: an Info button opens the gamified Streamer Academy '
-        'guide and steps through all 4 OBS quests to the final CTA',
-        (tester) async {
+        'TC-STUDIO-12: the Info button opens mode-specific help for OBS on a '
+        'computer, with the watch-link vs key explanation', (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
         createTestWidget(
@@ -512,37 +511,25 @@ void main() {
       await tester.tap(find.byIcon(Icons.info_outline_rounded));
       await tester.pumpAndSettle();
 
-      expect(find.text('STREAMER ACADEMY'), findsOneWidget);
-      expect(find.textContaining('Level 1 of 4'), findsOneWidget);
-      expect(find.text('Next Quest '), findsOneWidget);
-      // First quest -- no Previous button yet.
-      expect(find.text('Previous Step'), findsNothing);
-
-      for (var i = 0; i < 3; i++) {
-        await tester.tap(find.text('Next Quest '));
-        await tester.pumpAndSettle();
-      }
-
-      expect(find.textContaining('Level 4 of 4'), findsOneWidget);
-      expect(find.text("Got It, Let's Stream!"), findsOneWidget);
-      expect(find.text('Previous Step'), findsOneWidget);
-
-      await tester.tap(find.text("Got It, Let's Stream!"));
-      await tester.pumpAndSettle();
-
+      expect(find.byKey(const Key('studio-guide')), findsOneWidget);
+      expect(find.text('OBS on a computer'), findsWidgets);
+      expect(find.byKey(const Key('studio-guide-link-vs-key')), findsOneWidget);
       expect(find.text('STREAMER ACADEMY'), findsNothing);
+
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('studio-guide')), findsNothing);
     });
 
     testWidgets(
-        'TC-STUDIO-13: Paste Key from Clipboard inside the guide populates '
-        'the stream key field back in Phone mode', (tester) async {
+        'TC-STUDIO-13: Phone help explains this phone\'s path and never reads '
+        'the clipboard for the stream key', (tester) async {
       useTallTestSurface(tester);
+      var clipboardReads = 0;
       tester.binding.defaultBinaryMessenger.setMockMethodCallHandler(
         SystemChannels.platform,
         (MethodCall methodCall) async {
-          if (methodCall.method == 'Clipboard.getData') {
-            return {'text': 'clipboard-pasted-stream-key'};
-          }
+          if (methodCall.method == 'Clipboard.getData') clipboardReads++;
           return null;
         },
       );
@@ -554,34 +541,14 @@ void main() {
             child: const LiveBroadcasterStudioSheet(), provider: provider),
       );
       await tester.pumpAndSettle();
-
       await tester.tap(find.text('Phone'));
       await tester.pumpAndSettle();
-
       await tester.tap(find.byIcon(Icons.info_outline_rounded));
       await tester.pumpAndSettle();
 
-      // Level 2 ("Set It & Forget It") is the Phone quest carrying the
-      // paste action -- advance one quest forward from Level 1.
-      await tester.tap(find.text('Next Quest '));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Paste Key from Clipboard'));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Stream key pasted ✓'), findsOneWidget);
-      // Let the confirmation SnackBar's own auto-dismiss Timer fire so it
-      // isn't still pending when this test function returns (see
-      // TC-STUDIO-06's InteractiveToastOverlay.dismiss() note above).
-      await tester.pump(const Duration(seconds: 5));
-
-      await tester.tap(find.byIcon(Icons.close_rounded));
-      await tester.pumpAndSettle();
-
-      final keyField = findByHint('xxxx-xxxx-xxxx-xxxx-xxxx');
-      final fieldWidget = tester.widget<TextField>(keyField);
-      expect(
-          fieldWidget.controller?.text, equals('clipboard-pasted-stream-key'));
+      expect(find.text("This phone's camera"), findsOneWidget);
+      expect(find.textContaining('Clipboard'), findsNothing);
+      expect(clipboardReads, 0);
     });
 
     testWidgets(

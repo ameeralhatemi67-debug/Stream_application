@@ -1,505 +1,199 @@
-import 'dart:ui';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/theme/app_theme.dart';
-import 'rtmp_ip_dialog.dart'show StudioMode;
+import 'rtmp_ip_dialog.dart' show StudioMode;
 
-enum _ActionKind { openStudio, pasteClipboard }
-
-class _QuestAction {
-  final _ActionKind kind;
-  final String label;
-
-  const _QuestAction(this.kind, this.label);
-}
-
-class _Quest {
-  final String questName;
-  final IconData icon;
-  final String heading;
-  final String body;
-  final List<_QuestAction> actions;
-
-  const _Quest({
-    required this.questName,
-    required this.icon,
-    required this.heading,
-    required this.body,
-    this.actions = const [],
-  });
-}
-
-/// Gamified multi-step "Streamer Academy"setup guide -- the Info (!) button
-/// destination for all 3 Broadcaster Studio modes (V2 redesign). Replaces
-/// the old plain numbered-steps dialog with a swipeable story-card carousel
-/// (playful, non-technical "quest"copy), a two-tap "paste from clipboard"
-/// shortcut that writes straight back into the studio sheet's stream key
-/// field via [onStreamKeyPasted], and a direct external link into YouTube
-/// Studio. Never asks for a Google account or channel URL -- it only opens
-/// YouTube Studio's public dashboard and lets the streamer sign in there
-/// themselves.
-class StreamerSetupGuideModal extends StatefulWidget {
+/// "More info" for the Broadcaster Studio: short, mode-specific help that
+/// explains the decision at hand and one useful action (P6S research 06).
+///
+/// It replaces a quest-style "Streamer Academy" carousel that promised
+/// outcomes the app could not confirm and offered a clipboard shortcut for
+/// the secret stream key. Each mode says only what this build can do:
+/// OBS on a computer and another phone app are external senders the app
+/// cannot see; the phone path keeps the screen open and ends on leave;
+/// Local is not available.
+class StreamerSetupGuideModal extends StatelessWidget {
   final StudioMode mode;
-  final ValueChanged<String>? onStreamKeyPasted;
+
+  /// For [StudioMode.obs]: `obs_laptop` or `external_phone`.
+  final String externalSender;
 
   const StreamerSetupGuideModal({
     super.key,
     required this.mode,
-    this.onStreamKeyPasted,
+    this.externalSender = 'obs_laptop',
   });
 
   static Future<void> show(
     BuildContext context, {
     required StudioMode mode,
-    ValueChanged<String>? onStreamKeyPasted,
+    String externalSender = 'obs_laptop',
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: AppTheme.media.withValues(alpha: 0.6),
-      builder: (_) => StreamerSetupGuideModal(
-        mode: mode,
-        onStreamKeyPasted: onStreamKeyPasted,
-      ),
+      builder: (_) =>
+          StreamerSetupGuideModal(mode: mode, externalSender: externalSender),
     );
   }
 
-  @override
-  State<StreamerSetupGuideModal> createState() =>
-      _StreamerSetupGuideModalState();
-}
+  String get _section => switch (mode) {
+        StudioMode.obs =>
+          externalSender == 'external_phone' ? 'phone_app' : 'obs',
+        StudioMode.phone => 'phone',
+        StudioMode.local => 'local',
+      };
 
-class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
-  late final PageController _pageController;
-  int _currentPage = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _pageController = PageController();
+  List<String> get _stepKeys {
+    final count = mode == StudioMode.local ? 3 : 4;
+    return [for (var i = 1; i <= count; i++) 'live_guide.${_section}_$i'];
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
-  }
+  IconData get _icon => switch (_section) {
+        'obs' => Icons.laptop_mac_rounded,
+        'phone_app' => Icons.smartphone_rounded,
+        'phone' => Icons.videocam_rounded,
+        _ => Icons.wifi_off_rounded,
+      };
 
-  List<_Quest> _quests(bool isAr) {
-    return switch (widget.mode) {
-      StudioMode.obs => _obsQuests(isAr),
-      StudioMode.phone => _phoneQuests(isAr),
-      StudioMode.local => _localQuests(isAr),
-    };
-  }
-
-  List<_Quest> _obsQuests(bool isAr) => [
-        _Quest(
-          questName: 'design_copy.mission_control'.tr(),
-          icon: Icons.public_rounded,
-          heading: 'design_copy.open_mission_control'.tr(),
-          body: 'design_copy.everything_starts_at_youtube_studio_your_mission_control_for_goin'.tr(),
-          actions: [
-            _QuestAction(_ActionKind.openStudio,
-                'design_copy.open_youtube_studio'.tr()),
-          ],
-        ),
-        _Quest(
-          questName: 'design_copy.the_secret_vip_pass'.tr(),
-          icon: Icons.vpn_key_rounded,
-          heading: 'design_copy.grab_your_secret_stream_key'.tr(),
-          body: 'design_copy.think_of_your_stream_key_like_a_secret_vip_backstage_pass_it_tell'.tr(),
-          actions: [
-            _QuestAction(_ActionKind.openStudio,
-                'design_copy.open_youtube_studio'.tr()),
-            _QuestAction(_ActionKind.pasteClipboard,
-                'design_copy.paste_key_from_clipboard'.tr()),
-          ],
-        ),
-        _Quest(
-          questName: 'design_copy.connecting_the_wires'.tr(),
-          icon: Icons.cable_rounded,
-          heading: 'design_copy.wire_up_obs_studio'.tr(),
-          body: 'design_copy.open_obs_studio_on_your_computer_go_to_settings_stream_and_paste_'.tr(),
-        ),
-        _Quest(
-          questName: 'design_copy.ready_for_takeoff'.tr(),
-          icon: Icons.rocket_launch_rounded,
-          heading: 'design_copy.launch_your_broadcast'.tr(),
-          body: 'design_copy.press_start_streaming_in_obs_first_then_tap_go_live_below_to_laun'.tr(),
-        ),
-      ];
-
-  List<_Quest> _phoneQuests(bool isAr) => [
-        _Quest(
-          questName: 'design_copy.account_activation'.tr(),
-          icon: Icons.hourglass_top_rounded,
-          heading: 'design_copy.activate_your_channel_first'.tr(),
-          body: 'design_copy.first_time_going_live_on_youtube_your_channel_needs_a_one_time_24'.tr(),
-        ),
-        _Quest(
-          questName: 'design_copy.set_it_forget_it'.tr(),
-          icon: Icons.save_rounded,
-          heading: 'design_copy.paste_your_stream_key_once'.tr(),
-          body: 'design_copy.grab_your_stream_key_from_youtube_studio_s_stream_tab_and_paste_i'.tr(),
-          actions: [
-            _QuestAction(_ActionKind.openStudio,
-                'design_copy.open_youtube_studio'.tr()),
-            _QuestAction(_ActionKind.pasteClipboard,
-                'design_copy.paste_key_from_clipboard'.tr()),
-          ],
-        ),
-        _Quest(
-          questName: 'design_copy.live_from_your_phone'.tr(),
-          icon: Icons.smartphone_rounded,
-          heading: 'design_copy.open_camera_go'.tr(),
-          body: 'design_copy.tap_open_camera_and_your_phone_s_own_camera_and_microphone_become'.tr(),
-        ),
-      ];
-
-  // No Local transport exists (P6S G4, owner decision D3): the guide says
-  // so instead of describing a same-Wi-Fi flow the app cannot perform.
-  List<_Quest> _localQuests(bool isAr) => [
-        _Quest(
-          questName: 'design_copy.local'.tr(),
-          icon: Icons.wifi_off_rounded,
-          heading: 'live_studio.local_unavailable_title'.tr(),
-          body: 'live_studio.local_unavailable_body'.tr(),
-        ),
-      ];
-
-  Future<void> _openYoutubeStudio() async {
+  Future<void> _openStudio() async {
     final uri = Uri.parse('https://studio.youtube.com');
-    if (await canLaunchUrl(uri)) {
+    try {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
-  }
-
-  Future<void> _pasteFromClipboard(bool isAr) async {
-    final data = await Clipboard.getData(Clipboard.kTextPlain);
-    final text = data?.text?.trim() ?? '';
-    if (!mounted) return;
-
-    if (text.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('design_copy.clipboard_is_empty_or_too_short_to_be_a_stream_key'.tr()),
-        ),
-      );
-      return;
-    }
-
-    widget.onStreamKeyPasted?.call(text);
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('design_copy.stream_key_pasted'.tr()),
-        backgroundColor: AppTheme.live,
-      ),
-    );
-  }
-
-  void _goToPage(int page) {
-    HapticFeedback.selectionClick();
-    _pageController.animateToPage(
-      page,
-      duration: const Duration(milliseconds: 320),
-      curve: Curves.easeOutCubic,
-    );
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final isAr = context.locale.languageCode == 'ar';
-    final quests = _quests(isAr);
-    final screenHeight = MediaQuery.of(context).size.height;
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
-    // UI-09: also honour the safe-area inset (gesture nav bar), not just the
-    // keyboard inset, so the nav row never sits flush against/under it.
-    final bottomSafeArea = MediaQuery.of(context).padding.bottom;
-
-    return ClipRRect(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: Container(
-          height: screenHeight * 0.72,
-          padding: EdgeInsets.only(
-            left: AppTheme.spaceLg,
-            right: AppTheme.spaceLg,
-            top: AppTheme.spaceMd,
-            bottom: bottomInset > 0
-                ? bottomInset + AppTheme.spaceMd
-                : bottomSafeArea + AppTheme.spaceLg,
-          ),
-          decoration: BoxDecoration(
-            color: AppTheme.surface.withValues(alpha: 0.92),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              _buildHeader(isAr, quests),
-              const SizedBox(height: AppTheme.spaceMd),
-              Expanded(
-                child: PageView.builder(
-                  controller: _pageController,
-                  itemCount: quests.length,
-                  onPageChanged: (i) {
-                    HapticFeedback.selectionClick();
-                    setState(() => _currentPage = i);
-                  },
-                  itemBuilder: (context, i) => _buildQuestCard(quests[i], isAr),
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceMd),
-              _buildDots(quests.length),
-              const SizedBox(height: AppTheme.spaceMd),
-              _buildNavRow(quests.length, isAr),
-            ],
-          ),
-        ),
+    final maxHeight = MediaQuery.of(context).size.height * 0.85;
+    return Container(
+      key: const Key('studio-guide'),
+      constraints: BoxConstraints(maxHeight: maxHeight),
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        border: Border(top: BorderSide(color: AppTheme.borderStrong)),
       ),
-    );
-  }
-
-  Widget _buildHeader(bool isAr, List<_Quest> quests) {
-    final quest = quests[_currentPage];
-    return Row(
-      children: [
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'design_copy.streamer_academy'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.danger,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                  letterSpacing: 0.5,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                isAr
-                    ? 'المستوى ${_currentPage + 1} من ${quests.length}: ${quest.questName}'
-                    : 'Level ${_currentPage + 1} of ${quests.length}: ${quest.questName}',
-                style: const TextStyle(
-                  // UI-03: this sits on the pale surface behind the header,
-                  // not on dark media -- onMedia (white) was unreadable here.
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ],
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
-          tooltip: 'design_copy.close'.tr(),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildQuestCard(_Quest quest, bool isAr) {
-    // UI-10: previously a plain SingleChildScrollView top-anchored the card,
-    // so short quests (few actions, short body) left a large dead gap below
-    // the card and above the dots/nav row. Centering the card within the
-    // available height keeps the layout stable for tall quests (still
-    // scrolls) while pulling short ones toward the middle instead of the top.
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(minHeight: constraints.maxHeight),
-            child: Center(child: _buildQuestCardContent(quest, isAr)),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildQuestCardContent(_Quest quest, bool isAr) {
-    return Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceXs),
-        child: Container(
+      child: SafeArea(
+        top: false,
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppTheme.spaceLg),
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceAlt,
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            border: Border.all(color: AppTheme.border),
-          ),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Center(
-                child: Container(
-                  width: 64,
-                  height: 64,
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: AppTheme.surfaceAlt,
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.danger.withValues(alpha: 0.42),
-                        blurRadius: 24,
-                        spreadRadius: 2,
+              Row(
+                children: [
+                  Icon(_icon, color: AppTheme.primary, size: 22),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  Expanded(
+                    child: Semantics(
+                      header: true,
+                      child: Text(
+                        'live_guide.title_$_section'.tr(),
+                        style: const TextStyle(
+                          color: AppTheme.textPrimary,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded,
+                        color: AppTheme.textSecondary),
+                    tooltip: 'live_guide.close'.tr(),
+                    onPressed: () => Navigator.of(context).pop(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: AppTheme.spaceMd),
+              for (final (i, key) in _stepKeys.indexed)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      CircleAvatar(
+                        radius: 11,
+                        backgroundColor: AppTheme.surfaceAlt,
+                        child: Text(
+                          '${i + 1}',
+                          style: const TextStyle(
+                              color: AppTheme.textPrimary,
+                              fontSize: 11,
+                              fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spaceSm),
+                      Expanded(
+                        child: Text(
+                          key.tr(),
+                          style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 13,
+                              height: 1.45),
+                        ),
                       ),
                     ],
                   ),
-                  // UI-03: dark icon on the pale card, not onMedia (white),
-                  // which disappeared against AppTheme.surfaceAlt.
-                  child: Icon(quest.icon, color: AppTheme.textPrimary, size: 30),
                 ),
-              ),
-              const SizedBox(height: AppTheme.spaceLg),
-              Text(
-                quest.heading,
-                textAlign: TextAlign.start,
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 17,
-                ),
-              ),
-              const SizedBox(height: AppTheme.spaceSm),
-              Text(
-                quest.body,
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 13,
-                  height: 1.5,
-                ),
-              ),
-              if (quest.actions.isNotEmpty) ...[
-                const SizedBox(height: AppTheme.spaceLg),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: quest.actions.map((action) {
-                    return OutlinedButton(
-                      onPressed: switch (action.kind) {
-                        _ActionKind.openStudio => _openYoutubeStudio,
-                        _ActionKind.pasteClipboard => () => _pasteFromClipboard(isAr),
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.danger,
-                        side: const BorderSide(color: AppTheme.danger),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                        ),
+              if (mode != StudioMode.local) ...[
+                const SizedBox(height: AppTheme.spaceSm),
+                Container(
+                  key: const Key('studio-guide-link-vs-key'),
+                  padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceAlt,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'live_guide.link_vs_key_title'.tr(),
+                        style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold),
                       ),
-                      child: Text(
-                        action.label,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                      const SizedBox(height: AppTheme.spaceXs),
+                      Text(
+                        'live_guide.link_vs_key_body'.tr(),
+                        style: const TextStyle(
+                            color: AppTheme.textSecondary,
+                            fontSize: 12.5,
+                            height: 1.45),
                       ),
-                    );
-                  }).toList(),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    key: const Key('studio-guide-open-studio'),
+                    onPressed: _openStudio,
+                    icon: const Icon(Icons.open_in_new_rounded, size: 18),
+                    label: Text('live_guide.open_studio'.tr()),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppTheme.primary,
+                      side: const BorderSide(color: AppTheme.primary),
+                      minimumSize: const Size.fromHeight(44),
+                    ),
+                  ),
                 ),
               ],
             ],
           ),
         ),
-    );
-  }
-
-  Widget _buildDots(int count) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(count, (i) {
-        final active = i == _currentPage;
-        return Container(
-          margin: const EdgeInsets.symmetric(horizontal: 3),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            boxShadow: active
-                ? [
-                    BoxShadow(
-                      color: AppTheme.danger.withValues(alpha: 0.45),
-                      blurRadius: 8,
-                      spreadRadius: 0.5,
-                    ),
-                  ]
-                : null,
-          ),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 320),
-            curve: Curves.easeOutBack,
-            width: active ? 26 : 7,
-            height: 7,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-              color: active ? null : AppTheme.disabled,
-              gradient: active
-                  ? AppGradients.brand
-                  : null,
-            ),
-          ),
-        );
-      }),
-    );
-  }
-
-  Widget _buildNavRow(int count, bool isAr) {
-    final isFirst = _currentPage == 0;
-    final isLast = _currentPage == count - 1;
-
-    return Row(
-      children: [
-        Expanded(
-          child: isFirst
-              ? const SizedBox.shrink()
-              : OutlinedButton(
-                  onPressed: () => _goToPage(_currentPage - 1),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.textSecondary,
-                    side: const BorderSide(color: AppTheme.border),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    ),
-                  ),
-                  child: Text(
-                    'design_copy.previous_step'.tr(),
-                    style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
-                  ),
-                ),
-        ),
-        if (!isFirst) const SizedBox(width: AppTheme.spaceSm),
-        Expanded(
-          child: ElevatedButton(
-            onPressed: isLast
-                ? () => Navigator.of(context).pop()
-                : () => _goToPage(_currentPage + 1),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.danger,
-              foregroundColor: AppTheme.onMedia,
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              ),
-            ),
-            child: Text(
-              isLast
-                  ? ('design_copy.got_it_let_s_stream'.tr())
-                  : ('design_copy.next_quest'.tr()),
-              style: const TextStyle(fontSize: 12.5, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

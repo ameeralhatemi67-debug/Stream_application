@@ -1,27 +1,32 @@
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 
+/// A shortcut back to the broadcast the viewer left, not a player.
+///
+/// The room's YouTube player is a web view owned by the room screen, so
+/// leaving the room stops playback. This used to be a "mini-player" card
+/// that showed a stock photo and a mute button with no audio behind it. It
+/// now says what is true: playback stopped, and one tap returns to the
+/// broadcast. System picture-in-picture is not offered for YouTube streams.
 class FloatingStreamMiniPlayer extends StatefulWidget {
   const FloatingStreamMiniPlayer({super.key});
 
   @override
-  State<FloatingStreamMiniPlayer> createState() => _FloatingStreamMiniPlayerState();
+  State<FloatingStreamMiniPlayer> createState() =>
+      _FloatingStreamMiniPlayerState();
 }
 
 class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
   Offset _position = const Offset(16, 120);
-  bool _controlsVisible = true;
 
-  // Insets the card is kept inside: clear of status bar and bottom nav
   static const double _edgeInset = 12.0;
   static const double _topInset = 60.0;
   static const double _bottomInset = 90.0;
 
-  /// Clamping to keep card inside the viewport during and after dragging.
   Offset _clampToScreen(
       Offset position, Size screen, double width, double height) {
     final maxDx = screen.width - width - _edgeInset;
@@ -32,7 +37,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
     );
   }
 
-  void _expandToFullScreen(BuildContext context, AppProvider provider) {
+  void _returnToBroadcast(BuildContext context, AppProvider provider) {
     final streamId = provider.miniPlayerStreamId;
     provider.closeMiniPlayer();
     if (streamId != null && streamId.isNotEmpty) {
@@ -46,253 +51,80 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
     if (!provider.isMiniPlayerActive) return const SizedBox.shrink();
 
     final size = MediaQuery.of(context).size;
-    final isDesktop = size.width >= 900;
-    final playerWidth = isDesktop ? 220.0 : 175.0;
-    final playerHeight = isDesktop ? 130.0 : 110.0;
-
-    // Re-clamp on every build so rotation / window resize never strands card
-    final position = _clampToScreen(_position, size, playerWidth, playerHeight);
-
-    final isAudioOnly = provider.isMiniPlayerAudioOnly;
+    final width = (size.width - 2 * _edgeInset).clamp(160.0, 300.0);
+    const height = 64.0;
+    final position = _clampToScreen(_position, size, width, height);
     final accentColor =
-        isAudioOnly ? AppTheme.accent : AppTheme.danger;
+        provider.isMiniPlayerAudioOnly ? AppTheme.accent : AppTheme.danger;
 
     return PositionedDirectional(
       start: position.dx,
       top: position.dy,
       child: GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            _position = _clampToScreen(
-                position + details.delta, size, playerWidth, playerHeight);
-          });
-        },
-        onDoubleTap: () => _expandToFullScreen(context, provider),
+        onPanUpdate: (details) => setState(() {
+          // The chip is placed from the start edge, so in right-to-left
+          // layouts a drag to the right moves it toward the start.
+          final rtl = Directionality.of(context) == TextDirection.rtl;
+          final delta =
+              rtl ? Offset(-details.delta.dx, details.delta.dy) : details.delta;
+          _position = _clampToScreen(position + delta, size, width, height);
+        }),
         child: Material(
-          elevation: 16,
-          color: Colors.transparent,
+          key: const ValueKey('mini_player_return_chip'),
+          elevation: 12,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          child: Container(
-            width: playerWidth,
-            height: playerHeight,
-            decoration: BoxDecoration(
-              color: AppTheme.media,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(
-                color: accentColor.withValues(alpha: 0.8),
-                width: 1.4,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            onTap: () => _returnToBroadcast(context, provider),
+            child: Container(
+              width: width,
+              height: height,
+              padding: const EdgeInsetsDirectional.only(
+                  start: AppTheme.spaceSm, end: 2),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                border: Border.all(color: accentColor.withValues(alpha: 0.6)),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: AppTheme.media.withValues(alpha: 0.7),
-                  blurRadius: 16,
-                  offset: const Offset(0, 6),
-                ),
-                BoxShadow(
-                  color: accentColor.withValues(alpha: 0.25),
-                  blurRadius: 10,
-                  spreadRadius: 0.5,
-                ),
-              ],
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd - 1.4),
-              child: Stack(
-                fit: StackFit.expand,
+              child: Row(
                 children: [
-                  // 1. Media Preview Area (Video Thumbnail or Audio Stage Avatar)
-                  GestureDetector(
-                    onTap: () {
-                      setState(() {
-                        _controlsVisible = !_controlsVisible;
-                      });
-                    },
-                    child: Container(
-                      color: AppTheme.media,
-                      child: isAudioOnly
-                          ? Center(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      color: AppTheme.accent
-                                          .withValues(alpha: 0.2),
-                                      border: Border.all(
-                                        color: AppTheme.accent
-                                            .withValues(alpha: 0.6),
-                                        width: 1.2,
-                                      ),
-                                    ),
-                                    child: const Icon(
-                                      Icons.headphones_rounded,
-                                      color: AppTheme.accent,
-                                      size: 24,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'live.audio_live_indicator'.tr(),
-                                    style: const TextStyle(
-                                      color: AppTheme.accent,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : Image.network(
-                              'https://images.unsplash.com/photo-1518770660439-4636190af475?w=400&auto=format&fit=crop&q=80',
-                              fit: BoxFit.cover,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  Container(
-                                color: AppTheme.surface,
-                                child: const Icon(
-                                  Icons.videocam_rounded,
-                                  color: AppTheme.textMuted,
-                                  size: 28,
-                                ),
-                              ),
-                            ),
-                    ),
-                  ),
-
-                  // 2. Bottom Title & Live Pill Overlay (Tappable to expand)
-                  PositionedDirectional(
-                    bottom: 0,
-                    start: 0,
-                    end: 0,
-                    child: GestureDetector(
-                      onTap: () => _expandToFullScreen(context, provider),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 5),
-                        decoration: const BoxDecoration(color: AppTheme.media),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 6,
-                              height: 6,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: accentColor,
-                              ),
-                            ),
-                            const SizedBox(width: 5),
-                            Expanded(
-                              child: Text(
-                                provider.miniPlayerTitle,
-                                style: const TextStyle(
-                                  color: AppTheme.onMedia,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
+                  Icon(Icons.open_in_full_rounded,
+                      color: accentColor, size: 22),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'live.return_to_broadcast'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
-                      ),
+                        Text(
+                          provider.miniPlayerTitle.isEmpty
+                              ? 'live.return_chip_paused'.tr()
+                              : '${provider.miniPlayerTitle} · '
+                                  '${'live.return_chip_paused'.tr()}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                              color: AppTheme.textSecondary, fontSize: 11),
+                        ),
+                      ],
                     ),
                   ),
-
-                  // 3. Floating Overlay Controls (Fade In / Out on Tap)
-                  IgnorePointer(
-                    ignoring: !_controlsVisible,
-                    child: AnimatedOpacity(
-                      opacity: _controlsVisible ? 1.0 : 0.0,
-                      duration: const Duration(milliseconds: 200),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // Semi-transparent backdrop when controls are visible (must not intercept button taps)
-                          IgnorePointer(
-                            child: Container(
-                              color: AppTheme.media.withValues(alpha: 0.25),
-                            ),
-                          ),
-
-                          // Top-Left: Mute / Unmute Button
-                          PositionedDirectional(
-                            top: 6,
-                            start: 6,
-                            child: IconButton(
-                              key: const ValueKey('mini_player_mute_button'),
-                              icon: Icon(
-                                provider.isMiniPlayerMuted
-                                    ? Icons.volume_off_rounded
-                                    : Icons.volume_up_rounded,
-                                size: 16,
-                                color: provider.isMiniPlayerMuted
-                                    ? AppTheme.warning
-                                    : AppTheme.onMedia,
-                              ),
-                              onPressed: provider.toggleMiniPlayerMute,
-                              padding: const EdgeInsets.all(5),
-                              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppTheme.media.withValues(alpha: 0.75),
-                                shape: const CircleBorder(
-                                  side: BorderSide(color: AppTheme.onMedia, width: 0.8),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Top-Right: Close Button
-                          PositionedDirectional(
-                            top: 6,
-                            end: 6,
-                            child: IconButton(
-                              key: const ValueKey('mini_player_close_button'),
-                              icon: const Icon(
-                                Icons.close_rounded,
-                                size: 16,
-                                color: AppTheme.onMedia,
-                              ),
-                              onPressed: provider.closeMiniPlayer,
-                              padding: const EdgeInsets.all(5),
-                              constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppTheme.media.withValues(alpha: 0.75),
-                                shape: const CircleBorder(
-                                  side: BorderSide(color: AppTheme.onMedia, width: 0.8),
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          // Center Tap-to-Expand Indicator
-                          Center(
-                            child: Material(
-                              color: Colors.transparent,
-                              child: InkWell(
-                                onTap: () =>
-                                    _expandToFullScreen(context, provider),
-                                borderRadius: BorderRadius.circular(20),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.media.withValues(alpha: 0.6),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(
-                                    Icons.open_in_full_rounded,
-                                    size: 16,
-                                    color: AppTheme.onMedia,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  IconButton(
+                    key: const ValueKey('mini_player_close_button'),
+                    icon: const Icon(Icons.close_rounded,
+                        size: 18, color: AppTheme.textSecondary),
+                    tooltip: 'live.return_chip_dismiss'.tr(),
+                    onPressed: provider.closeMiniPlayer,
                   ),
                 ],
               ),

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import 'adapters/aws_ivs_player_adapter.dart';
@@ -33,6 +34,24 @@ enum StreamState {
   offline,
   noAudioToken,
   fallbackError,
+}
+
+/// Playback commands a player state can carry out on the real engine.
+///
+/// The room's play, pause and mute buttons used to flip booleans only; the
+/// embedded player kept playing. A player that implements this does the
+/// command and reports whether it was sent. One that cannot (the web iframe
+/// gives the app no command channel) says so via [supportsCommands], and the
+/// room leaves transport to the player's own controls.
+abstract interface class PlayerTransport {
+  bool get supportsCommands;
+  Future<bool> play();
+  Future<bool> pause();
+  Future<bool> setMuted(bool muted);
+
+  /// The player's own mute state, including changes made with the player's
+  /// built-in controls, so the room's mute button can follow it.
+  ValueListenable<bool> get mutedListenable;
 }
 
 /// Polymorphic abstract video player interface widget for educational broadcasts.
@@ -89,6 +108,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     double aspectRatio,
     String preferredQuality,
     List<String> fallbackUrls,
+    bool initialMuted,
   })? debugPlayerFactory;
 
   /// Polymorphic factory constructor instantiating concrete player adapters based on [sourceType].
@@ -103,6 +123,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
     double aspectRatio = 16 / 9,
     String preferredQuality = 'auto',
     List<String> fallbackUrls = const [],
+    bool initialMuted = false,
   }) {
     final override = debugPlayerFactory;
     if (override != null) {
@@ -117,6 +138,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
         aspectRatio: aspectRatio,
         preferredQuality: preferredQuality,
         fallbackUrls: fallbackUrls,
+        initialMuted: initialMuted,
       );
     }
     switch (sourceType) {
@@ -144,6 +166,7 @@ abstract class AbstractVideoPlayer extends StatefulWidget {
         );
       case StreamSourceType.youtubeEmbed:
         return YouTubePlayerAdapter(
+          initialMuted: initialMuted,
           key: key,
           streamUrl: streamUrl,
           fallbackUrls: fallbackUrls,
