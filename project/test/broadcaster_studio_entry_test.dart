@@ -13,6 +13,8 @@ import 'package:streamer_app/core/models/device_session_model.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/services/supabase_auth_service.dart';
+import 'package:streamer_app/core/services/youtube_api_service.dart';
+import 'package:streamer_app/features/admin/models/broadcaster_application_model.dart';
 import 'package:streamer_app/core/widgets/interactive_toast_overlay.dart';
 import 'package:streamer_app/features/live_stream/presentation/screens/phone_broadcast_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/rtmp_ip_dialog.dart';
@@ -38,9 +40,73 @@ class _Auth extends SupabaseAuthService {
   Stream<AuthState> get onAuthStateChange => const Stream.empty();
 }
 
+/// Answers YouTube lookups without the network. The default says the link is
+/// live on an unknown channel.
+class _FakeYouTube extends YouTubeApiService {
+  _FakeYouTube(
+      {this.status = const YouTubeWatchStatus(YouTubeWatchState.live),
+      this.channelIdByHandle = const {},
+      this.liveVideoId,
+      this.searchUnavailable = false})
+      : super(apiKey: '');
+  final bool searchUnavailable;
+  YouTubeWatchStatus status;
+  final Map<String, String> channelIdByHandle;
+  final String? liveVideoId;
+  final checked = <String>[];
+  final searchedChannels = <String>[];
+
+  @override
+  Future<YouTubeWatchStatus> fetchWatchStatus(String videoId) async {
+    checked.add(videoId);
+    return status;
+  }
+
+  @override
+  Future<Map<String, String>> fetchChannelDetails(String handleOrUrl) async {
+    final id = channelIdByHandle[handleOrUrl];
+    return id == null ? {} : {'channelId': id};
+  }
+
+  @override
+  Future<String?> fetchLiveVideoId(String channelId) async {
+    searchedChannels.add(channelId);
+    if (searchUnavailable) throw const YouTubeLookupUnavailable();
+    return liveVideoId;
+  }
+}
+
+BroadcasterApplicationModel _approvedApp(String handle) =>
+    BroadcasterApplicationModel(
+      id: 'app-c',
+      applicantProfileId: 'c',
+      accountType: ApplicationAccountType.individualScholar,
+      applicantNameEn: 'C',
+      applicantNameAr: 'C',
+      email: 'c@example.invalid',
+      phone: '',
+      categoryId: 'computer_science',
+      tags: const [],
+      venueNameEn: '',
+      venueNameAr: '',
+      latitude: 0,
+      longitude: 0,
+      seatingCapacity: 0,
+      youtubeChannelUrl: 'https://youtube.com/@$handle',
+      youtubeHandle: handle,
+      bioEn: '',
+      bioAr: '',
+      avatarUrl: '',
+      bannerUrl: '',
+      status: ApplicationStatus.approved,
+      submittedAt: DateTime.utc(2026, 9, 1),
+    );
+
 class _StudioDb extends AdminDatabaseService {
-  _StudioDb({this.primary = true});
+  _StudioDb({this.primary = true, this.app});
   final bool primary;
+  final BroadcasterApplicationModel? app;
+  final senderModes = <String>[];
   final devices = StreamController<List<DeviceSessionModel>>.broadcast();
   int claims = 0;
   int liveCalls = 0;
@@ -49,6 +115,10 @@ class _StudioDb extends AdminDatabaseService {
 
   @override
   Future<bool> checkIsProfileStreamer(String id) async => true;
+  @override
+  Future<BroadcasterApplicationModel?> loadMyApplication(
+          String profileId) async =>
+      app;
   @override
   Future<Map<String, dynamic>?> loadOwnProfile(String id) async =>
       {'display_name_en': 'C', 'is_streamer': true, 'is_verified': true};
@@ -93,6 +163,7 @@ class _StudioDb extends AdminDatabaseService {
       required String deviceId,
       required String senderMode,
       String? orgId}) async {
+    senderModes.add(senderMode);
     await setLiveState(
         live: true,
         type: type,
@@ -103,9 +174,11 @@ class _StudioDb extends AdminDatabaseService {
   }
 }
 
-Future<AppProvider> _broadcaster(_StudioDb db) async {
-  final provider =
-      AppProvider.withServices(authService: _Auth('c'), adminDbService: db);
+Future<AppProvider> _broadcaster(_StudioDb db, {_FakeYouTube? youTube}) async {
+  final provider = AppProvider.withServices(
+      authService: _Auth('c'),
+      adminDbService: db,
+      youTubeService: youTube ?? _FakeYouTube());
   for (var i = 0; i < 200 && provider.authHydrating; i++) {
     await Future<void>.delayed(const Duration(milliseconds: 2));
   }
@@ -171,7 +244,7 @@ void main() {
 
   Finder field(String hint) => find.byWidgetPredicate(
       (w) => w is TextField && w.decoration?.hintText == hint);
-  final watchField = field('https://youtube.com/watch?v=... or Video ID');
+  final watchField = find.byKey(const Key('studio-watch-link-field'));
   final keyField = field('xxxx-xxxx-xxxx-xxxx-xxxx');
 
   Future<void> tapCta(WidgetTester tester, String key) async {
@@ -252,8 +325,8 @@ void main() {
       expect(db.liveCalls, 1);
       expect(provider.isBroadcastingLive, isTrue);
       expect(find.byType(LiveBroadcasterStudioSheet), findsNothing);
-      expect(find.text('live_studio.obs_listed_live_title'.tr()),
-          findsOneWidget);
+      expect(
+          find.text('live_studio.obs_listed_live_title'.tr()), findsOneWidget);
       await close(tester, provider, db);
     });
 
@@ -321,7 +394,8 @@ void main() {
       await openSheet(tester, provider!);
       await tester.tap(find.text('Phone'));
       await tester.pumpAndSettle();
-      await tester.enterText(watchField, 'https://www.youtube.com/watch?v=abcdefghijk');
+      await tester.enterText(
+          watchField, 'https://www.youtube.com/watch?v=abcdefghijk');
       await tester.enterText(keyField, 'disposable-key');
       await tester.pump();
       final cta = find.text('live_studio.btn_open_camera'.tr());
@@ -343,7 +417,8 @@ void main() {
       await close(tester, provider, db);
     });
 
-    testWidgets('outside the Android app, Phone explains that it is unavailable',
+    testWidgets(
+        'outside the Android app, Phone explains that it is unavailable',
         (tester) async {
       debugDefaultTargetPlatformOverride = TargetPlatform.windows;
       final db = _StudioDb();
@@ -370,6 +445,484 @@ void main() {
       expectVisible(tester, find.text('live.watch_url_required'.tr()));
       expect(tester.takeException(), isNull);
       await close(tester, provider, db);
+    });
+  });
+
+  group('Watch link and sender (P6S Group 2)', () {
+    Future<void> goLive(WidgetTester tester, String link) async {
+      await tester.enterText(watchField, link);
+      await tapCta(tester, 'live_studio.btn_go_live');
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump();
+    }
+
+    for (final (state, key) in [
+      (YouTubeWatchState.notFound, 'live_studio.watch_check_not_found'),
+      (YouTubeWatchState.ended, 'live_studio.watch_check_ended'),
+      (YouTubeWatchState.notLive, 'live_studio.watch_check_not_live'),
+    ]) {
+      testWidgets('a ${state.name} link is refused before anything is listed',
+          (tester) async {
+        final db = _StudioDb();
+        final yt = _FakeYouTube(status: YouTubeWatchStatus(state));
+        final provider =
+            await tester.runAsync(() => _broadcaster(db, youTube: yt));
+        await openSheet(tester, provider!);
+        await goLive(tester, 'https://youtu.be/abcdefghijk');
+        expect(yt.checked, ['abcdefghijk']);
+        expectVisible(tester, find.text(key.tr()));
+        expect(db.liveCalls, 0);
+        expect(provider.isBroadcastingLive, isFalse);
+        expect(provider.customYouTubeVideoId, isEmpty,
+            reason: 'a refused link is not stored as the watch target');
+        await close(tester, provider, db);
+      });
+    }
+
+    testWidgets(
+        'a live link on another channel than the approved one is refused',
+        (tester) async {
+      final db = _StudioDb(app: _approvedApp('my_channel'));
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.live,
+              channelId: 'UC_someone_else'),
+          channelIdByHandle: {'my_channel': 'UC_mine'});
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await openSheet(tester, provider!);
+      await goLive(tester, 'abcdefghijk');
+      expectVisible(
+          tester, find.text('live_studio.watch_check_wrong_channel'.tr()));
+      expect(db.liveCalls, 0);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('a live link on the approved channel is listed as verified',
+        (tester) async {
+      final db = _StudioDb(app: _approvedApp('my_channel'));
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.live,
+              channelId: 'UC_mine'),
+          channelIdByHandle: {'my_channel': 'UC_mine'});
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      final check =
+          await tester.runAsync(() => provider!.verifyWatchLink('abcdefghijk'));
+      expect(check!.verdict, WatchLinkVerdict.live);
+      expect(check.channelVerified, isTrue);
+      await close(tester, provider!, db);
+    });
+
+    testWidgets(
+        'when YouTube cannot be asked, the link is listed with an '
+        'explicit unchecked note', (tester) async {
+      final db = _StudioDb();
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.unavailable));
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await openSheet(tester, provider!);
+      await goLive(tester, 'abcdefghijk');
+      await tester.pumpAndSettle();
+      expect(db.liveCalls, 1);
+      expect(provider.isBroadcastingLive, isTrue);
+      expect(
+          find.textContaining('live_studio.watch_check_unverified_note'.tr()),
+          findsOneWidget);
+      await close(tester, provider, db);
+    });
+
+    testWidgets(
+        'a verified link lists without the unchecked note and records '
+        'OBS on a computer as the sender', (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      await openSheet(tester, provider!);
+      await goLive(tester, 'abcdefghijk');
+      await tester.pumpAndSettle();
+      expect(db.senderModes, ['obs_laptop']);
+      expect(
+          find.textContaining('live_studio.watch_check_unverified_note'.tr()),
+          findsNothing);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('choosing Another phone app records external_phone',
+        (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      await openSheet(tester, provider!);
+      final chip = find.byKey(const Key('studio-sender-external_phone'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pump();
+      expect(find.text('live_studio.sender_external_phone_help'.tr()),
+          findsOneWidget);
+      expect(
+          find.text('live_studio.sender_external_phone'.tr()), findsOneWidget);
+      expect('live_studio.sender_external_phone'.tr(), isNot(contains('OBS')));
+      await goLive(tester, 'abcdefghijk');
+      expect(db.senderModes, ['external_phone']);
+      await close(tester, provider, db);
+    });
+
+    testWidgets(
+        'the Encoder tab never shows or offers to copy a stream key or '
+        'ingest URL', (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      provider!.updatePhoneBroadcastTarget(
+          rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2',
+          streamKey: 'abcd-efgh-ijkl-mnop-qrst');
+      await openSheet(tester, provider);
+      expect(find.byKey(const Key('studio-encoder-key-note')), findsOneWidget);
+      expect(find.textContaining('abcd-efgh'), findsNothing);
+      expect(find.textContaining('rtmp://'), findsNothing);
+      expect(find.text('design_copy.stream_key'.tr()), findsNothing);
+      expect(find.text('design_copy.ingest_server_url'.tr()), findsNothing);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('a stream key pasted as the watch link is caught unsent',
+        (tester) async {
+      final db = _StudioDb();
+      final yt = _FakeYouTube();
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await openSheet(tester, provider!);
+      await goLive(tester, 'abcd-efgh-ijkl-mnop-qrst');
+      expectVisible(
+          tester, find.text('live_studio.error_key_in_watch_field'.tr()));
+      expect(yt.checked, isEmpty, reason: 'the key never leaves the device');
+      expect(db.liveCalls, 0);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Phone: a watch link pasted as the stream key is caught',
+        (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      await openSheet(tester, provider!);
+      await tester.tap(find.text('Phone'));
+      await tester.pumpAndSettle();
+      await tester.enterText(
+          keyField, 'https://www.youtube.com/watch?v=abcdefghijk');
+      await tapCta(tester, 'live_studio.btn_open_camera');
+      expectVisible(
+          tester, find.text('live_studio.error_watch_in_key_field'.tr()));
+      expect(find.byType(PhoneBroadcastScreen), findsNothing);
+      expect(provider.phoneBroadcastStreamKey, isEmpty);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Phone: an ended watch link is refused before the camera',
+        (tester) async {
+      final db = _StudioDb();
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.ended));
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await openSheet(tester, provider!);
+      await tester.tap(find.text('Phone'));
+      await tester.pumpAndSettle();
+      await tester.enterText(watchField, 'abcdefghijk');
+      await tester.enterText(keyField, 'disposable-key');
+      await tapCta(tester, 'live_studio.btn_open_camera');
+      await tester.runAsync(
+          () => Future<void>.delayed(const Duration(milliseconds: 20)));
+      await tester.pump();
+      expectVisible(tester, find.text('live_studio.watch_check_ended'.tr()));
+      expect(find.byType(PhoneBroadcastScreen), findsNothing);
+      expect(provider.phoneBroadcastStreamKey, isEmpty);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Find my live broadcast searches only this account channel',
+        (tester) async {
+      final db = _StudioDb(app: _approvedApp('my_channel'));
+      final yt = _FakeYouTube(
+          channelIdByHandle: {'my_channel': 'UC_mine'},
+          liveVideoId: 'zyxwvutsrqp');
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      final found =
+          await tester.runAsync(() => provider!.findMyLiveBroadcast());
+      expect(found, isTrue);
+      expect(yt.searchedChannels, ['UC_mine']);
+      expect(provider!.customYouTubeVideoId, 'zyxwvutsrqp');
+      expect(provider.isBroadcastingLive, isFalse,
+          reason: 'finding a link never marks anything live');
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Find my live broadcast without a channel on record explains',
+        (tester) async {
+      final db = _StudioDb();
+      final yt = _FakeYouTube(liveVideoId: 'zyxwvutsrqp');
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      final found =
+          await tester.runAsync(() => provider!.findMyLiveBroadcast());
+      expect(found, isFalse);
+      expect(yt.searchedChannels, isEmpty);
+      expect(provider!.findMyLiveBroadcastErrorKey,
+          'live_studio.find_live_no_channel');
+      expect(provider.customYouTubeVideoId, isEmpty);
+      await close(tester, provider, db);
+    });
+
+    testWidgets(
+        'a live link with no channel on record says the channel was not '
+        'matched', (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      await openSheet(tester, provider!);
+      await goLive(tester, 'abcdefghijk');
+      await tester.pumpAndSettle();
+      expect(db.liveCalls, 1);
+      expect(
+          find.textContaining(
+              'live_studio.watch_check_channel_unconfirmed_note'.tr()),
+          findsOneWidget);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('a matched channel shows no channel note', (tester) async {
+      final db = _StudioDb(app: _approvedApp('my_channel'));
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.live,
+              channelId: 'UC_mine'),
+          channelIdByHandle: {'my_channel': 'UC_mine'});
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await openSheet(tester, provider!);
+      await goLive(tester, 'abcdefghijk');
+      await tester.pumpAndSettle();
+      expect(db.liveCalls, 1);
+      expect(
+          find.textContaining(
+              'live_studio.watch_check_channel_unconfirmed_note'.tr()),
+          findsNothing);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('a channel URL on record is compared without a lookup',
+        (tester) async {
+      const id = 'UCabcdefghijklmnopqrstuv';
+      final db = _StudioDb(app: _approvedApp('channel/$id'));
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.live,
+              channelId: 'UCzzzzzzzzzzzzzzzzzzzzzz'));
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      final check =
+          await tester.runAsync(() => provider!.verifyWatchLink('abcdefghijk'));
+      expect(check!.verdict, WatchLinkVerdict.wrongChannel);
+      await close(tester, provider!, db);
+    });
+
+    testWidgets('a broadcast scheduled hours ahead is refused for now',
+        (tester) async {
+      final db = _StudioDb();
+      final yt = _FakeYouTube(
+          status: YouTubeWatchStatus(YouTubeWatchState.upcoming,
+              scheduledStart: DateTime.now().add(const Duration(hours: 5))));
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await openSheet(tester, provider!);
+      await goLive(tester, 'abcdefghijk');
+      expectVisible(
+          tester, find.text('live_studio.watch_check_scheduled_later'.tr()));
+      expect(db.liveCalls, 0);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('with Another phone app chosen, the copy never refers to OBS',
+        (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      await openSheet(tester, provider!);
+      final chip = find.byKey(const Key('studio-sender-external_phone'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pump();
+      await tapCta(tester, 'live_studio.btn_go_live');
+      expectVisible(tester,
+          find.text('live_studio.error_watch_id_required_phone_app'.tr()));
+      expect('live_studio.error_watch_id_required_phone_app'.tr(),
+          isNot(contains('OBS')));
+      await goLive(tester, 'abcdefghijk');
+      await tester.pumpAndSettle();
+      expect(
+          find.textContaining('live_studio.phone_app_listed_live_body'
+              .tr(args: ['abcdefghijk'])),
+          findsOneWidget);
+      expect(find.textContaining('OBS'), findsNothing);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Phone: the server address pasted as the key is named',
+        (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      await openSheet(tester, provider!);
+      await tester.tap(find.text('Phone'));
+      await tester.pumpAndSettle();
+      await tester.enterText(keyField, 'rtmp://a.rtmp.youtube.com/live2');
+      await tapCta(tester, 'live_studio.btn_open_camera');
+      expectVisible(
+          tester, find.text('live_studio.error_ingest_in_key_field'.tr()));
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Find my live broadcast: a YouTube outage is not "none"',
+        (tester) async {
+      final db = _StudioDb(app: _approvedApp('my_channel'));
+      final yt = _FakeYouTube(
+          channelIdByHandle: {'my_channel': 'UC_mine'},
+          searchUnavailable: true);
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      final found =
+          await tester.runAsync(() => provider!.findMyLiveBroadcast());
+      expect(found, isFalse);
+      expect(provider!.findMyLiveBroadcastErrorKey,
+          'live_studio.find_live_unavailable');
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Find my live broadcast is throttled to spare shared quota',
+        (tester) async {
+      final db = _StudioDb(app: _approvedApp('my_channel'));
+      final yt = _FakeYouTube(
+          channelIdByHandle: {'my_channel': 'UC_mine'}, liveVideoId: null);
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await tester.runAsync(() => provider!.findMyLiveBroadcast());
+      await tester.runAsync(() => provider!.findMyLiveBroadcast());
+      expect(yt.searchedChannels, ['UC_mine'], reason: 'one search only');
+      expect(
+          provider!.findMyLiveBroadcastErrorKey, 'live_studio.find_live_wait');
+      await close(tester, provider, db);
+    });
+
+    testWidgets('Arabic: the Encoder tab and its sender choice lay out',
+        (tester) async {
+      final db = _StudioDb();
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      await openSheet(tester, provider!, locale: const Locale('ar'));
+      expect(find.text('live_studio.mode_encoder'.tr()), findsOneWidget);
+      expect(find.byKey(const Key('studio-sender-obs_laptop')), findsOneWidget);
+      final chip = find.byKey(const Key('studio-sender-external_phone'));
+      await tester.ensureVisible(chip);
+      await tester.tap(chip);
+      await tester.pump();
+      expect(find.text('live_studio.sender_external_phone_help'.tr()),
+          findsOneWidget);
+      expect(find.byKey(const Key('studio-encoder-key-note')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await close(tester, provider, db);
+    });
+
+    testWidgets('a handle that merely starts with UC is looked up, not parsed',
+        (tester) async {
+      const handle = 'UCLA_Bruins_Official_Channel';
+      final db = _StudioDb(app: _approvedApp(handle));
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.live,
+              channelId: 'UC_real_bruins'),
+          channelIdByHandle: {handle: 'UC_real_bruins'});
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      final check =
+          await tester.runAsync(() => provider!.verifyWatchLink('abcdefghijk'));
+      expect(check!.verdict, WatchLinkVerdict.live);
+      expect(check.channelVerified, isTrue);
+      await close(tester, provider!, db);
+    });
+
+    testWidgets('a handle on record that cannot be looked up gets its own note',
+        (tester) async {
+      final db = _StudioDb(app: _approvedApp('my_channel'));
+      final provider = await tester.runAsync(() => _broadcaster(db));
+      final check =
+          await tester.runAsync(() => provider!.verifyWatchLink('abcdefghijk'));
+      expect(
+          check!.noteKey, 'live_studio.watch_check_channel_lookup_failed_note');
+      await close(tester, provider!, db);
+    });
+
+    for (final (name, makeYouTube, key) in [
+      (
+        'wrong channel',
+        () => _FakeYouTube(
+            status: const YouTubeWatchStatus(YouTubeWatchState.live,
+                channelId: 'UC_someone_else'),
+            channelIdByHandle: {'my_channel': 'UC_mine'}),
+        'live_studio.watch_check_wrong_channel'
+      ),
+      (
+        'scheduled later',
+        () => _FakeYouTube(
+            status: YouTubeWatchStatus(YouTubeWatchState.upcoming,
+                scheduledStart: DateTime.now().add(const Duration(hours: 3)))),
+        'live_studio.watch_check_scheduled_later'
+      ),
+    ]) {
+      testWidgets('Phone: a $name link is refused before the camera',
+          (tester) async {
+        final db = _StudioDb(app: _approvedApp('my_channel'));
+        final provider = await tester
+            .runAsync(() => _broadcaster(db, youTube: makeYouTube()));
+        await openSheet(tester, provider!);
+        await tester.tap(find.text('Phone'));
+        await tester.pumpAndSettle();
+        await tester.enterText(watchField, 'abcdefghijk');
+        await tester.enterText(keyField, 'disposable-key');
+        await tapCta(tester, 'live_studio.btn_open_camera');
+        await tester.runAsync(
+            () => Future<void>.delayed(const Duration(milliseconds: 20)));
+        await tester.pump();
+        expectVisible(tester, find.text(key.tr()));
+        expect(find.byType(PhoneBroadcastScreen), findsNothing);
+        await close(tester, provider, db);
+      });
+    }
+
+    testWidgets('Phone: an unchecked link opens the camera with its note',
+        (tester) async {
+      final db = _StudioDb();
+      final yt = _FakeYouTube(
+          status: const YouTubeWatchStatus(YouTubeWatchState.unavailable));
+      final provider =
+          await tester.runAsync(() => _broadcaster(db, youTube: yt));
+      await openSheet(tester, provider!);
+      await tester.tap(find.text('Phone'));
+      await tester.pumpAndSettle();
+      await tester.enterText(watchField, 'abcdefghijk');
+      await tester.enterText(keyField, 'disposable-key');
+      await tapCta(tester, 'live_studio.btn_open_camera');
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(PhoneBroadcastScreen), findsOneWidget);
+      expect(find.text('live_studio.watch_check_unverified_note'.tr()),
+          findsOneWidget);
+      tester.takeException();
+      await close(tester, provider, db);
+    });
+
+    test('key and watch-link shapes are told apart', () {
+      expect(looksLikeStreamKey('abcd-efgh-ijkl-mnop-qrst'), isTrue);
+      expect(looksLikeStreamKey('abcd-1234-ef56-gh78'), isTrue);
+      expect(looksLikeStreamKey('abcdefghijk'), isFalse);
+      expect(looksLikeStreamKey('https://youtu.be/abcdefghijk'), isFalse);
+      expect(looksLikeWatchLink('https://youtu.be/abcdefghijk'), isTrue);
+      expect(looksLikeWatchLink('youtube.com/live/abcdefghijk'), isTrue);
+      expect(looksLikeWatchLink('abcd-efgh-ijkl-mnop-qrst'), isFalse);
+      expect(looksLikeWatchLink('abcdefghijk'), isTrue,
+          reason: 'a bare video ID is not a key');
+      expect(looksLikeIngestUrl('rtmps://a.rtmps.youtube.com/live2'), isTrue);
+      expect(looksLikeIngestUrl('abcd-efgh-ijkl-mnop-qrst'), isFalse);
     });
   });
 
@@ -439,8 +992,8 @@ void main() {
           platform: 'android',
           lastActiveAt: DateTime.now()),
     ]);
-    await tester.runAsync(
-        () => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
 
@@ -453,19 +1006,21 @@ void main() {
     await close(tester, provider, db);
   });
 
-  testWidgets('Local is visibly unavailable and saves nothing',
-      (tester) async {
+  testWidgets('Local is visibly unavailable and saves nothing', (tester) async {
     final provider = AppProvider();
     final ipBefore = provider.rtmpLaptopIp;
     await openSheet(tester, provider);
     await tester.tap(find.text('Local'));
     await tester.pumpAndSettle();
     expect(find.byKey(const ValueKey('local-unavailable')), findsOneWidget);
-    expect(find.byType(TextField).evaluate().any((e) =>
-            (e.widget as TextField).decoration?.hintText == 'e.g. 192.168.1.100'),
+    expect(
+        find.byType(TextField).evaluate().any((e) =>
+            (e.widget as TextField).decoration?.hintText ==
+            'e.g. 192.168.1.100'),
         isFalse);
     await tapCta(tester, 'live_studio.btn_local_unavailable');
-    expectVisible(tester,
+    expectVisible(
+        tester,
         find.descendant(
             of: find.byKey(const ValueKey('studio-cta-error')),
             matching: find.text('live_studio.local_unavailable_body'.tr())));

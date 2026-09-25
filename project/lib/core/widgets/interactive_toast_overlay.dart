@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 
@@ -19,6 +19,7 @@ class InteractiveToastOverlay {
     VoidCallback? onTap,
     String? actionLabel,
     VoidCallback? onActionPressed,
+    int messageMaxLines = 2,
   }) {
     // Dismiss any existing active banner immediately
     dismiss();
@@ -33,6 +34,7 @@ class InteractiveToastOverlay {
         icon: icon,
         accentColor: accentColor,
         duration: duration,
+        messageMaxLines: messageMaxLines,
         onTap: () {
           dismiss();
           onTap?.call();
@@ -76,8 +78,10 @@ class _InteractiveToastWidget extends StatefulWidget {
   final String? actionLabel;
   final VoidCallback? onActionPressed;
   final VoidCallback onDismissed;
+  final int messageMaxLines;
 
   const _InteractiveToastWidget({
+    this.messageMaxLines = 2,
     required this.title,
     required this.message,
     required this.icon,
@@ -90,7 +94,8 @@ class _InteractiveToastWidget extends StatefulWidget {
   });
 
   @override
-  State<_InteractiveToastWidget> createState() => _InteractiveToastWidgetState();
+  State<_InteractiveToastWidget> createState() =>
+      _InteractiveToastWidgetState();
 }
 
 class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
@@ -132,123 +137,135 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
       top: topPadding + 8,
       start: 16,
       end: 16,
-      child: Material(
-        color: Colors.transparent,
-        child: AnimatedBuilder(
-          animation: _animController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(0, _slideAnimation.value),
-              child: Opacity(
-                opacity: _fadeAnimation.value,
-                child: child,
-              ),
-            );
-          },
-          child: Dismissible(
-            key: const Key('interactive_toast_dismissible'),
-            direction: DismissDirection.up,
-            onDismissed: (_) => widget.onDismissed(),
-            child: InkWell(
-              onTap: widget.onTap,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(
-                    color: widget.accentColor.withValues(alpha: 0.6),
-                    width: 1.2,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.media.withValues(alpha: 0.4),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
-                    ),
-                  ],
+      // Announced by screen readers when it appears.
+      child: Semantics(
+        liveRegion: true,
+        container: true,
+        child: Material(
+          color: Colors.transparent,
+          child: AnimatedBuilder(
+            animation: _animController,
+            builder: (context, child) {
+              return Transform.translate(
+                offset: Offset(0, _slideAnimation.value),
+                child: Opacity(
+                  opacity: _fadeAnimation.value,
+                  child: child,
                 ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Icon Badge
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: widget.accentColor.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      ),
-                      child: Icon(
-                        widget.icon,
-                        color: widget.accentColor,
-                        size: 20,
-                      ),
+              );
+            },
+            child: Dismissible(
+              key: const Key('interactive_toast_dismissible'),
+              direction: DismissDirection.up,
+              onDismissed: (_) => widget.onDismissed(),
+              child: InkWell(
+                onTap: widget.onTap,
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    border: Border.all(
+                      color: widget.accentColor.withValues(alpha: 0.6),
+                      width: 1.2,
                     ),
-                    const SizedBox(width: 12),
-
-                    // Title & Message Text
-                    Expanded(
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.title,
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontSize: 13,
-                              fontWeight: FontWeight.bold,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            widget.message,
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 11.5,
-                              height: 1.25,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    // Action Button or Dismiss Icon
-                    if (widget.actionLabel != null) ...[
-                      const SizedBox(width: 8),
-                      TextButton(
-                        onPressed: widget.onActionPressed ?? widget.onTap,
-                        style: TextButton.styleFrom(
-                          backgroundColor: widget.accentColor.withValues(alpha: 0.18),
-                          foregroundColor: widget.accentColor,
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          minimumSize: Size.zero,
-                          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                          ),
-                        ),
-                        child: Text(
-                          widget.actionLabel!,
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-                        ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.media.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
                       ),
                     ],
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Icon Badge
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: BoxDecoration(
+                          color: widget.accentColor.withValues(alpha: 0.15),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                        ),
+                        child: Icon(
+                          widget.icon,
+                          color: widget.accentColor,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
 
-                    const SizedBox(width: 4),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 16, color: AppTheme.textMuted),
-                      padding: EdgeInsets.zero,
-                      constraints: const BoxConstraints(),
-                      onPressed: widget.onDismissed,
-                    ),
-                  ],
+                      // Title & Message Text
+                      Expanded(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              widget.title,
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              widget.message,
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
+                                fontSize: 11.5,
+                                height: 1.25,
+                              ),
+                              maxLines: widget.messageMaxLines,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      // Action Button or Dismiss Icon
+                      if (widget.actionLabel != null) ...[
+                        const SizedBox(width: 8),
+                        TextButton(
+                          onPressed: widget.onActionPressed ?? widget.onTap,
+                          style: TextButton.styleFrom(
+                            backgroundColor:
+                                widget.accentColor.withValues(alpha: 0.18),
+                            foregroundColor: widget.accentColor,
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 10, vertical: 6),
+                            minimumSize: Size.zero,
+                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusXs),
+                            ),
+                          ),
+                          child: Text(
+                            widget.actionLabel!,
+                            style: const TextStyle(
+                                fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+
+                      const SizedBox(width: 4),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded,
+                            size: 16, color: AppTheme.textMuted),
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: widget.onDismissed,
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),

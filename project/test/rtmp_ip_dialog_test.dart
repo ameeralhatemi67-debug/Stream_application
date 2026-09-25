@@ -135,7 +135,7 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        const obsLabel = 'OBS';
+        final obsLabel = localized(data, 'live_studio.mode_encoder');
         final phoneLabel = localized(data, 'design_copy.phone');
         final localLabel = localized(data, 'design_copy.local');
 
@@ -145,29 +145,28 @@ void main() {
         // reliable, locale-independent fingerprint (hardcoded hint text)
         // for exactly one mode.
         expect(find.byKey(const ValueKey('local-unavailable')), findsNothing);
-        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
-            findsOneWidget);
+        expect(
+            find.byKey(const Key('studio-watch-link-field')), findsOneWidget);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
 
         await tester.tap(find.text(localLabel));
         await tester.pumpAndSettle();
         expect(find.byKey(const ValueKey('local-unavailable')), findsOneWidget);
-        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
-            findsNothing);
+        expect(find.byKey(const Key('studio-watch-link-field')), findsNothing);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
 
         await tester.tap(find.text(phoneLabel));
         await tester.pumpAndSettle();
         expect(find.byKey(const ValueKey('local-unavailable')), findsNothing);
-        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
-            findsOneWidget);
+        expect(
+            find.byKey(const Key('studio-watch-link-field')), findsOneWidget);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsOneWidget);
 
         await tester.tap(find.text(obsLabel));
         await tester.pumpAndSettle();
         expect(find.byKey(const ValueKey('local-unavailable')), findsNothing);
-        expect(findByHint('https://youtube.com/watch?v=... or Video ID'),
-            findsOneWidget);
+        expect(
+            find.byKey(const Key('studio-watch-link-field')), findsOneWidget);
         expect(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), findsNothing);
       });
     }
@@ -191,7 +190,7 @@ void main() {
       expect(find.text('live_studio.director_subtitle'), findsNothing);
     });
 
-    testWidgets('TC-STUDIO-02: opens on OBS mode with all three pill tabs',
+    testWidgets('TC-STUDIO-02: opens on Encoder mode with all three pill tabs',
         (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
@@ -200,7 +199,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('OBS'), findsOneWidget);
+      expect(find.text('Encoder'), findsOneWidget);
       expect(find.text('Phone'), findsOneWidget);
       expect(find.text('Local'), findsOneWidget);
       expect(find.text('Go Live'), findsOneWidget);
@@ -244,11 +243,10 @@ void main() {
       await tester.tap(find.text('Phone'));
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-          findByHint('https://youtube.com/watch?v=... or Video ID'),
+      await tester.enterText(find.byKey(const Key('studio-watch-link-field')),
           'https://youtube.com/watch?v=abcdefghijk');
-      await tester.enterText(
-          findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'), 'real-key-from-youtube-studio');
+      await tester.enterText(findByHint('xxxx-xxxx-xxxx-xxxx-xxxx'),
+          'real-key-from-youtube-studio');
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Open Camera'));
@@ -260,8 +258,7 @@ void main() {
       expect(provider.isBroadcastingLive, isFalse);
     });
 
-    testWidgets(
-        'TC-STUDIO-05: an empty stream key never reaches AppProvider',
+    testWidgets('TC-STUDIO-05: an empty stream key never reaches AppProvider',
         (tester) async {
       useTallTestSurface(tester);
       await tester.pumpWidget(
@@ -326,7 +323,7 @@ void main() {
       await tester.pump();
       expect(find.byKey(const ValueKey('studio-cta-error')), findsOneWidget);
 
-      await tester.tap(find.text('OBS'));
+      await tester.tap(find.text('Encoder'));
       await tester.pumpAndSettle();
       expect(find.byKey(const ValueKey('studio-cta-error')), findsNothing);
     });
@@ -376,7 +373,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('My Great Lecture'), findsOneWidget);
 
-      await tester.tap(find.text('OBS'));
+      await tester.tap(find.text('Encoder'));
       await tester.pumpAndSettle();
       expect(find.text('My Great Lecture'), findsOneWidget);
     });

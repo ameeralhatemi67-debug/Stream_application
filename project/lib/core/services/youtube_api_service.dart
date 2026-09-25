@@ -1,7 +1,41 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../../features/profile/models/vod_models.dart';
+
+/// What YouTube's public Data API says about one watch ID. This is a
+/// snapshot read with the app's API key, not channel authorization: it can
+/// tell a live broadcast from a finished one, a regular video or a mistyped
+/// ID, and which channel owns it. It cannot see the stream key, the encoder
+/// or whether a particular viewer hears sound.
+enum YouTubeWatchState {
+  live,
+  upcoming,
+  ended,
+  notLive,
+  notFound,
+
+  /// No answer (no API key, quota, network): nothing is known.
+  unavailable,
+}
+
+class YouTubeWatchStatus {
+  const YouTubeWatchStatus(this.state,
+      {this.channelId, this.title, this.scheduledStart});
+  final YouTubeWatchState state;
+  final String? channelId;
+  final String? title;
+
+  /// liveStreamingDetails.scheduledStartTime, for an upcoming broadcast.
+  final DateTime? scheduledStart;
+}
+
+/// YouTube could not be asked (quota, key, network, timeout). Distinct from
+/// "asked, and the answer is no".
+class YouTubeLookupUnavailable implements Exception {
+  const YouTubeLookupUnavailable();
+}
 
 /// Service for communicating with YouTube Data API v3 REST endpoints.
 class YouTubeApiService {
@@ -11,6 +45,11 @@ class YouTubeApiService {
   static const String _defaultApiKey =
       String.fromEnvironment('YOUTUBE_API_KEY');
   static const String _baseUrl = 'https://www.googleapis.com/youtube/v3';
+
+  /// Studio lookups wait at most this long; after that the studio treats
+  /// YouTube as unreachable instead of spinning.
+  static const Duration defaultLookupTimeout = Duration(seconds: 8);
+  final Duration lookupTimeout;
 
   final String apiKey;
   final http.Client _client;
@@ -22,6 +61,7 @@ class YouTubeApiService {
   YouTubeApiService({
     String? apiKey,
     http.Client? client,
+    this.lookupTimeout = defaultLookupTimeout,
   })  : apiKey = apiKey ?? _defaultApiKey,
         _client = client ?? http.Client();
 
@@ -50,7 +90,7 @@ class YouTubeApiService {
     );
 
     try {
-      final response = await _client.get(url);
+      final response = await _client.get(url).timeout(lookupTimeout);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -72,7 +112,8 @@ class YouTubeApiService {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching channel details for $handleOrUrl: $e');
+      // The error text can contain the request URL, which carries the key.
+      debugPrint('Error fetching channel details: ${e.runtimeType}');
     }
 
     return {};
@@ -257,13 +298,17 @@ class YouTubeApiService {
   /// Returns null if the channel has no active live broadcast right now
   /// (e.g. OBS hasn't started streaming, or "Go Live"hasn't been clicked
   /// yet in YouTube Studio).
+  ///
+  /// Throws [YouTubeLookupUnavailable] when YouTube could not be asked, so a
+  /// quota or network failure is never reported as "no live broadcast".
   Future<String?> fetchLiveVideoId(String channelId) async {
+    if (apiKey.isEmpty) throw const YouTubeLookupUnavailable();
     final url = Uri.parse(
       '$_baseUrl/search?part=snippet&channelId=$channelId&eventType=live&type=video&key=$apiKey',
     );
 
     try {
-      final response = await _client.get(url);
+      final response = await _client.get(url).timeout(lookupTimeout);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -277,15 +322,65 @@ class YouTubeApiService {
           }
         }
       } else {
-        debugPrint(
-          'YouTube live lookup failed for channel $channelId: HTTP ${response.statusCode} ${response.body}',
-        );
+        debugPrint('YouTube live lookup failed: HTTP ${response.statusCode}');
+        throw const YouTubeLookupUnavailable();
       }
+    } on YouTubeLookupUnavailable {
+      rethrow;
     } catch (e) {
-      debugPrint('Error fetching live video for channel $channelId: $e');
+      debugPrint('YouTube live lookup failed: ${e.runtimeType}');
+      throw const YouTubeLookupUnavailable();
     }
 
     return null;
+  }
+
+  /// Reads the public status of [videoId] (videos.list, 1 quota unit):
+  /// snippet.liveBroadcastContent is `live`, `upcoming` or `none`, and a
+  /// finished broadcast keeps liveStreamingDetails.actualEndTime. Request
+  /// URLs carry the API key, so they are never logged.
+  Future<YouTubeWatchStatus> fetchWatchStatus(String videoId) async {
+    // A malformed ID cannot exist on YouTube; no request is needed.
+    if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
+      return const YouTubeWatchStatus(YouTubeWatchState.notFound);
+    }
+    if (apiKey.isEmpty) {
+      return const YouTubeWatchStatus(YouTubeWatchState.unavailable);
+    }
+    final url = Uri.parse(
+      '$_baseUrl/videos?part=snippet,liveStreamingDetails&id=$videoId&key=$apiKey',
+    );
+    try {
+      final response = await _client.get(url).timeout(lookupTimeout);
+      if (response.statusCode != 200) {
+        debugPrint('YouTube watch check failed: HTTP ${response.statusCode}');
+        return const YouTubeWatchStatus(YouTubeWatchState.unavailable);
+      }
+      final data = json.decode(response.body) as Map<String, dynamic>;
+      final items = data['items'] as List<dynamic>? ?? const [];
+      if (items.isEmpty) {
+        return const YouTubeWatchStatus(YouTubeWatchState.notFound);
+      }
+      final item = items.first as Map<String, dynamic>;
+      final snippet = item['snippet'] as Map<String, dynamic>? ?? const {};
+      final details = item['liveStreamingDetails'] as Map<String, dynamic>?;
+      final content = snippet['liveBroadcastContent'] as String? ?? 'none';
+      final state = switch (content) {
+        'live' => YouTubeWatchState.live,
+        'upcoming' => YouTubeWatchState.upcoming,
+        _ => details?['actualEndTime'] != null
+            ? YouTubeWatchState.ended
+            : YouTubeWatchState.notLive,
+      };
+      return YouTubeWatchStatus(state,
+          channelId: snippet['channelId'] as String?,
+          title: snippet['title'] as String?,
+          scheduledStart: DateTime.tryParse(
+              details?['scheduledStartTime'] as String? ?? ''));
+    } catch (e) {
+      debugPrint('YouTube watch check failed: ${e.runtimeType}');
+      return const YouTubeWatchStatus(YouTubeWatchState.unavailable);
+    }
   }
 
   /// Fetches real-time concurrent viewers for an active live YouTube broadcast.

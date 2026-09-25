@@ -120,6 +120,11 @@ class _LiveBroadcasterStudioSheetState
   bool _isAudioOnly = false;
   BroadcastQualityPreset _quality = BroadcastQualityPreset.medium;
   bool _streamKeyVisible = false;
+
+  /// Which external sender the Encoder tab lists for: OBS Studio on a
+  /// computer, or another phone app (for example Larix Broadcaster). They are
+  /// separate modes and are recorded separately on the server session.
+  String _externalSender = 'obs_laptop';
   bool _isSubmitting = false;
   // Re-entrancy guard: a double tap must not start two go-live requests or
   // pop the sheet and then the page under it.
@@ -391,7 +396,9 @@ class _LiveBroadcasterStudioSheetState
                 children: [
                   Expanded(
                     child: _pillTab(
-                        StudioMode.obs, Icons.laptop_mac_rounded, 'OBS'),
+                        StudioMode.obs,
+                        Icons.settings_input_antenna_rounded,
+                        'live_studio.mode_encoder'.tr()),
                   ),
                   Expanded(
                     child: _pillTab(
@@ -432,17 +439,19 @@ class _LiveBroadcasterStudioSheetState
               color: selected ? _modeColor : AppTheme.textSecondary,
             ),
             const SizedBox(width: 6),
-            Text(
-              label,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                // UI-02: the selected pill is a light tint of _modeColor, so
-                // white (onMedia) text on it was near-invisible. _modeColor
-                // itself (already used for the icon) reads clearly on that
-                // tint, matching the pattern the category chips already use.
-                color: selected ? _modeColor : AppTheme.textSecondary,
-                fontSize: 12,
-                fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+            Flexible(
+              child: Text(
+                label,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  // UI-02: the selected pill is a light tint of _modeColor, so
+                  // white (onMedia) text on it was near-invisible. _modeColor
+                  // itself (already used for the icon) reads clearly on that
+                  // tint, matching the pattern the category chips already use.
+                  color: selected ? _modeColor : AppTheme.textSecondary,
+                  fontSize: 12,
+                  fontWeight: selected ? FontWeight.bold : FontWeight.w500,
+                ),
               ),
             ),
           ],
@@ -486,7 +495,7 @@ class _LiveBroadcasterStudioSheetState
       controller: _titleController,
       style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13.5),
       decoration: InputDecoration(
-        hintText: 'e.g. AI & Machine Learning Lecture',
+        hintText: 'live_studio.title_hint'.tr(),
         hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
         prefixIcon: Icon(Icons.title_rounded, color: _modeColor, size: 20),
         filled: true,
@@ -591,6 +600,10 @@ class _LiveBroadcasterStudioSheetState
         const SizedBox(height: AppTheme.spaceSm),
         _categoryChips(isAr),
         const SizedBox(height: AppTheme.spaceMd),
+        _sectionLabel('live_studio.sender_label'.tr()),
+        const SizedBox(height: AppTheme.spaceSm),
+        _buildSenderChoice(),
+        const SizedBox(height: AppTheme.spaceMd),
         Row(
           children: [
             Expanded(
@@ -603,13 +616,7 @@ class _LiveBroadcasterStudioSheetState
         const SizedBox(height: AppTheme.spaceSm),
         _buildAutoDetectButton(),
         const SizedBox(height: AppTheme.spaceMd),
-        _sectionLabel('design_copy.stream_key'.tr()),
-        const SizedBox(height: AppTheme.spaceSm),
-        _readOnlyKeyBox(),
-        const SizedBox(height: AppTheme.spaceSm),
-        _sectionLabel('design_copy.ingest_server_url'.tr()),
-        const SizedBox(height: AppTheme.spaceSm),
-        _ingestUrlPreview(),
+        _encoderKeyNote(),
         const SizedBox(height: AppTheme.spaceMd),
         _buildAudioPosterSection(isAr),
         _buildStreamAccessSection(isAr),
@@ -618,10 +625,13 @@ class _LiveBroadcasterStudioSheetState
   }
 
   Widget _watchUrlField() => TextField(
+        key: const Key('studio-watch-link-field'),
         controller: _youtubeUrlController,
         style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
         decoration: InputDecoration(
-          hintText: 'https://youtube.com/watch?v=... or Video ID',
+          hintText: 'live_studio.watch_link_hint'.tr(),
+          helperText: 'live_studio.watch_link_helper'.tr(),
+          helperMaxLines: 3,
           hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
           prefixIcon: Icon(Icons.link_rounded, color: _modeColor, size: 18),
           filled: true,
@@ -641,10 +651,10 @@ class _LiveBroadcasterStudioSheetState
         return SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
-            onPressed: provider.isDetectingAmirLiveVideo
+            onPressed: provider.isFindingMyLiveBroadcast
                 ? null
                 : () async {
-                    final found = await provider.autoDetectAmirLiveVideo();
+                    final found = await provider.findMyLiveBroadcast();
                     if (!context.mounted) return;
                     if (found) {
                       _youtubeUrlController.text =
@@ -662,14 +672,15 @@ class _LiveBroadcasterStudioSheetState
                       InteractiveToastOverlay.show(
                         context,
                         title: 'live_studio.toast_detection_failed_title'.tr(),
-                        message: provider.amirAutoDetectError ??
-                            'live_studio.toast_detection_failed_message'.tr(),
+                        message: (provider.findMyLiveBroadcastErrorKey ??
+                                'live_studio.toast_detection_failed_message')
+                            .tr(),
                         icon: Icons.error_outline_rounded,
                         accentColor: AppTheme.danger,
                       );
                     }
                   },
-            icon: provider.isDetectingAmirLiveVideo
+            icon: provider.isFindingMyLiveBroadcast
                 ? SizedBox(
                     width: 14,
                     height: 14,
@@ -678,9 +689,10 @@ class _LiveBroadcasterStudioSheetState
                   )
                 : Icon(Icons.sensors_rounded, size: 16, color: _modeColor),
             label: Text(
-              provider.isDetectingAmirLiveVideo
-                  ? 'Detecting...'
-                  : 'Auto-Detect Live Video',
+              (provider.isFindingMyLiveBroadcast
+                      ? 'live_studio.find_live_busy'
+                      : 'live_studio.find_live_button')
+                  .tr(),
               style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
             ),
             style: OutlinedButton.styleFrom(
@@ -694,108 +706,77 @@ class _LiveBroadcasterStudioSheetState
     );
   }
 
-  Widget _readOnlyKeyBox() {
-    final key = _streamKeyController.text;
-    final masked = key.isEmpty ? '' : '•' * key.length;
+  Widget _buildSenderChoice() {
+    Widget chip(String mode, IconData icon, String labelKey) {
+      final selected = _externalSender == mode;
+      return ChoiceChip(
+        key: Key('studio-sender-$mode'),
+        avatar: Icon(icon,
+            size: 16, color: selected ? _modeColor : AppTheme.textSecondary),
+        label: Text(labelKey.tr()),
+        selected: selected,
+        selectedColor: _modeColor.withValues(alpha: 0.2),
+        backgroundColor: AppTheme.surfaceAlt,
+        labelStyle: TextStyle(
+          color: selected ? _modeColor : AppTheme.textSecondary,
+          fontSize: 12,
+          fontWeight: selected ? FontWeight.bold : FontWeight.normal,
+        ),
+        side: BorderSide(color: selected ? _modeColor : AppTheme.border),
+        onSelected: (_) => setState(() => _externalSender = mode),
+      );
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            chip('obs_laptop', Icons.laptop_mac_rounded,
+                'live_studio.sender_obs_laptop'),
+            chip('external_phone', Icons.smartphone_rounded,
+                'live_studio.sender_external_phone'),
+          ],
+        ),
+        const SizedBox(height: AppTheme.spaceXs),
+        Semantics(
+          liveRegion: true,
+          child: Text(
+            (_externalSender == 'obs_laptop'
+                    ? 'live_studio.sender_obs_laptop_help'
+                    : 'live_studio.sender_external_phone_help')
+                .tr(),
+            style: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// OBS or the phone app holds the stream key; this app never needs it for
+  /// an external sender, so it is neither shown nor copied here.
+  Widget _encoderKeyNote() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      key: const Key('studio-encoder-key-note'),
+      padding: const EdgeInsets.all(AppTheme.spaceSm),
       decoration: BoxDecoration(
         color: AppTheme.surfaceAlt,
         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
         border: Border.all(color: AppTheme.border),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(Icons.key_rounded, color: _modeColor, size: 16),
-          const SizedBox(width: 8),
+          const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
-              key.isEmpty
-                  ? 'Not set -- add it in Phone mode'
-                  : (_streamKeyVisible ? key : masked),
-              style: TextStyle(
-                color: key.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary,
-                fontSize: 12,
-                fontFamily: 'monospace',
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              'live_studio.encoder_key_note'.tr(),
+              style: const TextStyle(
+                  color: AppTheme.textSecondary, fontSize: 12, height: 1.4),
             ),
-          ),
-          IconButton(
-            icon: Icon(
-              _streamKeyVisible
-                  ? Icons.visibility_off_rounded
-                  : Icons.visibility_rounded,
-              size: 16,
-              color: AppTheme.textMuted,
-            ),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onPressed: key.isEmpty
-                ? null
-                : () => setState(() => _streamKeyVisible = !_streamKeyVisible),
-          ),
-          const SizedBox(width: 6),
-          IconButton(
-            icon: const Icon(Icons.copy_rounded,
-                size: 14, color: AppTheme.textMuted),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onPressed: key.isEmpty
-                ? null
-                : () {
-                    Clipboard.setData(ClipboardData(text: key));
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                          content: Text(
-                              'design_ui.stream_key_copied_to_clipboard'.tr())),
-                    );
-                  },
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _ingestUrlPreview() {
-    final url = _ingestUrlController.text.trim();
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: AppTheme.bg,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: _modeColor.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.link_rounded, color: _modeColor, size: 16),
-          const SizedBox(width: 6),
-          Expanded(
-            child: Text(
-              url.isEmpty ? 'rtmp://a.rtmp.youtube.com/live2' : url,
-              style: TextStyle(
-                color: url.isEmpty ? AppTheme.textMuted : AppTheme.textPrimary,
-                fontSize: 11,
-                fontFamily: 'monospace',
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.copy_rounded,
-                size: 14, color: AppTheme.textMuted),
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-            onPressed: () {
-              Clipboard.setData(ClipboardData(text: url));
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                    content:
-                        Text('design_ui.ingest_url_copied_to_clipboard'.tr())),
-              );
-            },
           ),
         ],
       ),
@@ -841,8 +822,11 @@ class _LiveBroadcasterStudioSheetState
               color: AppTheme.textPrimary,
               fontSize: 13,
               fontFamily: 'monospace'),
+          key: const Key('studio-stream-key-field'),
           decoration: InputDecoration(
             hintText: 'xxxx-xxxx-xxxx-xxxx-xxxx',
+            helperText: 'live_studio.stream_key_helper'.tr(),
+            helperMaxLines: 3,
             hintStyle:
                 const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
             prefixIcon: Icon(Icons.key_rounded, color: _modeColor, size: 18),
@@ -1623,7 +1607,7 @@ class _LiveBroadcasterStudioSheetState
         case StudioMode.obs:
           await _handleObsGoLive();
         case StudioMode.phone:
-          _handlePhoneOpenCamera();
+          await _handlePhoneOpenCamera();
         case StudioMode.local:
           _showCtaError('live_studio.local_unavailable_body',
               titleKey: 'live_studio.local_unavailable_title');
@@ -1667,22 +1651,29 @@ class _LiveBroadcasterStudioSheetState
       return;
     }
     final rawYoutube = _youtubeUrlController.text.trim();
+    if (looksLikeStreamKey(rawYoutube)) {
+      _showCtaError('live_studio.error_key_in_watch_field');
+      return;
+    }
     final videoId = AppProvider.extractYouTubeId(rawYoutube);
     if (videoId.isEmpty) {
-      _showCtaError('live_studio.error_watch_id_required');
+      _showCtaError(_externalSender == 'obs_laptop'
+          ? 'live_studio.error_watch_id_required'
+          : 'live_studio.error_watch_id_required_phone_app');
+      return;
+    }
+
+    setState(() => _isSubmitting = true);
+    final check = await provider.verifyWatchLink(videoId);
+    if (!mounted) return;
+    if (!check.allowsStart) {
+      setState(() => _isSubmitting = false);
+      _showCtaError(check.errorKey!);
       return;
     }
     provider.setCustomStreamerYouTubeUrl(rawYoutube);
-    provider.updatePhoneBroadcastTarget(
-      rtmpUrl: _ingestUrlController.text.trim().isEmpty
-          ? provider.phoneBroadcastRtmpUrl
-          : _ingestUrlController.text.trim(),
-      streamKey: _streamKeyController.text.trim(),
-    );
-
-    setState(() => _isSubmitting = true);
     if (!provider.isBroadcastingLive) {
-      provider.setBroadcastSenderMode('obs_laptop');
+      provider.setBroadcastSenderMode(_externalSender);
       await provider.setBroadcasterLive(true);
     }
     // Closed while the request was in flight: the provider already holds the
@@ -1697,15 +1688,26 @@ class _LiveBroadcasterStudioSheetState
     InteractiveToastOverlay.show(
       context,
       title: 'live_studio.obs_listed_live_title'.tr(),
-      message: 'live_studio.obs_listed_live_body'.tr(args: [videoId]),
-      icon: Icons.sensors_rounded,
-      accentColor: _modeColor,
+      message: [
+        (_externalSender == 'obs_laptop'
+                ? 'live_studio.obs_listed_live_body'
+                : 'live_studio.phone_app_listed_live_body')
+            .tr(args: [videoId]),
+        if (check.noteKey != null) check.noteKey!.tr(),
+      ].join(' '),
+      // A note the broadcaster must read stays up longer and is not cut off.
+      duration: Duration(seconds: check.noteKey == null ? 4 : 12),
+      messageMaxLines: check.noteKey == null ? 2 : 8,
+      icon: check.noteKey == null
+          ? Icons.sensors_rounded
+          : Icons.warning_amber_rounded,
+      accentColor: check.noteKey == null ? _modeColor : AppTheme.warning,
     );
   }
 
   /// Phone: validate everything the phone screen needs before leaving the
   /// sheet, so a refusal is explained here instead of after navigation.
-  void _handlePhoneOpenCamera() {
+  Future<void> _handlePhoneOpenCamera() async {
     final provider = context.read<AppProvider>();
     if (kIsWeb || defaultTargetPlatform != TargetPlatform.android) {
       _showCtaError('live_studio.error_phone_unsupported');
@@ -1722,9 +1724,30 @@ class _LiveBroadcasterStudioSheetState
           titleKey: 'live_studio.toast_stream_key_required_title');
       return;
     }
+    if (looksLikeIngestUrl(streamKey)) {
+      _showCtaError('live_studio.error_ingest_in_key_field');
+      return;
+    }
+    if (looksLikeWatchLink(streamKey)) {
+      _showCtaError('live_studio.error_watch_in_key_field');
+      return;
+    }
     final watchUrl = _youtubeUrlController.text.trim();
-    if (AppProvider.extractYouTubeId(watchUrl).isEmpty) {
+    if (looksLikeStreamKey(watchUrl)) {
+      _showCtaError('live_studio.error_key_in_watch_field');
+      return;
+    }
+    final videoId = AppProvider.extractYouTubeId(watchUrl);
+    if (videoId.isEmpty) {
       _showCtaError('live.watch_url_required');
+      return;
+    }
+    setState(() => _isSubmitting = true);
+    final check = await provider.verifyWatchLink(videoId);
+    if (!mounted) return;
+    setState(() => _isSubmitting = false);
+    if (!check.allowsStart) {
+      _showCtaError(check.errorKey!);
       return;
     }
     provider.setCustomStreamerYouTubeUrl(watchUrl);
@@ -1740,7 +1763,8 @@ class _LiveBroadcasterStudioSheetState
     navigator.pop();
     navigator.push(
       MaterialPageRoute(
-        builder: (_) => PhoneBroadcastScreen(quickLaunchPreset: _quality),
+        builder: (_) => PhoneBroadcastScreen(
+            quickLaunchPreset: _quality, watchLinkNoteKey: check.noteKey),
       ),
     );
   }
@@ -1830,3 +1854,25 @@ class _PulseGlowState extends State<_PulseGlow>
     );
   }
 }
+
+/// A YouTube stream key pasted into the public watch-link field (keys are
+/// dash-separated groups of letters and digits). Never shown back.
+@visibleForTesting
+bool looksLikeStreamKey(String text) =>
+    RegExp(r'^[A-Za-z0-9]{4}(-[A-Za-z0-9]{4}){3,5}$').hasMatch(text.trim());
+
+/// A watch link (or a bare 11-character video ID) pasted into the secret
+/// stream-key field.
+@visibleForTesting
+bool looksLikeWatchLink(String text) {
+  final t = text.trim();
+  final lower = t.toLowerCase();
+  return lower.contains('youtube.com/') ||
+      lower.contains('youtu.be/') ||
+      RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(t);
+}
+
+/// The RTMP(S) server address pasted into the stream-key field.
+@visibleForTesting
+bool looksLikeIngestUrl(String text) =>
+    RegExp(r'^rtmps?://', caseSensitive: false).hasMatch(text.trim());

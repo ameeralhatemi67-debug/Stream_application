@@ -7,6 +7,7 @@ import 'package:wakelock_plus/wakelock_plus.dart';
 
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/interactive_toast_overlay.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../discovery/models/academic_category_model.dart';
 import '../../../profile/models/streamer_models.dart';
@@ -28,7 +29,12 @@ import '../widgets/rtmp_ip_dialog.dart';
 class PhoneBroadcastScreen extends StatefulWidget {
   final BroadcastQualityPreset? quickLaunchPreset;
 
-  const PhoneBroadcastScreen({super.key, this.quickLaunchPreset});
+  /// A note from the studio's watch-link check (not checked, or channel not
+  /// matched), shown once when this screen opens.
+  final String? watchLinkNoteKey;
+
+  const PhoneBroadcastScreen(
+      {super.key, this.quickLaunchPreset, this.watchLinkNoteKey});
 
   @override
   State<PhoneBroadcastScreen> createState() => _PhoneBroadcastScreenState();
@@ -90,6 +96,22 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     _chatController.addListener(_handleChatConnectionChange);
 
     _setWakelock(true);
+
+    final note = widget.watchLinkNoteKey;
+    if (note != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        InteractiveToastOverlay.show(
+          context,
+          title: 'live_studio.watch_check_note_title'.tr(),
+          message: note.tr(),
+          icon: Icons.info_outline_rounded,
+          accentColor: AppTheme.warning,
+          duration: const Duration(seconds: 12),
+          messageMaxLines: 8,
+        );
+      });
+    }
 
     if (widget.quickLaunchPreset != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {

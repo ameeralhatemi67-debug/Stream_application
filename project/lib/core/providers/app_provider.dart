@@ -178,7 +178,7 @@ class AppProvider extends ChangeNotifier {
   // attributed to named people; the sample set lives in test fixtures.
   final List<LectureQuestionModel> _questions = [];
   UserProfileModel _userProfile = UserProfileModel.defaultProfile;
-  final YouTubeApiService _youTubeService = YouTubeApiService();
+  final YouTubeApiService _youTubeService;
   final SupabaseAuthService _authService;
   AdminDatabaseService? _adminDbService;
 
@@ -399,8 +399,10 @@ class AppProvider extends ChangeNotifier {
   AppProvider.withServices(
       {AdminDatabaseService? adminDbService,
       SupabaseAuthService? authService,
-      ConnectivityService? connectivityService})
-      : _adminDbService = adminDbService,
+      ConnectivityService? connectivityService,
+      YouTubeApiService? youTubeService})
+      : _youTubeService = youTubeService ?? YouTubeApiService(),
+        _adminDbService = adminDbService,
         _authService = authService ?? SupabaseAuthService(),
         _connectivityService = connectivityService {
     _initAdminDatabase();
@@ -1118,8 +1120,7 @@ class AppProvider extends ChangeNotifier {
     final lastEnded = status['last_ended'];
     final reason = status['live'] == true
         ? 'replaced'
-        : (lastEnded is Map ? lastEnded['reason'] as String? : null) ??
-            'ended';
+        : (lastEnded is Map ? lastEnded['reason'] as String? : null) ?? 'ended';
     if (reason == 'device_transfer') {
       _loseBroadcastDevice();
       return;
@@ -1869,6 +1870,7 @@ class AppProvider extends ChangeNotifier {
     }
     return loadVerifiedStreamersFromBackend();
   }
+
   static const Duration _liveFlagSweepInterval = Duration(seconds: 60);
 
   Future<void> loadVerifiedStreamersFromBackend() {
@@ -3457,45 +3459,133 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // The YouTube channel the studio's auto-detect looks up. It is a single
-  // configured channel id; the detected video is applied to the caller's own
-  // channel only (P1.6), never to another streamer's card.
-  static const String amirYouTubeChannelId = 'UCdPq2Mayw6k-WuvBMKNj44A';
+  /// The YouTube handle of the channel this broadcast goes out on: the
+  /// selected organization's, or the broadcaster's approved application's.
+  /// Empty when the account has none on record.
+  String get _broadcastChannelHandle {
+    final orgId = _selectedBroadcastOrgId;
+    if (orgId != null) {
+      return getStreamerById(orgId)?.youtubeHandle.trim() ?? '';
+    }
+    return _myApplication?.youtubeHandle.trim() ?? '';
+  }
 
-  bool _isDetectingAmirLiveVideo = false;
-  String? _amirAutoDetectError;
+  final Map<String, String> _channelIdByHandle = {};
 
-  bool get isDetectingAmirLiveVideo => _isDetectingAmirLiveVideo;
-  String? get amirAutoDetectError => _amirAutoDetectError;
+  Future<String?> _resolveChannelId(String handle) async {
+    if (handle.isEmpty) return null;
+    // A channel URL (/channel/UC...) or a whole bare channel ID needs no
+    // lookup. Anchored: a handle such as @UCLA_... is not a channel ID.
+    final direct = RegExp(
+            r'^(?:(?:https?://)?(?:www\.|m\.)?youtube\.com/)?(?:channel/)?(UC[A-Za-z0-9_-]{22})/?$')
+        .firstMatch(handle.trim());
+    if (direct != null) return direct.group(1);
+    final cached = _channelIdByHandle[handle];
+    if (cached != null) return cached;
+    final details = await _youTubeService.fetchChannelDetails(handle);
+    final id = details['channelId'];
+    if (id == null || id.isEmpty) return null;
+    _channelIdByHandle[handle] = id;
+    return id;
+  }
 
-  /// Auto-detects Amir Al-Hatemi's currently-live YouTube broadcast and
-  /// applies it as the active YouTube Live target. Only ever looks up
-  /// [amirYouTubeChannelId] — this must not be generalized to other
-  /// streamer accounts.
-  Future<bool> autoDetectAmirLiveVideo() async {
-    _isDetectingAmirLiveVideo = true;
-    _amirAutoDetectError = null;
+  /// Checks a watch link with YouTube's public Data API before the app lists
+  /// it: that the video exists, is a live or scheduled broadcast (not a
+  /// finished one or a regular upload) and, when the account's channel is on
+  /// record, that it belongs to that channel. This is not channel
+  /// authorization and cannot see the stream key or the encoder; it catches
+  /// the wrong-link mistakes that put an unrelated video in front of viewers.
+  Future<WatchLinkCheck> verifyWatchLink(String videoId) async {
+    final status = await _youTubeService.fetchWatchStatus(videoId);
+    switch (status.state) {
+      case YouTubeWatchState.unavailable:
+        return const WatchLinkCheck(WatchLinkVerdict.unverified);
+      case YouTubeWatchState.notFound:
+        return const WatchLinkCheck(WatchLinkVerdict.notFound);
+      case YouTubeWatchState.ended:
+        return const WatchLinkCheck(WatchLinkVerdict.ended);
+      case YouTubeWatchState.notLive:
+        return const WatchLinkCheck(WatchLinkVerdict.notLive);
+      case YouTubeWatchState.live:
+      case YouTubeWatchState.upcoming:
+        final start = status.scheduledStart;
+        if (status.state == YouTubeWatchState.upcoming &&
+            start != null &&
+            start.difference(DateTime.now()) > const Duration(hours: 1)) {
+          return const WatchLinkCheck(WatchLinkVerdict.scheduledLater);
+        }
+        final onRecord = _broadcastChannelHandle;
+        final expected = await _resolveChannelId(onRecord);
+        if (expected != null &&
+            status.channelId != null &&
+            status.channelId != expected) {
+          return const WatchLinkCheck(WatchLinkVerdict.wrongChannel);
+        }
+        return WatchLinkCheck(
+          status.state == YouTubeWatchState.live
+              ? WatchLinkVerdict.live
+              : WatchLinkVerdict.upcoming,
+          channelVerified: expected != null && status.channelId == expected,
+          channelOnRecord: onRecord.isNotEmpty,
+        );
+    }
+  }
+
+  bool _isFindingMyLiveBroadcast = false;
+  String? _findMyLiveBroadcastErrorKey;
+  DateTime? _lastFindMyLiveBroadcastAt;
+
+  /// One channel search costs 100 of the app key's shared daily quota; this
+  /// keeps repeated taps from draining it for everyone.
+  static const Duration findMyLiveBroadcastCooldown = Duration(seconds: 30);
+
+  bool get isFindingMyLiveBroadcast => _isFindingMyLiveBroadcast;
+  String? get findMyLiveBroadcastErrorKey => _findMyLiveBroadcastErrorKey;
+
+  /// Looks up the live broadcast on THIS account's own channel (the approved
+  /// application's or selected organization's YouTube handle) and fills in
+  /// the watch link. It never marks anything live. It used to search one
+  /// fixed channel for every account and mark the caller's card live with a
+  /// made-up stream id. Costs one YouTube search (100 quota units).
+  Future<bool> findMyLiveBroadcast() async {
+    final last = _lastFindMyLiveBroadcastAt;
+    if (last != null &&
+        DateTime.now().difference(last) < findMyLiveBroadcastCooldown) {
+      _findMyLiveBroadcastErrorKey = 'live_studio.find_live_wait';
+      notifyListeners();
+      return false;
+    }
+    _isFindingMyLiveBroadcast = true;
+    _findMyLiveBroadcastErrorKey = null;
     notifyListeners();
-
     try {
-      final videoId =
-          await _youTubeService.fetchLiveVideoId(amirYouTubeChannelId);
-
-      if (videoId == null) {
-        _amirAutoDetectError =
-            'No active live stream found on Amir Al-Hatemi\'s channel. '
-            'Make sure OBS is streaming and you\'ve clicked "Go Live"in YouTube Studio.';
+      final handle = _broadcastChannelHandle;
+      if (handle.isEmpty) {
+        _findMyLiveBroadcastErrorKey = 'live_studio.find_live_no_channel';
         return false;
       }
-
-      // Only fills in the watch link. Nothing is live until the server
-      // accepts a start; this used to mark the caller's card live locally
-      // with a made-up stream id.
+      final channelId = await _resolveChannelId(handle);
+      if (channelId == null) {
+        _findMyLiveBroadcastErrorKey = 'live_studio.find_live_unavailable';
+        return false;
+      }
+      _lastFindMyLiveBroadcastAt = DateTime.now();
+      final String? videoId;
+      try {
+        videoId = await _youTubeService.fetchLiveVideoId(channelId);
+      } on YouTubeLookupUnavailable {
+        _findMyLiveBroadcastErrorKey = 'live_studio.find_live_unavailable';
+        return false;
+      }
+      if (videoId == null) {
+        _findMyLiveBroadcastErrorKey = 'live_studio.find_live_none';
+        return false;
+      }
       _customYouTubeVideoId = videoId;
       _customYouTubeLiveUrl = 'https://www.youtube.com/watch?v=$videoId';
       return true;
     } finally {
-      _isDetectingAmirLiveVideo = false;
+      _isFindingMyLiveBroadcast = false;
       notifyListeners();
     }
   }
@@ -3641,10 +3731,10 @@ class AppProvider extends ChangeNotifier {
         _liveSessionId = session;
         _liveWatchId = watchId;
         // A phone start is recorded as sending by the server itself.
-        _lastReportedIngest = session == null ||
-                _broadcastSenderMode != 'phone_direct'
-            ? null
-            : (session, true);
+        _lastReportedIngest =
+            session == null || _broadcastSenderMode != 'phone_direct'
+                ? null
+                : (session, true);
       } else {
         final session = _liveSessionId;
         if (session != null) {
@@ -3670,14 +3760,14 @@ class AppProvider extends ChangeNotifier {
       if (generation != _deviceGeneration) return;
       _isBroadcastingLive =
           previousLive && _currentDeviceSession?.isPrimaryBroadcaster == true;
-      _broadcastSessionError = error is PostgrestException &&
-              error.code == '42501'
-          ? (error.message.contains('removed by moderation')
-              // guard_removed_live_stream: this watch link was ended and
-              // blocked by an admin; approval itself is unchanged.
-              ? 'broadcast_watch_link_blocked'
-              : 'broadcast_approval_required')
-          : 'broadcast_state_failed';
+      _broadcastSessionError =
+          error is PostgrestException && error.code == '42501'
+              ? (error.message.contains('removed by moderation')
+                  // guard_removed_live_stream: this watch link was ended and
+                  // blocked by an admin; approval itself is unchanged.
+                  ? 'broadcast_watch_link_blocked'
+                  : 'broadcast_approval_required')
+              : 'broadcast_state_failed';
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text(_broadcastSessionError!.tr())));
@@ -6022,4 +6112,71 @@ class AppProvider extends ChangeNotifier {
       context: context,
     );
   }
+}
+
+/// What the studio learned about a watch link before listing it.
+enum WatchLinkVerdict {
+  live,
+  upcoming,
+  ended,
+  notLive,
+  notFound,
+  wrongChannel,
+
+  /// Upcoming, but scheduled more than an hour from now.
+  scheduledLater,
+
+  /// YouTube could not be asked (no API key, quota, network).
+  unverified,
+}
+
+class WatchLinkCheck {
+  const WatchLinkCheck(this.verdict,
+      {this.channelVerified = false, this.channelOnRecord = false});
+  final WatchLinkVerdict verdict;
+
+  /// A channel handle is on record for this account (whether or not it
+  /// could be resolved just now).
+  final bool channelOnRecord;
+
+  /// What the studio must tell the broadcaster about an allowed link that
+  /// was not fully checked, or null when it was.
+  String? get noteKey {
+    if (verdict == WatchLinkVerdict.unverified) {
+      return 'live_studio.watch_check_unverified_note';
+    }
+    if (!channelUnconfirmed) return null;
+    return channelOnRecord
+        ? 'live_studio.watch_check_channel_lookup_failed_note'
+        : 'live_studio.watch_check_channel_unconfirmed_note';
+  }
+
+  /// The link was confirmed to belong to this account's channel on record.
+  final bool channelVerified;
+
+  /// Allowed, but the channel could not be compared with one on record (no
+  /// handle, or it did not resolve). The studio says so instead of implying
+  /// the link was matched to this account.
+  bool get channelUnconfirmed =>
+      (verdict == WatchLinkVerdict.live ||
+          verdict == WatchLinkVerdict.upcoming) &&
+      !channelVerified;
+
+  /// Whether the studio may list this link.
+  bool get allowsStart =>
+      verdict == WatchLinkVerdict.live ||
+      verdict == WatchLinkVerdict.upcoming ||
+      verdict == WatchLinkVerdict.unverified;
+
+  /// Explanation for a refused link, or null when it may be used.
+  String? get errorKey => switch (verdict) {
+        WatchLinkVerdict.notFound => 'live_studio.watch_check_not_found',
+        WatchLinkVerdict.ended => 'live_studio.watch_check_ended',
+        WatchLinkVerdict.notLive => 'live_studio.watch_check_not_live',
+        WatchLinkVerdict.wrongChannel =>
+          'live_studio.watch_check_wrong_channel',
+        WatchLinkVerdict.scheduledLater =>
+          'live_studio.watch_check_scheduled_later',
+        _ => null,
+      };
 }
