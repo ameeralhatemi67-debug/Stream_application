@@ -1,0 +1,302 @@
+{
+  "master": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
+  "status": [
+    " M Core_files/STATUS.md",
+    " M Core_files/progres.md",
+    " M Roadmap.md",
+    " M brief/LEDGER.md",
+    " M issue_encountered.md",
+    " M skill-observations/log.md",
+    "?? brief/assets/issues/",
+    "?? brief/evidence/2026-09-24/p6-device-retest/",
+    "?? brief/evidence/2026-09-24/p6-retest-repair/REPAIR_RETEST_RESULTS.md",
+    "?? brief/evidence/2026-09-24/p6-retest-repair/screenshots/",
+    "?? brief/evidence/2026-09-24/p6-wave3-review.md",
+    "?? brief/evidence/2026-09-26/p6s-astra-audit/E4_ACCEPTANCE_RESULTS.md",
+    "?? brief/evidence/2026-09-26/p6s-astra-audit/SCREENSHOTS_AUDIT.md",
+    "?? brief/evidence/2026-09-26/p6s-astra-audit/screenshots/",
+    "?? brief/evidence/2026-09-26/p6s-manager-review.md",
+    "?? brief/prompts/",
+    "?? brief/research/"
+  ],
+  "worktrees": [
+    "worktree C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app",
+    "HEAD 7b54cb5e565011c33dcd03351735b7cc45a0926a",
+    "branch refs/heads/master",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/g11a-secret-gate/Streamer_app",
+    "HEAD f44e0daf82e85cf76edb3001b4415dcfb4535aed",
+    "branch refs/heads/codex/g11a-secret-scan",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/g6-localization-gate/Streamer_app",
+    "HEAD dfa6ad17b5680cf0411829d00af71ee946785078",
+    "branch refs/heads/codex/g6-localization-gate",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/p5-basemap-spike/Streamer_app",
+    "HEAD 87ecd98728cf9af1ab8efa243ce60d60f948c4a3",
+    "branch refs/heads/codex/tricity-map-upgrade",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/p5-offline/Streamer_app",
+    "HEAD 22c6560679041ca988be647740e12913056be12e",
+    "branch refs/heads/codex/p5-offline",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/p5-offline-hardening/Streamer_app",
+    "HEAD 96a67f64c87f958895ab51b3cbdf618730a15e58",
+    "branch refs/heads/codex/p5-offline-hardening",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/p6-retest-repair/Streamer_app",
+    "HEAD 938dc2274b8882afb4368597d39f5e00c8ca78e7",
+    "branch refs/heads/codex/p6-retest-repair",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app",
+    "HEAD 7b54cb5e565011c33dcd03351735b7cc45a0926a",
+    "branch refs/heads/codex/p6s-wave4v2-repair",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/p8b-store-compliance/Streamer_app",
+    "HEAD e15155942bf8623758da69cedd6655b81e3cbad3",
+    "branch refs/heads/codex/p8b-store-compliance",
+    "",
+    "worktree C:/Users/User/.codex/worktrees/tricity-baseline-7b54cb5",
+    "HEAD 7b54cb5e565011c33dcd03351735b7cc45a0926a",
+    "detached",
+    "",
+    "worktree C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/.claude/worktrees/p6-client",
+    "HEAD 0d6b7a1b32361a092230b7b52eb6eadb14729330",
+    "branch refs/heads/p6-client-safety",
+    "",
+    "worktree C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/.claude/worktrees/p6-client/.claude/worktrees/p6-accept",
+    "HEAD c7614682508fa01bb826aa2e013b5b491572013a",
+    "branch refs/heads/p6-acceptance",
+    "",
+    "worktree C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/.claude/worktrees/p6s-astra-audit",
+    "HEAD 7b54cb5e565011c33dcd03351735b7cc45a0926a",
+    "branch refs/heads/codex/p6s-astra-audit",
+    "",
+    "worktree C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/.claude/worktrees/p6s-wave3",
+    "HEAD 531f63d56ff99f81b4371910e604d87a3b5c50de",
+    "branch refs/heads/opus/p6s-wave3-implementation",
+    ""
+  ],
+  "stashes": [
+    "stash@{0} d646b945d0007d55ec52690f1ca085a3879ccab8 On master: owner-brief-settings-before-window2-2026-09-20",
+    "stash@{1} d53c178e116328e8c3d349f36af795733dc31ee4 On master: preexisting-before-budget-stop-2026-09-20"
+  ],
+  "hashes": [
+    {
+      "path": "brief/evidence/2026-09-21/screenshots/scheme_a_evidence/phone_broadcast_ar.png",
+      "sha256": "05B2D99F454AA062A1165EC3D2A31A25B4C20836319F05A61862E3CE29C33AD1"
+    },
+    {
+      "path": "brief/evidence/2026-09-21/screenshots/scheme_a_evidence/phone_broadcast_en.png",
+      "sha256": "7115DA9AA7AF4EEAA9AE9DEDB7C26D9D7F6896F553B9D89D1C9CE7C0F7CB1DB3"
+    },
+    {
+      "path": "brief/LEDGER.md",
+      "sha256": "43F387BD9728F9F03138F2D5F5129E62FEAA055A63DFB9D27388DC4774B7496B"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\android-build.txt",
+      "sha256": "7AE376905ED63C8A17C1FCE8E37A429902D72144D74D34F4086013BD06BC55AE"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\android-initial-build.txt",
+      "sha256": "A4EE354D248CC52A68C2EF4C4072232010AD488FA76A452C3FE61CCE0B5ED079"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\backend-probe-cold-start.txt",
+      "sha256": "AEC02338B02A2B2004A8974079D2764A5BC1E975EB6A0D8C4ADC6A18F68045E8"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\backend-probe.txt",
+      "sha256": "5E3E5E0FDD617B31A6446F3126158BB33A21A1A02CF339742247E8583E9CAE9E"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\BROWSER_PROBE.md",
+      "sha256": "033E58F571DFF943EFB04BF1CA478F83C60D5DE0864B9F92EEE36C562AEC2C45"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\build-hashes.json",
+      "sha256": "777B4DA501DF585A1C889BCCFECAC7FF65C9BBABDFF6DCC859910141646A9EB0"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\concurrency-final.txt",
+      "sha256": "E1754A97C5F470E66F0D52E3415DDD7D98F2AFA7133B8FDC36D43D37CE8B9F2F"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\E4_ACCEPTANCE_RESULTS.md",
+      "sha256": "6003E2EF1757E31C83783ECC6B350CAC413CF25DA5C18FB1645C960BBE9BA052"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\E4_RETEST_SCRIPT.md",
+      "sha256": "A25A92726161A1EC06BBDFD8A871F004BE0F036A2101CAC3DF2468014E1B2F3A"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\embed-runtime.txt",
+      "sha256": "ECF28EFF172D5F76ECFE4A8ED86CADC9C057C48332C3C3F3167101EC6500FE98"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-analyze.txt",
+      "sha256": "1DE8E2E1854BD97F10A42ED63DFFCA869B9EC21F8311AB792B4BC3A421CB3CA9"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-full-log-hash.json",
+      "sha256": "4E50CFCFC7B3C7EFDDDC42303395EF7917835882F7E366140B292510F389A423"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-tests.txt",
+      "sha256": "A70240E420DB9145A079E87CAB7D7F989AD5766F6773ECEE71C7C4C040755382"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\gates.json",
+      "sha256": "A84E176FFAD6FFAE4A64BC695187BF13B25CD313C2459850288BC726E2D7D5F7"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\identity-after.txt",
+      "sha256": "F7B7C38FBF1E72F662928694B53BEFA3EC7079DA1D44550B01501A80D0660A5B"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\identity-before.txt",
+      "sha256": "1B4E18F8F0236D947150688EDA409B4CC49DD98B320C4F9ACF8C2F8BBAE7FEEC"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\INTEGRATION.md",
+      "sha256": "EA240BBFF5C652C5EEB69AD5B3AD4D242CB1DBEDEC0ACF16AB0213D4790CEDC2"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\ISSUE_RECORD_ADDENDUM.md",
+      "sha256": "01791B733DD5A66B43D6B34F354DEF2AA62E7658EE083A1AA288E05CEC5633D5"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\local-stack.toml",
+      "sha256": "7A4A20BCFFAAED109BCDD43A7E88F4FC9D24ABCF09EA9F8EB3C2FEE5A26AF42E"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\main-checkout-after.json",
+      "sha256": "76D944233744D8E80E5A7F2C506C0A7FA7119C4BAD0AFCC1A5FA062230F26877"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\main-checkout-before.json",
+      "sha256": "BF08B2D1DB216D344D6300D7E2739398CCED25DC8A35AB0F9B92DE47DC7F808D"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\race-after.txt",
+      "sha256": "93D161C33B69A7C7D07C3E339FDD016900A397BA32297D7C2DB634E513B95D4C"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\race-before.txt",
+      "sha256": "3495FE052F2B1419627AE0A0CD31ECDBDDDE7A39B0F00DDEB92BA34089F1D0A5"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\REPORT.md",
+      "sha256": "DD7A016009EE4581FD5CF6449ECD1F3862107C4FD460191D0BB52D0464816B19"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\SCREENSHOTS_AUDIT.md",
+      "sha256": "3C3A90A9C99144A345BADFAF4D8E04C7603BC5FC46DE7C8C7D806EC95F364362"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_bottom_sheet_overflow_17px.jpg",
+      "sha256": "97CC4A6F0C511A70CBD98C6B448A3DC74DABC292121361368007AFE29EBD1798"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_keyboard_overflow_90px.jpg",
+      "sha256": "36C7B730EB35CA52F4E77D1CF0963F9423FF9EEFA3A021D64F61AEE68D9A9FE8"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_side_chat_overlap.jpg",
+      "sha256": "7C7048104C58AE3EA215F37674018BF26BE6B01B6013FCF6057B0E3600446AF5"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_sideways_camera_and_header.jpg",
+      "sha256": "A06824D904E630AD0F65685AFFD00D942735C72EBB39922022FDE70AAC600A77"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_youtube_web_pillarbox_orientation_mismatch.png",
+      "sha256": "A93B0FC1B2016C01E9723972AB600DC863D2D4CB224584D625067564C306F500"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\sql-suite.txt",
+      "sha256": "3E702506D42DD963901D5E3E0E6F06D9A6B6060E42B0607D49650A4B5075DFF8"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\sweep-before.txt",
+      "sha256": "F0594EB141142E20C6EB3D79944C43348016CD537EA22EEC2B936F2F43ECDDFA"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\VERIFICATION.md",
+      "sha256": "7BA5B82C8A91B83BF3D5583E11E6B7AB23721D47C0D365998D70E1057D91FA6E"
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\web-build.txt",
+      "sha256": "BD917B662B4E5518C1171A95473E0A8516A69A5B42120871F78FBC948C755B9F"
+    },
+    {
+      "path": "Core_files/progres.md",
+      "sha256": "EDF4EB91B151E8D5A6FE770CE9E32D97DC6473752971D6F322893391AB3E1331"
+    },
+    {
+      "path": "Core_files/STATUS.md",
+      "sha256": "D6A3EEE673FF5249F3CA2EDFEFD6B99CC02BFE33F9E4B64FF50A02A341895DC2"
+    },
+    {
+      "path": "issue_encountered.md",
+      "sha256": "FB96C42C242BAFA891C043EC133B897009B90BDD2F8092290CC6C1D0723153FC"
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherBridge.kt",
+      "sha256": "729591548BE641122E13305209D97DE9F58B4AD37FCF66CA73D2104DD3A5010A"
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherView.kt",
+      "sha256": "ACE2C13D1C7891ED47F20FBC0102B1687A504B537B2D6B1EDE339747434E7128"
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherViewFactory.kt",
+      "sha256": "FC77AB71E6E89303A14A82DB3D364FFD4CAE9DF18D970804E4DDA7A5D881358E"
+    },
+    {
+      "path": "project/lib/core/providers/app_provider.dart",
+      "sha256": "AE786D452420BE9A3BF6C5AA9844F45B6AFE99F5BFEE972B77DF24F86EDA113C"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/adapters/youtube_player_adapter.dart",
+      "sha256": "90B333B06228BEBF3F9E77D8EB7E79585C67F0FAC10E3E9069D50948481B3D2C"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/live_broadcast_screen.dart",
+      "sha256": "E5E5562996DA6FD1829009604F5BD9C2F6AE36EA200A507C1D71976A054D903F"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/screens/phone_broadcast_screen.dart",
+      "sha256": "3A17B46D5A59DA4479F5A6418D4871E2601C334408037BE3D6725C3FED0432A8"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/widgets/live_chat_widget.dart",
+      "sha256": "EEF5EED1DFC911A5A0BC651C0578756E0772C9F6F21DA27D50050933ACBB4EFC"
+    },
+    {
+      "path": "project/lib/features/live_stream/services/rtmp_publish_engine.dart",
+      "sha256": "7F41148D6ABCEB95BFA095E283C07998E4BDCAD50699329995421BDF08588EF9"
+    },
+    {
+      "path": "project/pubspec.lock",
+      "sha256": "26B890254DE0A91CC3F5487FDD8BDEDF0CD0B7B6371FF81DD9DB898D04721A4D"
+    },
+    {
+      "path": "project/test/phone_broadcast_end_test.dart",
+      "sha256": "B8198A8406105E059A34D117CFFCF08D6CCF250388E513AE2A6F1CD619E8E0C5"
+    },
+    {
+      "path": "project/test/phone_broadcast_engine_test.dart",
+      "sha256": "2BCCC8FC069D08CBAF33A967082153C51665CB812C3A50CCBEF71D3FD6358438"
+    },
+    {
+      "path": "Roadmap.md",
+      "sha256": "8A776BE0800929E1EF0F6CBF136DDAFE1703862E9FCD17CAE62B9CBC2D91CCA4"
+    },
+    {
+      "path": "skill-observations/log.md",
+      "sha256": "2666F0FD9C3B9B75745D3109E883E049ABDBF051C9C6D246186B9933FCC12747"
+    }
+  ]
+}

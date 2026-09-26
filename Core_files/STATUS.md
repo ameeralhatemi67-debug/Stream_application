@@ -127,3 +127,7 @@ The local Windows debug build now passes with a compiler compatibility definitio
 ## 2026-09-24 Android device build recovery
 
 After the owner's repeat `dart_plugin_registrant.dart` failure, the generated file was present during inspection. `flutter run` launched an unconfigured build on SM M307FN, then a placeholder-config build on the exact failing SM S936B. Following `flutter clean` (which removed `.dart_tool`), a fresh placeholder-config `flutter run` again built, installed and launched on SM S936B. An arm64 debug APK using the owner's local define file then built and was installed on SM S936B without launch. The intermittent cause remains unconfirmed; the real-config app and P6 flows have not been accepted. No backend operation, push, deployment or hosted migration was performed. See `issue_encountered.md`.
+
+
+## Wave 4v2 repair branch — 2026-09-26
+NEEDS WORK. Isolated source commits 0eaa645 / 68394e9 repair interrupted-room End/session identity and part of landscape chat/settings. Codex weekly budget reached the 4% soft stop; G2 recovery, native rotation, G4 channel/security/scope remain open. Neither P6 nor P6S accepted. See brief/evidence/2026-09-26/p6s-wave4v2/README.md. This branch note does not overwrite the owner’s newer main-checkout status.

@@ -1,0 +1,250 @@
+[
+  {
+    "id": "G1a",
+    "title": "mockStreamers / MockVodArchivePool / sampleQuestions in lib",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G1b",
+    "title": "FeatureInProgressModal call sites",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G1c",
+    "title": "hard-coded dev identity ('prof_alghamdi_01', dev emails)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G1d",
+    "title": "fake viewer-count literals (1240 / 18450)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G1e",
+    "title": "ghost/demo chat",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G2a",
+    "title": "dark-only theme tokens referenced (AppTheme.dark* / *Dark)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G2b",
+    "title": "ThemeMode.dark",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G2c",
+    "title": "hard-coded color literals outside app_theme.dart (target 0 except allowlisted on-media overlays)",
+    "value": 0,
+    "target": null,
+    "status": "INFO",
+    "detail": ""
+  },
+  {
+    "id": "G2d",
+    "title": "gradient literals outside lib/core/theme/ (gradients only via AppGradients tokens)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G3",
+    "title": "emoji/pictograph occurrences in lib + i18n (excluding brief/emoji_allowlist.txt files)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G4a",
+    "title": "'com.example' package/scheme still present (android/web/lib)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G4b",
+    "title": "app name still the working title 'streamer_app' (manifest label / web title / web manifest)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G5a",
+    "title": "flutter_vlc_player still in pubspec",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G5b",
+    "title": "lib/spike_rtmp exists",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G5c",
+    "title": "assets/map/gadm41_SAU_2.svg (GADM licence) still bundled",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G6",
+    "title": "hard-coded English Text('...') literals (should move to i18n)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G7",
+    "title": "en/ar i18n key mismatches (-1 = unreadable JSON)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G8",
+    "title": "release build can silently fall back to the debug keystore",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G9",
+    "title": "Admin \"Testing tools\" tab not gated by kDebugMode",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G10a",
+    "title": "public tables without ENABLE ROW LEVEL SECURITY in migrations (of 30)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G10b",
+    "title": "tables with RLS on but NO policy (deny-all; must be intentional and commented, e.g. stream_viewers)",
+    "value": 2,
+    "target": null,
+    "status": "INFO",
+    "detail": "stream_viewers, removed_live_streams"
+  },
+  {
+    "id": "G10c",
+    "title": "write policies that are unconditionally 'true' (using/with check (true))",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G10d",
+    "title": "SECURITY DEFINER functions without SET search_path",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G10e",
+    "title": "GRANT of write/execute privileges to anon/public in migrations (review each; only viewer_heartbeat/get_viewer_counts and public views are expected)",
+    "value": 3,
+    "target": null,
+    "status": "INFO",
+    "detail": ""
+  },
+  {
+    "id": "G11a",
+    "title": "service-role JWTs / sb_secret keys / private keys / DB URLs with password found in the working tree",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G11b",
+    "title": "client code (project/lib, android, web) that mentions the service role",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G11c",
+    "title": "JWT-shaped tokens with an unexpected role (not anon/service_role)",
+    "value": 0,
+    "target": null,
+    "status": "INFO",
+    "detail": ""
+  },
+  {
+    "id": "G11d",
+    "title": "secret-bearing paths NOT covered by .gitignore (dart_define.local.json, key.properties, keystores, .env)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G11e",
+    "title": "secret-bearing files TRACKED by git (must be 0; if >0 the key is burned: rotate it)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G11f",
+    "title": "dart_define.local.json holds a service-role/secret-named entry (only the anon key belongs in the app)",
+    "value": 0,
+    "target": 0,
+    "status": "PASS",
+    "detail": ""
+  },
+  {
+    "id": "G11g",
+    "title": "history scan for JWT-shaped tokens skipped (slow, ~1 min): run `node brief/tools/gates.mjs --history` at P0 and P9",
+    "value": 0,
+    "target": null,
+    "status": "INFO",
+    "detail": ""
+  }
+]

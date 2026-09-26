@@ -34,6 +34,9 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Map search and cached pins outlive catalog refresh** — FIXED locally for current provider snapshots; offline revocation timing open.
 - **Offline map pins disappear without a public catalog snapshot** — FIXED locally with vetted marker-only cache fallback; phone cold start open.
 
+- **Live room stays uncertain after End during viewer outage** — source regression repaired; physical convergence pending.
+- **Landscape chat and settings overflow at large text** — synthetic en/ar layouts pass; physical IME/TalkBack pending.
+
 ## Recording format
 
 Use one entry per distinct root cause. Keep it searchable and actionable:
@@ -262,3 +265,10 @@ Cause: an absent catalog and an authoritative empty catalog were both represente
 Fix/workaround: distinguish those states; retain marker-only pins until a catalog is available, then filter by its visible IDs. Version the marker cache to v2 and save only verified, map-visible pins; older unvetted cache entries are ignored.
 Verification: focused map/catalog tests passed, combined Flutter suite 587 passed, analyzer 0. Physical airplane-mode cold start remains open.
 Evidence: local P5/P6 merge checkpoint in `brief/LEDGER.md`.
+
+
+## Live room stays uncertain after End during viewer outage
+Cause: recovery required a live entry before End reconciliation, discarded polling with room services, and did not fence same-watch replacement sessions. Fix: retain original actor/watch/session, reconcile successful fresh catalog first and keep polling through interruption. Verification: new baseline regression failed; targeted suite43 passed. Healthy-network owner timing still needs physical reproduction; polling is20s plus unbounded read latency. See Wave4v2 evidence.
+
+## Landscape chat and settings overflow at large text
+Cause: composer stayed present on rotation; sheet did not scroll; connection status could exceed narrow chat header. Fix: read-only landscape, screen-owned sender draft, scrollable safe-area sheet, flexible header labels and readable sheet colors. Verification:740x360/190px synthetic inset/2x/en-ar tests17 pass; initial new tests exposed71/87px overflow. Actual90/17px screenshot device cases remain NOT RUN.

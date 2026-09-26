@@ -1,0 +1,29 @@
+{
+  "source_commit": "68394e936d313b91c2073c66bcd96b64f36c7841",
+  "base": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
+  "configuration": "No defines; compile only; not an E2E candidate",
+  "artifacts_at_budget_stop": [
+    {
+      "path": "project/pubspec.lock",
+      "exists": true,
+      "sha256": "26b890254de0a91cc3f5487fdd8bdedf0cd0b7b6371ff81dd9db898d04721a4d"
+    },
+    {
+      "path": "project/build/app/outputs/flutter-apk/app-debug.apk",
+      "exists": true,
+      "sha256": "9c85db3d43dca05c239458c4c496fa95ad30e89ece0558cac766ae9a3acb1081"
+    },
+    {
+      "path": "project/build/web/main.dart.js",
+      "exists": false,
+      "sha256": null
+    },
+    {
+      "path": "project/build/web/index.html",
+      "exists": true,
+      "sha256": "b2bb8407e0f7d697c16afde2191442157cc57e9e89ba536289737c72fb9dc8c2"
+    }
+  ],
+  "build_process_session": 74545,
+  "verification": "Full suite before test correction:698 passed,1 failed. Corrected test has NOT been rerun. Build process may still be running; inspect logs before use."
+}
