@@ -57,6 +57,8 @@ Observed, not fixed: preparation also stores every other same-origin URL the vis
 | Eviction re-prompt, interrupted re-preparation (asked by critic round 2) | PASS (R4-03, R4-05) |
 | Offline start after re-saves (new) | Failed at `ad28998` (avatars and logo dropped); PASS at `a57dda7` (R5-03) |
 
+Note (critic round 3, F4): `chrome-r3/R5-02` and `R5-04` are byte-identical to `R4-04` and `R4-07`. They were captured separately (scratch files timed 00:52:18 and 01:01:56, and 00:55:48 and 01:03:31, on 2026-09-27) in different profiles (`p5r4` on `ad28998`, `p5r5` on `a57dda7`). The map renders deterministically for the same state. The build-specific evidence for `a57dda7` is `raw/r3/first-save.json`, `re-save.json` and `net-offline-ar-cold-start.json`, plus `R5-03`.
+
 ## Performance and size (proposed gates from the research)
 
 | Gate | Result |

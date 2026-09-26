@@ -2,7 +2,7 @@
 
 Date: 2026-09-26. Implementer: Claude Opus 5.5 (Claude Code). Branch `codex/tricity-map-upgrade`, worktree `C:/Users/User/.codex/worktrees/p5-basemap-spike/Streamer_app` (reused: it was clean and its branch `codex/p5-basemap-spike`, `86068e8`, is already merged into master; that branch ref is untouched).
 
-**Status: implementation complete for the agreed bundled-release scope; ready for Astra's independent audit with explicit pending evidence. Not accepted.** Physical Android (SM-S936B) runs, TalkBack, performance traces and live-stream integration were not possible in this session (no phone attached, no reachable non-production backend). Accurate city outlines remain an **unmet requirement** (no licensed municipal geometry). See [ACCEPTANCE_RESULTS.md](ACCEPTANCE_RESULTS.md), [HANDOFF_TO_ASTRA.md](HANDOFF_TO_ASTRA.md) and the critic scores in [CRITIC_REVIEW.md](CRITIC_REVIEW.md).
+**Status: NEEDS WORK after the final (third) critic round: 8 / 7 / 8 / 8.** Accessibility fails on F1, a venue-card layout regression from the round-2 repair. See HANDOFF_TO_ASTRA.md for the fix and the audit steps. **Not accepted.** Physical Android (SM-S936B) runs, TalkBack, performance traces and live-stream integration were not possible in this session (no phone attached, no reachable non-production backend). Accurate city outlines remain an **unmet requirement** (no licensed municipal geometry). See [ACCEPTANCE_RESULTS.md](ACCEPTANCE_RESULTS.md), [HANDOFF_TO_ASTRA.md](HANDOFF_TO_ASTRA.md) and the critic scores in [CRITIC_REVIEW.md](CRITIC_REVIEW.md).
 
 ## Starting point and preservation
 
@@ -33,7 +33,8 @@ Date: 2026-09-26. Implementer: Claude Opus 5.5 (Claude Code). Branch `codex/tric
 | `cdd079e` | docs(evidence): critic round 2 record (NEEDS WORK, 8/8/7/8) |
 | `ad28998` | fix(map): repair critic round 2 findings (D2 residual, E1-E5, D5/D6 residuals) |
 | `a57dda7` | fix(web): require the app's interface images for offline readiness (found in the repair re-check) |
-| (next) | docs(evidence): round 2 repair pass re-check |
+| `87e3118` | docs(evidence): round 2 repair pass re-check |
+| (next) | docs(evidence): critic round 3 record and final handoff |
 
 ## What changed
 

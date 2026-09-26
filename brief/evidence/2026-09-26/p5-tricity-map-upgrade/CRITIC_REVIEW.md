@@ -2,7 +2,7 @@
 
 Rules (from `brief/research/p5-tricity-map-upgrade/OPUS_EXECUTION_PROMPT.md`): at most **three** critic reviews for the whole map upgrade. Four categories scored 0-10 by the critic, not the implementer: Functionality; Accessibility and platform compatibility; Integration and connectivity; Ease of use. Below 8 fails a category. Critical/high defects, unlicensed assets, failed G0 gates or missing essential acceptance evidence block acceptance regardless of scores. Missing physical evidence is provisional, not "verified good". Each round is tied to the reviewed commit; any later source fix invalidates affected evidence until re-checked.
 
-Rounds used: 2 of 3 (round 1: NEEDS WORK; round 2: NEEDS WORK)
+Rounds used: 3 of 3 (round 1: NEEDS WORK; round 2: NEEDS WORK; round 3: NEEDS WORK)
 
 ## Round 1 (reviewed commit 53a6b9d)
 
@@ -157,3 +157,87 @@ Evidence: the web prompt with Save/Not now (R3-01); one Retry offline; tolerant 
 4. Re-run the affected Chrome cases: eviction re-prompt, interrupted re-preparation and hanging network.
 
 Physical-device and backend evidence stay pending either way. A passing round 3 would mean "ready for Astra audit", not P5 accepted.
+
+## Round 3 (reviewed commit 87e3118) — final
+
+Critic: independent Claude Code subagent (did not write the code or the evidence). Date 2026-09-27. Reviewed `git diff 4b7a84c..a57dda7` (repairs `ad28998` and `a57dda7`) in full and the relevant parts of `git diff 7b54cb5..a57dda7`, the "Round 2 repair pass" sections of VERIFICATION and ACCEPTANCE_RESULTS, `raw/r3/*` (cache listings, first-save, re-save, interrupted-save caches, hanging-network, the offline Arabic cold starts at `ad28998` and `a57dda7`), screenshots `chrome-r3/R4-01..R4-07, R5-01..R5-04` and `windows-r3/P01..P04` with `picker-render-results-windows.json`, and ADR-008. Nothing was modified except this section and the "Rounds used" line. This is the last round allowed under the three-round cap.
+
+### What I re-ran myself (worktree at 87e3118; code identical to a57dda7)
+
+| Check | Result |
+|---|---|
+| `flutter analyze` (`project/`) | No issues found |
+| `flutter test` (full, `project/`) | **734 passed, 0 failed** (matches VERIFICATION) |
+| `node brief/tools/gates.mjs` (worktree root) | 0 gates failing |
+| i18n symmetry (script over `en.json`/`ar.json`) | 1,476 keys each, none missing on either side |
+| Temporary layout probe (my own widget test in an untracked `project/test_critic_tmp/`, deleted after the run; real IBM Plex fonts loaded as in `layout_sweep_test.dart`) | `MarkerSummaryCard` rendered at the map's two real widths (overlay card: screen width minus 92; marker-anchored card: 320) for en/ar, offline/live video/live audio, text scale 1.0 and 1.3. Results under F1 |
+| Worktree state | only the known line-ending noise in `project/windows/flutter/generated_plugin*` (confirmed whitespace-only; not committed) |
+
+Not re-run: web/Windows/APK builds, the Chrome driver runs and the Windows integration tests (I relied on the raw logs and screenshots), the pack validator. No device, emulator, backend or network was used.
+
+### Round-2 findings: status
+
+| # | Status | Basis |
+|---|---|---|
+| D2 (residual, Medium) | **Fixed** | `venue_navigation_sheet.dart:46, 339-363, 365, 435` hides distance and the open-maps button for a 0,0 or invalid point and shows `map.no_venue_location`; `:479-486` stops before the clipboard fallback. That sheet is the only target of the live Venue tab (`live_broadcast_screen.dart:2169`), the summary card and the drawer; every other directions call goes through the guarded `openVenueDirections`. The new widget test covers the sheet. The live Venue tab itself was not opened in Chrome or on a device, and its button still reads "Get Driving Directions" for an unpinned venue (F5). The apply form still submits an unpinned venue as 0,0 and approval still hard-codes `cityEn: 'Al Khobar'` (`app_provider.dart:4422`, pre-existing). |
+| E1 | **Fixed, with a trade-off** | Only navigations use the 4 s fallback; files of a page that started from the network wait for the network, so a page no longer mixes builds (`streamer_offline_sw.js:56-72`). Closed pages are pruned on navigation. The hanging-network start still works (`raw/r3/ad28998-net-hanging-network.json`: `main.dart.js` at 4.45 s, 16/16 from the worker). New trade-off: F2. |
+| E2 | **Fixed** | One stored copy per path (`map_pack_platform_web.dart:256-261`); `raw/r3/ad28998-cache-after-save.json` lists 32 entries with a single `version.json`. |
+| E3 | **Mostly fixed** | Label fonts are recognised by path, so self-hosted fallback fonts on this origin qualify (`:198-209`). A third-party font CDN still cannot qualify (the worker would not serve it either). Not exercised; the constraint is still not written in ADR-008. |
+| E4 | **Mostly fixed** | Save no longer writes the dismissal (`spatial_map_screen.dart:862-866`, unit test); the details sheet says "saved in this browser" once ready (`map_status_details.dart:393-400`, R4-02). The prompt comes back on the next visit after a failed or older-pack save (R4-04). Residual: the prompt is still offered while the browser itself is offline (`_showWebOfflineHint`, `:499`, has no connectivity check). |
+| E5 | **Fixed** | Reticle glyph for the centre mark and the button (`location_picker_modal.dart:277-282, 410`), hint and wording name both ways (P01-P03). |
+| D5 (residual) | **Fixed as asked, but caused a regression** | Summary-card directions/info buttons are 48x48 (`marker_summary_card.dart:225, 233`). The row was not re-laid out for the 34 px this adds: see F1. The close button is still 28x28 (`:111`). |
+| D6 (residual) | **Fixed** | The untouched first view re-frames with the measured, mirrored insets (`spatial_map_screen.dart:77, 183-187, 522-527, 660`). I checked that every user and app camera path sets `_cameraMoved` (`_moveTo` default `userIntent: true`; gestures, wheel and flutter_map keyboard pans report `hasGesture: true`), so it cannot pull a user's view back to the overview. Picker insets mirror (`location_picker_modal.dart:75-77`; `Directionality.of` is used only in build/callbacks, not in `initState`). R4-07 shows the mirrored first view. |
+| E6 / D12 | Not addressed (cosmetic) | R4-07/R4-03: the Qatif label still sits under the search bar at overview. |
+
+Found during the implementer's re-check and fixed in `a57dda7`: a re-save kept only the files that visit observed, so the built-in avatars and logo disappeared after two re-saves (`raw/r3/ad28998-net-offline-ar-missing-images.json`: 68 avatar and 1 logo failures offline). Every bundled SVG and built-in avatar is now required (`map_pack_platform_web.dart:173-185`); `raw/r3/first-save.json` and `re-save.json` show 4 avatars and 6 SVGs stored, and `raw/r3/net-offline-ar-cold-start.json` (a57dda7) shows 29/29 responses from the worker, the avatars served, the pack and styles loaded, and only the placeholder backend failing. R5-03 shows the avatars offline. I agree with this fix.
+
+### Confirmed good (this round)
+
+- The evidence claims in "Round 2 repair pass" are supported by the raw files I opened, with one caveat: `R5-02` and `R5-04` are byte-identical to `R4-04` and `R4-07` (same MD5), which were captured on build `ad28998`. That is plausible for deterministic headless renders of identical screens, and the `a57dda7` network log supports the offline Arabic start. But those two images cannot on their own show a different build (F4).
+- The worker still intercepts only same-origin and the two gstatic CDNs, never writes to the cache, and skips `cache: 'reload'` preparation fetches. No API or auth response can be stored.
+- Preparation still fails safe. Required files, including the new SVG/avatar set (about 0.7 MB), abort staging on any failure. The live copy is replaced only after staging completes, and readiness is written last. R4-05 and `raw/r3/ad28998-interrupted-save-caches.json` show the live copy kept, the old record kept and no staging cache left after an interrupted re-preparation.
+- Windows real-engine picker (`windows-r3/picker-render-results-windows.json`): pack ready, centre in the domain, pinned text matches the camera centre, and the no-location message is shown. P03 shows the Arabic picker with mirrored zoom buttons and the reticle.
+- No new assets, so licensing is unchanged (no unlicensed asset).
+
+### Defects remaining
+
+| # | Severity | Where | Failure scenario | Fixable in code |
+|---|---|---|---|---|
+| F1 (new, regression from the D5 fix) | **Medium** | `marker_summary_card.dart:153-285` (Row 3: badge, `Spacer`, two 48 px `IconButton`s at `:219-236`, 6 px gap, non-flexible `ElevatedButton.icon` at `:238`) | The row now needs 34 px more than before, and nothing in it can shrink. My probe (real fonts) found these overflows. **Marker-anchored card (320 wide, used after a venue tap focuses to z15.5):** at text 1.0, Arabic live video overflows by 3 px and English live audio by 0.5 px. At text 1.3, **all six** en/ar x offline/video/audio variants overflow, by 18-38 px (before the change, only Arabic video did, by 4 px). **Overlay card (below z13.5):** on a 384 dp screen (SM-S936B at its default display size, assumed) it overflows at text 1.0 in 5 of 6 variants, by 16-31 px (before, 0 of 6). On a 360 dp phone it overflows in 6 of 6, by 1-55 px. In release the **Watch Live / Listen Live / Profile** button draws past the card edge (to the left in Arabic), and the part outside the row cannot be tapped. In debug the overflow stripe shows. No test selects a venue, so the layout sweep does not catch it. The ACCEPTANCE row "Summary-card targets PASS (code)" checked target size only. | Yes: let the action button shrink (`Flexible` with ellipsis), or move it to its own line or a `Wrap` at narrow widths and large text. Add a layout-sweep case with a selected venue (en/ar, 320-412 dp, text 1.0-1.6). |
+| F2 (new, trade-off from the E1 fix) | Low | `streamer_offline_sw.js:21, 58, 67` | Pinned "offline" pages live only in the worker's memory. On a connected network that has no internet, suppose the worker is stopped after about 30 s idle. It restarts with an empty set. Later lazy files (for example the Noto Arabic fallback font when switching language, or an image) are then "network-started" and wait for the OS network timeout instead of the stored copy (before E1 they fell back after 4 s). A separate, narrow race: `forgetClosedPages` from another tab's navigation can drop a just-pinned page whose client is not yet listed by `clients.matchAll`. Hard offline is unaffected, because fetch fails fast. | Yes: persist the pin (for example, tag stored responses with a build id and let a network-started page accept the stored copy only for the same build), or keep a timeout for files whose stored copy matches the page's build. |
+| F3 (new, partly fixed by a57dda7) | Low | `map_pack_platform_web.dart:256-296` | A re-save still drops every optional file that visit did not observe (demo streamer JPGs, PNG logos, other screens' images). Only the SVGs and the four avatars are now protected. Offline screens not visited during the latest save can show broken images. | Yes: carry forward still-valid optional entries from the previous live copy, or require the image assets that offline screens use. |
+| F4 (new) | Info (evidence) | `screenshots/chrome-r3/R5-02` = `R4-04`, `R5-04` = `R4-07` (identical MD5) | The "a57dda7" screenshots cannot visually distinguish the two builds; the a57dda7 claim rests on `raw/r3/net-offline-ar-cold-start.json` (which does support it). | Label them as such |
+| F5 (new) | Low (ease of use) | `live_broadcast_screen.dart:2152-2172` | For an unpinned venue, the live Venue tab still offers "Get Driving Directions", which opens a sheet saying directions are unavailable. This is truthful but a dead end. | Yes: hide the button or change its label when `isUsableVenuePoint` is false |
+| D5 (residual) | Low | `marker_summary_card.dart:111` | The summary-card close button is still 28x28. | Yes |
+| E4 (residual) | Low | `spatial_map_screen.dart:499-504` | The "Save" prompt is offered while the browser is offline, and that Save must fail. | Yes |
+| E3 (residual) | Info | ADR-008 | The font-origin constraint (engine fallback fonts must come from this origin or fonts.gstatic.com) is not recorded. | Doc |
+| D2 (pre-existing part) | Low | `streamer_apply_screen.dart:346-347`; `app_provider.dart:4422` | An unpinned application is accepted and stored as 0,0, and approval labels every approved venue "Al Khobar". | Yes / owner decision |
+| E6, D12 | Info | R4-03, R4-07 | Top-edge place labels (Qatif) sit under the search bar, and a cluster badge can cover a city label. | Yes |
+
+### Scores
+
+**1. Functionality: 8 / 10 (passes; provisional, not verified on Android).**
+Evidence: code review of the sheet guard, worker, de-duplication, required-image rule and first-view re-frame; my analyze, 734-test and gates runs; the `raw/r3` cache listings, interrupted-save caches, hanging-network and offline Arabic cold-start logs; Windows picker render JSON. Confidence: high for the web preparation's fail-safe behaviour, recovery from interruption and eviction, and the camera policy. **Low** for native first-launch offline, reboot and app-version replacement, which have no Android runtime evidence of any kind. Why not 10 (and not 9): the core native first-use offline claim is unverified on SM-S936B. A11 accurate city outlines are unmet (external data rights). F2 means a hanging network can stall lazy files after a worker restart. F3 means a re-save can drop optional images. The apply form still allows an unpinned venue that approval labels "Al Khobar".
+
+**2. Accessibility and platform compatibility: 7 / 10 (fails).**
+Evidence: my layout probe of the summary card; RTL framing (R4-07, P03); Arabic offline labels (R4-07 and the a57dda7 log); 48 px map and picker controls; keyboard and screen-reader centre pin (Windows real engine). Confidence: medium on Chrome and Windows, **none** on Android, TalkBack, device text scale and keyboard traversal. Why below 8: **F1** is a new responsive-layout regression in the map's main venue card. It is worst in exactly the areas this category measures: Arabic and larger text. Every variant overflows at text 1.3, and on target-width phones the overlay card overflows at default text. In release the primary Watch Live / Profile action draws outside the card and is partly untappable. It was introduced by this round's own D5 repair and is not covered by any test. Other shortfalls: no Android runtime evidence for the primary platform, the 28 px close button, and untested keyboard panning.
+
+**3. Integration and connectivity: 8 / 10 (passes; provisional).**
+Evidence: I traced every directions and venue-sheet caller (`openVenueDirections`, `VenueNavigationSheet.show`) and all are now guarded against 0,0 or invalid points. The map works without the backend in the a57dda7 Chrome offline log (only `127.0.0.1:9` fails). The worker isolates API origins. There is one pack controller and no duplicate renderer or system. Confidence: medium, because nothing ran against a reachable backend. Why not 10: A14 backend-current, A15 reconnect-removal and A17 map -> stream -> map with the mini-player have no runtime evidence (external: no authorized backend). The live Venue tab was verified only by a widget test of the sheet. F2 is a small cross-mode risk in the worker. The approval path still stores unpinned venues as 0,0 under an "Al Khobar" label.
+
+**4. Ease of use: 8 / 10 (passes).**
+Evidence: the web prompt with Save/Not now (R4-01) and its return after eviction or an older pack (R4-03, R4-04); honest "saved in this browser" wording (R4-02) and "incomplete" failure wording with Prepare (R4-05); a clear centre-mark wording and glyph in both languages (P01-P03); a clear no-location message (P04). Why not 10: F1 makes the venue card look broken for Arabic and large-text users (the main older-user group). F5: a directions button leads to "no directions". E4 residual: Save is offered while offline. Top-edge labels sit under the controls. There has been no testing with real older or non-technical users.
+
+### Blockers
+
+- **Blocking acceptance:** Accessibility and platform compatibility is 7 (below 8) because of F1, a Medium regression that can be fixed in code. It was introduced by the D5 repair, and no review round remains to verify a fix. Essential acceptance evidence is still missing: every SM-S936B case (A01, A02, A08, A10, A12, A17, A19 on the device, and TalkBack/text size), backend-current A14/A15, and A17 map -> stream -> map. A11 accurate outlines are unmet (external data rights). No critical or high defect remains, no asset is unlicensed, and no G0 gate fails on Chrome or Windows (Android G0 is still unqualified on hardware).
+- **Needs owner, hardware or external input:** the SM-S936B run per `OWNER_RETEST_SCRIPT.md`, including a venue tap in Arabic and at a large text size (this would also expose F1 on the device); an authorized non-production backend for A14/A15/A17 and for A19 through the signed-in apply flow; the venue-extent decision (D8); licensed municipal geometry (A11); counsel review of the credits.
+
+**Verdict: NEEDS WORK.** The round-2 repairs fixed the integration defect (D2 residual) and most usability findings, and the implementer's own re-check found and fixed a real offline-image loss. But the D5 repair introduced F1: the venue summary card's action row now overflows in Arabic and at larger text sizes, including on phones the width of the target device. That puts Accessibility and platform compatibility at 7. The critic loop is closed under the three-round cap. No further code change may claim this review's scores. Exact remaining actions for the handoff to Astra:
+
+1. Fix F1: make the summary card's action row shrink or wrap. Add a layout-sweep case with a selected venue (en/ar, 320-412 dp, text 1.0-1.6). Astra's audit must verify this change, because no critic round remains.
+2. Optionally fix, in the same audited change: F5, the D5 close button, the E4 offline prompt, F2 and F3.
+3. Run the SM-S936B owner script (offline first launch, reboot, TalkBack, text size, a venue tap in Arabic) and the backend-current A14/A15/A17/A19 runs.
+4. Decide the owner items: the venue extent (D8), licensed outlines (A11), counsel review of the credits.
+
+Scores 8 / 7 / 8 / 8 (Functionality / Accessibility and platform / Integration / Ease of use). This review does not authorize merge, push, release or closing P5/P6.
