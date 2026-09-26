@@ -89,9 +89,7 @@ class _BroadcastingSettingsSectionState
                     height: 8,
                     decoration: BoxDecoration(
                       color: isBroadcasting
-                          ? (isAudioLive
-                              ? AppTheme.textMuted
-                              : AppTheme.danger)
+                          ? (isAudioLive ? AppTheme.textMuted : AppTheme.danger)
                           : AppTheme.textMuted,
                       shape: BoxShape.circle,
                     ),
@@ -105,9 +103,7 @@ class _BroadcastingSettingsSectionState
                         : 'settings.broadcast_status_offline'.tr(),
                     style: TextStyle(
                       color: isBroadcasting
-                          ? (isAudioLive
-                              ? AppTheme.onMedia
-                              : AppTheme.danger)
+                          ? (isAudioLive ? AppTheme.onMedia : AppTheme.danger)
                           : AppTheme.textMuted,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
@@ -133,9 +129,7 @@ class _BroadcastingSettingsSectionState
                         ? '342 ${'live.listening_count'.tr()}'
                         : '342 ${'settings.viewers_count'.tr()}',
                     style: TextStyle(
-                      color: isAudioLive
-                          ? AppTheme.onMedia
-                          : AppTheme.danger,
+                      color: isAudioLive ? AppTheme.onMedia : AppTheme.danger,
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
@@ -207,7 +201,7 @@ class _BroadcastingSettingsSectionState
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
-                          'admin.broadcast_as_org'.tr(),
+                          'live.org_broadcast_deferred'.tr(),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -232,11 +226,7 @@ class _BroadcastingSettingsSectionState
                         ? AppTheme.warning
                         : AppTheme.border,
                   ),
-                  onSelected: (selected) {
-                    if (selected) {
-                      provider.setSelectedBroadcastOrgId('org_dalilk_04');
-                    }
-                  },
+                  onSelected: null,
                 ),
               ),
             ],
@@ -379,8 +369,7 @@ class _BroadcastingSettingsSectionState
             // The live broadcast's watch link cannot change underneath it;
             // end the broadcast to use another link.
             enabled: !isBroadcasting,
-            style:
-                const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               labelText: 'settings.youtube_url_label'.tr(),
               helperText: isBroadcasting
@@ -395,8 +384,7 @@ class _BroadcastingSettingsSectionState
 
           TextField(
             controller: _titleController,
-            style:
-                const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: InputDecoration(
               labelText: 'settings.lecture_title_label'.tr(),
               prefixIcon: const Icon(Icons.title_rounded,
@@ -481,8 +469,7 @@ class _BroadcastingSettingsSectionState
                       ),
                       label: Text(spk.getLocalizedName(langCode)),
                       selected: isChecked,
-                      selectedColor:
-                          AppTheme.warning.withValues(alpha: 0.25),
+                      selectedColor: AppTheme.warning.withValues(alpha: 0.25),
                       backgroundColor: AppTheme.surfaceAlt,
                       labelStyle: TextStyle(
                         color: isChecked
@@ -493,9 +480,7 @@ class _BroadcastingSettingsSectionState
                             isChecked ? FontWeight.bold : FontWeight.normal,
                       ),
                       side: BorderSide(
-                        color: isChecked
-                            ? AppTheme.warning
-                            : AppTheme.border,
+                        color: isChecked ? AppTheme.warning : AppTheme.border,
                       ),
                       onSelected: (_) =>
                           provider.toggleCoSpeaker(spk.speakerId),
@@ -507,8 +492,7 @@ class _BroadcastingSettingsSectionState
           ] else ...[
             TextField(
               controller: _venueController,
-              style: const TextStyle(
-                  color: AppTheme.textPrimary, fontSize: 13),
+              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
               decoration: InputDecoration(
                 labelText: 'settings.venue_location_label'.tr(),
                 prefixIcon: const Icon(Icons.location_pin,
@@ -524,7 +508,8 @@ class _BroadcastingSettingsSectionState
               style: ElevatedButton.styleFrom(
                 backgroundColor:
                     isBroadcasting ? AppTheme.surface : AppTheme.danger,
-                foregroundColor: isBroadcasting ? AppTheme.textPrimary : AppTheme.onPrimary,
+                foregroundColor:
+                    isBroadcasting ? AppTheme.textPrimary : AppTheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -580,8 +565,7 @@ class _BroadcastingSettingsSectionState
           DropdownButtonFormField<String>(
             initialValue: quality,
             dropdownColor: AppTheme.surfaceAlt,
-            style:
-                const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
             decoration: const InputDecoration(
               contentPadding:
                   EdgeInsets.symmetric(horizontal: 12, vertical: 10),

@@ -131,14 +131,15 @@ class LivePlayerOverlayControls extends StatefulWidget {
 
   @override
   State<LivePlayerOverlayControls> createState() =>
-      _LivePlayerOverlayControlsState();
+      LivePlayerOverlayControlsState();
 }
 
-class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
+class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
   bool _showControls = true;
+  final FocusNode _controlsFocus = FocusNode(debugLabel: 'viewer-controls');
 
   @override
   void initState() {
@@ -155,12 +156,17 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
 
   @override
   void dispose() {
+    _controlsFocus.dispose();
     _pulseController.dispose();
     super.dispose();
   }
 
-  void _toggleControlsVisibility() {
-    FocusScope.of(context).unfocus();
+  void toggleControlsVisibility() {
+    if (_showControls &&
+        (_controlsFocus.hasFocus ||
+            MediaQuery.of(context).accessibleNavigation)) {
+      return;
+    }
     setState(() {
       _showControls = !_showControls;
     });
@@ -175,18 +181,37 @@ class _LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         StreamStatePlaceholderOverlay.coversState(widget.streamState);
     final controlsVisible = _showControls && !isPlaceholderVisible;
 
-    return GestureDetector(
-      onTap: widget.showTransportControls ? _toggleControlsVisibility : null,
-      behavior: widget.showTransportControls
-          ? HitTestBehavior.translucent
-          : HitTestBehavior.deferToChild,
+    return Focus(
+      focusNode: _controlsFocus,
       child: Stack(
         children: [
+          if (!isPlaceholderVisible)
+            PositionedDirectional(
+                top: 8,
+                start: 12,
+                child: IconButton(
+                  tooltip: 'live.toggle_player_controls'.tr(),
+                  onPressed: () {
+                    if (_showControls && _controlsFocus.hasFocus) {
+                      // An explicit Hide button may release its own focus; a media
+                      // tap never removes focused controls.
+                      _controlsFocus.unfocus();
+                    }
+                    if (!MediaQuery.of(context).accessibleNavigation) {
+                      setState(() => _showControls = !_showControls);
+                    }
+                  },
+                  icon: Icon(
+                      _showControls
+                          ? Icons.visibility_off_outlined
+                          : Icons.visibility_outlined,
+                      color: AppTheme.onMedia),
+                )),
           // Top Header Overlay: Live Badge, Viewer count pill, Quality Selector (Video only)
           if (controlsVisible && !widget.isAudioOnly)
             PositionedDirectional(
               top: 8,
-              start: 12,
+              start: 72,
               end: 12,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

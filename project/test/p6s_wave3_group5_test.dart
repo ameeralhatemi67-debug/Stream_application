@@ -46,6 +46,7 @@ class _Log {
 
   /// The starting mute of each player created, in order.
   final initialMuted = <bool>[];
+  final autoplay = <bool>[];
 
   /// The current player's own mute state (its built-in controls).
   ValueNotifier<bool>? muted;
@@ -61,6 +62,7 @@ class _Player extends AbstractVideoPlayer {
       super.key,
       super.onStateChanged,
       super.onPlayerReady,
+      super.autoPlay,
       this.initialMuted = false});
   final bool initialMuted;
   final _Log log;
@@ -113,6 +115,7 @@ class _PlayerState extends State<_Player> implements PlayerTransport {
     super.initState();
     widget.log.created++;
     widget.log.initialMuted.add(widget.initialMuted);
+    widget.log.autoplay.add(widget.autoPlay);
     widget.log.muted = _muted;
     widget.log.emit = (state) => widget.onStateChanged?.call(state);
     final report = widget.log.report;
@@ -191,6 +194,7 @@ void main() {
 
   group('room player', () {
     late _Log log;
+    late _Catalog roomCatalog;
     setUp(() {
       log = _Log();
       LiveBroadcastScreen.debugChatFactory = (id, _) => _Chat(id);
@@ -209,6 +213,7 @@ void main() {
         bool initialMuted = false,
       }) =>
           _Player(
+              autoPlay: autoPlay,
               initialMuted: initialMuted,
               key: key,
               streamUrl: streamUrl,
@@ -236,7 +241,7 @@ void main() {
       tester.view.physicalSize = size;
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      final catalog = _Catalog();
+      final catalog = roomCatalog = _Catalog();
       final provider = AppProvider.withServices(adminDbService: catalog);
       provider.addStreamer(live);
       await tester.pumpWidget(
@@ -346,6 +351,9 @@ void main() {
       await tester.pump();
       await tester.pump();
       await tester.tap(find.text('live.retry_feed'.tr()).hitTestable().first);
+      await tester.pump(const Duration(seconds: 3));
+      expect(log.created, 1, reason: 'fresh session truth must precede reload');
+      roomCatalog.pending.removeAt(0).complete([live]);
       await tester.pump();
       await tester.pump();
       await tester.pump();
@@ -443,6 +451,78 @@ void main() {
       await close(tester);
     });
 
+    testWidgets(
+        'automatic recovery preserves paused mute intent and stops at End',
+        (tester) async {
+      await open(tester);
+      await showControls(tester);
+      await tester.tap(find.byKey(const Key('room-mute')));
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('room-play-pause')));
+      await tester.pump();
+      log.emit!(StreamState.fallbackError);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      log.report = StreamState.paused;
+      roomCatalog.pending.removeAt(0).complete([live]);
+      await tester.pump();
+      await tester.pump();
+      expect(log.autoplay, [true, false]);
+      expect(log.initialMuted, [false, true]);
+      await tester.pump(const Duration(seconds: 10));
+      log.emit!(StreamState.fallbackError);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 3));
+      roomCatalog.pending.removeAt(0).complete(
+          [live.copyWith(isCurrentlyLive: false, activeStreamId: '')]);
+      await tester.pump();
+      await tester.pump();
+      expect(log.created, 2);
+      expect(find.byKey(const Key('live-room-ended')), findsOneWidget);
+      await close(tester);
+    });
+
+    testWidgets('viewer recovery exhausts and late truth cannot restart player',
+        (tester) async {
+      final p = await open(tester);
+      log.emit!(StreamState.fallbackError);
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 60));
+      await tester.pump();
+      expect(find.byKey(const Key('live-room-recovery-exhausted')),
+          findsOneWidget);
+      final read = p.loadVerifiedStreamersFromBackend();
+      await tester.pump();
+      var completed = false;
+      read.then((_) => completed = true);
+      for (var i = 0; i < 5 && !completed; i++) {
+        final requests = List.of(roomCatalog.pending);
+        roomCatalog.pending.clear();
+        for (final request in requests) {
+          request.complete([live]);
+        }
+        await tester.pump();
+      }
+      expect(completed, isTrue);
+      expect(log.created, 1);
+      expect(log.disposed, 1);
+      await close(tester);
+    });
+
+    testWidgets('explicit viewer controls toggle stays reachable',
+        (tester) async {
+      await open(tester);
+      final button = find.byTooltip('live.toggle_player_controls'.tr());
+      await tester.tap(button);
+      await tester.pump();
+      expect(find.byKey(const Key('room-fullscreen')), findsNothing);
+      expect(button, findsOneWidget);
+      await tester.tap(button);
+      await tester.pump();
+      expect(find.byKey(const Key('room-fullscreen')), findsOneWidget);
+      await close(tester);
+    });
+
     testWidgets('Retry loads a fresh player', (tester) async {
       log.report = StreamState.fallbackError;
       await open(tester);
@@ -450,6 +530,9 @@ void main() {
       expect(find.text('live.retry_feed'.tr()), findsWidgets);
       log.report = StreamState.live;
       await tester.tap(find.text('live.retry_feed'.tr()).hitTestable().first);
+      await tester.pump(const Duration(seconds: 3));
+      expect(log.created, 1, reason: 'fresh session truth must precede reload');
+      roomCatalog.pending.removeAt(0).complete([live]);
       await tester.pump();
       await tester.pump();
       expect(log.created, 2);

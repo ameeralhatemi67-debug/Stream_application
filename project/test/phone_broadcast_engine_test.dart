@@ -200,7 +200,13 @@ void main() {
     await engine.startPublishing('rtmp://example.com/live2/key');
 
     expect(captured?.method, 'startStream');
-    expect(captured?.arguments, {'url': 'rtmp://example.com/live2/key'});
+    expect(captured?.arguments, {
+      'url': 'rtmp://example.com/live2/key',
+      'generation': 1,
+      'muted': false,
+      'audioOnly': false,
+      'front': false
+    });
     expect(engine.state, RtmpPublishState.connecting);
   });
 

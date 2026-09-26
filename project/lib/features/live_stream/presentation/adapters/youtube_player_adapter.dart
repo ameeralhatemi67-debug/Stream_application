@@ -226,6 +226,8 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
   }
 
   void _handleBridgeMessage(String jsonStr) {
+    // Dedicated owner-run diagnostic build; unreachable in release builds.
+    if (kDebugMode && const bool.fromEnvironment('WAVE4V2_SUPPRESS_PLAYER_READY')) return;
     try {
       final Map<String, dynamic> data = jsonDecode(jsonStr);
       final type = data['type'] as String?;

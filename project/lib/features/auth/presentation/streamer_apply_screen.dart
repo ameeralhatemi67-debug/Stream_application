@@ -1,3 +1,4 @@
+import '../../../core/services/youtube_channel_reference.dart';
 import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -86,7 +87,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       _bannerPath = existing.bannerUrl;
       _affiliationController.text = existing.institutionEn ?? '';
       _youtubeController.text = existing.youtubeChannelUrl;
-      _orgNameController.text = existing.isOrganization ? existing.applicantNameEn : '';
+      _orgNameController.text =
+          existing.isOrganization ? existing.applicantNameEn : '';
       _selectedCategories = [existing.categoryId];
       _isOrganization = existing.isOrganization;
       _selectedTags.clear();
@@ -102,10 +104,12 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     final defaultName = provider.googleUserName ?? provider.userProfile.nameEn;
     if (defaultName.isNotEmpty) {
       _nameController.text = defaultName;
-      final cleanHandle = defaultName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_');
+      final cleanHandle =
+          defaultName.toLowerCase().replaceAll(RegExp(r'[^a-z0-9_]'), '_');
       _handleController.text = '@$cleanHandle';
     }
-    if (provider.googleUserAvatar != null && provider.googleUserAvatar!.isNotEmpty) {
+    if (provider.googleUserAvatar != null &&
+        provider.googleUserAvatar!.isNotEmpty) {
       _avatarPath = provider.googleUserAvatar;
     }
   }
@@ -168,12 +172,14 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         return false;
       }
       if (_selectedCategories.isEmpty) {
-        _showValidationToast('wizard_steps.step3_categories_title'.tr(args: ['0']));
+        _showValidationToast(
+            'wizard_steps.step3_categories_title'.tr(args: ['0']));
         return false;
       }
     } else if (_isOrganization && _currentStep == 3) {
       // Step 3.5 Org Speakers (Optional to have multiple, but must not be broken)
-    } else if ((!_isOrganization && _currentStep == 3) || (_isOrganization && _currentStep == 4)) {
+    } else if ((!_isOrganization && _currentStep == 3) ||
+        (_isOrganization && _currentStep == 4)) {
       // Location & Phone Validation
       final phone = _phoneController.text.replaceAll(RegExp(r'\s+'), '');
       if (phone.isNotEmpty) {
@@ -261,12 +267,18 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   }
 
   Future<void> _submitApplication() async {
+    final channel = YouTubeChannelReference.parse(_youtubeController.text);
+    if (channel == null || channel.parameter == 'custom') {
+      _showValidationToast('live.channel_invalid'.tr());
+      return;
+    }
     if (!context.read<AppProvider>().isOnline) {
       _showValidationToast('offline_experience.form_preserved'.tr());
       return;
     }
     if (!_agreedToTerms) {
-      _showValidationToast('You must agree to the Terms & Conditions before submitting.');
+      _showValidationToast(
+          'You must agree to the Terms & Conditions before submitting.');
       return;
     }
 
@@ -277,10 +289,12 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       final email = provider.currentUserEmail ?? 'applicant@streamer.app';
 
       // 1. Upload custom avatar / banner to Supabase Storage if available
-      String finalAvatarUrl = _avatarPath ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
+      String finalAvatarUrl =
+          _avatarPath ?? 'assets/images/Amir_Alhatemi/amir_person_pic.jpg';
       if (_avatarBytes != null) {
         final uploaded = await provider.uploadStreamerMediaAsset(
-          fileName: 'avatar_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.jpg',
+          fileName:
+              'avatar_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.jpg',
           fileBytes: _avatarBytes!,
         );
         if (uploaded != null) {
@@ -288,10 +302,12 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         }
       }
 
-      String finalBannerUrl = _bannerPath ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
+      String finalBannerUrl =
+          _bannerPath ?? 'assets/images/Amir_Alhatemi/amir_card_pic.jpg';
       if (_bannerBytes != null) {
         final uploaded = await provider.uploadStreamerMediaAsset(
-          fileName: 'banner_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.jpg',
+          fileName:
+              'banner_${email.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '_')}.jpg',
           fileBytes: _bannerBytes!,
         );
         if (uploaded != null) {
@@ -300,9 +316,10 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       }
 
       // 2. Execute Automated Bidirectional Translation & Transliteration
-      final effectiveName = _isOrganization && _orgNameController.text.trim().isNotEmpty
-          ? _orgNameController.text.trim()
-          : _nameController.text.trim();
+      final effectiveName =
+          _isOrganization && _orgNameController.text.trim().isNotEmpty
+              ? _orgNameController.text.trim()
+              : _nameController.text.trim();
 
       final effectiveAffiliation = _affiliationController.text.trim().isNotEmpty
           ? _affiliationController.text.trim()
@@ -343,12 +360,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         latitude: _selectedCoordinates.latitude,
         longitude: _selectedCoordinates.longitude,
         seatingCapacity: _isOrganization ? 300 : 120,
-        youtubeChannelUrl: ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text).isNotEmpty
-            ? 'https://www.youtube.com/@${ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text)}'
-            : 'https://www.youtube.com/@broadcaster',
-        youtubeHandle: ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text).isNotEmpty
-            ? '@${ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text)}'
-            : '@broadcaster',
+        youtubeChannelUrl: channel.url,
+        youtubeHandle: channel.stored,
         bioEn: bilingual.bioEn,
         bioAr: bilingual.bioAr,
         avatarUrl: finalAvatarUrl,
@@ -406,7 +419,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         selectedCategories: _selectedCategories,
         isOrganization: _isOrganization,
         selectedTags: _selectedTags,
-        onCategoriesChanged: (cats) => setState(() => _selectedCategories = cats),
+        onCategoriesChanged: (cats) =>
+            setState(() => _selectedCategories = cats),
         onTypeChanged: (isOrg) {
           setState(() {
             _isOrganization = isOrg;
@@ -446,8 +460,10 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         selectedCoordinates: _selectedCoordinates,
         orgBranches: _orgBranches,
         onCityChanged: (city) => setState(() => _selectedCity = city),
-        onContactPrefChanged: (pref) => setState(() => _preferredContact = pref),
-        onCoordinatesSelected: (coord) => setState(() => _selectedCoordinates = coord),
+        onContactPrefChanged: (pref) =>
+            setState(() => _preferredContact = pref),
+        onCoordinatesSelected: (coord) =>
+            setState(() => _selectedCoordinates = coord),
         onAddBranch: (br) => setState(() => _orgBranches.add(br)),
         onRemoveBranch: (idx) => setState(() => _orgBranches.removeAt(idx)),
       ),
@@ -496,14 +512,17 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         leading: IconButton(
           icon: Transform.scale(
             scaleX: context.locale.languageCode == 'ar' ? -1.0 : 1.0,
-            child: const Icon(Icons.arrow_back_rounded, color: AppTheme.textPrimary),
+            child: const Icon(Icons.arrow_back_rounded,
+                color: AppTheme.textPrimary),
           ),
           onPressed: _previousStep,
         ),
         title: Text(
           _isOrganization
-              ? 'wizard_steps.org_title'.tr(args: ['${_currentStep + 1}', '$_totalSteps'])
-              : 'wizard_steps.streamer_title'.tr(args: ['${_currentStep + 1}', '$_totalSteps']),
+              ? 'wizard_steps.org_title'
+                  .tr(args: ['${_currentStep + 1}', '$_totalSteps'])
+              : 'wizard_steps.streamer_title'
+                  .tr(args: ['${_currentStep + 1}', '$_totalSteps']),
           style: const TextStyle(
             color: AppTheme.textPrimary,
             fontSize: 16,
@@ -528,7 +547,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
               children: [
                 // Top Progress Bar
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
                   child: Column(
                     children: [
                       ClipRRect(
@@ -536,7 +556,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                         child: LinearProgressIndicator(
                           value: stepProgress,
                           backgroundColor: AppTheme.surface,
-                          valueColor: const AlwaysStoppedAnimation<Color>(AppTheme.danger),
+                          valueColor: const AlwaysStoppedAnimation<Color>(
+                              AppTheme.danger),
                           minHeight: 6,
                         ),
                       ),
@@ -546,7 +567,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                         spacing: AppTheme.spaceSm,
                         children: [
                           Text(
-                            'wizard_steps.step_progress'.tr(args: ['${_currentStep + 1}', '$_totalSteps']),
+                            'wizard_steps.step_progress'.tr(
+                                args: ['${_currentStep + 1}', '$_totalSteps']),
                             style: const TextStyle(
                               color: AppTheme.textMuted,
                               fontSize: 11,
@@ -554,7 +576,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                             ),
                           ),
                           Text(
-                            'wizard_steps.step_completed'.tr(args: ['${(stepProgress * 100).toInt()}']),
+                            'wizard_steps.step_completed'
+                                .tr(args: ['${(stepProgress * 100).toInt()}']),
                             style: const TextStyle(
                               color: AppTheme.danger,
                               fontSize: 11,
@@ -571,11 +594,13 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                 // Wizard PageView
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spaceLg),
                     child: PageView(
                       controller: _pageController,
                       physics: const NeverScrollableScrollPhysics(),
-                      onPageChanged: (idx) => setState(() => _currentStep = idx),
+                      onPageChanged: (idx) =>
+                          setState(() => _currentStep = idx),
                       children: _buildStepPages(),
                     ),
                   ),
@@ -595,9 +620,11 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: AppTheme.textPrimary,
                             side: const BorderSide(color: AppTheme.border),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 13),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 13),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusMd),
                             ),
                           ),
                           onPressed: _previousStep,
@@ -612,37 +639,51 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                             foregroundColor: AppTheme.onMedia,
                             padding: const EdgeInsets.symmetric(vertical: 13),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusMd),
                             ),
                             elevation: 2,
                           ),
                           onPressed: _isSubmitting
                               ? null
-                              : (_currentStep == _totalSteps - 1 ? _submitApplication : _nextStep),
+                              : (_currentStep == _totalSteps - 1
+                                  ? _submitApplication
+                                  : _nextStep),
                           child: _isSubmitting
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(AppTheme.onMedia),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppTheme.onMedia),
                                   ),
                                 )
                               : Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    Flexible(child: Text(
+                                    Flexible(
+                                        child: Text(
                                       _currentStep == _totalSteps - 1
                                           ? 'wizard_steps.btn_submit'.tr()
                                           : 'wizard_steps.btn_next'.tr(),
-                                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
+                                      style: const TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold),
                                     )),
                                     const SizedBox(width: 6),
                                     _currentStep == _totalSteps - 1
-                                        ? const Icon(Icons.send_rounded, size: 16)
+                                        ? const Icon(Icons.send_rounded,
+                                            size: 16)
                                         : Transform.scale(
-                                            scaleX: context.locale.languageCode == 'ar' ? -1.0 : 1.0,
-                                            child: const Icon(Icons.arrow_forward_rounded, size: 16),
+                                            scaleX:
+                                                context.locale.languageCode ==
+                                                        'ar'
+                                                    ? -1.0
+                                                    : 1.0,
+                                            child: const Icon(
+                                                Icons.arrow_forward_rounded,
+                                                size: 16),
                                           ),
                                   ],
                                 ),

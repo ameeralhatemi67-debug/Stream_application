@@ -724,7 +724,9 @@ class _LiveBroadcasterStudioSheetState
           fontWeight: selected ? FontWeight.bold : FontWeight.normal,
         ),
         side: BorderSide(color: selected ? _modeColor : AppTheme.border),
-        onSelected: (_) => setState(() => _externalSender = mode),
+        onSelected: mode == 'external_phone'
+            ? null
+            : (_) => setState(() => _externalSender = mode),
       );
     }
 
@@ -738,7 +740,7 @@ class _LiveBroadcasterStudioSheetState
             chip('obs_laptop', Icons.laptop_mac_rounded,
                 'live_studio.sender_obs_laptop'),
             chip('external_phone', Icons.smartphone_rounded,
-                'live_studio.sender_external_phone'),
+                'live.external_phone_unavailable'),
           ],
         ),
         const SizedBox(height: AppTheme.spaceXs),

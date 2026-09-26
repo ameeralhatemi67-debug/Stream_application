@@ -179,6 +179,17 @@
     "channel_unavailable": "Channel unavailable."
   },
   "live": {
+    "recovery_exhausted": "Connection could not be restored. Retry or leave.",
+    "recovery_retry": "Retry",
+    "recovery_leave": "Leave",
+    "recovery_restored": "Connection restored.",
+    "channel_invalid": "Enter a YouTube @handle, channel ID URL or /user/ URL. The channel URL field must contain a YouTube channel URL.",
+    "channel_custom": "For an old /c/ link, open the channel and copy its current @handle or /channel/ ID URL.",
+    "channel_mismatch": "The URL and handle name different channels. Correct one of the two fields before saving.",
+    "channel_lookup_required": "Could not confirm that the URL and handle match. Check your connection, or paste the same canonical channel reference in both fields.",
+    "org_broadcast_deferred": "Organization broadcasting: coming later",
+    "external_phone_unavailable": "External phone app: unavailable",
+    "toggle_player_controls": "Show or hide player controls",
     "connection_error": "Connection failed. End this attempt and retry from the studio.",
     "landscape_chat_read_only": "Rotate to portrait to type. Landscape chat is read-only.",
     "toggle_overlay_controls": "Show or hide broadcast controls",

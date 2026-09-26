@@ -95,31 +95,19 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 50));
     });
 
-    test(
-        'TC-ORG-GOLIVE-01: Broadcast identity and branch selection state updates correctly',
+    test('TC-ORG-GOLIVE-01: Deferred organization identity cannot be selected',
         () {
       expect(provider.selectedBroadcastOrgId, isNull);
       expect(provider.selectedVenueBranchId, isNull);
       expect(provider.selectedCoSpeakerIds, isEmpty);
 
-      // Select Dalilk 4 IELTS organization
       provider.setSelectedBroadcastOrgId('org_dalilk_04');
-      expect(provider.selectedBroadcastOrgId, equals('org_dalilk_04'));
-      expect(provider.selectedVenueBranchId, equals('dalilk_hq_khobar'));
-      expect(provider.selectedCoSpeakerIds, contains('spk_abdulrahman'));
-
-      // Switch to Dhahran Campus branch
-      provider.setSelectedVenueBranchId('dalilk_branch_dhahran');
-      expect(provider.selectedVenueBranchId, equals('dalilk_branch_dhahran'));
-
-      // Toggle additional co-speakers
-      provider.toggleCoSpeaker('spk_sarah');
-      expect(provider.selectedCoSpeakerIds,
-          containsAll(['spk_abdulrahman', 'spk_sarah']));
-
-      // Toggle off
-      provider.toggleCoSpeaker('spk_abdulrahman');
-      expect(provider.selectedCoSpeakerIds, equals(['spk_sarah']));
+      expect(provider.selectedBroadcastOrgId, isNull);
+      expect(provider.selectedVenueBranchId, isNull);
+      expect(provider.selectedCoSpeakerIds, isEmpty);
+      // Unrelated organization data remains available.
+      expect(provider.getOrganizationVenues('org_dalilk_04'), hasLength(3));
+      expect(provider.getOrganizationSpeakers('org_dalilk_04'), isNotEmpty);
     });
 
     test(

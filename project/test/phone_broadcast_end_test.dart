@@ -46,6 +46,10 @@ class _Db extends AdminDatabaseService {
   bool failStop = false;
   bool useSession = false;
   bool rejectIngest = false;
+  bool permitted = true;
+  String? deviceId;
+  final statusOverrides = <String, dynamic>{};
+  Completer<Map<String, dynamic>>? statusGate;
   final reports = <bool>[];
 
   @override
@@ -60,12 +64,17 @@ class _Db extends AdminDatabaseService {
   }
 
   @override
-  Future<Map<String, dynamic>> loadMyBroadcastStatus() async => {
-        'live': !rejectIngest,
-        'stream_id': 'abcdefghijk',
-        'session_id': 'phone-session',
-        'last_ended': {'reason': 'admin_end'},
-      };
+  Future<Map<String, dynamic>> loadMyBroadcastStatus() async =>
+      statusGate != null
+          ? await statusGate!.future
+          : {
+              'live': !rejectIngest,
+              'stream_id': 'abcdefghijk',
+              'session_id': 'phone-session',
+              'device_id': deviceId,
+              'last_ended': {'reason': 'admin_end'},
+              ...statusOverrides,
+            };
 
   @override
   Future<void> endBroadcastSession(
@@ -89,7 +98,7 @@ class _Db extends AdminDatabaseService {
   Future<bool> heartbeatDevice(String deviceId) async => true;
   @override
   Future<bool> canBroadcast({String? orgId, required String type}) async =>
-      true;
+      permitted;
   @override
   Future<void> setLiveState(
       {required bool live,
@@ -110,6 +119,7 @@ class _Db extends AdminDatabaseService {
       required String deviceId,
       required String senderMode,
       String? orgId}) async {
+    this.deviceId = deviceId;
     starts++;
     return useSession ? 'phone-session' : null;
   }
@@ -219,6 +229,56 @@ void main() {
     p.dispose();
     await db.devices.close();
     await tester.pump(const Duration(seconds: 1));
+  }
+
+  for (final fault in [
+    'none',
+    'end',
+    'replacement',
+    'device',
+    'revoke',
+    'unreachable',
+    'lateEnd'
+  ]) {
+    test('recovery authorization checks exact live authority: $fault',
+        () async {
+      final db = _Db()..useSession = true;
+      final p = await broadcaster(db);
+      await p.setBroadcasterLive(true);
+      expect(p.isBroadcastingLive, isTrue);
+      if (fault == 'end') db.statusOverrides['live'] = false;
+      if (fault == 'replacement') {
+        db.statusOverrides['session_id'] = 'replacement';
+      }
+      if (fault == 'device') db.statusOverrides['device_id'] = 'other';
+      if (fault == 'revoke') db.permitted = false;
+      if (fault == 'unreachable' || fault == 'lateEnd') {
+        db.statusGate = Completer();
+      }
+      final pending = p.authorizeBroadcastRecovery();
+      if (fault == 'unreachable') {
+        db.statusGate!.completeError(StateError('offline'));
+      }
+      if (fault == 'lateEnd') {
+        await p.setBroadcasterLive(false);
+        db.statusGate!.complete({
+          'live': true,
+          'session_id': 'phone-session',
+          'stream_id': 'abcdefghijk',
+          'device_id': db.deviceId
+        });
+      }
+      expect(
+          await pending,
+          fault == 'none'
+              ? true
+              : fault == 'unreachable'
+                  ? null
+                  : false);
+      expect(db.reports, fault == 'none' ? [false] : isEmpty);
+      p.dispose();
+      await db.devices.close();
+    });
   }
 
   final endButton = find.byKey(const Key('phone-end-broadcast'));

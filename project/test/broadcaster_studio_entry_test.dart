@@ -547,22 +547,17 @@ void main() {
       await close(tester, provider, db);
     });
 
-    testWidgets('choosing Another phone app records external_phone',
+    testWidgets('external phone is unavailable and cannot change sender mode',
         (tester) async {
       final db = _StudioDb();
       final provider = await tester.runAsync(() => _broadcaster(db));
       await openSheet(tester, provider!);
       final chip = find.byKey(const Key('studio-sender-external_phone'));
       await tester.ensureVisible(chip);
-      await tester.tap(chip);
-      await tester.pump();
-      expect(find.text('live_studio.sender_external_phone_help'.tr()),
-          findsOneWidget);
-      expect(
-          find.text('live_studio.sender_external_phone'.tr()), findsOneWidget);
-      expect('live_studio.sender_external_phone'.tr(), isNot(contains('OBS')));
-      await goLive(tester, 'abcdefghijk');
-      expect(db.senderModes, ['external_phone']);
+      expect(tester.widget<ChoiceChip>(chip).onSelected, isNull);
+      expect(find.text('live.external_phone_unavailable'.tr()), findsOneWidget);
+      provider.setBroadcastSenderMode('external_phone');
+      expect(provider.broadcastSenderMode, isNot('external_phone'));
       await close(tester, provider, db);
     });
 
@@ -708,7 +703,9 @@ void main() {
     testWidgets('a channel URL on record is compared without a lookup',
         (tester) async {
       const id = 'UCabcdefghijklmnopqrstuv';
-      final db = _StudioDb(app: _approvedApp('channel/$id'));
+      final db = _StudioDb(
+          app: _approvedApp(id)
+              .copyWith(youtubeChannelUrl: 'https://youtube.com/channel/$id'));
       final yt = _FakeYouTube(
           status: const YouTubeWatchStatus(YouTubeWatchState.live,
               channelId: 'UCzzzzzzzzzzzzzzzzzzzzzz'));
@@ -736,7 +733,7 @@ void main() {
       await close(tester, provider, db);
     });
 
-    testWidgets('with Another phone app chosen, the copy never refers to OBS',
+    testWidgets('unavailable sender cannot silently replace OBS selection',
         (tester) async {
       final db = _StudioDb();
       final provider = await tester.runAsync(() => _broadcaster(db));
@@ -745,18 +742,8 @@ void main() {
       await tester.ensureVisible(chip);
       await tester.tap(chip);
       await tester.pump();
-      await tapCta(tester, 'live_studio.btn_go_live');
-      expectVisible(tester,
-          find.text('live_studio.error_watch_id_required_phone_app'.tr()));
-      expect('live_studio.error_watch_id_required_phone_app'.tr(),
-          isNot(contains('OBS')));
       await goLive(tester, 'abcdefghijk');
-      await tester.pumpAndSettle();
-      expect(
-          find.textContaining('live_studio.phone_app_listed_live_body'
-              .tr(args: ['abcdefghijk'])),
-          findsOneWidget);
-      expect(find.textContaining('OBS'), findsNothing);
+      expect(db.senderModes, ['obs_laptop']);
       await close(tester, provider, db);
     });
 
@@ -816,7 +803,7 @@ void main() {
       await tester.ensureVisible(chip);
       await tester.tap(chip);
       await tester.pump();
-      expect(find.text('live_studio.sender_external_phone_help'.tr()),
+      expect(find.text('live.external_phone_unavailable'.tr()),
           findsOneWidget);
       expect(find.byKey(const Key('studio-encoder-key-note')), findsOneWidget);
       expect(tester.takeException(), isNull);

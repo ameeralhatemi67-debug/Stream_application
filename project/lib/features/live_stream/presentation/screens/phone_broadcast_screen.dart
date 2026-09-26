@@ -82,6 +82,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (!_appProviderCaptured) {
       _appProvider = Provider.of<AppProvider>(context, listen: false);
       _appProviderCaptured = true;
+      _engine.authorizeRecovery = _appProvider.authorizeBroadcastRecovery;
+      _engine.isOnline = () => _appProvider.isOnline;
       _seenRemoteEnd = _appProvider.remoteBroadcastEndGeneration;
       _appProvider.addListener(_onBroadcastSessionChanged);
     }
@@ -299,7 +301,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     } else if (_wasListed &&
         !_starting &&
         !_syncingLive &&
-        _engine.state == RtmpPublishState.live &&
         _appProvider.broadcastSessionError == null) {
       // Something else in this app ended the listing (for example the
       // studio's End) while the encoder is still sending: stop sending too,
@@ -445,8 +446,15 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (owned) await _appProvider.setBroadcasterLive(false);
   }
 
+  int _seenRecovery = 0;
+
   void _onEngineChanged() {
     if (!mounted) return;
+    if (_engine.recoveryCount > _seenRecovery) {
+      _seenRecovery = _engine.recoveryCount;
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('live.recovery_restored'.tr())));
+    }
     setState(() {});
     if (_weStartedBroadcast && !_starting && !_syncingLive) {
       _syncEncoderLiveState();
@@ -821,6 +829,55 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
+  bool _checkingRetry = false;
+  Future<void> _retryBroadcast() async {
+    if (_checkingRetry || _closing || _isSending) return;
+    setState(() => _checkingRetry = true);
+    final user = _appProvider.currentUserSessionId;
+    try {
+      final check =
+          await _appProvider.verifyWatchLink(_appProvider.customYouTubeVideoId);
+      if (!mounted || _closing || user != _appProvider.currentUserSessionId) {
+        return;
+      }
+      if (!check.allowsStart) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content:
+                Text((check.errorKey ?? 'live.channel_lookup_required').tr())));
+        return;
+      }
+      await _startBroadcast();
+    } finally {
+      if (mounted) setState(() => _checkingRetry = false);
+    }
+  }
+
+  Widget _recoveryStatus() {
+    if (_engine.lastError != null && !_isSending) {
+      return Material(
+        color: AppTheme.surface,
+        child: Padding(
+          padding: const EdgeInsets.all(AppTheme.spaceSm),
+          child: Wrap(crossAxisAlignment: WrapCrossAlignment.center, children: [
+            Text('live.recovery_exhausted'.tr()),
+            TextButton(
+                onPressed: _starting || _checkingRetry ? null : _retryBroadcast,
+                child: Text('live.recovery_retry'.tr())),
+            TextButton(
+                onPressed: _handleEndOrLeave,
+                child: Text('live.recovery_leave'.tr())),
+          ]),
+        ),
+      );
+    }
+    if (_engine.state == RtmpPublishState.reconnecting) {
+      return _ReconnectingBanner(
+          attempt: _engine.reconnectAttempt,
+          maxAttempts: _engine.maxReconnectAttempts);
+    }
+    return const SizedBox.shrink();
+  }
+
   Widget _buildVideoViewport({
     required bool isSideBySide,
     required StreamerModel streamer,
@@ -1053,11 +1110,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 top: 0,
                 start: 0,
                 end: 0,
-                child: _StreamErrorBanner(message: _engine.lastError!),
+                child:
+                    _StreamErrorBanner(message: 'live.connection_error'.tr()),
               ),
+
+            PositionedDirectional(
+                top: 56, start: 8, end: 8, child: _recoveryStatus()),
 
             // 6. Floating Reaction Hearts Overlay
             FloatingReactionsOverlay(controller: _reactionsController),
+            PositionedDirectional(
+                top: 64, start: 8, end: 8, child: _recoveryStatus()),
 
             // 7. Knocking Requests (Private Stream)
             Consumer<AppProvider>(
@@ -1837,6 +1900,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           else
             PhoneCameraPreview(key: _previewKey),
           FloatingReactionsOverlay(controller: _reactionsController),
+          PositionedDirectional(
+              top: 64, start: 8, end: 8, child: _recoveryStatus()),
           if (visible)
             SafeArea(
                 child: Focus(

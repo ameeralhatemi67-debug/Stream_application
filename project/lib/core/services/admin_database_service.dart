@@ -1,3 +1,4 @@
+import 'youtube_channel_reference.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -231,6 +232,15 @@ class AdminDatabaseService {
 
   Future<void> submitApplication(
       BroadcasterApplicationModel application) async {
+    final error = YouTubeChannelReference.pairError(
+        application.youtubeChannelUrl, application.youtubeHandle);
+    if (error != null) throw FormatException(error);
+    final channel = YouTubeChannelReference.parse(application.youtubeChannelUrl,
+        requireUrl: true)!;
+    if (!channel
+        .sameAs(YouTubeChannelReference.parse(application.youtubeHandle)!)) {
+      throw const FormatException('live.channel_lookup_required');
+    }
     if (_useSupabase) {
       try {
         final applicantId = _client.auth.currentUser?.id;

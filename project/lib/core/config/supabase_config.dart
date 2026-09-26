@@ -16,5 +16,8 @@ class SupabaseConfig {
   /// android/app/src/main/AndroidManifest.xml and be added to this Supabase
   /// project's Authentication > URL Configuration > Redirect URLs allow-list.
   /// Not used on web, where signInWithOAuth's redirectTo is left null.
-  static const String oauthRedirectUrl = 'sa.hadayah.streamerapp://login-callback';
+  static const String oauthRedirectUrl = String.fromEnvironment(
+    'OAUTH_REDIRECT_URL',
+    defaultValue: 'sa.hadayah.streamerapp://login-callback',
+  );
 }
