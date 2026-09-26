@@ -167,7 +167,8 @@ void main() {
   /// encoder stays "connecting": no native connection event arrives).
   Future<void> open(WidgetTester tester, AppProvider p,
       {Locale locale = const Locale('en'),
-      Size size = const Size(412, 915)}) async {
+      Size size = const Size(412, 915),
+      double textScale = 1}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -181,6 +182,11 @@ void main() {
         builder: (context) => ChangeNotifierProvider.value(
           value: p,
           child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
@@ -272,8 +278,7 @@ void main() {
     await close(tester, p, db);
   });
 
-  testWidgets(
-      'landscape: End stays visible and tappable after the controls fade',
+  testWidgets('landscape: focused End stays visible when the media is tapped',
       (tester) async {
     final db = _Db();
     final p = await tester.runAsync(() => broadcaster(db));
@@ -323,6 +328,28 @@ void main() {
     expect('live.ctrl_video_hidden_sub'.tr(), contains('camera stays on'));
     await close(tester, p, db);
   });
+
+  for (final locale in [const Locale('en'), const Locale('ar')]) {
+    testWidgets('short landscape settings and chat at 2x: $locale',
+        (tester) async {
+      final db = _Db();
+      final p = await tester.runAsync(() => broadcaster(db));
+      await open(tester, p!,
+          locale: locale, size: const Size(740, 360), textScale: 2);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 190);
+      await tester.pump();
+      await tester.tap(find.byTooltip('live.tooltip_toggle_chat'.tr()));
+      await tester.pump();
+      expect(find.byType(TextField), findsNothing);
+      expect(find.text('live.landscape_chat_read_only'.tr()), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
+      await tester.pumpAndSettle();
+      expect(find.byType(SingleChildScrollView), findsWidgets);
+      expect(tester.takeException(), isNull);
+      await close(tester, p, db);
+    });
+  }
 
   Future<void> goLive(WidgetTester tester) async {
     // The native encoder reports a connection.

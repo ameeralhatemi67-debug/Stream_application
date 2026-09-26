@@ -179,6 +179,9 @@
     "channel_unavailable": "Channel unavailable."
   },
   "live": {
+    "connection_error": "Connection failed. End this attempt and retry from the studio.",
+    "landscape_chat_read_only": "Rotate to portrait to type. Landscape chat is read-only.",
+    "toggle_overlay_controls": "Show or hide broadcast controls",
     "title": "Live Broadcast Room",
     "live_indicator": "LIVE",
     "watching_count": "watching now",

@@ -46,6 +46,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   final FloatingReactionsOverlayController _reactionsController =
       FloatingReactionsOverlayController();
   final TextEditingController _chatTextController = TextEditingController();
+  final GlobalKey _previewKey = GlobalKey(debugLabel: 'phone-preview');
+  final FocusNode _controlsFocus = FocusNode(debugLabel: 'phone-controls');
   final ScrollController _chatScrollController = ScrollController();
 
   late final LiveChatController _chatController;
@@ -57,6 +59,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   bool _isFullscreen = false;
   bool _isSideChatOpen = false;
   bool _controlsVisible = true;
+  bool _wasLandscape = false;
   bool _isDescriptionExpanded = false;
 
   late AppProvider _appProvider;
@@ -69,6 +72,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    final landscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+    if (landscape && !_wasLandscape) {
+      FocusManager.instance.primaryFocus?.unfocus();
+      SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    }
+    _wasLandscape = landscape;
     if (!_appProviderCaptured) {
       _appProvider = Provider.of<AppProvider>(context, listen: false);
       _appProviderCaptured = true;
@@ -556,6 +566,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
     _tabController.dispose();
     _chatTextController.dispose();
+    _controlsFocus.dispose();
     _chatScrollController.dispose();
     _chatController.removeListener(_handleChatConnectionChange);
     _chatController.dispose();
@@ -627,6 +638,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (_isFullscreen || isLandscape) {
       return Scaffold(
         backgroundColor: AppTheme.media,
+        resizeToAvoidBottomInset: false,
         body: _buildFullscreenLandscapeLayout(title, streamer, langCode),
       );
     }
@@ -912,9 +924,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 ),
               )
             else
-              const ClipRect(
+              ClipRect(
                 child: SizedBox.expand(
-                  child: PhoneCameraPreview(),
+                  child: PhoneCameraPreview(key: _previewKey),
                 ),
               ),
 
@@ -1086,6 +1098,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
+      useSafeArea: true,
       builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -1105,240 +1118,259 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               padding: const EdgeInsets.symmetric(
                   horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceMd),
               child: SafeArea(
-                top: false,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Center(
-                      child: Container(
-                        width: 36,
-                        height: 4,
-                        decoration: BoxDecoration(
-                          color: AppTheme.borderStrong,
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: AppTheme.spaceMd),
-                    Row(
+                  top: false,
+                  child: SingleChildScrollView(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(Icons.tune_rounded,
-                            color: AppTheme.danger, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'design_ui.streamer_quick_controls'.tr(),
-                            style: const TextStyle(
-                              color: AppTheme.onMedia,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
+                        Center(
+                          child: Container(
+                            width: 36,
+                            height: 4,
+                            decoration: BoxDecoration(
+                              color: AppTheme.borderStrong,
+                              borderRadius: BorderRadius.circular(2),
                             ),
                           ),
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: AppTheme.spaceMd),
+                        const SizedBox(height: AppTheme.spaceMd),
+                        Row(
+                          children: [
+                            const Icon(Icons.tune_rounded,
+                                color: AppTheme.danger, size: 20),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: Text(
+                                'design_ui.streamer_quick_controls'.tr(),
+                                style: const TextStyle(
+                                  color: AppTheme.textPrimary,
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: AppTheme.spaceMd),
 
-                    // 1.  Microphone Mute Toggle
-                    ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                      tileColor: isMuted
-                          ? AppTheme.danger.withValues(alpha: 0.15)
-                          : AppTheme.surfaceAlt,
-                      leading: Icon(
-                        isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                        color: isMuted ? AppTheme.danger : AppTheme.success,
-                      ),
-                      title: Text(
-                        (isMuted ? 'live.ctrl_unmute' : 'live.ctrl_mute').tr(),
-                        style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.5),
-                      ),
-                      subtitle: Text(
-                        (isMuted
-                                ? 'live.ctrl_mic_muted_sub'
-                                : 'live.ctrl_mic_active_sub')
-                            .tr(),
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 11),
-                      ),
-                      trailing: Switch(
-                        value: !isMuted,
-                        activeThumbColor: AppTheme.success,
-                        onChanged: (val) async {
-                          await _engine.setMuted(!val);
-                          setModalState(() {});
-                          setState(() {});
-                        },
-                      ),
-                      onTap: () async {
-                        await _engine.setMuted(!isMuted);
-                        setModalState(() {});
-                        setState(() {});
-                      },
-                    ),
-                    const SizedBox(height: 8),
-
-                    // 2.  Flip Camera Toggle
-                    ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                      tileColor: AppTheme.surfaceAlt,
-                      leading: const Icon(Icons.flip_camera_ios_rounded,
-                          color: AppTheme.primary),
-                      title: Text(
-                        (isFrontCamera
-                                ? 'live.ctrl_switch_to_back'
-                                : 'live.ctrl_switch_to_front')
-                            .tr(),
-                        style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.5),
-                      ),
-                      subtitle: Text(
-                        (isFrontCamera
-                                ? 'live.ctrl_front_active_sub'
-                                : 'live.ctrl_back_active_sub')
-                            .tr(),
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 11),
-                      ),
-                      trailing: const Icon(Icons.sync_rounded,
-                          color: AppTheme.textSecondary, size: 18),
-                      onTap: isCameraOff
-                          ? null
-                          : () async {
-                              await _engine.switchCamera();
+                        // 1.  Microphone Mute Toggle
+                        ListenableBuilder(
+                          listenable: _engine,
+                          builder: (context, _) => _engine.state ==
+                                  RtmpPublishState.live
+                              ? _LiveBadge(bitrateBps: _engine.lastBitrateBps)
+                              : Text(_engine.state ==
+                                      RtmpPublishState.reconnecting
+                                  ? 'live.stream_interrupted_reconnecting'.tr()
+                                  : _engine.state == RtmpPublishState.error
+                                      ? 'live.connection_error'.tr()
+                                      : 'live.chat_status_connecting'.tr()),
+                        ),
+                        ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          tileColor: isMuted
+                              ? AppTheme.danger.withValues(alpha: 0.15)
+                              : AppTheme.surfaceAlt,
+                          leading: Icon(
+                            isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
+                            color: isMuted ? AppTheme.danger : AppTheme.success,
+                          ),
+                          title: Text(
+                            (isMuted ? 'live.ctrl_unmute' : 'live.ctrl_mute')
+                                .tr(),
+                            style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5),
+                          ),
+                          subtitle: Text(
+                            (isMuted
+                                    ? 'live.ctrl_mic_muted_sub'
+                                    : 'live.ctrl_mic_active_sub')
+                                .tr(),
+                            style: const TextStyle(
+                                color: AppTheme.textSecondary, fontSize: 11),
+                          ),
+                          trailing: Switch(
+                            value: !isMuted,
+                            activeThumbColor: AppTheme.success,
+                            onChanged: (val) async {
+                              await _engine.setMuted(!val);
                               setModalState(() {});
                               setState(() {});
                             },
-                    ),
-                    const SizedBox(height: 8),
-
-                    // 3.  Close Camera (Video / Audio-Only Toggle)
-                    ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                      tileColor: isCameraOff
-                          ? AppTheme.warning.withValues(alpha: 0.15)
-                          : AppTheme.surfaceAlt,
-                      leading: Icon(
-                        isCameraOff
-                            ? Icons.videocam_off_rounded
-                            : Icons.videocam_rounded,
-                        color:
-                            isCameraOff ? AppTheme.warning : AppTheme.primary,
-                      ),
-                      title: Text(
-                        (isCameraOff
-                                ? 'live.ctrl_show_video'
-                                : 'live.ctrl_hide_video')
-                            .tr(),
-                        style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontWeight: FontWeight.w600,
-                            fontSize: 13.5),
-                      ),
-                      subtitle: Text(
-                        (isCameraOff
-                                ? 'live.ctrl_video_hidden_sub'
-                                : 'live.ctrl_video_shown_sub')
-                            .tr(),
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 11),
-                      ),
-                      trailing: Switch(
-                        value: !isCameraOff,
-                        activeThumbColor: AppTheme.primary,
-                        onChanged: (val) async {
-                          await _engine.toggleCamera(!val);
-                          setModalState(() {});
-                          setState(() {});
-                        },
-                      ),
-                      onTap: () async {
-                        await _engine.toggleCamera(!isCameraOff);
-                        setModalState(() {});
-                        setState(() {});
-                      },
-                    ),
-                    const SizedBox(height: 8),
-
-                    // 4.  Private Attendees Admission (if private)
-                    if (_appProvider.isActiveStreamPrivate) ...[
-                      ListTile(
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          onTap: () async {
+                            await _engine.setMuted(!isMuted);
+                            setModalState(() {});
+                            setState(() {});
+                          },
                         ),
-                        tileColor: AppTheme.surfaceAlt,
-                        leading: const Icon(Icons.people_alt_rounded,
-                            color: AppTheme.warning),
-                        title: Text(
-                          'live.ctrl_manage_attendees'.tr(args: [
-                            '${_appProvider.admittedAttendees.length}'
-                          ]),
-                          style: const TextStyle(
-                              color: AppTheme.onMedia,
-                              fontWeight: FontWeight.w600,
-                              fontSize: 13.5),
-                        ),
-                        subtitle: Text(
-                          'live.ctrl_waiting_queue'.tr(args: [
-                            '${_appProvider.pendingKnockRequests.length}'
-                          ]),
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 11),
-                        ),
-                        trailing: const Icon(Icons.chevron_right_rounded,
-                            color: AppTheme.textSecondary),
-                        onTap: () {
-                          Navigator.of(sheetContext).pop();
-                          _showDirectorPanel(context, _appProvider);
-                        },
-                      ),
-                      const SizedBox(height: 8),
-                    ],
+                        const SizedBox(height: 8),
 
-                    // 5.  Studio & End Stream Shortcut
-                    ListTile(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                      tileColor: AppTheme.danger.withValues(alpha: 0.1),
-                      leading: const Icon(Icons.cell_tower_rounded,
-                          color: AppTheme.danger),
-                      title: Text(
-                        'design_ui.broadcaster_studio_end_stream'.tr(),
-                        style: const TextStyle(
-                            color: AppTheme.danger,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 13.5),
-                      ),
-                      subtitle: Text(
-                        'design_ui.adjust_stream_settings_or_end_broadcast_session'
-                            .tr(),
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 11),
-                      ),
-                      trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                          color: AppTheme.danger, size: 14),
-                      onTap: () {
-                        Navigator.of(sheetContext).pop();
-                        LiveBroadcasterStudioSheet.show(context,
-                            onEndBroadcast: _handleEndOrLeave);
-                      },
+                        // 2.  Flip Camera Toggle
+                        ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          tileColor: AppTheme.surfaceAlt,
+                          leading: const Icon(Icons.flip_camera_ios_rounded,
+                              color: AppTheme.primary),
+                          title: Text(
+                            (isFrontCamera
+                                    ? 'live.ctrl_switch_to_back'
+                                    : 'live.ctrl_switch_to_front')
+                                .tr(),
+                            style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5),
+                          ),
+                          subtitle: Text(
+                            (isFrontCamera
+                                    ? 'live.ctrl_front_active_sub'
+                                    : 'live.ctrl_back_active_sub')
+                                .tr(),
+                            style: const TextStyle(
+                                color: AppTheme.textSecondary, fontSize: 11),
+                          ),
+                          trailing: const Icon(Icons.sync_rounded,
+                              color: AppTheme.textSecondary, size: 18),
+                          onTap: isCameraOff
+                              ? null
+                              : () async {
+                                  await _engine.switchCamera();
+                                  setModalState(() {});
+                                  setState(() {});
+                                },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // 3.  Close Camera (Video / Audio-Only Toggle)
+                        ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          tileColor: isCameraOff
+                              ? AppTheme.warning.withValues(alpha: 0.15)
+                              : AppTheme.surfaceAlt,
+                          leading: Icon(
+                            isCameraOff
+                                ? Icons.videocam_off_rounded
+                                : Icons.videocam_rounded,
+                            color: isCameraOff
+                                ? AppTheme.warning
+                                : AppTheme.primary,
+                          ),
+                          title: Text(
+                            (isCameraOff
+                                    ? 'live.ctrl_show_video'
+                                    : 'live.ctrl_hide_video')
+                                .tr(),
+                            style: const TextStyle(
+                                color: AppTheme.textPrimary,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5),
+                          ),
+                          subtitle: Text(
+                            (isCameraOff
+                                    ? 'live.ctrl_video_hidden_sub'
+                                    : 'live.ctrl_video_shown_sub')
+                                .tr(),
+                            style: const TextStyle(
+                                color: AppTheme.textSecondary, fontSize: 11),
+                          ),
+                          trailing: Switch(
+                            value: !isCameraOff,
+                            activeThumbColor: AppTheme.primary,
+                            onChanged: (val) async {
+                              await _engine.toggleCamera(!val);
+                              setModalState(() {});
+                              setState(() {});
+                            },
+                          ),
+                          onTap: () async {
+                            await _engine.toggleCamera(!isCameraOff);
+                            setModalState(() {});
+                            setState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // 4.  Private Attendees Admission (if private)
+                        if (_appProvider.isActiveStreamPrivate) ...[
+                          ListTile(
+                            shape: RoundedRectangleBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusMd),
+                            ),
+                            tileColor: AppTheme.surfaceAlt,
+                            leading: const Icon(Icons.people_alt_rounded,
+                                color: AppTheme.warning),
+                            title: Text(
+                              'live.ctrl_manage_attendees'.tr(args: [
+                                '${_appProvider.admittedAttendees.length}'
+                              ]),
+                              style: const TextStyle(
+                                  color: AppTheme.textPrimary,
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 13.5),
+                            ),
+                            subtitle: Text(
+                              'live.ctrl_waiting_queue'.tr(args: [
+                                '${_appProvider.pendingKnockRequests.length}'
+                              ]),
+                              style: const TextStyle(
+                                  color: AppTheme.textSecondary, fontSize: 11),
+                            ),
+                            trailing: const Icon(Icons.chevron_right_rounded,
+                                color: AppTheme.textSecondary),
+                            onTap: () {
+                              Navigator.of(sheetContext).pop();
+                              _showDirectorPanel(context, _appProvider);
+                            },
+                          ),
+                          const SizedBox(height: 8),
+                        ],
+
+                        // 5.  Studio & End Stream Shortcut
+                        ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          tileColor: AppTheme.danger.withValues(alpha: 0.1),
+                          leading: const Icon(Icons.cell_tower_rounded,
+                              color: AppTheme.danger),
+                          title: Text(
+                            'design_ui.broadcaster_studio_end_stream'.tr(),
+                            style: const TextStyle(
+                                color: AppTheme.danger,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 13.5),
+                          ),
+                          subtitle: Text(
+                            'design_ui.adjust_stream_settings_or_end_broadcast_session'
+                                .tr(),
+                            style: const TextStyle(
+                                color: AppTheme.textSecondary, fontSize: 11),
+                          ),
+                          trailing: const Icon(Icons.arrow_forward_ios_rounded,
+                              color: AppTheme.danger, size: 14),
+                          onTap: () {
+                            Navigator.of(sheetContext).pop();
+                            LiveBroadcasterStudioSheet.show(context,
+                                onEndBroadcast: _handleEndOrLeave);
+                          },
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
+                  )),
             );
           },
         );
@@ -1638,6 +1670,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         final messages = _chatController.messages;
 
         return LiveChatWidget(
+          textController: _chatTextController,
           messages: messages,
           connectionState: _chatController.connectionState,
           onSendTextMessage: _handleSendChatMessage,
@@ -1776,155 +1809,84 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
+  void _toggleLandscapeControls() {
+    if (_controlsVisible &&
+        (_controlsFocus.hasFocus ||
+            MediaQuery.of(context).accessibleNavigation)) {
+      return;
+    }
+    setState(() => _controlsVisible = !_controlsVisible);
+  }
+
   Widget _buildFullscreenLandscapeLayout(
       String title, StreamerModel streamer, String langCode) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: () => setState(() => _controlsVisible = !_controlsVisible),
-      child: Stack(
-        children: [
-          // 1. Fullscreen Camera Preview / Audio Poster
+    final visible =
+        _controlsVisible || MediaQuery.of(context).accessibleNavigation;
+    return Semantics(
+      label: 'live.toggle_overlay_controls'.tr(),
+      onTap: _toggleLandscapeControls,
+      child: GestureDetector(
+        key: const Key('phone-landscape-media'),
+        behavior: HitTestBehavior.opaque,
+        onTap: _toggleLandscapeControls,
+        child: Stack(fit: StackFit.expand, children: [
           if (_engine.isCameraOff)
-            Container(
-              color: AppTheme.bg,
-              alignment: Alignment.center,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  CircleAvatar(
-                    radius: 40,
-                    backgroundColor: AppTheme.surface,
-                    backgroundImage:
-                        resolveImageProviderOrNull(streamer.avatarUrl),
-                  ),
-                  const SizedBox(height: 12),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warning.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      border: Border.all(
-                          color: AppTheme.warning.withValues(alpha: 0.5)),
-                    ),
-                    child: Text(
-                      'live.video_hidden_badge'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.warning,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
+            Center(
+                child: Text('live.video_hidden_badge'.tr(),
+                    style: const TextStyle(color: AppTheme.onMedia)))
           else
-            const SizedBox.expand(
-              child: PhoneCameraPreview(),
-            ),
-
-          // 2. Reactions Overlay
+            PhoneCameraPreview(key: _previewKey),
           FloatingReactionsOverlay(controller: _reactionsController),
-
-          // 3. Top Translucent Overlay Bar
-          PositionedDirectional(
-            top: 0,
-            start: 0,
-            end: 0,
-            child: AnimatedOpacity(
-              opacity: _controlsVisible ? 1.0 : 0.0,
-              duration: const Duration(milliseconds: 240),
-              child: IgnorePointer(
-                ignoring: !_controlsVisible,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: AppTheme.spaceLg, vertical: 12),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.media,
-                  ),
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: const Icon(Icons.fullscreen_exit_rounded,
-                            color: AppTheme.onMedia, size: 24),
-                        tooltip: 'live.tooltip_exit_fullscreen'.tr(),
-                        onPressed: _handleToggleFullscreen,
-                      ),
-                      const SizedBox(width: AppTheme.spaceSm),
-                      if (_engine.state == RtmpPublishState.live &&
-                          _appProvider.isBroadcastingLive)
-                        _LiveBadge(bitrateBps: _engine.lastBitrateBps),
-                      const SizedBox(width: AppTheme.spaceMd),
-                      Expanded(
-                        child: Text(
-                          title.isNotEmpty
-                              ? title
-                              : streamer.getLocalizedTitle(langCode),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.more_vert_rounded,
-                            color: AppTheme.onMedia, size: 22),
-                        tooltip: 'live.tooltip_controls'.tr(),
-                        onPressed: () => _showStreamerControlsSheet(streamer),
-                      ),
-                      IconButton(
-                        icon: Icon(
-                          _isSideChatOpen
-                              ? Icons.chat_bubble_rounded
-                              : Icons.chat_bubble_outline_rounded,
-                          color: _isSideChatOpen
-                              ? AppTheme.danger
-                              : AppTheme.onMedia,
-                          size: 22,
-                        ),
-                        tooltip: 'live.tooltip_toggle_chat'.tr(),
-                        onPressed: () {
-                          setState(() => _isSideChatOpen = !_isSideChatOpen);
-                        },
-                      ),
-                    ],
+          if (visible)
+            SafeArea(
+                child: Focus(
+              focusNode: _controlsFocus,
+              child: Stack(children: [
+                PositionedDirectional(
+                  top: AppTheme.spaceSm,
+                  start: AppTheme.spaceSm,
+                  child: IconButton.filled(
+                    tooltip: 'live.tooltip_exit_fullscreen'.tr(),
+                    onPressed: _handleToggleFullscreen,
+                    icon: const Icon(Icons.fullscreen_exit_rounded),
                   ),
                 ),
-              ),
-            ),
-          ),
-
-          // End is never faded with the other controls.
-          PositionedDirectional(
-            bottom: AppTheme.spaceMd,
-            end: AppTheme.spaceMd,
-            child: SafeArea(child: _endControl()),
-          ),
-
-          // 4. Side Chat Drawer Overlay (when active in fullscreen)
-          if (_isSideChatOpen)
+                PositionedDirectional(
+                  top: AppTheme.spaceSm,
+                  end: AppTheme.spaceSm,
+                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                    IconButton.filled(
+                      tooltip: 'live.tooltip_controls'.tr(),
+                      onPressed: () => _showStreamerControlsSheet(streamer),
+                      icon: const Icon(Icons.more_vert_rounded),
+                    ),
+                    IconButton.filled(
+                      tooltip: 'live.tooltip_toggle_chat'.tr(),
+                      onPressed: () =>
+                          setState(() => _isSideChatOpen = !_isSideChatOpen),
+                      icon: const Icon(Icons.chat_bubble_outline_rounded),
+                    ),
+                  ]),
+                ),
+                PositionedDirectional(
+                  bottom: AppTheme.spaceSm,
+                  start: AppTheme.spaceSm,
+                  child: _endControl(),
+                ),
+              ]),
+            )),
+          if (visible && _isSideChatOpen)
             PositionedDirectional(
-              top: 60,
-              bottom: 80,
-              end: 16,
-              width: 320,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: AppTheme.bg.withValues(alpha: 0.88),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  child: _buildLiveChatTab(),
-                ),
+              top: 64,
+              bottom: AppTheme.spaceSm,
+              end: AppTheme.spaceSm,
+              width: MediaQuery.sizeOf(context).width * 0.42,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                child: _buildLiveChatTab(),
               ),
             ),
-        ],
+        ]),
       ),
     );
   }

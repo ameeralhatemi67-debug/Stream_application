@@ -51,6 +51,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   final FloatingReactionsOverlayController _reactionsController =
       FloatingReactionsOverlayController();
   final TextEditingController _chatTextController = TextEditingController();
+  final FocusNode _chatFocus = FocusNode(debugLabel: 'viewer-chat');
   final ScrollController _chatScrollController = ScrollController();
   late LiveChatController _chatController;
 
@@ -96,6 +97,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   // player and a LIVE badge running (P6S wave 3, stale LIVE after transfer).
   bool _openedLive = false;
   String? _openedWatchId;
+  String? _openedSessionId;
   String? _openedStreamerId;
   int _openedCatalogRevision = 0;
   bool _roomEnded = false;
@@ -113,6 +115,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    if (MediaQuery.orientationOf(context) == Orientation.landscape) {
+      _chatFocus.unfocus();
+      SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    }
     final provider = context.read<AppProvider>();
     if (identical(provider, _roomProvider)) return;
     _roomProvider?.removeListener(_syncRoomConnection);
@@ -126,6 +132,21 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     if (!provider.isOnline) {
       _requiredCatalogRevision ??= provider.successfulCatalogRevision;
       _stopRoom();
+      return;
+    }
+    final current = _findStreamer(provider);
+    final fresh = provider.successfulCatalogRevision >
+        (_requiredCatalogRevision ?? _openedCatalogRevision);
+    // A network interruption disposes media, not the identity of this room.
+    // Reconcile End before requiring a live catalog entry for recovery.
+    if (_openedLive &&
+        fresh &&
+        (current == null ||
+            !current.isLiveForRoom ||
+            current.liveWatchId != _openedWatchId ||
+            (_openedSessionId != null &&
+                current.liveSessionId != _openedSessionId))) {
+      _endRoom();
       return;
     }
     if (_requiredCatalogRevision case final revision?) {
@@ -144,7 +165,6 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       }
       _requiredCatalogRevision = null;
     }
-    final current = _findStreamer(provider);
     if (current == null && !_roomActive) {
       // Nothing to join yet (or at all): no chat or presence for a room that
       // names no known channel. Keep looking, since a link opened right after
@@ -154,15 +174,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
     _lookupTimer?.cancel();
     _lookupTimer = null;
-    if (_roomActive && _openedLive) {
-      final fresh = provider.successfulCatalogRevision > _openedCatalogRevision;
-      if (fresh &&
-          (current == null ||
-              !current.isLiveForRoom ||
-              current.liveWatchId != _openedWatchId)) {
-        _endRoom();
-        return;
-      }
+    if (!_openedLive && current?.isLiveForRoom == true) {
+      _openedLive = true;
+      _openedStreamerId = current!.streamerId;
+      _openedWatchId = current.liveWatchId;
+      _openedSessionId = current.liveSessionId;
+      _openedCatalogRevision = provider.successfulCatalogRevision;
     }
     _startRoom();
   }
@@ -190,6 +207,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   /// and the player; the viewer gets an explicit ended state with a way back.
   void _endRoom() {
     _roomEnded = true;
+    _liveStateTimer?.cancel();
     _stopRoom();
     if (mounted) setState(() {});
   }
@@ -201,14 +219,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _streamState = StreamState.initializing;
     final provider = _roomProvider;
     final opened = provider == null ? null : _findStreamer(provider);
-    _openedStreamerId = opened?.streamerId;
-    _openedLive = opened?.isLiveForRoom ?? false;
-    _openedWatchId = opened?.liveWatchId;
-    _openedCatalogRevision = provider?.successfulCatalogRevision ?? 0;
+    _openedStreamerId ??= opened?.streamerId;
     // Viewers get no Realtime event when another account's broadcast ends,
     // so the room re-reads the catalog itself; an ended broadcast closes the
     // room within about 20 seconds.
-    _liveStateTimer = Timer.periodic(const Duration(seconds: 20), (_) {
+    _liveStateTimer ??= Timer.periodic(const Duration(seconds: 20), (_) {
       final p = _roomProvider;
       if (p != null && p.isOnline) {
         unawaited(p.loadVerifiedStreamersFromBackend());
@@ -238,8 +253,6 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   void _stopRoom() {
     if (!_roomActive) return;
     _roomActive = false;
-    _liveStateTimer?.cancel();
-    _liveStateTimer = null;
     _roomGeneration++;
     _streamState = StreamState.offline;
     _setWakelock(false);
@@ -275,6 +288,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   @override
   void dispose() {
+    _liveStateTimer?.cancel();
     _mutedSource?.removeListener(_onPlayerMutedChanged);
     _lookupTimer?.cancel();
     _roomProvider?.removeListener(_syncRoomConnection);
@@ -286,6 +300,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _restorePortraitChrome();
     _tabController.dispose();
     _chatTextController.dispose();
+    _chatFocus.dispose();
     _chatScrollController.removeListener(_handleChatScroll);
     _chatScrollController.dispose();
     super.dispose();
@@ -401,10 +416,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   /// room used to fall back to the "active" or first catalog entry, which
   /// could put a stranger's broadcast behind this room's chat and title.
   StreamerModel? _findStreamer(AppProvider appProvider) {
-    final direct = appProvider.getStreamerById(widget.streamId);
-    if (direct != null) return direct;
     final opened = _openedStreamerId;
-    return opened == null ? null : appProvider.getStreamerById(opened);
+    return appProvider.getStreamerById(opened ?? widget.streamId);
   }
 
   /// Which of the three streamer-brandable states (Task 4b) the current
@@ -1580,6 +1593,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   Widget _buildChatComposer() {
+    if (MediaQuery.orientationOf(context) == Orientation.landscape) {
+      return _buildChatComposerNotice(
+        icon: Icons.screen_rotation_rounded,
+        color: AppTheme.textSecondary,
+        message: 'live.landscape_chat_read_only'.tr(),
+      );
+    }
     switch (_chatController.composerState) {
       case ChatComposerState.guest:
         return _buildChatComposerNotice(
@@ -1674,6 +1694,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           Expanded(
             child: TextField(
               controller: _chatTextController,
+              focusNode: _chatFocus,
               style:
                   const TextStyle(color: AppTheme.textPrimary, fontSize: 12.5),
               decoration: InputDecoration(

@@ -179,6 +179,9 @@
     "channel_unavailable": "القناة غير متاحة."
   },
   "live": {
+    "connection_error": "تعذر الاتصال. أنه هذه المحاولة وأعد المحاولة من الاستوديو.",
+    "landscape_chat_read_only": "أدر الهاتف إلى الوضع العمودي للكتابة. الدردشة الأفقية للقراءة فقط.",
+    "toggle_overlay_controls": "إظهار أو إخفاء أدوات البث",
     "title": "غرفة البث المباشر",
     "live_indicator": "مباشر",
     "watching_count": "يشاهدون الآن",

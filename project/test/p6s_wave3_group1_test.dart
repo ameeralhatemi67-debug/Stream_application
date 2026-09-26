@@ -381,6 +381,44 @@ void main() {
       expect(counts.urls, ['LIVEvideo01']);
     });
 
+    testWidgets('ordinary End during a viewer network interruption is terminal',
+        (tester) async {
+      final (provider, catalog) =
+          await openRoom(tester, phoneLive, phoneLive.streamerId);
+      provider.debugSetOnlineForTests(false);
+      await tester.pump();
+      provider.debugSetOnlineForTests(true);
+      await tester.pump();
+      for (final request in List.of(catalog.pending)) {
+        request.complete([
+          phoneLive.copyWith(isCurrentlyLive: false, clearLiveState: true),
+        ]);
+      }
+      catalog.pending.clear();
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('live-room-ended')), findsOneWidget);
+      expect(counts.playersDisposed, 1);
+      expect(counts.urls, ['LIVEvideo01']);
+    });
+
+    testWidgets('same-watch replacement cannot take over an open viewer',
+        (tester) async {
+      final (provider, catalog) = await openRoom(
+          tester,
+          phoneLive.copyWith(liveSessionId: 'session-old'),
+          phoneLive.streamerId);
+      unawaited(provider.loadVerifiedStreamersFromBackend());
+      await tester.pump();
+      catalog.pending.removeAt(0).complete([
+        phoneLive.copyWith(liveSessionId: 'session-new'),
+      ]);
+      await tester.pump();
+      await tester.pump();
+      expect(find.byKey(const Key('live-room-ended')), findsOneWidget);
+      expect(counts.urls, ['LIVEvideo01']);
+    });
+
     testWidgets('a broadcast hidden from discovery still plays in its room',
         (tester) async {
       final hidden =
