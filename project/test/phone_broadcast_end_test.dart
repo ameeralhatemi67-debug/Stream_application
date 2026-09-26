@@ -231,6 +231,34 @@ void main() {
     await tester.pump(const Duration(seconds: 1));
   }
 
+  for (final size in [const Size(412, 915), const Size(915, 412)]) {
+    testWidgets('one sender recovery surface at $size', (tester) async {
+      final db = _Db()..useSession = true;
+      final p = await tester.runAsync(() => broadcaster(db));
+      await open(tester, p!, size: size);
+      for (final event in ['live', 'disconnected']) {
+        messenger.handlePlatformMessage(events.name,
+            events.codec.encodeSuccessEnvelope({'type': event}), (_) {});
+        await tester.pump();
+      }
+      expect(
+          find.text('live.stream_interrupted_reconnecting_attempt'
+              .tr(namedArgs: {'current': '0', 'total': '10'})),
+          findsOneWidget);
+      await tester.pump(const Duration(seconds: 60));
+      await tester.pump();
+      expect(find.text('live.recovery_retry'.tr()), findsOneWidget);
+      final panel = find.byKey(const Key('sender-recovery-exhausted'));
+      expect(panel, findsOneWidget);
+      expect(
+          find.descendant(
+              of: panel, matching: find.text('live.recovery_leave'.tr())),
+          findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await close(tester, p, db);
+    });
+  }
+
   for (final fault in [
     'none',
     'end',

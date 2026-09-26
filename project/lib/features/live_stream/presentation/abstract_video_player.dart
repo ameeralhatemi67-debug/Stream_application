@@ -26,6 +26,9 @@ enum StreamSourceType {
 enum StreamState {
   initializing,
   startingSoon,
+
+  /// Native controls are visible; playback has not been acknowledged.
+  unconfirmed,
   live,
   paused,
   buffering,

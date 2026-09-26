@@ -49,6 +49,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
   static bool coversState(StreamState state) {
     switch (state) {
       case StreamState.live:
+      case StreamState.unconfirmed:
       case StreamState.paused:
       case StreamState.buffering:
         return false;
@@ -118,6 +119,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
           subtitleKey: 'live.state_error_sub',
         );
       case StreamState.live:
+      case StreamState.unconfirmed:
       case StreamState.paused:
       case StreamState.buffering:
         return const _PlaceholderSpec(
@@ -321,7 +323,8 @@ class _PlaceholderGlyphState extends State<_PlaceholderGlyph>
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         color: spec.accent.withValues(alpha: 0.12),
-        border: Border.all(color: spec.accent.withValues(alpha: 0.55), width: 1.5),
+        border:
+            Border.all(color: spec.accent.withValues(alpha: 0.55), width: 1.5),
       ),
       child: Icon(spec.icon, color: spec.accent, size: 34),
     );

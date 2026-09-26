@@ -67,7 +67,6 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
   bool _heardFromPlayer = false;
 
   /// A playback state (not just "ready") has been reported.
-  bool _reportedState = false;
   Timer? _silentPlayerTimer;
 
   @override
@@ -191,7 +190,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
                 _silentPlayerTimer?.cancel();
                 _silentPlayerTimer = Timer(const Duration(seconds: 10), () {
                   if (mounted && !_heardFromPlayer && !_hasError) {
-                    widget.onStateChanged?.call(StreamState.paused);
+                    widget.onStateChanged?.call(StreamState.unconfirmed);
                   }
                 });
               }
@@ -227,7 +226,10 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
 
   void _handleBridgeMessage(String jsonStr) {
     // Dedicated owner-run diagnostic build; unreachable in release builds.
-    if (kDebugMode && const bool.fromEnvironment('WAVE4V2_SUPPRESS_PLAYER_READY')) return;
+    if (kDebugMode &&
+        const bool.fromEnvironment('WAVE4V2_SUPPRESS_PLAYER_READY')) {
+      return;
+    }
     try {
       final Map<String, dynamic> data = jsonDecode(jsonStr);
       final type = data['type'] as String?;
@@ -239,11 +241,8 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
         _heardFromPlayer = true;
         _silentPlayerTimer?.cancel();
         widget.onPlayerReady?.call();
-        // The player answered but has not reported a playback state yet
-        // (for example autoplay was blocked). Show it as paused, with its
-        // own play button reachable, rather than "starting" forever or
-        // "playing" when it is not.
-        if (!_reportedState) widget.onStateChanged?.call(StreamState.paused);
+        // The bridge reports getPlayerState immediately after ready. Wait
+        // for that acknowledgement instead of inventing a playback state.
         return;
       }
       if (type == 'muted') {
@@ -253,7 +252,6 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
         return;
       }
       if (type == 'state') {
-        _reportedState = true;
         final stateVal = data['value'] as int?;
         if (stateVal == -1 || stateVal == 5) {
           // Unstarted or cued: loaded but not playing.
@@ -315,7 +313,6 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
   void _loadVideoEmbed(String videoId) {
     _silentPlayerTimer?.cancel();
     _heardFromPlayer = false;
-    _reportedState = false;
     if (kIsWeb) {
       // No `origin` on web: the real origin there is the host page, which
       // this adapter cannot know, and a mismatched origin is exactly what
@@ -331,7 +328,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
           // not a playback acknowledgement; app transport remains disabled.
           setState(() => _isLoading = false);
           widget.onPlayerReady?.call();
-          widget.onStateChanged?.call(StreamState.paused);
+          widget.onStateChanged?.call(StreamState.unconfirmed);
         }).catchError((Object error) {
           if (mounted && _currentVideoId == videoId) {
             _handleStreamFailure('live.player_not_ready'.tr());

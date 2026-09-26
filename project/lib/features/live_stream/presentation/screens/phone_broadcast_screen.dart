@@ -855,6 +855,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   Widget _recoveryStatus() {
     if (_engine.lastError != null && !_isSending) {
       return Material(
+        key: const Key('sender-recovery-exhausted'),
         color: AppTheme.surface,
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spaceSm),
@@ -1091,18 +1092,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               child: Center(child: _endControl()),
             ),
 
-            // 4. Reconnecting Banner
-            if (_engine.state == RtmpPublishState.reconnecting)
-              PositionedDirectional(
-                top: 0,
-                start: 0,
-                end: 0,
-                child: _ReconnectingBanner(
-                  attempt: _engine.reconnectAttempt,
-                  maxAttempts: _engine.maxReconnectAttempts,
-                ),
-              ),
-
             // 5. Error Banner
             if (_engine.state == RtmpPublishState.error &&
                 _engine.lastError != null)
@@ -1113,9 +1102,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 child:
                     _StreamErrorBanner(message: 'live.connection_error'.tr()),
               ),
-
-            PositionedDirectional(
-                top: 56, start: 8, end: 8, child: _recoveryStatus()),
 
             // 6. Floating Reaction Hearts Overlay
             FloatingReactionsOverlay(controller: _reactionsController),

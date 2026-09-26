@@ -482,6 +482,37 @@ void main() {
       await close(tester);
     });
 
+    for (final state in [
+      StreamState.live,
+      StreamState.paused,
+      StreamState.unconfirmed
+    ]) {
+      testWidgets('delayed $state cancels queued media reload', (tester) async {
+        await open(tester);
+        log.emit!(StreamState.fallbackError);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 3));
+        log.report = null;
+        roomCatalog.pending.removeAt(0).complete([live]);
+        await tester.pump();
+        await tester.pump();
+        expect(log.created, 2);
+        await tester.pump(const Duration(seconds: 4));
+        log.emit!(state);
+        await tester.pump();
+        await tester.pump(const Duration(seconds: 9));
+        expect(roomCatalog.pending, isEmpty,
+            reason: 'a queued retry must not reload a responding player');
+        expect(log.created, 2);
+        if (state == StreamState.unconfirmed) {
+          expect(
+              find.text('live.player_state_unconfirmed'.tr()), findsOneWidget);
+        }
+        await tester.pump(const Duration(seconds: 1));
+        await close(tester);
+      });
+    }
+
     testWidgets('viewer recovery exhausts and late truth cannot restart player',
         (tester) async {
       final p = await open(tester);

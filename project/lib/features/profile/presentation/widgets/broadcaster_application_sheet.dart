@@ -342,7 +342,7 @@ class _BroadcasterApplicationSheetState
       seatingCapacity: capacity,
       officialWebsiteUrl: _websiteController.text.trim(),
       youtubeChannelUrl: _youtubeChannelController.text.trim(),
-      youtubeHandle: _youtubeHandleController.text.trim().replaceAll('@', ''),
+      youtubeHandle: _youtubeHandleController.text.trim(),
       bioEn: _bioEnController.text.trim(),
       bioAr: _bioArController.text.trim(),
       avatarUrl: widget.existingApplication?.avatarUrl ??

@@ -180,6 +180,7 @@
   },
   "live": {
     "recovery_exhausted": "تعذر استعادة الاتصال. أعد المحاولة أو غادر.",
+    "player_state_unconfirmed": "لم يتأكد التشغيل. استخدم أزرار يوتيوب أو أعد المحاولة.",
     "recovery_retry": "إعادة المحاولة",
     "recovery_leave": "مغادرة",
     "recovery_restored": "تمت استعادة الاتصال.",

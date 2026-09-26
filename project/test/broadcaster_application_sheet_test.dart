@@ -1,10 +1,71 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/features/admin/models/broadcaster_application_model.dart';
+import 'package:streamer_app/features/profile/presentation/widgets/broadcaster_application_sheet.dart';
+import 'support/localized_app.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  setUpAll(initializeTestLocalization);
+
+  testWidgets('handle URL survives the complete sheet submission',
+      (tester) async {
+    final provider = AppProvider(AdminDatabaseService(null));
+    final application = BroadcasterApplicationModel(
+      id: 'sheet-url',
+      accountType: ApplicationAccountType.individualScholar,
+      applicantNameEn: 'Test',
+      applicantNameAr: 'اختبار',
+      email: 'fixture@example.invalid',
+      phone: '',
+      academicTitleEn: 'Lecturer',
+      institutionEn: 'Fixture',
+      categoryId: 'computer_science',
+      tags: const [],
+      venueNameEn: 'Hall',
+      venueNameAr: 'قاعة',
+      latitude: 26,
+      longitude: 50,
+      seatingCapacity: 10,
+      youtubeChannelUrl: 'https://youtube.com/@lecture',
+      youtubeHandle: 'https://youtube.com/@lecture',
+      bioEn: '',
+      bioAr: '',
+      avatarUrl: '',
+      bannerUrl: '',
+      status: ApplicationStatus.pending,
+      submittedAt: DateTime(2026),
+    );
+    await tester.pumpWidget(ChangeNotifierProvider.value(
+        value: provider,
+        child: localizedApp(
+            home: Builder(
+                builder: (context) => Scaffold(
+                      body: TextButton(
+                          onPressed: () => BroadcasterApplicationSheet.show(
+                              context,
+                              application: application),
+                          child: const Text('Open')),
+                    )))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open'));
+    await tester.pumpAndSettle();
+    final submit = find.byType(ElevatedButton);
+    await tester.ensureVisible(submit);
+    await tester.pumpAndSettle();
+    await tester.tap(submit);
+    await tester.pumpAndSettle();
+    expect(provider.applications.single.youtubeHandle, 'lecture');
+    expect(provider.applications.single.youtubeChannelUrl,
+        'https://www.youtube.com/@lecture');
+    expect(find.byType(BroadcasterApplicationSheet), findsNothing);
+    await tester.pump(const Duration(seconds: 5));
+    await tester.pumpWidget(const SizedBox.shrink());
+    provider.dispose();
+  });
 
   group('Broadcaster Application Sheet & State Management Tests (Phase 2)', () {
     late AppProvider provider;
@@ -114,7 +175,8 @@ void main() {
       expect(provider.applications.length, equals(initialCount + 1));
       expect(provider.applications.any((a) => a.id == newApp.id), isTrue);
 
-      final fetched = provider.applications.firstWhere((a) => a.id == newApp.id);
+      final fetched =
+          provider.applications.firstWhere((a) => a.id == newApp.id);
       expect(fetched.applicantNameEn, equals('Dr. Nasser Al-Ghamdi'));
       expect(fetched.status, equals(ApplicationStatus.pending));
     });
@@ -167,7 +229,8 @@ void main() {
       expect(updatedApp.reviewNotes, equals(feedbackReason));
     });
 
-    test('TC-APP-04: Approval Lifecycle & Auto Live Streamer Registration', () async {
+    test('TC-APP-04: Approval Lifecycle & Auto Live Streamer Registration',
+        () async {
       final initialStreamers = provider.streamers.length;
 
       final app = BroadcasterApplicationModel(

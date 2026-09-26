@@ -180,6 +180,7 @@
   },
   "live": {
     "recovery_exhausted": "Connection could not be restored. Retry or leave.",
+    "player_state_unconfirmed": "Playback is unconfirmed. Use YouTube controls or Retry.",
     "recovery_retry": "Retry",
     "recovery_leave": "Leave",
     "recovery_restored": "Connection restored.",

@@ -542,6 +542,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       case StreamState.ended:
         return StreamPlaceholderType.ending;
       case StreamState.initializing:
+      case StreamState.unconfirmed:
       case StreamState.live:
       case StreamState.buffering:
       case StreamState.reconnecting:
@@ -957,6 +958,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         _refreshTransportAvailability();
                         setState(() {
                           _streamState = state;
+                          if (state == StreamState.unconfirmed) {
+                            // No state bridge: hand control to the visible
+                            // player without claiming recovery or repeatedly
+                            // reloading media the user may already be playing.
+                            _cancelViewerRecovery();
+                          }
                           // Follow the player: a pause from its own controls or
                           // the system shows as paused here too.
                           if (state == StreamState.paused) _isPlaying = false;
@@ -965,6 +972,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                               state == StreamState.live) {
                             _playIntent = _isPlaying;
                             if (_recovering) {
+                              _recoveryTimer?.cancel();
+                              _recoveryTimer = null;
                               _recoveryStable ??=
                                   Timer(const Duration(seconds: 10), () {
                                 _cancelViewerRecovery();
@@ -1129,6 +1138,22 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     : null,
               ),
 
+              if (_streamState == StreamState.unconfirmed)
+                PositionedDirectional(
+                  top: 0,
+                  start: 8,
+                  end: 8,
+                  child: Row(children: [
+                    Expanded(
+                        child: Text('live.player_state_unconfirmed'.tr(),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(color: AppTheme.onMedia))),
+                    TextButton(
+                        onPressed: _retryStream,
+                        child: Text('live.retry_feed'.tr())),
+                  ]),
+                ),
               if (_recovering || _recoveryExhausted)
                 PositionedDirectional(
                   top: 8,
