@@ -28,11 +28,13 @@ Flutter commands ran from `project/`, using `C:/Users/User/sru/flutter/bin/flutt
 | `dart --packages=project/.dart_tool/package_config.json brief/tools/p6s_backend_probe.dart` from audit root | Final warm run **19/19 PASS**. Cold restart run **18 PASS / 1 FAIL**, owner event absent at 10 s; direct reads and all state/permission checks passed. Cause not proven. Warm repeat used unchanged code and observed owner event at 23 ms. | `backend-probe.txt`, `backend-probe-cold-start.txt` |
 | `P6S_EMBED_EXPORT` set for `youtube_embed_page_test.dart`, then `node brief/tools/youtube_embed_runtime.test.mjs brief/.runtime/p6s-astra/embed.html` | PASS: exact player identity, pre-ready refusal, delivery versus state, mute reporting, errors and command allowlist. Executed actual generated script with SDK stub. | `embed-runtime.txt` |
 | `flutter run --no-pub -d web-server -t tool/p6s_browser_probe.dart --web-hostname 127.0.0.1 --web-port 55890` | Real Chrome reproduced/retested loading-cover defect, exact watch URL and responsive embedded Play control. No backend credentials. Temporary server/tab closed. | `BROWSER_PROBE.md` |
-| `flutter build apk --debug --no-pub` | PASS. Initial build took 148.3 s; final audited-source repeat also recorded. No installation or physical run. | `android-build.txt` |
+| `flutter build apk --debug --no-pub` | PASS. Initial build took 148.3 s; final audited-source repeat took 58.5 s. No installation or physical run. | `android-build.txt`, `android-initial-build.txt`, `build-hashes.json` |
 | `flutter build web --no-pub` | PASS, 100.6 s; Wasm dry run succeeded. No deployment. | `web-build.txt` |
 | `git diff --check` | PASS for audit changes. Generated Windows plugin files showed line-ending/stat dirt with no semantic diff and were not committed. | Git checkpoint in integration record. |
 
 The web build warns about a referenced CupertinoIcons font not included in the font set. Android emits Java 8 source/target deprecation warnings. Neither is counted as a failure or as proof of runtime compatibility. They remain lower-priority build/UI debt outside these streaming fixes.
+
+Saved console text has trailing alignment whitespace removed; values and results are unchanged. The initial captured-output whitespace check failed, was corrected in the evidence files, and the complete branch diff then passed `git diff --check`. Original runtime logs remain in the audit worktree.
 
 Gate INFO review: G2c=0 color exceptions; G10b=2 intentional deny-all tables (`stream_viewers`, `removed_live_streams`); G10e=3 anonymous public helpers reviewed in REPORT.md; G11c=0 unexpected-role token shapes; G11g is a skipped historical secret scan. This is not a P0/P9 history or signed-release-artifact secret audit. Main-checkout pre-existing ignored credential-shaped files were not imported, opened as configuration, removed or committed; clean audit-source gate results must not be described as sanitizing that checkout.
 

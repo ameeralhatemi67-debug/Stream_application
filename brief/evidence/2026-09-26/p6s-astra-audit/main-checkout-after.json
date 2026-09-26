@@ -1,0 +1,184 @@
+{
+  "checkedAtUtc": "2026-09-26T10:27:13.1833874Z",
+  "branch": "master",
+  "base": "760a69b58b92d3eadeace34a15380820974f5a31",
+  "mergedCommit": "2ac3800e7a342aa814bd2d0f2e3dbbc24631afbc",
+  "filesChecked": 31,
+  "allFilesPreserved": true,
+  "stashListPreserved": true,
+  "dirtyStatusPreserved": true,
+  "stashes": [
+    "d646b945d0007d55ec52690f1ca085a3879ccab8 On master: owner-brief-settings-before-window2-2026-09-20",
+    "d53c178e116328e8c3d349f36af795733dc31ee4 On master: preexisting-before-budget-stop-2026-09-20"
+  ],
+  "status": [
+    " M Core_files/STATUS.md",
+    " M Core_files/progres.md",
+    " M Roadmap.md",
+    " M brief/LEDGER.md",
+    " M issue_encountered.md",
+    " M skill-observations/log.md",
+    "?? brief/evidence/2026-09-24/p6-device-retest/",
+    "?? brief/evidence/2026-09-24/p6-retest-repair/REPAIR_RETEST_RESULTS.md",
+    "?? brief/evidence/2026-09-24/p6-retest-repair/screenshots/",
+    "?? brief/evidence/2026-09-24/p6-wave3-review.md",
+    "?? brief/research/"
+  ],
+  "files": [
+    {
+      "path": "Core_files/STATUS.md",
+      "sha256": "D6A3EEE673FF5249F3CA2EDFEFD6B99CC02BFE33F9E4B64FF50A02A341895DC2",
+      "preserved": true
+    },
+    {
+      "path": "Core_files/progres.md",
+      "sha256": "EDF4EB91B151E8D5A6FE770CE9E32D97DC6473752971D6F322893391AB3E1331",
+      "preserved": true
+    },
+    {
+      "path": "Roadmap.md",
+      "sha256": "8A776BE0800929E1EF0F6CBF136DDAFE1703862E9FCD17CAE62B9CBC2D91CCA4",
+      "preserved": true
+    },
+    {
+      "path": "brief/LEDGER.md",
+      "sha256": "43F387BD9728F9F03138F2D5F5129E62FEAA055A63DFB9D27388DC4774B7496B",
+      "preserved": true
+    },
+    {
+      "path": "issue_encountered.md",
+      "sha256": "FB96C42C242BAFA891C043EC133B897009B90BDD2F8092290CC6C1D0723153FC",
+      "preserved": true
+    },
+    {
+      "path": "skill-observations/log.md",
+      "sha256": "2666F0FD9C3B9B75745D3109E883E049ABDBF051C9C6D246186B9933FCC12747",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-device-retest/TEST_CHEAT.md",
+      "sha256": "22EE7800279B2AACA6D4CE155F2BE6E4B4D1BE0FE122F2161A82B295518D12AF",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-device-retest/screenshots/.gitkeep",
+      "sha256": "01BA4719C80B6FE911B091A7C05124B64EEECE964E09C058EF8F9805DACA546B",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-device-retest/screenshots/good/R05-audit-log-platform-switches.png",
+      "sha256": "76206061614EF0D96E9F3E3B14F9344ED07335790A08DD95EE2AC72CA4F5A68B",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-device-retest/screenshots/good/R05-signups-paused.png",
+      "sha256": "FE736E19E7979DCF5F0C4407054E87757BFF037FEB87ED50EEEA363CD74C9450",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-device-retest/screenshots/good/R09-banned-account-screen-ar.jpg",
+      "sha256": "56EECA40427EFCC03395E81CF5FC88A016FA88650479B78A5F23DECDDD269DFC",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-device-retest/screenshots/good/R09-revocation-notification-feed.jpg",
+      "sha256": "1F93486415085E3C127429FDAD636559EE458D5FEF2FFAE6F280CACDFC69F8E4",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-device-retest/screenshots/good/R09-streamer-revoked-settings.jpg",
+      "sha256": "3AD968B7628DA996573AF47E708C20B7FB3A00EA88087E2CE1DB471345C97FEA",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-retest-repair/REPAIR_RETEST_RESULTS.md",
+      "sha256": "5FA7F7AB7AEDD699C24808FB9F85CB47B7ACE99A7D1FAD0C0851DD2C69EF1CF3",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/R02-displaced-wifi-offline-banner.jpg",
+      "sha256": "CD45E7A50DE34D808FE9A19B0A2C15047444F30A83CFEA162540A9563ACA8F77",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/R06-viewer-in-live-room-chat-paused.png",
+      "sha256": "92AE27506B655E0DD461377B9FFD80BE90800AE04457CBF1A5865E184091266A",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/S01-phone-broadcaster-landscape-2380kbps.jpg",
+      "sha256": "B73F552A0CFB174FAE1D6EA35F0545326B4EB8E6940EFC5C53571C8840747169",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/S01-phone-broadcaster-portrait-chat-2580kbps.jpg",
+      "sha256": "F7E0FCECFD4767DA833206150B828955DC25536835BEFCFEF8D4B9011F49561D",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/S01-youtube-stream-portrait-compression-observation.png",
+      "sha256": "F044D912BEB1DA88A3A447EE1F6E3EB2DEA2228245F3ABA439D418DA1F33B39A",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/S01-youtube-studio-incoming-stream-excellent.png",
+      "sha256": "4BBF2266C31B2D82CCBB466C2B5EB62B00EC3ACCD3E44EC30EB3251D8CE3CE34",
+      "preserved": true
+    },
+    {
+      "path": "brief/evidence/2026-09-24/p6-wave3-review.md",
+      "sha256": "0048FF46804C8BF08FF3C38D8AA0E3414122EFDE7722B94DD357CA5AD3F7175F",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/00_CURRENT_STATE.md",
+      "sha256": "B2BDDFA5F0EB9F26395E740ADC029293DB5652699CE1061DDAB65B058B120B45",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/01_YOUTUBE_AND_OBS.md",
+      "sha256": "10D4901AC29E484808EB8A3689FA3725085940FDD99FD0B6E6DCBBD34460DCE7",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/02_LOCAL_WIFI.md",
+      "sha256": "566D7CC8F7EA699D6E18A5BB1BAA2588304A18E061B1126A45F6E14B0145C991",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/03_PHONE_MEDIA.md",
+      "sha256": "1B22E4105909D0AE5F056D6597D56B3596E3BEBFB97C21A6A251BDBDBA5E53F6",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/04_PRIVACY_AND_ACCESS.md",
+      "sha256": "11F7302FBA1DAC3D422A450C5A32E23D477B195222693E99BD7946A9972FEAFE",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/05_PLAYBACK_FULLSCREEN_PIP.md",
+      "sha256": "3E85A8A9CD6697C008AE0193A6563755FB83F6FF581BAECC0F90FAB3219DF8B6",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/06_STREAMER_GUIDANCE.md",
+      "sha256": "78189CE55B148B7192935C5C65A8F597486391BAB37118582A068319B16FC3E9",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/07_IMPLEMENTATION_SEQUENCE.md",
+      "sha256": "D18DBF4E887105EE19B47DDB1736C55B17ED4A9C9AD4147413519CA68C573563",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/README.md",
+      "sha256": "45D31F9624445073270F3C068C9291682BD5D6076B35FE980CC3004E507E211A",
+      "preserved": true
+    },
+    {
+      "path": "brief/research/p6s-streaming-architecture/SOURCES.md",
+      "sha256": "C8BD1ED235B6FF4119F85A9BFEFA2CDDEF96795F4877E64E7CDFB4106EA380EC",
+      "preserved": true
+    }
+  ]
+}
