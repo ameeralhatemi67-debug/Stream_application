@@ -350,7 +350,9 @@ void main() {
     catalog.pending.clear();
     await tester.pump();
     await tester.pump();
-    expect(find.text('Broadcast not confirmed live'), findsOneWidget);
+    // A fresh successful catalog confirmed that this previously live session
+    // ended. Only failed/stale reads should retain the uncertainty message.
+    expect(find.text('This broadcast has ended'), findsOneWidget);
     expect(counts.playersStarted, 2);
     expect(counts.playersDisposed, 2);
     expect(counts.chatsDisposed, 2);
