@@ -6,6 +6,7 @@ import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:ui_web' as ui_web;
 
+import 'package:flutter/services.dart' show AssetManifest, rootBundle;
 import 'package:web/web.dart' as web;
 
 import 'map_offline_store.dart';
@@ -163,6 +164,20 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
       for (final family in (jsonDecode(text) as List).cast<Map>()) {
         for (final font in (family['fonts'] as List).cast<Map>()) {
           required.add(_assetUrl(font['asset'] as String));
+        }
+      }
+    } catch (_) {
+      return null;
+    }
+
+    // The app's own interface images (logo, icons, built-in avatars) are
+    // small and shown on the first screens, so they are required whether or
+    // not this visit happened to load them.
+    try {
+      final assets = await AssetManifest.loadFromAssetBundle(rootBundle);
+      for (final key in assets.listAssets()) {
+        if (key.endsWith('.svg') || key.startsWith('assets/images/avatars/')) {
+          required.add(_assetUrl(key));
         }
       }
     } catch (_) {
