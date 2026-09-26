@@ -1,6 +1,6 @@
 import 'dart:async';
 
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -70,7 +70,11 @@ class LocationPickerModal extends StatefulWidget {
 
 class _LocationPickerModalState extends State<LocationPickerModal> {
   static const MapViewportPolicy _policy = MapViewportPolicy();
-  static const EdgeInsets _padding = EdgeInsets.fromLTRB(16, 16, 72, 56);
+
+  /// Keeps framing clear of the zoom buttons, which sit on the end side.
+  EdgeInsets get _padding => Directionality.of(context) == TextDirection.rtl
+      ? const EdgeInsets.fromLTRB(72, 16, 16, 56)
+      : const EdgeInsets.fromLTRB(16, 16, 72, 56);
 
   late final MapController _mapController;
   late final MapPackController _pack;
@@ -269,10 +273,11 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                       ),
                     ),
                   ),
-                  // Centre crosshair for "Pin map centre".
+                  // Centre mark for "Pin the centre mark" (not a "+", which
+                  // is the zoom-in button).
                   IgnorePointer(
                     child: Center(
-                      child: Icon(Icons.add_rounded,
+                      child: Icon(Icons.gps_not_fixed_rounded,
                           size: 32,
                           color: AppTheme.textPrimary.withValues(alpha: 0.7)),
                     ),
@@ -282,7 +287,9 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     builder: (context, _) => _pack.isReady
                         ? const SizedBox.shrink()
                         : Center(
-                            child: Padding(
+                            // Scrolls on short map areas (small phones,
+                            // large text) instead of overflowing.
+                            child: SingleChildScrollView(
                               padding: const EdgeInsets.all(AppTheme.spaceLg),
                               child: MapPackStatusCard(
                                 controller: _pack,
@@ -400,7 +407,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     builder: (context, _) => Align(
                       alignment: AlignmentDirectional.centerStart,
                       child: TextButton.icon(
-                        icon: const Icon(Icons.my_location_rounded, size: 18),
+                        icon: const Icon(Icons.gps_not_fixed_rounded, size: 18),
                         label: Text(_pack.isReady
                             ? 'map.picker_use_centre'.tr()
                             : 'map.picker_map_needed'.tr()),

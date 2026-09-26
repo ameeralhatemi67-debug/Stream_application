@@ -180,10 +180,15 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
     }
     required.addAll(engine);
 
-    final labelFonts =
-        observed.where((u) => u.startsWith('https://fonts.gstatic.com/'));
-    if (!labelFonts.any((u) => u.contains('/roboto/')) ||
-        !labelFonts.any((u) => u.contains('notosansarabic'))) {
+    // The engine's fallback fonts come from the font CDN by default, or from
+    // this site when the build is configured to host them itself.
+    final labelFonts = observed.where((u) {
+      final path = Uri.parse(u).path.toLowerCase();
+      return (path.contains('/roboto') || path.contains('notosansarabic')) &&
+          RegExp(r'\.(woff2?|ttf|otf)$').hasMatch(path);
+    });
+    if (!labelFonts.any((u) => u.toLowerCase().contains('/roboto')) ||
+        !labelFonts.any((u) => u.toLowerCase().contains('notosansarabic'))) {
       return null;
     }
     required.addAll(labelFonts);
@@ -233,7 +238,12 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
     final packUrl = _assetUrl(packAssetKey);
     // Everything else this visit loaded (images, other screens' assets) is
     // stored when possible but does not decide readiness.
-    final optional = observed.where((u) => !required.contains(u)).toList();
+    // The worker matches stored files ignoring the query string, so one
+    // copy per path is enough (a long session can load the same file with
+    // many different queries).
+    String pathKey(String u) => Uri.parse(u).replace(query: '').toString();
+    final seenPaths = required.map(pathKey).toSet();
+    final optional = observed.where((u) => seenPaths.add(pathKey(u))).toList();
     final all = [...required, ...optional];
     final stored = <String>[];
     try {

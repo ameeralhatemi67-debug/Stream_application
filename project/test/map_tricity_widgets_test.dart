@@ -20,6 +20,9 @@ import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
 import 'package:streamer_app/features/map/presentation/venue_directions_launcher.dart';
 import 'package:streamer_app/features/map/presentation/widgets/city_selector_dropdown.dart';
 import 'package:streamer_app/features/map/services/map_pack_controller.dart';
+import 'package:streamer_app/features/map/services/map_offline_store.dart';
+import 'package:streamer_app/features/map/presentation/widgets/venue_navigation_sheet.dart';
+import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 late Map<String, dynamic> enData, arData;
 
@@ -84,6 +87,33 @@ Widget _app(Widget home, AppProvider provider, {String lang = 'en'}) =>
 /// is shown in these tests because no pack files are provided.
 Offset _mapPoint(WidgetTester tester) =>
     tester.getTopLeft(find.byType(FlutterMap)) + const Offset(60, 40);
+
+/// Web offline store whose results the test scripts (no browser needed).
+class _ScriptedWebStore implements WebOfflineMapStore {
+  WebOfflineStatus state = const WebOfflineStatus(WebOfflineState.notPrepared);
+  WebOfflineStatus prepareResult =
+      const WebOfflineStatus(WebOfflineState.failed, detail: 'incomplete');
+  int prepares = 0;
+
+  @override
+  Future<WebOfflineStatus> inspect({required String packSha256}) async => state;
+
+  @override
+  Future<WebOfflineStatus> prepare({
+    required String packSha256,
+    required String packAssetKey,
+    required List<String> requiredAssetKeys,
+    required int packBytes,
+    void Function(int done, int total)? onProgress,
+  }) async {
+    prepares++;
+    return state = prepareResult;
+  }
+
+  @override
+  Future<void> reset() async =>
+      state = const WebOfflineStatus(WebOfflineState.notPrepared);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -327,7 +357,7 @@ void main() {
       await openPicker(tester, null, city: 'dammam');
       await tester.tapAt(_mapPoint(tester));
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
-      expect(find.text('No point chosen yet. Tap the map.'), findsOneWidget);
+      expect(find.text('No point chosen yet.'), findsOneWidget);
       expect(tester.widget<ElevatedButton>(useButton()).onPressed, isNull);
       expect(
           find.text('The map must be showing to place a pin'), findsOneWidget);
@@ -339,7 +369,7 @@ void main() {
       phone(tester);
       MapPackController.debugShared = await _readyPack(tester);
       await openPicker(tester, null, city: 'dammam');
-      await tester.tap(find.text('Pin the map centre (+)'));
+      await tester.tap(find.text('Pin the centre mark'));
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
       expect(find.textContaining('Latitude'), findsOneWidget);
       expect(tester.widget<ElevatedButton>(useButton()).onPressed, isNotNull);
@@ -374,7 +404,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('open'));
       await tester.pumpAndSettle();
-      expect(find.text('No point chosen yet. Tap the map.'), findsOneWidget);
+      expect(find.text('No point chosen yet.'), findsOneWidget);
       await tester.tapAt(_mapPoint(tester));
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
       expect(find.textContaining('Latitude'), findsOneWidget);
@@ -417,7 +447,7 @@ void main() {
           ),
           AppProvider(AdminDatabaseService(null))));
       await tester.pumpAndSettle();
-      expect(find.text('No point chosen yet. Tap the map.'), findsOneWidget);
+      expect(find.text('No point chosen yet.'), findsOneWidget);
 
       // Cancel: nothing changes.
       await tester.tap(find.byIcon(Icons.pin_drop_rounded));
@@ -502,6 +532,95 @@ void main() {
       final pinned = branches.last.coordinates!;
       expect(isInTricityMapDomain(pinned.latitude, pinned.longitude), isTrue);
       expect(branches.last.address, 'Typed address');
+    });
+  });
+
+  group('Round 2 repairs', () {
+    testWidgets(
+        'an unpinned (0,0) venue shows no distance and no directions, only '
+        'the no-location message', (tester) async {
+      phone(tester);
+      final provider = AppProvider(AdminDatabaseService(null));
+      const unpinned = StreamerModel(
+        streamerId: 'unpinned_1',
+        fullNameEn: 'Dr. No Pin',
+        fullNameAr: 'د. بلا موقع',
+        titleEn: 'Professor',
+        titleAr: 'أستاذ',
+        organizationEn: 'KFUPM',
+        organizationAr: 'جامعة الملك فهد',
+        cityEn: 'Al Khobar',
+        cityAr: 'الخبر',
+        venueNameEn: 'Hall',
+        venueNameAr: 'قاعة',
+        latitude: 0,
+        longitude: 0,
+        isCurrentlyLive: false,
+        activeViewerCount: 0,
+        avatarUrl: '',
+        bannerUrl: '',
+        bioEn: '',
+        bioAr: '',
+        followerCount: 0,
+        isVerified: true,
+        categoryId: 'cs_tech',
+      );
+      await tester.pumpWidget(_app(
+          const Scaffold(body: VenueNavigationSheet(streamer: unpinned)),
+          provider));
+      await tester.pumpAndSettle();
+      expect(
+          find.text("This venue has no pinned location yet, so directions "
+              "aren't available."),
+          findsOneWidget);
+      expect(find.text('Estimated Distance'), findsNothing);
+      expect(
+          find.text('Open External Map (Google / Apple Maps)'), findsNothing);
+    });
+
+    testWidgets(
+        'web prompt: Save keeps the prompt when saving fails and hides it '
+        'once the copy is ready; details then say it is saved', (tester) async {
+      phone(tester);
+      SharedPreferences.setMockInitialValues({});
+      final provider = AppProvider(AdminDatabaseService(null))
+        ..debugSetOnlineForTests(false);
+      final store = _ScriptedWebStore();
+      final pack = MapPackController(
+        bundle: _FilePackBundle(),
+        hasher: (bytes) async => sha256.convert(bytes).toString(),
+        webStore: store,
+      );
+      await tester.runAsync(pack.ensureOpened);
+      expect(pack.isReady, isTrue);
+      await tester
+          .pumpWidget(_app(SpatialMapScreen(packController: pack), provider));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      const prompt = 'Use this map without internet? Save it once in this '
+          'browser.';
+      expect(find.text(prompt), findsOneWidget);
+
+      await tester.tap(find.text('Save'));
+      await tester.runAsync(() => Future<void>.delayed(Duration.zero));
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      expect(store.prepares, 1);
+      expect(pack.webOffline?.state, WebOfflineState.failed);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('map_web_offline_hint_dismissed_v1'), isNull,
+          reason: 'a failed save must not dismiss the prompt for good');
+
+      store.prepareResult = const WebOfflineStatus(WebOfflineState.ready);
+      await tester.runAsync(pack.prepareWebOffline);
+      for (var i = 0; i < 5; i++) {
+        await tester.pump(const Duration(milliseconds: 200));
+      }
+      expect(pack.webOffline?.state, WebOfflineState.ready);
+      expect(find.text(prompt), findsNothing);
+      expect(find.textContaining('are saved in this browser'), findsOneWidget);
     });
   });
 }

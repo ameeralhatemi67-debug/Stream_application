@@ -393,9 +393,11 @@ class _MapDetailsBody extends StatelessWidget {
         children: [
           _section('map.details_title'.tr(), [
             _body(controller.isReady
-                ? (controller.supportsWebOffline
-                        ? 'map.details_pack_ready_web'
-                        : 'map.details_pack_ready')
+                ? (!controller.supportsWebOffline
+                        ? 'map.details_pack_ready'
+                        : web?.state == WebOfflineState.ready
+                            ? 'map.details_pack_saved_web'
+                            : 'map.details_pack_ready_web')
                     .tr(namedArgs: {'date': manifest?.dataDate ?? ''})
                 : controller.status == MapPackStatus.loading
                     ? 'map.pack_loading'.tr()

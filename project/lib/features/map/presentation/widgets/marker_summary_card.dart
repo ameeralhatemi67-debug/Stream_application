@@ -222,16 +222,15 @@ class MarkerSummaryCard extends StatelessWidget {
                     color: AppTheme.primary, size: 20),
                 tooltip: 'venue.open_maps'.tr(),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: () => _openInGoogleMaps(context, streamer),
               ),
-              const SizedBox(width: 6),
               IconButton(
                 icon: const Icon(Icons.info_outline_rounded,
                     color: AppTheme.primary, size: 20),
                 tooltip: 'venue.visit_venue'.tr(),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: () =>
                     VenueNavigationSheet.show(context, streamer: streamer),
               ),

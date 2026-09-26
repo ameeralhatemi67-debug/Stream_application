@@ -71,6 +71,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   bool _isRetryingConnectivity = false;
   bool _mapReady = false;
 
+  /// False until the user or the app moves the camera. Until then the first
+  /// overview is re-framed whenever the measured insets change (controls,
+  /// notice, Arabic mirroring), since it was built before they were known.
+  bool _cameraMoved = false;
+
   /// Map canvas and the parts of it covered by floating controls, updated
   /// after every layout so every path frames against what is visible.
   Size _canvas = Size.zero;
@@ -127,8 +132,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     _cameraAnimationController.reset();
   }
 
-  void _moveTo(MapCameraTarget target, {bool animate = true}) {
+  void _moveTo(MapCameraTarget target,
+      {bool animate = true, bool userIntent = true}) {
     if (!_mapReady || _canvas.isEmpty) return;
+    if (userIntent) _cameraMoved = true;
     _stopCameraAnimation();
     final startCenter = _mapController.camera.center;
     final startZoom = _mapController.camera.zoom;
@@ -169,7 +176,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     final moved = (legal.zoom - camera.zoom).abs() > 1e-6 ||
         (legal.center.latitude - camera.center.latitude).abs() > 1e-9 ||
         (legal.center.longitude - camera.center.longitude).abs() > 1e-9;
-    if (moved) _moveTo(legal, animate: false);
+    if (moved) _moveTo(legal, animate: false, userIntent: false);
+  }
+
+  /// Re-frames the untouched first overview with the measured insets.
+  void _reframeInitialOverview() {
+    if (!_mapReady || _cameraMoved || _canvas.isEmpty) return;
+    _moveTo(_policy.overviewTarget(_canvas, _safePadding),
+        animate: false, userIntent: false);
   }
 
   void _showOverview() {
@@ -508,6 +522,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         (next.bottom - _safePadding.bottom).abs() > 1 ||
         next.left != _safePadding.left) {
       setState(() => _safePadding = next);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _reframeInitialOverview();
+      });
     }
   }
 
@@ -640,9 +657,13 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                           onMapReady: () {
                             _mapReady = true;
                             _enforceLegalCamera();
+                            _reframeInitialOverview();
                           },
                           onPositionChanged: (camera, hasGesture) {
-                            if (hasGesture) _stopCameraAnimation();
+                            if (hasGesture) {
+                              _cameraMoved = true;
+                              _stopCameraAnimation();
+                            }
                             if (_zoomNotifier.value != camera.zoom) {
                               _zoomNotifier.value = camera.zoom;
                             }
@@ -835,8 +856,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                       child: MapWebOfflineHint(
                                         evicted: _pack.webOffline?.state ==
                                             WebOfflineState.evicted,
+                                        // Not dismissed here: success hides
+                                        // the prompt (ready), a failure
+                                        // keeps it so the user can retry.
                                         onPrepare: () {
-                                          unawaited(_dismissWebHint());
                                           unawaited(_pack.prepareWebOffline());
                                           _openDetails();
                                         },

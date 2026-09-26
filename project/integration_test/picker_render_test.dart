@@ -35,8 +35,10 @@ const _outDir = String.fromEnvironment('MAP_RENDER_OUT');
 class _JsonLoader extends AssetLoader {
   const _JsonLoader();
   @override
-  Future<Map<String, dynamic>> load(String path, Locale locale) async =>
-      jsonDecode(await rootBundle.loadString('$path/${locale.languageCode}.json'))
+  Future<Map<String, dynamic>> load(
+          String path, Locale locale) async =>
+      jsonDecode(
+              await rootBundle.loadString('$path/${locale.languageCode}.json'))
           as Map<String, dynamic>;
 }
 
@@ -96,7 +98,8 @@ void main() {
                           child: Center(
                             child: TextButton(
                               key: const Key('directions-no-point'),
-                              onPressed: () => openVenueDirections(context, 0, 0,
+                              onPressed: () => openVenueDirections(
+                                  context, 0, 0,
                                   launcher: (_, __) async => true),
                               child: const SizedBox.shrink(),
                             ),
@@ -122,13 +125,15 @@ void main() {
     expect(pack.isReady, isTrue);
     await settle(tester, 6);
     await capture(tester, 'P01-picker-crosshair-en');
-    results['no_point_text_shown'] =
-        find.text('No point chosen yet. Tap the map.').evaluate().isNotEmpty;
+    results['no_point_text_shown'] = find
+        .text('No point chosen yet.')
+        .evaluate()
+        .isNotEmpty;
 
     final controller =
         tester.widget<FlutterMap>(find.byType(FlutterMap)).mapController!;
     final centre = controller.camera.center;
-    await tester.tap(find.text('Pin the map centre (+)'));
+    await tester.tap(find.text('Pin the centre mark'));
     await settle(tester, 2);
     await capture(tester, 'P02-picker-centre-pinned-en');
     final expected = 'Latitude ${centre.latitude.toStringAsFixed(5)}, '
@@ -158,7 +163,8 @@ void main() {
 
     if (_outDir.isNotEmpty) {
       File('$_outDir/picker-render-results-${Platform.operatingSystem}.json')
-          .writeAsStringSync(const JsonEncoder.withIndent(' ').convert(results));
+          .writeAsStringSync(
+              const JsonEncoder.withIndent(' ').convert(results));
     }
     // ignore: avoid_print
     print('PICKER_RENDER_RESULTS ${jsonEncode(results)}');

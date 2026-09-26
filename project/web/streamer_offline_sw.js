@@ -4,9 +4,11 @@
 // "Prepare offline map" (lib/features/map/services/map_pack_platform_web.dart).
 // This worker never adds entries by itself. On every GET from this origin or
 // the two public Flutter/Google font CDNs it tries the network first and
-// answers from that bucket only when the network fails or, for a request
+// answers from that bucket only when the network fails or, for a page load
 // that has a stored copy, takes longer than NETWORK_TIMEOUT_MS (a connected
-// network without internet). Other origins (Supabase, YouTube, analytics)
+// network without internet). A page that started from the stored copy takes
+// every file from it; a page that started from the network waits for the
+// network for its files, so one page never mixes two app builds. Other origins (Supabase, YouTube, analytics)
 // are never intercepted or cached, so no API, auth or personal response can
 // be stored here.
 const CACHE = 'streamer-offline-v1';
@@ -14,8 +16,16 @@ const PUBLIC_CDNS = ['https://www.gstatic.com', 'https://fonts.gstatic.com'];
 const NETWORK_TIMEOUT_MS = 4000;
 
 // Pages whose start came from the stored copy keep using it for every file,
-// so one page never mixes files from two different app builds.
+// so one page never mixes files from two different app builds. Closed pages
+// are dropped at the next page load.
 const offlinePages = new Set();
+
+async function forgetClosedPages() {
+  const open = new Set((await self.clients.matchAll({ type: 'window' })).map((c) => c.id));
+  for (const id of offlinePages) {
+    if (!open.has(id)) offlinePages.delete(id);
+  }
+}
 
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
@@ -46,13 +56,17 @@ self.addEventListener('fetch', (event) => {
       stored = await cache.match(new URL('index.html', self.registration.scope).href);
     }
     if (stored && offlinePages.has(event.clientId)) return stored;
+    const navigate = request.mode === 'navigate';
+    if (navigate) event.waitUntil(forgetClosedPages().catch(() => {}));
     const network = fetch(request);
     if (!stored) return network;
     network.catch(() => {}); // a late failure after the timeout is expected
     try {
-      return await withTimeout(network, NETWORK_TIMEOUT_MS);
+      // Only a page load gives up on a slow network; a file for a page that
+      // came from the network waits for it (or its failure).
+      return await (navigate ? withTimeout(network, NETWORK_TIMEOUT_MS) : network);
     } catch (networkError) {
-      if (request.mode === 'navigate' && event.resultingClientId) {
+      if (navigate && event.resultingClientId) {
         offlinePages.add(event.resultingClientId);
       }
       return stored;
