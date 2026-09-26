@@ -223,7 +223,7 @@ class MarkerSummaryCard extends StatelessWidget {
                 tooltip: 'venue.open_maps'.tr(),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                onPressed: () => _openInGoogleMaps(streamer),
+                onPressed: () => _openInGoogleMaps(context, streamer),
               ),
               const SizedBox(width: 6),
               IconButton(
@@ -292,12 +292,11 @@ class MarkerSummaryCard extends StatelessWidget {
   }
 
   /// Task 9 -- opens the streamer's venue coordinates directly in Google
-  /// Maps (native app if installed, browser fallback otherwise). Silently
-  /// no-ops if no maps handler exists on the device, same as the plan's
-  /// other two launch sites -- this is a convenience shortcut, not the only
-  /// way to navigate (VenueNavigationSheet's own button remains the
-  /// full-featured path with a clipboard fallback).
-  static Future<void> _openInGoogleMaps(StreamerModel streamer) async {
-    await launchVenueDirections(streamer.latitude, streamer.longitude);
+  /// Maps (native app if installed, browser fallback otherwise). If no maps
+  /// handler can take it, a localized message says so (VenueNavigationSheet
+  /// keeps its fuller clipboard fallback).
+  static Future<void> _openInGoogleMaps(
+      BuildContext context, StreamerModel streamer) async {
+    await openVenueDirections(context, streamer.latitude, streamer.longitude);
   }
 }

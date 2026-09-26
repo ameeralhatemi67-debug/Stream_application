@@ -43,5 +43,17 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <!--
+    Offline map: a network-first worker that answers from the cache the app
+    fills only when the user prepares the offline map. See
+    streamer_offline_sw.js; it never caches other origins' API responses.
+  -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('streamer_offline_sw.js').catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

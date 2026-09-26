@@ -56,6 +56,11 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+
+        // Isolated acceptance builds only: `-PstreamerTestId=maptest` installs as
+        // sa.hadayah.streamer_app.maptest beside (never over) the owner's app and its data.
+        // Absent by default, so normal and release builds keep the owner's APP_ID above.
+        (project.findProperty("streamerTestId") as String?)?.let { applicationIdSuffix = ".$it" }
     }
 
     signingConfigs {

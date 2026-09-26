@@ -1,50 +1,8 @@
 import 'dart:math' as math;
 import 'package:latlong2/latlong.dart';
-import 'package:flutter_map/flutter_map.dart' show LatLngBounds;
 import '../../profile/models/streamer_models.dart';
 
 enum MarkerStatus { liveVideo, liveAudio, offline }
-
-/// Generous viewport guard around Saudi Arabia, including the Gulf coast.
-final LatLngBounds saudiMapBounds = LatLngBounds(
-  const LatLng(15.5, 34.0),
-  const LatLng(33.0, 56.0),
-);
-
-class MapRegionModel {
-  final String regionId;
-  final String nameEn;
-  final String nameAr;
-  final LatLng centerCoordinates;
-  final String svgElementId;
-  final double zoomLevelTarget;
-  final List<LatLng> polygonPoints;
-
-  const MapRegionModel({
-    required this.regionId,
-    required this.nameEn,
-    required this.nameAr,
-    required this.centerCoordinates,
-    required this.svgElementId,
-    required this.zoomLevelTarget,
-    this.polygonPoints = const [],
-  });
-
-  String getLocalizedName(String languageCode) =>
-      languageCode == 'ar' ? nameAr : nameEn;
-
-  static double calculateHaversineDistance(
-      double lat1, double lon1, double lat2, double lon2) {
-    return calculateDistanceKm(lat1, lon1, lat2, lon2);
-  }
-
-  static String formatDistance(double distanceKm, String languageCode) {
-    if (languageCode == 'ar') {
-      return '${distanceKm.toStringAsFixed(1)} كم';
-    }
-    return '${distanceKm.toStringAsFixed(1)} km';
-  }
-}
 
 class MapMarkerModel {
   final String markerId;
@@ -162,6 +120,8 @@ class MapMarkerModel {
   }
 }
 
+/// Legacy display hint derived from the free-text city name. It is not
+/// spatial proof and never decides map eligibility or city selection.
 String mapCityId(String cityEn) {
   final city = cityEn.toLowerCase();
   for (final name in [
@@ -177,143 +137,6 @@ String mapCityId(String cityEn) {
   }
   return city.trim().replaceAll(RegExp(r'\s+'), '_');
 }
-
-/// AlSharqia Core Regions & 50% Decimated Clean Geographic Municipal Bounding Coordinates
-const List<MapRegionModel> alSharqiaRegions = [
-  MapRegionModel(
-    regionId: 'khobar',
-    nameEn: 'Al Khobar',
-    nameAr: 'الخبر',
-    centerCoordinates: LatLng(26.2871, 50.2125),
-    svgElementId: 'path5',
-    zoomLevelTarget: 13.5,
-    polygonPoints: [
-      LatLng(26.4080, 50.1850),
-      LatLng(26.4020, 50.1940),
-      LatLng(26.3760, 50.2170),
-      LatLng(26.3300, 50.2240),
-      LatLng(26.3000, 50.2210),
-      LatLng(26.2730, 50.2230),
-      LatLng(26.2600, 50.2140),
-      LatLng(26.2570, 50.1870),
-      LatLng(26.2640, 50.1610),
-      LatLng(26.2870, 50.1630),
-      LatLng(26.3150, 50.1750),
-      LatLng(26.3420, 50.1730),
-      LatLng(26.3610, 50.1700),
-      LatLng(26.3850, 50.1650),
-      LatLng(26.4010, 50.1710),
-    ],
-  ),
-  MapRegionModel(
-    regionId: 'dhahran',
-    nameEn: 'Dhahran',
-    nameAr: 'الظهران',
-    centerCoordinates: LatLng(26.3042, 50.1462),
-    svgElementId: 'path15',
-    zoomLevelTarget: 13.5,
-    polygonPoints: [
-      LatLng(26.4010, 50.1710),
-      LatLng(26.3850, 50.1650),
-      LatLng(26.3610, 50.1700),
-      LatLng(26.3420, 50.1730),
-      LatLng(26.3150, 50.1750),
-      LatLng(26.2870, 50.1630),
-      LatLng(26.2640, 50.1610),
-      LatLng(26.2500, 50.1550),
-      LatLng(26.2530, 50.1250),
-      LatLng(26.2550, 50.0950),
-      LatLng(26.2700, 50.0850),
-      LatLng(26.2950, 50.1000),
-      LatLng(26.3200, 50.1150),
-      LatLng(26.3450, 50.1250),
-      LatLng(26.3750, 50.1200),
-      LatLng(26.3950, 50.1250),
-      LatLng(26.4050, 50.1450),
-    ],
-  ),
-  MapRegionModel(
-    regionId: 'dammam',
-    nameEn: 'Dammam',
-    nameAr: 'الدمام',
-    centerCoordinates: LatLng(26.4207, 50.0888),
-    svgElementId: 'path14',
-    zoomLevelTarget: 13.0,
-    polygonPoints: [
-      LatLng(26.5100, 50.0350),
-      LatLng(26.4950, 50.0650),
-      LatLng(26.4800, 50.0950),
-      LatLng(26.4650, 50.1150),
-      LatLng(26.4450, 50.1100),
-      LatLng(26.4250, 50.1150),
-      LatLng(26.4080, 50.1850),
-      LatLng(26.4010, 50.1710),
-      LatLng(26.4050, 50.1450),
-      LatLng(26.3950, 50.1250),
-      LatLng(26.3750, 50.1200),
-      LatLng(26.3800, 50.0950),
-      LatLng(26.3900, 50.0750),
-      LatLng(26.4150, 50.0550),
-      LatLng(26.4400, 50.0350),
-      LatLng(26.4700, 50.0200),
-      LatLng(26.4950, 50.0250),
-    ],
-  ),
-];
-
-/// Navigation presets are separate from the three reviewed city polygons.
-/// The offline schematic still covers only those Eastern Province polygons.
-final List<MapRegionModel> saudiMapPresets = [
-  const MapRegionModel(
-    regionId: 'saudi_arabia',
-    nameEn: 'Saudi Arabia',
-    nameAr: 'السعودية',
-    centerCoordinates: LatLng(24.0, 45.0),
-    svgElementId: '',
-    zoomLevelTarget: 5.3,
-  ),
-  const MapRegionModel(
-    regionId: 'eastern_province',
-    nameEn: 'Eastern Province',
-    nameAr: 'المنطقة الشرقية',
-    centerCoordinates: LatLng(26.2, 49.7),
-    svgElementId: '',
-    zoomLevelTarget: 8.0,
-  ),
-  ...alSharqiaRegions,
-  const MapRegionModel(
-    regionId: 'jubail',
-    nameEn: 'Jubail',
-    nameAr: 'الجبيل',
-    centerCoordinates: LatLng(27.004, 49.661),
-    svgElementId: '',
-    zoomLevelTarget: 12.5,
-  ),
-  const MapRegionModel(
-    regionId: 'hofuf',
-    nameEn: 'Hofuf',
-    nameAr: 'الهفوف',
-    centerCoordinates: LatLng(25.3647, 49.587),
-    svgElementId: '',
-    zoomLevelTarget: 12.5,
-  ),
-  const MapRegionModel(
-    regionId: 'riyadh',
-    nameEn: 'Riyadh',
-    nameAr: 'الرياض',
-    centerCoordinates: LatLng(24.7136, 46.6753),
-    svgElementId: '',
-    zoomLevelTarget: 11.5,
-  ),
-  const MapRegionModel(
-    regionId: 'jeddah',
-    nameEn: 'Jeddah',
-    nameAr: 'جدة',
-    centerCoordinates: LatLng(21.5433, 39.1728),
-    svgElementId: '',
-    zoomLevelTarget: 11.5,
-  ),
-];
 
 /// Whether a streamer/marker in [categoryId] survives the map's current
 /// topic filter.

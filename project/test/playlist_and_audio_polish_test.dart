@@ -14,7 +14,6 @@ import 'package:streamer_app/features/map/presentation/widgets/top_spatial_searc
 import 'package:streamer_app/features/map/presentation/widgets/city_selector_dropdown.dart';
 import 'package:streamer_app/features/map/presentation/widgets/topic_selector_dropdown.dart';
 import 'package:streamer_app/features/discovery/models/academic_category_model.dart';
-import 'package:streamer_app/features/map/models/map_models.dart';
 
 import 'fixtures/streamer_fixtures.dart';
 
@@ -142,10 +141,10 @@ void main() {
           Column(
             children: [
               TopSpatialSearchBar(
-                onSearchResultSelected: (coords, zoom, label) {},
+                onCitySelected: (_) {},
               ),
               CitySelectorDropdown(
-                selectedCity: alSharqiaRegions.first,
+                selectedCityId: 'khobar',
                 onCitySelected: (_) {},
               ),
               TopicSelectorDropdown(

@@ -16,6 +16,9 @@ dependencies:
   go_router: ^14.2.0
   provider: ^6.1.2
   http: ^1.2.0
+  # Direct imports for the map pack (hash check, browser offline storage).
+  crypto: ^3.0.7
+  web: ^1.1.1
   shared_preferences: ^2.2.2
   url_launcher: ^6.3.0
   connectivity_plus: ^6.0.5
@@ -24,8 +27,11 @@ dependencies:
   easy_localization: ^3.0.7
 
   # GIS Mapping & Vector Rendering
-  flutter_map: ^7.0.2
-  flutter_map_cancellable_tile_provider: ^3.0.1
+  # Exact pins: qualified together in P5 tri-city G0 (see
+  # brief/evidence/2026-09-26/p5-tricity-map-upgrade/). Upgrade only with a
+  # fresh qualification of the local PMTiles adapter and label rendering.
+  flutter_map: 8.3.2
+  flutter_map_vector_tiles: 2.9.0
   cached_network_image: ^3.3.1
   latlong2: ^0.9.1
   flutter_svg: ^2.0.9
@@ -59,6 +65,9 @@ dev_dependencies:
   fake_async: ^1.3.3
   flutter_test:
     sdk: flutter
+  # Real-engine map render checks on Windows/Android (integration_test/).
+  integration_test:
+    sdk: flutter
   flutter_lints: ^3.0.0
   # Generates the launcher, adaptive and web icons from the owner's supplied
   # logo. A dev dependency: nothing it produces is imported at runtime.
@@ -74,6 +83,8 @@ flutter:
     - assets/Language.svg
     - assets/i18n/en.json
     - assets/i18n/ar.json
+    # Bundled three-city map pack (hash-verified against manifest.json).
+    - assets/maps/tricity/
     - assets/images/Ahmed_Amer_YouTube_files/
     - assets/images/Amir_Alhatemi/
     - assets/images/BidonWaraq/

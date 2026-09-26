@@ -1,14 +1,14 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math' as math;
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
+import 'package:streamer_app/features/map/models/map_tricity_domain.dart';
 import 'package:streamer_app/features/map/presentation/map_cluster_layout.dart';
+import 'package:streamer_app/features/map/presentation/map_viewport_policy.dart';
 import 'package:streamer_app/features/map/presentation/map_visible_catalog.dart';
 import 'package:streamer_app/features/map/presentation/venue_directions_launcher.dart';
 import 'package:streamer_app/features/map/presentation/widgets/spatial_streamer_marker.dart';
@@ -48,8 +48,8 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await EasyLocalization.ensureInitialized();
   });
-  math.Point<double> project(LatLng p) => math.Point(p.longitude, p.latitude);
-  LatLng unproject(math.Point<double> p) => LatLng(p.y, p.x);
+  Offset project(LatLng p) => Offset(p.longitude, p.latitude);
+  LatLng unproject(Offset p) => LatLng(p.dy, p.dx);
 
   test('dense points form one stable cluster with bounded projection work', () {
     var projections = 0;
@@ -89,10 +89,11 @@ void main() {
         points[0].coordinates);
   });
 
-  test('cluster tap zooms before presenting a member choice', () {
-    expect(clusterTapZoom(8), 10);
-    expect(clusterTapZoom(16), 17.5);
-    expect(clusterTapZoom(17.5), isNull);
+  test('cluster tap zooms up to the shared maximum, then lists members', () {
+    expect(clusterTapZoom(11), 13);
+    expect(clusterTapZoom(17), kMapMaxZoom);
+    expect(clusterTapZoom(kMapMaxZoom - 0.25), isNull);
+    expect(clusterTapZoom(kMapMaxZoom), isNull);
   });
 
   test('search and cached marker IDs follow the refreshed public catalog', () {
@@ -161,7 +162,7 @@ void main() {
           TopSpatialSearchBar(
             visibleStreamers: streamers,
             onStreamerSelected: picks.add,
-            onSearchResultSelected: (_, __, ___) {},
+            onCitySelected: (_) {},
           ),
         );
     await tester.pumpWidget(search([venue]));
@@ -180,31 +181,21 @@ void main() {
     expect(find.byType(ListTile), findsOneWidget);
   });
 
-  test('Saudi presets include owner cities and stay in navigable bounds', () {
-    final ids = saudiMapPresets.map((p) => p.regionId).toSet();
-    expect(
-        ids,
-        containsAll([
-          'saudi_arabia',
-          'eastern_province',
-          'khobar',
-          'dammam',
-          'jubail',
-          'hofuf',
-          'riyadh',
-          'jeddah'
-        ]));
-    for (final preset in saudiMapPresets) {
-      expect(saudiMapBounds.contains(preset.centerCoordinates), isTrue,
-          reason: preset.regionId);
-      expect(preset.zoomLevelTarget, inInclusiveRange(5, 17.5));
-      expect(preset.getLocalizedName('ar'), isNotEmpty);
+  test('three city views stay inside the map domain; legacy ids remain hints',
+      () {
+    expect(kTricityCityViews.map((v) => v.id), ['khobar', 'dhahran', 'dammam']);
+    for (final view in kTricityCityViews) {
+      final c = view.view.center;
+      expect(isInTricityMapDomain(c.latitude, c.longitude), isTrue,
+          reason: view.id);
+      expect(view.localizedName('ar'), isNotEmpty);
+      expect(kTricityOverviewExtent.contains(c.latitude, c.longitude), isTrue,
+          reason: view.id);
     }
-    expect(saudiMapPresets.first.centerCoordinates.longitude, lessThan(50));
-    expect(alSharqiaRegions.first.regionId, 'khobar');
+    // mapCityId is only a display hint derived from free text.
     expect(mapCityId('Riyadh'), 'riyadh');
     expect(mapCityId('Al Jubail'), 'jubail');
-    expect(mapCityId('Jeddah'), 'jeddah');
+    expect(isInTricityMapDomain(24.7136, 46.6753), isFalse);
   });
 
   test('native directions target exact coordinates on Android and iOS', () {

@@ -1,0 +1,42 @@
+Streamer three-city offline map: notices
+=========================================
+
+Map data
+--------
+Map data (c) OpenStreetMap contributors, available under the Open Database
+License (ODbL) 1.0: https://www.openstreetmap.org/copyright
+https://opendatacommons.org/licenses/odbl/1-0/
+
+The bundled vector tiles (basemap.pmtiles) are a regional extract of the
+Protomaps Basemap build 20260926 (schema 4.15.2; OpenStreetMap replication
+2026-09-26 04:00 UTC), produced from OpenStreetMap and Natural Earth data.
+Protomaps tiles are a Produced Work of the OpenStreetMap database:
+https://protomaps.com/legal  https://docs.protomaps.com/basemaps/downloads
+Natural Earth data is in the public domain: https://www.naturalearthdata.com/about/terms-of-use/
+
+Regional extract: pmtiles 1.31.2 `extract` over
+bbox 49.70,25.95,50.45,26.80 (west,south,east,north), zoom 0-15.
+Build and validation steps: project/tool/maps/README.md in the app source.
+
+Map style
+---------
+style-en.json and style-ar.json were written for this app
+(project/tool/maps/build_styles.py) against the Protomaps basemap v4 schema.
+No third-party style, sprite or glyph files are bundled.
+
+Fonts
+-----
+Map labels use the fonts already shipped with the app: IBM Plex Sans and
+IBM Plex Sans Arabic, (c) IBM Corp., SIL Open Font License 1.1:
+https://github.com/IBM/plex/blob/master/LICENSE.txt
+
+Software
+--------
+flutter_map (c) fleaflet contributors, BSD 3-Clause License.
+flutter_map_vector_tiles (c) 2026 Jonas Grunau, BSD 3-Clause License.
+The full software licence texts are listed on the app's licences screen.
+
+City outlines
+-------------
+No city boundary geometry is included. The city names in the map selector
+choose a map view; they are not official municipal limits.
