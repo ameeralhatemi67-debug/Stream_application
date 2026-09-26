@@ -93,7 +93,7 @@
     "details_venues_online": "علامات الأماكن وحالة البث محدّثة.",
     "details_venues_saved": "دون اتصال: تُعرض الأماكن المحفوظة بتاريخ {time}. تظهر حالة البث والأماكن الجديدة عند عودة الاتصال.",
     "details_credits_title": "المصادر",
-    "details_credits_body": "بيانات الخريطة © مساهمو OpenStreetMap، متاحة بموجب رخصة قاعدة البيانات المفتوحة (ODbL). البلاطات من خريطة Protomaps الأساسية.",
+    "details_credits_body": "بيانات الخريطة من مساهمي OpenStreetMap، متاحة بموجب رخصة قاعدة البيانات المفتوحة (ODbL). البلاطات من خريطة Protomaps الأساسية.",
     "details_notices": "التراخيص والمصادر (محفوظة في التطبيق)",
     "pack_loading": "جارٍ تحميل الخريطة…",
     "pack_unavailable_title": "تعذّر عرض الخريطة",

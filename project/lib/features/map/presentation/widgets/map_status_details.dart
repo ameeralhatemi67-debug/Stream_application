@@ -8,7 +8,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../services/map_offline_store.dart';
 import '../../services/map_pack_controller.dart';
 
-/// Always-visible map credit: a short readable `© OpenStreetMap` link plus a
+/// Always-visible map credit: the pack's short OpenStreetMap credit link plus a
 /// 48 px information button that opens the local notices and map status.
 /// Never ellipsized; it wraps at large text sizes instead.
 class MapAttributionRail extends StatelessWidget {
@@ -24,7 +24,7 @@ class MapAttributionRail extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final manifest = controller.manifest;
-    final credit = manifest?.attributionShort ?? '© OpenStreetMap';
+    final credit = manifest?.attributionShort ?? kOsmCreditFallback;
     final url =
         manifest?.attributionUrl ?? 'https://www.openstreetmap.org/copyright';
     return Material(
@@ -404,7 +404,7 @@ class _MapDetailsBody extends StatelessWidget {
             _body('map.details_credits_body'.tr()),
             TextButton.icon(
               icon: const Icon(Icons.open_in_new_rounded, size: 16),
-              label: Text(manifest?.attributionShort ?? '© OpenStreetMap'),
+              label: Text(manifest?.attributionShort ?? kOsmCreditFallback),
               onPressed: () => launchUrl(
                   Uri.parse(manifest?.attributionUrl ??
                       'https://www.openstreetmap.org/copyright'),

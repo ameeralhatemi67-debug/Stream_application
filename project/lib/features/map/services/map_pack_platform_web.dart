@@ -91,11 +91,12 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
   /// Latin and Arabic sample so both are fetched (and then stored below)
   /// even if this visit never showed Arabic labels.
   Future<void> _warmLabelFonts() async {
-    final builder = ui.ParagraphBuilder(ui.ParagraphStyle())
-      ..addText('Al Khobar Dhahran Dammam 0123456789 '
-          'الخبر '
-          'الظهران '
-          'الدمام');
+    // Not shown to anyone: it only makes the engine fetch the fallback fonts.
+    const sample = 'Al Khobar Dhahran Dammam 0123456789 '
+        'الخبر '
+        'الظهران '
+        'الدمام';
+    final builder = ui.ParagraphBuilder(ui.ParagraphStyle())..addText(sample);
     builder.build().layout(const ui.ParagraphConstraints(width: 600));
     for (var i = 0; i < 40 && !_hasFontEntry('notosansarabic'); i++) {
       await Future<void>.delayed(const Duration(milliseconds: 250));

@@ -11,6 +11,11 @@ import 'map_pack_platform.dart';
 
 const String kTricityPackDir = 'assets/maps/tricity';
 
+/// Credit shown only if the pack manifest cannot be read (the map itself is
+/// then not shown). The normal credit, with the copyright sign, comes from
+/// the manifest's `attribution.short`, so it always matches the bundled data.
+const String kOsmCreditFallback = 'OpenStreetMap contributors';
+
 enum MapPackStatus { loading, ready, unavailable }
 
 /// Why the local map could not be shown. Codes map to localized copy.
@@ -56,7 +61,7 @@ class MapPackManifest {
       .map((e) => e.toInt())
       .toList();
   String get attributionShort =>
-      (json['attribution'] as Map?)?['short'] as String? ?? '© OpenStreetMap';
+      (json['attribution'] as Map?)?['short'] as String? ?? kOsmCreditFallback;
   String get attributionUrl =>
       (json['attribution'] as Map?)?['url'] as String? ??
       'https://www.openstreetmap.org/copyright';

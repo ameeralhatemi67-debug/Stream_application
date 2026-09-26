@@ -97,7 +97,7 @@ void main() {
       expect(pack.status, MapPackStatus.unavailable);
       expect(find.text("The map can't be shown"), findsOneWidget);
       expect(find.textContaining('Offline ·'), findsOneWidget);
-      expect(find.text('© OpenStreetMap'), findsOneWidget);
+      expect(find.text(kOsmCreditFallback), findsOneWidget);
       expect(find.byTooltip('Map details and credits'), findsOneWidget);
       expect(find.byTooltip('Show all three cities'), findsOneWidget);
       expect(find.textContaining('Esri'), findsNothing);
@@ -164,7 +164,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.textContaining('Offline ·'), findsNothing);
       expect(find.text("The map can't be shown"), findsOneWidget);
-      expect(find.text('© OpenStreetMap'), findsOneWidget);
+      expect(find.text(kOsmCreditFallback), findsOneWidget);
     });
 
     testWidgets('details sheet shows local notices and venue freshness',
@@ -196,7 +196,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('المدن الثلاث'), findsOneWidget);
       expect(find.byTooltip('عرض المدن الثلاث'), findsOneWidget);
-      expect(find.text('© OpenStreetMap'), findsOneWidget);
+      expect(find.text(kOsmCreditFallback), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
   });

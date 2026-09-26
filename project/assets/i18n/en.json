@@ -93,7 +93,7 @@
     "details_venues_online": "Venue pins and live status are current.",
     "details_venues_saved": "Offline: showing venues saved {time}. Live status and new venues appear when you reconnect.",
     "details_credits_title": "Credits",
-    "details_credits_body": "Map data © OpenStreetMap contributors, available under the Open Database License. Tiles from the Protomaps basemap.",
+    "details_credits_body": "Map data from OpenStreetMap contributors, available under the Open Database License. Tiles from the Protomaps basemap.",
     "details_notices": "Licences and sources (stored in the app)",
     "pack_loading": "Loading map…",
     "pack_unavailable_title": "The map can't be shown",
