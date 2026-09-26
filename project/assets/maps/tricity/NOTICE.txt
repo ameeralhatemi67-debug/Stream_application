@@ -26,15 +26,18 @@ No third-party style, sprite or glyph files are bundled.
 
 Fonts
 -----
-Map labels use the fonts already shipped with the app: IBM Plex Sans and
-IBM Plex Sans Arabic, (c) IBM Corp., SIL Open Font License 1.1:
-https://github.com/IBM/plex/blob/master/LICENSE.txt
+Map labels are drawn with the device's default fonts (the app's own IBM
+Plex fonts are used for the rest of the interface). In a web browser the
+engine uses Roboto (Apache License 2.0) and Noto Sans Arabic (SIL Open Font
+License 1.1) from Google Fonts; they are stored in the browser only when you
+prepare the offline map.
 
 Software
 --------
 flutter_map (c) fleaflet contributors, BSD 3-Clause License.
 flutter_map_vector_tiles (c) 2026 Jonas Grunau, BSD 3-Clause License.
-The full software licence texts are listed on the app's licences screen.
+https://pub.dev/packages/flutter_map
+https://pub.dev/packages/flutter_map_vector_tiles
 
 City outlines
 -------------
