@@ -1,223 +1,305 @@
 {
-  "main_branch": "master",
-  "main_head": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
-  "stash": "stash@{0} d646b945d0007d55ec52690f1ca085a3879ccab8 On master: owner-brief-settings-before-window2-2026-09-20\nstash@{1} d53c178e116328e8c3d349f36af795733dc31ee4 On master: preexisting-before-budget-stop-2026-09-20",
-  "hash_checks": [
+  "checked_utc": "2026-09-26T20:42:57.449768+00:00",
+  "master": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
+  "master_unchanged": true,
+  "status": [
+    " M Core_files/STATUS.md",
+    " M Core_files/progres.md",
+    " M Roadmap.md",
+    " M brief/LEDGER.md",
+    " M issue_encountered.md",
+    " M skill-observations/log.md",
+    "?? brief/assets/issues/",
+    "?? brief/evidence/2026-09-24/p6-device-retest/",
+    "?? brief/evidence/2026-09-24/p6-retest-repair/REPAIR_RETEST_RESULTS.md",
+    "?? brief/evidence/2026-09-24/p6-retest-repair/screenshots/",
+    "?? brief/evidence/2026-09-24/p6-wave3-review.md",
+    "?? brief/evidence/2026-09-26/p6s-astra-audit/E4_ACCEPTANCE_RESULTS.md",
+    "?? brief/evidence/2026-09-26/p6s-astra-audit/SCREENSHOTS_AUDIT.md",
+    "?? brief/evidence/2026-09-26/p6s-astra-audit/screenshots/",
+    "?? brief/evidence/2026-09-26/p6s-manager-review.md",
+    "?? brief/prompts/",
+    "?? brief/research/"
+  ],
+  "stashes": [
+    "d646b945d0007d55ec52690f1ca085a3879ccab8 stash@{0} On master: owner-brief-settings-before-window2-2026-09-20",
+    "d53c178e116328e8c3d349f36af795733dc31ee4 stash@{1} On master: preexisting-before-budget-stop-2026-09-20"
+  ],
+  "files_checked": 54,
+  "files_unchanged": 54,
+  "files": [
     {
       "path": "brief/evidence/2026-09-21/screenshots/scheme_a_evidence/phone_broadcast_ar.png",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "05b2d99f454aa062a1165ec3d2a31a25b4c20836319f05a61862e3ce29c33ad1"
     },
     {
       "path": "brief/evidence/2026-09-21/screenshots/scheme_a_evidence/phone_broadcast_en.png",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "7115da9aa7af4eeaa9ae9dedb7c26d9d7f6896f553b9d89d1c9ce7c0f7cb1db3"
     },
     {
       "path": "brief/LEDGER.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "43f387bd9728f9f03138f2d5f5129e62feaa055a63dfb9d27388dc4774b7496b"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\android-build.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "7ae376905ed63c8a17c1fce8e37a429902d72144d74d34f4086013bd06bc55ae"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\android-initial-build.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "a4ee354d248cc52a68c2ef4c4072232010ad488fa76a452c3fe61cce0b5ed079"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\backend-probe-cold-start.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "aec02338b02a2b2004a8974079d2764a5bc1e975eb6a0d8c4adc6a18f68045e8"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\backend-probe.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "5e3e5e0fdd617b31a6446f3126158bb33a21a1a02cf339742247e8583e9cae9e"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\BROWSER_PROBE.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "033e58f571dff943efb04bf1ca478f83c60d5de0864b9f92eee36c562aec2c45"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\build-hashes.json",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "777b4da501df585a1c889bccfecac7ff65c9bbabdff6dcc859910141646a9eb0"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\concurrency-final.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "e1754a97c5f470e66f0d52e3415ddd7d98f2afa7133b8fdc36d43d37ce8b9f2f"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\E4_ACCEPTANCE_RESULTS.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "6003e2ef1757e31c83783ecc6b350cac413cf25da5c18fb1645c960bbe9ba052"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\E4_RETEST_SCRIPT.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "a25a92726161a1ec06bbdfd8a871f004be0f036a2101cac3df2468014e1b2f3a"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\embed-runtime.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "ecf28eff172d5f76ecfe4a8ed86cadc9c057c48332c3c3f3167101ec6500fe98"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-analyze.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "1de8e2e1854bd97f10a42ed63dffca869b9ec21f8311ab792b4bc3a421cb3ca9"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-full-log-hash.json",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "4e50cfcfc7b3c7efdddc42303395ef7917835882f7e366140b292510f389a423"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-tests.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "a70240e420db9145a079e87cab7d7f989ad5766f6773ecee71c7c4c040755382"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\gates.json",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "a84e176ffad6ffae4a64bc695187bf13b25cd313c2459850288bc726e2d7d5f7"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\identity-after.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "f7b7c38fbf1e72f662928694b53befa3ec7079da1d44550b01501a80d0660a5b"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\identity-before.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "1b4e18f8f0236d947150688eda409b4cc49dd98b320c4f9acf8c2f8bbae7feec"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\INTEGRATION.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "ea240bbff5c652c5eeb69ad5b3ad4d242cb1dbedec0acf16ab0213d4790cedc2"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\ISSUE_RECORD_ADDENDUM.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "01791b733dd5a66b43d6b34f354def2aa62e7658ee083a1aa288e05cec5633d5"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\local-stack.toml",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "7a4a20bcffaaed109bcdd43a7e88f4fc9d24abcf09ea9f8eb3c2fee5a26af42e"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\main-checkout-after.json",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "76d944233744d8e80e5a7f2c506c0a7fa7119c4bad0afcc1a5fa062230f26877"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\main-checkout-before.json",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "bf08b2d1db216d344d6300d7e2739398cced25dc8a35ab0f9b92de47dc7f808d"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\race-after.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "93d161c33b69a7c7d07c3e339fdd016900a397ba32297d7c2db634e513b95d4c"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\race-before.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "3495fe052f2b1419627ae0a0cd31ecdbddde7a39b0f00ddeb92ba34089f1d0a5"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\REPORT.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "dd7a016009ee4581fd5cf6449ecd1f3862107c4fd460191d0bb52d0464816b19"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\SCREENSHOTS_AUDIT.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "3c3a90a9c99144a345badfaf4d8e04c7603bc5fc46de7c8c7d806ec95f364362"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_bottom_sheet_overflow_17px.jpg",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "97cc4a6f0c511a70cbd98c6b448a3dc74dabc292121361368007afe29ebd1798"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_keyboard_overflow_90px.jpg",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "36c7b730eb35ca52f4e77d1cf0963f9423ff9eefa3a021d64f61aee68d9a9fe8"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_side_chat_overlap.jpg",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "7c7048104c58ae3ea215f37674018bf26be6b01b6013fcf6057b0e3600446af5"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_sideways_camera_and_header.jpg",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "a06824d904e630ad0f65685affd00d942735c72ebb39922022fde70aac600a77"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_youtube_web_pillarbox_orientation_mismatch.png",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "a93b0fc1b2016c01e9723972ab600dc863d2d4cb224584d625067564c306f500"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\sql-suite.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "3e702506d42dd963901d5e3e0e6f06d9a6b6060e42b0607d49650a4b5075dff8"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\sweep-before.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "f0594eb141142e20c6eb3d79944c43348016cd537ea22eec2b936f2f43ecddfa"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\VERIFICATION.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "7ba5b82c8a91b83bf3d5583e11e6b7ab23721d47c0d365998d70e1057d91fa6e"
     },
     {
       "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\web-build.txt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "bd917b662b4e5518c1171a95473e0a8516a69a5b42120871f78fbc948c755b9f"
     },
     {
       "path": "Core_files/progres.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "edf4eb91b151e8d5a6fe770ce9e32d97dc6473752971d6f322893391ab3e1331"
     },
     {
       "path": "Core_files/STATUS.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "d6a3eee673ff5249f3ca2edfefd6b99cc02bfe33f9e4b64ff50a02a341895dc2"
     },
     {
       "path": "issue_encountered.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "fb96c42c242bafa891c043ec133b897009b90bdd2f8092290cc6c1d0723153fc"
     },
     {
       "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherBridge.kt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "729591548be641122e13305209d97de9f58b4ad37fcf66ca73d2104dd3a5010a"
     },
     {
       "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherView.kt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "ace2c13d1c7891ed47f20fbc0102b1687a504b537b2d6b1ede339747434e7128"
     },
     {
       "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherViewFactory.kt",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "fc77ab71e6e89303a14a82db3d364ffd4cae9df18d970804e4dda7a5d881358e"
     },
     {
       "path": "project/lib/core/providers/app_provider.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "ae786d452420be9a3bf6c5aa9844f45b6afe99f5bfee972b77df24f86eda113c"
     },
     {
       "path": "project/lib/features/live_stream/presentation/adapters/youtube_player_adapter.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "90b333b06228bebf3f9e77d8eb7e79585c67f0fac10e3e9069d50948481b3d2c"
     },
     {
       "path": "project/lib/features/live_stream/presentation/live_broadcast_screen.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "e5e5562996da6fd1829009604f5bd9c2f6ae36ea200a507c1d71976a054d903f"
     },
     {
       "path": "project/lib/features/live_stream/presentation/screens/phone_broadcast_screen.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "3a17b46d5a59da4479f5a6418d4871e2601c334408037be3d6725c3fed0432a8"
     },
     {
       "path": "project/lib/features/live_stream/presentation/widgets/live_chat_widget.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "eef5eed1dfc911a5a0bc651c0578756e0772c9f6f21da27d50050933acbb4efc"
     },
     {
       "path": "project/lib/features/live_stream/services/rtmp_publish_engine.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "7f41148d6abceb95bfa095e283c07998e4bdcad50699329995421bdf08588ef9"
     },
     {
       "path": "project/pubspec.lock",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "26b890254de0a91cc3f5487fdd8bdedf0cd0b7b6371ff81dd9db898d04721a4d"
     },
     {
       "path": "project/test/phone_broadcast_end_test.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "b8198a8406105e059a34d117cffcf08d6ccf250388e513ae2a6f1cd619e8e0c5"
     },
     {
       "path": "project/test/phone_broadcast_engine_test.dart",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "2bccc8fc069d08cbaf33a967082153c51665cb812c3a50ccbef71d3fd6358438"
     },
     {
       "path": "Roadmap.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "8a776be0800929e1ef0f6cbf136ddafe1703862e9fcd17cae62b9cbc2d91cca4"
     },
     {
       "path": "skill-observations/log.md",
-      "unchanged": true
+      "same": true,
+      "current_sha256": "2666f0fd9c3b9b75745d3109e883e049abdbf051c9c6d246186b9933fcc12747"
     }
-  ]
+  ],
+  "notes": "Read-only comparison. Opus remains active; its own progress is not altered. Owner test app not installed. Only private AVD used and stopped.",
+  "status_unchanged": true,
+  "stashes_unchanged": true
 }

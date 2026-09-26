@@ -1,0 +1,1356 @@
+Resolving dependencies...
+Downloading packages...
+  app_links 7.0.0 (7.2.1 available)
+  app_links_platform_interface 2.0.2 (2.0.4 available)
+  cached_network_image 3.4.1 (4.0.2 available)
+  cached_network_image_platform_interface 4.1.1 (5.0.2 available)
+  cached_network_image_web 1.3.1 (2.0.2 available)
+  cli_util 0.4.2 (0.6.0 available)
+  clock 1.1.2 (1.1.3 available)
+  code_assets 1.2.1 (2.1.0 available)
+  connectivity_plus 6.1.5 (7.3.1 available)
+  cross_file 0.3.5+4 (0.3.5+5 available)
+  dbus 0.7.14 (0.8.0 available)
+  dio 5.11.0 (5.11.1 available)
+  dio_web_adapter 2.2.1 (2.2.2 available)
+  file_selector_linux 0.9.4 (0.9.4+1 available)
+  file_selector_macos 0.9.5 (0.9.5+1 available)
+  file_selector_windows 0.9.3+5 (0.9.3+6 available)
+  flutter_cache_manager 3.4.2 (3.4.5 available)
+  flutter_lints 3.0.2 (6.0.0 available)
+  flutter_map 7.0.2 (8.3.2 available)
+  flutter_map_cancellable_tile_provider 3.0.2 (discontinued replaced by flutter_map)
+  go_router 14.8.1 (18.0.1 available)
+  hooks 2.0.2 (2.2.0 available)
+  image_picker_android 0.8.13+17 (0.8.13+23 available)
+  image_picker_ios 0.8.13+6 (0.8.13+8 available)
+  intl 0.20.2 (0.20.3 available)
+  jni_flutter 1.0.2 (1.0.3 available)
+  latlong2 0.9.1 (0.10.1 available)
+  lints 3.0.0 (6.1.0 available)
+  logger 2.7.0 (2.8.0 available)
+  matcher 0.12.18 (0.12.20 available)
+  material_color_utilities 0.13.0 (0.13.1 available)
+  meta 1.17.0 (1.19.0 available)
+  mgrs_dart 2.0.0 (3.0.0 available)
+  mime 2.0.0 (2.1.0 available)
+  nm 0.5.0 (0.6.0 available)
+  objective_c 9.5.0 (9.6.0 available)
+  octo_image 2.1.0 (2.1.1 available)
+  package_info_plus 9.0.1 (10.2.1 available)
+  package_info_plus_platform_interface 3.2.1 (4.1.0 available)
+  passkeys_platform_interface 2.9.0 (2.10.0 available)
+  permission_handler 11.4.0 (13.0.2 available)
+  permission_handler_android 12.1.0 (14.1.0 available)
+  permission_handler_platform_interface 4.4.0 (4.4.1 available)
+  platform 3.1.6 (3.2.0 available)
+  proj4dart 2.1.0 (3.0.0 available)
+  pub_semver 2.2.0 (2.2.1 available)
+  record_use 0.6.0 (1.1.1 available)
+  share_plus 10.1.4 (13.3.0 available)
+  share_plus_platform_interface 5.0.2 (7.2.0 available)
+  shared_preferences_android 2.4.23 (2.4.28 available)
+  shared_preferences_foundation 2.5.6 (2.5.7 available)
+  sqflite 2.4.2+1 (2.4.4 available)
+  sqflite_android 2.4.2+3 (2.4.4 available)
+  sqflite_common 2.5.8 (2.5.13 available)
+  sqflite_darwin 2.4.2 (2.4.4 available)
+  sqflite_platform_interface 2.4.0 (2.4.2 available)
+  stack_trace 1.12.1 (1.12.2 available)
+  synchronized 3.4.0+1 (3.4.2 available)
+  test_api 0.7.9 (0.7.14 available)
+  unicode 0.3.1 (1.1.9 available)
+  url_launcher_android 6.3.30 (6.3.33 available)
+  url_launcher_ios 6.4.1 (6.4.2 available)
+  url_launcher_linux 3.2.2 (3.2.3 available)
+  url_launcher_macos 3.2.5 (3.2.6 available)
+  url_launcher_windows 3.1.5 (3.1.6 available)
+  vector_math 2.2.0 (2.4.3 available)
+  vm_service 15.2.0 (15.3.0 available)
+  wakelock_plus 1.5.2 (1.8.0 available)
+  wakelock_plus_platform_interface 1.6.0 (1.7.0 available)
+  webview_flutter_android 4.12.0 (4.14.1 available)
+  webview_flutter_wkwebview 3.25.1 (3.26.1 available)
+  win32 5.15.0 (6.4.0 available)
+  xml 6.6.1 (7.0.1 available)
+  yaml 3.1.3 (3.1.4 available)
+  youtube_player_iframe 5.2.2 (6.0.2 available)
+Got dependencies!
+1 package is discontinued.
+75 packages have newer versions incompatible with dependency constraints.
+Try `flutter pub outdated` for more information.
+00:00 +0: loading C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart
+00:00 +0: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: start acknowledgement stays connecting until native confirmation
+00:00 +1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: connection wait fails on native error and screen disposal
+00:00 +2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: initializeCamera transitions idle -> initializingCamera -> ready on success
+00:00 +3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: initializeCamera surfaces a PlatformException as error state
+00:00 +4: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: initializeCamera retries through NOT_READY until the native view attaches
+00:00 +5: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: initializeCamera surfaces NOT_READY as error once retries are exhausted
+00:02 +6: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: switchCamera toggles isFrontCamera on success
+00:02 +7: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: switchCamera surfaces an error without flipping isFrontCamera
+00:02 +8: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: initializeCamera sends the selected preset's width/height/bitrate
+00:02 +9: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: startPublishing sends the url and sets connecting state
+00:02 +9 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: startPublishing sends the url and sets connecting state [E]
+  Expected: {'url': 'rtmp://example.com/live2/key'}
+    Actual: {'url': 'rtmp://example.com/live2/key', 'generation': 1}
+     Which: has different length and has extra map key 'generation'
+
+  package:matcher                                     expect
+  package:flutter_test/src/widget_tester.dart 473:18  expect
+  test\phone_broadcast_engine_test.dart 203:5         main.<fn>
+
+00:02 +9 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: startPublishing surfaces a PlatformException as error state
+00:02 +10 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: stopPublishing invokes stopStream and sets stopped state
+00:02 +11 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: setMuted toggles isMuted on success and sends the muted flag
+00:02 +12 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: setAudioOnly toggles isAudioOnly on success and sends the flag
+00:02 +13 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: setAudioOnly surfaces an error without flipping isAudioOnly
+00:02 +14 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: an event-channel "live" event flips state to live once initialized
+00:02 +15 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: a "reconnecting" event surfaces the attempt/maxAttempts and clears on "live"
+00:02 +16 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: a final "error" event after reconnecting clears the attempt counters
+00:02 +17 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: isMicSilent flips with an explicit mute and clears on unmute
+00:02 +18 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: a failed setMuted leaves the silence flag untouched
+00:02 +19 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: stopPublishing clears a lingering mute so the badge does not stick
+00:02 +20 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_engine_test.dart: toggleCamera and isCameraOff state changes seamlessly
+00:02 +21 -1: loading C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart
+00:03 +21 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:03 +21 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: portrait: End is on screen while sending and asks first
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:06 +22 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: system Back while sending asks instead of silently ending
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:06 +23 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: landscape: focused End stays visible when the media is tapped
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:07 +24 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: Arabic: End and its confirmation are localized and lay out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:07 +25 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: controls sheet copy is localized and says the camera stays on
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:08 +26 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: short landscape settings and chat at 2x: en
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:08 +27 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: short landscape settings and chat at 2x: ar
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:09 +28 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: a second Back while ending never pops the page underneath
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:09 +29 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: losing the device while the End dialog is open closes both
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:10 +30 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: live: the studio End goes through this screen and stops it
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:11 +31 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: live: a listing ended elsewhere in the app stops the encoder
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:12 +32 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: remote End stops encoder, changes End to Leave and cannot relist
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+00:12 +33 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: portrait End remains reachable above the keyboard
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:12 +34 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: a session ingest rejection stops the encoder without another start
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+00:13 +35 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: 360 px: End clears the muted badge and stays tappable
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:13 +36 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: live: an End the server does not confirm is said plainly
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:14 +37 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: the studio opened here cannot open a second camera screen
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[PhoneBroadcastScreen] wakelock unavailable: PlatformException(channel-error, Unable to establish connection on channel: "dev.flutter.pigeon.wakelock_plus_platform_interface.WakelockPlusApi.toggle"., null, null)
+00:14 +38 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/phone_broadcast_end_test.dart: (tearDownAll)
+00:14 +38 -1: loading C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart
+00:16 +38 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:16 +38 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity a phone broadcast plays its exact live watch ID
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+unhandled element <defs/>; Picture key: Svg loader
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:17 +39 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity a live room never plays the profile featured video
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +40 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity a live channel with no valid watch ID plays nothing
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +41 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity an unknown room never borrows another streamer
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +42 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity fresh catalog data that ends the broadcast closes the room, its player, chat and LIVE badge
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +43 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity without any Realtime event the room re-reads the catalog and closes within about 20 seconds of the broadcast ending
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +44 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity a different broadcast on the same channel also ends the room
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +45 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity ordinary End during a viewer network interruption is terminal
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +46 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity same-watch replacement cannot take over an open viewer
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:18 +47 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity a broadcast hidden from discovery still plays in its room
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:19 +48 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity a hidden broadcast room recovers after a connection drop
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:19 +49 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity a room opened before the catalog has it keeps looking
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:19 +50 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity an interrupted phone broadcast shows reconnecting, not a LIVE badge
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:19 +51 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: viewer room identity the ended room reads correctly in Arabic
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:19 +52 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: catalog freshness a request made during a load gets one fresh follow-up read
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:19 +53 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: broadcast ended by the server admin End stops LIVE but keeps the device, mode and approval, and says who ended it
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:20 +54 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: broadcast ended by the server a real device transfer still reports the lost device
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:20 +55 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: broadcast ended by the server a status read that started before this device went live is ignored
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:20 +56 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: broadcast ended by the server an unreadable status changes nothing
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Broadcast status check failed: Exception: offline
+Broadcast status check failed: Exception: offline
+00:20 +57 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: session-fenced broadcasting a late start response cannot restore a displaced device session
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:21 +58 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: session-fenced broadcasting a reconnect after an admin End is refused and stops the phone; LIVE is not re-asserted
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:21 +59 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: session-fenced broadcasting editing the watch link while live does not end the broadcast
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:21 +60 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: session-fenced broadcasting ending uses the exact session
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:21 +61 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: refused Google sign-in paused sign-ups explain the refusal and name the account still signed in
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+Realtime user status channel subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Profile provisioning failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Admin role check failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshCurrentUserBanStatus failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Auth session error: AuthRetryableFetchException
+Auth error without a sign-in attempt: AuthException
+AppFlags: refresh failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:21 +62 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: refused Google sign-in without a paused switch the refusal stays generic
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:21 +63 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: the LIVE badge follows the server, not the player
+00:21 +63 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: refused Google sign-in without a paused switch the refusal stays generic
+refreshAdminData failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+_refreshTags failed: A AppProvider was used after being disposed.
+Once you have called dispose() on a AppProvider, it can no longer be used.
+00:21 +63 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: the LIVE badge follows the server, not the player
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:21 +64 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: a live mini-player closes when its broadcast ends
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:22 +65 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: remote end reasons map to explicit copy in both languages
+00:22 +66 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group1_test.dart: (tearDownAll)
+00:22 +66 -1: loading C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart
+00:22 +66 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:22 +66 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player embedded controls receive taps when app transport is unavailable
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+unhandled element <defs/>; Picture key: Svg loader
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:24 +67 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player pause, play and mute are sent to the player
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:24 +68 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player a refused command leaves the shown state unchanged
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:25 +69 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player a delivered command cannot invent a playback state
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:25 +70 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player a player without commands shows no dead transport buttons
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:25 +71 -1: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player a muted viewer stays muted after Retry
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <2>
+  Actual: <1>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart:352:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart line 352
+The test description was:
+  a muted viewer stays muted after Retry
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:25 +71 -2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player a muted viewer stays muted after Retry [E]
+  Test failed. See exception logs above.
+  The test description was: a muted viewer stays muted after Retry
+
+00:25 +71 -2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player media buttons are 48 dp with localized tooltips (ar, 360 px)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:26 +72 -2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player a mute made with the player's own controls shows here
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:26 +73 -2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player taps while a command is in flight send nothing more
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:26 +74 -2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player a pause from the player itself shows as paused
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:26 +75 -2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player rotation keeps the same player instance
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:26 +76 -2: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player Retry loads a fresh player
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: <2>
+  Actual: <1>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure>.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart:455:7)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart line 455
+The test description was:
+  Retry loads a fresh player
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:27 +76 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: room player Retry loads a fresh player [E]
+  Test failed. See exception logs above.
+  The test description was: Retry loads a fresh player
+
+00:27 +76 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: return shortcut is an honest shortcut: no video, no dead mute button
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +77 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_obs (en) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +78 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_obs (ar) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +79 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_phone_app (en) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +80 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_phone_app (ar) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +81 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_phone (en) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +82 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_phone (ar) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +83 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_local (en) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +84 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help live_guide.title_local (ar) explains that mode and lays out
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded ar[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +85 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: studio help the phone-app help never calls the sender OBS
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:27 +86 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/p6s_wave3_group5_test.dart: (tearDownAll)
+00:27 +86 -3: loading C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/broadcaster_application_sheet_test.dart
+00:28 +86 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-01: Dual-Track Application Distinction (Scholar vs Org)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+_loadMapMarkerCacheFromDisk failed: MissingPluginException(No implementation found for method getAll on channel plugins.flutter.io/shared_preferences)
+00:28 +87 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-02: AppProvider Application Submission & Mutation
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+_loadMapMarkerCacheFromDisk failed: MissingPluginException(No implementation found for method getAll on channel plugins.flutter.io/shared_preferences)
+00:28 +88 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-03: Rejection with Admin Feedback Notes Lifecycle
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+_loadMapMarkerCacheFromDisk failed: MissingPluginException(No implementation found for method getAll on channel plugins.flutter.io/shared_preferences)
+00:28 +89 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-04: Approval Lifecycle & Auto Live Streamer Registration
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+_loadMapMarkerCacheFromDisk failed: MissingPluginException(No implementation found for method getAll on channel plugins.flutter.io/shared_preferences)
+00:28 +90 -3: loading C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart
+00:29 +90 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-YT-PARSER-01: Correctly extracts clean handle from various URL formats
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:30 +91 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-YT-PARSER-02: Handles empty or whitespace inputs gracefully
+00:30 +91 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-YT-PARSER-01: Correctly extracts clean handle from various URL formats
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:30 +91 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-YT-PARSER-02: Handles empty or whitespace inputs gracefully
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+00:30 +92 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-SYNC-01: AppProvider merges backend verified streamers correctly
+00:30 +92 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-YT-PARSER-02: Handles empty or whitespace inputs gracefully
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:30 +92 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-SYNC-01: AppProvider merges backend verified streamers correctly
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+00:30 +93 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-REVOKE-01: deleteStreamer successfully removes non-protected streamer and updates registry
+00:30 +93 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-SYNC-01: AppProvider merges backend verified streamers correctly
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:30 +93 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-REVOKE-01: deleteStreamer successfully removes non-protected streamer and updates registry
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+00:30 +94 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-PROTECT-01: no channel is undeletable in the client any more
+00:30 +94 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-REVOKE-01: deleteStreamer successfully removes non-protected streamer and updates registry
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:30 +94 -3: C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app/project/test/multi_device_streamer_sync_and_youtube_parser_test.dart: Multi-Device Streamer Sync & Flexible YouTube Parsing Tests TC-PROTECT-01: no channel is undeletable in the client any more
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+00:30 +95 -3: Some tests failed.

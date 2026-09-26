@@ -1,12 +1,15 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-09-24
+updated: 2026-09-26
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+Wave 4v2 repair (isolated `codex/p6s-wave4v2-repair`, 2026-09-26): G1 End reconciliation, bounded authorized recovery, native fixed-canvas orientation, landscape controls/chat and channel/mode guards implemented. Verification and physical evidence are separate in `brief/evidence/2026-09-26/p6s-wave4v2/README.md`. D8 server-side YouTube authorization is an explicit owner-retained release blocker. Final source5162add: analyzer0,722 Flutter tests,440 local SQL assertions, APK/web builds pass. Critic3/3 is8/7/7/7; target not met. Unconfirmed viewer notice still obstructs the controls toggle (P2); native ANR/sparse frames unresolved and physical evidence missing. P6 and P6S remain NOT ACCEPTED; no merge/push/hosted operation authorized.
+
 
 Local P6/P5 integration, 2026-09-24: P6 retest repairs are on `master` through `938dc22`; P5.4/P5.5 map work and a focused offline marker-cache correction are merged locally. The combined Flutter suite passed **587** tests, analyzer found **0** issues, and the added cache test passed separately. G5c/G6/G7 are 0; G11a still flags five local credential-shaped hits for private owner review. Opus's 330 SQL assertions passed on a disposable backend; the two new P6 migrations have **not** been applied to a hosted test backend. Two-phone/YouTube and physical offline-map acceptance remain open. **P6 and P5 are not accepted; P6S is incomplete.**
 

@@ -600,3 +600,11 @@ Branch `p6-acceptance` (from `f581329`): reviewed migration `20260923130000` (pa
 
 ### RESUME — 2026-09-26 Wave 4v2 isolated partial repair
 Branch codex/p6s-wave4v2-repair; worktree C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app. Budget soft stop at weekly4 / cap5, no waiver. Source 0eaa645; test contract 68394e9. G1 interruption and same-watch fencing plus G3 chat/settings changes; remaining work and evidence in brief/evidence/2026-09-26/p6s-wave4v2/HANDOFF.md. No SQL changes, production access, push, merge or installation. P6/P6S NOT ACCEPTED. Read CRITIC_REVIEW.md before resuming; maximum three rounds total.
+
+
+### RESUME — 2026-09-26 Wave4v2 final repair/retest pack (isolated)
+
+- Branch `codex/p6s-wave4v2-repair`, app source `5162addcc8a659d3c66dafde3f243565cc85acf7`, worktree `C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app`. Earlier budget stop was superseded by explicit owner continuation until four8s or three reviews; no meter edited.
+- Implemented End identity/polling reconciliation, bounded authorized sender/viewer retries, RtmpStream fitted fixed canvas, landscape chat/settings/controls and channel/mode validation. Final analyzer0/full722/focused70, gates26PASS5INFO0FAIL, SQL21files440 assertions, isolated debug APK and web builds passed. Safe local no-key artifacts/config/source hashes in `brief/evidence/2026-09-26/p6s-wave4v2/identity.json`. E2E credentials/OAuth remain unprovisioned.
+- All3 critic rounds used; final8/7/7/7, target not met. Open introduced P2: unconfirmed notice obstructs full-room eye toggle. No source fix after final review. D8 server YouTube authorization remains HIGH release blocker by owner decision. Native probe48frames/37.603s and System UI ANR unresolved; real physical acceptance NOT RUN. P6/P6S NOT ACCEPTED.
+- Owner starts with WAVE4V2_RETEST_SCRIPT.md, fills124 subchecks in WAVE4V2_ACCEPTANCE_RESULTS.md, assesses separate P6/P6S matrices. Known P2 and credentials/scopes need resolution before closure. All54 protected hashes/main status/master/stashes unchanged; Opus untouched. Task browser/server/private AVD stopped; named local backend stopped with backup. No merge/push/deploy/hosted operation or owner app installation.

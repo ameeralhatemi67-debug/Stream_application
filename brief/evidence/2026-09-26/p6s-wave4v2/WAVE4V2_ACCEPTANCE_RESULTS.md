@@ -1,51 +1,149 @@
 # Wave 4v2 acceptance results
-All rows start NOT RUN. Historical E4_ACCEPTANCE_RESULTS.md is in the main checkout's brief/evidence/2026-09-26/p6s-astra-audit directory; its passes do not apply to this build.
 
-Date/operator: ___
-Source commit / APK hash / web hash / config hash: ___
-Safe backend / migrations / account roles: ___
-Phone A model/OS/WebView: ___
-Phone B model/OS/WebView: ___
-Chrome / OBS / sender version: ___
-Networks / UTC clock alignment: ___
-Approved scope decisions with references: ___
+All subchecks start NOT RUN. Historical Wave 4 is retained in the main checkout and is not a pass for this build. Use PASS / FAIL / NOT RUN / DEFERRED (explicit owner reference required). Duplicate a row for every additional phone, locale, camera or fault; never collapse failing siblings into a PASS heading.
 
-Use PASS / FAIL / NOT RUN / DEFERRED (owner reference required). Duplicate rows for each device, locale, camera, variant and fault; partial subchecks must stay separate. Never include keys/tokens.
+Date/operator: ___  Source commit: ___
+APK/web/config SHA256 and variant: ___
+Safe backend/migration identity: ___  D8: RELEASE BLOCKER (owner confirmed)
+Phone A model/OS/WebView: ___  Phone B model/OS/WebView: ___
+Chrome/OBS versions: ___  Test identity roles: ___
+Media network/control-backend network/USB tunnel: ___
+UTC clock alignment: ___  Approved scope decisions/references: ___
 
-| ID | Status | Sender / device | Server session/watch state | Viewer / device | Timing / attempts / gaps | Evidence / unresolved sibling checks |
+| Subcheck | Status | Sender/device observation | Server session/watch/authority | Viewer/device observation | Actual timing/count/gaps | Evidence/failing sibling |
 |---|---|---|---|---|---|---|
-| F01 Ordinary End | NOT RUN | | | | | |
-| F02 Interrupted viewer End | NOT RUN | | | | | |
-| F03 Sender brief drop | NOT RUN | | | | | |
-| F04 Viewer brief drop | NOT RUN | | | | | |
-| F05 Exhaustion/manual Retry | NOT RUN | | | | | |
-| F06 Terminal during recovery | NOT RUN | | | | | |
-| F07 Orientation | NOT RUN | | | | | |
-| F08 Keyboard/draft | NOT RUN | | | | | |
-| F09 Controls/escape | NOT RUN | | | | | |
-| F10 Short layout | NOT RUN | | | | | |
-| F11 Channel edit | NOT RUN | | | | | |
-| F12 Watch negative checks | NOT RUN | | | | | |
-| R01 Admin End | NOT RUN | | | | | |
-| R02 Hide/Show/block | NOT RUN | | | | | |
-| R03 Transfer | NOT RUN | | | | | |
-| R04 Rapid restart | NOT RUN | | | | | |
-| R05 Direct duration | NOT RUN | | | | | |
-| R06 OBS duration | NOT RUN | | | | | |
-| R07 Audio-only resources | NOT RUN | | | | | |
-| R08 Home/lock/route exit | NOT RUN | | | | | |
-| R09 Player readiness/Retry | NOT RUN | | | | | |
-| R10 Unsupported modes | NOT RUN | | | | | |
-| R11 Permissions/exits | NOT RUN | | | | | |
-| R12 Account isolation | NOT RUN | | | | | |
-| P01 Chat states | NOT RUN | | | | | |
-| P02 Chat security | NOT RUN | | | | | |
-| P03 Block/report/moderate | NOT RUN | | | | | |
-| P04 Admin directory | NOT RUN | | | | | |
-| P05 Admin tools/flags | NOT RUN | | | | | |
-| P06 Counts/organization regression | NOT RUN | | | | | |
+| F01.1 A sender/B Android ended | NOT RUN | | | | | |
+| F01.2 A sender/C Chrome ended | NOT RUN | | | | | |
+| F01.3 B sender/A Android ended | NOT RUN | | | | | |
+| F01.4 B sender/C Chrome ended | NOT RUN | | | | | |
+| F01.5 approval and primary retained | NOT RUN | | | | | |
+| F01.6 feed/map convergence | NOT RUN | | | | | |
+| F02.1 offline viewer learns ordinary End | NOT RUN | | | | | |
+| F02.2 same-watch/new-session never takes over old room | NOT RUN | | | | | |
+| F03.1 A brief drop | NOT RUN | | | | | |
+| F03.2 B brief drop | NOT RUN | | | | | |
+| F03.3 A Wi-Fi to cellular | NOT RUN | | | | | |
+| F03.4 B Wi-Fi to cellular | NOT RUN | | | | | |
+| F04.1 Android muted and paused | NOT RUN | | | | | |
+| F04.2 Android playing and unmuted | NOT RUN | | | | | |
+| F04.3 Chrome unconfirmed reload/native Play, pause/mute | NOT RUN | | | | | |
+| F05.1 sender exhaustion en | NOT RUN | | | | | |
+| F05.2 sender exhaustion ar | NOT RUN | | | | | |
+| F05.3 viewer exhaustion en | NOT RUN | | | | | |
+| F05.4 viewer exhaustion ar | NOT RUN | | | | | |
+| F05.5 sender manual Retry/Leave | NOT RUN | | | | | |
+| F05.6 viewer manual Retry/Leave | NOT RUN | | | | | |
+| F06.1 manual End during retry | NOT RUN | | | | | |
+| F06.2 admin End during retry | NOT RUN | | | | | |
+| F06.3 admin block during retry | NOT RUN | | | | | |
+| F06.4 transfer during retry | NOT RUN | | | | | |
+| F06.5 revocation during retry | NOT RUN | | | | | |
+| F06.6 sign-out during retry | NOT RUN | | | | | |
+| F06.7 expired session cannot revive | NOT RUN | | | | | |
+| F07.1 A rear portrait/left/right preview | NOT RUN | | | | | |
+| F07.2 A rear received media | NOT RUN | | | | | |
+| F07.3 A front preview and received | NOT RUN | | | | | |
+| F07.4 B rear preview and received | NOT RUN | | | | | |
+| F07.5 B front preview and received | NOT RUN | | | | | |
+| F07.6 repeated rotation one session/audio instance | NOT RUN | | | | | |
+| F08.1 sender draft and real keyboard en/ar | NOT RUN | | | | | |
+| F08.2 viewer draft and real keyboard en/ar | NOT RUN | | | | | |
+| F09.1 sender media tap/End/Back | NOT RUN | | | | | |
+| F09.2 Android viewer media tap/native controls | NOT RUN | | | | | |
+| F09.3 Chrome iframe controls and app toggle | NOT RUN | | | | | |
+| F09.4 TalkBack and keyboard focused controls | NOT RUN | | | | | |
+| F10.1 short landscape settings en 2x | NOT RUN | | | | | |
+| F10.2 short landscape settings ar 2x | NOT RUN | | | | | |
+| F10.3 chat/menu/End/transfer transitions | NOT RUN | | | | | |
+| F11.1 matching handle/URL | NOT RUN | | | | | |
+| F11.2 mismatch correction | NOT RUN | | | | | |
+| F11.3 canonical channel ID | NOT RUN | | | | | |
+| F11.4 Unicode/legacy supported reference | NOT RUN | | | | | |
+| F11.5 malformed/deceptive URL | NOT RUN | | | | | |
+| F11.6 account switch/stale lookup | NOT RUN | | | | | |
+| F11.7 full handle URL through actual submit/save | NOT RUN | | | | | |
+| F12.1 missing API key | NOT RUN | | | | | |
+| F12.2 HTTP503/quota403 controlled fixture | NOT RUN | | | | | |
+| F12.3 wrong channel | NOT RUN | | | | | |
+| F12.4 ended/VOD | NOT RUN | | | | | |
+| F12.5 malformed watch/channel response | NOT RUN | | | | | |
+| F12.6 far-future upcoming rejection | NOT RUN | | | | | |
+| R01.1 admin End and role preservation | NOT RUN | | | | | |
+| R02.1 Hide | NOT RUN | | | | | |
+| R02.2 Show | NOT RUN | | | | | |
+| R02.3 End-and-block | NOT RUN | | | | | |
+| R02.4 same-ID relist denied | NOT RUN | | | | | |
+| R02.5 new permitted ID allowed | NOT RUN | | | | | |
+| R03.1 normal transfer | NOT RUN | | | | | |
+| R03.2 transfer during confirmation | NOT RUN | | | | | |
+| R03.3 transfer during recovery | NOT RUN | | | | | |
+| R04.1 same-watch rapid restart | NOT RUN | | | | | |
+| R04.2 late callback/End regression | NOT RUN | | | | | |
+| R04.3 End during fullscreen/dialog | NOT RUN | | | | | |
+| R05.1 A direct AV >=15min + interruption | NOT RUN | | | | | |
+| R05.2 B direct AV >=15min + interruption | NOT RUN | | | | | |
+| R06.1 OBS AV >=15min + interruption | NOT RUN | | | | | |
+| R07.1 audio-only audibility | NOT RUN | | | | | |
+| R07.2 camera indicator while hidden | NOT RUN | | | | | |
+| R07.3 camera/mic release after End | NOT RUN | | | | | |
+| R08.1 Home continuity | NOT RUN | | | | | |
+| R08.2 lock continuity | NOT RUN | | | | | |
+| R08.3 return foreground | NOT RUN | | | | | |
+| R08.4 confirmed route exit releases resources | NOT RUN | | | | | |
+| R09.1 normal native readiness | NOT RUN | | | | | |
+| R09.2 reachable iframe/suppressed bridge timeout | NOT RUN | | | | | |
+| R09.3 real Retry/mute/pause | NOT RUN | | | | | |
+| R09.4 Chrome native transport | NOT RUN | | | | | |
+| R10.1 org/external-phone unavailable | NOT RUN | | | | | |
+| R10.2 Local/private/direct-laptop unavailable | NOT RUN | | | | | |
+| R10.3 web Phone unavailable | NOT RUN | | | | | |
+| R10.4 upcoming/return-chip/PiP claims | NOT RUN | | | | | |
+| R11.1 camera denial | NOT RUN | | | | | |
+| R11.2 microphone denial | NOT RUN | | | | | |
+| R11.3 setup/key cancel | NOT RUN | | | | | |
+| R11.4 Back/loading/offline/reconnect | NOT RUN | | | | | |
+| R11.5 server refusal and End resource release | NOT RUN | | | | | |
+| R12.1 guest and account switching | NOT RUN | | | | | |
+| R12.2 approval/channel isolation | NOT RUN | | | | | |
+| R12.3 device revocation | NOT RUN | | | | | |
+| R12.4 deleted account/cache | NOT RUN | | | | | |
+| P01.1 guest/read-only/offline draft | NOT RUN | | | | | |
+| P01.2 muted/banned/slow/pause | NOT RUN | | | | | |
+| P01.3 new message pill/scroll | NOT RUN | | | | | |
+| P01.4 failed send retry/no duplicate | NOT RUN | | | | | |
+| P01.5 badges/empty/no ghosts | NOT RUN | | | | | |
+| P02.1 rate limit and Arabic keywords | NOT RUN | | | | | |
+| P02.2 report enum/uniqueness | NOT RUN | | | | | |
+| P02.3 stranger/nonadmin denial | NOT RUN | | | | | |
+| P02.4 owner/moderator success | NOT RUN | | | | | |
+| P02.5 current SQL suite | NOT RUN | | | | | |
+| P03.1 viewer block persists across restart | NOT RUN | | | | | |
+| P03.2 report reason and live admin queue | NOT RUN | | | | | |
+| P03.3 delete/mute convergence | NOT RUN | | | | | |
+| P03.4 audit evidence | NOT RUN | | | | | |
+| P04.1 directory search/detail | NOT RUN | | | | | |
+| P04.2 ban/unban | NOT RUN | | | | | |
+| P04.3 streamer revoke | NOT RUN | | | | | |
+| P04.4 session revoke | NOT RUN | | | | | |
+| P04.5 account deletion | NOT RUN | | | | | |
+| P04.6 lower-role denial | NOT RUN | | | | | |
+| P05.1 live list/force-end | NOT RUN | | | | | |
+| P05.2 audit filters | NOT RUN | | | | | |
+| P05.3 keyword edits | NOT RUN | | | | | |
+| P05.4 chat flag | NOT RUN | | | | | |
+| P05.5 registration flag | NOT RUN | | | | | |
+| P05.6 nonadmin RPC refusal | NOT RUN | | | | | |
+| P06.1 guest/viewer heartbeat counts | NOT RUN | | | | | |
+| P06.2 unrelated org features | NOT RUN | | | | | |
+| P06.3 deferred org cannot start | NOT RUN | | | | | |
 
-P6 decision: NOT ACCEPTED. Missing rows/deferrals: ___
-P6S decision: NOT ACCEPTED. Missing rows/deferrals: ___
-Owner decision/date: ___
+Temperature/readiness/AV notes: ___
+Unexpected defects and reproduction: ___
+Automated fixture result recorded separately from physical observations: ___
+P6 decision: NOT ACCEPTED. Missing evidence/approved cuts: ___
+P6S decision: NOT ACCEPTED. Missing evidence/approved cuts: ___
+Owner/reviewer/date: ___
 
+## Known source defect before physical testing
+
+Final review3/3 found an unresolved P2: in the full room, the unconfirmed notice overlaps/intercepts the eye button used to hide/reveal controls. Chrome normally remains unconfirmed. F09/F10 must record this separately; do not treat the standalone browser probe as a full-room pass. All fresh physical rows remain NOT RUN. Review scores8/7/7/7 did not meet the target. Source is frozen at5162add; no post-review source fix is included. D8 remains HIGH and release-blocking by owner decision.

@@ -6,6 +6,11 @@ Updated: 2026-09-24. This is a local troubleshooting record, not proof that the 
 
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
 
+- **Phone retry loses authority or mute intent** — bounded fresh-authority recovery and native generation/intent guards; physical recovery pending.
+- **Viewer controls toggle covered by status row** — confirmed state repaired; unconfirmed notice overlap remains P2.
+- **Native emulator ANR and sparse output** — unresolved; not a native UX pass.
+- **Channel URL contradicts stale handle** — shared parser/save guard; ownership proof remains a release blocker.
+
 - **Docker Inference manager `dockerInference` socket bind collision** — currently operational; earlier root cause unresolved.
 - **Supabase CLI telemetry temp-file `EPERM`** — workaround: `DO_NOT_TRACK=1`.
 - **Weekly-only budget window mislabeled five-hour** — FIXED with owner-authorized weekly mode and focused tests.
@@ -268,7 +273,23 @@ Evidence: local P5/P6 merge checkpoint in `brief/LEDGER.md`.
 
 
 ## Live room stays uncertain after End during viewer outage
-Cause: recovery required a live entry before End reconciliation, discarded polling with room services, and did not fence same-watch replacement sessions. Fix: retain original actor/watch/session, reconcile successful fresh catalog first and keep polling through interruption. Verification: new baseline regression failed; targeted suite43 passed. Healthy-network owner timing still needs physical reproduction; polling is20s plus unbounded read latency. See Wave4v2 evidence.
+Cause: recovery required a live entry before End reconciliation, discarded polling with room services, and did not fence same-watch replacement sessions. Fix: retain original actor/watch/session, reconcile successful fresh catalog first and keep polling through interruption. Verification: new baseline regression failed; targeted suite43 passed. Healthy-network owner timing still needs physical reproduction; polling is20s with2s optional sweep/5s public-read timeouts; healthy room target30s/discovery40s. See Wave4v2 evidence.
 
 ## Landscape chat and settings overflow at large text
 Cause: composer stayed present on rotation; sheet did not scroll; connection status could exceed narrow chat header. Fix: read-only landscape, screen-owned sender draft, scrollable safe-area sheet, flexible header labels and readable sheet colors. Verification:740x360/190px synthetic inset/2x/en-ar tests17 pass; initial new tests exposed71/87px overflow. Actual90/17px screenshot device cases remain NOT RUN.
+
+## Phone retry loses authority or mute intent
+
+Cause: native retry could reconnect without checking current server ownership; callback flapping and watchdog shutdown could reset bounds or lose native mute. Fix: one Dart-owned 3s/10-attempt/60s episode, fresh session/device/permission RPC checks, native generation fence and explicit mute/camera flags per start. SDK rotation moves to RtmpStream with independent fitted preview and stable output dimensions. Verify native/received video separately; mock/compile results are not physical acceptance.
+
+## Viewer controls toggle covered by status row
+
+New toggle was initially behind the full-width header hit region. A widget tap regression reproduced it. Reserve a separate 48dp slot; media pointer observer does not claim the native gesture arena. Confirmed-state regression passes. Final review5162add found a new full-width unconfirmed notice above the eye toggle: text intercepts its normal tap center. **OPEN P2**, not fixed after review3/3. Future repair must reserve separate space and add an unconfirmed full-room tap regression. Chrome harness omits this room; physical/TalkBack checks remain pending.
+
+## Channel URL contradicts stale handle
+
+Cause: independent fields and permissive legacy path stripping saved conflicting identities. Fix: shared syntactic parser, pair validation before save, authoritative resolution for mixed references, canonical pending application. Vanity /c URLs require a current handle/UC URL. No ownership claim: D8 server/OAuth coordination remains explicitly release-blocking. Physical form/account checks pending.
+
+## Native emulator ANR and sparse output
+
+Status: UNRESOLVED. Fresh private Android16/API36 emulator with synthetic cameras produced H2641280x720/AAC and stopped resources, but only48frames over37.603s; preview screenshot shows System UI ANR. Cause unestablished; low-resource emulator is not a smooth/native/physical pass. Evidence: Wave4v2 NATIVE_PROBE.md and native screenshots. Real received-video orientation, recovery, long-duration/thermal and Home/lock tests remain required.
