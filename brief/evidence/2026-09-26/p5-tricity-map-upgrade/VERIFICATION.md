@@ -78,6 +78,28 @@ FlutterMap 8 migration: the only compile breaks were `MapCamera.project/unprojec
 | Saved venues (synthetic, `raw/seed-saved-venues.js`) | 5 in-domain pins, Riyadh and (0,0) records excluded; a 3-venue cluster in Al Khobar; same-coordinate pair ends in "2 venues here" list at maximum zoom; offline search finds only in-domain saved venues |
 | Black-holed backend (`10.255.255.1`) | guest Enter to feed in 524 ms: the analytics dependency did not block in Chrome; no code change made (not demonstrated) |
 
+## Round 2 re-check (2026-09-27, after critic round 1)
+
+All in the same worktree. Tooling: `raw/chrome_driver.js` (puppeteer-core 24.43.1 against the installed Chrome 153, headless, 412x860 at DPR 2), `raw/spa_server.py`, and `raw/hang_server.py`, which accepts connections and never answers.
+
+| Command / run | Result |
+|---|---|
+| `flutter analyze` at `4b7a84c` | **No issues found** |
+| `flutter test` (full) at `4b7a84c` | **732 passed**, 0 failed |
+| `node brief/tools/gates.mjs` at `4b7a84c` | **0 failing** |
+| `flutter build web --release --dart-define=SUPABASE_URL=http://127.0.0.1:9 --dart-define=SUPABASE_ANON_KEY=local-placeholder-not-a-key` | success at `d11e9f2` (the build left by the paused session, checked: its worker and page match the source) and again at `4b7a84c` |
+| `flutter test integration_test/map_render_test.dart -d windows --dart-define=MAP_RENDER_OUT=<evidence>/screenshots/windows-r2` | pass: ready 1,657 ms (verify+open 1,082 ms), overview 10.76, zoom 30 -> 18, zoom 2 -> 10.57 (minimum), 0 style warnings (`windows-r2/map-render-results-windows.json`) |
+| `flutter test integration_test/picker_render_test.dart -d windows --dart-define=MAP_RENDER_OUT=...` (new) | pass: pack ready; "No point chosen yet"; **Pin the map centre** pinned exactly the camera centre `26.253614, 50.216742` (inside the domain); Arabic layout; "This venue has no pinned location yet…" for (0,0) (`windows-r2/picker-render-results-windows.json`, `P01-P04`) |
+
+| Chrome run (profile) | Observation |
+|---|---|
+| Long session then Save, build `d11e9f2` (`p5r2`) and `4b7a84c` (`p5r3`, fresh) | Guest onboarding in English, then `performance.clearResourceTimings()` and 320 fetches of `version.json?longsession=N`. Timing buffer 250 (full) with no `main.dart.js`, CanvasKit or Noto Arabic; the page observer held 341 URLs. Map opened, the prompt appeared, **Save**: "Saving… 28 of 350" and then "Ready". Cache: 351 entries incl. every required shell, engine, font and map file (`raw/r2/cache-after-long-session.json`; `d11e9f2-cache-after-long-session.json` for the first build) |
+| Offline cold start, Arabic | Server stopped, relaunch with `--host-resolver-rules=MAP * ~NOTFOUND`: page load 0.5 s (`d11e9f2`) / 1.3 s (`4b7a84c`); Arabic onboarding, map: 29/29 responses from the service worker, only `127.0.0.1:9` failed (`raw/r2/net-offline-ar-cold-start.json`). Joined Arabic city, district and street labels at overview and deep zoom; details sheet says "ready" (R3-04..R3-07). Console: backend `ERR_UNSAFE_PORT` lines and one expected worker update-check error |
+| Hanging network (connects, never answers) | `d11e9f2`: navigation answered from the cache at 4.26 s, but CanvasKit/`main.dart.js` were requested only at 8.4 s. Cause: the generated `flutter_bootstrap.js` passed `serviceWorkerSettings`, so the loader registered `flutter_service_worker.js` and waited its 4 s timeout. `4b7a84c` (minimal `web/flutter_bootstrap.js`, per the Flutter web initialization docs): `main.dart.js` at 4.70 s, 17/17 from the worker (`raw/r2/net-hanging-network.json`, `d11e9f2-net-hanging-network.json`) |
+| Online revisit after preparing | `d11e9f2`: `flutter_service_worker.js` fetched (200 then 304) at the same scope; the offline worker stayed active in this run. `4b7a84c`: no request for it, one navigation, offline worker active and in control, copy ready (`raw/r2/online-revisit-registration.json`, `server-online-revisit.log`) |
+
+Not re-run in round 2: the pack validator (pack bytes unchanged, SHA-256 `1deb87ea…6a87`), the APK build (`4b7a84c` changes only web start-up and a test file), the eviction, interrupted-update and blocked-storage Chrome runs. `d11e9f2` changed the preparation code these depend on (required-file list, incomplete failure, eviction prompt), so after round 1 they are covered only by the fake-store unit tests. The prompt reappearing after eviction was not exercised in Chrome.
+
 ## Not verified here
 
 Physical SM-S936B (no device), Android emulator (none), TalkBack/keyboard traversal on device, frame/memory profiling, text-scale on device, mini-player coexistence and map -> live -> map with a real stream, backend-reachable runs, Edge/Firefox/Safari, iOS. Windows timings are from a debug build and are not release performance figures.

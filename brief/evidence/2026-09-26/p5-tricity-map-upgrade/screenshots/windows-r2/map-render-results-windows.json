@@ -1,0 +1,12 @@
+{
+ "pack_status": "ready",
+ "pack_problem": null,
+ "pack_open_ms": 1082,
+ "map_entry_to_ready_ms": 1657,
+ "ranges_after_overview": 5,
+ "overview_zoom": 10.757295748463932,
+ "clamped_max_zoom": 18.0,
+ "after_request_zoom_2": 10.573958412747762,
+ "camera_after_locale": 10.573958412747762,
+ "style_warnings": []
+}

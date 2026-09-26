@@ -25,7 +25,11 @@ Date: 2026-09-26. Implementer: Claude Opus 5.5 (Claude Code). Branch `codex/tric
 | `e821e1e` | fix(map): keep repository gates green for the map credit |
 | `0162d75` | docs(map): record pack licensing, notices and ADR-008 |
 | `5e10678` | feat(map): dated advisory for old map data; test directions failure |
-| (next) | docs(evidence): this directory |
+| `53a6b9d` | docs(evidence): this directory |
+| `d11e9f2` | fix(map): repair critic round 1 findings (D1-D8, D11, D12) |
+| `87ecd98` | docs(evidence): critic round 1 record and paused-session handoff |
+| `4b7a84c` | fix(web): start without Flutter's deprecated service worker (found in the round-2 Chrome re-check); adds the Windows picker render test |
+| (next) | docs(evidence): round 2 re-check and evidence relabels |
 
 ## What changed
 
@@ -35,13 +39,29 @@ Date: 2026-09-26. Implementer: Claude Opus 5.5 (Claude Code). Branch `codex/tric
 
 **Camera (G3).** `MapViewportPolicy` is the only camera path: initial overview, dropdown, search, venue focus, cluster tap, double-tap, overview button, resize/tab restore, plus the matching `CameraConstraint.contain` for gestures/wheel/keyboard. Minimum zoom = overview framing for the canvas; maximum 18; rotation disabled. Wide or tall canvases get a feasible centred map canvas; wide canvases use one control row. Venues are never moved; an out-of-area focus is refused with an explanation.
 
-**Domain and data truth.** Map eligibility: verified, not hidden, finite, not (0,0), inside the venue rectangle `[49.72, 25.97, 50.33, 26.68]`. The navigation extent is wider over the Gulf/Ras Tanura (`[49.72, 25.97, 50.43, 26.78]`) only so the overview fits wide/tall screens. Moderation, null-versus-empty catalogs, stale-live clearing and route guards are unchanged. The unsourced polygons, Saudi-wide presets and "municipal" claim are removed.
+**Domain and data truth.** Map eligibility: verified, not hidden, finite, not (0,0), inside the venue rectangle `[49.72, 25.97, 50.33, 26.68]`. **Area disclosure (round-1 D8):** this rectangle is wider than the research proposal `[49.85, 26.05, 50.28, 26.60]` and also admits venues in Qatif, Saihat, Tarout, Safwa and Ras Tanura. The app's wording now says "Al Khobar, Dhahran and Dammam with nearby areas such as Qatif, Saihat and Ras Tanura"; whether to keep or narrow the area is an **owner decision** (not made). The navigation extent is wider over the Gulf/Ras Tanura (`[49.72, 25.97, 50.43, 26.78]`) only so the overview fits wide/tall screens. Moderation, null-versus-empty catalogs, stale-live clearing and route guards are unchanged. The unsourced polygons, Saudi-wide presets and "municipal" claim are removed.
 
 **Presentation (G4).** Compact always-visible `© OpenStreetMap` link + 48 px details button in every state; details sheet with pack date/id/size, venue freshness, credits, the bundled NOTICE (offline) and, on the web, offline preparation. Single-line connection chip instead of the large banner; compact empty-venues notice; pack loading/failure card with retry and venue list. Label sizes follow the user's text scale (clamped 1.0-1.6). Localized directions-failure message. Dated advisory after 90 days (map keeps working).
 
 **Web offline.** Opt-in "Prepare offline map" warms the label fonts, downloads shell + pack + styles + fonts into a staging cache with `cache: 'reload'`, verifies the pack SHA-256, then replaces the live `streamer-offline-v1` cache and writes readiness last. `streamer_offline_sw.js` is network-first for same-origin and the two Google CDNs only, answering from that cache when the network fails; other origins (Supabase, YouTube) are never intercepted.
 
 **Location picker (A19).** Same pack, basemap layer, credit rail and policy; returns only the tapped point; typed venue text and chosen city are no longer overwritten; saved out-of-area points are shown and kept; the apply form no longer submits an invented Al Khobar point, and unpinned branches keep `null`.
+
+## Round-1 repairs and round-2 re-check
+
+Critic round 1 (on `53a6b9d`) found one high defect (D1) and scored 7/6/7/7. `d11e9f2` repaired:
+
+- **D1:** browser preparation requires the start-up shell, rendering engine and Latin/Arabic label fonts, and fails as "incomplete" otherwise. A page-lifetime `PerformanceObserver` records resources, because the browser's 250-entry timing buffer drops them in long sessions.
+- **D2:** approval no longer invents an Al Khobar point for an unpinned application, and directions refuse (0,0)/invalid points with a message.
+- **D3:** the picker has a centre crosshair and a "Pin the map centre" action, and places no pin while the map is not showing.
+- **D4:** a one-time, dismissible "use this map without internet" prompt on the web, shown again after eviction.
+- **D5/D6:** 48 px map buttons; framing insets mirror for Arabic and include the empty-venues notice.
+- **D7:** the picker's details sheet shows the real venue freshness.
+- **D8:** the area wording names the nearby towns.
+- **D11:** the worker falls back to the stored copy after 4 s.
+- **D12:** one Retry when offline; tolerant city spellings.
+
+The round-2 re-check (Chrome and Windows, ACCEPTANCE_RESULTS "Round 2 re-check") confirmed D1 after a simulated long session, with an Arabic offline cold start. It also found that Flutter's generated loader still registered its deprecated service worker at the offline worker's scope. That worker unregisters the scope's owner when it activates, and it added a second 4 s wait on a network that never answers. `4b7a84c` starts the loader without it.
 
 ## Implemented flow
 
@@ -85,8 +105,8 @@ stateDiagram-v2
 
 | Measure | Result |
 |---|---|
-| Analyzer / full Flutter suite at `5e10678` | 0 issues / **727 passed**, 0 failed (no failures, so no pre-existing-failure triage was needed; historical master counts are not reused) |
-| Repository gates (`gates.mjs`) | 0 failing at tip and at baseline |
+| Analyzer / full Flutter suite at `4b7a84c` | 0 issues / **732 passed**, 0 failed (727 at `5e10678`; the round-1 repairs added 5 tests). No failures, so no pre-existing-failure triage was needed; historical master counts are not reused |
+| Repository gates (`gates.mjs`) | 0 failing at `4b7a84c` and at baseline |
 | Pack | 11,919,559 B raw; 8,298/8,298 tiles decode |
 | APK (arm64 profile, same defines) | baseline 63,063,482 B; branch clean build 76,783,749 B (+13.72 MB, includes the `integration_test` dev plugin that release builds exclude); earlier pre-`integration_test` build +12.27 MB. Target <= 40 MB: met with margin |
 | Windows real engine (debug build) | pack verify+open 1,025 ms; entry to ready 1,634 ms; max zoom 18; zoom below minimum refused; camera kept across locale change; 0 style warnings |
@@ -96,7 +116,7 @@ stateDiagram-v2
 
 1. **No application-support copy on native.** The pack is 11.9 MB (plan assumed up to 64 MiB), so it is read from the installed bundle into memory and hash-checked on each cold open. This removes the low-storage/partial-copy failure class; an app update replaces the bundle atomically. Remote update hosting was deferred by the owner, so there is no native write path at all.
 2. **Label fonts.** flutter_map_vector_tiles 2.9.0 ignores style `text-font` families (`label_painter.dart` sets no `fontFamily`), so labels use platform defaults, not IBM Plex. On Chrome, the Arabic fallback font arrives after first shaping and the package caches the result; the layer is rebuilt on the engine's font-change signal (no fork) and web preparation warms and stores the fonts.
-3. **Extents widened.** Final pack/navigation extents reach further east (Gulf, a sliver of Bahrain's west coast) and north (Ras Tanura) than the research proposal, so the overview can be framed below the controls on wide/tall canvases without clamping. Venue eligibility keeps the narrower rectangle, so Bahrain or out-of-scope records never appear. +0.9 MB.
+3. **Extents widened.** Final pack/navigation extents reach further east (Gulf, a sliver of Bahrain's west coast) and north (Ras Tanura) than the research proposal, so the overview can be framed below the controls on wide/tall canvases without clamping. Venue eligibility keeps the narrower venue rectangle, so Bahrain records never appear; that rectangle still includes nearby towns (see the D8 area disclosure above). +0.9 MB.
 4. **Integration test.** `integration_test` added as a dev dependency to render the real screen on Windows (and, later, a phone).
 
 ## Unmet or pending
