@@ -56,6 +56,17 @@ class MapPackManifest {
   int get schema => (json['schema'] as num?)?.toInt() ?? -1;
   String get packId => json['pack_id'] as String? ?? '';
   String get dataDate => json['data_date'] as String? ?? '';
+
+  /// Map data older than this still works; the details sheet only adds a
+  /// dated advisory (it never expires the offline map).
+  static const Duration staleAfter = Duration(days: 90);
+
+  /// Whether [now] is more than [staleAfter] past the data date.
+  bool isStale(DateTime now) {
+    final date = DateTime.tryParse(dataDate);
+    return date != null && now.difference(date) > staleAfter;
+  }
+
   List<int> get nativeZoom => ((json['native_zoom'] as List?) ?? const [])
       .cast<num>()
       .map((e) => e.toInt())

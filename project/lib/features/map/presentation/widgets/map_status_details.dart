@@ -342,6 +342,11 @@ class _MapDetailsBody extends StatelessWidget {
                     : MapPackStatusCard.problemText(controller.problem)),
             const SizedBox(height: AppTheme.spaceXs),
             _body('map.details_coverage'.tr()),
+            if (manifest != null && manifest.isStale(DateTime.now())) ...[
+              const SizedBox(height: AppTheme.spaceXs),
+              _body('map.details_pack_stale'
+                  .tr(namedArgs: {'date': manifest.dataDate})),
+            ],
             if (pack != null) ...[
               const SizedBox(height: AppTheme.spaceXs),
               Text(

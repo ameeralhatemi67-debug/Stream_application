@@ -294,6 +294,16 @@ void main() {
     });
   });
 
+  test('old map data gets an advisory after 90 days but is never expired',
+      () async {
+    final c = _controller(_PackBundle());
+    await c.ensureOpened();
+    final date = DateTime.parse(c.manifest!.dataDate);
+    expect(c.manifest!.isStale(date.add(const Duration(days: 90))), isFalse);
+    expect(c.manifest!.isStale(date.add(const Duration(days: 91))), isTrue);
+    expect(c.isReady, isTrue);
+  });
+
   group(
       'Browser offline preparation state (fake store; real browser '
       'behaviour is covered by the Chrome acceptance run)', () {

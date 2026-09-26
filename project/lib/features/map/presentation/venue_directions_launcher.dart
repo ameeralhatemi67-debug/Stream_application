@@ -41,9 +41,14 @@ Future<bool> launchVenueDirections(double lat, double lng) async {
 /// Opens directions to the exact venue coordinates and tells the user when
 /// no maps app or browser could take them (A18), instead of doing nothing.
 Future<bool> openVenueDirections(
-    BuildContext context, double lat, double lng) async {
+  BuildContext context,
+  double lat,
+  double lng, {
+  @visibleForTesting Future<bool> Function(double lat, double lng) launcher =
+      launchVenueDirections,
+}) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
-  final opened = await launchVenueDirections(lat, lng);
+  final opened = await launcher(lat, lng);
   if (!opened) {
     messenger?.showSnackBar(
       SnackBar(

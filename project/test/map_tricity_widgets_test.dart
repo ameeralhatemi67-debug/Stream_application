@@ -16,6 +16,7 @@ import 'package:streamer_app/features/auth/presentation/steps/apply_step_4_locat
 import 'package:streamer_app/features/auth/presentation/widgets/location_picker_modal.dart';
 import 'package:streamer_app/features/map/models/map_tricity_domain.dart';
 import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
+import 'package:streamer_app/features/map/presentation/venue_directions_launcher.dart';
 import 'package:streamer_app/features/map/presentation/widgets/city_selector_dropdown.dart';
 import 'package:streamer_app/features/map/services/map_pack_controller.dart';
 
@@ -199,6 +200,31 @@ void main() {
       expect(find.text(kOsmCreditFallback), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
+  });
+
+  testWidgets(
+      'directions that no app can open show a localized message '
+      '(A18)', (tester) async {
+    phone(tester);
+    var opened = true;
+    await tester.pumpWidget(_app(
+        Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () async => opened = await openVenueDirections(
+                  context, 26.289, 50.217,
+                  launcher: (_, __) async => false),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+        AppProvider(AdminDatabaseService(null))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    expect(opened, isFalse);
+    expect(find.text("Couldn't open a maps app or browser on this device."),
+        findsOneWidget);
   });
 
   group('Venue location picker (A19)', () {
