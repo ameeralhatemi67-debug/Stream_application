@@ -1,0 +1,12 @@
+I/flutter ( 4913): WAVE4V2 4717ms initializingCamera retry=null
+I/flutter ( 4913): WAVE4V2 10441ms ready retry=null
+I/flutter ( 4913): WAVE4V2 10478ms connecting retry=null
+I/flutter ( 4913): WAVE4V2 action=10
+I/flutter ( 4913): WAVE4V2 action=20
+I/flutter ( 4913): WAVE4V2 26848ms live retry=null
+I/flutter ( 4913): WAVE4V2 action=30
+I/flutter ( 4913): WAVE4V2 front camera correctly unavailable
+I/flutter ( 4913): WAVE4V2 action=40
+I/flutter ( 4913): WAVE4V2 action=50
+I/flutter ( 4913): WAVE4V2 action=55
+I/flutter ( 4913): WAVE4V2 57010ms stopped retry=null

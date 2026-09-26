@@ -1,0 +1,9 @@
+{
+  "frames": 484,
+  "first_video_pts": 6.852,
+  "last_video_pts": 55.594,
+  "delivered_fps": 9.909318452258832,
+  "largest_gap_seconds": 1,
+  "advertised_fps": 30,
+  "physical_evidence": false
+}

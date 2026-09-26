@@ -1,13 +1,13 @@
 # Issues encountered during release hardening
 
-Updated: 2026-09-24. This is a local troubleshooting record, not proof that the database tests passed.
+Updated: 2026-09-27. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
 
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
 
 - **Phone retry loses authority or mute intent** — bounded fresh-authority recovery and native generation/intent guards; physical recovery pending.
-- **Viewer controls toggle covered by status row** — confirmed state repaired; unconfirmed notice overlap remains P2.
+- **Viewer controls toggle covered by status row** — confirmed and unconfirmed states repaired; physical hit testing pending.
 - **Native emulator ANR and sparse output** — unresolved; not a native UX pass.
 - **Channel URL contradicts stale handle** — shared parser/save guard; ownership proof remains a release blocker.
 
@@ -41,6 +41,9 @@ Agents: when investigating an error, scan only these short names for a match. If
 
 - **Live room stays uncertain after End during viewer outage** — source regression repaired; physical convergence pending.
 - **Landscape chat and settings overflow at large text** — synthetic en/ar layouts pass; physical IME/TalkBack pending.
+- **Camera rotation follows Flutter virtual display** — actual Activity display ID fixes unchanged portrait framing; physical uprightness pending.
+- **Java helper missing from Android APK** — move Java source to src/main/java; runtime receive path verified.
+- **Custom viewport defeats video mute** — clear stream viewport while hidden; received black frame verified.
 
 ## Recording format
 
@@ -278,13 +281,15 @@ Cause: recovery required a live entry before End reconciliation, discarded polli
 ## Landscape chat and settings overflow at large text
 Cause: composer stayed present on rotation; sheet did not scroll; connection status could exceed narrow chat header. Fix: read-only landscape, screen-owned sender draft, scrollable safe-area sheet, flexible header labels and readable sheet colors. Verification:740x360/190px synthetic inset/2x/en-ar tests17 pass; initial new tests exposed71/87px overflow. Actual90/17px screenshot device cases remain NOT RUN.
 
+2026-09-27 follow-up: own-message Edit and studio opened from video could still offer text entry in landscape. Both now show a portrait-edit prompt while retaining drafts. Dialog controllers are disposed after route completion, fixing a disposed-controller error caught by the rotation/cancel test. Message action/report sheets scroll. Sender settings checks include 568x240, 740x360 and 1366x768 at 2x text in en/ar. The obsolete sender fullscreen lock was removed so physical rotation owns layout; AndroidView ignores pointers so the media tap reaches Flutter. See `brief/evidence/2026-09-27/p6s-camera-landscape/VERIFICATION.md`; real IME/TalkBack pending.
+
 ## Phone retry loses authority or mute intent
 
 Cause: native retry could reconnect without checking current server ownership; callback flapping and watchdog shutdown could reset bounds or lose native mute. Fix: one Dart-owned 3s/10-attempt/60s episode, fresh session/device/permission RPC checks, native generation fence and explicit mute/camera flags per start. SDK rotation moves to RtmpStream with independent fitted preview and stable output dimensions. Verify native/received video separately; mock/compile results are not physical acceptance.
 
 ## Viewer controls toggle covered by status row
 
-New toggle was initially behind the full-width header hit region. A widget tap regression reproduced it. Reserve a separate 48dp slot; media pointer observer does not claim the native gesture arena. Confirmed-state regression passes. Final review5162add found a new full-width unconfirmed notice above the eye toggle: text intercepts its normal tap center. **OPEN P2**, not fixed after review3/3. Future repair must reserve separate space and add an unconfirmed full-room tap regression. Chrome harness omits this room; physical/TalkBack checks remain pending.
+New toggle was initially behind the full-width header hit region. A widget tap regression reproduced it. Reserve a separate 48dp slot; media pointer observer does not claim the native gesture arena. Confirmed-state regression passes. Final review5162add found a full-width unconfirmed notice above the eye toggle: text intercepted its normal tap center. The owner-requested 2026-09-27 follow-up reserves that space and exercises the actual unconfirmed-state tap. Source fix verified in widget tests; physical/TalkBack checks remain pending. No fourth critic review or score applies to the follow-up.
 
 ## Channel URL contradicts stale handle
 
@@ -293,3 +298,29 @@ Cause: independent fields and permissive legacy path stripping saved conflicting
 ## Native emulator ANR and sparse output
 
 Status: UNRESOLVED. Fresh private Android16/API36 emulator with synthetic cameras produced H2641280x720/AAC and stopped resources, but only48frames over37.603s; preview screenshot shows System UI ANR. Cause unestablished; low-resource emulator is not a smooth/native/physical pass. Evidence: Wave4v2 NATIVE_PROBE.md and native screenshots. Real received-video orientation, recovery, long-duration/thermal and Home/lock tests remain required.
+
+2026-09-27 final local probe: 484 frames over 48.742 s video timestamp span (9.91 delivered fps, largest gap 1 s); both landscape framing changes and a black Hide-video frame observed, camera/service release confirmed. System UI ANR still visible; cause remains unestablished. This is not a native UX/performance pass. See `brief/evidence/2026-09-27/p6s-camera-landscape/NATIVE_PROBE.md`.
+
+## Camera rotation follows Flutter virtual display
+Status: fixed in local receive probe; physical orientation UNVERIFIED.
+Observed: UI rotates but transmitted frames stay portrait despite a display listener.
+Cause: Flutter hosts the preview SurfaceView on a virtual display whose rotation stays zero.
+Fix/workaround: pass the Activity display ID into the bridge; use DisplayManager for that display. Apply inverse display rotation after the camera texture's sensor transform, then fit portrait/crop landscape using actual advertised capture dimensions. Do not add a fixed -90 degree transform or restart the encoder on rotation.
+Verification: local H.264 received frames show portrait, both landscape rotations, then portrait; geometry assertions cover 16 sensor/display combinations and different ratios. The emulator's fixed house scene does not prove real-world uprightness. Two-phone TOP-arrow checks remain required.
+Evidence: `brief/evidence/2026-09-27/p6s-camera-landscape/NATIVE_PROBE.md`.
+
+## Java helper missing from Android APK
+Status: FIXED.
+Observed: new CameraFraming helper compiled but runtime failed with NoClassDefFoundError.
+Cause: Java file placed under src/main/kotlin was available to Kotlin compilation but omitted from the packaged Java classes.
+Fix/workaround: place it under src/main/java with the matching package; keep Kotlin bridge/source under src/main/kotlin.
+Verification: rebuilt isolated probe executes the helper during successful local capture/rotation. Compilation alone did not catch the defect.
+Evidence: `brief/evidence/2026-09-27/p6s-camera-landscape/native-packaging-failure.txt` and final native events.
+
+## Custom viewport defeats video mute
+Status: FIXED locally; physical Hide/Show acceptance pending.
+Observed: inspection of RootEncoder 2.7.5 shows a custom stream viewport takes precedence over muteVideo's zero-sized draw viewport.
+Cause: the new custom fit/crop geometry could override the SDK's video-hide mechanism.
+Fix/workaround: setStreamViewPort(null) while audioOnly is true, including rotation/resize/reconnect synchronization. Restore framing when showing video.
+Verification: final native receiver gets a black frame after Hide video. Camera remains active by existing design; this does not prove resource release while hidden.
+Evidence: `brief/evidence/2026-09-27/p6s-camera-landscape/received-final-49.png`.

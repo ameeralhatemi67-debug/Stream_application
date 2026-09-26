@@ -1,12 +1,14 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-09-26
+updated: 2026-09-27
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+Camera/landscape follow-up (isolated `codex/p6s-wave4v2-repair`, 2026-09-27), source `ddcb52178e126894e1b456aa06516a3d789cdac0`: actual Activity-display rotation and advertised rear capture sizes, portrait fit/landscape crop, three tap-toggle sender controls, no landscape chat/edit/studio keyboard, scrollable sheets and owner-deferred front camera Coming Soon. Unconfirmed viewer-toggle overlap is repaired. Analyzer 0, full suite 730, gates 26 PASS / 5 INFO / 0 FAIL. Local native receive shows both framing changes and black video when hidden; delivery is only 9.91 fps and System UI ANR remains unresolved. Physical uprightness/smoothness/YouTube/IME/TalkBack/long-duration evidence is NOT RUN. The three earlier critic rounds are exhausted; no score applies to this new source. D8 remains HIGH and release-blocking. **P6 and P6S are NOT ACCEPTED.** Current test pack and build identities: `brief/evidence/2026-09-27/p6s-camera-landscape/README.md`. Master, Opus and owner apps remain untouched; no merge/push/deploy/hosted operation.
 
 Wave 4v2 repair (isolated `codex/p6s-wave4v2-repair`, 2026-09-26): G1 End reconciliation, bounded authorized recovery, native fixed-canvas orientation, landscape controls/chat and channel/mode guards implemented. Verification and physical evidence are separate in `brief/evidence/2026-09-26/p6s-wave4v2/README.md`. D8 server-side YouTube authorization is an explicit owner-retained release blocker. Final source5162add: analyzer0,722 Flutter tests,440 local SQL assertions, APK/web builds pass. Critic3/3 is8/7/7/7; target not met. Unconfirmed viewer notice still obstructs the controls toggle (P2); native ANR/sparse frames unresolved and physical evidence missing. P6 and P6S remain NOT ACCEPTED; no merge/push/hosted operation authorized.
 

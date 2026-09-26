@@ -1,0 +1,2 @@
+I/flutter ( 3225): WAVE4V2 4099ms initializingCamera retry=null
+I/flutter ( 3225): WAVE4V2 action=10

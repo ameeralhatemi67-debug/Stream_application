@@ -1,0 +1,4 @@
+ M project/windows/flutter/generated_plugin_registrant.cc
+ M project/windows/flutter/generated_plugin_registrant.h
+ M project/windows/flutter/generated_plugins.cmake
+?? brief/evidence/2026-09-27/
