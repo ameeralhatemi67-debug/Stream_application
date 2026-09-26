@@ -2,7 +2,7 @@
 
 Rules (from `brief/research/p5-tricity-map-upgrade/OPUS_EXECUTION_PROMPT.md`): at most **three** critic reviews for the whole map upgrade. Four categories scored 0-10 by the critic, not the implementer: Functionality; Accessibility and platform compatibility; Integration and connectivity; Ease of use. Below 8 fails a category. Critical/high defects, unlicensed assets, failed G0 gates or missing essential acceptance evidence block acceptance regardless of scores. Missing physical evidence is provisional, not "verified good". Each round is tied to the reviewed commit; any later source fix invalidates affected evidence until re-checked.
 
-Rounds used: 1 of 3 (round 1: NEEDS WORK, see below).
+Rounds used: 2 of 3 (round 1: NEEDS WORK; round 2: NEEDS WORK)
 
 ## Round 1 (reviewed commit 53a6b9d)
 
@@ -71,3 +71,89 @@ Evidence: screenshots (compact chip, matching city dropdown and search, details-
 - **Needs owner, hardware or external input:** SM-S936B runs per `OWNER_RETEST_SCRIPT.md` (plus TalkBack, rotation, text size, frame/memory); an authorized non-production backend for A14/A15/A17/A19; a decision on the venue-domain extent (D8: include Qatif/Saihat/Ras Tanura or not); licensed municipal geometry for A11; counsel sign-off on the credit wording and a licences screen.
 
 **Verdict: NEEDS WORK.** One high defect and three sub-8 categories can be fixed in code in round 2. Physical-device and backend evidence remain pending either way.
+
+## Round 2 (reviewed commit 06d1a83)
+
+Critic: independent Claude Code subagent (did not write the code or the evidence). Date 2026-09-27. Reviewed `git diff 53a6b9d..4b7a84c` (the repairs `d11e9f2` and the start-up fix `4b7a84c`), the relevant parts of `git diff 7b54cb5..4b7a84c`, the Round 2 sections of ACCEPTANCE_RESULTS and VERIFICATION, `raw/r2/*` (cache-after-long-session, long-session-simulation, net-hanging-network, net-offline-ar-cold-start, net-online-revisit, online-revisit-registration, server-online-revisit.log), screenshots `chrome-r2/R3-01` to `R3-06` and `windows-r2/P02` to `P04`, and ADR-008. Nothing was modified except this section and the "Rounds used" line.
+
+### What I re-ran myself (worktree, at 06d1a83; code identical to 4b7a84c)
+
+| Check | Result |
+|---|---|
+| `flutter analyze` (`project/`) | No issues found |
+| `flutter test` (full, `project/`) | **732 passed, 0 failed** (matches VERIFICATION) |
+| `node brief/tools/gates.mjs` (worktree root) | 0 gates failing |
+| i18n symmetry (script over `en.json`/`ar.json`) | 1,475 keys each, no key missing on either side; all new keys have Arabic text |
+| Worktree state | only the known line-ending noise in `project/windows/flutter/generated_plugin*` (not committed) |
+
+Not re-run: web/Windows/APK builds, the Chrome driver runs and the Windows integration tests (I relied on the raw logs and screenshots), the pack validator. No device, emulator, backend or network was used.
+
+### Round-1 defects: status
+
+| # | Status | Basis |
+|---|---|---|
+| D1 (High) | **Fixed** | `web/index.html:34-57` records resources from page start with a buffered `PerformanceObserver`. `map_pack_platform_web.dart:143-191` makes the page, bootstrap, `main.dart.*`, manifests, every FontManifest font, CanvasKit js+wasm, and gstatic Roboto + Noto Sans Arabic *required*, and returns `incomplete` (not ready) if any is missing. A missing required fetch fails and deletes staging (`:258-263`). The evidence supports the fix. `raw/r2/long-session-simulation.json` shows the timing buffer full (250) without `main.dart.js`, CanvasKit or Noto Arabic, while the observer held 341 URLs. `cache-after-long-session.json` shows every required file stored. The Arabic offline cold start (29/29 from the worker) renders joined Arabic labels at overview and at deep zoom (R3-04, R3-06). |
+| D2 (Medium) | **Partly fixed** | Approval no longer invents `26.2871, 50.2125` (`app_provider.dart:4426-4429`). `isUsableVenuePoint` guards `openVenueDirections` and `launchVenueDirections`, and the map, drawer and summary-card paths show "no pinned location". **Not fixed:** the live-stream Venue tab (see the D2 residual below). The apply form still submits an unpinned venue as 0,0, and approval still hard-codes `cityEn: 'Al Khobar'` (`app_provider.dart:4421`, pre-existing). |
+| D3 | **Fixed (on desktop)** | Centre crosshair and a 48 px "Pin the map centre" button that keyboard and screen-reader users can reach. No blind pin, and the button is disabled, while the map is not showing (`location_picker_modal.dart:130-148, 272-278, 398-411`). flutter_map 8.3.2 gives the map a focusable node with arrow-key panning by default, so keyboard panning is plausible but untested. The Windows real-engine screenshots P02/P03 show the pin exactly under the crosshair. TalkBack is unverified. |
+| D4 | **Fixed** | One-time dismissible web prompt, shown again after eviction (`spatial_map_screen.dart:483-490, 829-847`; R3-01). No automated test covers it, and the eviction re-prompt was not exercised in Chrome (disclosed). |
+| D5 | **Partly fixed** | The map's floating buttons are now 48x48 (`spatial_map_screen.dart:1199-1200`). The summary-card icon buttons are still 28x28 (`marker_summary_card.dart:225, 234`; pre-existing, untouched). |
+| D6 | **Mostly fixed** | Insets mirror in RTL and include the empty-notice height (`spatial_map_screen.dart:496-513`; R3-05). Residual: the first view on opening uses the default LTR inset (`:77`, `:582`; disclosed). The picker keeps a fixed LTR padding (`location_picker_modal.dart:73`) while its zoom buttons move to the left in Arabic (P03). Low. |
+| D7 | **Fixed** | Picker details use `provider.isOnline` and `mapCacheUpdatedAt` (`location_picker_modal.dart:316-324`). |
+| D8 | **Fixed (text)** | The coverage, outside-area and picker strings and REPORT deviation 3 now disclose Qatif, Saihat and Ras Tanura. The extent itself remains an owner decision. |
+| D9 | **Fixed** | `HANDOFF_TO_ASTRA.md` exists. Its status line is stale; the implementer will update it. |
+| D10 | **Fixed** | A01, A04, A09 and A13 are relabelled PARTIAL. ADR-008 now says native first-launch offline is "unverified on hardware". |
+| D11 | **Fixed** | Requests that have a stored copy now time out after 4 s, and pages started from the stored copy stay on it (`streamer_offline_sw.js:14-59`). `web/flutter_bootstrap.js` no longer registers Flutter's deprecated worker. In `raw/r2/net-hanging-network.json` the navigation comes from the cache at about 4.2 s, then `flutter_bootstrap.js`, CanvasKit and `main.dart.js` come from the worker within about 0.5 s. On an online revisit the offline worker stays in control and nothing requests `flutter_service_worker.js`. See E1 for a side effect. |
+| D12 | **Mostly fixed** | Offline, only the connection line offers Retry (`spatial_map_screen.dart:730-743`; R3-04). The cluster badge over the city label is not addressed (cosmetic). |
+
+### Confirmed good (independently checked this round)
+
+- The D1 fix fails safe. If any engine, font or app file cannot be identified, preparation stops before anything is marked ready. The live copy is replaced only after staging completes, and readiness is written last.
+- The service worker still never writes to the cache. It intercepts only same-origin requests and the two gstatic CDNs, and it skips the `cache: 'reload'` fetches used by preparation, so no API or auth response can be stored.
+- The custom `flutter_bootstrap.js` is the documented `{{flutter_js}}` / `{{flutter_build_config}}` / `_flutter.loader.load()` template. Registering `streamer_offline_sw.js` at the same scope replaces a previously installed Flutter worker.
+- The directions guard rejects NaN, out-of-range values and 0,0, and the map domain filter already keeps 0,0 records off the map. Tests cover both.
+- City search normalisation (`map_tricity_domain.dart:113-157`) matches "Alkhobar", "Al-Khubar", "خبر", "Dahran" and "Damam", and it is unit-tested.
+- The Windows picker evidence (`picker-render-results-windows.json`, P02-P03) uses the real engine and the real pack. The pin tip sits on the crosshair, and the coordinates match the camera centre.
+- No new assets, so licensing is unchanged from round 1 (no unlicensed asset found).
+
+### Defects remaining
+
+| # | Severity | Where | Failure scenario | Fixable in code |
+|---|---|---|---|---|
+| D2 (residual) | **Medium** | `live_broadcast_screen.dart:2160-2172` (Venue tab "Get Driving Directions", shown unconditionally) -> `venue_navigation_sheet.dart:44-56` and `:442-455` | A venue approved without a pin is now 0,0 on the client as well as in the backend. When it is opened from a live stream's Venue tab, the sheet computes the distance from the default Al Khobar point to 0,0 (about 6,000 km, with a travel time). "Open in Google Maps" gets `false` from the new guard, and the sheet treats that as "no maps app": it copies a `query=0.0,0.0` Google Maps link to the clipboard and shows "Opening External Map Directions to Venue...". The comment at `app_provider.dart:4426-4427` ("The map and directions treat it as absent") is false for this path. | Yes: check `isUsableVenuePoint` in the Venue tab and `VenueNavigationSheet`, hide distance and directions, and show `map.no_venue_location`. Do not send a guard refusal into the clipboard fallback. Optionally require a pin (or an explicit "no fixed venue") on the apply form. |
+| E1 | Low | `web/streamer_offline_sw.js:43-58` | Suppose a prepared browser receives a new app build and is on a slow but working network. Any same-origin or CDN request that has a stored copy and takes more than 4 s to return headers is answered from the older build, even when the page itself came from the network. Only navigation fallbacks pin a page to the stored copy. Mixed `main.dart.js`, bootstrap and engine versions can then fail to start. `offlinePages` is held in memory, so if the worker is stopped mid-load it is lost and every request waits 4 s again. It is also never pruned. | Yes: apply the timeout fallback only to navigations and to resources of pages already pinned offline, or tag the stored copy with a build id and refuse cross-build answers. Prune with `clients.matchAll()`. |
+| E2 | Low | `map_pack_platform_web.dart:233-237` | Every other same-origin URL the visit loaded is stored as "optional", including query-string variants. The long-session run stored 320 redundant `version.json?...` copies (the worker matches with `ignoreSearch`). This wastes quota and prolongs "Saving... n of 350". Disclosed by the implementer. | Yes: de-duplicate by path, and skip query-string URLs and non-asset paths. |
+| E3 | Low | `map_pack_platform_web.dart:182-187` | Readiness requires Roboto and Noto Sans Arabic from `fonts.gstatic.com`. A deployment that self-hosts engine fallback fonts (`fontFallbackBaseUrl`) or blocks gstatic will always fail with "incomplete". The `incomplete` path and the web prompt have no automated test. The eviction, interrupt and blocked-storage Chrome runs were not repeated after the preparation code changed (disclosed). | Yes: derive the font origin from the engine config and add fake-store tests. Record the constraint in ADR-008. |
+| E4 | Low (ease of use) | `spatial_map_screen.dart:835-839`; `map_status_details.dart` "Map" paragraph (R3-02) | Tapping **Save** dismisses the prompt permanently before the result is known. A failed preparation (quota, network or incomplete) is then offered again only inside the details sheet. The prompt also appears while the browser itself is offline, offering a Save that must fail. After a successful save, the details sheet still says "To open them without internet, prepare the offline map below" (disclosed). | Yes |
+| E5 | Low (ease of use) | `location_picker_modal.dart:274-277` vs `:300-302`; `en.json` `map.picker_use_centre`, `map.picker_no_point`, `map.picker_hint` | "Pin the map centre (+)" refers to a crosshair drawn with the same "+" glyph as the zoom-in button beside it. The header and empty-state text still say only "Tap the map", so they never mention the option that needs no pointer. | Yes: use a distinct crosshair glyph and update the wording. |
+| D5 (residual) | Low | `marker_summary_card.dart:225, 234` | 28x28 directions/info targets on the venue summary card (pre-existing). | Yes |
+| D6 (residual) | Low | `spatial_map_screen.dart:77, 582`; `location_picker_modal.dart:73` | The first Arabic view and the picker frame against LTR insets. The view is still legal, and the cities stay clear in the screenshots. | Yes |
+| E6 | Info | R3-01, R3-04 | At overview, place labels at the top edge (Tarout, Qatif) are partly hidden under the search bar and dropdowns. The D12 cluster-over-label issue also remains. Cosmetic. | Yes |
+
+### Scores
+
+**1. Functionality: 8 / 10 (passes; provisional).**
+Evidence: code review of the new required-shell rule, staging and failure paths; my analyze and 732-test runs; the `raw/r2` long-session cache listing and Arabic offline cold start; the hanging-network timeline; the Windows picker and map render JSON. Confidence: high for D1's fail-safe logic and the Chrome prepared/offline path. Low for native first-launch offline, reboot and app-version replacement, because there is no Android runtime evidence of any kind. Why not 10: native first-use offline, the core claim, is unverified on SM-S936B. A11 accurate outlines remain unmet (external). The preparation code changed, but the eviction, interrupted-update and blocked-storage runs were not repeated in Chrome. E1 can mix builds on slow networks. The D2 residual gives a wrong distance and link for unpinned venues.
+
+**2. Accessibility and platform compatibility: 8 / 10 (passes; provisional, not verified on Android).**
+Evidence: 48 px map controls; the picker's centre-pin path, reachable by keyboard and screen reader (Windows real engine); RTL insets mirrored (R3-05) and the Arabic picker layout (P03); Arabic labels offline on the web after a long session (R3-04, R3-06); layout-sweep tests. Confidence: medium on Chrome and Windows. **None** on Android, TalkBack, device text scale or keyboard traversal. Why not 10: there is no Android runtime evidence for the primary platform (external: no device or emulator). Other shortfalls: the D5 residual 28 px summary-card targets, the D6 residual LTR first view and picker padding, untested keyboard panning, and the E3 platform constraint on self-hosted fonts.
+
+**3. Integration and connectivity: 7 / 10 (fails).**
+Evidence: I traced the approval path, the directions guard and its callers. Chrome offline shows again that the map works without the backend. The service worker still isolates API origins, one pack controller is shared, and there are no duplicate systems. Confidence: medium, because nothing ran against a reachable backend. Why below 8: the D2 residual is a concrete, code-fixable integration defect between the approval/picker change and the live-stream Venue tab. It shows a bogus distance of about 6,000 km and copies a 0,0 link under a toast saying "Opening External Map Directions to Venue...", while the code comment claims the opposite. A14 "backend current", A15 reconnect-removal and A17 map -> stream -> map have no runtime evidence (external). E1 is a new cross-build risk introduced by the D11 repair.
+
+**4. Ease of use: 8 / 10 (passes).**
+Evidence: the web prompt with Save/Not now (R3-01); one Retry offline; tolerant city search; the crosshair and centre pin; honest coverage wording; readable Arabic and English labels. Why not 10: E4 (the prompt is lost after a failed Save, the "prepare below" text is stale after saving, and Save is offered while offline). E5 (the "(+)" and "Tap the map" wording in the picker is ambiguous). The D2 residual's misleading toast. No testing with older or non-technical users.
+
+### Blockers
+
+- **Blocking acceptance:** Integration and connectivity is below 8 because of the D2 residual (Medium, fixable in code). Essential acceptance evidence is still missing: every SM-S936B case (A01, A02, A08, A10, A12, A17, and A19 on device, plus TalkBack), backend-current A14/A15, and A17. A11 accurate outlines are unmet (external data rights). No critical or high defect remains, no asset is unlicensed, and no G0 gate fails on Chrome or Windows (Android G0 is still unqualified on hardware).
+- **Fixable in code (round 3):** the D2 residual (required to pass Integration). Recommended, all low: E1, E2, E3 tests, E4, E5, and the D5/D6 residuals.
+- **Needs owner, hardware or external input:** the SM-S936B run per `OWNER_RETEST_SCRIPT.md`; an authorized non-production backend for A14/A15/A17 and for A19 through the signed-in apply flow; the venue-extent decision (D8); licensed municipal geometry (A11); counsel review of the credits.
+
+**Verdict: NEEDS WORK.** Round 2 fixed the high defect (D1) with convincing evidence, and most usability and accessibility findings. One category, Integration and connectivity (7), still fails on a small, fixable defect: guard the live-stream Venue tab and `VenueNavigationSheet` for unpinned (0,0) venues. Round 3 is the last round. It should:
+
+1. Fix the D2 residual, and preferably E1, E4 and E5 as well.
+2. Add a test that opens the Venue tab for a 0,0 venue.
+3. Re-run analyze, the full suite and the gates.
+4. Re-run the affected Chrome cases: eviction re-prompt, interrupted re-preparation and hanging network.
+
+Physical-device and backend evidence stay pending either way. A passing round 3 would mean "ready for Astra audit", not P5 accepted.
