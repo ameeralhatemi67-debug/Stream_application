@@ -19,6 +19,9 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   const sameOrigin = url.origin === self.location.origin;
   if (!sameOrigin && !PUBLIC_CDNS.includes(url.origin)) return;
+  // The app's own preparation downloads use `cache: 'reload'`: they must
+  // come from the network, never from the old offline copy.
+  if (request.cache === 'reload') return;
   event.respondWith((async () => {
     try {
       return await fetch(request);

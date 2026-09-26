@@ -30,8 +30,8 @@ class WebOfflineStatus {
   final DateTime? preparedAt;
 
   /// Stable, untranslated reason code for [WebOfflineState.failed]
-  /// (`quota`, `network`, `unsupported`, `private`), mapped to localized copy
-  /// by the UI.
+  /// (`quota`, `network`, `mismatch`, `unsupported`, `private`), mapped to
+  /// localized copy by the UI.
   final String? detail;
   final int done;
   final int total;
@@ -41,10 +41,14 @@ class WebOfflineStatus {
 abstract class WebOfflineMapStore {
   Future<WebOfflineStatus> inspect({required String packSha256});
 
-  /// Fetches every required file and records readiness last, so an
-  /// interrupted preparation is never reported as ready.
+  /// Fetches every required file from the network (never from the old
+  /// offline copy), verifies the pack at [packAssetKey] against
+  /// [packSha256], and replaces the live copy and its readiness record only
+  /// after everything succeeded. An interrupted run is never reported as
+  /// ready and leaves an existing offline copy untouched.
   Future<WebOfflineStatus> prepare({
     required String packSha256,
+    required String packAssetKey,
     required List<String> requiredAssetKeys,
     required int packBytes,
     void Function(int done, int total)? onProgress,

@@ -123,7 +123,11 @@
     "picker_address_note": "The map saves only the exact point. Type the venue name and address yourself.",
     "picker_zoom_in": "Zoom in",
     "picker_zoom_out": "Zoom out",
-    "picker_pinned_point": "Pinned point: {coords}"
+    "picker_pinned_point": "Pinned point: {coords}",
+    "details_pack_ready_web": "Streets and place names for Al Khobar, Dhahran and Dammam load with this site (map data from {date}). To open them without internet, prepare the offline map below.",
+    "web_offline_failed_mismatch": "The downloaded map didn't match this version of the app, so nothing was saved. Reload the page and try again.",
+    "web_offline_remove_title": "Remove the offline copy?",
+    "web_offline_remove_body": "This browser will need internet to open the site and prepare the map again. Your account and venues are not affected."
   },
   "feed": {
     "title": "Discovery Feed",

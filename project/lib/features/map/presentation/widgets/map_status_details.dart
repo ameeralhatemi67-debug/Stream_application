@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -256,6 +258,9 @@ Future<void> showMapDetailsSheet(
   required DateTime? venuesUpdatedAt,
   required bool backendOnline,
 }) {
+  // Re-inspect browser storage: it may have been cleared or evicted since
+  // the status was last read.
+  unawaited(controller.refreshWebOffline());
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -328,9 +333,10 @@ class _MapDetailsBody extends StatelessWidget {
         children: [
           _section('map.details_title'.tr(), [
             _body(controller.isReady
-                ? 'map.details_pack_ready'.tr(namedArgs: {
-                    'date': manifest?.dataDate ?? '',
-                  })
+                ? (controller.supportsWebOffline
+                        ? 'map.details_pack_ready_web'
+                        : 'map.details_pack_ready')
+                    .tr(namedArgs: {'date': manifest?.dataDate ?? ''})
                 : controller.status == MapPackStatus.loading
                     ? 'map.pack_loading'.tr()
                     : MapPackStatusCard.problemText(controller.problem)),
@@ -388,7 +394,7 @@ class _MapDetailsBody extends StatelessWidget {
                     if (web.state == WebOfflineState.ready ||
                         web.state == WebOfflineState.evicted)
                       OutlinedButton(
-                        onPressed: controller.resetWebOffline,
+                        onPressed: () => _confirmRemove(context),
                         child: Text('map.web_offline_remove'.tr()),
                       ),
                   ],
@@ -424,6 +430,27 @@ class _MapDetailsBody extends StatelessWidget {
     );
   }
 
+  Future<void> _confirmRemove(BuildContext context) async {
+    final remove = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text('map.web_offline_remove_title'.tr()),
+        content: Text('map.web_offline_remove_body'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('design_ui.cancel'.tr()),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text('map.web_offline_remove'.tr()),
+          ),
+        ],
+      ),
+    );
+    if (remove == true) await controller.resetWebOffline();
+  }
+
   String _webText(WebOfflineStatus status, int? packBytes) {
     final size = packBytes == null
         ? ''
@@ -440,6 +467,7 @@ class _MapDetailsBody extends StatelessWidget {
       WebOfflineState.failed => switch (status.detail) {
           'quota' => 'map.web_offline_failed_quota'.tr(),
           'private' => 'map.web_offline_failed_private'.tr(),
+          'mismatch' => 'map.web_offline_failed_mismatch'.tr(),
           'unsupported' => 'map.web_offline_unsupported'.tr(),
           _ => 'map.web_offline_failed_network'.tr(),
         },

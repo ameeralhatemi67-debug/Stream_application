@@ -341,6 +341,7 @@ class MapPackController extends ChangeNotifier {
     notifyListeners();
     final result = await store.prepare(
       packSha256: pack.sha256,
+      packAssetKey: '$kTricityPackDir/basemap.pmtiles',
       requiredAssetKeys: [
         for (final name in manifest.fileNames) '$kTricityPackDir/$name',
         '$kTricityPackDir/manifest.json',

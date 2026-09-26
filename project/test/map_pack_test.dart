@@ -58,6 +58,7 @@ class _FakeWebStore implements WebOfflineMapStore {
   @override
   Future<WebOfflineStatus> prepare({
     required String packSha256,
+    required String packAssetKey,
     required List<String> requiredAssetKeys,
     required int packBytes,
     void Function(int done, int total)? onProgress,

@@ -26,6 +26,7 @@ WebOfflineMapStore? createWebOfflineStore() => _BrowserOfflineMapStore();
 
 /// Must match CACHE in web/streamer_offline_sw.js.
 const _cacheName = 'streamer-offline-v1';
+const _stagingName = 'streamer-offline-v1-staging';
 const _readyPath = '__streamer_offline_ready__.json';
 
 /// Origins whose public, immutable files the shell needs: this site, the
@@ -122,6 +123,7 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
   @override
   Future<WebOfflineStatus> prepare({
     required String packSha256,
+    required String packAssetKey,
     required List<String> requiredAssetKeys,
     required int packBytes,
     void Function(int done, int total)? onProgress,
@@ -149,39 +151,63 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
 
     await _warmLabelFonts();
     final required = [for (final key in requiredAssetKeys) _assetUrl(key)];
+    final packUrl = _assetUrl(packAssetKey);
     final optional = _shellUrls().where((u) => !required.contains(u)).toList();
     final all = [...required, ...optional];
     final stored = <String>[];
     try {
-      final cache = await web.window.caches.open(_cacheName).toDart;
-      // Withdraw any earlier readiness first: an interrupted run must never
-      // look ready.
-      await cache.delete(_abs(_readyPath).toJS).toDart;
+      // Download into a staging cache; the live offline copy is replaced
+      // only after every required file arrived and the pack verified, so an
+      // interrupted or failed run never damages an existing offline copy.
+      await web.window.caches.delete(_stagingName).toDart;
+      final staging = await web.window.caches.open(_stagingName).toDart;
       var done = 0;
       for (final url in all) {
         final isRequired = done < required.length;
-        web.Response response;
+        web.Response? response;
         try {
-          response = await web.window.fetch(url.toJS).toDart;
+          // `reload` tells the worker not to answer from the old offline
+          // copy: preparation must read the network, or fail honestly.
+          response = await web.window
+              .fetch(url.toJS, web.RequestInit(cache: 'reload'))
+              .toDart;
         } catch (_) {
-          if (isRequired) {
-            return const WebOfflineStatus(WebOfflineState.failed,
-                detail: 'network');
-          }
-          done++;
-          continue;
+          response = null;
         }
-        if (!response.ok) {
+        if (response == null || !response.ok) {
           if (isRequired) {
+            await web.window.caches.delete(_stagingName).toDart;
             return const WebOfflineStatus(WebOfflineState.failed,
                 detail: 'network');
           }
         } else {
-          await cache.put(url.toJS, response).toDart;
+          if (url == packUrl) {
+            final buffer = await response.clone().arrayBuffer().toDart;
+            if (await sha256Hex(buffer.toDart.asUint8List()) != packSha256) {
+              await web.window.caches.delete(_stagingName).toDart;
+              return const WebOfflineStatus(WebOfflineState.failed,
+                  detail: 'mismatch');
+            }
+          }
+          await staging.put(url.toJS, response).toDart;
           stored.add(url);
         }
         done++;
         onProgress?.call(done, all.length);
+      }
+
+      final live = await web.window.caches.open(_cacheName).toDart;
+      await live.delete(_abs(_readyPath).toJS).toDart;
+      for (final url in stored) {
+        final copy = await staging.match(url.toJS).toDart;
+        if (copy != null) await live.put(url.toJS, copy).toDart;
+      }
+      // Drop files an older shell stored that this one no longer uses.
+      final keep = {...stored, _abs(_readyPath)};
+      for (final request in (await live.keys().toDart).toDart) {
+        if (!keep.contains(request.url)) {
+          await live.delete(request).toDart;
+        }
       }
       final now = DateTime.now().toUtc();
       final record = jsonEncode({
@@ -189,7 +215,8 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
         'preparedAt': now.toIso8601String(),
         'urls': stored,
       });
-      await cache
+      // Readiness is written last.
+      await live
           .put(
             _abs(_readyPath).toJS,
             web.Response(
@@ -201,9 +228,13 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
             ),
           )
           .toDart;
+      await web.window.caches.delete(_stagingName).toDart;
       return WebOfflineStatus(WebOfflineState.ready,
           preparedAt: now, done: done, total: all.length);
     } catch (error) {
+      try {
+        await web.window.caches.delete(_stagingName).toDart;
+      } catch (_) {}
       final quota = error.toString().contains('Quota');
       return WebOfflineStatus(WebOfflineState.failed,
           detail: quota ? 'quota' : 'network');
@@ -213,6 +244,7 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
   @override
   Future<void> reset() async {
     if (!_supported) return;
+    await web.window.caches.delete(_stagingName).toDart;
     await web.window.caches.delete(_cacheName).toDart;
   }
 }
