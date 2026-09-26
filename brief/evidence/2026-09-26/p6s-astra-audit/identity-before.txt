@@ -1,0 +1,76 @@
+ no_plan
+---------
+(0 rows)
+
+                              set_config
+-----------------------------------------------------------------------
+ {"sub":"68000000-0000-4000-8000-000000000002","role":"authenticated"}
+(1 row)
+
+                                           isnt
+-------------------------------------------------------------------------------------------
+ not ok 1 - changing organization creates a new session even for the same watch ID        +
+ # Failed test 1: "changing organization creates a new session even for the same watch ID"+
+ #         have: e6e6b7c5-2cdd-4dfd-bccf-66725a31a1b4                                     +
+ #         want: anything else
+(1 row)
+
+                             is
+-------------------------------------------------------------
+ not ok 2 - session belongs to selected organization        +
+ # Failed test 2: "session belongs to selected organization"+
+ #         have: 68000000-0000-4000-8000-000000000030       +
+ #         want: 68000000-0000-4000-8000-000000000031
+(1 row)
+
+                              set_config
+-----------------------------------------------------------------------
+ {"sub":"68000000-0000-4000-8000-000000000003","role":"authenticated"}
+(1 row)
+
+                         throws_ok
+-----------------------------------------------------------
+ ok 3 - two accounts cannot concurrently list one watch ID
+(1 row)
+
+                              set_config
+-----------------------------------------------------------------------
+ {"sub":"68000000-0000-4000-8000-000000000002","role":"authenticated"}
+(1 row)
+
+                 lives_ok
+------------------------------------------
+ ok 4 - owner ends organization broadcast
+(1 row)
+
+                              set_config
+-----------------------------------------------------------------------
+ {"sub":"68000000-0000-4000-8000-000000000003","role":"authenticated"}
+(1 row)
+
+                      lives_ok
+----------------------------------------------------
+ ok 5 - another account may reuse an ended watch ID
+(1 row)
+
+                                                        set_config
+---------------------------------------------------------------------------------------------------------------------------
+ {"sub":"68000000-0000-4000-8000-000000000001","role":"authenticated","session_id":"68000000-0000-4000-8000-000000000011"}
+(1 row)
+
+             lives_ok
+----------------------------------
+ ok 6 - revoke stale organization
+(1 row)
+
+                                               ok
+-------------------------------------------------------------------------------------------------
+ not ok 7 - organization revocation cannot end an unrelated account reusing its watch ID        +
+ # Failed test 7: "organization revocation cannot end an unrelated account reusing its watch ID"
+(1 row)
+
+                finish
+--------------------------------------
+ 1..7
+ # Looks like you failed 3 tests of 7
+(2 rows)

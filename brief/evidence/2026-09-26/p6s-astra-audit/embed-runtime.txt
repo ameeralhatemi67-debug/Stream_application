@@ -1,0 +1,1 @@
+PASS: readiness, exact player identity, command delivery versus confirmation, mute, error and command allowlist

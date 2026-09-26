@@ -1,0 +1,5 @@
+05:21 +693: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/.claude/worktrees/p6s-astra-audit/project/test/youtube_watch_status_test.dart: fetchLiveVideoId returns the live video, or null when there is none
+05:21 +694: C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/.claude/worktrees/p6s-astra-audit/project/test/youtube_watch_status_test.dart: fetchLiveVideoId a quota or network failure throws instead of saying "none"
+YouTube live lookup failed: ClientException
+YouTube live lookup failed: HTTP 403
+05:21 +695: All tests passed!

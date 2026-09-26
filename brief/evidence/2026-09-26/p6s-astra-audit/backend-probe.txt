@@ -1,0 +1,22 @@
+PASS viewer sees the live session through the public view
+INFO transferee own-row event: 23 ms
+PASS receiving phone gets its own profile change after transfer
+PASS read after the event shows the broadcast ended
+PASS admin receives the profile change
+INFO unrelated viewer profile events: 0
+PASS an unrelated viewer receives NO Realtime event for another broadcaster (RLS); rooms must poll
+PASS session records device_transfer
+PASS viewer sees the interruption, broadcast stays live
+PASS admin token carries a session id
+PASS hidden broadcast stays live and is flagged hidden in the public view
+PASS admin Show makes the same live session discoverable again
+PASS viewer cannot change discovery (42501)
+PASS late reconnect report after admin End is refused (55000)
+PASS the refused reconnect did not revive LIVE
+PASS broadcasting phone reads admin_end as the reason
+PASS phone B is still the primary device after admin End
+PASS the owner can deliberately start a new broadcast after admin End
+PASS End-and-block ends the current app session
+PASS End-and-block prevents relisting that same watch ID
+PASS another account cannot read the broadcaster status
+Synthetic users removed; no credentials persisted.

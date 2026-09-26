@@ -1,0 +1,10 @@
+[
+  {
+    "path": "project/build/app/outputs/flutter-apk/app-debug.apk",
+    "sha256": "C118ED9FD86BF24108694A9AEB2E05637CD2B0EBE60F52915D1CA0C226F02450"
+  },
+  {
+    "path": "project/build/web/main.dart.js",
+    "sha256": "92B67E7927ED32C8849F1995699562BCF507E8B26C0CF866B9A0D4AE52B6AD4F"
+  }
+]

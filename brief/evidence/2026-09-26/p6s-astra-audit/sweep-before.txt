@@ -1,0 +1,23 @@
+{"test":"different-watch-replacement","endObservedWaiting":true,"passed":true,"result":{"live":true,"watch":"RACENEW0001","state":"live"}}
+{"test":"same-watch-replacement","endObservedWaiting":true,"passed":true,"result":{"live":true,"watch":"RACEOLD0001","state":"live"}}
+{"test":"expiry-versus-replacement","sweepObservedWaiting":true,"passed":false,"result":"ended"}
+starter: WARNING:  there is no transaction in progress
+node:internal/modules/run_main:123
+    triggerUncaughtException(
+    ^
+
+AssertionError [ERR_ASSERTION]: A stale concurrent End terminated a newer broadcast
+
+1 !== 0
+
+    at file:///C:/Users/User/Documents/Amir%20Ob/projects/Ideas/Current/Streamer_app/.claude/worktrees/p6s-astra-audit/brief/tools/broadcast_session_concurrency.mjs:118:8
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5) {
+  generatedMessage: false,
+  code: 'ERR_ASSERTION',
+  actual: 1,
+  expected: 0,
+  operator: 'strictEqual',
+  diff: 'simple'
+}
+
+Node.js v22.19.0
