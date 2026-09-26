@@ -100,6 +100,31 @@ All in the same worktree. Tooling: `raw/chrome_driver.js` (puppeteer-core 24.43.
 
 Not re-run in round 2: the pack validator (pack bytes unchanged, SHA-256 `1deb87ea…6a87`), the APK build (`4b7a84c` changes only web start-up and a test file), the eviction, interrupted-update and blocked-storage Chrome runs. `d11e9f2` changed the preparation code these depend on (required-file list, incomplete failure, eviction prompt), so after round 1 they are covered only by the fake-store unit tests. The prompt reappearing after eviction was not exercised in Chrome.
 
+## Round 2 repair pass (2026-09-27, after critic round 2)
+
+Code tip `a57dda7` (`ad28998` round-2 repairs, then `a57dda7`, found during this re-check).
+
+| Command / run | Result |
+|---|---|
+| `flutter analyze` at `a57dda7` | **No issues found** |
+| `flutter test` (full) at `a57dda7` | **734 passed**, 0 failed (2 new: unpinned-venue sheet; web prompt Save/fail/ready) |
+| `node brief/tools/gates.mjs` at `a57dda7` | **0 failing** |
+| i18n symmetry | 1,476 keys in `en.json` and `ar.json`, none missing |
+| Windows `picker_render_test.dart` at `ad28998` | pass; new centre mark and wording (`screenshots/windows-r3/P01-P04`) |
+| `flutter build web --release` (placeholder backend) | success at `ad28998` and at `a57dda7` |
+
+| Chrome run (profile, build) | Observation |
+|---|---|
+| Long session then Save (`p5r4`, `ad28998`) | Ready; details now read "saved in this browser and open without internet" (R4-02); 32 stored files instead of 351: one `version.json`, not 320 query copies; the prompt's dismissal key was **not** written by Save (`raw/r3/ad28998-cache-after-save.json`) |
+| Eviction (`p5r4`) | Deleting the stored pack, reloading and opening the map shows "The browser removed the saved offline map. Save it again while connected." with Save; the first view is re-framed below it (R4-03) |
+| Interrupted re-preparation (`p5r4`) | Readiness marked as an older pack: the prompt returns (R4-04). Server stopped, Save: "Some app files could not be saved, so nothing was marked ready…" with Prepare; the live copy keeps its 26 files and its old record, and no staging cache is left (R4-05, `raw/r3/ad28998-interrupted-save-caches.json`) |
+| Hanging network (`p5r4`, `ad28998`) | Page from the worker at 4.06 s, `main.dart.js` at 4.45 s, 16/16 from the worker |
+| Offline Arabic cold start (`p5r4`, `ad28998`) | The first map view uses the mirrored insets (R4-07, same framing as the overview button). **Found:** after two re-saves the built-in avatars and logo were no longer stored (a save keeps only what that visit observed and drops older files), so 69 image requests failed offline. Fixed in `a57dda7` |
+| Save and re-save (`p5r5`, fresh, `a57dda7`) | First save 36 files; re-save after an older-pack mark 35 files; both include 4 avatars, 6 SVGs, `main.dart.js`, Noto Sans Arabic and the pack (`raw/r3/first-save.json`, `re-save.json`) |
+| Offline Arabic cold start (`p5r5`, `a57dda7`) | Avatars render on the offline onboarding (R5-03); map first view mirrored (R5-04); 29/29 responses from the worker, only `127.0.0.1:9` failed |
+
+Not re-run at `a57dda7`: the hanging-network start (the worker is unchanged since `ad28998`), the Windows map render and the APK build (no native or map-render change after `d11e9f2`, apart from the picker, which was rendered at `ad28998`).
+
 ## Not verified here
 
 Physical SM-S936B (no device), Android emulator (none), TalkBack/keyboard traversal on device, frame/memory profiling, text-scale on device, mini-player coexistence and map -> live -> map with a real stream, backend-reachable runs, Edge/Firefox/Safari, iOS. Windows timings are from a debug build and are not release performance figures.

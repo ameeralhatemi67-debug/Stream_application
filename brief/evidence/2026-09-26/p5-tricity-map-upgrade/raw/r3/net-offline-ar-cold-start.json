@@ -1,0 +1,1006 @@
+[
+ {
+  "t": 1790460172179,
+  "url": "http://localhost:8765/",
+  "method": "GET",
+  "type": "document"
+ },
+ {
+  "t": 1790460172213,
+  "url": "http://localhost:8765/",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460172232,
+  "url": "http://localhost:8765/flutter_bootstrap.js",
+  "method": "GET",
+  "type": "script"
+ },
+ {
+  "t": 1790460172235,
+  "url": "http://localhost:8765/manifest.json",
+  "method": "GET",
+  "type": "manifest"
+ },
+ {
+  "t": 1790460172241,
+  "url": "http://localhost:8765/flutter_bootstrap.js",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460172324,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.wasm",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460172325,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.js",
+  "method": "GET",
+  "type": "script"
+ },
+ {
+  "t": 1790460172326,
+  "url": "http://localhost:8765/main.dart.js",
+  "method": "GET",
+  "type": "script"
+ },
+ {
+  "t": 1790460172327,
+  "url": "http://localhost:8765/manifest.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460172342,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.wasm",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460172356,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.js",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460172621,
+  "url": "http://localhost:8765/main.dart.js",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173202,
+  "url": "http://localhost:8765/assets/FontManifest.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173218,
+  "url": "http://localhost:8765/icons/Icon-192.png",
+  "method": "GET",
+  "type": "other"
+ },
+ {
+  "t": 1790460173223,
+  "url": "http://localhost:8765/assets/FontManifest.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173230,
+  "url": "http://localhost:8765/assets/fonts/MaterialIcons-Regular.otf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173231,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173232,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173232,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-400.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173232,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-700.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173233,
+  "url": "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173247,
+  "url": "http://localhost:8765/icons/Icon-192.png",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173257,
+  "url": "http://localhost:8765/assets/fonts/MaterialIcons-Regular.otf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173257,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173257,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173258,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-400.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173262,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-700.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173263,
+  "url": "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173415,
+  "url": "http://localhost:8765/assets/assets/i18n/en.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173416,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173416,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173417,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460173417,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460173419,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460173422,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460173425,
+  "url": "http://localhost:8765/assets/assets/i18n/en.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460173523,
+  "url": "http://localhost:8765/assets/assets/logo/colored.svg",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460173746,
+  "url": "http://localhost:8765/assets/assets/logo/colored.svg",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460174430,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460174432,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460174432,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460174440,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460174942,
+  "url": "http://localhost:8765/assets/assets/Language.svg",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460174943,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460174944,
+  "url": "http://localhost:8765/assets/assets/Language.svg",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460174944,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460174944,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460175004,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460176017,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460176018,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460176018,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460176018,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460176449,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460176451,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460176451,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460176451,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460178027,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460178027,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460178027,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460178028,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460180455,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460180458,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460180458,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460180458,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460180463,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460180465,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460180465,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460180465,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460181439,
+  "url": "http://localhost:8765/assets/assets/i18n/ar.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460181467,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460181469,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460181469,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460181593,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460181593,
+  "url": "http://localhost:8765/assets/assets/i18n/ar.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460182092,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460182092,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460182092,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460182097,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460183607,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460183608,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460183608,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460183608,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460187623,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460187624,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460187624,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460187624,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460187626,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460187635,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460187635,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460187635,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460188371,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460188372,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460188639,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460188639,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460188639,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460188639,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460188971,
+  "url": "http://localhost:8765/assets/AssetManifest.bin.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460188971,
+  "url": "http://localhost:8765/assets/AssetManifest.bin.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460188998,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460188998,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460188998,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460188998,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460189014,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460189015,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460189015,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460189015,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460190649,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460190649,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460190649,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460190649,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460194661,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460194662,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460194662,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460194662,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460194664,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460194665,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460194665,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460194665,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460195676,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460195676,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460195676,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460195677,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460197680,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460197681,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460197681,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460197681,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460198948,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/manifest.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460198948,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/manifest.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460198967,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/basemap.pmtiles",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460198981,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/basemap.pmtiles",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460199029,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-en.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460199046,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-en.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460199047,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-ar.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460199063,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-ar.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460199064,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/NOTICE.txt",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460199087,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/NOTICE.txt",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460200311,
+  "url": "https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvvnCBFQLaig.woff2",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460200356,
+  "url": "https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvvnCBFQLaig.woff2",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790460201685,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460201686,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460201686,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460201686,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460201687,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460201688,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460201688,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460201688,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460202693,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460202694,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460202694,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460202694,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460203378,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460203379,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460204710,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460204710,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460204710,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460204710,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460208721,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460208721,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460208721,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460208721,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460208725,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "method": "POST",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460208726,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460208726,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460208726,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460208728,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460208729,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460208729,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460208729,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460209734,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790460209734,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790460209734,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790460209734,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ }
+]

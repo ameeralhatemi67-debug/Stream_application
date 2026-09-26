@@ -29,7 +29,11 @@ Date: 2026-09-26. Implementer: Claude Opus 5.5 (Claude Code). Branch `codex/tric
 | `d11e9f2` | fix(map): repair critic round 1 findings (D1-D8, D11, D12) |
 | `87ecd98` | docs(evidence): critic round 1 record and paused-session handoff |
 | `4b7a84c` | fix(web): start without Flutter's deprecated service worker (found in the round-2 Chrome re-check); adds the Windows picker render test |
-| (next) | docs(evidence): round 2 re-check and evidence relabels |
+| `06d1a83` | docs(evidence): round 2 re-check and evidence relabels |
+| `cdd079e` | docs(evidence): critic round 2 record (NEEDS WORK, 8/8/7/8) |
+| `ad28998` | fix(map): repair critic round 2 findings (D2 residual, E1-E5, D5/D6 residuals) |
+| `a57dda7` | fix(web): require the app's interface images for offline readiness (found in the repair re-check) |
+| (next) | docs(evidence): round 2 repair pass re-check |
 
 ## What changed
 
@@ -62,6 +66,18 @@ Critic round 1 (on `53a6b9d`) found one high defect (D1) and scored 7/6/7/7. `d1
 - **D12:** one Retry when offline; tolerant city spellings.
 
 The round-2 re-check (Chrome and Windows, ACCEPTANCE_RESULTS "Round 2 re-check") confirmed D1 after a simulated long session, with an Arabic offline cold start. It also found that Flutter's generated loader still registered its deprecated service worker at the offline worker's scope. That worker unregisters the scope's owner when it activates, and it added a second 4 s wait on a network that never answers. `4b7a84c` starts the loader without it.
+
+Critic round 2 (on `06d1a83`) scored 8/8/7/8, with no high defect. Integration failed on a D2 residual: the live Venue tab's sheet showed a distance of about 6,000 km for an unpinned venue and copied a 0,0 link. `ad28998` repaired:
+
+- **D2 residual:** the shared venue sheet hides the distance and directions for unusable points.
+- **E1:** the worker's timeout applies only to page loads, so a page never mixes builds.
+- **E2:** one stored copy per path.
+- **E3:** self-hosted label fonts are accepted.
+- **E4:** Save no longer dismisses the prompt, and the details say "saved" once saved.
+- **E5:** a distinct centre mark and clearer picker wording.
+- **D5/D6 residuals:** 48 px targets; mirrored picker insets; the untouched first view re-frames with the measured insets.
+
+The re-check then found that a re-save dropped interface images the visit hadn't loaded. `a57dda7` makes every bundled SVG and built-in avatar required (about 0.7 MB).
 
 ## Implemented flow
 
@@ -105,8 +121,8 @@ stateDiagram-v2
 
 | Measure | Result |
 |---|---|
-| Analyzer / full Flutter suite at `4b7a84c` | 0 issues / **732 passed**, 0 failed (727 at `5e10678`; the round-1 repairs added 5 tests). No failures, so no pre-existing-failure triage was needed; historical master counts are not reused |
-| Repository gates (`gates.mjs`) | 0 failing at `4b7a84c` and at baseline |
+| Analyzer / full Flutter suite at `a57dda7` | 0 issues / **734 passed**, 0 failed (727 at `5e10678`, 732 at `4b7a84c`; the repairs added 7 tests). No failures, so no pre-existing-failure triage was needed; historical master counts are not reused |
+| Repository gates (`gates.mjs`) | 0 failing at `a57dda7` and at baseline |
 | Pack | 11,919,559 B raw; 8,298/8,298 tiles decode |
 | APK (arm64 profile, same defines) | baseline 63,063,482 B; branch clean build 76,783,749 B (+13.72 MB, includes the `integration_test` dev plugin that release builds exclude); earlier pre-`integration_test` build +12.27 MB. Target <= 40 MB: met with margin |
 | Windows real engine (debug build) | pack verify+open 1,025 ms; entry to ready 1,634 ms; max zoom 18; zoom below minimum refused; camera kept across locale change; 0 style warnings |

@@ -42,6 +42,21 @@ Builds: `project/build/web` of `d11e9f2` (first pass, profile `p5r2`) and of `4b
 
 Observed, not fixed: preparation also stores every other same-origin URL the visit loaded, including 320 query-string copies of `version.json` in this synthetic run (the worker matches with `ignoreSearch`, so they are redundant); the details sheet's "Map" paragraph still says "prepare the offline map below" once the copy is saved.
 
+## Round 2 repair pass re-check (2026-09-27, code tip `a57dda7`)
+
+| Case (round-2 finding) | Result |
+|---|---|
+| Unpinned 0,0 venue in the venue sheet used by the live Venue tab, summary card and drawer (D2 residual) | PASS (widget): no distance, no directions button, the no-location message; the open-maps path never copies a 0,0 link. The live Venue tab was not opened on a device or in Chrome |
+| Mixed builds on a slow network (E1) | Code fix only: the 4 s fallback now applies to page loads, and files for a network-started page wait for the network. The hanging-network start still passes (4.45 s). A slow-but-working network was not simulated |
+| Query-string duplicates (E2) | PASS: one stored copy per path (32 files, not 351) |
+| Self-hosted label fonts (E3) | Code fix only (fonts accepted from this site); not exercised, because this build uses the font CDN |
+| Save before the result; stale details wording (E4) | PASS: Save no longer dismisses the prompt, so it returns after a failed save or an older pack (unit test plus R4-04); details say "saved in this browser" once ready (R4-02) |
+| Centre mark looked like zoom-in (E5) | PASS (Windows render, R3 P01-P03): reticle mark matching the button icon; hint names both ways to place the pin |
+| First Arabic view and picker insets (D6 residual) | PASS: the first view re-frames with the measured, mirrored insets until the user moves the map (R4-07, R5-04); picker insets mirror |
+| Summary-card targets (D5 residual) | PASS (code): 48 px |
+| Eviction re-prompt, interrupted re-preparation (asked by critic round 2) | PASS (R4-03, R4-05) |
+| Offline start after re-saves (new) | Failed at `ad28998` (avatars and logo dropped); PASS at `a57dda7` (R5-03) |
+
 ## Performance and size (proposed gates from the research)
 
 | Gate | Result |
