@@ -151,7 +151,14 @@ void main() {
         events.name, (_) async => events.codec.encodeSuccessEnvelope(null));
     // The camera preview is a native view; the test only needs it to exist.
     messenger.setMockMethodCallHandler(SystemChannels.platform_views,
-        (call) async => call.method == 'create' ? 0 : null);
+        (call) async {
+      if (call.method == 'create') return 0;
+      if (call.method == 'resize') {
+        final args = call.arguments as Map;
+        return {'width': args['width'], 'height': args['height']};
+      }
+      return null;
+    });
   });
   tearDown(() {
     messenger.setMockMethodCallHandler(permissions, null);
@@ -372,6 +379,10 @@ void main() {
     final p = await tester.runAsync(() => broadcaster(db));
     await open(tester, p!, size: const Size(915, 412));
     expect(endButton, findsOneWidget);
+    Focus.of(tester.element(
+            find.descendant(of: endButton, matching: find.byType(Text)).first))
+        .requestFocus();
+    await tester.pump();
     // Tap the picture to hide the overlay controls.
     await tester.tapAt(const Offset(450, 200));
     await tester.pumpAndSettle();
@@ -381,6 +392,61 @@ void main() {
     expect(find.byKey(const Key('phone-end-confirm')), findsOneWidget);
     await tester.tap(find.byKey(const Key('phone-end-stay')));
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await close(tester, p, db);
+  });
+
+  testWidgets('landscape has three toggled controls and End at the top left',
+      (tester) async {
+    final orientations = <List<dynamic>>[];
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'SystemChrome.setPreferredOrientations') {
+        orientations.add(List<dynamic>.from(call.arguments as List));
+      }
+      return null;
+    });
+    addTearDown(() =>
+        messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!, size: const Size(915, 412));
+    expect(orientations.single, [
+      'DeviceOrientation.portraitUp',
+      'DeviceOrientation.landscapeLeft',
+      'DeviceOrientation.landscapeRight',
+    ]);
+    expect(tester.getTopLeft(endButton).dx, lessThan(20));
+    expect(tester.getTopLeft(endButton).dy, lessThan(20));
+    expect(find.byIcon(Icons.fullscreen_exit_rounded), findsNothing);
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump();
+    final starts = calls.where((c) => c == 'startStream').length;
+    await tester.tapAt(const Offset(450, 200));
+    await tester.pump();
+    expect(endButton, findsNothing);
+    expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
+    expect(find.byIcon(Icons.chat_bubble_outline_rounded), findsNothing);
+    await tester.tapAt(const Offset(450, 200));
+    await tester.pump();
+    expect(endButton.hitTestable(), findsOneWidget);
+    await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('live.front_camera_coming_soon'.tr()));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(calls, isNot(contains('switchCamera')));
+    expect(calls.where((c) => c == 'startStream').length, starts);
+    await tester.tap(find.text('common.ok'.tr()));
+    await tester.pumpAndSettle();
+    Navigator.of(
+            tester.element(find.text('live.front_camera_coming_soon'.tr())))
+        .pop();
+    await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(412, 915);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('phone-landscape-media')), findsNothing);
+    expect(find.byIcon(Icons.fullscreen_rounded), findsNothing);
+    expect(calls.where((c) => c == 'startStream').length, starts);
     expect(tester.takeException(), isNull);
     await close(tester, p, db);
   });
@@ -418,25 +484,39 @@ void main() {
   });
 
   for (final locale in [const Locale('en'), const Locale('ar')]) {
-    testWidgets('short landscape settings and chat at 2x: $locale',
-        (tester) async {
-      final db = _Db();
-      final p = await tester.runAsync(() => broadcaster(db));
-      await open(tester, p!,
-          locale: locale, size: const Size(740, 360), textScale: 2);
-      tester.view.viewInsets = const FakeViewPadding(bottom: 190);
-      await tester.pump();
-      await tester.tap(find.byTooltip('live.tooltip_toggle_chat'.tr()));
-      await tester.pump();
-      expect(find.byType(TextField), findsNothing);
-      expect(find.text('live.landscape_chat_read_only'.tr()), findsOneWidget);
-      expect(tester.takeException(), isNull);
-      await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
-      await tester.pumpAndSettle();
-      expect(find.byType(SingleChildScrollView), findsWidgets);
-      expect(tester.takeException(), isNull);
-      await close(tester, p, db);
-    });
+    for (final size in [
+      const Size(568, 240),
+      const Size(740, 360),
+      const Size(1366, 768)
+    ]) {
+      testWidgets('landscape settings and chat at 2x: $locale $size',
+          (tester) async {
+        final db = _Db();
+        final p = await tester.runAsync(() => broadcaster(db));
+        await open(tester, p!, locale: locale, size: size, textScale: 2);
+        tester.view.viewInsets = const FakeViewPadding(bottom: 190);
+        await tester.pump();
+        await tester.tap(find.byTooltip('live.tooltip_toggle_chat'.tr()));
+        await tester.pump();
+        expect(find.byType(TextField), findsNothing);
+        expect(find.text('live.landscape_chat_read_only'.tr()), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.byType(SingleChildScrollView), findsWidgets);
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(
+            find.text('design_ui.broadcaster_studio_end_stream'.tr()));
+        await tester
+            .tap(find.text('design_ui.broadcaster_studio_end_stream'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.byType(TextField), findsNothing);
+        expect(
+            find.text('live.landscape_settings_portrait'.tr()), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await close(tester, p, db);
+      });
+    }
   }
 
   Future<void> goLive(WidgetTester tester) async {

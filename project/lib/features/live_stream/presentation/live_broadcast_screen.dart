@@ -834,7 +834,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   IconButton(
                     icon: const Icon(Icons.cell_tower_rounded, size: 20),
                     tooltip: 'live.rtmp_ip_tooltip'.tr(),
-                    onPressed: () => LiveBroadcasterStudioSheet.show(context),
+                    onPressed: () => LiveBroadcasterStudioSheet.show(context,
+                        openedFromVideo: true),
                   ),
                 const LanguageSwitcher(),
                 const SizedBox(width: AppTheme.spaceSm),
@@ -1141,7 +1142,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               if (_streamState == StreamState.unconfirmed)
                 PositionedDirectional(
                   top: 0,
-                  start: 8,
+                  start: 72,
                   end: 8,
                   child: Row(children: [
                     Expanded(

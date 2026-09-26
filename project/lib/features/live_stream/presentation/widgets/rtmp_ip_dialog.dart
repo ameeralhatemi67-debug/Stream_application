@@ -48,15 +48,17 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
   /// Set when the studio is opened from the phone broadcast screen: End
   /// goes through that screen, which stops its encoder and leaves.
   final Future<void> Function()? onEndBroadcast;
+  final bool openedFromVideo;
 
   const LiveBroadcasterStudioSheet({
     super.key,
     @visibleForTesting this.initialMode = StudioMode.obs,
     this.onEndBroadcast,
+    this.openedFromVideo = false,
   });
 
   static Future<void> show(BuildContext context,
-      {Future<void> Function()? onEndBroadcast}) {
+      {Future<void> Function()? onEndBroadcast, bool openedFromVideo = false}) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -77,7 +79,9 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
             ),
             Align(
               alignment: Alignment.bottomCenter,
-              child: LiveBroadcasterStudioSheet(onEndBroadcast: onEndBroadcast),
+              child: LiveBroadcasterStudioSheet(
+                  onEndBroadcast: onEndBroadcast,
+                  openedFromVideo: openedFromVideo),
             ),
           ],
         );
@@ -231,6 +235,22 @@ class _LiveBroadcasterStudioSheetState
 
   @override
   Widget build(BuildContext context) {
+    if (widget.openedFromVideo &&
+        MediaQuery.orientationOf(context) == Orientation.landscape) {
+      // Removed fields close their input connections. This State keeps drafts.
+      return Material(
+          color: AppTheme.surface,
+          child: SafeArea(
+              child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text('live.landscape_settings_portrait'.tr()),
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text('common.close'.tr())),
+            ]),
+          )));
+    }
     final isAr = context.locale.languageCode == 'ar';
     final screenHeight = MediaQuery.of(context).size.height;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;

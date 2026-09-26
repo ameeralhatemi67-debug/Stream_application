@@ -540,8 +540,9 @@ void main() {
       await close(tester);
     });
 
-    testWidgets('explicit viewer controls toggle stays reachable',
+    testWidgets('unconfirmed viewer controls toggle stays reachable',
         (tester) async {
+      log.report = StreamState.unconfirmed;
       await open(tester);
       final button = find.byTooltip('live.toggle_player_controls'.tr());
       await tester.tap(button);

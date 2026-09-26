@@ -46,7 +46,7 @@ extension BroadcastQualityPresetConfig on BroadcastQualityPreset {
   int get height {
     switch (this) {
       case BroadcastQualityPreset.low:
-        return 480;
+        return 360;
       case BroadcastQualityPreset.medium:
         return 720;
       case BroadcastQualityPreset.high:
@@ -215,7 +215,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   String? _lastError;
   String? get lastError => _lastError;
 
-  bool _isFrontCamera = false;
+  final bool _isFrontCamera = false;
   bool get isFrontCamera => _isFrontCamera;
 
   bool _isMuted = false;
@@ -320,26 +320,23 @@ class RtmpPublishEngine extends ChangeNotifier {
   }
 
   Future<void> switchCamera() async {
-    try {
-      await _channel.invokeMethod<void>('switchCamera');
-      _isFrontCamera = !_isFrontCamera;
-      notifyListeners();
-    } on PlatformException catch (e) {
-      _lastError = e.message ?? e.code;
-      notifyListeners();
-    }
+    // Owner scope decision, 2026-09-27. The native bridge also refuses it.
+    throw UnsupportedError('Front camera switching is coming soon.');
   }
 
   /// Hides video while retaining the RTMP video track. The current native
   /// implementation keeps the camera open; this is not a resource-off mode.
   Future<void> setAudioOnly(bool audioOnly) async {
+    if (_disposed) return;
     try {
       await _channel
           .invokeMethod<void>('setAudioOnly', {'audioOnly': audioOnly});
+      if (_disposed) return;
       _isAudioOnly = audioOnly;
       _isCameraOff = audioOnly;
       notifyListeners();
     } on PlatformException catch (e) {
+      if (_disposed) return;
       _lastError = e.message ?? e.code;
       notifyListeners();
     }
@@ -452,12 +449,15 @@ class RtmpPublishEngine extends ChangeNotifier {
   }
 
   Future<void> setMuted(bool muted) async {
+    if (_disposed) return;
     try {
       await _channel.invokeMethod<void>('setMuted', {'muted': muted});
+      if (_disposed) return;
       _isMuted = muted;
       _applySilenceState();
       notifyListeners();
     } on PlatformException catch (e) {
+      if (_disposed) return;
       _lastError = e.message ?? e.code;
       notifyListeners();
     }

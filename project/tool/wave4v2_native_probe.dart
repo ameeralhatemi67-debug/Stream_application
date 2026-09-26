@@ -39,20 +39,26 @@ class _ProbeState extends State<_Probe> with WidgetsBindingObserver {
       }
     }));
     at(
-        10,
+        30,
         () => SystemChrome.setPreferredOrientations(
             [DeviceOrientation.landscapeLeft]));
     at(
-        20,
-        () => SystemChrome.setPreferredOrientations(
-            [DeviceOrientation.portraitUp]));
-    at(30, engine.switchCamera);
-    at(
         40,
         () => SystemChrome.setPreferredOrientations(
+            [DeviceOrientation.portraitUp]));
+    at(45, () async {
+      try {
+        await engine.switchCamera();
+      } on UnsupportedError {
+        debugPrint('WAVE4V2 front camera correctly unavailable');
+      }
+    });
+    at(
+        50,
+        () => SystemChrome.setPreferredOrientations(
             [DeviceOrientation.landscapeRight]));
-    at(50, () => engine.setAudioOnly(true));
-    at(55, engine.stopPublishing);
+    at(60, () => engine.setAudioOnly(true));
+    at(70, engine.stopPublishing);
   }
 
   void at(int seconds, Future<void> Function() action) {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -56,7 +56,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   String? _setupError;
   late BroadcastQualityPreset _preset;
   late bool _presetConfirmed;
-  bool _isFullscreen = false;
   bool _isSideChatOpen = false;
   bool _controlsVisible = true;
   bool _wasLandscape = false;
@@ -77,6 +76,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (landscape && !_wasLandscape) {
       FocusManager.instance.primaryFocus?.unfocus();
       SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+    }
+    if (landscape != _wasLandscape) {
+      SystemChrome.setEnabledSystemUIMode(
+          landscape ? SystemUiMode.immersiveSticky : SystemUiMode.edgeToEdge);
     }
     _wasLandscape = landscape;
     if (!_appProviderCaptured) {
@@ -108,6 +111,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     _chatController.addListener(_handleChatConnectionChange);
 
     _setWakelock(true);
+    // Leaving a previous room can lock portrait. Enable rotation on every entry;
+    // physical orientation owns fullscreen, so there is no exit-icon lock trap.
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
 
     final note = widget.watchLinkNoteKey;
     if (note != null) {
@@ -536,28 +546,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     _appProvider.setStreamerMicMuted(_engine.isMicSilent.value);
   }
 
-  void _handleToggleFullscreen() {
-    final entering = !_isFullscreen;
-    setState(() => _isFullscreen = entering);
-
-    if (entering) {
-      _engine.setOrientation(90);
-      SystemChrome.setPreferredOrientations(const [
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-    } else {
-      _engine.setOrientation(0);
-      SystemChrome.setPreferredOrientations(const [
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    }
-  }
-
   void _restorePortraitChrome() {
     _engine.setOrientation(0);
     SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
@@ -629,7 +617,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     final mediaQuery = MediaQuery.of(context);
     final isDesktop = mediaQuery.size.width >= 900;
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
-    final isSideBySide = isDesktop || (isLandscape && !_isFullscreen);
+    final isSideBySide = isDesktop || isLandscape;
     final streamer = _appProvider.currentBroadcasterStreamer;
 
     if (!_presetConfirmed) {
@@ -643,7 +631,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       );
     }
 
-    if (_isFullscreen || isLandscape) {
+    if (isLandscape) {
       return Scaffold(
         backgroundColor: AppTheme.media,
         resizeToAvoidBottomInset: false,
@@ -778,7 +766,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   color: AppTheme.danger, size: 20),
               tooltip: 'live.tooltip_studio'.tr(),
               onPressed: () => LiveBroadcasterStudioSheet.show(context,
-                  onEndBroadcast: _handleEndOrLeave),
+                  onEndBroadcast: _handleEndOrLeave, openedFromVideo: true),
             ),
           ),
         ],
@@ -1046,27 +1034,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
 
                     // Bottom Right: Fullscreen Button
-                    PositionedDirectional(
-                      bottom: AppTheme.spaceSm,
-                      end: AppTheme.spaceSm,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.media.withValues(alpha: 0.65),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(
-                              color: AppTheme.onMedia.withValues(alpha: 0.24),
-                              width: 0.8),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.fullscreen_rounded,
-                              color: AppTheme.onMedia, size: 20),
-                          tooltip: 'live.tooltip_fullscreen'.tr(),
-                          onPressed: _handleToggleFullscreen,
-                        ),
-                      ),
-                    ),
-
                     // Mic Muted Pill
                     // Hidden while the audio-only poster shows: it would sit
                     // over the poster's button.
@@ -1153,7 +1120,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           builder: (context, setModalState) {
             final isMuted = _engine.isMuted;
             final isCameraOff = _engine.isCameraOff;
-            final isFrontCamera = _engine.isFrontCamera;
 
             return Container(
               decoration: const BoxDecoration(
@@ -1248,19 +1214,19 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             activeThumbColor: AppTheme.success,
                             onChanged: (val) async {
                               await _engine.setMuted(!val);
-                              setModalState(() {});
-                              setState(() {});
+                              if (context.mounted) setModalState(() {});
+                              if (mounted) setState(() {});
                             },
                           ),
                           onTap: () async {
                             await _engine.setMuted(!isMuted);
-                            setModalState(() {});
-                            setState(() {});
+                            if (context.mounted) setModalState(() {});
+                            if (mounted) setState(() {});
                           },
                         ),
                         const SizedBox(height: 8),
 
-                        // 2.  Flip Camera Toggle
+                        // Front camera is deferred; this action only explains it.
                         ListTile(
                           shape: RoundedRectangleBorder(
                             borderRadius:
@@ -1270,32 +1236,32 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           leading: const Icon(Icons.flip_camera_ios_rounded,
                               color: AppTheme.primary),
                           title: Text(
-                            (isFrontCamera
-                                    ? 'live.ctrl_switch_to_back'
-                                    : 'live.ctrl_switch_to_front')
-                                .tr(),
+                            'live.front_camera_coming_soon'.tr(),
                             style: const TextStyle(
                                 color: AppTheme.textPrimary,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13.5),
                           ),
                           subtitle: Text(
-                            (isFrontCamera
-                                    ? 'live.ctrl_front_active_sub'
-                                    : 'live.ctrl_back_active_sub')
-                                .tr(),
+                            'live.ctrl_back_active_sub'.tr(),
                             style: const TextStyle(
                                 color: AppTheme.textSecondary, fontSize: 11),
                           ),
-                          trailing: const Icon(Icons.sync_rounded,
+                          trailing: const Icon(Icons.info_outline_rounded,
                               color: AppTheme.textSecondary, size: 18),
-                          onTap: isCameraOff
-                              ? null
-                              : () async {
-                                  await _engine.switchCamera();
-                                  setModalState(() {});
-                                  setState(() {});
-                                },
+                          onTap: () => showDialog<void>(
+                            context: sheetContext,
+                            builder: (context) => AlertDialog(
+                              scrollable: true,
+                              title: Text('live.front_camera_coming_soon'.tr()),
+                              content: Text('live.ctrl_back_active_sub'.tr()),
+                              actions: [
+                                TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text('common.ok'.tr()))
+                              ],
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 8),
 
@@ -1339,14 +1305,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             activeThumbColor: AppTheme.primary,
                             onChanged: (val) async {
                               await _engine.toggleCamera(!val);
-                              setModalState(() {});
-                              setState(() {});
+                              if (context.mounted) setModalState(() {});
+                              if (mounted) setState(() {});
                             },
                           ),
                           onTap: () async {
                             await _engine.toggleCamera(!isCameraOff);
-                            setModalState(() {});
-                            setState(() {});
+                            if (context.mounted) setModalState(() {});
+                            if (mounted) setState(() {});
                           },
                         ),
                         const SizedBox(height: 8),
@@ -1414,7 +1380,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           onTap: () {
                             Navigator.of(sheetContext).pop();
                             LiveBroadcasterStudioSheet.show(context,
-                                onEndBroadcast: _handleEndOrLeave);
+                                onEndBroadcast: _handleEndOrLeave,
+                                openedFromVideo: true);
                           },
                         ),
                       ],
@@ -1427,8 +1394,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
-  /// Always visible while this screen is open, in both orientations. While
-  /// nothing is sending it reads "Leave" and closes without asking.
+  /// Revealed with the landscape controls; Back keeps the same confirmation.
+  /// While nothing is sending it reads "Leave" and closes without asking.
   Widget _endControl() {
     final sending = _isSending;
     return FilledButton.icon(
@@ -1892,20 +1859,18 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             SafeArea(
                 child: Focus(
               focusNode: _controlsFocus,
+              canRequestFocus: false,
               child: Stack(children: [
-                PositionedDirectional(
+                Positioned(
                   top: AppTheme.spaceSm,
-                  start: AppTheme.spaceSm,
-                  child: IconButton.filled(
-                    tooltip: 'live.tooltip_exit_fullscreen'.tr(),
-                    onPressed: _handleToggleFullscreen,
-                    icon: const Icon(Icons.fullscreen_exit_rounded),
-                  ),
-                ),
-                PositionedDirectional(
-                  top: AppTheme.spaceSm,
-                  end: AppTheme.spaceSm,
-                  child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  left: AppTheme.spaceSm,
+                  right: AppTheme.spaceSm,
+                  child: Row(textDirection: TextDirection.ltr, children: [
+                    Expanded(
+                        child: Align(
+                            alignment: Alignment.centerLeft,
+                            child: _endControl())),
+                    const SizedBox(width: AppTheme.spaceSm),
                     IconButton.filled(
                       tooltip: 'live.tooltip_controls'.tr(),
                       onPressed: () => _showStreamerControlsSheet(streamer),
@@ -1919,18 +1884,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     ),
                   ]),
                 ),
-                PositionedDirectional(
-                  bottom: AppTheme.spaceSm,
-                  start: AppTheme.spaceSm,
-                  child: _endControl(),
-                ),
               ]),
             )),
           if (visible && _isSideChatOpen)
-            PositionedDirectional(
+            Positioned(
               top: 64,
-              bottom: AppTheme.spaceSm,
-              end: AppTheme.spaceSm,
+              bottom: MediaQuery.paddingOf(context).bottom + AppTheme.spaceSm,
+              right: MediaQuery.paddingOf(context).right + AppTheme.spaceSm,
               width: MediaQuery.sizeOf(context).width * 0.42,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),

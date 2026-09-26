@@ -386,6 +386,8 @@
     "ctrl_mic_active_sub": "Viewers can hear you",
     "ctrl_switch_to_back": "Switch to back camera",
     "ctrl_switch_to_front": "Switch to front camera",
+    "front_camera_coming_soon": "Front camera switching is coming soon",
+    "landscape_settings_portrait": "Rotate to portrait to edit stream settings. You can end the broadcast using the button over the video.",
     "ctrl_front_active_sub": "Front camera in use",
     "ctrl_back_active_sub": "Back camera in use",
     "ctrl_hide_video": "Hide video (audio only)",
