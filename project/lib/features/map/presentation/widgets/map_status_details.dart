@@ -76,6 +76,66 @@ class MapAttributionRail extends StatelessWidget {
   }
 }
 
+/// Browser only: a one-line suggestion to prepare the offline map, shown
+/// until the user prepares or dismisses it (and again if the browser removes
+/// a prepared copy).
+class MapWebOfflineHint extends StatelessWidget {
+  const MapWebOfflineHint({
+    super.key,
+    required this.evicted,
+    required this.onPrepare,
+    required this.onDismiss,
+  });
+
+  final bool evicted;
+  final VoidCallback onPrepare;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppTheme.surface.withValues(alpha: 0.95),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
+        side: const BorderSide(color: AppTheme.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.only(start: AppTheme.spaceMd),
+        child: Row(
+          children: [
+            const Icon(Icons.download_for_offline_outlined,
+                color: AppTheme.primary, size: 20),
+            const SizedBox(width: AppTheme.spaceSm),
+            Expanded(
+              child: Text(
+                (evicted
+                        ? 'map.web_offline_hint_evicted'
+                        : 'map.web_offline_hint')
+                    .tr(),
+                style: const TextStyle(
+                    color: AppTheme.textPrimary, fontSize: 12.5),
+              ),
+            ),
+            TextButton(
+              onPressed: onPrepare,
+              style: TextButton.styleFrom(minimumSize: const Size(48, 48)),
+              child: Text('map.web_offline_hint_prepare'.tr()),
+            ),
+            if (!evicted)
+              IconButton(
+                tooltip: 'map.web_offline_hint_dismiss'.tr(),
+                onPressed: onDismiss,
+                icon: const Icon(Icons.close_rounded,
+                    size: 18, color: AppTheme.textSecondary),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Compact, single-line backend status for the map ("Offline · saved
 /// venues from …"). Map streets never depend on it.
 class MapConnectionChip extends StatelessWidget {
@@ -473,6 +533,7 @@ class _MapDetailsBody extends StatelessWidget {
           'quota' => 'map.web_offline_failed_quota'.tr(),
           'private' => 'map.web_offline_failed_private'.tr(),
           'mismatch' => 'map.web_offline_failed_mismatch'.tr(),
+          'incomplete' => 'map.web_offline_failed_incomplete'.tr(),
           'unsupported' => 'map.web_offline_unsupported'.tr(),
           _ => 'map.web_offline_failed_network'.tr(),
         },

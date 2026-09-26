@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:crypto/crypto.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -34,6 +35,25 @@ class DirectJsonAssetLoader extends AssetLoader {
 class _NoPackBundle extends CachingAssetBundle {
   @override
   Future<ByteData> load(String key) async => throw StateError('no $key');
+}
+
+/// Serves the real shipped pack files, so the controller verifies and opens
+/// the actual bundle (used where the picker needs a ready map).
+class _FilePackBundle extends CachingAssetBundle {
+  @override
+  Future<ByteData> load(String key) async =>
+      ByteData.sublistView(File(key).readAsBytesSync());
+}
+
+Future<MapPackController> _readyPack(WidgetTester tester) async {
+  final pack = MapPackController(
+    bundle: _FilePackBundle(),
+    hasher: (bytes) async => sha256.convert(bytes).toString(),
+    useWebStore: false,
+  );
+  await tester.runAsync(pack.ensureOpened);
+  expect(pack.isReady, isTrue);
+  return pack;
 }
 
 MapPackController _unavailablePack() =>
@@ -227,6 +247,29 @@ void main() {
         findsOneWidget);
   });
 
+  testWidgets(
+      'directions for a venue without a pinned point explain it '
+      'instead of opening 0,0', (tester) async {
+    phone(tester);
+    var launched = false;
+    await tester.pumpWidget(_app(
+        Scaffold(
+          body: Builder(
+            builder: (context) => ElevatedButton(
+              onPressed: () => openVenueDirections(context, 0, 0,
+                  launcher: (_, __) async => launched = true),
+              child: const Text('go'),
+            ),
+          ),
+        ),
+        AppProvider(AdminDatabaseService(null))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('go'));
+    await tester.pumpAndSettle();
+    expect(launched, isFalse);
+    expect(find.textContaining('no pinned location'), findsOneWidget);
+  });
+
   group('Venue location picker (A19)', () {
     Future<LocationPickerResult?> openPicker(
         WidgetTester tester, LatLng? initial,
@@ -277,11 +320,45 @@ void main() {
       expect(find.textContaining('Corniche'), findsNothing);
     });
 
+    testWidgets('without a visible map no blind pin can be placed',
+        (tester) async {
+      phone(tester);
+      MapPackController.debugShared = _unavailablePack();
+      await openPicker(tester, null, city: 'dammam');
+      await tester.tapAt(_mapPoint(tester));
+      await tester.pumpAndSettle(const Duration(milliseconds: 400));
+      expect(find.text('No point chosen yet. Tap the map.'), findsOneWidget);
+      expect(tester.widget<ElevatedButton>(useButton()).onPressed, isNull);
+      expect(
+          find.text('The map must be showing to place a pin'), findsOneWidget);
+    });
+
+    testWidgets(
+        '"Pin the map centre" places the point under the crosshair '
+        '(keyboard and screen-reader path)', (tester) async {
+      phone(tester);
+      MapPackController.debugShared = await _readyPack(tester);
+      await openPicker(tester, null, city: 'dammam');
+      await tester.tap(find.text('Pin the map centre (+)'));
+      await tester.pumpAndSettle(const Duration(milliseconds: 400));
+      expect(find.textContaining('Latitude'), findsOneWidget);
+      expect(tester.widget<ElevatedButton>(useButton()).onPressed, isNotNull);
+      final shown = tester.widget<Text>(find.textContaining('Latitude')).data!;
+      final numbers = RegExp(r'\d+\.\d+')
+          .allMatches(shown)
+          .map((m) => double.parse(m.group(0)!))
+          .toList();
+      // The centre of the Dammam city view the picker opened on.
+      expect(
+          cityViewById('dammam')!.view.contains(numbers[0], numbers[1]), isTrue,
+          reason: shown);
+    });
+
     testWidgets(
         'tapping the map records the exact point; the result carries '
         'coordinates only', (tester) async {
       phone(tester);
-      MapPackController.debugShared = _unavailablePack();
+      MapPackController.debugShared = await _readyPack(tester);
       LocationPickerResult? result;
       await tester.pumpWidget(_app(
           Scaffold(
@@ -316,7 +393,7 @@ void main() {
         'text and chosen city are kept; cancel keeps the old point',
         (tester) async {
       phone(tester);
-      MapPackController.debugShared = _unavailablePack();
+      MapPackController.debugShared = await _readyPack(tester);
       final venue = TextEditingController(text: 'My own hall, King Fahd Rd');
       final phoneCtrl = TextEditingController();
       LatLng? picked;
@@ -369,7 +446,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      MapPackController.debugShared = _unavailablePack();
+      MapPackController.debugShared = await _readyPack(tester);
       final branches = <OrgBranchVenue>[];
       await tester.pumpWidget(_app(
           Scaffold(

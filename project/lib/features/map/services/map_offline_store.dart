@@ -30,8 +30,8 @@ class WebOfflineStatus {
   final DateTime? preparedAt;
 
   /// Stable, untranslated reason code for [WebOfflineState.failed]
-  /// (`quota`, `network`, `mismatch`, `unsupported`, `private`), mapped to
-  /// localized copy by the UI.
+  /// (`quota`, `network`, `mismatch`, `incomplete`, `unsupported`,
+  /// `private`), mapped to localized copy by the UI.
   final String? detail;
   final int done;
   final int total;

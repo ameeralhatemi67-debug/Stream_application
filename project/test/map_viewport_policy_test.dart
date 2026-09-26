@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:streamer_app/features/map/models/map_tricity_domain.dart';
 import 'package:streamer_app/features/map/presentation/map_viewport_policy.dart';
+import 'package:streamer_app/features/map/presentation/venue_directions_launcher.dart';
 
 const _policy = MapViewportPolicy();
 const _padding = EdgeInsets.fromLTRB(16, 132, 72, 56);
@@ -184,6 +185,28 @@ void main() {
     expect(isInTricityMapDomain(double.nan, 50.1), isFalse);
     // Swapped latitude/longitude is outside, not silently corrected.
     expect(isInTricityMapDomain(50.1, 26.3), isFalse);
+  });
+
+  test('city search tolerates common spellings and the Arabic article', () {
+    MapCityView view(String id) => cityViewById(id)!;
+    for (final q in ['khobar', 'Al-Khubar', 'alkhobar', 'الخبر', 'خبر']) {
+      expect(view('khobar').matchesSearch(q), isTrue, reason: q);
+    }
+    for (final q in ['dahran', 'Zahran', 'الظهران']) {
+      expect(view('dhahran').matchesSearch(q), isTrue, reason: q);
+    }
+    for (final q in ['damam', 'Dammam', 'الدمام']) {
+      expect(view('dammam').matchesSearch(q), isTrue, reason: q);
+    }
+    expect(view('khobar').matchesSearch('riyadh'), isFalse);
+    expect(view('dammam').matchesSearch('a'), isFalse);
+  });
+
+  test('directions refuse points that are not a pinned location', () {
+    expect(isUsableVenuePoint(26.289, 50.217), isTrue);
+    expect(isUsableVenuePoint(0, 0), isFalse);
+    expect(isUsableVenuePoint(double.nan, 50), isFalse);
+    expect(isUsableVenuePoint(95, 50), isFalse);
   });
 
   test('cluster taps share the policy maximum', () {

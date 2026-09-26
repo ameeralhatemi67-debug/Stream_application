@@ -1,11 +1,12 @@
 import 'dart:async';
 import 'dart:math' as math;
 import '../../../core/widgets/safe_image_provider.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/services/connectivity_service.dart';
@@ -13,6 +14,7 @@ import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
 import '../models/map_models.dart';
 import '../models/map_tricity_domain.dart';
+import '../services/map_offline_store.dart';
 import '../services/map_pack_controller.dart';
 import 'map_cluster_layout.dart';
 import 'map_viewport_policy.dart';
@@ -60,6 +62,12 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   late final ValueNotifier<int> _cameraRevision;
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _topControlsKey = GlobalKey();
+  final GlobalKey _emptyNoticeKey = GlobalKey();
+
+  /// Web only: whether the user dismissed the "use offline" suggestion.
+  static const String _webHintDismissedKey =
+      'map_web_offline_hint_dismissed_v1';
+  bool _webHintDismissed = true;
   bool _isRetryingConnectivity = false;
   bool _mapReady = false;
 
@@ -73,6 +81,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     super.initState();
     _pack = widget.packController ?? MapPackController.shared;
     unawaited(_pack.ensureOpened());
+    if (_pack.supportsWebOffline) unawaited(_loadWebHintState());
     _mapController = MapController();
     _zoomNotifier = ValueNotifier<double>(0);
     _cameraRevision = ValueNotifier<int>(0);
@@ -455,15 +464,50 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     );
   }
 
-  /// Measures the floating top controls so framing keeps cities and venues
-  /// clear of them at every text size.
-  void _measureTopControls() {
+  Future<void> _loadWebHintState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final dismissed = prefs.getBool(_webHintDismissedKey) ?? false;
+      if (mounted) setState(() => _webHintDismissed = dismissed);
+    } catch (_) {}
+  }
+
+  Future<void> _dismissWebHint() async {
+    setState(() => _webHintDismissed = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_webHintDismissedKey, true);
+    } catch (_) {}
+  }
+
+  /// Browser only: suggest preparing the offline map once, and again
+  /// whenever the browser has removed a prepared copy.
+  bool get _showWebOfflineHint {
+    final state = _pack.webOffline?.state;
+    if (!_pack.supportsWebOffline || !_pack.isReady) return false;
+    if (state == WebOfflineState.evicted) return true;
+    return state == WebOfflineState.notPrepared && !_webHintDismissed;
+  }
+
+  /// Measures the floating controls so framing keeps cities and venues clear
+  /// of them at every text size, and mirrors the side inset for the button
+  /// column in right-to-left layouts.
+  void _measureInsets() {
     final box =
         _topControlsKey.currentContext?.findRenderObject() as RenderBox?;
     if (box == null || !box.hasSize) return;
     final top = box.size.height + AppTheme.spaceSm;
-    if ((top - _safePadding.top).abs() > 1) {
-      setState(() => _safePadding = _safePadding.copyWith(top: top));
+    final notice =
+        _emptyNoticeKey.currentContext?.findRenderObject() as RenderBox?;
+    final bottom = notice != null && notice.hasSize
+        ? 60 + notice.size.height + AppTheme.spaceSm
+        : 56.0;
+    final rtl = Directionality.of(context) == TextDirection.rtl;
+    final next = EdgeInsets.fromLTRB(rtl ? 72 : 16, top, rtl ? 16 : 72, bottom);
+    if ((next.top - _safePadding.top).abs() > 1 ||
+        (next.bottom - _safePadding.bottom).abs() > 1 ||
+        next.left != _safePadding.left) {
+      setState(() => _safePadding = next);
     }
   }
 
@@ -513,7 +557,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         context.select<AppProvider, DateTime?>((p) => p.mapCacheUpdatedAt);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) _measureTopControls();
+      if (mounted) _measureInsets();
     });
 
     return Scaffold(
@@ -636,6 +680,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       end: 76,
                       bottom: 60,
                       child: Container(
+                        key: _emptyNoticeKey,
                         padding: const EdgeInsetsDirectional.fromSTEB(
                             AppTheme.spaceMd,
                             AppTheme.spaceSm,
@@ -682,17 +727,20 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                 ),
                               ],
                             ),
-                            Align(
-                              alignment: AlignmentDirectional.centerEnd,
-                              child: TextButton(
-                                onPressed: _isRetryingConnectivity
-                                    ? null
-                                    : _retryConnectivity,
-                                style: TextButton.styleFrom(
-                                    minimumSize: const Size(48, 48)),
-                                child: Text('map.offline_retry'.tr()),
+                            // Offline, the connection line at the top already
+                            // offers Retry; one Retry is enough.
+                            if (isOnline)
+                              Align(
+                                alignment: AlignmentDirectional.centerEnd,
+                                child: TextButton(
+                                  onPressed: _isRetryingConnectivity
+                                      ? null
+                                      : _retryConnectivity,
+                                  style: TextButton.styleFrom(
+                                      minimumSize: const Size(48, 48)),
+                                  child: Text('map.offline_retry'.tr()),
+                                ),
                               ),
-                            ),
                           ],
                         ),
                       ),
@@ -778,6 +826,25 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                 ],
                               ),
                             ],
+                            ListenableBuilder(
+                              listenable: _pack,
+                              builder: (context, _) => _showWebOfflineHint
+                                  ? Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: AppTheme.spaceSm),
+                                      child: MapWebOfflineHint(
+                                        evicted: _pack.webOffline?.state ==
+                                            WebOfflineState.evicted,
+                                        onPrepare: () {
+                                          unawaited(_dismissWebHint());
+                                          unawaited(_pack.prepareWebOffline());
+                                          _openDetails();
+                                        },
+                                        onDismiss: _dismissWebHint,
+                                      ),
+                                    )
+                                  : const SizedBox.shrink(),
+                            ),
                           ],
                         ),
                       ),
@@ -1129,10 +1196,10 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
           child: Tooltip(
             message: tooltip,
             child: Container(
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               alignment: Alignment.center,
-              child: Icon(icon, color: AppTheme.danger, size: 20),
+              child: Icon(icon, color: AppTheme.danger, size: 22),
             ),
           ),
         ),

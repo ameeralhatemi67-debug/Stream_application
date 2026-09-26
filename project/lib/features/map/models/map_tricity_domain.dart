@@ -96,6 +96,7 @@ class MapCityView {
     required this.nameEn,
     required this.nameAr,
     required this.view,
+    this.searchTerms = const [],
   });
 
   final TricityCity city;
@@ -103,7 +104,19 @@ class MapCityView {
   final String nameAr;
   final GeoExtent view;
 
+  /// Common spellings people type (transliterations, Arabic with or without
+  /// the article); matched after [normalizeSearchText].
+  final List<String> searchTerms;
+
   String get id => city.name;
+
+  bool matchesSearch(String query) {
+    final q = normalizeSearchText(query);
+    if (q.length < 2) return false;
+    return [nameEn, nameAr, ...searchTerms]
+        .map(normalizeSearchText)
+        .any((term) => term.contains(q) || (q.length >= 4 && q.contains(term)));
+  }
 
   String localizedName(String languageCode) =>
       languageCode == 'ar' ? nameAr : nameEn;
@@ -115,20 +128,33 @@ const List<MapCityView> kTricityCityViews = [
     nameEn: 'Al Khobar',
     nameAr: 'الخبر',
     view: GeoExtent(west: 50.155, south: 26.17, east: 50.235, north: 26.365),
+    searchTerms: ['Khobar', 'Khubar', 'Alkhobar', 'Al-Khobar', 'Al Khubar'],
   ),
   MapCityView(
     city: TricityCity.dhahran,
     nameEn: 'Dhahran',
     nameAr: 'الظهران',
     view: GeoExtent(west: 50.06, south: 26.25, east: 50.19, north: 26.345),
+    searchTerms: ['Dhahran', 'Dahran', 'Zahran', 'Thahran', 'ظهران'],
   ),
   MapCityView(
     city: TricityCity.dammam,
     nameEn: 'Dammam',
     nameAr: 'الدمام',
     view: GeoExtent(west: 49.98, south: 26.34, east: 50.17, north: 26.50),
+    searchTerms: ['Dammam', 'Damam', 'Dammaam', 'دمام'],
   ),
 ];
+
+/// Lower-case, without spaces, hyphens, apostrophes, Arabic tatweel and a
+/// leading "al"/"el"/Arabic article, so "Al-Khubar", "alkhobar" and "الخبر"
+/// compare sensibly.
+String normalizeSearchText(String input) {
+  var s = input.toLowerCase().replaceAll(RegExp(r"[\s\-'`’ʿـ]"), '');
+  s = s.replaceFirst(RegExp(r'^(al|el)(?=[a-z]{3})'), '');
+  s = s.replaceFirst(RegExp(r'^ال'), '');
+  return s;
+}
 
 MapCityView? cityViewById(String? id) {
   for (final view in kTricityCityViews) {

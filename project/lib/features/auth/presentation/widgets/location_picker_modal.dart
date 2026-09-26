@@ -4,7 +4,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
+import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../map/models/map_tricity_domain.dart';
 import '../../../map/presentation/map_viewport_policy.dart';
@@ -125,7 +127,16 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
     if (target != null) _mapController.move(target.center, target.zoom);
   }
 
+  /// Keyboard, switch and screen-reader friendly alternative to tapping:
+  /// pin the point under the centre crosshair.
+  void _pinCentre() {
+    if (!_ready) return;
+    _onTap(_mapController.camera.center);
+  }
+
   void _onTap(LatLng point) {
+    // Without the map there is nothing to aim at: no blind points.
+    if (!_pack.isReady) return;
     if (!isInTricityMapDomain(point.latitude, point.longitude)) {
       ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
         behavior: SnackBarBehavior.floating,
@@ -258,6 +269,14 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                       ),
                     ),
                   ),
+                  // Centre crosshair for "Pin map centre".
+                  IgnorePointer(
+                    child: Center(
+                      child: Icon(Icons.add_rounded,
+                          size: 32,
+                          color: AppTheme.textPrimary.withValues(alpha: 0.7)),
+                    ),
+                  ),
                   ListenableBuilder(
                     listenable: _pack,
                     builder: (context, _) => _pack.isReady
@@ -294,12 +313,15 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                       listenable: _pack,
                       builder: (context, _) => MapAttributionRail(
                         controller: _pack,
-                        onDetails: () => showMapDetailsSheet(
-                          context,
-                          controller: _pack,
-                          venuesUpdatedAt: null,
-                          backendOnline: true,
-                        ),
+                        onDetails: () {
+                          final provider = context.read<AppProvider>();
+                          showMapDetailsSheet(
+                            context,
+                            controller: _pack,
+                            venuesUpdatedAt: provider.mapCacheUpdatedAt,
+                            backendOnline: provider.isOnline,
+                          );
+                        },
                       ),
                     ),
                   ),
@@ -372,7 +394,23 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     style: const TextStyle(
                         color: AppTheme.textSecondary, fontSize: 12),
                   ),
-                  const SizedBox(height: AppTheme.spaceMd),
+                  const SizedBox(height: AppTheme.spaceSm),
+                  ListenableBuilder(
+                    listenable: _pack,
+                    builder: (context, _) => Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: TextButton.icon(
+                        icon: const Icon(Icons.my_location_rounded, size: 18),
+                        label: Text(_pack.isReady
+                            ? 'map.picker_use_centre'.tr()
+                            : 'map.picker_map_needed'.tr()),
+                        style: TextButton.styleFrom(
+                            minimumSize: const Size(48, 48)),
+                        onPressed: _pack.isReady ? _pinCentre : null,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spaceSm),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primary,

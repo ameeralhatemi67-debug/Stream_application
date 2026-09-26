@@ -31,6 +31,30 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Hadayah Live</title>
+  <script>
+    // Offline map preparation: remember every file this page loads from its
+    // own origin and the Flutter/Google font CDNs, from the very start, so
+    // "Prepare offline map" can store the exact shell, engine and fonts in
+    // use (the browser's own timing list keeps only 250 entries). URLs only.
+    (function () {
+      var seen = window.__streamerResources = [];
+      var allowed = [location.origin, 'https://www.gstatic.com', 'https://fonts.gstatic.com'];
+      function add(entries) {
+        entries.forEach(function (entry) {
+          try {
+            var url = new URL(entry.name);
+            if (allowed.indexOf(url.origin) >= 0 && seen.indexOf(entry.name) < 0 && seen.length < 3000) {
+              seen.push(entry.name);
+            }
+          } catch (e) {}
+        });
+      }
+      try {
+        new PerformanceObserver(function (list) { add(list.getEntries()); })
+          .observe({ type: 'resource', buffered: true });
+      } catch (e) {}
+    })();
+  </script>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>

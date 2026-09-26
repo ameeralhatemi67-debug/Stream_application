@@ -81,34 +81,25 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
     }
   }
 
-  bool _hasFontEntry(String needle) => web.window.performance
-      .getEntriesByType('resource')
-      .toDart
-      .any((e) => e.name.contains(needle));
-
-  /// Map labels use the engine's default font, which on the web is Roboto
-  /// plus Noto fallbacks fetched from the font CDN on first use. Shape a
-  /// Latin and Arabic sample so both are fetched (and then stored below)
-  /// even if this visit never showed Arabic labels.
-  Future<void> _warmLabelFonts() async {
-    // Not shown to anyone: it only makes the engine fetch the fallback fonts.
-    const sample = 'Al Khobar Dhahran Dammam 0123456789 '
-        'الخبر '
-        'الظهران '
-        'الدمام';
-    final builder = ui.ParagraphBuilder(ui.ParagraphStyle())..addText(sample);
-    builder.build().layout(const ui.ParagraphConstraints(width: 600));
-    for (var i = 0; i < 40 && !_hasFontEntry('notosansarabic'); i++) {
-      await Future<void>.delayed(const Duration(milliseconds: 250));
+  /// Every resource this page has loaded from its own origin or the
+  /// Flutter/Google font CDNs. `web/index.html` records them from page start
+  /// with a PerformanceObserver, so a long session cannot push early shell
+  /// files out of the browser's 250-entry resource-timing buffer; that
+  /// buffer is only a fallback.
+  List<String> _observedUrls() {
+    final names = <String>[];
+    final recorded = (web.window as JSObject)['__streamerResources'];
+    final list = recorded?.dartify();
+    if (list is List) {
+      names.addAll(list.whereType<String>());
     }
-  }
-
-  List<String> _shellUrls() {
+    for (final entry
+        in web.window.performance.getEntriesByType('resource').toDart) {
+      names.add(entry.name);
+    }
     final origin = web.window.location.origin;
-    final urls = <String>{_abs(''), _abs('index.html')};
-    final entries = web.window.performance.getEntriesByType('resource').toDart;
-    for (final entry in entries) {
-      final name = entry.name;
+    final urls = <String>{};
+    for (final name in names) {
       final uri = Uri.tryParse(name);
       if (uri == null || !(uri.scheme == 'https' || uri.scheme == 'http')) {
         continue;
@@ -119,6 +110,84 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
       }
     }
     return urls.toList()..sort();
+  }
+
+  /// Map labels use the engine's default font, which on the web is Roboto
+  /// plus Noto fallbacks fetched from the font CDN on first use. Shape a
+  /// Latin and Arabic sample so both are fetched (and then stored below)
+  /// even if this visit never showed Arabic labels. Returns whether the
+  /// Arabic fallback font was seen.
+  Future<bool> _warmLabelFonts() async {
+    // Not shown to anyone: it only makes the engine fetch the fallback fonts.
+    const sample = 'Al Khobar Dhahran Dammam 0123456789 '
+        'الخبر '
+        'الظهران '
+        'الدمام';
+    final builder = ui.ParagraphBuilder(ui.ParagraphStyle())..addText(sample);
+    builder.build().layout(const ui.ParagraphConstraints(width: 600));
+    for (var i = 0; i < 40; i++) {
+      if (_observedUrls().any((u) => u.contains('notosansarabic'))) {
+        return true;
+      }
+      await Future<void>.delayed(const Duration(milliseconds: 250));
+    }
+    return false;
+  }
+
+  /// Files without which a later offline start would not work or would draw
+  /// broken labels: the page and bootstrap, compiled app, asset and font
+  /// manifests, every font the app declares, the rendering engine (JS and
+  /// wasm), and the engine's Latin and Arabic label fonts. Returns null when
+  /// any of them cannot be identified, so preparation fails rather than
+  /// reporting a shell that cannot start.
+  Future<List<String>?> _requiredShellUrls(List<String> observed) async {
+    final required = <String>{
+      _abs(''),
+      _abs('index.html'),
+      _abs('flutter_bootstrap.js'),
+      _abs('manifest.json'),
+      _abs('assets/FontManifest.json'),
+      _abs('assets/AssetManifest.bin.json'),
+    };
+    final program = RegExp(r'/main\.dart\.(js|mjs|wasm)$');
+    final mains = observed.where((u) => program.hasMatch(Uri.parse(u).path));
+    required.addAll(mains.isEmpty ? [_abs('main.dart.js')] : mains);
+
+    try {
+      final response = await web.window
+          .fetch(_abs('assets/FontManifest.json').toJS,
+              web.RequestInit(cache: 'reload'))
+          .toDart;
+      if (!response.ok) return null;
+      final text = (await response.text().toDart).toDart;
+      for (final family in (jsonDecode(text) as List).cast<Map>()) {
+        for (final font in (family['fonts'] as List).cast<Map>()) {
+          required.add(_assetUrl(font['asset'] as String));
+        }
+      }
+    } catch (_) {
+      return null;
+    }
+
+    final engine = observed.where((u) {
+      final path = Uri.parse(u).path;
+      return (path.contains('canvaskit') || path.contains('skwasm')) &&
+          (path.endsWith('.js') || path.endsWith('.wasm'));
+    }).toList();
+    if (!engine.any((u) => u.endsWith('.wasm')) ||
+        !engine.any((u) => u.endsWith('.js'))) {
+      return null;
+    }
+    required.addAll(engine);
+
+    final labelFonts =
+        observed.where((u) => u.startsWith('https://fonts.gstatic.com/'));
+    if (!labelFonts.any((u) => u.contains('/roboto/')) ||
+        !labelFonts.any((u) => u.contains('notosansarabic'))) {
+      return null;
+    }
+    required.addAll(labelFonts);
+    return required.toList();
   }
 
   @override
@@ -151,9 +220,20 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
     }
 
     await _warmLabelFonts();
-    final required = [for (final key in requiredAssetKeys) _assetUrl(key)];
+    final observed = _observedUrls();
+    final shell = await _requiredShellUrls(observed);
+    if (shell == null) {
+      return const WebOfflineStatus(WebOfflineState.failed,
+          detail: 'incomplete');
+    }
+    final required = <String>{
+      for (final key in requiredAssetKeys) _assetUrl(key),
+      ...shell,
+    }.toList();
     final packUrl = _assetUrl(packAssetKey);
-    final optional = _shellUrls().where((u) => !required.contains(u)).toList();
+    // Everything else this visit loaded (images, other screens' assets) is
+    // stored when possible but does not decide readiness.
+    final optional = observed.where((u) => !required.contains(u)).toList();
     final all = [...required, ...optional];
     final stored = <String>[];
     try {

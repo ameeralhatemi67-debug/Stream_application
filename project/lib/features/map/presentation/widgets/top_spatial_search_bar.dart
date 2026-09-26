@@ -86,8 +86,7 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
     final langCode = EasyLocalization.of(context)?.locale.languageCode ?? 'en';
 
     for (final view in kTricityCityViews) {
-      if (view.nameEn.toLowerCase().contains(q) ||
-          view.nameAr.toLowerCase().contains(q)) {
+      if (view.matchesSearch(q)) {
         matches.add(SearchResultItem(
           title: view.localizedName(langCode),
           subtitle: 'map.place_preset'.tr(),

@@ -4423,8 +4423,10 @@ class AppProvider extends ChangeNotifier {
       cityAr: 'الخبر',
       venueNameEn: app.venueNameEn,
       venueNameAr: app.venueNameAr,
-      latitude: app.latitude != 0.0 ? app.latitude : 26.2871,
-      longitude: app.longitude != 0.0 ? app.longitude : 50.2125,
+      // 0,0 is the application's "no pinned location"; keep it rather than
+      // inventing a venue point. The map and directions treat it as absent.
+      latitude: app.latitude,
+      longitude: app.longitude,
       isCurrentlyLive: false,
       broadcastType: BroadcastType.offline,
       isOrganization: app.isOrganization,

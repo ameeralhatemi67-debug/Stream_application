@@ -20,7 +20,17 @@ Uri nativeVenueDirectionsUri(double lat, double lng, TargetPlatform platform) {
   return googleVenueDirectionsUri(lat, lng);
 }
 
+/// A venue point directions can use: finite, in range and not 0,0 (the
+/// app's "no location pinned" value).
+bool isUsableVenuePoint(double lat, double lng) =>
+    lat.isFinite &&
+    lng.isFinite &&
+    lat.abs() <= 90 &&
+    lng.abs() <= 180 &&
+    !(lat == 0 && lng == 0);
+
 Future<bool> launchVenueDirections(double lat, double lng) async {
+  if (!isUsableVenuePoint(lat, lng)) return false;
   final fallback = googleVenueDirectionsUri(lat, lng);
   final preferred = nativeVenueDirectionsUri(lat, lng, defaultTargetPlatform);
   try {
@@ -48,6 +58,15 @@ Future<bool> openVenueDirections(
       launchVenueDirections,
 }) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
+  if (!isUsableVenuePoint(lat, lng)) {
+    messenger?.showSnackBar(
+      SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text('map.no_venue_location'.tr()),
+      ),
+    );
+    return false;
+  }
   final opened = await launcher(lat, lng);
   if (!opened) {
     messenger?.showSnackBar(
