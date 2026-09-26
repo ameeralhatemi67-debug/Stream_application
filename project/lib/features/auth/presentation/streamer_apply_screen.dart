@@ -56,7 +56,10 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   final TextEditingController _venueController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   String _preferredContact = 'whatsapp';
-  LatLng _selectedCoordinates = const LatLng(26.2172, 50.1971);
+  /// Exact venue point the applicant pinned; null until they pin one. An
+  /// unpinned application is submitted as 0,0, the existing "no location"
+  /// value, never as an invented Al Khobar point.
+  LatLng? _selectedCoordinates;
   final List<OrgBranchVenue> _orgBranches = [];
 
   // Step 5 Terms
@@ -340,8 +343,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         organizationType: _isOrganization ? 'Educational Academy' : null,
         venueNameEn: bilingual.venueNameEn,
         venueNameAr: bilingual.venueNameAr,
-        latitude: _selectedCoordinates.latitude,
-        longitude: _selectedCoordinates.longitude,
+        latitude: _selectedCoordinates?.latitude ?? 0.0,
+        longitude: _selectedCoordinates?.longitude ?? 0.0,
         seatingCapacity: _isOrganization ? 300 : 120,
         youtubeChannelUrl: ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text).isNotEmpty
             ? 'https://www.youtube.com/@${ApplyStep3Professional.extractCleanYouTubeHandle(_youtubeController.text)}'
