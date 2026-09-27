@@ -11,69 +11,79 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(initializeTestLocalization);
 
-  testWidgets('handle URL survives the complete sheet submission',
-      (tester) async {
-    final provider = AppProvider(AdminDatabaseService(null));
-    final application = BroadcasterApplicationModel(
-      id: 'sheet-url',
-      cityId: 'dhahran',
-      accountType: ApplicationAccountType.individualScholar,
-      applicantNameEn: 'Test',
-      applicantNameAr: 'اختبار',
-      email: 'fixture@example.invalid',
-      phone: '',
-      academicTitleEn: 'Lecturer',
-      institutionEn: 'Fixture',
-      categoryId: 'computer_science',
-      tags: const [],
-      venueNameEn: 'Hall',
-      venueNameAr: 'قاعة',
-      latitude: 26,
-      longitude: 50,
-      seatingCapacity: 10,
-      youtubeChannelUrl: 'https://youtube.com/@lecture',
-      youtubeHandle: 'https://youtube.com/@lecture',
-      bioEn: '',
-      bioAr: '',
-      avatarUrl: '',
-      bannerUrl: '',
-      status: ApplicationStatus.pending,
-      submittedAt: DateTime(2026),
-    );
-    await tester.pumpWidget(ChangeNotifierProvider.value(
-        value: provider,
-        child: localizedApp(
-            home: Builder(
-                builder: (context) => Scaffold(
-                      body: TextButton(
-                          onPressed: () => BroadcasterApplicationSheet.show(
-                              context,
-                              application: application),
-                          child: const Text('Open')),
-                    )))));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Open'));
-    await tester.pumpAndSettle();
-    final city = find.widgetWithText(ChoiceChip, 'Dammam');
-    await tester.ensureVisible(city);
-    await tester.tap(city);
-    await tester.pumpAndSettle();
-    final submit = find.byType(ElevatedButton);
-    await tester.ensureVisible(submit);
-    await tester.pumpAndSettle();
-    await tester.tap(submit);
-    await tester.pumpAndSettle();
-    expect(provider.applications.single.youtubeHandle, 'lecture');
-    expect(provider.applications.single.cityId, 'dammam');
-    expect(provider.applications.single.latitude, 26);
-    expect(provider.applications.single.longitude, 50);
-    expect(provider.applications.single.youtubeChannelUrl,
-        'https://www.youtube.com/@lecture');
-    expect(find.byType(BroadcasterApplicationSheet), findsNothing);
-    await tester.pump(const Duration(seconds: 5));
-    await tester.pumpWidget(const SizedBox.shrink());
-    provider.dispose();
-  });
+  for (final categoryId in ['computer_science', 'cs_tech', 'custom_subject']) {
+    testWidgets(
+        'saved category $categoryId survives sheet editing and submission',
+        (tester) async {
+      final provider = AppProvider(AdminDatabaseService(null));
+      final application = BroadcasterApplicationModel(
+        id: 'sheet-url',
+        cityId: 'dhahran',
+        accountType: ApplicationAccountType.individualScholar,
+        applicantNameEn: 'Test',
+        applicantNameAr: 'اختبار',
+        email: 'fixture@example.invalid',
+        phone: '',
+        academicTitleEn: 'Lecturer',
+        institutionEn: 'Fixture',
+        categoryId: categoryId,
+        tags: const [],
+        venueNameEn: 'Hall',
+        venueNameAr: 'قاعة',
+        latitude: 26,
+        longitude: 50,
+        seatingCapacity: 10,
+        youtubeChannelUrl: 'https://youtube.com/@lecture',
+        youtubeHandle: 'https://youtube.com/@lecture',
+        bioEn: '',
+        bioAr: '',
+        avatarUrl: '',
+        bannerUrl: '',
+        status: ApplicationStatus.pending,
+        submittedAt: DateTime(2026),
+      );
+      await tester.pumpWidget(ChangeNotifierProvider.value(
+          value: provider,
+          child: localizedApp(
+              home: Builder(
+                  builder: (context) => Scaffold(
+                        body: TextButton(
+                            onPressed: () => BroadcasterApplicationSheet.show(
+                                context,
+                                application: application),
+                            child: const Text('Open')),
+                      )))));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Open'));
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final dropdown = tester
+          .widget<DropdownButton<String>>(find.byType(DropdownButton<String>));
+      expect(dropdown.value, categoryId);
+      expect(dropdown.items!.where((item) => item.value == categoryId),
+          hasLength(1));
+      final city = find.widgetWithText(ChoiceChip, 'Dammam');
+      await tester.ensureVisible(city);
+      await tester.tap(city);
+      await tester.pumpAndSettle();
+      final submit = find.byType(ElevatedButton);
+      await tester.ensureVisible(submit);
+      await tester.pumpAndSettle();
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+      expect(provider.applications.single.categoryId, categoryId);
+      expect(provider.applications.single.youtubeHandle, 'lecture');
+      expect(provider.applications.single.cityId, 'dammam');
+      expect(provider.applications.single.latitude, 26);
+      expect(provider.applications.single.longitude, 50);
+      expect(provider.applications.single.youtubeChannelUrl,
+          'https://www.youtube.com/@lecture');
+      expect(find.byType(BroadcasterApplicationSheet), findsNothing);
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pumpWidget(const SizedBox.shrink());
+      provider.dispose();
+    });
+  }
 
   group('Broadcaster Application Sheet & State Management Tests (Phase 2)', () {
     late AppProvider provider;

@@ -952,6 +952,24 @@ class _BroadcasterApplicationSheetState
   }
 
   Widget _buildCategoryDropdown() {
+    final categories = <String, String>{
+      'computer_science': 'design_ui.computer_science_ai'.tr(),
+      'medical_health': 'design_ui.medicine_health_sciences'.tr(),
+      'engineering': 'design_ui.engineering_architecture'.tr(),
+      'islamic_studies': 'design_ui.islamic_arabic_studies'.tr(),
+      'business_finance': 'design_ui.business_fintech'.tr(),
+      for (final category
+          in context.select((AppProvider p) => p.academicCategories))
+        if (category.isActive || category.id == _selectedCategory)
+          category.id: category.getLocalizedName(context.locale.languageCode),
+    };
+    // Preserve registration/legacy/custom IDs until the user changes them.
+    categories.putIfAbsent(
+      _selectedCategory,
+      () => _selectedCategory == 'cs_tech'
+          ? 'design_ui.computer_science_ai'.tr()
+          : _selectedCategory,
+    );
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
@@ -967,23 +985,12 @@ class _BroadcasterApplicationSheetState
           style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
           icon: const Icon(Icons.arrow_drop_down_rounded,
               color: AppTheme.textSecondary),
-          items: [
-            DropdownMenuItem(
-                value: 'computer_science',
-                child: Text('design_ui.computer_science_ai'.tr())),
-            DropdownMenuItem(
-                value: 'medical_health',
-                child: Text('design_ui.medicine_health_sciences'.tr())),
-            DropdownMenuItem(
-                value: 'engineering',
-                child: Text('design_ui.engineering_architecture'.tr())),
-            DropdownMenuItem(
-                value: 'islamic_studies',
-                child: Text('design_ui.islamic_arabic_studies'.tr())),
-            DropdownMenuItem(
-                value: 'business_finance',
-                child: Text('design_ui.business_fintech'.tr())),
-          ],
+          items: categories.entries
+              .map((category) => DropdownMenuItem(
+                    value: category.key,
+                    child: Text(category.value),
+                  ))
+              .toList(),
           onChanged: (val) {
             if (val != null) {
               setState(() => _selectedCategory = val);

@@ -4,6 +4,10 @@ Updated: 2026-09-27. This is a local troubleshooting record, not proof that the 
 
 ## Issue-name index — scan this list first
 
+- **Spatial Map and drawer hide legacy profiles with saved pins** — shared city filter repaired locally; owner confirmation pending.
+- **Edit Account Profile dropdown crashes for cs_tech** — saved category retained exactly once; editor/save regression passes.
+- **Gradle daemon disappears with native memory exhaustion** — confirmed Windows memory exhaustion before Android launch; recovery/rebuild pending.
+
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
 
 - **Selected venue card overflows Arabic narrow screen** — repaired in integration; populated 320–412dp matrix, physical acceptance pending.
@@ -377,3 +381,25 @@ Status: UNRESOLVED precise cause; working isolated-profile alternative verified.
 Observed: Every put, including unrelated fresh-cache keys, failed in the deeply nested disposable integration profile. Identical candidate passed in a short temporary profile.
 Action: Preserve failed profile; use short dedicated test profile and capture Chromium filesystem diagnostics if repeated. Do not patch app behavior or clear owner caches to hide it.
 Verification: Initial-page acknowledgement and all52 offline assets pass under the short profile. Path/profile-related explanation is an inference, not proven Chromium root cause.
+
+## Gradle daemon disappears with native memory exhaustion
+Status: UNRESOLVED recovery; immediate cause confirmed.
+Observed: Android run on SM-S936B failed at assembleDebug with daemon pid 39724 disappearing, 2026-09-27 11:20 +03:00. Owner reports Chrome run works.
+Cause: JVM fatal log confirms native malloc failure for 1,519,776 bytes. Windows had 233 MiB free physical memory and 38 MiB available system commit capacity. Gradle allowed an 8 GiB heap / 4 GiB metaspace; these are maximum limits, not proof of actual allocation. At failure its resident size was about 450 MiB, so this was system-wide pressure, not evidence of an app memory leak. Follow-up at 11:23 had only about 468 MiB physical memory available and 2.48 GiB commit headroom.
+Fix/workaround: save work and close unnecessary applications/build sessions, or restart Windows and reopen only the main project plus the required phone connection. Retry the same owner command after memory is available. Do not upgrade packages or clear project caches based on this error. No processes stopped, system settings changed, or credentials read by the manager.
+Verification: fatal-log header and memory counters inspected; current OS memory checked read-only. Android rebuild/install/reception NOT RUN. Chrome success is owner-reported and does not establish physical acceptance. If it repeats after freeing memory, inspect the new crash log and consider measured Gradle heap/worker limits; reducing heap alone is not a proven fix for this system-wide exhaustion.
+Evidence: ignored local `project/android/hs_err_pid39724.log`; sanitized summary in `brief/evidence/2026-09-27/android-build-memory/DIAGNOSIS.md`.
+
+## Spatial Map and drawer hide legacy profiles with saved pins
+Status: REPAIRED locally; confirmation against the owner's live profiles pending.
+Observed: Owner reports zero profiles in Spatial Map or its drawer while Admin/Discovery retain them, with the new basemap visible. Two example pins are 26.3050/50.1450 and 26.2172/50.1971.
+Cause: The shared visibleMapStreamers catalog required a recognized city label as well as valid coordinates. Older backend records may have blank city fields; these disappear before markers, search, cards and drawer receive them. This cause is reproduced in local fixtures; live backend rows were not inspected, so it is not proof that every reported profile has this cause.
+Fix: Shared isTricityMapVenue allows blank-city exact pins within the existing core overview; explicit other-city records and invalid/out-of-area pins stay excluded. No coordinates or city names are fabricated. Cached markers follow the same eligibility and retain Arabic-only city metadata. Verification/hidden-profile checks and current-catalog cache revocation remain intact. Accurate municipal geometry remains an open requirement; the overview is a product extent only.
+Verification: Catalog/cache tests cover both reported locations plus a third location and negative cases. Widget regression taps the marker and drawer entry and verifies the profile card opens. Full regression evidence and owner retest instructions: brief/evidence/2026-09-27/map-profile-repair/README.md. Owner runtime confirmation pending.
+
+## Edit Account Profile dropdown crashes for cs_tech
+Status: REPAIRED locally; owner retest pending.
+Observed: BroadcasterApplicationSheet throws DropdownButton's exactly-one-item assertion when the stored category is cs_tech.
+Cause: Registration/legacy/custom category IDs can differ from the editor's five hardcoded DropdownMenuItem values. The editor restored the saved value without including it in the available items.
+Fix: Combine existing choices and provider categories, deduplicate by ID, and include the saved category even if legacy/custom/inactive. Keep the original saved ID unless the user changes it; no forced category migration.
+Verification: Widget tests open and submit the sheet for computer_science, cs_tech and custom_subject, assert exactly one matching item, no widget error and unchanged submitted category. Full verification evidence: brief/evidence/2026-09-27/map-profile-repair/README.md. No hosted backend write or device acceptance claimed.

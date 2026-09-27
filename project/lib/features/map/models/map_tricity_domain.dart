@@ -67,8 +67,8 @@ const GeoExtent kTricityNavigationExtent =
     GeoExtent(west: 49.72, south: 25.97, east: 50.43, north: 26.78);
 
 /// Coordinate safety envelope, not the venue product scope. Catalog and
-/// saved pins must also identify one of the three cities via
-/// [isTricityVenueCity]. Padding never admits adjacent towns by itself.
+/// saved pins use [isTricityMapVenue] for city membership and legacy pins.
+/// Padding never admits adjacent towns by itself.
 const GeoExtent kTricityVenueDomain =
     GeoExtent(west: 49.72, south: 25.97, east: 50.33, north: 26.68);
 
@@ -172,8 +172,23 @@ bool isInTricityMapDomain(double latitude, double longitude) =>
     kTricityVenueDomain.contains(latitude, longitude);
 
 /// Use existing city metadata, never infer municipal membership from a box.
-/// Missing/other city records remain unchanged and available outside this map.
-bool isTricityVenueCity(String city) => kTricityCityViews.any((view) =>
-    [view.id, view.nameEn, view.nameAr, ...view.searchTerms]
-        .map(normalizeSearchText)
-        .contains(normalizeSearchText(city)));
+/// Does not change missing or other city metadata.
+bool isTricityVenueCity(String city) => kTricityCityViews.any((view) => [
+      view.id,
+      view.nameEn,
+      view.nameAr,
+      ...view.searchTerms
+    ].map(normalizeSearchText).contains(normalizeSearchText(city)));
+
+/// Older profiles have exact pins but no city metadata. Keep those pins in
+/// the existing three-city overview, without assigning a municipal city or
+/// admitting unknown locations in the wider navigation padding.
+bool isTricityMapVenue(
+    double latitude, double longitude, Iterable<String> cities) {
+  if (!isInTricityMapDomain(latitude, longitude)) return false;
+  final names = cities.where((city) => city.trim().isNotEmpty).toList();
+  // ponytail: legacy fallback uses the existing overview, not municipal borders;
+  // replace it when verified boundary geometry is available.
+  return names.any(isTricityVenueCity) ||
+      (names.isEmpty && kTricityOverviewExtent.contains(latitude, longitude));
+}

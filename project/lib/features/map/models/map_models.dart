@@ -74,7 +74,9 @@ class MapMarkerModel {
           ? streamer.cityEn
           : isTricityVenueCity(streamer.cityAr)
               ? streamer.cityAr
-              : streamer.cityEn),
+              : streamer.cityEn.trim().isNotEmpty
+                  ? streamer.cityEn
+                  : streamer.cityAr),
       categoryId: streamer.categoryId,
       status: markerStatus,
       viewerCount: streamer.activeViewerCount,

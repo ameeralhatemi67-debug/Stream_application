@@ -1,0 +1,30 @@
+[
+  {
+    "path": "project/lib/features/map/models/map_models.dart",
+    "sha256": "2bd912586ed0c9f2434f1cf990d2b9ca0905d7a1970de5a2def0bec6b972039d"
+  },
+  {
+    "path": "project/lib/features/map/models/map_tricity_domain.dart",
+    "sha256": "2f1de970d66966bd1364d0fc093842cef6f16491dcf8f27a701e5b7a4b079657"
+  },
+  {
+    "path": "project/lib/features/map/presentation/map_visible_catalog.dart",
+    "sha256": "f83c50e382acc64e72ff926a92a8a90462cd9dbb8694ae441d5235c483d5c2f1"
+  },
+  {
+    "path": "project/lib/features/profile/presentation/widgets/broadcaster_application_sheet.dart",
+    "sha256": "01b98aea1bb6d19e5ec6ae1036bed48e223ccfb9e6c6720ba07cb15d1d1c4b5a"
+  },
+  {
+    "path": "project/test/broadcaster_application_sheet_test.dart",
+    "sha256": "b80284489df35d8012e242a8fb3042af39e875876f3b33e7f4cc9b6feda1c414"
+  },
+  {
+    "path": "project/test/map_p5_presentation_test.dart",
+    "sha256": "a85c9dbaa90e4d7019005b25aedb0450977e573d02d4f1803d5d81e93a49a2d0"
+  },
+  {
+    "path": "project/test/map_tricity_widgets_test.dart",
+    "sha256": "d47a8f74480f38306195c51b7a7328b740c1b89db0d0870696b4b21e9d1a3695"
+  }
+]

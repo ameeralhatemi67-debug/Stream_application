@@ -26,6 +26,7 @@ import 'package:streamer_app/features/map/presentation/widgets/marker_summary_ca
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 import 'fixtures/streamer_fixtures.dart';
 import 'package:streamer_app/features/map/presentation/widgets/spatial_streamer_marker.dart';
+import 'package:streamer_app/features/map/presentation/widgets/streamer_sliding_drawer.dart';
 
 late Map<String, dynamic> enData, arData;
 
@@ -133,6 +134,54 @@ void main() {
     await EasyLocalization.ensureInitialized();
   });
   tearDown(() => MapPackController.debugShared = null);
+
+  testWidgets('legacy pin and drawer both open the saved profile card',
+      (tester) async {
+    tester.view.physicalSize = const Size(412, 860);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final provider = AppProvider(AdminDatabaseService(null))
+      ..debugSetOnlineForTests(true)
+      ..addStreamerForTests(mockStreamers.first.copyWith(
+        fullNameEn: 'Legacy Venue',
+        cityEn: '',
+        cityAr: '',
+        latitude: 26.3050,
+        longitude: 50.1450,
+      ));
+    final pack = _unavailablePack();
+    await tester
+        .pumpWidget(_app(SpatialMapScreen(packController: pack), provider));
+    await tester.pump(const Duration(milliseconds: 500));
+    await tester.pump();
+    expect(find.byType(SpatialStreamerMarker), findsOneWidget);
+    tester
+        .widget<SpatialStreamerMarker>(find.byType(SpatialStreamerMarker))
+        .onTap();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(MarkerSummaryCard), findsOneWidget);
+    await tester.tap(find.descendant(
+        of: find.byType(MarkerSummaryCard),
+        matching: find.byTooltip('common.close'.tr())));
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(MarkerSummaryCard), findsNothing);
+    tester.state<ScaffoldState>(find.byType(Scaffold).first).openEndDrawer();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    final drawerProfile = find.descendant(
+        of: find.byType(StreamerSlidingDrawer),
+        matching: find.text('Legacy Venue'));
+    expect(drawerProfile, findsOneWidget);
+    expect(drawerProfile.hitTestable(), findsOneWidget);
+    await tester.tap(drawerProfile);
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(find.byType(MarkerSummaryCard), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    provider.dispose();
+    pack.dispose();
+  });
 
   for (final lang in ['en', 'ar']) {
     for (final width in [320.0, 360.0, 384.0, 412.0]) {

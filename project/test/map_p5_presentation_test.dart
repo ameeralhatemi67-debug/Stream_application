@@ -174,6 +174,43 @@ void main() {
     expect(MapMarkerModel.fromStreamer(arabicOnly).cityId, 'khobar');
   });
 
+  test('legacy exact pins without city metadata survive catalog and cache', () {
+    for (final point in [
+      const LatLng(26.3050, 50.1450),
+      const LatLng(26.2172, 50.1971),
+      const LatLng(26.42, 50.09),
+    ]) {
+      final venue = mockStreamers.first.copyWith(
+        cityEn: '',
+        cityAr: '',
+        latitude: point.latitude,
+        longitude: point.longitude,
+      );
+      expect(visibleMapStreamers([venue]), [venue]);
+      final cached = MapMarkerModel.fromStreamer(venue);
+      expect(cached.cityId, isEmpty);
+      expect(
+          visibleCachedMapMarkers([cached], currentVisibleIds: null), [cached]);
+      expect(visibleCachedMapMarkers([cached], currentVisibleIds: {}), isEmpty);
+      expect(
+          visibleMapStreamers([
+            venue.copyWith(isVerified: false),
+            venue.copyWith(isTemporarilyHiddenFromMap: true),
+            venue.copyWith(latitude: 0, longitude: 0),
+            venue.copyWith(cityEn: 'Riyadh'),
+          ]),
+          isEmpty);
+      expect(venue.cityEn, isEmpty);
+      expect(venue.cityAr, isEmpty);
+      final outsideCity = venue.copyWith(cityAr: 'الرياض');
+      expect(visibleMapStreamers([outsideCity]), isEmpty);
+      expect(
+          visibleCachedMapMarkers([MapMarkerModel.fromStreamer(outsideCity)],
+              currentVisibleIds: null),
+          isEmpty);
+    }
+  });
+
   testWidgets('search selection and refresh use the current visible list',
       (tester) async {
     final venue = mockStreamers.first.copyWith(

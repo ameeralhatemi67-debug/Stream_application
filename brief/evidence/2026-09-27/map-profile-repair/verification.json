@@ -1,0 +1,52 @@
+{
+  "baseCommit": "e8201196171cf423b3344533ef974acd1298c787",
+  "branch": "master",
+  "date": "2026-09-27",
+  "analyzer": "No issues found",
+  "totalPassed": 851,
+  "shards": [
+    {
+      "shard": 0,
+      "exitCode": 0,
+      "result": "01:56 +110: All tests passed!"
+    },
+    {
+      "shard": 1,
+      "exitCode": 0,
+      "result": "02:08 +111: All tests passed!"
+    },
+    {
+      "shard": 2,
+      "exitCode": 0,
+      "result": "01:27 +99: All tests passed!"
+    },
+    {
+      "shard": 3,
+      "exitCode": 0,
+      "result": "01:45 +120: All tests passed!"
+    },
+    {
+      "shard": 4,
+      "exitCode": 0,
+      "result": "01:40 +100: All tests passed!"
+    },
+    {
+      "shard": 5,
+      "exitCode": 0,
+      "result": "01:41 +108: All tests passed!"
+    },
+    {
+      "shard": 6,
+      "exitCode": 0,
+      "result": "01:35 +102: All tests passed!"
+    },
+    {
+      "shard": 7,
+      "exitCode": 0,
+      "result": "01:34 +101: All tests passed!"
+    }
+  ],
+  "sourceManifest": "source-sha256.json",
+  "logs": "brief/.runtime/map-profile-repair",
+  "physicalRetest": "NOT RUN"
+}
