@@ -26,8 +26,10 @@ reset role;
 -- Owner may update its organization, but cannot publish another owner's application.
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"39000000-0000-4000-8000-000000000012","role":"authenticated"}',true);
-update public.organizations set approved_application_id='59000000-0000-4000-8000-000000000011' where id='69000000-0000-4000-8000-000000000012';
+update public.organizations set owner_profile_id='39000000-0000-4000-8000-000000000011', approved_application_id='59000000-0000-4000-8000-000000000011' where id='69000000-0000-4000-8000-000000000012';
 reset role;
+select is((select owner_profile_id::text from public.organizations where id='69000000-0000-4000-8000-000000000012'), '39000000-0000-4000-8000-000000000012', 'existing guarded columns prevent changing owner to match foreign application');
+select is((select approved_application_id::text from public.organizations where id='69000000-0000-4000-8000-000000000012'), '59000000-0000-4000-8000-000000000011', 'adversarial reference update actually reached the stored row');
 set local role anon;
 select ok((select latitude is null from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000012'), 'foreign application reference exposes no location');
 reset role;
