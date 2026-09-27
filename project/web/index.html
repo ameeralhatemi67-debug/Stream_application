@@ -75,21 +75,35 @@
   <script>
     if ('serviceWorker' in navigator) {
       window.__hadayahPageReady = new Promise(function (resolve) {
-      window.addEventListener('load', function () {
-        navigator.serviceWorker.register('streamer_offline_sw.js')
-          .then(function () { return navigator.serviceWorker.ready; })
-          .then(function (registration) {
-            // The page is committed now. During the navigation fetch its new
-            // client ID may not yet appear in clients.matchAll().
-            var channel = new MessageChannel();
-            var timer = setTimeout(function () { channel.port1.close(); resolve(false); }, 15000);
-            channel.port1.onmessage = function (event) {
-              clearTimeout(timer); channel.port1.close(); resolve(event.data === true);
-            };
-            registration.active.postMessage({ type: 'page-build',
-              buildId: document.querySelector('meta[name="hadayah-build"]')?.content }, [channel.port2]);
-          }).catch(function () { resolve(false); });
-      });
+        window.addEventListener('load', function () {
+          var ports = [], finished = false;
+          var timer = setTimeout(function () { finish(false); }, 15000);
+          function finish(ready) {
+            if (finished) return;
+            finished = true;
+            clearTimeout(timer);
+            navigator.serviceWorker.removeEventListener('controllerchange', identify);
+            ports.forEach(function (port) { port.close(); });
+            resolve(ready);
+          }
+          function identify() {
+            navigator.serviceWorker.ready.then(function (registration) {
+              if (finished) return;
+              var channel = new MessageChannel();
+              ports.push(channel.port1);
+              channel.port1.onmessage = function (event) { finish(event.data === true); };
+              (navigator.serviceWorker.controller || registration.active).postMessage({
+                type: 'page-build',
+                buildId: document.querySelector('meta[name="hadayah-build"]')?.content
+              }, [channel.port2]);
+            }).catch(function () { finish(false); });
+          }
+          // During an upgrade ready may still resolve the old worker. Retry
+          // identification when the new worker claims this committed page.
+          navigator.serviceWorker.addEventListener('controllerchange', identify);
+          navigator.serviceWorker.register('streamer_offline_sw.js')
+            .then(identify).catch(function () { finish(false); });
+        });
       });
     }
   </script>
