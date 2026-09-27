@@ -1,0 +1,269 @@
+{
+  "ok": true,
+  "result": {
+    "build": "7cab6d0-local-diag-1",
+    "ack": true,
+    "files": [
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/maps/tricity/basemap.pmtiles",
+        "status": 200,
+        "bytes": 11919559
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/maps/tricity/style-en.json",
+        "status": 200,
+        "bytes": 14056
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/maps/tricity/style-ar.json",
+        "status": 200,
+        "bytes": 14056
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/maps/tricity/NOTICE.txt",
+        "status": 200,
+        "bytes": 1884
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/maps/tricity/manifest.json",
+        "status": 200,
+        "bytes": 2369
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/i18n/en.json",
+        "status": 200,
+        "bytes": 95979
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/i18n/ar.json",
+        "status": 200,
+        "bytes": 128703
+      },
+      {
+        "url": "http://127.0.0.1:56090/",
+        "status": 200,
+        "bytes": 4114
+      },
+      {
+        "url": "http://127.0.0.1:56090/index.html",
+        "status": 200,
+        "bytes": 4114
+      },
+      {
+        "url": "http://127.0.0.1:56090/flutter_bootstrap.js",
+        "status": 200,
+        "bytes": 10475
+      },
+      {
+        "url": "http://127.0.0.1:56090/manifest.json",
+        "status": 200,
+        "bytes": 1000
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/FontManifest.json",
+        "status": 200,
+        "bytes": 391
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/AssetManifest.bin.json",
+        "status": 200,
+        "bytes": 4490
+      },
+      {
+        "url": "http://127.0.0.1:56090/main.dart.js",
+        "status": 200,
+        "bytes": 5296490
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/fonts/MaterialIcons-Regular.otf",
+        "status": 200,
+        "bytes": 51380
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+        "status": 200,
+        "bytes": 537244
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/fonts/IBMPlexSansArabic-400.ttf",
+        "status": 200,
+        "bytes": 235924
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/fonts/IBMPlexSansArabic-700.ttf",
+        "status": 200,
+        "bytes": 246992
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/Language.svg",
+        "status": 200,
+        "bytes": 9671
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Ahmed_Amer_YouTube_files/Ahmed_Amer_banner.jpg",
+        "status": 200,
+        "bytes": 28974
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Ahmed_Amer_YouTube_files/Ahmed_Amer_profile.jpg",
+        "status": 200,
+        "bytes": 10827
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Amir_Alhatemi/amir_card_pic.jpg",
+        "status": 200,
+        "bytes": 2581994
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Amir_Alhatemi/amir_person_pic.jpg",
+        "status": 200,
+        "bytes": 5359538
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/BidonWaraq/BidonWaraq_banner.jpg",
+        "status": 200,
+        "bytes": 92690
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/BidonWaraq/BidonWaraq_profile.jpg",
+        "status": 200,
+        "bytes": 4396
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Dalilak/OrgBanner.jpg",
+        "status": 200,
+        "bytes": 98260
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Dalilak/OrgMainProfile.jpg",
+        "status": 200,
+        "bytes": 13189
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Dalilak/profile1.jpg",
+        "status": 200,
+        "bytes": 7769
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Dalilak/profile2.jpg",
+        "status": 200,
+        "bytes": 11977
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/Dalilak/profile3.jpg",
+        "status": 200,
+        "bytes": 7193
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/quran/Quran_banner.jpg",
+        "status": 200,
+        "bytes": 193035
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/quran/Quran_profile.jpg",
+        "status": 200,
+        "bytes": 31227
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/black.png",
+        "status": 200,
+        "bytes": 1850306
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/black.svg",
+        "status": 200,
+        "bytes": 5303
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/cercal.png",
+        "status": 200,
+        "bytes": 6082426
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/cercal.svg",
+        "status": 200,
+        "bytes": 9142
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/colored.png",
+        "status": 200,
+        "bytes": 2452186
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/colored.svg",
+        "status": 200,
+        "bytes": 7716
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/logoInkscapeMaker.svg",
+        "status": 200,
+        "bytes": 652392
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/square.png",
+        "status": 200,
+        "bytes": 6082426
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/logo/square.svg",
+        "status": 200,
+        "bytes": 8038
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/packages/flutter_map/lib/assets/flutter_map_logo.png",
+        "status": 200,
+        "bytes": 2424
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/avatars/neutral_1.png",
+        "status": 200,
+        "bytes": 1229
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/avatars/neutral_2.png",
+        "status": 200,
+        "bytes": 886
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/avatars/neutral_3.png",
+        "status": 200,
+        "bytes": 1024
+      },
+      {
+        "url": "http://127.0.0.1:56090/assets/assets/images/avatars/neutral_4.png",
+        "status": 200,
+        "bytes": 1831
+      },
+      {
+        "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.js",
+        "status": 200,
+        "bytes": 86496
+      },
+      {
+        "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.wasm",
+        "status": 200,
+        "bytes": 5686836
+      },
+      {
+        "url": "https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvvnCBFQLaig.woff2",
+        "status": 200,
+        "bytes": 66412
+      },
+      {
+        "url": "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
+        "status": 200,
+        "bytes": 63464
+      },
+      {
+        "url": "http://127.0.0.1:56090/favicon.png",
+        "status": 200,
+        "bytes": 608
+      },
+      {
+        "url": "http://127.0.0.1:56090/icons/Icon-192.png",
+        "status": 200,
+        "bytes": 12284
+      }
+    ]
+  }
+}

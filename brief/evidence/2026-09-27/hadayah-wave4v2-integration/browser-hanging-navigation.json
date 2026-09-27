@@ -1,0 +1,5 @@
+{
+  "scenario": "origin accepts connection but never responds",
+  "browserBuild": "integration-audit-4",
+  "navigationMilliseconds": 696
+}

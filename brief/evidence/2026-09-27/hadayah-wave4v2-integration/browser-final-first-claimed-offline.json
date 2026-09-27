@@ -1,0 +1,19 @@
+{
+  "ok": true,
+  "result": [
+    {
+      "p": "main.dart.js",
+      "status": 200,
+      "bytes": 5296490
+    },
+    {
+      "p": "assets/assets/images/Amir_Alhatemi/amir_person_pic.jpg",
+      "status": 200,
+      "bytes": 5359538
+    },
+    {
+      "p": "assets/assets/fonts/Tajawal-Regular.ttf",
+      "error": "TypeError"
+    }
+  ]
+}

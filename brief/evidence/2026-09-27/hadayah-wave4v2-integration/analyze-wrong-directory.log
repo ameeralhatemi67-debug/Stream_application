@@ -1,0 +1,24 @@
+Analyzing Streamer_app...                                       
+
+  error - Target of URI doesn't exist: 'package:supabase/supabase.dart' - brief\tools\p6s_backend_probe.dart:10:8 - uri_does_not_exist
+  error - Undefined class 'RealtimeChannel' - brief\tools\p6s_backend_probe.dart:44:10 - undefined_class
+  error - Undefined class 'SupabaseClient' - brief\tools\p6s_backend_probe.dart:45:3 - undefined_class
+  error - Undefined name 'PostgresChangeEvent' - brief\tools\p6s_backend_probe.dart:54:16 - undefined_identifier
+  error - The function 'PostgresChangeFilter' isn't defined - brief\tools\p6s_backend_probe.dart:59:15 - undefined_function
+  error - Undefined name 'PostgresChangeFilterType' - brief\tools\p6s_backend_probe.dart:60:23 - undefined_identifier
+  error - Undefined name 'RealtimeSubscribeStatus' - brief\tools\p6s_backend_probe.dart:67:18 - undefined_identifier
+  error - Undefined class 'SupabaseClient' - brief\tools\p6s_backend_probe.dart:86:3 - undefined_class
+  error - The function 'SupabaseClient' isn't defined - brief\tools\p6s_backend_probe.dart:121:19 - undefined_function
+  error - The function 'SupabaseClient' isn't defined - brief\tools\p6s_backend_probe.dart:126:13 - undefined_function
+  error - The function 'SupabaseClient' isn't defined - brief\tools\p6s_backend_probe.dart:127:13 - undefined_function
+  error - The function 'SupabaseClient' isn't defined - brief\tools\p6s_backend_probe.dart:128:13 - undefined_function
+  error - The function 'SupabaseClient' isn't defined - brief\tools\p6s_backend_probe.dart:129:13 - undefined_function
+  error - Undefined class 'SupabaseClient' - brief\tools\p6s_backend_probe.dart:136:22 - undefined_class
+  error - Undefined class 'RealtimeChannel' - brief\tools\p6s_backend_probe.dart:136:38 - undefined_class
+  error - The function 'AdminUserAttributes' isn't defined - brief\tools\p6s_backend_probe.dart:142:9 - undefined_function
+  error - Undefined class 'SupabaseClient' - brief\tools\p6s_backend_probe.dart:170:24 - undefined_class
+  error - The name 'PostgrestException' isn't a type and can't be used in an on-catch clause - brief\tools\p6s_backend_probe.dart:311:10 - non_type_in_catch_clause
+  error - The name 'PostgrestException' isn't a type and can't be used in an on-catch clause - brief\tools\p6s_backend_probe.dart:333:10 - non_type_in_catch_clause
+  error - The name 'PostgrestException' isn't a type and can't be used in an on-catch clause - brief\tools\p6s_backend_probe.dart:389:10 - non_type_in_catch_clause
+
+20 issues found. (ran in 12.6s)

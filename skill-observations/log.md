@@ -82,3 +82,12 @@ Observations captured during task-oriented work.
 **Suggested improvement:** Verify snapshot readiness and channel subscription separately; test a mutation after join, then test the startup window and documented fallback without adding duplicate listeners.
 
 **Principle:** A successful initial read does not establish readiness to receive subsequent events.
+
+### Observation 8: Verify publication and client commitment separately
+
+**Status:** OPEN
+**Date:** 2026-09-27
+**Skill:** task-observer / reusable offline verification candidate
+**Issue:** Download-interruption tests passed while final cache publication, initial page claim and concurrent navigation cleanup still failed. An update can also complete installation after a page has messaged its old controller.
+**Suggested improvement:** Probe final publication after all downloads, first-claimed pages, reserved navigation clients, controller replacement, worker restart and real concurrent tabs against actual artifacts. Keep deterministic state fixtures distinct from browser/physical evidence.
+**Principle:** Successful download and compilation do not establish a safely published, usable application generation.

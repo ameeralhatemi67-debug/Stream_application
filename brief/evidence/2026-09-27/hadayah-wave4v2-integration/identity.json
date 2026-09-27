@@ -1,0 +1,44 @@
+{
+  "sourceCommit": "34d074a5c577cd35944813f0a3db5315f4c85e96",
+  "branch": "codex/hadayah-wave4v2-integration",
+  "candidateStatus": "DIAGNOSTIC",
+  "android": {
+    "path": "C:\\Users\\User\\.codex\\worktrees\\hadayah-wave4v2-integration\\Streamer_app\\brief\\.runtime\\hadayah-integration\\candidate\\Hadayah-Test-34d074a-diagnostic.apk",
+    "sha256": "576ee96a860b5bcc1b5bde1c7875ee31f31943062c8cb6bd071482453c158b99",
+    "bytes": 204811617,
+    "package": "sa.hadayah.streamer_app.wave4v2",
+    "label": "Hadayah Test",
+    "versionName": "1.0.0",
+    "versionCode": 1,
+    "signing": "Android debug certificate",
+    "certificateSha256": "ea7b7f9f333b40e73f2dff0e76a21bd072d3a4f375be7c2f294aa821e81b64a7",
+    "callback": "sa.hadayah.streamerapp.wave4v2://login-callback"
+  },
+  "web": {
+    "path": "C:\\Users\\User\\.codex\\worktrees\\hadayah-wave4v2-integration\\Streamer_app\\brief\\.runtime\\hadayah-integration\\candidate\\Hadayah-Test-34d074a-diagnostic-web.zip",
+    "sha256": "720fa376cdc9a9f4a4b7c6b4fe50aa972bb0c9b84c217409bdb3feadfd709d57",
+    "bytes": 33962870,
+    "buildId": "34d074a-local-diag-1",
+    "pageTitle": "Hadayah Live",
+    "testOrigin": "http://127.0.0.1:56090",
+    "buildManifestSha256": "bae1973a30f211245237e862264b6fba2117618f472f0e5fbc7281fd76be1ddf",
+    "mainDartJsSha256": "e74a2a86273a3a8a9da18d5fad8a595dde659e8d449223051675faf01b47af90"
+  },
+  "configuration": {
+    "path": "C:\\Users\\User\\.codex\\worktrees\\hadayah-wave4v2-integration\\Streamer_app\\brief\\.runtime\\hadayah-integration\\defines.diagnostic.json",
+    "sha256": "ec0874bda156a2d98197f3341718be24e8d8ef5ef0c07004a69f0ebde39dbba9",
+    "googleConfigured": false,
+    "youtubeConfigured": false
+  },
+  "backend": {
+    "identity": "Hadayah_integration_20260927",
+    "api": "http://127.0.0.1:56021",
+    "databasePort": 56022,
+    "state": "stopped with backup after disposable verification",
+    "hostedOperations": false
+  },
+  "sourceTrees": {
+    "project": "4514fe2ea48c82dbc4056d686cfe768fe1d64ac5",
+    "supabase": "2523de384c019bf1ed652e6356cf254b5d61c0e4"
+  }
+}

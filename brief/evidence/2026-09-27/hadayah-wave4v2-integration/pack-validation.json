@@ -1,0 +1,4016 @@
+{
+ "archive": "assets/maps/tricity/basemap.pmtiles",
+ "bytes": 11919559,
+ "sha256": "1deb87eab58135bcdccaab12df54fbe52290c4fe1ea5dd60b1d1dbb5c74c6a87",
+ "pack_envelope_wsen": [
+  49.7,
+  25.95,
+  50.45,
+  26.8
+ ],
+ "header": {
+  "tile_type": "TileType.MVT",
+  "tile_compression": "Compression.GZIP",
+  "min_zoom": 0,
+  "max_zoom": 15,
+  "bounds_wsen": [
+   49.7,
+   25.95,
+   50.45,
+   26.8
+  ],
+  "addressed_tiles_count": 8298,
+  "tile_entries_count": 4569,
+  "tile_contents_count": 3915
+ },
+ "metadata": {
+  "attribution": "<a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">&copy; OpenStreetMap</a>",
+  "description": "Basemap layers derived from OpenStreetMap and Natural Earth",
+  "name": "Protomaps Basemap",
+  "pgf:devanagari:name": "NotoSansDevanagari-Regular",
+  "pgf:devanagari:version": "1",
+  "planetiler:buildtime": "2026-03-28T14:41:39.524Z",
+  "planetiler:githash": "0e5588c4a6e8c29a270a33afe8df62027d889604",
+  "planetiler:osm:osmosisreplicationseq": "123045",
+  "planetiler:osm:osmosisreplicationtime": "2026-09-26T04:00:00Z",
+  "planetiler:osm:osmosisreplicationurl": "https://planet.osm.org/replication/hour/",
+  "planetiler:version": "0.10.2",
+  "type": "baselayer",
+  "version": "4.15.2"
+ },
+ "vector_layers": [
+  "boundaries",
+  "buildings",
+  "earth",
+  "landcover",
+  "landuse",
+  "places",
+  "pois",
+  "roads",
+  "water"
+ ],
+ "per_zoom": {
+  "0": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 0,
+   "with_buildings": 0,
+   "empty_or_sea_only": 1,
+   "bytes": 66795
+  },
+  "1": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 0,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 77370
+  },
+  "2": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 0,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 126651
+  },
+  "3": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 1,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 77509
+  },
+  "4": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 1,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 63969
+  },
+  "5": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 1,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 50315
+  },
+  "6": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 1,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 23336
+  },
+  "7": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 1,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 23477
+  },
+  "8": {
+   "slots": 1,
+   "addressed": 1,
+   "with_roads": 1,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 25973
+  },
+  "9": {
+   "slots": 4,
+   "addressed": 4,
+   "with_roads": 4,
+   "with_buildings": 0,
+   "empty_or_sea_only": 0,
+   "bytes": 84038
+  },
+  "10": {
+   "slots": 12,
+   "addressed": 12,
+   "with_roads": 10,
+   "with_buildings": 0,
+   "empty_or_sea_only": 2,
+   "bytes": 136916
+  },
+  "11": {
+   "slots": 42,
+   "addressed": 42,
+   "with_roads": 31,
+   "with_buildings": 15,
+   "empty_or_sea_only": 8,
+   "bytes": 246250
+  },
+  "12": {
+   "slots": 120,
+   "addressed": 120,
+   "with_roads": 86,
+   "with_buildings": 42,
+   "empty_or_sea_only": 29,
+   "bytes": 865462
+  },
+  "13": {
+   "slots": 437,
+   "addressed": 437,
+   "with_roads": 264,
+   "with_buildings": 108,
+   "empty_or_sea_only": 167,
+   "bytes": 1591477
+  },
+  "14": {
+   "slots": 1584,
+   "addressed": 1584,
+   "with_roads": 747,
+   "with_buildings": 280,
+   "empty_or_sea_only": 805,
+   "bytes": 2802670
+  },
+  "15": {
+   "slots": 6090,
+   "addressed": 6090,
+   "with_roads": 2218,
+   "with_buildings": 709,
+   "empty_or_sea_only": 3814,
+   "bytes": 6033609
+  }
+ },
+ "missing_slots": [],
+ "decode_errors": [],
+ "control_locations": [
+  {
+   "area": "al_khobar",
+   "label": "Al Khobar corniche",
+   "lat": 26.289,
+   "lon": 50.217,
+   "tile": [
+    15,
+    20954,
+    13902
+   ],
+   "road_features": 55,
+   "named_roads": 42,
+   "road_names_sample": [
+    "10th Street",
+    "11th Street",
+    "12th Street",
+    "13th Street",
+    "14th Street",
+    "15th Street"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 6,
+   "buildings": 835,
+   "pois": 75,
+   "result": "pass"
+  },
+  {
+   "area": "al_khobar",
+   "label": "Al Khobar Al Aqrabiyah",
+   "lat": 26.293,
+   "lon": 50.196,
+   "tile": [
+    15,
+    20952,
+    13902
+   ],
+   "road_features": 18,
+   "named_roads": 6,
+   "road_names_sample": [
+    "10th Street",
+    "6th Street",
+    "7th Street",
+    "شارع مكة المكرمة",
+    "طرق خادم الحرمين الشريفين",
+    "طريق خادم الحرمين الشريفين"
+   ],
+   "roads_with_name_ar": 1,
+   "roads_with_name_en": 4,
+   "buildings": 1021,
+   "pois": 71,
+   "result": "pass"
+  },
+  {
+   "area": "al_khobar",
+   "label": "Al Khobar Al Rakah",
+   "lat": 26.357,
+   "lon": 50.197,
+   "tile": [
+    15,
+    20953,
+    13895
+   ],
+   "road_features": 12,
+   "named_roads": 2,
+   "road_names_sample": [
+    "شارع خالد بن الوليد",
+    "طريق الملك فيصل"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 2,
+   "buildings": 1453,
+   "pois": 12,
+   "result": "pass"
+  },
+  {
+   "area": "al_khobar",
+   "label": "Al Khobar Al Aziziyah (south)",
+   "lat": 26.185,
+   "lon": 50.195,
+   "tile": [
+    15,
+    20952,
+    13913
+   ],
+   "road_features": 7,
+   "named_roads": 1,
+   "road_names_sample": [
+    "طريق الملك فهد"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 1,
+   "buildings": 4,
+   "pois": 4,
+   "result": "pass"
+  },
+  {
+   "area": "al_khobar",
+   "label": "King Fahd Causeway approach",
+   "lat": 26.178,
+   "lon": 50.225,
+   "tile": [
+    15,
+    20955,
+    13913
+   ],
+   "road_features": 1,
+   "named_roads": 0,
+   "road_names_sample": [],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 0,
+   "buildings": 0,
+   "pois": 0,
+   "result": "pass"
+  },
+  {
+   "area": "dhahran",
+   "label": "KFUPM campus",
+   "lat": 26.307,
+   "lon": 50.144,
+   "tile": [
+    15,
+    20948,
+    13900
+   ],
+   "road_features": 28,
+   "named_roads": 10,
+   "road_names_sample": [
+    "Academic Belt Road",
+    "Acorn Lane",
+    "Apple Avenue",
+    "Chestnut Street",
+    "Dr Bakr Bin Bakr Road",
+    "Dr. Khaled Alsultan Road"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 2,
+   "buildings": 164,
+   "pois": 66,
+   "result": "pass"
+  },
+  {
+   "area": "dhahran",
+   "label": "Dhahran (Aramco residential)",
+   "lat": 26.287,
+   "lon": 50.115,
+   "tile": [
+    15,
+    20945,
+    13902
+   ],
+   "road_features": 58,
+   "named_roads": 51,
+   "road_names_sample": [
+    "Abqaiq Court",
+    "Abu Ali Lane",
+    "Abu Hadriya Avenue",
+    "Ain Dar Lane",
+    "Al Hasa Road",
+    "Al Rub' Al Khali Road"
+   ],
+   "roads_with_name_ar": 1,
+   "roads_with_name_en": 1,
+   "buildings": 789,
+   "pois": 15,
+   "result": "pass"
+  },
+  {
+   "area": "dhahran",
+   "label": "Ithra / King Abdulaziz Center",
+   "lat": 26.335,
+   "lon": 50.121,
+   "tile": [
+    15,
+    20946,
+    13897
+   ],
+   "road_features": 23,
+   "named_roads": 11,
+   "road_names_sample": [
+    "AL jamiah walking trail",
+    "Al Nakheel Street",
+    "Al-Dana Shamaliah Street; Bin Al-Haithan Street",
+    "Ali Naimi Road",
+    "Areej Street",
+    "Custodian Of The Two Holy Mosques Branch Road"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 2,
+   "buildings": 44,
+   "pois": 60,
+   "result": "pass"
+  },
+  {
+   "area": "dhahran",
+   "label": "Dhahran Mall area",
+   "lat": 26.304,
+   "lon": 50.166,
+   "tile": [
+    15,
+    20950,
+    13900
+   ],
+   "road_features": 16,
+   "named_roads": 4,
+   "road_names_sample": [
+    "King Saud Road",
+    "Radisson Blu Access Lane",
+    "طريف الأمير فيصل بن فهد",
+    "طريق الملك سعود"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 2,
+   "buildings": 38,
+   "pois": 106,
+   "result": "pass"
+  },
+  {
+   "area": "dammam",
+   "label": "Dammam corniche",
+   "lat": 26.445,
+   "lon": 50.113,
+   "tile": [
+    15,
+    20945,
+    13886
+   ],
+   "road_features": 24,
+   "named_roads": 14,
+   "road_names_sample": [
+    "15th st",
+    "King Faisal Street",
+    "Street 10",
+    "شارع 12",
+    "شارع 14",
+    "شارع 17"
+   ],
+   "roads_with_name_ar": 7,
+   "roads_with_name_en": 10,
+   "buildings": 980,
+   "pois": 42,
+   "result": "pass"
+  },
+  {
+   "area": "dammam",
+   "label": "Dammam Al Faisaliyah",
+   "lat": 26.415,
+   "lon": 50.045,
+   "tile": [
+    15,
+    20939,
+    13889
+   ],
+   "road_features": 10,
+   "named_roads": 2,
+   "road_names_sample": [
+    "Saad Ibn Abi Waqqas St.",
+    "شارع عمر بن الخطاب"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 1,
+   "buildings": 0,
+   "pois": 1,
+   "result": "pass"
+  },
+  {
+   "area": "dammam",
+   "label": "Dammam city centre (Al Adamah)",
+   "lat": 26.428,
+   "lon": 50.095,
+   "tile": [
+    15,
+    20943,
+    13888
+   ],
+   "road_features": 13,
+   "named_roads": 3,
+   "road_names_sample": [
+    "شارع عثمان بن عفان",
+    "طريق الملك فهد",
+    "طريق الملك فهد الفرعي"
+   ],
+   "roads_with_name_ar": 1,
+   "roads_with_name_en": 3,
+   "buildings": 1298,
+   "pois": 25,
+   "result": "pass"
+  },
+  {
+   "area": "dammam",
+   "label": "Dammam north (Al Shatea)",
+   "lat": 26.478,
+   "lon": 50.125,
+   "tile": [
+    15,
+    20946,
+    13883
+   ],
+   "road_features": 8,
+   "named_roads": 3,
+   "road_names_sample": [
+    "D8",
+    "Murjan St.",
+    "طريق الأمير محمد بن فهد"
+   ],
+   "roads_with_name_ar": 1,
+   "roads_with_name_en": 1,
+   "buildings": 689,
+   "pois": 3,
+   "result": "pass"
+  },
+  {
+   "area": "dammam",
+   "label": "Dammam south-west (2nd Industrial City)",
+   "lat": 26.26,
+   "lon": 49.97,
+   "tile": [
+    15,
+    20932,
+    13905
+   ],
+   "road_features": 3,
+   "named_roads": 1,
+   "road_names_sample": [
+    "Makkah Road"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 0,
+   "buildings": 1,
+   "pois": 2,
+   "result": "pass"
+  },
+  {
+   "area": "dammam",
+   "label": "King Fahd International Airport",
+   "lat": 26.471,
+   "lon": 49.798,
+   "tile": [
+    15,
+    20916,
+    13883
+   ],
+   "road_features": 20,
+   "named_roads": 1,
+   "road_names_sample": [
+    "طريق المطار"
+   ],
+   "roads_with_name_ar": 0,
+   "roads_with_name_en": 0,
+   "buildings": 3,
+   "pois": 7,
+   "result": "pass"
+  }
+ ],
+ "places_z13": [
+  {
+   "name": "طعوس الهلك",
+   "name:en": null,
+   "name:ar": "طعوس الهلك",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.6772,
+   "lat": 26.82
+  },
+  {
+   "name": "جزيرة أمّ الغربان",
+   "name:en": "Jazirat Umm al Ghirban",
+   "name:ar": "جزيرة أمّ الغربان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7015,
+   "lat": 26.8179
+  },
+  {
+   "name": "جزيرة الرياس الغربي",
+   "name:en": "Jazirat ar Riyas",
+   "name:ar": "جزيرة الرياس الغربي",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7333,
+   "lat": 26.815
+  },
+  {
+   "name": "شعاب",
+   "name:en": "Shi`ab",
+   "name:ar": "شعاب",
+   "kind": "locality",
+   "kind_detail": "hamlet",
+   "lon": 49.9453,
+   "lat": 26.812
+  },
+  {
+   "name": "الرضميات",
+   "name:en": "Ar Rudumiyat",
+   "name:ar": "الرضميات",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9282,
+   "lat": 26.7774
+  },
+  {
+   "name": "العرقوبة",
+   "name:en": "Al `Arqubah",
+   "name:ar": "العرقوبة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.6808,
+   "lat": 26.7525
+  },
+  {
+   "name": "العبى",
+   "name:en": "Al `Aba",
+   "name:ar": "العبى",
+   "kind": "locality",
+   "kind_detail": "hamlet",
+   "lon": 49.7677,
+   "lat": 26.7451
+  },
+  {
+   "name": "ام عريش",
+   "name:en": "Umm `Arish",
+   "name:ar": "ام عريش",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7093,
+   "lat": 26.7387
+  },
+  {
+   "name": "جزيرة صفوان",
+   "name:en": "Jazirat Safwan",
+   "name:ar": "جزيرة صفوان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9601,
+   "lat": 26.7352
+  },
+  {
+   "name": "جزيرة جليعد",
+   "name:en": "Jazirat Julay`id",
+   "name:ar": "جزيرة جليعد",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7986,
+   "lat": 26.7297
+  },
+  {
+   "name": "جزيرة رهيجاء",
+   "name:en": "Jazirat Ruhayja'",
+   "name:ar": "جزيرة رهيجاء",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9457,
+   "lat": 26.7291
+  },
+  {
+   "name": "النعيم",
+   "name:en": "An Naim",
+   "name:ar": "النعيم",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0408,
+   "lat": 26.7196
+  },
+  {
+   "name": "رضوى",
+   "name:en": "Radwa",
+   "name:ar": "رضوى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0778,
+   "lat": 26.7194
+  },
+  {
+   "name": "جاوان",
+   "name:en": "Jawan",
+   "name:ar": "جاوان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9667,
+   "lat": 26.7167
+  },
+  {
+   "name": "طعوس أبو ثيلة",
+   "name:en": null,
+   "name:ar": "طعوس أبو ثيلة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9414,
+   "lat": 26.7142
+  },
+  {
+   "name": "قرطبة",
+   "name:en": "Qurtubah",
+   "name:ar": "قرطبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0436,
+   "lat": 26.7137
+  },
+  {
+   "name": "الفيحاء",
+   "name:en": "Al Fayha",
+   "name:ar": "الفيحاء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0584,
+   "lat": 26.7125
+  },
+  {
+   "name": "جاوان",
+   "name:en": "Jawan",
+   "name:ar": "جاوان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9629,
+   "lat": 26.7105
+  },
+  {
+   "name": "الروضة",
+   "name:en": "Ar Rawdah",
+   "name:ar": "الروضة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0704,
+   "lat": 26.7094
+  },
+  {
+   "name": "الزهور",
+   "name:en": "Az Zuhur",
+   "name:ar": "الزهور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0483,
+   "lat": 26.7083
+  },
+  {
+   "name": "نجمة",
+   "name:en": "Najmah",
+   "name:ar": "نجمة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0934,
+   "lat": 26.7083
+  },
+  {
+   "name": "رأس تنورة",
+   "name:en": "Ra's Tannurah",
+   "name:ar": "رأس تنورة",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.0673,
+   "lat": 26.7074
+  },
+  {
+   "name": "الدانة",
+   "name:en": "Ad Danah",
+   "name:ar": "الدانة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0602,
+   "lat": 26.7053
+  },
+  {
+   "name": "الاندلس",
+   "name:en": "Al Andalus",
+   "name:ar": "الاندلس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0695,
+   "lat": 26.7026
+  },
+  {
+   "name": "الصناعية الثانية",
+   "name:en": "second industrial",
+   "name:ar": "الصناعية الثانية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0253,
+   "lat": 26.7021
+  },
+  {
+   "name": "المنتزة",
+   "name:en": "Al Montazah",
+   "name:ar": "المنتزة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.048,
+   "lat": 26.7004
+  },
+  {
+   "name": "الصناعية الأولى",
+   "name:en": "First Industrial",
+   "name:ar": "الصناعية الأولى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.058,
+   "lat": 26.6975
+  },
+  {
+   "name": "طعوس أبو شميلة",
+   "name:en": "Tu`us Abu Shumaylah",
+   "name:ar": "طعوس أبو شميلة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.935,
+   "lat": 26.6878
+  },
+  {
+   "name": "قديرات",
+   "name:en": "Qudayrat",
+   "name:ar": "قديرات",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7667,
+   "lat": 26.6667
+  },
+  {
+   "name": "الرحاب",
+   "name:en": "Al Rehab",
+   "name:ar": "الرحاب",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9169,
+   "lat": 26.6643
+  },
+  {
+   "name": "المنار",
+   "name:en": "Al Manar",
+   "name:ar": "المنار",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9498,
+   "lat": 26.6615
+  },
+  {
+   "name": "المصيف",
+   "name:en": "Al Masif",
+   "name:ar": "المصيف",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.8311,
+   "lat": 26.6603
+  },
+  {
+   "name": "أبو معن",
+   "name:en": "Bani M`en",
+   "name:ar": "أبو معن",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.807,
+   "lat": 26.6602
+  },
+  {
+   "name": "الربوة",
+   "name:en": "Ar Rabwah",
+   "name:ar": "الربوة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9575,
+   "lat": 26.6576
+  },
+  {
+   "name": "الدريدي",
+   "name:en": "Ad Duraydi",
+   "name:ar": "الدريدي",
+   "kind": "locality",
+   "kind_detail": "hamlet",
+   "lon": 49.8914,
+   "lat": 26.6564
+  },
+  {
+   "name": "أم الساهك",
+   "name:en": "Umm as Sahik",
+   "name:ar": "أم الساهك",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9141,
+   "lat": 26.6529
+  },
+  {
+   "name": "البدور",
+   "name:en": "Al Budur",
+   "name:ar": "البدور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9324,
+   "lat": 26.6509
+  },
+  {
+   "name": "حزم",
+   "name:en": "Hazm",
+   "name:ar": "حزم",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9529,
+   "lat": 26.6508
+  },
+  {
+   "name": "المروة",
+   "name:en": "Al Marwah",
+   "name:ar": "المروة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9608,
+   "lat": 26.6496
+  },
+  {
+   "name": "الشورى",
+   "name:en": "Ash Shura",
+   "name:ar": "الشورى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9811,
+   "lat": 26.649
+  },
+  {
+   "name": "صفوى",
+   "name:en": "Safwa",
+   "name:ar": "صفوى",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9467,
+   "lat": 26.6485
+  },
+  {
+   "name": "العروبة",
+   "name:en": "Al Urubah",
+   "name:ar": "العروبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9472,
+   "lat": 26.6467
+  },
+  {
+   "name": "الرويحة",
+   "name:en": "Ar Ruwaihah",
+   "name:ar": "الرويحة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.8194,
+   "lat": 26.6465
+  },
+  {
+   "name": "الصفاء",
+   "name:en": "Al Safa",
+   "name:ar": "الصفاء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.96,
+   "lat": 26.642
+  },
+  {
+   "name": "الحزم",
+   "name:en": "Al Hazm",
+   "name:ar": "الحزم",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9115,
+   "lat": 26.6389
+  },
+  {
+   "name": "العمل",
+   "name:en": "Al Amal",
+   "name:ar": "العمل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9596,
+   "lat": 26.637
+  },
+  {
+   "name": "الخترشية",
+   "name:en": "Al Khatrashiyah",
+   "name:ar": "الخترشية",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 49.929,
+   "lat": 26.6203
+  },
+  {
+   "name": "جبل القوم",
+   "name:en": "Jabal al Qawm",
+   "name:ar": "جبل القوم",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9671,
+   "lat": 26.6118
+  },
+  {
+   "name": "جبيل القوم",
+   "name:en": "Jubayl al Qawm",
+   "name:ar": "جبيل القوم",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9628,
+   "lat": 26.6108
+  },
+  {
+   "name": "جزيرة ابا الهيل",
+   "name:en": "Jazirat Aba al Hayl",
+   "name:ar": "جزيرة ابا الهيل",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8702,
+   "lat": 26.6095
+  },
+  {
+   "name": "الزهراء",
+   "name:en": "Az Zahra",
+   "name:ar": "الزهراء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0132,
+   "lat": 26.6033
+  },
+  {
+   "name": "الثريا",
+   "name:en": "Ath Thuraiya",
+   "name:ar": "الثريا",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9831,
+   "lat": 26.6006
+  },
+  {
+   "name": "نقا الصليبي",
+   "name:en": "Naqa as Sulaybi",
+   "name:ar": "نقا الصليبي",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8,
+   "lat": 26.6
+  },
+  {
+   "name": "طعوس الشنان",
+   "name:en": "Tu`us ash Shinan",
+   "name:ar": "طعوس الشنان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.6717,
+   "lat": 26.5983
+  },
+  {
+   "name": "الريف",
+   "name:en": "Ar Rif",
+   "name:ar": "الريف",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9756,
+   "lat": 26.5981
+  },
+  {
+   "name": "الزور",
+   "name:en": "Az Zour",
+   "name:ar": "الزور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0772,
+   "lat": 26.5952
+  },
+  {
+   "name": "النرجس",
+   "name:en": "An Narjis",
+   "name:ar": "النرجس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9888,
+   "lat": 26.5906
+  },
+  {
+   "name": "العوامية",
+   "name:en": "Al `Awwamiyah",
+   "name:ar": "العوامية",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.984,
+   "lat": 26.5883
+  },
+  {
+   "name": "النرجس 1",
+   "name:en": "An Narjis 1",
+   "name:ar": "النرجس 1",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0749,
+   "lat": 26.588
+  },
+  {
+   "name": "الجامعيين",
+   "name:en": "Al Jamiyin",
+   "name:ar": "الجامعيين",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0544,
+   "lat": 26.5868
+  },
+  {
+   "name": "المروج",
+   "name:en": "Al Muruj",
+   "name:ar": "المروج",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0478,
+   "lat": 26.5867
+  },
+  {
+   "name": "الجواهر",
+   "name:en": "Al Jawahir",
+   "name:ar": "الجواهر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0072,
+   "lat": 26.5857
+  },
+  {
+   "name": "الصناعية",
+   "name:en": "As Sinaiyah",
+   "name:ar": "الصناعية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0367,
+   "lat": 26.5855
+  },
+  {
+   "name": "البوادي",
+   "name:en": "Al Bawadi",
+   "name:ar": "البوادي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9681,
+   "lat": 26.5854
+  },
+  {
+   "name": "الزارة",
+   "name:en": "Az Zarah",
+   "name:ar": "الزارة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9934,
+   "lat": 26.5844
+  },
+  {
+   "name": "الجميمة",
+   "name:en": "Al Jumaimah",
+   "name:ar": "الجميمة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9768,
+   "lat": 26.5839
+  },
+  {
+   "name": "الورود",
+   "name:en": "Al Wurud",
+   "name:ar": "الورود",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0273,
+   "lat": 26.583
+  },
+  {
+   "name": "سنابس",
+   "name:en": "Sanabis",
+   "name:ar": "سنابس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0834,
+   "lat": 26.5825
+  },
+  {
+   "name": "الجوهرة",
+   "name:en": "Al Jawharah",
+   "name:ar": "الجوهرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0784,
+   "lat": 26.5804
+  },
+  {
+   "name": "الروضة",
+   "name:en": "Ar Rawdah",
+   "name:ar": "الروضة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0407,
+   "lat": 26.5767
+  },
+  {
+   "name": "النخيل",
+   "name:en": "Al Nakhil",
+   "name:ar": "النخيل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0636,
+   "lat": 26.5767
+  },
+  {
+   "name": "سنابس",
+   "name:en": "Sanabis",
+   "name:ar": "سنابس",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.0817,
+   "lat": 26.5767
+  },
+  {
+   "name": "تاروت",
+   "name:en": "Tarout",
+   "name:ar": "تاروت",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.0555,
+   "lat": 26.5764
+  },
+  {
+   "name": "الناصرة",
+   "name:en": "An Nasirah",
+   "name:ar": "الناصرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0109,
+   "lat": 26.5757
+  },
+  {
+   "name": "الواحة",
+   "name:en": "Al Wahah",
+   "name:ar": "الواحة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.027,
+   "lat": 26.5756
+  },
+  {
+   "name": "الحسين",
+   "name:en": "Al Husain",
+   "name:ar": "الحسين",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9982,
+   "lat": 26.5755
+  },
+  {
+   "name": "اليمامة",
+   "name:en": "Al Yamamah",
+   "name:ar": "اليمامة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0703,
+   "lat": 26.5744
+  },
+  {
+   "name": "الفيحاء",
+   "name:en": "Al Fayha",
+   "name:ar": "الفيحاء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9075,
+   "lat": 26.5741
+  },
+  {
+   "name": "الجبل",
+   "name:en": "Al Jabal",
+   "name:ar": "الجبل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0609,
+   "lat": 26.5728
+  },
+  {
+   "name": "الديرة",
+   "name:en": "Ad Dirah",
+   "name:ar": "الديرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0658,
+   "lat": 26.572
+  },
+  {
+   "name": "الفتح",
+   "name:en": "Al Fath",
+   "name:ar": "الفتح",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0434,
+   "lat": 26.5711
+  },
+  {
+   "name": "الربيعية",
+   "name:en": "Ar Rabeiyah",
+   "name:ar": "الربيعية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0801,
+   "lat": 26.5704
+  },
+  {
+   "name": "الصواري",
+   "name:en": "As Sawari",
+   "name:ar": "الصواري",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.086,
+   "lat": 26.5704
+  },
+  {
+   "name": "القديح",
+   "name:en": "Al Qadih",
+   "name:ar": "القديح",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9852,
+   "lat": 26.5698
+  },
+  {
+   "name": "الزمرد",
+   "name:en": "Az Zomorod",
+   "name:ar": "الزمرد",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0675,
+   "lat": 26.5691
+  },
+  {
+   "name": "المشتل",
+   "name:en": "Al Mashtal",
+   "name:ar": "المشتل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9736,
+   "lat": 26.5689
+  },
+  {
+   "name": "القديح",
+   "name:en": "Al Qudayh",
+   "name:ar": "القديح",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9891,
+   "lat": 26.5685
+  },
+  {
+   "name": "البحاري",
+   "name:en": "Al Bahari",
+   "name:ar": "البحاري",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9927,
+   "lat": 26.5684
+  },
+  {
+   "name": "الربيعية",
+   "name:en": "Ar Rabi`iyah",
+   "name:ar": "الربيعية",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.0668,
+   "lat": 26.5684
+  },
+  {
+   "name": "البحر",
+   "name:en": "Al Bahr",
+   "name:ar": "البحر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0077,
+   "lat": 26.5656
+  },
+  {
+   "name": "المناخ",
+   "name:en": "Al Manakh",
+   "name:ar": "المناخ",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0578,
+   "lat": 26.5653
+  },
+  {
+   "name": "الخزامى",
+   "name:en": "Al Khuzama",
+   "name:ar": "الخزامى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0176,
+   "lat": 26.5652
+  },
+  {
+   "name": "باب الساب",
+   "name:en": "Bab As Sab",
+   "name:ar": "باب الساب",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.001,
+   "lat": 26.565
+  },
+  {
+   "name": "الرضا",
+   "name:en": "Ar Rida",
+   "name:ar": "الرضا",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0303,
+   "lat": 26.5647
+  },
+  {
+   "name": "الصدفة",
+   "name:en": "As Sadafah",
+   "name:ar": "الصدفة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0713,
+   "lat": 26.5641
+  },
+  {
+   "name": "الوسادة",
+   "name:en": "Al Wasadah",
+   "name:ar": "الوسادة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9988,
+   "lat": 26.5634
+  },
+  {
+   "name": "الشاطئ",
+   "name:en": "Ash Shati",
+   "name:ar": "الشاطئ",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.045,
+   "lat": 26.5629
+  },
+  {
+   "name": "الأوجام",
+   "name:en": "Al Awjam",
+   "name:ar": "الأوجام",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9439,
+   "lat": 26.5628
+  },
+  {
+   "name": "البستان 2",
+   "name:en": "Al Bustan 2",
+   "name:ar": "البستان 2",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0027,
+   "lat": 26.5623
+  },
+  {
+   "name": "الشماسية",
+   "name:en": "Ash Shamasiyyah",
+   "name:ar": "الشماسية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0049,
+   "lat": 26.5622
+  },
+  {
+   "name": "الاوجام",
+   "name:en": "Al Aujam",
+   "name:ar": "الاوجام",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9415,
+   "lat": 26.5617
+  },
+  {
+   "name": "القلعة",
+   "name:en": "Al Qalah",
+   "name:ar": "القلعة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0062,
+   "lat": 26.5606
+  },
+  {
+   "name": "باب الشمال",
+   "name:en": "Bab Madinah Ash Shamal",
+   "name:ar": "باب الشمال",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.003,
+   "lat": 26.5605
+  },
+  {
+   "name": "الشهباء",
+   "name:en": "Ash Shahba",
+   "name:ar": "الشهباء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9837,
+   "lat": 26.56
+  },
+  {
+   "name": "الرابعة",
+   "name:en": "Ar Rabiah",
+   "name:ar": "الرابعة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.011,
+   "lat": 26.5599
+  },
+  {
+   "name": "المدني",
+   "name:en": "Al Madani",
+   "name:ar": "المدني",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9999,
+   "lat": 26.5598
+  },
+  {
+   "name": "الجراري",
+   "name:en": "Al Jarrari",
+   "name:ar": "الجراري",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0026,
+   "lat": 26.5588
+  },
+  {
+   "name": "القطيف",
+   "name:en": "Qatif",
+   "name:ar": "القطيف",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.0087,
+   "lat": 26.5586
+  },
+  {
+   "name": "بديعة البصري",
+   "name:en": "Badiah Al Basri",
+   "name:ar": "بديعة البصري",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.008,
+   "lat": 26.558
+  },
+  {
+   "name": "التوبي",
+   "name:en": "At Tubi",
+   "name:ar": "التوبي",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9917,
+   "lat": 26.5578
+  },
+  {
+   "name": "الروابي",
+   "name:en": "Ar Rawabi",
+   "name:ar": "الروابي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.8855,
+   "lat": 26.5569
+  },
+  {
+   "name": "المدارس",
+   "name:en": "Al Madaris",
+   "name:ar": "المدارس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9997,
+   "lat": 26.5569
+  },
+  {
+   "name": "الشريعة",
+   "name:en": "Ash Shariah",
+   "name:ar": "الشريعة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0056,
+   "lat": 26.5566
+  },
+  {
+   "name": "مياس",
+   "name:en": "Mayyas",
+   "name:ar": "مياس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0029,
+   "lat": 26.5564
+  },
+  {
+   "name": "الخامسة",
+   "name:en": "Al Khamisah",
+   "name:ar": "الخامسة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0177,
+   "lat": 26.5559
+  },
+  {
+   "name": "الاندلس",
+   "name:en": "Al Andalus",
+   "name:ar": "الاندلس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0786,
+   "lat": 26.5554
+  },
+  {
+   "name": "الدويج",
+   "name:en": "Ad Doij",
+   "name:ar": "الدويج",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0001,
+   "lat": 26.5546
+  },
+  {
+   "name": "التوبي",
+   "name:en": "At Tawbi",
+   "name:ar": "التوبي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9957,
+   "lat": 26.5544
+  },
+  {
+   "name": "الوديعة",
+   "name:en": "Al Wadiah",
+   "name:ar": "الوديعة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0098,
+   "lat": 26.5531
+  },
+  {
+   "name": "الجزيرة",
+   "name:en": "Al Jazirah",
+   "name:ar": "الجزيرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.013,
+   "lat": 26.553
+  },
+  {
+   "name": "الكويكب",
+   "name:en": "Kuwaikib",
+   "name:ar": "الكويكب",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0067,
+   "lat": 26.5528
+  },
+  {
+   "name": "ام الجزم",
+   "name:en": "Umm Al Jazm",
+   "name:ar": "ام الجزم",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9999,
+   "lat": 26.5527
+  },
+  {
+   "name": "الساحل",
+   "name:en": "As Sahil",
+   "name:ar": "الساحل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0462,
+   "lat": 26.5521
+  },
+  {
+   "name": "المرجان",
+   "name:en": "Al Murjan",
+   "name:ar": "المرجان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0626,
+   "lat": 26.5521
+  },
+  {
+   "name": "الدبابية",
+   "name:en": "Ad Dababiyyah",
+   "name:ar": "الدبابية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.002,
+   "lat": 26.552
+  },
+  {
+   "name": "الخويلدية",
+   "name:en": "Al Khuwaildiyah",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 49.9901,
+   "lat": 26.551
+  },
+  {
+   "name": "دارين",
+   "name:en": "Darin",
+   "name:ar": "دارين",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.0768,
+   "lat": 26.5499
+  },
+  {
+   "name": "الشويكة",
+   "name:en": "Ash Shweikah",
+   "name:ar": "الشويكة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0078,
+   "lat": 26.5487
+  },
+  {
+   "name": "الزمرد 2",
+   "name:en": "Az Zomorod 2",
+   "name:ar": "الزمرد 2",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9986,
+   "lat": 26.5477
+  },
+  {
+   "name": "المسعودية",
+   "name:en": "Al Masudiyah",
+   "name:ar": "المسعودية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0034,
+   "lat": 26.5477
+  },
+  {
+   "name": "البديع",
+   "name:en": "Al Badi",
+   "name:ar": "البديع",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9572,
+   "lat": 26.5473
+  },
+  {
+   "name": "التلال",
+   "name:en": "At Talal",
+   "name:ar": "التلال",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9199,
+   "lat": 26.5458
+  },
+  {
+   "name": "دارين",
+   "name:en": "Darin",
+   "name:ar": "دارين",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0767,
+   "lat": 26.5451
+  },
+  {
+   "name": "النهضة",
+   "name:en": "An Nahdah",
+   "name:ar": "النهضة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9,
+   "lat": 26.5446
+  },
+  {
+   "name": "المجيدية",
+   "name:en": "Al Majidiyah",
+   "name:ar": "المجيدية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0254,
+   "lat": 26.5422
+  },
+  {
+   "name": "الجارودية",
+   "name:en": "Al Jarudiyah",
+   "name:ar": "الجارودية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9875,
+   "lat": 26.542
+  },
+  {
+   "name": "منطقة المستودعات",
+   "name:en": "Warehouse Area",
+   "name:ar": "منطقة المستودعات",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.019,
+   "lat": 26.5417
+  },
+  {
+   "name": "الجارودية",
+   "name:en": "Jarudiyah",
+   "name:ar": "الجارودية",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9847,
+   "lat": 26.5414
+  },
+  {
+   "name": "محيش",
+   "name:en": "Imhaish",
+   "name:ar": "محيش",
+   "kind": "locality",
+   "kind_detail": "hamlet",
+   "lon": 49.9959,
+   "lat": 26.539
+  },
+  {
+   "name": "حلة محيش",
+   "name:en": "Halat Mahish",
+   "name:ar": "حلة محيش",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9988,
+   "lat": 26.5389
+  },
+  {
+   "name": "حلة محيش",
+   "name:en": "Hillat Muhaish",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 49.9968,
+   "lat": 26.5374
+  },
+  {
+   "name": "الياقوت",
+   "name:en": "Al Yaqoot",
+   "name:ar": "الياقوت",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9783,
+   "lat": 26.5371
+  },
+  {
+   "name": "البديعة",
+   "name:en": "Al Badiah",
+   "name:ar": "البديعة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9689,
+   "lat": 26.5333
+  },
+  {
+   "name": "العقيق",
+   "name:en": "Al Aqiq",
+   "name:ar": "العقيق",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0203,
+   "lat": 26.5307
+  },
+  {
+   "name": "المحار",
+   "name:en": "Al Mahar",
+   "name:ar": "المحار",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0298,
+   "lat": 26.5258
+  },
+  {
+   "name": "الأنوار",
+   "name:en": "Al Anwar",
+   "name:ar": "الأنوار",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0071,
+   "lat": 26.5255
+  },
+  {
+   "name": "أم الحمام",
+   "name:en": "Umm Al Hamam",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9996,
+   "lat": 26.5223
+  },
+  {
+   "name": "عنك",
+   "name:en": "`Inak",
+   "name:ar": "عنك",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.0271,
+   "lat": 26.5196
+  },
+  {
+   "name": "الاسكان",
+   "name:en": "Al Iskan",
+   "name:ar": "الاسكان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9761,
+   "lat": 26.5195
+  },
+  {
+   "name": "حزوم الضبية",
+   "name:en": "Huzum ad Dabbiyah",
+   "name:ar": "حزوم الضبية",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7665,
+   "lat": 26.5193
+  },
+  {
+   "name": "البدراني",
+   "name:en": "Al Badrani",
+   "name:ar": "البدراني",
+   "kind": "locality",
+   "kind_detail": "hamlet",
+   "lon": 49.9657,
+   "lat": 26.5188
+  },
+  {
+   "name": "البستان 1",
+   "name:en": "Al Bustan 1",
+   "name:ar": "البستان 1",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0325,
+   "lat": 26.5165
+  },
+  {
+   "name": "الجش",
+   "name:en": "Al Jish",
+   "name:ar": "الجش",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9904,
+   "lat": 26.5159
+  },
+  {
+   "name": "الراية",
+   "name:en": "Ar Rayah",
+   "name:ar": "الراية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9858,
+   "lat": 26.514
+  },
+  {
+   "name": "الملاحة",
+   "name:en": "Mallahah",
+   "name:ar": "الملاحة",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 49.9988,
+   "lat": 26.5132
+  },
+  {
+   "name": "البدر",
+   "name:en": "Al Badr",
+   "name:ar": "البدر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.031,
+   "lat": 26.5111
+  },
+  {
+   "name": "خبوب الدبيسي",
+   "name:en": "Khubub ad Dubaysi",
+   "name:ar": "خبوب الدبيسي",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8772,
+   "lat": 26.5089
+  },
+  {
+   "name": "الريحان",
+   "name:en": "Ar Raihan",
+   "name:ar": "الريحان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9394,
+   "lat": 26.5086
+  },
+  {
+   "name": "علاة الضبية",
+   "name:en": "`Alat ad Dabbiyah",
+   "name:ar": "علاة الضبية",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7762,
+   "lat": 26.5053
+  },
+  {
+   "name": "الجش",
+   "name:en": "Al Jish",
+   "name:ar": "الجش",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.9993,
+   "lat": 26.505
+  },
+  {
+   "name": "النسيم",
+   "name:en": "Al Naseem",
+   "name:ar": "النسيم",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0416,
+   "lat": 26.5029
+  },
+  {
+   "name": "قرطبة",
+   "name:en": "Qurtubah",
+   "name:ar": "قرطبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.035,
+   "lat": 26.5016
+  },
+  {
+   "name": "الرمال",
+   "name:en": "Ar Rimal",
+   "name:ar": "الرمال",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9876,
+   "lat": 26.4996
+  },
+  {
+   "name": "الطف",
+   "name:en": "At Tif",
+   "name:ar": "الطف",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0302,
+   "lat": 26.4941
+  },
+  {
+   "name": "الغدير",
+   "name:en": "Al Ghadir",
+   "name:ar": "الغدير",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0494,
+   "lat": 26.4933
+  },
+  {
+   "name": "الخصاب",
+   "name:en": "Al Khisab",
+   "name:ar": "الخصاب",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0347,
+   "lat": 26.4924
+  },
+  {
+   "name": "المنتزة",
+   "name:en": "Al Muntazah",
+   "name:ar": "المنتزة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0443,
+   "lat": 26.4889
+  },
+  {
+   "name": "المها",
+   "name:en": "Al Maha",
+   "name:ar": "المها",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9333,
+   "lat": 26.485
+  },
+  {
+   "name": "النور",
+   "name:en": "An Noor",
+   "name:ar": "النور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0419,
+   "lat": 26.4845
+  },
+  {
+   "name": "النقى",
+   "name:en": "An Naqa",
+   "name:ar": "النقى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.031,
+   "lat": 26.4835
+  },
+  {
+   "name": "الديرة 2",
+   "name:en": "Ad Dirah 2",
+   "name:ar": "الديرة 2",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0365,
+   "lat": 26.4825
+  },
+  {
+   "name": "الكوثر",
+   "name:en": "Al Kawthar",
+   "name:ar": "الكوثر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.059,
+   "lat": 26.4816
+  },
+  {
+   "name": "غرب النابية",
+   "name:en": "Gharb An Nabiyah",
+   "name:ar": "غرب النابية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9979,
+   "lat": 26.4784
+  },
+  {
+   "name": "النابية",
+   "name:en": "An Nabiyah",
+   "name:ar": "النابية",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.0067,
+   "lat": 26.476
+  },
+  {
+   "name": "السلام",
+   "name:en": "As Salam",
+   "name:ar": "السلام",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.039,
+   "lat": 26.4758
+  },
+  {
+   "name": "غرناطة",
+   "name:en": "Ghirnatah",
+   "name:ar": "غرناطة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0515,
+   "lat": 26.4755
+  },
+  {
+   "name": "سيهات",
+   "name:en": "Sayhat",
+   "name:ar": "سيهات",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.0416,
+   "lat": 26.475
+  },
+  {
+   "name": "الفردوس",
+   "name:en": "Al Ferdous",
+   "name:ar": "الفردوس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0453,
+   "lat": 26.4749
+  },
+  {
+   "name": "الشاطئ الغربي",
+   "name:en": "Ash Shati Al Gharbi",
+   "name:ar": "الشاطئ الغربي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1211,
+   "lat": 26.4742
+  },
+  {
+   "name": "الشاطئ الشرقي",
+   "name:en": "Ash Shati Ash Sharqi",
+   "name:ar": "الشاطئ الشرقي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1288,
+   "lat": 26.4731
+  },
+  {
+   "name": "العلاة",
+   "name:en": "Al `Alah",
+   "name:ar": "العلاة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.832,
+   "lat": 26.4704
+  },
+  {
+   "name": "الخليج",
+   "name:en": "Al Khalij",
+   "name:ar": "الخليج",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0289,
+   "lat": 26.4703
+  },
+  {
+   "name": "الزهور",
+   "name:en": "Az Zuhur",
+   "name:ar": "الزهور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0363,
+   "lat": 26.4681
+  },
+  {
+   "name": "البحيرة",
+   "name:en": "Al Buhayrah",
+   "name:ar": "البحيرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0652,
+   "lat": 26.4678
+  },
+  {
+   "name": "الحمراء",
+   "name:en": "Al Hamra",
+   "name:ar": "الحمراء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.091,
+   "lat": 26.4676
+  },
+  {
+   "name": "الدانة",
+   "name:en": "Ad Danah",
+   "name:ar": "الدانة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.043,
+   "lat": 26.466
+  },
+  {
+   "name": "جيب بطاح",
+   "name:en": "Jayb Battah",
+   "name:ar": "جيب بطاح",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7611,
+   "lat": 26.4644
+  },
+  {
+   "name": "الجوهرة",
+   "name:en": "Al Jawharah",
+   "name:ar": "الجوهرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0749,
+   "lat": 26.4644
+  },
+  {
+   "name": "الرابية",
+   "name:en": "Ar Rabiyah",
+   "name:ar": "الرابية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0336,
+   "lat": 26.4626
+  },
+  {
+   "name": "العزيزية",
+   "name:en": "Al Aziziyah",
+   "name:ar": "العزيزية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0704,
+   "lat": 26.4576
+  },
+  {
+   "name": "المحمدية",
+   "name:en": "Al Muhammadiyah",
+   "name:ar": "المحمدية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0567,
+   "lat": 26.4567
+  },
+  {
+   "name": "الزهور",
+   "name:en": "Az Zuhur",
+   "name:ar": "الزهور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0888,
+   "lat": 26.4542
+  },
+  {
+   "name": "السلام",
+   "name:en": "As Salam",
+   "name:ar": "السلام",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1019,
+   "lat": 26.4533
+  },
+  {
+   "name": "الخضرية",
+   "name:en": "Al Kuthriah",
+   "name:ar": "الخضرية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0453,
+   "lat": 26.4527
+  },
+  {
+   "name": "البديع",
+   "name:en": "Al Badi",
+   "name:ar": "البديع",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1132,
+   "lat": 26.4511
+  },
+  {
+   "name": "الصناعية",
+   "name:en": "As Sinaiyah",
+   "name:ar": "الصناعية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0215,
+   "lat": 26.451
+  },
+  {
+   "name": "ميناء الملك عبدالعزيز",
+   "name:en": "King Abdul Aziz Seaport",
+   "name:ar": "ميناء الملك عبدالعزيز",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1888,
+   "lat": 26.4506
+  },
+  {
+   "name": "طعوس القرائن",
+   "name:en": null,
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8833,
+   "lat": 26.45
+  },
+  {
+   "name": "الضباب",
+   "name:en": "Ad Dabab",
+   "name:ar": "الضباب",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1574,
+   "lat": 26.4476
+  },
+  {
+   "name": "العنود",
+   "name:en": "Al Anud",
+   "name:ar": "العنود",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0714,
+   "lat": 26.4469
+  },
+  {
+   "name": "الخليج",
+   "name:en": "Al Khalij",
+   "name:ar": "الخليج",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0882,
+   "lat": 26.4463
+  },
+  {
+   "name": "الدواسر",
+   "name:en": "Ad Dawasir",
+   "name:ar": "الدواسر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1019,
+   "lat": 26.4452
+  },
+  {
+   "name": "المزروعية",
+   "name:en": "Al Mazruiyah",
+   "name:ar": "المزروعية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1241,
+   "lat": 26.4442
+  },
+  {
+   "name": "العمامرة",
+   "name:en": "Al Amamrah",
+   "name:ar": "العمامرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1123,
+   "lat": 26.4441
+  },
+  {
+   "name": "الفيحاء",
+   "name:en": "Al Fayha",
+   "name:ar": "الفيحاء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0393,
+   "lat": 26.4405
+  },
+  {
+   "name": "السوق",
+   "name:en": "As Suq",
+   "name:ar": "السوق",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1022,
+   "lat": 26.4405
+  },
+  {
+   "name": "الربيع",
+   "name:en": "Ar Rabie",
+   "name:ar": "الربيع",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1128,
+   "lat": 26.4404
+  },
+  {
+   "name": "النخيل",
+   "name:en": "Al Nakhil",
+   "name:ar": "النخيل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0891,
+   "lat": 26.4398
+  },
+  {
+   "name": "الدمام",
+   "name:en": "Dammam",
+   "name:ar": "الدمام",
+   "kind": "locality",
+   "kind_detail": "city",
+   "lon": 50.104,
+   "lat": 26.4368
+  },
+  {
+   "name": "الجلوية",
+   "name:en": "Al Jalawiyah",
+   "name:ar": "الجلوية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0743,
+   "lat": 26.4356
+  },
+  {
+   "name": "القزاز",
+   "name:en": "Al Qazaz",
+   "name:ar": "القزاز",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.092,
+   "lat": 26.4348
+  },
+  {
+   "name": "العدامة",
+   "name:en": "Al Adamah",
+   "name:ar": "العدامة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1017,
+   "lat": 26.4328
+  },
+  {
+   "name": "الامير محمد بن سعود",
+   "name:en": "Prince Muhammed Ibn Saud",
+   "name:ar": "الامير محمد بن سعود",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.113,
+   "lat": 26.4327
+  },
+  {
+   "name": "الأثير",
+   "name:en": "Al Athir",
+   "name:ar": "الأثير",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0607,
+   "lat": 26.4324
+  },
+  {
+   "name": "الطبيشي",
+   "name:en": "At Tubayshi",
+   "name:ar": "الطبيشي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.125,
+   "lat": 26.4321
+  },
+  {
+   "name": "النور",
+   "name:en": "An Noor",
+   "name:ar": "النور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0236,
+   "lat": 26.4294
+  },
+  {
+   "name": "البادية",
+   "name:en": "Al Badiyah",
+   "name:ar": "البادية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0909,
+   "lat": 26.4278
+  },
+  {
+   "name": "غرناطة",
+   "name:en": "Ghirnatah",
+   "name:ar": "غرناطة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0799,
+   "lat": 26.4241
+  },
+  {
+   "name": "مدينة العمال",
+   "name:en": "Madinat Al Ummal",
+   "name:ar": "مدينة العمال",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1079,
+   "lat": 26.4238
+  },
+  {
+   "name": "الناصرية",
+   "name:en": "An Nasriyah",
+   "name:ar": "الناصرية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1238,
+   "lat": 26.4237
+  },
+  {
+   "name": "ابن خلدون",
+   "name:en": "Ibn Khaldun",
+   "name:ar": "ابن خلدون",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0966,
+   "lat": 26.4223
+  },
+  {
+   "name": "النورس",
+   "name:en": "An Nawras",
+   "name:ar": "النورس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1941,
+   "lat": 26.4223
+  },
+  {
+   "name": "الضباب",
+   "name:en": "Ad Dabab",
+   "name:ar": "الضباب",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0541,
+   "lat": 26.422
+  },
+  {
+   "name": "ضاحية الملك فهد",
+   "name:en": "Dahiyat Al Malik Fahd",
+   "name:ar": "ضاحية الملك فهد",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.995,
+   "lat": 26.4215
+  },
+  {
+   "name": "زبراة جمرة",
+   "name:en": "Zibarat Jamrah",
+   "name:ar": "زبراة جمرة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8678,
+   "lat": 26.4197
+  },
+  {
+   "name": "القادسية",
+   "name:en": "Al Qadisiyah",
+   "name:ar": "القادسية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0698,
+   "lat": 26.4186
+  },
+  {
+   "name": "الدبيسي",
+   "name:en": "Ad Dubaysi",
+   "name:ar": "الدبيسي",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8333,
+   "lat": 26.4167
+  },
+  {
+   "name": "الخالدية الشمالية",
+   "name:en": "Al Khalidiyah Ash Shamaliyah",
+   "name:ar": "الخالدية الشمالية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1446,
+   "lat": 26.4149
+  },
+  {
+   "name": "المريكبات",
+   "name:en": "Al Muraikabat",
+   "name:ar": "المريكبات",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1019,
+   "lat": 26.4141
+  },
+  {
+   "name": "الاتصالات",
+   "name:en": "Ettisalat",
+   "name:ar": "الاتصالات",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0863,
+   "lat": 26.4139
+  },
+  {
+   "name": "احد",
+   "name:en": "Ohod",
+   "name:ar": "احد",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0428,
+   "lat": 26.4132
+  },
+  {
+   "name": "عبدالله فؤاد",
+   "name:en": "Abdullah Fuad",
+   "name:ar": "عبدالله فؤاد",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1186,
+   "lat": 26.4108
+  },
+  {
+   "name": "الفنار",
+   "name:en": "Al Fanar",
+   "name:ar": "الفنار",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2011,
+   "lat": 26.4081
+  },
+  {
+   "name": "الريان",
+   "name:en": "Ar Rayyan",
+   "name:ar": "الريان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0928,
+   "lat": 26.4049
+  },
+  {
+   "name": "روا",
+   "name:en": "Ruwa",
+   "name:ar": "روا",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.6973,
+   "lat": 26.4039
+  },
+  {
+   "name": "بدر",
+   "name:en": "Badr",
+   "name:ar": "بدر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0261,
+   "lat": 26.4033
+  },
+  {
+   "name": "الخالدية الجنوبية",
+   "name:en": "Al Khalidiyah Al Janubiyah",
+   "name:ar": "الخالدية الجنوبية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1629,
+   "lat": 26.4027
+  },
+  {
+   "name": "مدينة الملك فيصل الجامعية",
+   "name:en": "King Faisal University",
+   "name:ar": "مدينة الملك فيصل الجامعية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2043,
+   "lat": 26.4013
+  },
+  {
+   "name": "عدامة منيفة",
+   "name:en": "`Adamat Munifah",
+   "name:ar": "عدامة منيفة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7832,
+   "lat": 26.4011
+  },
+  {
+   "name": "الروضة",
+   "name:en": "Ar Rawdah",
+   "name:ar": "الروضة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0803,
+   "lat": 26.4003
+  },
+  {
+   "name": "البساتين",
+   "name:en": "Al Basatin",
+   "name:ar": "البساتين",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1262,
+   "lat": 26.3971
+  },
+  {
+   "name": "الصناعية الاولى",
+   "name:en": "1st Industrial",
+   "name:ar": "الصناعية الاولى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1381,
+   "lat": 26.3963
+  },
+  {
+   "name": "الجامعيين",
+   "name:en": "Al Jamiyin",
+   "name:ar": "الجامعيين",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0985,
+   "lat": 26.394
+  },
+  {
+   "name": "الحسام",
+   "name:en": "Al Hussam",
+   "name:ar": "الحسام",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1727,
+   "lat": 26.3939
+  },
+  {
+   "name": "الفيصلية",
+   "name:en": "Al Faysaliyah",
+   "name:ar": "الفيصلية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0635,
+   "lat": 26.3931
+  },
+  {
+   "name": "النزهة",
+   "name:en": "An Nuzhah",
+   "name:ar": "النزهة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1099,
+   "lat": 26.3922
+  },
+  {
+   "name": "السيف",
+   "name:en": "As Saif",
+   "name:ar": "السيف",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2134,
+   "lat": 26.3903
+  },
+  {
+   "name": "الصفا",
+   "name:en": "As Safa",
+   "name:ar": "الصفا",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1837,
+   "lat": 26.3864
+  },
+  {
+   "name": "الأمانة",
+   "name:en": "Al Amanah",
+   "name:ar": "الأمانة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9675,
+   "lat": 26.3845
+  },
+  {
+   "name": "الواحة",
+   "name:en": "Al Wahah",
+   "name:ar": "الواحة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0943,
+   "lat": 26.3812
+  },
+  {
+   "name": "المطار",
+   "name:en": "Al Matar",
+   "name:ar": "المطار",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9446,
+   "lat": 26.3806
+  },
+  {
+   "name": "الفردوس",
+   "name:en": "Al Ferdous",
+   "name:ar": "الفردوس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1174,
+   "lat": 26.3802
+  },
+  {
+   "name": "المنتزه",
+   "name:en": "Al Muntazah",
+   "name:ar": "المنتزه",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1318,
+   "lat": 26.3787
+  },
+  {
+   "name": "النهضة",
+   "name:en": "An Nahdah",
+   "name:ar": "النهضة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1436,
+   "lat": 26.3776
+  },
+  {
+   "name": "المنار",
+   "name:en": "Al Manar",
+   "name:ar": "المنار",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0398,
+   "lat": 26.3775
+  },
+  {
+   "name": "نقا أبو شداد",
+   "name:en": "Naqa Abu Shidad",
+   "name:ar": "نقا أبو شداد",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9503,
+   "lat": 26.3758
+  },
+  {
+   "name": "الندى",
+   "name:en": "An Nada",
+   "name:ar": "الندى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0776,
+   "lat": 26.3746
+  },
+  {
+   "name": "الصدفة",
+   "name:en": "As Sadafah",
+   "name:ar": "الصدفة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2182,
+   "lat": 26.374
+  },
+  {
+   "name": "الراكة الشمالية",
+   "name:en": "Ar Rakah Ash Shamaliyah",
+   "name:ar": "الراكة الشمالية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1916,
+   "lat": 26.3693
+  },
+  {
+   "name": "كولة العبد",
+   "name:en": "Kulat al `Abd",
+   "name:ar": "كولة العبد",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9812,
+   "lat": 26.369
+  },
+  {
+   "name": "الشروق",
+   "name:en": "Ash Shrouk",
+   "name:ar": "الشروق",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9737,
+   "lat": 26.3678
+  },
+  {
+   "name": "القشلة",
+   "name:en": "Al Qashlah",
+   "name:ar": "القشلة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1756,
+   "lat": 26.3678
+  },
+  {
+   "name": "الأنوار",
+   "name:en": "Al Anwar",
+   "name:ar": "الأنوار",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0126,
+   "lat": 26.3658
+  },
+  {
+   "name": "قصر الخليج",
+   "name:en": "Qasr Al Khalij",
+   "name:ar": "قصر الخليج",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1337,
+   "lat": 26.3645
+  },
+  {
+   "name": "الحرس الوطني",
+   "name:en": "Al Haras Al Watani",
+   "name:ar": "الحرس الوطني",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1647,
+   "lat": 26.3642
+  },
+  {
+   "name": "خبوب الجذوعي",
+   "name:en": "Khubub al Jidhu`i",
+   "name:ar": "خبوب الجذوعي",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8597,
+   "lat": 26.3603
+  },
+  {
+   "name": "هجر",
+   "name:en": "Hajr",
+   "name:ar": "هجر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1125,
+   "lat": 26.3597
+  },
+  {
+   "name": "طيبة",
+   "name:en": "Taibah",
+   "name:ar": "طيبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0501,
+   "lat": 26.3583
+  },
+  {
+   "name": "المدينة الرياضية",
+   "name:en": "Sports City",
+   "name:ar": "المدينة الرياضية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1831,
+   "lat": 26.3578
+  },
+  {
+   "name": "الفرسان",
+   "name:en": "Al Fursan",
+   "name:ar": "الفرسان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9615,
+   "lat": 26.3548
+  },
+  {
+   "name": "تهامة",
+   "name:en": "Tihamah",
+   "name:ar": "تهامة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1307,
+   "lat": 26.3544
+  },
+  {
+   "name": "البحر",
+   "name:en": "Al Bahar",
+   "name:ar": "البحر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2211,
+   "lat": 26.3543
+  },
+  {
+   "name": "الإسكان الشمالي",
+   "name:en": "Al Iskan Al Shimali",
+   "name:ar": "الإسكان الشمالي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9787,
+   "lat": 26.3526
+  },
+  {
+   "name": "الراكة الجنوبية",
+   "name:en": "Ar Rakah Al Janubiyah",
+   "name:ar": "الراكة الجنوبية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2014,
+   "lat": 26.3509
+  },
+  {
+   "name": "القصور",
+   "name:en": "Al Qusur",
+   "name:ar": "القصور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1504,
+   "lat": 26.3493
+  },
+  {
+   "name": "الهضبة",
+   "name:en": "Al Hadabah",
+   "name:ar": "الهضبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9371,
+   "lat": 26.3462
+  },
+  {
+   "name": "الجامعة",
+   "name:en": "Al Jamiah",
+   "name:ar": "الجامعة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1317,
+   "lat": 26.3442
+  },
+  {
+   "name": "الأمل",
+   "name:en": "Al Amal",
+   "name:ar": "الأمل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0229,
+   "lat": 26.3435
+  },
+  {
+   "name": "قرطبة",
+   "name:en": "Qurtubah",
+   "name:ar": "قرطبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1867,
+   "lat": 26.3433
+  },
+  {
+   "name": "شرائع الدرعية",
+   "name:en": null,
+   "name:ar": "شرائع الدرعية",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7212,
+   "lat": 26.3426
+  },
+  {
+   "name": "العروبة",
+   "name:en": "Al Urubah",
+   "name:ar": "العروبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9998,
+   "lat": 26.3425
+  },
+  {
+   "name": "الشعلة",
+   "name:en": "Ash Shulah",
+   "name:ar": "الشعلة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.07,
+   "lat": 26.3407
+  },
+  {
+   "name": "خب الطويرف",
+   "name:en": "Khabb at Tuwayrif",
+   "name:ar": "خب الطويرف",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8156,
+   "lat": 26.3373
+  },
+  {
+   "name": "الدانة الشمالية",
+   "name:en": "Ad Danah Ash Shamaliyah",
+   "name:ar": "الدانة الشمالية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.144,
+   "lat": 26.3366
+  },
+  {
+   "name": "الدوحة الشمالية",
+   "name:en": "Ad Dawhah Ash Shamaliyah",
+   "name:ar": "الدوحة الشمالية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.167,
+   "lat": 26.3361
+  },
+  {
+   "name": "الروابي",
+   "name:en": "Ar Rawabi",
+   "name:ar": "الروابي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2079,
+   "lat": 26.3321
+  },
+  {
+   "name": "الإسكان الجنوبي",
+   "name:en": "Al Iskan Al Janubi",
+   "name:ar": "الإسكان الجنوبي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9906,
+   "lat": 26.3299
+  },
+  {
+   "name": "الجوهرة",
+   "name:en": "Al Jawharah",
+   "name:ar": "الجوهرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1959,
+   "lat": 26.3295
+  },
+  {
+   "name": "الدانة الجنوبية",
+   "name:en": "Ad Danah Al Janubiyah",
+   "name:ar": "الدانة الجنوبية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1499,
+   "lat": 26.3266
+  },
+  {
+   "name": "الأندلس",
+   "name:en": "Al Andalus",
+   "name:ar": "الأندلس",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1849,
+   "lat": 26.324
+  },
+  {
+   "name": "الحزم",
+   "name:en": "Al Hazm",
+   "name:ar": "الحزم",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.973,
+   "lat": 26.3234
+  },
+  {
+   "name": "البستان",
+   "name:en": "Al Bustan",
+   "name:ar": "البستان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2119,
+   "lat": 26.3223
+  },
+  {
+   "name": "الدوحة الجنوبية",
+   "name:en": "Ad Dawhah Al Janubiyah",
+   "name:ar": "الدوحة الجنوبية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1661,
+   "lat": 26.3179
+  },
+  {
+   "name": "الحزام الذهبي",
+   "name:en": "Al Hizam Adh Dhahabi",
+   "name:ar": "الحزام الذهبي",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2001,
+   "lat": 26.3179
+  },
+  {
+   "name": "الكورنيش",
+   "name:en": "Al Kurnaish",
+   "name:ar": "الكورنيش",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2255,
+   "lat": 26.3163
+  },
+  {
+   "name": "غرب الظهران",
+   "name:en": "Gharb Adh Dhahran",
+   "name:ar": "غرب الظهران",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1201,
+   "lat": 26.312
+  },
+  {
+   "name": "اليرموك",
+   "name:en": "Al Yarmok",
+   "name:ar": "اليرموك",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2203,
+   "lat": 26.312
+  },
+  {
+   "name": "الهدا",
+   "name:en": "Al Hada",
+   "name:ar": "الهدا",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1845,
+   "lat": 26.3109
+  },
+  {
+   "name": "البندرية",
+   "name:en": "Al Bandariyah",
+   "name:ar": "البندرية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2143,
+   "lat": 26.3095
+  },
+  {
+   "name": "خب حسني",
+   "name:en": "Khabb Hisini",
+   "name:ar": "خب حسني",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9673,
+   "lat": 26.3086
+  },
+  {
+   "name": "الحزام الأخضر",
+   "name:en": "Al Hizam Al Akhdar",
+   "name:ar": "الحزام الأخضر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2007,
+   "lat": 26.3082
+  },
+  {
+   "name": "جامعة الملك فهد للبترول والمعادن",
+   "name:en": "King Fahd University of Petroleum and Minerals",
+   "name:ar": "جامعة الملك فهد للبترول والمعادن",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.152,
+   "lat": 26.3063
+  },
+  {
+   "name": "الخبر",
+   "name:en": "Al Khobar",
+   "name:ar": "الخبر",
+   "kind": "locality",
+   "kind_detail": "city",
+   "lon": 50.196,
+   "lat": 26.304
+  },
+  {
+   "name": "طعوس الغبيا",
+   "name:en": null,
+   "name:ar": "طعوس الغبيا",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7731,
+   "lat": 26.3033
+  },
+  {
+   "name": "الجود",
+   "name:en": "Al Jud",
+   "name:ar": "الجود",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0151,
+   "lat": 26.3015
+  },
+  {
+   "name": "العليا",
+   "name:en": "Al Olaya",
+   "name:ar": "العليا",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1775,
+   "lat": 26.2977
+  },
+  {
+   "name": "الظهران",
+   "name:en": "Dhahran",
+   "name:ar": "الظهران",
+   "kind": "locality",
+   "kind_detail": "city",
+   "lon": 50.1202,
+   "lat": 26.2967
+  },
+  {
+   "name": "العقربية",
+   "name:en": "Al Aqrabiyah",
+   "name:ar": "العقربية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1925,
+   "lat": 26.2951
+  },
+  {
+   "name": "مدينة العمال",
+   "name:en": "Madinat Al Ummal",
+   "name:ar": "مدينة العمال",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2035,
+   "lat": 26.2931
+  },
+  {
+   "name": "الخبر الشمالية",
+   "name:en": "Al Khubar Ash Shamaliyah",
+   "name:ar": "الخبر الشمالية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2143,
+   "lat": 26.2912
+  },
+  {
+   "name": "طعس المضباعة",
+   "name:en": "Ti`s al Midba`ah",
+   "name:ar": "طعس المضباعة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.0083,
+   "lat": 26.2881
+  },
+  {
+   "name": "الرقطاء",
+   "name:en": "Ar Ruqtah",
+   "name:ar": "الرقطاء",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8333,
+   "lat": 26.2832
+  },
+  {
+   "name": "الخبر الجنوبية",
+   "name:en": "Al Khubar Al Janubiyah",
+   "name:ar": "الخبر الجنوبية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2073,
+   "lat": 26.2739
+  },
+  {
+   "name": "الثقبة",
+   "name:en": "Ath Thuqbah",
+   "name:ar": "الثقبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1928,
+   "lat": 26.273
+  },
+  {
+   "name": "خب المنفلت",
+   "name:en": "Khabb al Munfalit",
+   "name:ar": "خب المنفلت",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7857,
+   "lat": 26.2661
+  },
+  {
+   "name": "الصناعية الثانية",
+   "name:en": "second industrial",
+   "name:ar": "الصناعية الثانية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.9693,
+   "lat": 26.2607
+  },
+  {
+   "name": "الساحل",
+   "name:en": "As Sahil",
+   "name:ar": "الساحل",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2168,
+   "lat": 26.2588
+  },
+  {
+   "name": "الإسكان",
+   "name:en": "Al Iskan",
+   "name:ar": "الإسكان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2095,
+   "lat": 26.2576
+  },
+  {
+   "name": "صناعية الثقبة",
+   "name:en": "Sinaiyah Ath Thuqbah",
+   "name:ar": "صناعية الثقبة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1995,
+   "lat": 26.256
+  },
+  {
+   "name": "صناعية الفوازية",
+   "name:en": "Sinaiyah Al Fawaziyah",
+   "name:ar": "صناعية الفوازية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2136,
+   "lat": 26.2443
+  },
+  {
+   "name": "ابن سيناء",
+   "name:en": "Ibn Sina",
+   "name:ar": "ابن سيناء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2043,
+   "lat": 26.2428
+  },
+  {
+   "name": "طعوس بني حليوين",
+   "name:en": "Tu`us Bani Hulaywin",
+   "name:ar": "طعوس بني حليوين",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.6833,
+   "lat": 26.2333
+  },
+  {
+   "name": "المدينة الشمالية",
+   "name:en": "Northern City",
+   "name:ar": "المدينة الشمالية",
+   "kind": "locality",
+   "kind_detail": "city",
+   "lon": 50.4541,
+   "lat": 26.2331
+  },
+  {
+   "name": "حمرور المقطع",
+   "name:en": "Hamrur al Maqta`",
+   "name:ar": "حمرور المقطع",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.0831,
+   "lat": 26.2295
+  },
+  {
+   "name": "باربار",
+   "name:en": null,
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4806,
+   "lat": 26.2292
+  },
+  {
+   "name": "عدامة كحيان",
+   "name:en": "Adamat Kuhayyan",
+   "name:ar": "عدامة كحيان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8983,
+   "lat": 26.2291
+  },
+  {
+   "name": "الخور",
+   "name:en": "Al Khawr",
+   "name:ar": "الخور",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2169,
+   "lat": 26.2274
+  },
+  {
+   "name": "الحمراء",
+   "name:en": "Al Hamra",
+   "name:ar": "الحمراء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2051,
+   "lat": 26.2264
+  },
+  {
+   "name": "جنوسان",
+   "name:en": null,
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4954,
+   "lat": 26.2261
+  },
+  {
+   "name": "التعاون",
+   "name:en": "At Taawun",
+   "name:ar": "التعاون",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.187,
+   "lat": 26.2249
+  },
+  {
+   "name": "خبة البقة",
+   "name:en": "Khabbat al Baqqah",
+   "name:ar": "خبة البقة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7782,
+   "lat": 26.2215
+  },
+  {
+   "name": "الدراز",
+   "name:en": null,
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4645,
+   "lat": 26.221
+  },
+  {
+   "name": "البديع",
+   "name:en": "Budaiya",
+   "name:ar": "البديع",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.4524,
+   "lat": 26.2156
+  },
+  {
+   "name": "مقابة",
+   "name:en": "Muqaba",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4954,
+   "lat": 26.2113
+  },
+  {
+   "name": "بني جمرة",
+   "name:en": "Bani Jamrah",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4642,
+   "lat": 26.2109
+  },
+  {
+   "name": "الجسر",
+   "name:en": "Al Jisr",
+   "name:ar": "الجسر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2053,
+   "lat": 26.2102
+  },
+  {
+   "name": "الخزامى",
+   "name:en": "Al Khuzama",
+   "name:ar": "الخزامى",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1863,
+   "lat": 26.2087
+  },
+  {
+   "name": "الشفاء",
+   "name:en": "Ash Shifa",
+   "name:ar": "الشفاء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1438,
+   "lat": 26.2072
+  },
+  {
+   "name": "ساروق الخشبيّات",
+   "name:en": "Saruq al Khushubiyat",
+   "name:ar": "ساروق الخشبيّات",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.0889,
+   "lat": 26.207
+  },
+  {
+   "name": "المرخ",
+   "name:en": "Al Markh",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4798,
+   "lat": 26.202
+  },
+  {
+   "name": "طعوس بن هسينن",
+   "name:en": null,
+   "name:ar": "طعوس بن هسينن",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.2025,
+   "lat": 26.2019
+  },
+  {
+   "name": "اشبيليا",
+   "name:en": "Ishbiliya",
+   "name:ar": "اشبيليا",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.2171,
+   "lat": 26.2016
+  },
+  {
+   "name": "القرية",
+   "name:en": null,
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4645,
+   "lat": 26.2011
+  },
+  {
+   "name": "البحيرة",
+   "name:en": "Al Buhayrah",
+   "name:ar": "البحيرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1789,
+   "lat": 26.1968
+  },
+  {
+   "name": "المها",
+   "name:en": "Al Maha",
+   "name:ar": "المها",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1304,
+   "lat": 26.1899
+  },
+  {
+   "name": "سار",
+   "name:en": "Saar",
+   "name:ar": "سار",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4942,
+   "lat": 26.1898
+  },
+  {
+   "name": "الصواري",
+   "name:en": "As Sawari",
+   "name:ar": "الصواري",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1492,
+   "lat": 26.1869
+  },
+  {
+   "name": "طعوس ابو شيبة",
+   "name:en": "Tu`us Abu Shaybah",
+   "name:ar": "طعوس ابو شيبة",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8163,
+   "lat": 26.1852
+  },
+  {
+   "name": "غرب العزيزية",
+   "name:en": "West Al Aziziyah",
+   "name:ar": "غرب العزيزية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.0889,
+   "lat": 26.1851
+  },
+  {
+   "name": "جزيرة الملك فهد",
+   "name:en": "King Fahd Passport Island",
+   "name:ar": "جزيرة الملك فهد",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.3248,
+   "lat": 26.1837
+  },
+  {
+   "name": "الجَنَبِيَة",
+   "name:en": "Janabiyah",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4661,
+   "lat": 26.1831
+  },
+  {
+   "name": "التحلية",
+   "name:en": "At Tahliyah",
+   "name:ar": "التحلية",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1972,
+   "lat": 26.1822
+  },
+  {
+   "name": "العزيزية",
+   "name:en": "Al `Aziziyah",
+   "name:ar": "العزيزية",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.1943,
+   "lat": 26.1806
+  },
+  {
+   "name": "الكظوم",
+   "name:en": "Al Kazzum",
+   "name:ar": "الكظوم",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.1692,
+   "lat": 26.1797
+  },
+  {
+   "name": "الرجاء",
+   "name:en": "Ar Raja",
+   "name:ar": "الرجاء",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1265,
+   "lat": 26.1681
+  },
+  {
+   "name": "الشراع",
+   "name:en": "Ash Sheraa",
+   "name:ar": "الشراع",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1471,
+   "lat": 26.1643
+  },
+  {
+   "name": "الكوثر",
+   "name:en": "Al Kawthar",
+   "name:ar": "الكوثر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1181,
+   "lat": 26.1487
+  },
+  {
+   "name": "الهملة",
+   "name:en": "Hamalah",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.483,
+   "lat": 26.1441
+  },
+  {
+   "name": "رأس منيسف",
+   "name:en": "Ras Munaysif",
+   "name:ar": "رأس منيسف",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.1731,
+   "lat": 26.1433
+  },
+  {
+   "name": "الأمواج",
+   "name:en": "Al Amwaj",
+   "name:ar": "الأمواج",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1449,
+   "lat": 26.1427
+  },
+  {
+   "name": "السفن",
+   "name:en": "As Sufun",
+   "name:ar": "السفن",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1643,
+   "lat": 26.1383
+  },
+  {
+   "name": "غونان",
+   "name:en": "Ghunan",
+   "name:ar": "غونان",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 49.8972,
+   "lat": 26.1336
+  },
+  {
+   "name": "دِمِسْتان",
+   "name:en": null,
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4775,
+   "lat": 26.1255
+  },
+  {
+   "name": "اللؤلؤ",
+   "name:en": "Al Loaloa",
+   "name:ar": "اللؤلؤ",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1423,
+   "lat": 26.1201
+  },
+  {
+   "name": "المرجان",
+   "name:en": "Al Murjan",
+   "name:ar": "المرجان",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1167,
+   "lat": 26.118
+  },
+  {
+   "name": "كرزكان",
+   "name:en": "Karzakan",
+   "name:ar": "كرزكان",
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.481,
+   "lat": 26.1138
+  },
+  {
+   "name": "شاطئ نصف القمر",
+   "name:en": "Half Moon Beach",
+   "name:ar": "شاطئ نصف القمر",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1099,
+   "lat": 26.1088
+  },
+  {
+   "name": "المالكية",
+   "name:en": "Malkiya",
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4852,
+   "lat": 26.0996
+  },
+  {
+   "name": "العقيق",
+   "name:en": "Al Aqiq",
+   "name:ar": "العقيق",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1426,
+   "lat": 26.0966
+  },
+  {
+   "name": "خبّ أبا الحيّات",
+   "name:en": "Khabb Aba al Hayyat",
+   "name:ar": "خبّ أبا الحيّات",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8604,
+   "lat": 26.0905
+  },
+  {
+   "name": "ابا الدفوف",
+   "name:en": "Aba ad Dufuf",
+   "name:ar": "ابا الدفوف",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.6877,
+   "lat": 26.0887
+  },
+  {
+   "name": "صدد",
+   "name:en": null,
+   "name:ar": null,
+   "kind": "locality",
+   "kind_detail": "village",
+   "lon": 50.4923,
+   "lat": 26.0841
+  },
+  {
+   "name": "خبوب مرضية",
+   "name:en": "Khubub Murdiyah",
+   "name:ar": "خبوب مرضية",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.8939,
+   "lat": 26.0797
+  },
+  {
+   "name": "الدرة",
+   "name:en": "Al Durra",
+   "name:ar": "الدرة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 50.1349,
+   "lat": 26.0673
+  },
+  {
+   "name": "نقا المحارث",
+   "name:en": "Naqa al Miharath",
+   "name:ar": "نقا المحارث",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9833,
+   "lat": 26.0667
+  },
+  {
+   "name": "الزلاق",
+   "name:en": "Zallaq",
+   "name:ar": "الزلاق",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 50.487,
+   "lat": 26.0485
+  },
+  {
+   "name": "علاة ابا القعدان",
+   "name:en": "`Alat Aba al Qi`dan",
+   "name:ar": "علاة ابا القعدان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.7269,
+   "lat": 26.0398
+  },
+  {
+   "name": "رأس الخثاق",
+   "name:en": null,
+   "name:ar": "رأس الخثاق",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.1336,
+   "lat": 26.0292
+  },
+  {
+   "name": "بقيق 2",
+   "name:en": "Buqayq 2",
+   "name:ar": "بقيق 2",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.714,
+   "lat": 26.0277
+  },
+  {
+   "name": "طعوس أبا الحيات",
+   "name:en": null,
+   "name:ar": "طعوس أبا الحيات",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.85,
+   "lat": 26.0167
+  },
+  {
+   "name": "زبنة ظلوم",
+   "name:en": "Zabnat Zulum",
+   "name:ar": "زبنة ظلوم",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.0686,
+   "lat": 25.9869
+  },
+  {
+   "name": "الدنان",
+   "name:en": "Ad Danan",
+   "name:ar": "الدنان",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 49.9493,
+   "lat": 25.9574
+  },
+  {
+   "name": "خليج البحرين",
+   "name:en": "Gulf of Bahrain",
+   "name:ar": "خليج البحرين",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.3596,
+   "lat": 25.9452
+  },
+  {
+   "name": "بقيق",
+   "name:en": "Abqaiq",
+   "name:ar": "بقيق",
+   "kind": "locality",
+   "kind_detail": "town",
+   "lon": 49.6683,
+   "lat": 25.9356
+  },
+  {
+   "name": "قرية",
+   "name:en": "Qurayyah",
+   "name:ar": "قرية",
+   "kind": "locality",
+   "kind_detail": "locality",
+   "lon": 50.1189,
+   "lat": 25.9314
+  },
+  {
+   "name": "المدينة",
+   "name:en": "Al Madinah",
+   "name:ar": "المدينة",
+   "kind": "neighbourhood",
+   "kind_detail": "neighbourhood",
+   "lon": 49.6617,
+   "lat": 25.9246
+  }
+ ],
+ "failures": [],
+ "result": "PASS"
+}

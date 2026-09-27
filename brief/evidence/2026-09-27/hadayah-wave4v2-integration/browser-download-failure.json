@@ -1,0 +1,15 @@
+{
+  "ok": true,
+  "result": {
+    "downloadFailures": 1,
+    "pointerUnchanged": true,
+    "caches": [
+      "hadayah-offline-meta-v2",
+      "hadayah-offline-v2-2ad23ada-d11c-40b5-a7b5-effc340480bb"
+    ],
+    "locks": {
+      "held": [],
+      "pending": []
+    }
+  }
+}

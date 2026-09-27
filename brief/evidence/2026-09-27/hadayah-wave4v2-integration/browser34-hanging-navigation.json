@@ -1,0 +1,7 @@
+{
+  "result": {
+    "ok": true
+  },
+  "network": "server accepts but sends no headers; normal DNS; browser context online",
+  "milliseconds": 4072
+}

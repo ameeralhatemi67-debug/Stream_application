@@ -1,0 +1,971 @@
+00:00 +0: loading C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart
+00:00 +0: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:00 +0: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.0 BroadcastType.offline
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+unhandled element <defs/>; Picture key: Svg loader
+00:02 +1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.0 BroadcastType.liveVideo
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=320.0 text=1.0 BroadcastType.liveVideo
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:13 +1 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.0 BroadcastType.liveVideo [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=1.0 BroadcastType.liveVideo
+  
+00:13 +1 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.0 BroadcastType.liveAudio
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=320.0 text=1.0 BroadcastType.liveAudio
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:17 +1 -2: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.0 BroadcastType.liveAudio [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=1.0 BroadcastType.liveAudio
+  
+00:17 +1 -2: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.6 BroadcastType.offline
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:17 +2 -2: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.6 BroadcastType.liveVideo
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=320.0 text=1.6 BroadcastType.liveVideo
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:21 +2 -3: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.6 BroadcastType.liveVideo [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=1.6 BroadcastType.liveVideo
+  
+00:21 +2 -3: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.6 BroadcastType.liveAudio
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=320.0 text=1.6 BroadcastType.liveAudio
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:23 +2 -4: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=1.6 BroadcastType.liveAudio [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=1.6 BroadcastType.liveAudio
+  
+00:23 +2 -4: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=2.0 BroadcastType.offline
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+
+Warning: A call to tap() with finder "Found 1 widget with type "ListTile" that are ancestors of widget with text "Selected Venue": [
+  ListTile(dense: true, onTap: Closure: () => void, dependencies: [Directionality, InheritedCupertinoTheme, _InheritedTheme, _LocalizationsScope-[GlobalKey#fc0a4]]),
+]" derived an Offset (Offset(72.0, 599.5)) that would not hit test on the specified widget.
+Maybe the widget is actually off-screen, or another widget is obscuring it, or the widget cannot receive pointer events.
+The finder corresponds to this RenderBox: RenderSemanticsAnnotations#44ee5 relayoutBoundary=up26
+The hit test result at that offset is: HitTestResult(HitTestEntry<HitTestTarget>#fb614(TextSpan(debugLabel: ((englishLike bodyMedium 2021).merge(((((blackMountainView bodyMedium).apply).apply).apply).merge(unknown))).merge(unknown), inherit: false, color: Color(alpha: 1.0000, red: 0.2824, green: 0.3333, blue: 0.3294, colorSpace: ColorSpace.sRGB), family: IBM Plex Sans, familyFallback: [IBM Plex Sans Arabic, IBM Plex Sans], size: 15.0, weight: 400, letterSpacing: 0.0, baseline: alphabetic, height: 1.4x, leadingDistribution: even, decoration: Color(alpha: 1.0000, red: 0.1255, green: 0.1686, blue: 0.1686, colorSpace: ColorSpace.sRGB) TextDecoration.none, "The map files could not be read. Venue pins and the list still work.")), RenderParagraph#4c8e7@Offset(43.0, 398.5), RenderFlex#13ee7@Offset(43.0, 570.5), RenderSemanticsAnnotations#22a2f@Offset(43.0, 570.5), RenderPadding#02459@Offset(56.0, 583.5), RenderDecoratedBox#aa486@Offset(56.0, 583.5), RenderConstrainedBox#c81ce@Offset(56.0, 583.5), RenderPadding#33a67@Offset(72.0, 599.5), RenderPositionedBox#a50ea@Offset(72.0, 599.5), RenderStack#9086c@Offset(72.0, 599.5), _RenderLayoutBuilder#65e13@Offset(72.0, 599.5), RenderFlex#50727@Offset(72.0, 599.5), RenderCustomMultiChildLayoutBox#bc482@Offset(72.0, 599.5), _RenderInkFeatures#074c4@Offset(72.0, 599.5), RenderPhysicalModel#2d1c9@Offset(72.0, 599.5), RenderSemanticsAnnotations#e1539@Offset(72.0, 599.5), RenderRepaintBoundary#2614f@Offset(72.0, 599.5), RenderIgnorePointer#31ab3@Offset(72.0, 599.5), RenderAnimatedOpacity#1886b@Offset(72.0, 599.5), RenderAnimatedOpacity#469f3@Offset(72.0, 599.5), _RenderColoredBox#8e773@Offset(72.0, 599.5), RenderAnimatedOpacity#e5944@Offset(72.0, 599.5), RenderIgnorePointer#7ba82@Offset(72.0, 599.5), RenderAnimatedOpacity#afcb9@Offset(72.0, 599.5), RenderRepaintBoundary#7328f@Offset(72.0, 599.5), RenderSemanticsAnnotations#09e83@Offset(72.0, 599.5), RenderOffstage#bcaf7@Offset(72.0, 599.5), RenderSemanticsAnnotations#7d056@Offset(72.0, 599.5), _RenderTheater#4f734@Offset(72.0, 599.5), RenderAbsorbPointer#7ad2f@Offset(72.0, 599.5), RenderPointerListener#89935@Offset(72.0, 599.5), RenderSemanticsAnnotations#bc1f7@Offset(72.0, 599.5), RenderCustomPaint#2f862@Offset(72.0, 599.5), RenderSemanticsAnnotations#26936@Offset(72.0, 599.5), RenderSemanticsAnnotations#796a0@Offset(72.0, 599.5), RenderSemanticsAnnotations#6bb9d@Offset(72.0, 599.5), RenderTapRegionSurface#b5242@Offset(72.0, 599.5), RenderSemanticsAnnotations#b0bb6@Offset(72.0, 599.5), RenderSemanticsAnnotations#db81b@Offset(72.0, 599.5), HitTestEntry<HitTestTarget>#9c7f5(_ReusableRenderView#bd87e), HitTestEntry<HitTestTarget>#40e32(<AutomatedTestWidgetsFlutterBinding>))
+#0      WidgetController._getElementPoint (package:flutter_test/src/controller.dart:2144:25)
+#1      WidgetController.getCenter (package:flutter_test/src/controller.dart:1928:12)
+#2      WidgetController.tap (package:flutter_test/src/controller.dart:1061:7)
+#3      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:156:26)
+<asynchronous suspension>
+#4      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#5      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+#6      StackZoneSpecification._registerCallback.<anonymous closure> (package:stack_trace/src/stack_zone_specification.dart:114:42)
+<asynchronous suspension>
+To silence this warning, pass "warnIfMissed: false" to "tap()".
+To make this warning fatal, set WidgetController.hitTestWarningShouldBeFatal to true.
+
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 72 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column
+  Column:file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/lib/features/map/presentation/widgets/map_status_details.dart:267:16
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#13ee7 relayoutBoundary=up10 OVERFLOWING:
+  creator: Column ← Semantics ← Padding ← DecoratedBox ← ConstrainedBox ← Container ←
+    MapPackStatusCard ← Padding ← Align ← ListenableBuilder ← Stack ← LayoutBuilder ← ⋯
+  parentData: <none> (can use size)
+  constraints: BoxConstraints(0.0<=w<=262.0, 0.0<=h<=742.0)
+  size: Size(262.0, 742.0)
+  direction: vertical
+  mainAxisAlignment: start
+  mainAxisSize: min
+  crossAxisAlignment: start
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: exactly one matching candidate
+  Actual: _TypeWidgetFinder:<Found 0 widgets with type "MarkerSummaryCard": []>
+   Which: means none were found but one was expected
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:158:13)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart line 158
+The test description was:
+  selected card en width=320.0 text=2.0 BroadcastType.offline
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:24 +2 -5: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=2.0 BroadcastType.offline [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=2.0 BroadcastType.offline
+  
+00:24 +2 -5: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=2.0 BroadcastType.liveVideo
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 72 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column
+  Column:file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/lib/features/map/presentation/widgets/map_status_details.dart:267:16
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#88d91 relayoutBoundary=up10 OVERFLOWING:
+  creator: Column ← Semantics ← Padding ← DecoratedBox ← ConstrainedBox ← Container ←
+    MapPackStatusCard ← Padding ← Align ← ListenableBuilder ← Stack ← LayoutBuilder ← ⋯
+  parentData: <none> (can use size)
+  constraints: BoxConstraints(0.0<=w<=262.0, 0.0<=h<=742.0)
+  size: Size(262.0, 742.0)
+  direction: vertical
+  mainAxisAlignment: start
+  mainAxisSize: min
+  crossAxisAlignment: start
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=320.0 text=2.0 BroadcastType.liveVideo
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:27 +2 -6: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=2.0 BroadcastType.liveVideo [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=2.0 BroadcastType.liveVideo
+  
+00:27 +2 -6: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=2.0 BroadcastType.liveAudio
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY RENDERING LIBRARY ╞═════════════════════════════════════════════════════════
+The following assertion was thrown during layout:
+A RenderFlex overflowed by 72 pixels on the bottom.
+
+The relevant error-causing widget was:
+  Column
+  Column:file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/lib/features/map/presentation/widgets/map_status_details.dart:267:16
+
+The overflowing RenderFlex has an orientation of Axis.vertical.
+The edge of the RenderFlex that is overflowing has been marked in the rendering with a yellow and
+black striped pattern. This is usually caused by the contents being too big for the RenderFlex.
+Consider applying a flex factor (e.g. using an Expanded widget) to force the children of the
+RenderFlex to fit within the available space instead of being sized to their natural size.
+This is considered an error condition because it indicates that there is content that cannot be
+seen. If the content is legitimately bigger than the available space, consider clipping it with a
+ClipRect widget before putting it in the flex, or using a scrollable container rather than a Flex,
+like a ListView.
+The specific RenderFlex in question is: RenderFlex#eca43 relayoutBoundary=up10 OVERFLOWING:
+  creator: Column ← Semantics ← Padding ← DecoratedBox ← ConstrainedBox ← Container ←
+    MapPackStatusCard ← Padding ← Align ← ListenableBuilder ← Stack ← LayoutBuilder ← ⋯
+  parentData: <none> (can use size)
+  constraints: BoxConstraints(0.0<=w<=262.0, 0.0<=h<=742.0)
+  size: Size(262.0, 742.0)
+  direction: vertical
+  mainAxisAlignment: start
+  mainAxisSize: min
+  crossAxisAlignment: start
+  textDirection: ltr
+  verticalDirection: down
+  spacing: 0.0
+◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤◢◤
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=320.0 text=2.0 BroadcastType.liveAudio
+════════════════════════════════════════════════════════════════════════════════════════════════════
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following message was thrown:
+Multiple exceptions (2) were detected during the running of the current test, and at least one was
+unexpected.
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:30 +2 -7: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=320.0 text=2.0 BroadcastType.liveAudio [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=2.0 BroadcastType.liveAudio
+  
+00:30 +2 -7: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.0 BroadcastType.offline
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:30 +3 -7: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.0 BroadcastType.liveVideo
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=360.0 text=1.0 BroadcastType.liveVideo
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:33 +3 -8: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.0 BroadcastType.liveVideo [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=360.0 text=1.0 BroadcastType.liveVideo
+  
+00:33 +3 -8: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.0 BroadcastType.liveAudio
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=360.0 text=1.0 BroadcastType.liveAudio
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:36 +3 -9: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.0 BroadcastType.liveAudio [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=360.0 text=1.0 BroadcastType.liveAudio
+  
+00:36 +3 -9: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.6 BroadcastType.offline
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:37 +4 -9: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.6 BroadcastType.liveVideo
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following assertion was thrown running a test:
+pumpAndSettle timed out
+
+When the exception was thrown, this was the stack:
+#0      WidgetTester.pumpAndSettle.<anonymous closure> (package:flutter_test/src/widget_tester.dart:717:11)
+<asynchronous suspension>
+#1      TestAsyncUtils.guard.<anonymous closure> (package:flutter_test/src/test_async_utils.dart:130:27)
+<asynchronous suspension>
+#2      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:153:13)
+<asynchronous suspension>
+#3      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#4      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+The test description was:
+  selected card en width=360.0 text=1.6 BroadcastType.liveVideo
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:39 +4 -10: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.6 BroadcastType.liveVideo [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=360.0 text=1.6 BroadcastType.liveVideo
+  
+00:39 +4 -10: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart: selected card en width=360.0 text=1.6 BroadcastType.liveAudio

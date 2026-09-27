@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "34d074a5c577cd35944813f0a3db5315f4c85e96",
+  "changedSourcePaths": [],
+  "sourceUnchanged": true,
+  "artifactsAndConfigurationUnchanged": {
+    "android": true,
+    "web": true,
+    "configuration": true
+  },
+  "scope": "project, supabase and build scripts; documentation/evidence closure only"
+}

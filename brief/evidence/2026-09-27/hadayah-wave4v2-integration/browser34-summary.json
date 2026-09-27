@@ -1,0 +1,17 @@
+{
+  "finalBuild": "34d074a-local-diag-1",
+  "requiredFiles": 52,
+  "allOffline200": true,
+  "finalJsMatchesArtifact": true,
+  "oldBuild": "7cab6d0-local-diag-1",
+  "oldJsUnchanged": true,
+  "distinctRealBuilds": true,
+  "atomicFaultPreservedOld": true,
+  "faultLocksClear": true,
+  "settledAfterStorm": true,
+  "coldVisualInspection": [
+    "browser34-cold-ar-avatars.png",
+    "browser34-cold-ar-map.png"
+  ],
+  "hangingNavigationMs": 4072
+}

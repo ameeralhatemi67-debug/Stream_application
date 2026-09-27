@@ -1,0 +1,22 @@
+{
+  "ok": true,
+  "result": {
+    "build": "integration-audit-3",
+    "files": 52,
+    "missing": [],
+    "arabic": [
+      "http://127.0.0.1:56090/assets/assets/fonts/IBMPlexSansArabic-400.ttf",
+      "http://127.0.0.1:56090/assets/assets/fonts/IBMPlexSansArabic-700.ttf",
+      "https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvvnCBFQLaig.woff2"
+    ],
+    "images": 30,
+    "caches": [
+      "hadayah-offline-meta-v2",
+      "hadayah-offline-v2-ee8bb297-a639-4397-beb3-ee8bb25b0a5a"
+    ],
+    "locks": {
+      "held": [],
+      "pending": []
+    }
+  }
+}

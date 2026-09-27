@@ -6,6 +6,12 @@ Updated: 2026-09-27. This is a local troubleshooting record, not proof that the 
 
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
 
+- **Selected venue card overflows Arabic narrow screen** — repaired in integration; populated 320–412dp matrix, physical acceptance pending.
+- **Offline save mixes application generations or loses page pins** — immutable publication, build identity and acknowledged durable client pins; local browser/worker faults verified.
+- **Organization reload invents a venue and application city fails constraint** — approved public application projection and all existing city choices; local SQL/privacy tests pass.
+- **Flutter test shard loses lazy organization branch** — test pixel ratio leaked; reset and scroll to verify the last branch.
+- **Chrome Cache.put InvalidAccessError in long test profile path** — short isolated profile works; precise browser filesystem cause unconfirmed.
+
 - **Phone retry loses authority or mute intent** — bounded fresh-authority recovery and native generation/intent guards; physical recovery pending.
 - **Viewer controls toggle covered by status row** — confirmed and unconfirmed states repaired; physical hit testing pending.
 - **Native emulator ANR and sparse output** — unresolved; not a native UX pass.
@@ -324,3 +330,33 @@ Cause: the new custom fit/crop geometry could override the SDK's video-hide mech
 Fix/workaround: setStreamViewPort(null) while audioOnly is true, including rotation/resize/reconnect synchronization. Restore framing when showing video.
 Verification: final native receiver gets a black frame after Hide video. Camera remains active by existing design; this does not prove resource release while hidden.
 Evidence: `brief/evidence/2026-09-27/p6s-camera-landscape/received-final-49.png`.
+
+## Selected venue card overflows Arabic narrow screen
+Status: FIXED locally; physical acceptance pending.
+Observed: Row actions/badges and fixed popup size clipped selected venue actions at narrow widths and large text.
+Cause/fix: Wrap actions/badges;48dp targets and a scrollable selected overlay. Related short End/failure surfaces scroll.
+Verification:72 populated en/ar card combinations,320/360/384/412dp,1/1.6/2x; integration evidence pack. Not an empty-map or phone PASS.
+
+## Offline save mixes application generations or loses page pins
+Status: FIXED in local verified paths; browser eviction and five-minute reserved-client grace remain explicit limits.
+Observed: Map-only readiness missed app updates, file-wise promotion could mix generations, worker restart/first claim/pruning lost page identity.
+Fix: Build+pack identity, hashed app files, immutable generations/atomic pointer, bounded fetch, Web Locks, durable pins, page-build acknowledgement and controllerchange retry. Failed Dart callbacks settle JS lock promises before rethrowing.
+Verification: Real Chrome publication/download faults, cold Arabic startup,52-file inventory, worker restart/hang/multi-tab; deterministic actual-worker and HTML-script regressions. See integration VERIFICATION for artifact scope.
+
+## Organization reload invents a venue and application city fails constraint
+Status: FIXED locally; configured owner flow pending.
+Observed: Public reader assigned every organization Khobar coordinates; four offered application cities failed a new three-city constraint.
+Fix: Persist all existing application city choices separately from map scope. Organization public location comes only from a linked approved organization application with matching owner. Unknown remains unknown; private branch rows stay private and unchanged; no0,0 directions in branch sheet.
+Verification: Application/HTTP catalog regressions and fresh SQL including foreign/pending/individual links, combined owner/reference attack and exact-coordinate retention.
+
+## Flutter test shard loses lazy organization branch
+Status: FIXED test isolation.
+Observed: TC-ORG-UI-04 failed alone/in shard5 because a previous test left devicePixelRatio altered and the assertion expected an offscreen lazy row.
+Fix: Reset pixel ratio in teardown; scroll to third branch, retaining all three names/seating assertions.
+Verification: Full six-test organization profile file passes independently; final full-suite results in integration evidence. Separate host JIT OOM attempts remain failed logs.
+
+## Chrome Cache.put InvalidAccessError in long test profile path
+Status: UNRESOLVED precise cause; working isolated-profile alternative verified.
+Observed: Every put, including unrelated fresh-cache keys, failed in the deeply nested disposable integration profile. Identical candidate passed in a short temporary profile.
+Action: Preserve failed profile; use short dedicated test profile and capture Chromium filesystem diagnostics if repeated. Do not patch app behavior or clear owner caches to hide it.
+Verification: Initial-page acknowledgement and all52 offline assets pass under the short profile. Path/profile-related explanation is an inference, not proven Chromium root cause.

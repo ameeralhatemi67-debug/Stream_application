@@ -1,0 +1,7 @@
+{"test":"different-watch-replacement","endObservedWaiting":true,"passed":true,"result":{"live":true,"watch":"RACENEW0001","state":"live"}}
+{"test":"same-watch-replacement","endObservedWaiting":true,"passed":true,"result":{"live":true,"watch":"RACEOLD0001","state":"live"}}
+{"test":"expiry-versus-replacement","sweepObservedWaiting":false,"passed":true,"result":"live"}
+starter: WARNING:  there is no transaction in progress
+starter: WARNING:  there is no transaction in progress
+observer: WARNING:  there is no transaction in progress
+ender: WARNING:  there is no transaction in progress

@@ -1,0 +1,7 @@
+{
+  "reload": {
+    "ok": true
+  },
+  "milliseconds": 4082,
+  "network": "origin accepts request but never sends headers; normal DNS context"
+}
