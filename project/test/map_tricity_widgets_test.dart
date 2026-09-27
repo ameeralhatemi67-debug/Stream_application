@@ -136,6 +136,61 @@ void main() {
   });
   tearDown(() => MapPackController.debugShared = null);
 
+  testWidgets(
+      'selected pin survives clusters, pulses and clears on leaving map',
+      (tester) async {
+    final venue = mockStreamers.first;
+    final provider = AppProvider(AdminDatabaseService(null))
+      ..debugSetOnlineForTests(true)
+      ..addStreamerForTests(venue)
+      ..addStreamerForTests(venue.copyWith(streamerId: 'overlapping'));
+    final pack = _unavailablePack();
+    final active = ValueNotifier(true);
+    await tester.pumpWidget(_app(
+        ValueListenableBuilder<bool>(
+          valueListenable: active,
+          builder: (context, enabled, child) => TickerMode(
+            enabled: enabled,
+            child: SpatialMapScreen(packController: pack),
+          ),
+        ),
+        provider));
+    await tester.pumpAndSettle();
+    // Select from the drawer while two profiles occupy the same coordinate.
+    tester.state<ScaffoldState>(find.byType(Scaffold).first).openEndDrawer();
+    await tester.pumpAndSettle();
+    tester
+        .widget<StreamerSlidingDrawer>(find.byType(StreamerSlidingDrawer))
+        .onStreamerSelected(venue);
+    tester.state<ScaffoldState>(find.byType(Scaffold).first).closeEndDrawer();
+    await tester.pump(const Duration(milliseconds: 900));
+    await tester.pump();
+    expect(find.byType(MarkerSummaryCard), findsOneWidget);
+    final selected = find.byWidgetPredicate(
+        (widget) => widget is SpatialStreamerMarker && widget.isSelected);
+    expect(selected, findsOneWidget);
+    final pulse = find.byKey(ValueKey('selection-pulse-${venue.streamerId}'));
+    double scale() => tester.widget<Transform>(pulse).transform.storage[0];
+    final first = scale();
+    await tester.pump(const Duration(milliseconds: 450));
+    expect(scale(), isNot(closeTo(first, 0.001)));
+    final map = tester.widget<FlutterMap>(find.byType(FlutterMap));
+    map.mapController!.move(map.mapController!.camera.center, 12);
+    await tester.pump();
+    expect(selected, findsOneWidget);
+    active.value = false;
+    await tester.pump();
+    active.value = true;
+    await tester.pumpAndSettle();
+    expect(find.byType(MarkerSummaryCard), findsNothing);
+    expect(selected, findsNothing);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+    active.dispose();
+    pack.dispose();
+    provider.dispose();
+  });
+
   testWidgets('legacy pin and drawer both open the saved profile card',
       (tester) async {
     tester.view.physicalSize = const Size(412, 860);

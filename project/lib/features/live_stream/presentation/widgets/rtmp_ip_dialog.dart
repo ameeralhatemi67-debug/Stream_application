@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/interactive_toast_overlay.dart';
+import '../../../../core/widgets/language_switcher.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/stream_privacy_models.dart';
 import '../../services/rtmp_publish_engine.dart'
@@ -361,6 +362,18 @@ class _LiveBroadcasterStudioSheetState
             ],
           ),
         ),
+        const SizedBox(width: AppTheme.spaceSm),
+        Tooltip(
+          message: isAr ? 'English' : 'العربية',
+          child: const SizedBox(
+            width: 48,
+            height: 48,
+            child: LanguageSwitcher(
+              showLabel: false,
+              padding: EdgeInsets.all(14),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -580,14 +593,10 @@ class _LiveBroadcasterStudioSheetState
     );
   }
 
-  /// Opens the gamified "Streamer Academy"multi-step guide for whichever
-  /// mode is currently selected. "Paste Key from Clipboard"inside the
-  /// guide writes straight back into this sheet's own stream key field
-  /// (the single source of truth Phone mode submits -- see the class doc's
-  /// root-cause note), not into AppProvider directly, so the field the
-  /// streamer sees here updates immediately once the guide closes.
-  Widget _infoButton() {
+  /// Opens the relevant help page without reading or copying secrets.
+  Widget _infoButton({int page = 0}) {
     return IconButton(
+      key: _mode == StudioMode.phone ? Key('studio-phone-help-$page') : null,
       icon: const Icon(Icons.info_outline_rounded,
           color: AppTheme.live, size: 20),
       tooltip: 'live_studio.setup_guide_tooltip'.tr(),
@@ -595,8 +604,9 @@ class _LiveBroadcasterStudioSheetState
         context,
         mode: _mode,
         externalSender: _externalSender,
+        initialPage: page,
       ),
-      constraints: const BoxConstraints(),
+      constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
       padding: EdgeInsets.zero,
     );
   }
@@ -814,7 +824,10 @@ class _LiveBroadcasterStudioSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionLabel('design_copy.youtube_live_link'.tr()),
+        Row(children: [
+          Expanded(child: _sectionLabel('design_copy.youtube_live_link'.tr())),
+          _infoButton(),
+        ]),
         const SizedBox(height: AppTheme.spaceSm),
         _watchUrlField(),
         const SizedBox(height: AppTheme.spaceMd),
@@ -834,7 +847,7 @@ class _LiveBroadcasterStudioSheetState
           children: [
             Expanded(
                 child: _sectionLabel('design_copy.youtube_stream_key'.tr())),
-            _infoButton(),
+            _infoButton(page: 1),
           ],
         ),
         const SizedBox(height: AppTheme.spaceSm),

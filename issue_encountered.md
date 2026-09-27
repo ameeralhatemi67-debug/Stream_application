@@ -4,6 +4,8 @@ Updated: 2026-09-27. This is a local troubleshooting record, not proof that the 
 
 ## Issue-name index — scan this list first
 
+- **Selected map pin disappears at close zoom** — source suppression removed; selected pin retained and pulses, device confirmation pending.
+
 - **Spatial Map and drawer hide legacy profiles with saved pins** — shared city filter repaired locally; owner confirmation pending.
 - **Edit Account Profile dropdown crashes for cs_tech** — saved category retained exactly once; editor/save regression passes.
 - **Gradle daemon disappears with native memory exhaustion** — confirmed Windows memory exhaustion before Android launch; recovery/rebuild pending.
@@ -404,3 +406,11 @@ Observed: BroadcasterApplicationSheet throws DropdownButton's exactly-one-item a
 Cause: Registration/legacy/custom category IDs can differ from the editor's five hardcoded DropdownMenuItem values. The editor restored the saved value without including it in the available items.
 Fix: Combine existing choices and provider categories, deduplicate by ID, and include the saved category even if legacy/custom/inactive. Keep the original saved ID unless the user changes it; no forced category migration.
 Verification: Widget tests open and submit the sheet for computer_science, cs_tech and custom_subject, assert exactly one matching item, no widget error and unchanged submitted category. Full verification evidence: brief/evidence/2026-09-27/map-profile-repair/README.md. No hosted backend write or device acceptance claimed.
+
+
+## Selected map pin disappears at close zoom
+Status: REPAIRED locally; owner device retest pending.
+Observed: Owner reports a profile pin disappears after selection while its summary card remains.
+Cause: The live marker builder skipped selected markers at zoom >=13.5, assuming an anchored card would replace them. The actual summary card is a separate bottom overlay.
+Fix: Always retain the selected marker at its exact coordinates and exclude it from cluster membership while selected. Reuse its animation controller for a 1.0–1.16 size pulse; reset when deselected, TickerMode is inactive or reduced motion is requested. Clear map selection when its tab is hidden, so returning does not restart a stale selection.
+Verification: Widget regression selects overlapping profiles, checks the selected marker/card remain together, observes scale change, zooms out and leaves/returns to the map. The 143-test map file passes, including the existing card-size matrix. Full result is recorded in brief/evidence/2026-09-27/studio-pin/VERIFICATION.md. Device playback is not claimed; the supplied MP4 could not be opened by the browser's file-URL policy.

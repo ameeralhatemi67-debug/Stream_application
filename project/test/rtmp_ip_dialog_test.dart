@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
+import 'package:streamer_app/core/widgets/language_switcher.dart';
 import 'package:streamer_app/core/widgets/interactive_toast_overlay.dart';
 import 'package:streamer_app/features/live_stream/models/stream_privacy_models.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/rtmp_ip_dialog.dart';
@@ -119,6 +120,41 @@ void main() {
     }
 
     for (final locale in [const Locale('en'), const Locale('ar')]) {
+      testWidgets(
+          'studio language switch ${locale.languageCode} mirrors and keeps the draft',
+          (tester) async {
+        useTallTestSurface(tester);
+        await tester.pumpWidget(createTestWidget(
+            child: const LiveBroadcasterStudioSheet(),
+            provider: provider,
+            locale: locale));
+        await tester.pumpAndSettle();
+        final toggle = find.byType(LanguageSwitcher);
+        expect(tester.widget<LanguageSwitcher>(toggle).showLabel, isFalse);
+        final title = findByHint(localized(
+            locale.languageCode == 'ar' ? globalArData : globalEnData,
+            'live_studio.title_hint'));
+        await tester.enterText(title, 'Keep this draft');
+        double headingX() =>
+            tester.getCenter(find.text('live_studio.director_title'.tr())).dx;
+        expect(
+            tester.getCenter(toggle).dx,
+            locale.languageCode == 'ar'
+                ? lessThan(headingX())
+                : greaterThan(headingX()));
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+        expect(
+            tester.getCenter(toggle).dx,
+            locale.languageCode == 'ar'
+                ? greaterThan(headingX())
+                : lessThan(headingX()));
+        expect(find.text('Keep this draft'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.tap(toggle);
+        await tester.pumpAndSettle();
+      });
+
       testWidgets(
           'TC-STUDIO-20 (${locale.languageCode}): tapping every mode tab '
           'shows that mode\'s own fields, never another mode\'s -- '
@@ -543,11 +579,25 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Phone'));
       await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.info_outline_rounded));
+      await tester.tap(find.byKey(const Key('studio-phone-help-0')));
       await tester.pumpAndSettle();
 
       expect(find.text("This phone's camera"), findsOneWidget);
       expect(find.textContaining('Clipboard'), findsNothing);
+      expect(find.byKey(const Key('studio-guide-image-0')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('studio-guide-next')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('studio-guide-image-1')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('studio-guide-previous')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('studio-guide-image-0')), findsOneWidget);
+      await tester.tap(find.byTooltip('Close'));
+      await tester.pumpAndSettle();
+      final keyHelp = find.byKey(const Key('studio-phone-help-1'));
+      await tester.ensureVisible(keyHelp);
+      await tester.tap(keyHelp);
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('studio-guide-image-1')), findsOneWidget);
       expect(clipboardReads, 0);
     });
 

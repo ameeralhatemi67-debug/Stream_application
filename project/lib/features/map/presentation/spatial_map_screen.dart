@@ -48,7 +48,6 @@ class SpatialMapScreen extends StatefulWidget {
 class _SpatialMapScreenState extends State<SpatialMapScreen>
     with SingleTickerProviderStateMixin {
   static const MapViewportPolicy _policy = MapViewportPolicy();
-  static const double kAuditoriumCardZoomThreshold = 13.5;
   static const double kVenueFocusZoom = 15.5;
 
   late final MapController _mapController;
@@ -106,6 +105,12 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   }
 
   Timer? _catalogFreshnessTimer;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!TickerMode.valuesOf(context).enabled) _selectedStreamerId = null;
+  }
 
   @override
   void dispose() {
@@ -1094,18 +1099,25 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       valueListenable: _cameraRevision,
       builder: (context, revision, child) {
         final camera = MapCamera.of(context);
-        final bool showAuditoriumCards =
-            camera.zoom >= kAuditoriumCardZoomThreshold;
         if (displayedStreamers.isEmpty) {
           return const SizedBox.shrink();
         }
         final List<Marker> markerList = [];
         final groups = clusterMapPoints(
-          displayedStreamers.map((s) =>
-              MapClusterPoint(s.streamerId, LatLng(s.latitude, s.longitude))),
+          displayedStreamers
+              .where((s) => s.streamerId != selectedStreamer?.streamerId)
+              .map((s) => MapClusterPoint(
+                  s.streamerId, LatLng(s.latitude, s.longitude))),
           project: camera.projectAtZoom,
           unproject: camera.unprojectAtZoom,
         );
+        if (selectedStreamer != null) {
+          groups.add(MapClusterGroup(
+            'marker_${selectedStreamer.streamerId}',
+            [selectedStreamer.streamerId],
+            LatLng(selectedStreamer.latitude, selectedStreamer.longitude),
+          ));
+        }
         final byId = {for (final s in displayedStreamers) s.streamerId: s};
 
         for (final group in groups) {
@@ -1129,11 +1141,6 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
           final isSelected = _selectedStreamerId == streamer.streamerId;
           final markerModel = _mapStreamerToMarker(streamer);
           final isLive = markerModel.isLive;
-
-          if (isSelected && showAuditoriumCards) {
-            // Rendered as Anchored Summary Card at the absolute top of the layer below
-            continue;
-          }
 
           markerList.add(
             Marker(

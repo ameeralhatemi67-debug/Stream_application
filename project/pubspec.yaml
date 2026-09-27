@@ -91,6 +91,7 @@ flutter:
     - assets/images/Dalilak/
     - assets/images/quran/
     - assets/images/avatars/
+    - assets/images/studio_help/
 
   fonts:
     - family: IBM Plex Sans

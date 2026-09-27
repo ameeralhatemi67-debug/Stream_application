@@ -1535,6 +1535,12 @@
   },
   "broadcast_watch_link_blocked": "An administrator blocked this watch link from being listed in the app. Your broadcaster approval is unchanged. Create a new broadcast in YouTube Studio and use its new watch link.",
   "live_guide": {
+    "watch_help": "In YouTube Studio, open the broadcast you will use. Select Share (the arrow shown above), then copy its public watch link and paste it into YouTube Live Link. Use the link for the same broadcast as your stream key.",
+    "key_help": "In the same broadcast, open Stream settings. Beside the stream key, press Copy (shown above), then paste it into YouTube Stream Key. Keep it secret: never send it to viewers or paste it into the live-link field.",
+    "previous_page": "Previous page",
+    "next_page": "Next page",
+    "watch_image": "YouTube Studio Share button for the public watch link",
+    "key_image": "YouTube Studio Copy button beside the hidden stream key",
     "title_obs": "OBS on a computer",
     "title_phone_app": "Another phone app",
     "title_phone": "This phone's camera",

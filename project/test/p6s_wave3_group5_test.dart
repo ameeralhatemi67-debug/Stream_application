@@ -627,6 +627,19 @@ void main() {
           expect(find.text(title.tr()), findsOneWidget);
           // The old quest carousel (pages, Next Quest) is gone.
           expect(find.byType(PageView), findsNothing);
+          if (mode == StudioMode.phone) {
+            expect(
+                find.byKey(const Key('studio-guide-image-0')), findsOneWidget);
+            await tester.tap(find.byKey(const Key('studio-guide-next')));
+            await tester.pumpAndSettle();
+            expect(
+                find.byKey(const Key('studio-guide-image-1')), findsOneWidget);
+            expect(
+                find.ancestor(
+                    of: find.byKey(const Key('studio-guide-image-1')),
+                    matching: find.byType(ClipRRect)),
+                findsOneWidget);
+          }
           expect(find.byKey(const Key('studio-guide-link-vs-key')),
               mode == StudioMode.local ? findsNothing : findsOneWidget);
           expect(tester.takeException(), isNull);

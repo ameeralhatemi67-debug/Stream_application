@@ -14,8 +14,9 @@ import 'rtmp_ip_dialog.dart' show StudioMode;
 /// OBS on a computer and another phone app are external senders the app
 /// cannot see; the phone path keeps the screen open and ends on leave;
 /// Local is not available.
-class StreamerSetupGuideModal extends StatelessWidget {
+class StreamerSetupGuideModal extends StatefulWidget {
   final StudioMode mode;
+  final int initialPage;
 
   /// For [StudioMode.obs]: `obs_laptop` or `external_phone`.
   final String externalSender;
@@ -24,22 +25,34 @@ class StreamerSetupGuideModal extends StatelessWidget {
     super.key,
     required this.mode,
     this.externalSender = 'obs_laptop',
-  });
+    this.initialPage = 0,
+  }) : assert(initialPage == 0 || initialPage == 1);
 
   static Future<void> show(
     BuildContext context, {
     required StudioMode mode,
     String externalSender = 'obs_laptop',
+    int initialPage = 0,
   }) {
     return showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       barrierColor: AppTheme.media.withValues(alpha: 0.6),
-      builder: (_) =>
-          StreamerSetupGuideModal(mode: mode, externalSender: externalSender),
+      builder: (_) => StreamerSetupGuideModal(
+          mode: mode, externalSender: externalSender, initialPage: initialPage),
     );
   }
+
+  @override
+  State<StreamerSetupGuideModal> createState() =>
+      _StreamerSetupGuideModalState();
+}
+
+class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
+  late int _page = widget.initialPage;
+  StudioMode get mode => widget.mode;
+  String get externalSender => widget.externalSender;
 
   String get _section => switch (mode) {
         StudioMode.obs =>
@@ -49,6 +62,11 @@ class StreamerSetupGuideModal extends StatelessWidget {
       };
 
   List<String> get _stepKeys {
+    if (mode == StudioMode.phone) {
+      return _page == 0
+          ? ['live_guide.watch_help']
+          : ['live_guide.key_help', 'live_guide.phone_3', 'live_guide.phone_4'];
+    }
     final count = mode == StudioMode.local ? 3 : 4;
     return [for (var i = 1; i <= count; i++) 'live_guide.${_section}_$i'];
   }
@@ -113,6 +131,54 @@ class StreamerSetupGuideModal extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppTheme.spaceMd),
+              if (mode == StudioMode.phone) ...[
+                Row(
+                  children: [
+                    IconButton(
+                      key: const Key('studio-guide-previous'),
+                      tooltip: 'live_guide.previous_page'.tr(),
+                      onPressed:
+                          _page == 0 ? null : () => setState(() => _page = 0),
+                      icon: const Icon(Icons.arrow_back_rounded),
+                    ),
+                    Expanded(
+                      child: Semantics(
+                        liveRegion: true,
+                        child: Text(
+                          '${_page + 1} / 2 · ${(_page == 0 ? 'design_copy.youtube_live_link' : 'design_copy.youtube_stream_key').tr()}',
+                          key: const Key('studio-guide-page'),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                    ),
+                    IconButton(
+                      key: const Key('studio-guide-next'),
+                      tooltip: 'live_guide.next_page'.tr(),
+                      onPressed:
+                          _page == 1 ? null : () => setState(() => _page = 1),
+                      icon: const Icon(Icons.arrow_forward_rounded),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: AppTheme.spaceSm),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  child: Image.asset(
+                    _page == 0
+                        ? 'assets/images/studio_help/watch_link.png'
+                        : 'assets/images/studio_help/stream_key.png',
+                    key: ValueKey('studio-guide-image-$_page'),
+                    width: double.infinity,
+                    fit: BoxFit.contain,
+                    semanticLabel: (_page == 0
+                            ? 'live_guide.watch_image'
+                            : 'live_guide.key_image')
+                        .tr(),
+                  ),
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+              ],
               for (final (i, key) in _stepKeys.indexed)
                 Padding(
                   padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
