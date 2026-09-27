@@ -295,9 +295,12 @@ class _BrowserOfflineMapStore implements WebOfflineMapStore {
           detail: 'incomplete');
     }
     try {
-      // The worker must control later visits for the cache to be used.
-      await web.window.navigator.serviceWorker.ready.toDart
+      // Also bind the initially claimed page to its own build before Save.
+      final registered = await (web.window as JSObject)
+          .getProperty<JSPromise<JSBoolean>>('__hadayahPageReady'.toJS)
+          .toDart
           .timeout(const Duration(seconds: 15));
+      if (!registered.toDart) throw StateError('page registration failed');
     } catch (_) {
       return const WebOfflineStatus(WebOfflineState.failed,
           detail: 'unsupported');

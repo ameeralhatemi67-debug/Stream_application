@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../admin/models/broadcaster_application_model.dart';
 import '../widgets/location_picker_modal.dart';
 
 class OrgBranchVenue {
@@ -52,14 +53,9 @@ class ApplyStep4Location extends StatefulWidget {
     required this.onRemoveBranch,
   });
 
-  static const Map<String, String> cityOptions = {
-    'khobar': 'Al Khobar (الخبر)',
-    'dhahran': 'Dhahran (الظهران)',
-    'dammam': 'Dammam (الدمام)',
-    'ahsa': 'Al-Ahsa (الأحساء)',
-    'jubail': 'Jubail (الجبيل)',
-    'riyadh': 'Riyadh (الرياض)',
-    'other': 'Other KSA Region',
+  static final cityOptions = {
+    for (final city in BroadcasterApplicationModel.cityNames.entries)
+      city.key: '${city.value.nameEn} (${city.value.nameAr})',
   };
 
   @override

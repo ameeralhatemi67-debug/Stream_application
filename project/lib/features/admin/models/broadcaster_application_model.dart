@@ -15,6 +15,18 @@ enum ApplicationStatus {
 /// Comprehensive Model for Broadcaster & Organization Verification Applications
 @immutable
 class BroadcasterApplicationModel {
+  // Application availability is broader than the three-city discovery map.
+  static const cityNames = {
+    'khobar': (nameEn: 'Al Khobar', nameAr: 'الخبر'),
+    'dhahran': (nameEn: 'Dhahran', nameAr: 'الظهران'),
+    'dammam': (nameEn: 'Dammam', nameAr: 'الدمام'),
+    'ahsa': (nameEn: 'Al-Ahsa', nameAr: 'الأحساء'),
+    'jubail': (nameEn: 'Jubail', nameAr: 'الجبيل'),
+    'riyadh': (nameEn: 'Riyadh', nameAr: 'الرياض'),
+    'other': (nameEn: 'Other KSA Region', nameAr: 'منطقة أخرى في السعودية'),
+  };
+  ({String nameEn, String nameAr})? get city => cityNames[cityId];
+
   final String id;
   // The Supabase profiles.id of whoever submitted this application. Only
   // populated when loaded from the real backend (Checkpoint 3) -- null for

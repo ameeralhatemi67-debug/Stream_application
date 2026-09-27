@@ -17,7 +17,6 @@ import '../services/connectivity_service.dart';
 import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
 import '../../features/map/models/map_models.dart';
-import '../../features/map/models/map_tricity_domain.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -4484,9 +4483,12 @@ class AppProvider extends ChangeNotifier {
     // Stage 2: Create StreamerModel & Inject into Discovery Feed
     onProgress?.call(
         2, 'Creating Broadcaster card & integrating into Discovery Feed...');
-    final existingStreamer = _streamers.where((s) =>
-        s.streamerId == (realOrgId ?? applicantProfileId ?? 'streamer_${app.id}')).firstOrNull;
-    final applicationCity = cityViewById(app.cityId);
+    final existingStreamer = _streamers
+        .where((s) =>
+            s.streamerId ==
+            (realOrgId ?? applicantProfileId ?? 'streamer_${app.id}'))
+        .firstOrNull;
+    final applicationCity = app.city;
     final newStreamer = StreamerModel(
       streamerId: realOrgId ?? applicantProfileId ?? 'streamer_${app.id}',
       fullNameEn: app.applicantNameEn,
@@ -4784,12 +4786,14 @@ class AppProvider extends ChangeNotifier {
       followerCount: (row['follower_count'] as num?)?.toInt() ?? 0,
       categoryId: row['category_id'] as String? ?? 'general',
       tags: List<String>.from(row['tags'] as List? ?? const []),
-      cityEn: '',
-      cityAr: '',
-      venueNameEn: '',
-      venueNameAr: '',
-      latitude: 0,
-      longitude: 0,
+      cityEn:
+          BroadcasterApplicationModel.cityNames[row['city_id']]?.nameEn ?? '',
+      cityAr:
+          BroadcasterApplicationModel.cityNames[row['city_id']]?.nameAr ?? '',
+      venueNameEn: row['venue_name_en'] as String? ?? '',
+      venueNameAr: row['venue_name_ar'] as String? ?? '',
+      latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
       isCurrentlyLive: row['is_currently_live'] as bool? ?? false,
       isOrganization: true,
       youtubeHandle: row['youtube_handle'] as String? ?? '',

@@ -74,14 +74,22 @@
   -->
   <script>
     if ('serviceWorker' in navigator) {
+      window.__hadayahPageReady = new Promise(function (resolve) {
       window.addEventListener('load', function () {
         navigator.serviceWorker.register('streamer_offline_sw.js')
           .then(function () { return navigator.serviceWorker.ready; })
           .then(function (registration) {
             // The page is committed now. During the navigation fetch its new
             // client ID may not yet appear in clients.matchAll().
-            registration.active.postMessage('prune-offline');
-          }).catch(function () {});
+            var channel = new MessageChannel();
+            var timer = setTimeout(function () { channel.port1.close(); resolve(false); }, 15000);
+            channel.port1.onmessage = function (event) {
+              clearTimeout(timer); channel.port1.close(); resolve(event.data === true);
+            };
+            registration.active.postMessage({ type: 'page-build',
+              buildId: document.querySelector('meta[name="hadayah-build"]')?.content }, [channel.port2]);
+          }).catch(function () { resolve(false); });
+      });
       });
     }
   </script>

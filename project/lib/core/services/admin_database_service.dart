@@ -24,7 +24,6 @@ import '../../features/organization/models/org_broadcaster_permissions.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/profile/models/streamer_models.dart';
-import '../../features/map/models/map_tricity_domain.dart';
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -1250,7 +1249,7 @@ class AdminDatabaseService {
   Future<Map<String, dynamic>?> loadOrganizationProfile(String orgId) async {
     if (!_useSupabase || !_looksLikeUuid(orgId)) return null;
     return await _client
-        .from('organizations')
+        .from('organization_public_profiles')
         .select()
         .eq('id', orgId)
         .maybeSingle();
@@ -1272,6 +1271,7 @@ class AdminDatabaseService {
         .from('organizations')
         .insert({
           'owner_profile_id': ownerProfileId,
+          'approved_application_id': app.id,
           'name_en': app.applicantNameEn,
           'name_ar': app.applicantNameAr,
           'avatar_url': app.avatarUrl,
@@ -1295,7 +1295,7 @@ class AdminDatabaseService {
     BroadcasterApplicationModel app,
   ) async {
     if (!_useSupabase) throw Exception('Supabase not available');
-    final city = cityViewById(app.cityId);
+    final city = app.city;
     await _client.from('profiles').update({
       'is_streamer': true,
       'is_verified': true,
@@ -1492,12 +1492,16 @@ class AdminDatabaseService {
             followerCount: followerCount,
             categoryId: categoryId,
             tags: tagsList,
-            cityEn: 'Al Khobar',
-            cityAr: 'الخبر',
-            venueNameEn: nameEn,
-            venueNameAr: nameAr,
-            latitude: 26.2871,
-            longitude: 50.2125,
+            cityEn:
+                BroadcasterApplicationModel.cityNames[row['city_id']]?.nameEn ??
+                    '',
+            cityAr:
+                BroadcasterApplicationModel.cityNames[row['city_id']]?.nameAr ??
+                    '',
+            venueNameEn: row['venue_name_en'] as String? ?? '',
+            venueNameAr: row['venue_name_ar'] as String? ?? '',
+            latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
+            longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
             isCurrentlyLive: isLive,
             broadcastType: rowLive
                 ? (row['broadcast_type'] == 'liveAudio'

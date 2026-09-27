@@ -38,7 +38,8 @@ let networkCalls = 0;
 const liveClients = new Set();
 const pending = [];
 const queues = new Map();
-let pruneWorker;
+let pruneWorker, registerPage;
+let now = Date.now();
 const locks = { async request(name, callback) {
   const previous = queues.get(name) || Promise.resolve();
   const next = previous.then(callback);
@@ -48,7 +49,7 @@ const locks = { async request(name, callback) {
 function worker() {
   const handlers = {};
   vm.runInNewContext(source, {
-    caches: storage, URL, Response, AbortController,
+    caches: storage, URL, Response, AbortController, Date: { now: () => now },
     setTimeout: (fn) => setTimeout(fn, 10), clearTimeout,
     self: { location: { origin }, registration: { scope: `${origin}/` },
       navigator: { locks },
@@ -62,6 +63,14 @@ function worker() {
       return new Response(request.mode === 'navigate' ? html(networkBuild) : `code-${networkBuild}`);
     },
   });
+  registerPage = (id, buildId) => {
+    liveClients.add(id);
+    let acknowledged = false;
+    handlers.message({ data: {type: 'page-build', buildId}, source: {id},
+      ports: [{postMessage(value) { acknowledged = value; }}],
+      waitUntil(promise) { pending.push(promise); } });
+    return Promise.all(pending).then(() => assert.ok(acknowledged));
+  };
   pruneWorker = () => handlers.message({ data: 'prune-offline', waitUntil(promise) { pending.push(promise); } });
   return (url, clientId, navigate = false, cache = 'default') => {
     let result;
@@ -76,6 +85,9 @@ function worker() {
 await publish('build-old');
 let fetchPage = worker();
 networkMode = 'offline';
+await registerPage('first-claimed-tab', 'build-old');
+assert.equal(await (await fetchPage(`${origin}/main.dart.js`, 'first-claimed-tab')).text(), 'code-build-old');
+liveClients.delete('first-claimed-tab');
 assert.equal(await (await fetchPage(`${origin}/`, 'old-tab', true)).text(), html('build-old'));
 fetchPage = worker(); // worker termination destroys all global state
 networkMode = 'hanging';
@@ -99,9 +111,19 @@ await Promise.all(pending);
 pruneWorker();
 await Promise.all(pending);
 assert.ok(buckets.has('hadayah-offline-v2-build-old'), 'open old tab retains its generation');
+// An in-flight navigation can be absent from matchAll while another tab prunes.
+networkMode = 'online'; networkBuild = 'build-new';
+await fetchPage(`${origin}/`, 'reserved-tab', true);
+await publish('build-next');
+liveClients.delete('reserved-tab');
+pruneWorker(); await Promise.all(pending);
+networkMode = 'offline';
+assert.equal(await (await fetchPage(`${origin}/main.dart.js`, 'reserved-tab')).text(), 'code-build-new');
+liveClients.delete('reserved-tab');
 liveClients.delete('old-tab');
+now += 5 * 60 * 1000 + 1;
 await fetchPage(`${origin}/`, 'cold-tab', true);
 pruneWorker();
 await Promise.all(pending);
-assert.ok(!buckets.has('hadayah-offline-v2-build-old'), 'closed old tab is reclaimed');
-console.log('PASS: cold start, durable worker restart, hanging network, app-only update, concurrent tabs, preparation bypass, backend exclusion');
+assert.ok(!buckets.has('hadayah-offline-v2-build-old'), 'closed old tab is reclaimed after the reserved-client grace');
+console.log('PASS: initial claimed page, reserved-client concurrent prune, bounded orphan cleanup, cold start, durable worker restart, hanging network, app-only update, concurrent tabs, preparation bypass, backend exclusion');

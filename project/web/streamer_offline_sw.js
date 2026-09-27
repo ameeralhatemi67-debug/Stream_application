@@ -3,6 +3,9 @@ const META = 'hadayah-offline-meta-v2';
 const ACTIVE = '__hadayah_offline_active__.json';
 const PUBLIC_CDNS = ['https://www.gstatic.com', 'https://fonts.gstatic.com'];
 const NETWORK_TIMEOUT_MS = 4000;
+// ponytail: retain recent reserved clients for five minutes because matchAll()
+// omits a navigation until commit. Revisit this grace if startup can exceed it.
+const PIN_GRACE_MS = 5 * 60 * 1000;
 const absolute = (path) => new URL(path, self.registration.scope).href;
 const pinPath = (id) => absolute(`__hadayah_client__/${encodeURIComponent(id)}`);
 const locked = (action) => self.navigator.locks.request('hadayah-publish', action);
@@ -12,7 +15,8 @@ async function record(key) {
 }
 async function pin(id, value) {
   if (id) await (await caches.open(META)).put(pinPath(id),
-    new Response(JSON.stringify(value), { headers: { 'content-type': 'application/json' } }));
+    new Response(JSON.stringify({ ...value, pinnedAt: Date.now() }),
+      { headers: { 'content-type': 'application/json' } }));
 }
 async function boundedFetch(request) {
   const abort = new AbortController();
@@ -42,7 +46,10 @@ async function prune() {
     const keep = new Set([(await record(absolute(ACTIVE)))?.cacheName]);
     for (const request of await metadata.keys()) {
       if (!request.url.includes('/__hadayah_client__/')) continue;
-      if (clients.has(request.url)) keep.add((await record(request))?.cacheName);
+      const page = await record(request);
+      if (clients.has(request.url) || Date.now() - page?.pinnedAt < PIN_GRACE_MS) {
+        keep.add(page?.cacheName);
+      }
       else await metadata.delete(request);
     }
     for (const name of await caches.keys()) {
@@ -54,6 +61,21 @@ async function prune() {
 }
 self.addEventListener('message', (event) => {
   if (event.data === 'prune-offline') event.waitUntil(prune());
+  // The first page predates this worker's claim, so no navigation fetch pinned
+  // its build. Identify that page before it can prepare its first offline copy.
+  if (event.data?.type === 'page-build' && event.source?.id &&
+      /^[a-zA-Z0-9._-]+$/.test(event.data.buildId)) {
+    event.waitUntil(locked(async () => {
+      const current = await record(pinPath(event.source.id));
+      if (current?.buildId === event.data.buildId) return;
+      const active = await record(absolute(ACTIVE));
+      await pin(event.source.id, { buildId: event.data.buildId,
+        cacheName: active?.buildId === event.data.buildId ? active.cacheName : null });
+    }).then(() => {
+      event.ports?.[0]?.postMessage(true);
+      return prune();
+    }).catch(() => event.ports?.[0]?.postMessage(false)));
+  }
 });
 self.addEventListener('fetch', (event) => {
   const request = event.request;
