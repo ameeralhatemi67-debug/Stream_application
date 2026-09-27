@@ -91,6 +91,7 @@ void main() {
               avatarUrl: '',
               bannerUrl: '',
               youtubeHandle: '',
+              tags: const ['#Physics', '#Research'],
               bioEn: 'A long academic description with practical lessons. ' * 8,
               bioAr: 'وصف أكاديمي طويل مع دروس عملية ومعلومات إضافية. ' * 8,
             );
@@ -124,15 +125,17 @@ void main() {
             expect(tester.getSize(surface).width, lessThanOrEqualTo(420));
             expect(tester.takeException(), isNull);
             if (location == 'profile') {
-              await tester.ensureVisible(find.text('profile.show_more'.tr()));
+              await tester
+                  .ensureVisible(find.byTooltip('profile.show_more'.tr()));
               await tester.pumpAndSettle();
-              await tester.tap(find.text('profile.show_more'.tr()));
+              await tester.tap(find.byTooltip('profile.show_more'.tr()));
               await tester.pumpAndSettle();
-              expect(find.text('profile.show_less'.tr()), findsOneWidget);
+              expect(find.byTooltip('profile.show_less'.tr()), findsOneWidget);
               expect(tester.takeException(), isNull);
-              await tester.ensureVisible(find.text('profile.show_less'.tr()));
+              await tester
+                  .ensureVisible(find.byTooltip('profile.show_less'.tr()));
               await tester.pumpAndSettle();
-              await tester.tap(find.text('profile.show_less'.tr()));
+              await tester.tap(find.byTooltip('profile.show_less'.tr()));
               await tester.pumpAndSettle();
               final follow =
                   find.text('profile.follow_btn'.tr(), skipOffstage: false);
@@ -156,6 +159,9 @@ void main() {
               expect(find.text('settings.edit_profile'.tr()), findsOneWidget);
             }
             if (location == 'discovery') {
+              expect(find.text('profile.view_channel'.tr()), findsNothing);
+              expect(find.text('#Physics'), findsOneWidget);
+              expect(find.text('#Research'), findsOneWidget);
               expect(
                   find.descendant(
                       of: cards,
@@ -174,6 +180,27 @@ void main() {
         }
       }
     }
+  }
+
+  for (final lang in ['en', 'ar']) {
+    testWidgets('short profile has no expansion arrow $lang', (tester) async {
+      final streamer = mockStreamers.first.copyWith(
+          avatarUrl: '',
+          bannerUrl: '',
+          bioEn: 'Brief bio.',
+          bioAr: 'نبذة قصيرة.',
+          isOrganization: false);
+      final provider = AppProvider(AdminDatabaseService(null))
+        ..addStreamerForTests(streamer);
+      await tester.pumpWidget(app(provider,
+          BroadcasterProfileScreen(streamerId: streamer.streamerId), lang, 1));
+      await tester.pumpAndSettle();
+      expect(find.byTooltip('profile.show_more'.tr()), findsNothing);
+      expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsNothing);
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      provider.dispose();
+    });
   }
 
   testWidgets(

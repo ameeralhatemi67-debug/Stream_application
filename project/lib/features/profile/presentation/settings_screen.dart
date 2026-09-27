@@ -318,6 +318,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     BroadcasterApplicationSheet.show(
                       context,
                       application: provider.myApplication,
+                      editingProfile: true,
                     );
                   } else {
                     ViewerProfileEditorDialog.show(context);

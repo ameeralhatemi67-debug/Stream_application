@@ -25,7 +25,7 @@ select ok((select not is_streamer and not is_verified and follower_count = 0
 select ok((select not is_currently_live and active_stream_id is null and active_viewer_count = 0 and broadcast_type = 'offline'
  from public.profiles where id = auth.uid()), 'A3 cannot claim a victim stream');
 select is((select bio_en from public.profiles where id = auth.uid()), 'Updated bio', 'P1 bio remains editable');
-select is((select youtube_handle from public.profiles where id = auth.uid()), '@lecture', 'P1 handle remains editable');
+select is((select youtube_handle from public.profiles where id = auth.uid()), null, 'YouTube handle changes require application review');
 
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 update public.profiles set is_streamer = true, is_verified = true

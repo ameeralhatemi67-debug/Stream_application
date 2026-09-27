@@ -238,7 +238,10 @@
     "featured_channels_hint": "Click any instructor or channel to view their lectures & playlists",
     "filter_active_badge": "Active Filter",
     "view_channel_content": "View Lectures",
-    "channel_unavailable": "Channel unavailable."
+    "channel_unavailable": "Channel unavailable.",
+    "edit_saved": "Profile changes saved.",
+    "save_changes": "Save changes",
+    "edit_review_help": "Name, biography, academic details and tags save immediately. Contact, location or YouTube changes need approval; your approved details remain public until then."
   },
   "live": {
     "recovery_exhausted": "Connection could not be restored. Retry or leave.",

@@ -1,0 +1,20 @@
+{
+  "project/assets/i18n/ar.json": "4ef2b1fa486af262692593287aadda3f716d53e408247eea2a7ddb80bad1d5e6",
+  "project/assets/i18n/en.json": "b1ecb0337c2222940d000d0d0ed1ad3c26fa47a0324b879a3a2b0b05574e33ba",
+  "project/lib/core/providers/app_provider.dart": "7c30427632b3772e10ce9d1b872a2c32ca8f7179942ec793ed5195c59bbd6b2b",
+  "project/lib/core/services/admin_database_service.dart": "6c7086e9e60f6cc861db1a898355e81e70e08b404314331c3e549a66f93e23cf",
+  "project/lib/core/widgets/streamer_identity_card.dart": "c201124f3032813272fb509b65cffd02a249cb847eae98ce5c066776b21a7433",
+  "project/lib/features/admin/models/broadcaster_application_model.dart": "be85de1d15496f90fa423dfddaf9a19b648487cb31ba81f8d0b2383ee769ce82",
+  "project/lib/features/discovery/presentation/widgets/streamer_grid_card.dart": "75a946925d8bb2ce8146e156bfab94a7b9f65e54b65e969dbd9234e69ad28f0b",
+  "project/lib/features/profile/presentation/broadcaster_profile_screen.dart": "af02895a81ed04828b7a53fec2195c62d06119ff66a6c4e347b84f07ec98009a",
+  "project/lib/features/profile/presentation/settings_screen.dart": "0424b06f3e5b78006d57fd9af278ae75772f52d54c59933df1d744df74d913af",
+  "project/lib/features/profile/presentation/widgets/broadcaster_application_sheet.dart": "a94f49829e585ff269a6661253f94750deecf9a66da261d9793fa5bcd8ad75ab",
+  "project/test/broadcaster_application_sheet_test.dart": "31a1053732713ad68ac33b0d9478d2ad5cc4d72554a2b016cc7d0dcbbb1991ea",
+  "project/test/organization_profile_screen_test.dart": "3d6e52b764d37f655e8a48e148384e5c8716d7330adde237cd7d8482805a8965",
+  "project/test/streamer_card_design_test.dart": "74c64c649a80f0d2420a3aac29667d42ef1d0531af9e80924c088c3166886f6d",
+  "supabase/tests/broadcaster_columns.test.sql": "e05cf5ce1de43c12cf9e28acfb43745269a3405c5fd3212ad39fc581b12a0784",
+  "supabase/tests/organization_public_location.test.sql": "c4cd68941011874001c4749be5e79e5f75cfcfcfda16b69c322107ee56197931",
+  "project/test/profile_edit_review_test.dart": "7ffda6de62244ecced2c682739c4bb4ee237e70f648617f3b87ed1ba1d0aa67a",
+  "supabase/migrations/20260927030000_profile_edit_review.sql": "3a169d9ff78576542d5cb4d8b3b46a04464fa29042486adb2166230b695fab83",
+  "supabase/tests/profile_edit_review.test.sql": "9b1091ab2db360e2c5fa70b2cfcd11053af7a22b48bdd2c6254013903c621601"
+}

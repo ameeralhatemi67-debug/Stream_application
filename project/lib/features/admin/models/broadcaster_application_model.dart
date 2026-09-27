@@ -28,6 +28,7 @@ class BroadcasterApplicationModel {
   ({String nameEn, String nameAr})? get city => cityNames[cityId];
 
   final String id;
+  final String? revisionOf;
   // The Supabase profiles.id of whoever submitted this application. Only
   // populated when loaded from the real backend (Checkpoint 3) -- null for
   // legacy/seed data. Used to know which real profile/organization to
@@ -77,6 +78,7 @@ class BroadcasterApplicationModel {
 
   const BroadcasterApplicationModel({
     required this.id,
+    this.revisionOf,
     this.applicantProfileId,
     required this.accountType,
     required this.applicantNameEn,
@@ -143,6 +145,7 @@ class BroadcasterApplicationModel {
 
   BroadcasterApplicationModel copyWith({
     String? id,
+    String? revisionOf,
     String? applicantProfileId,
     ApplicationAccountType? accountType,
     String? applicantNameEn,
@@ -177,6 +180,7 @@ class BroadcasterApplicationModel {
   }) {
     return BroadcasterApplicationModel(
       id: id ?? this.id,
+      revisionOf: revisionOf ?? this.revisionOf,
       applicantProfileId: applicantProfileId ?? this.applicantProfileId,
       accountType: accountType ?? this.accountType,
       applicantNameEn: applicantNameEn ?? this.applicantNameEn,
@@ -213,6 +217,7 @@ class BroadcasterApplicationModel {
 
   Map<String, dynamic> toJson() => {
         'id': id,
+        'revisionOf': revisionOf,
         'accountType': accountType.name,
         'applicantNameEn': applicantNameEn,
         'applicantNameAr': applicantNameAr,
@@ -248,6 +253,7 @@ class BroadcasterApplicationModel {
   factory BroadcasterApplicationModel.fromJson(Map<String, dynamic> json) =>
       BroadcasterApplicationModel(
         id: json['id'] as String,
+        revisionOf: json['revisionOf'] as String?,
         accountType: ApplicationAccountType.values
             .byName(json['accountType'] as String? ?? 'individualScholar'),
         applicantNameEn: json['applicantNameEn'] as String? ?? '',

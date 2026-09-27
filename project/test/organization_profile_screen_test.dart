@@ -106,7 +106,7 @@ void main() {
       // Verify Organization name is rendered
       expect(find.textContaining('Dalilk 4 IELTS'), findsWidgets);
 
-      await tester.tap(find.text('Show more'));
+      await tester.tap(find.byTooltip('Show more'));
       await tester.pumpAndSettle();
 
       // Verify Campus Branches button is rendered (3 branches)
@@ -217,19 +217,25 @@ void main() {
       expect(find.textContaining('150'), findsOneWidget);
       // Lazy branch rows must be reachable by scrolling, independent of a
       // previous test's viewport/devicePixelRatio.
-      await tester.scrollUntilVisible(find.text('Dammam Executive Training Suite'), 150);
+      await tester.scrollUntilVisible(
+          find.text('Dammam Executive Training Suite'), 150);
       expect(find.text('Dammam Executive Training Suite'), findsOneWidget);
       expect(find.textContaining('100'), findsOneWidget);
     });
 
-    testWidgets('unpinned organization branch offers no directions', (tester) async {
+    testWidgets('unpinned organization branch offers no directions',
+        (tester) async {
       final provider = AppProvider(AdminDatabaseService(null));
       seedStreamerFixtures(provider);
       final venue = provider.getOrganizationVenues('org_dalilk_04').first;
-      await pumpTestApp(tester, Scaffold(body: OrgBranchesModalSheet(
-        orgName: 'Test organization',
-        venues: [venue.copyWith(latitude: 0, longitude: 0)],
-      )), provider);
+      await pumpTestApp(
+          tester,
+          Scaffold(
+              body: OrgBranchesModalSheet(
+            orgName: 'Test organization',
+            venues: [venue.copyWith(latitude: 0, longitude: 0)],
+          )),
+          provider);
       expect(find.byIcon(Icons.directions_rounded), findsNothing);
       expect(find.text(venue.nameEn), findsOneWidget);
     });

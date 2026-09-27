@@ -1,0 +1,157 @@
+{
+  "base_commit": "50349af",
+  "flutter_tests": 945,
+  "flutter_test_files": 66,
+  "analyzer_issues": 0,
+  "sql_assertions": 478,
+  "sql_files": 24,
+  "localization_keys_symmetric": true,
+  "hosted_migration_applied": false,
+  "physical_acceptance": "PENDING",
+  "sql_results": [
+    {
+      "file": "admin_safety_actions.test.sql",
+      "exit": 0,
+      "assertions": 26,
+      "failures": []
+    },
+    {
+      "file": "admin_user_directory.test.sql",
+      "exit": 0,
+      "assertions": 33,
+      "failures": []
+    },
+    {
+      "file": "application_and_ban_guards.test.sql",
+      "exit": 0,
+      "assertions": 11,
+      "failures": []
+    },
+    {
+      "file": "application_city.test.sql",
+      "exit": 0,
+      "assertions": 13,
+      "failures": []
+    },
+    {
+      "file": "asset_listing.test.sql",
+      "exit": 0,
+      "assertions": 5,
+      "failures": []
+    },
+    {
+      "file": "audited_broadcaster_moderation.test.sql",
+      "exit": 0,
+      "assertions": 26,
+      "failures": []
+    },
+    {
+      "file": "broadcast_identity_boundaries.test.sql",
+      "exit": 0,
+      "assertions": 7,
+      "failures": []
+    },
+    {
+      "file": "broadcast_session_authority.test.sql",
+      "exit": 0,
+      "assertions": 68,
+      "failures": []
+    },
+    {
+      "file": "broadcast_session_fencing.test.sql",
+      "exit": 0,
+      "assertions": 34,
+      "failures": []
+    },
+    {
+      "file": "broadcast_sessions.test.sql",
+      "exit": 0,
+      "assertions": 22,
+      "failures": []
+    },
+    {
+      "file": "broadcaster_columns.test.sql",
+      "exit": 0,
+      "assertions": 9,
+      "failures": []
+    },
+    {
+      "file": "broadcaster_device_claim_state.test.sql",
+      "exit": 0,
+      "assertions": 16,
+      "failures": []
+    },
+    {
+      "file": "chat_blocks_and_app_flags.test.sql",
+      "exit": 0,
+      "assertions": 26,
+      "failures": []
+    },
+    {
+      "file": "chat_keyword_audit.test.sql",
+      "exit": 0,
+      "assertions": 19,
+      "failures": []
+    },
+    {
+      "file": "chat_keyword_filter.test.sql",
+      "exit": 0,
+      "assertions": 30,
+      "failures": []
+    },
+    {
+      "file": "chat_moderation_authority.test.sql",
+      "exit": 0,
+      "assertions": 24,
+      "failures": []
+    },
+    {
+      "file": "chat_rate_limit.test.sql",
+      "exit": 0,
+      "assertions": 11,
+      "failures": []
+    },
+    {
+      "file": "follows_and_bookmarks.test.sql",
+      "exit": 0,
+      "assertions": 13,
+      "failures": []
+    },
+    {
+      "file": "live_flag_expiry_and_privilege.test.sql",
+      "exit": 0,
+      "assertions": 18,
+      "failures": []
+    },
+    {
+      "file": "organization_public_location.test.sql",
+      "exit": 0,
+      "assertions": 9,
+      "failures": []
+    },
+    {
+      "file": "profile_edit_review.test.sql",
+      "exit": 0,
+      "assertions": 16,
+      "failures": []
+    },
+    {
+      "file": "rls_catalog.test.sql",
+      "exit": 0,
+      "assertions": 21,
+      "failures": []
+    },
+    {
+      "file": "streamer_assets.test.sql",
+      "exit": 0,
+      "assertions": 7,
+      "failures": []
+    },
+    {
+      "file": "viewer_presence.test.sql",
+      "exit": 0,
+      "assertions": 14,
+      "failures": []
+    }
+  ]
+}

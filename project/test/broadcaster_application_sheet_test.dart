@@ -15,6 +15,10 @@ void main() {
     testWidgets(
         'saved category $categoryId survives sheet editing and submission',
         (tester) async {
+      tester.view.physicalSize = const Size(320, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
       final provider = AppProvider(AdminDatabaseService(null));
       final application = BroadcasterApplicationModel(
         id: 'sheet-url',
@@ -72,6 +76,7 @@ void main() {
       await tester.tap(submit);
       await tester.pumpAndSettle();
       expect(provider.applications.single.categoryId, categoryId);
+      expect(provider.applications.single.tags, isEmpty);
       expect(provider.applications.single.youtubeHandle, 'lecture');
       expect(provider.applications.single.cityId, 'dammam');
       expect(provider.applications.single.latitude, 26);

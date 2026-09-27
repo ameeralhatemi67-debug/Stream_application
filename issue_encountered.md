@@ -14,6 +14,7 @@ Updated: 2026-09-27. This is a local troubleshooting record, not proof that the 
 
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
 
+- **Profile edits unnecessarily resubmit verification or report cached success** — separate server-reviewed edit path; descriptive edits publish, sensitive revisions await approval; hosted migration and owner retest pending.
 - **Selected venue card overflows Arabic narrow screen** — responsive layout updated; populated 280–1280dp matrix, physical acceptance pending.
 - **Offline save mixes application generations or loses page pins** — immutable publication, build identity and acknowledged durable client pins; local browser/worker faults verified.
 - **Organization reload invents a venue and application city fails constraint** — approved public application projection and all existing city choices; local SQL/privacy tests pass.
@@ -420,3 +421,7 @@ Verification: Widget regression selects overlapping profiles, checks the selecte
 ### Expanded profile details overflow empty tabs
 
 2026-09-27, DES-01. A long expanded profile header leaves little or no height for the nested tab body. The empty archive/playlist/upcoming states used a centered non-scrollable Column, producing a vertical RenderFlex overflow. These three empty states now scroll. Automated en/ar layout and card interaction cases pass; physical confirmation remains pending. See `brief/evidence/2026-09-27/unified-streamer-cards/VERIFICATION.md`.
+
+## Profile edits unnecessarily resubmit verification or report cached success
+
+2026-09-27 — FIX-04. Settings reused the initial application sheet submission for approved accounts. Every save attempted pending status on the existing application, although owner RLS only permits pending-row edits; database failures could then become cached success. Separate editing mode now calls `save_broadcaster_profile`, which checks ownership/approval/bans and classifies fields on the server. Safe edits publish immediately; sensitive edits use a pending revision, with atomic publication on approval and no revocation on rejection. Direct writes cannot bypass contact/location/YouTube review. Existing approved channel data remains the broadcasting source. Local SQL regression passes; analyzer clean; final Flutter result is in `brief/evidence/2026-09-27/profile-edit-card-polish/VERIFICATION.md`. Hosted migration and physical acceptance remain pending.

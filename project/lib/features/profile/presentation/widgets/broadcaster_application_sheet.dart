@@ -13,24 +13,27 @@ import '../../../map/models/map_tricity_domain.dart';
 /// Verified Scholars or Registering Organization Auditoriums.
 class BroadcasterApplicationSheet extends StatefulWidget {
   final BroadcasterApplicationModel? existingApplication;
+  final bool editingProfile;
 
   const BroadcasterApplicationSheet({
     super.key,
     this.existingApplication,
+    this.editingProfile = false,
   });
 
   static void show(BuildContext context,
-      {BroadcasterApplicationModel? application}) {
+      {BroadcasterApplicationModel? application, bool editingProfile = false}) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      constraints: const BoxConstraints(maxWidth: 720),
       backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
-      builder: (context) =>
-          BroadcasterApplicationSheet(existingApplication: application),
+      builder: (context) => BroadcasterApplicationSheet(
+          existingApplication: application, editingProfile: editingProfile),
     );
   }
 
@@ -106,31 +109,29 @@ class _BroadcasterApplicationSheetState
     _emailController = TextEditingController(text: app?.email ?? defaultEmail);
     _phoneController = TextEditingController(text: app?.phone ?? '+966 ');
 
-    _academicTitleEnController = TextEditingController(
-        text: app?.academicTitleEn ?? 'Assistant Professor');
+    _academicTitleEnController =
+        TextEditingController(text: app?.academicTitleEn ?? '');
     _academicTitleArController =
-        TextEditingController(text: app?.academicTitleAr ?? 'أستاذ مساعد');
-    _institutionEnController = TextEditingController(
-        text: app?.institutionEn ?? 'King Fahd University');
-    _institutionArController = TextEditingController(
-        text: app?.institutionAr ?? 'جامعة الملك فهد للبترول والمعادن');
+        TextEditingController(text: app?.academicTitleAr ?? '');
+    _institutionEnController =
+        TextEditingController(text: app?.institutionEn ?? '');
+    _institutionArController =
+        TextEditingController(text: app?.institutionAr ?? '');
     _tagsController = TextEditingController(
-        text: app?.tags.isNotEmpty == true
-            ? app!.tags.join(', ')
-            : '#AI, #Technology');
+        text: app?.tags.isNotEmpty == true ? app!.tags.join(', ') : '');
 
-    _orgTypeController = TextEditingController(
-        text: app?.organizationType ?? 'University & Research Center');
+    _orgTypeController =
+        TextEditingController(text: app?.organizationType ?? '');
     _venueNameEnController =
-        TextEditingController(text: app?.venueNameEn ?? 'Grand Auditorium');
-    _venueNameArController = TextEditingController(
-        text: app?.venueNameAr ?? 'المدرج الأكاديمي الرئيسي');
+        TextEditingController(text: app?.venueNameEn ?? '');
+    _venueNameArController =
+        TextEditingController(text: app?.venueNameAr ?? '');
     _seatingCapacityController = TextEditingController(
         text: app?.seatingCapacity != null && app!.seatingCapacity > 0
             ? app.seatingCapacity.toString()
-            : '350');
+            : '');
     _websiteController =
-        TextEditingController(text: app?.officialWebsiteUrl ?? 'https://');
+        TextEditingController(text: app?.officialWebsiteUrl ?? '');
     _latController =
         TextEditingController(text: app?.latitude.toString() ?? '');
     _lngController =
@@ -140,12 +141,8 @@ class _BroadcasterApplicationSheetState
         TextEditingController(text: app?.youtubeChannelUrl ?? '');
     _youtubeHandleController =
         TextEditingController(text: app?.youtubeHandle ?? '');
-    _bioEnController = TextEditingController(
-        text: app?.bioEn ??
-            'Dedicated academic researcher delivering open lectures in the Eastern Province.');
-    _bioArController = TextEditingController(
-        text: app?.bioAr ??
-            'باحث ومحاضر أكاديمي مكرس لتقديم المحاضرات العلمية المفتوحة بالمنطقة الشرقية.');
+    _bioEnController = TextEditingController(text: app?.bioEn ?? '');
+    _bioArController = TextEditingController(text: app?.bioAr ?? '');
 
     if (app != null && app.categoryId.isNotEmpty) {
       _selectedCategory = app.categoryId;
@@ -249,7 +246,8 @@ class _BroadcasterApplicationSheetState
       return;
     }
 
-    if (_selectedRole == ApplicationAccountType.individualScholar) {
+    if (!widget.editingProfile &&
+        _selectedRole == ApplicationAccountType.individualScholar) {
       if (_academicTitleEnController.text.trim().isEmpty ||
           _institutionEnController.text.trim().isEmpty) {
         _scrollToKey(_academicKey);
@@ -257,7 +255,7 @@ class _BroadcasterApplicationSheetState
             '${'settings.required_field_missing'.tr()} Academic Title / University');
         return;
       }
-    } else {
+    } else if (!widget.editingProfile) {
       if (_venueNameEnController.text.trim().isEmpty ||
           _venueNameArController.text.trim().isEmpty) {
         _scrollToKey(_venueKey);
@@ -267,8 +265,15 @@ class _BroadcasterApplicationSheetState
       }
     }
 
-    final channelError = YouTubeChannelReference.pairError(
-        _youtubeChannelController.text, _youtubeHandleController.text);
+    final channelChanged = !widget.editingProfile ||
+        _youtubeChannelController.text.trim() !=
+            widget.existingApplication?.youtubeChannelUrl.trim() ||
+        _youtubeHandleController.text.trim() !=
+            widget.existingApplication?.youtubeHandle.trim();
+    final channelError = channelChanged
+        ? YouTubeChannelReference.pairError(
+            _youtubeChannelController.text, _youtubeHandleController.text)
+        : null;
     if (channelError != null) {
       _scrollToKey(_youtubeKey);
       _showErrorBanner(channelError.tr());
@@ -276,8 +281,10 @@ class _BroadcasterApplicationSheetState
     }
     setState(() => _isSubmitting = true);
     try {
-      await context.read<AppProvider>().validateChannelConfiguration(
-          _youtubeChannelController.text, _youtubeHandleController.text);
+      if (channelChanged) {
+        await context.read<AppProvider>().validateChannelConfiguration(
+            _youtubeChannelController.text, _youtubeHandleController.text);
+      }
     } on FormatException catch (e) {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -307,8 +314,7 @@ class _BroadcasterApplicationSheetState
       _showErrorBanner('map.pin_invalid'.tr());
       return;
     }
-    final capacity =
-        int.tryParse(_seatingCapacityController.text.trim()) ?? 250;
+    final capacity = int.tryParse(_seatingCapacityController.text.trim()) ?? 0;
 
     final application = BroadcasterApplicationModel(
       id: widget.existingApplication?.id ?? newId(),
@@ -330,7 +336,7 @@ class _BroadcasterApplicationSheetState
           ? _institutionArController.text.trim()
           : null,
       categoryId: _selectedCategory,
-      tags: tags.isNotEmpty ? tags : ['#Education', '#SaudiLectures'],
+      tags: tags,
       organizationType:
           _selectedRole == ApplicationAccountType.organizationVenue
               ? _orgTypeController.text.trim()
@@ -346,17 +352,20 @@ class _BroadcasterApplicationSheetState
       youtubeHandle: _youtubeHandleController.text.trim(),
       bioEn: _bioEnController.text.trim(),
       bioAr: _bioArController.text.trim(),
-      avatarUrl: widget.existingApplication?.avatarUrl ??
-          'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-      bannerUrl: widget.existingApplication?.bannerUrl ??
-          'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
+      avatarUrl: widget.existingApplication?.avatarUrl ?? '',
+      bannerUrl: widget.existingApplication?.bannerUrl ?? '',
       status: ApplicationStatus.pending,
       submittedAt: DateTime.now(),
     );
 
     final appProvider = Provider.of<AppProvider>(context, listen: false);
+    var needsReview = true;
     try {
-      await appProvider.submitBroadcasterApplication(application);
+      if (widget.editingProfile) {
+        needsReview = await appProvider.saveBroadcasterProfile(application);
+      } else {
+        await appProvider.submitBroadcasterApplication(application);
+      }
     } catch (_) {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -393,7 +402,10 @@ class _BroadcasterApplicationSheetState
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'application.submitted_toast'.tr(),
+                    (needsReview
+                            ? 'application.submitted_toast'
+                            : 'profile.edit_saved')
+                        .tr(),
                     style: const TextStyle(
                       color: AppTheme.onMedia,
                       fontWeight: FontWeight.bold,
@@ -458,7 +470,10 @@ class _BroadcasterApplicationSheetState
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'application.title'.tr(),
+                      (widget.editingProfile
+                              ? 'settings.edit_profile'
+                              : 'application.title')
+                          .tr(),
                       style: const TextStyle(
                         color: AppTheme.textPrimary,
                         fontSize: 17,
@@ -466,7 +481,10 @@ class _BroadcasterApplicationSheetState
                       ),
                     ),
                     Text(
-                      'application.subtitle'.tr(),
+                      (widget.editingProfile
+                              ? 'profile.edit_review_help'
+                              : 'application.subtitle')
+                          .tr(),
                       style: const TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 11,
@@ -492,7 +510,7 @@ class _BroadcasterApplicationSheetState
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 1. Role Segmented Switcher
-                  _buildRoleSwitcher(),
+                  if (!widget.editingProfile) _buildRoleSwitcher(),
                   const SizedBox(height: AppTheme.spaceLg),
 
                   // 2. Identity & Contact Information
@@ -522,9 +540,15 @@ class _BroadcasterApplicationSheetState
                   const SizedBox(height: AppTheme.spaceSm),
                   KeyedSubtree(
                     key: _emailKey,
-                    child: Row(
+                    child: Flex(
+                      direction: MediaQuery.sizeOf(context).width < 600
+                          ? Axis.vertical
+                          : Axis.horizontal,
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Expanded(
+                        Flexible(
+                          fit: FlexFit.loose,
                           child: _buildTextField(
                             controller: _emailController,
                             label: 'application.email'.tr(),
@@ -533,8 +557,10 @@ class _BroadcasterApplicationSheetState
                             keyboardType: TextInputType.emailAddress,
                           ),
                         ),
-                        const SizedBox(width: AppTheme.spaceSm),
-                        Expanded(
+                        const SizedBox(
+                            width: AppTheme.spaceSm, height: AppTheme.spaceSm),
+                        Flexible(
+                          fit: FlexFit.loose,
                           child: _buildTextField(
                             controller: _phoneController,
                             label: 'application.phone'.tr(),
@@ -601,7 +627,10 @@ class _BroadcasterApplicationSheetState
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: Text(
-                                    'application.submit_btn'.tr(),
+                                    (widget.editingProfile
+                                            ? 'profile.save_changes'
+                                            : 'application.submit_btn')
+                                        .tr(),
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
@@ -715,9 +744,15 @@ class _BroadcasterApplicationSheetState
           _buildSectionHeader(
               'application.section_academic'.tr(), Icons.school_outlined),
           const SizedBox(height: AppTheme.spaceSm),
-          Row(
+          Flex(
+            direction: MediaQuery.sizeOf(context).width < 600
+                ? Axis.vertical
+                : Axis.horizontal,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _academicTitleEnController,
                   label: 'application.academic_title_en'.tr(),
@@ -725,8 +760,9 @@ class _BroadcasterApplicationSheetState
                   icon: Icons.workspace_premium_outlined,
                 ),
               ),
-              const SizedBox(width: AppTheme.spaceSm),
-              Expanded(
+              const SizedBox(width: AppTheme.spaceSm, height: AppTheme.spaceSm),
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _academicTitleArController,
                   label: 'application.academic_title_ar'.tr(),
@@ -737,9 +773,15 @@ class _BroadcasterApplicationSheetState
             ],
           ),
           const SizedBox(height: AppTheme.spaceSm),
-          Row(
+          Flex(
+            direction: MediaQuery.sizeOf(context).width < 600
+                ? Axis.vertical
+                : Axis.horizontal,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _institutionEnController,
                   label: 'application.institution_en'.tr(),
@@ -747,8 +789,9 @@ class _BroadcasterApplicationSheetState
                   icon: Icons.account_balance_outlined,
                 ),
               ),
-              const SizedBox(width: AppTheme.spaceSm),
-              Expanded(
+              const SizedBox(width: AppTheme.spaceSm, height: AppTheme.spaceSm),
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _institutionArController,
                   label: 'application.institution_ar'.tr(),
@@ -786,9 +829,15 @@ class _BroadcasterApplicationSheetState
           icon: Icons.category_outlined,
         ),
         const SizedBox(height: AppTheme.spaceSm),
-        Row(
+        Flex(
+          direction: MediaQuery.sizeOf(context).width < 600
+              ? Axis.vertical
+              : Axis.horizontal,
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
+            Flexible(
+              fit: FlexFit.loose,
               child: _buildTextField(
                 controller: _seatingCapacityController,
                 label: 'application.seating_capacity'.tr(),
@@ -797,8 +846,9 @@ class _BroadcasterApplicationSheetState
                 keyboardType: TextInputType.number,
               ),
             ),
-            const SizedBox(width: AppTheme.spaceSm),
-            Expanded(
+            const SizedBox(width: AppTheme.spaceSm, height: AppTheme.spaceSm),
+            Flexible(
+              fit: FlexFit.loose,
               child: _buildTextField(
                 controller: _websiteController,
                 label: 'application.website_url'.tr(),
@@ -860,9 +910,15 @@ class _BroadcasterApplicationSheetState
           ),
           const SizedBox(height: AppTheme.spaceSm),
 
-          Row(
+          Flex(
+            direction: MediaQuery.sizeOf(context).width < 600
+                ? Axis.vertical
+                : Axis.horizontal,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _latController,
                   label: 'application.latitude'.tr(),
@@ -872,8 +928,9 @@ class _BroadcasterApplicationSheetState
                       const TextInputType.numberWithOptions(decimal: true),
                 ),
               ),
-              const SizedBox(width: AppTheme.spaceSm),
-              Expanded(
+              const SizedBox(width: AppTheme.spaceSm, height: AppTheme.spaceSm),
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _lngController,
                   label: 'application.longitude'.tr(),
@@ -909,9 +966,15 @@ class _BroadcasterApplicationSheetState
           _buildSectionHeader(
               'application.section_stream'.tr(), Icons.videocam_outlined),
           const SizedBox(height: AppTheme.spaceSm),
-          Row(
+          Flex(
+            direction: MediaQuery.sizeOf(context).width < 600
+                ? Axis.vertical
+                : Axis.horizontal,
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _youtubeChannelController,
                   label: 'application.youtube_channel'.tr(),
@@ -919,8 +982,9 @@ class _BroadcasterApplicationSheetState
                   icon: Icons.link_rounded,
                 ),
               ),
-              const SizedBox(width: AppTheme.spaceSm),
-              Expanded(
+              const SizedBox(width: AppTheme.spaceSm, height: AppTheme.spaceSm),
+              Flexible(
+                fit: FlexFit.loose,
                 child: _buildTextField(
                   controller: _youtubeHandleController,
                   label: 'application.youtube_handle'.tr(),

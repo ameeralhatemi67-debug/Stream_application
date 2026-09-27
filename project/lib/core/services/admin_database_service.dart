@@ -230,6 +230,17 @@ class AdminDatabaseService {
     }
   }
 
+  /// Server decides which fields require review; failure never becomes a local save.
+  Future<BroadcasterApplicationModel> saveBroadcasterProfile(
+      BroadcasterApplicationModel application) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    final row = await _client.rpc('save_broadcaster_profile', params: {
+      'p_application_id': application.id,
+      'p_changes': _applicationToRow(application),
+    });
+    return _applicationFromRow(Map<String, dynamic>.from(row as Map), const {});
+  }
+
   Future<void> submitApplication(
       BroadcasterApplicationModel application) async {
     final error = YouTubeChannelReference.pairError(
@@ -261,7 +272,7 @@ class AdminDatabaseService {
         }
         return;
       } catch (e) {
-        debugPrint('Supabase submitApplication failed, falling back: $e');
+        rethrow;
       }
     }
 
@@ -296,7 +307,8 @@ class AdminDatabaseService {
             .select()
             .single();
 
-        if (newStatus == ApplicationStatus.rejected) {
+        if (newStatus == ApplicationStatus.rejected &&
+            row['revision_of'] == null) {
           final applicantId = row['applicant_profile_id'] as String?;
           if (applicantId != null && _looksLikeUuid(applicantId)) {
             await _client.from('profiles').update({
@@ -316,7 +328,7 @@ class AdminDatabaseService {
         await _saveApplicationsToPrefs();
         return updated;
       } catch (e) {
-        debugPrint('Supabase updateApplicationStatus failed, falling back: $e');
+        rethrow;
       }
     }
 
@@ -346,6 +358,15 @@ class AdminDatabaseService {
           .order('submitted_at', ascending: false)
           .limit(1);
       if (rows.isEmpty) return null;
+      if (rows.first['revision_of'] != null &&
+          rows.first['status'] != 'pending') {
+        final base = await _client
+            .from('broadcaster_applications')
+            .select()
+            .eq('id', rows.first['revision_of'])
+            .single();
+        return _applicationFromRow(base, const {});
+      }
       final reviewerNames = await _resolveDisplayNames(
         rows.map((r) => r['reviewed_by'] as String?),
       );
@@ -510,6 +531,7 @@ class AdminDatabaseService {
   ) {
     return BroadcasterApplicationModel(
       id: row['id'] as String,
+      revisionOf: row['revision_of'] as String?,
       applicantProfileId: row['applicant_profile_id'] as String?,
       accountType:
           ApplicationAccountType.values.byName(row['account_type'] as String),

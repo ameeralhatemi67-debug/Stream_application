@@ -26,13 +26,7 @@ class StreamerGridCard extends StatelessWidget {
             ));
     final uncertain = cached || networkStatus != NetworkStatus.online;
     final isLive = !uncertain && streamer.isCurrentlyLive;
-    void openChannel() {
-      if (isLive && streamer.activeStreamId != null) {
-        context.push('/live/${streamer.activeStreamId}');
-      } else {
-        context.push('/profile/${streamer.streamerId}');
-      }
-    }
+    void openChannel() => context.push('/profile/${streamer.streamerId}');
 
     return StreamerIdentityCard(
       name: streamer.getLocalizedName(langCode),
@@ -59,22 +53,25 @@ class StreamerGridCard extends StatelessWidget {
                 style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
             const SizedBox(height: AppTheme.spaceSm),
           ],
-          ElevatedButton.icon(
-            onPressed: openChannel,
-            icon: Icon(
-                isLive
-                    ? (streamer.isAudioLive
-                        ? Icons.mic_rounded
-                        : Icons.play_arrow_rounded)
-                    : Icons.person_outline_rounded,
-                size: 18),
-            label: Text((isLive
-                    ? (streamer.isAudioLive
-                        ? 'live.listen_live'
-                        : 'live.watch_live')
-                    : 'profile.view_channel')
-                .tr()),
-            style: ElevatedButton.styleFrom(minimumSize: const Size(48, 48)),
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceXs,
+            children: streamer.tags
+                .where((tag) => tag.trim().isNotEmpty)
+                .toSet()
+                .map((tag) => Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spaceSm,
+                          vertical: AppTheme.spaceXs),
+                      decoration: BoxDecoration(
+                          color: AppTheme.surfaceAlt,
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm)),
+                      child: Text(tag,
+                          style: const TextStyle(
+                              color: AppTheme.primary, fontSize: 12)),
+                    ))
+                .toList(),
           ),
         ],
       ),

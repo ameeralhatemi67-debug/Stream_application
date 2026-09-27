@@ -1409,8 +1409,8 @@ class AppProvider extends ChangeNotifier {
   }
 
   String get currentUserHandle {
-    final fromApp = _myApplication?.youtubeHandle.trim();
-    if (fromApp != null && fromApp.isNotEmpty) {
+    final fromApp = _approvedChannelHandle;
+    if (fromApp.isNotEmpty) {
       return fromApp.replaceFirst('@', '');
     }
     final email = _googleUserEmail ?? _userProfile.id;
@@ -3025,6 +3025,32 @@ class AppProvider extends ChangeNotifier {
     if (ids[0] != ids[1]) throw const FormatException('live.channel_mismatch');
   }
 
+  Future<bool> saveBroadcasterProfile(
+      BroadcasterApplicationModel application) async {
+    if (!isApprovedStreamer || _myApplication == null) {
+      throw StateError('Approved profile required');
+    }
+    // Unchanged legacy channel values must not force a new lookup or review.
+    if (application.youtubeChannelUrl.trim() !=
+            _myApplication!.youtubeChannelUrl.trim() ||
+        application.youtubeHandle.trim() !=
+            _myApplication!.youtubeHandle.trim()) {
+      await validateChannelConfiguration(
+          application.youtubeChannelUrl, application.youtubeHandle);
+    }
+    _adminDbService ??= await AdminDatabaseService.create();
+    final generation = _authGeneration;
+    final saved = await _adminDbService!.saveBroadcasterProfile(application);
+    if (_authGeneration != generation) {
+      throw StateError('Account changed during save');
+    }
+    _myApplication = saved;
+    await refreshMyApplicationAndStreamerStatus();
+    await loadVerifiedStreamersFromBackend();
+    notifyListeners();
+    return saved.isPending;
+  }
+
   /// Submits a multi-step Broadcaster / Organization verification application
   Future<void> submitBroadcasterApplication(
       BroadcasterApplicationModel application) async {
@@ -3516,12 +3542,22 @@ class AppProvider extends ChangeNotifier {
   /// The YouTube handle of the channel this broadcast goes out on: the
   /// selected organization's, or the broadcaster's approved application's.
   /// Empty when the account has none on record.
+  String get _approvedChannelHandle {
+    if (!isApprovedStreamer) return '';
+    if (_userProfile.youtubeChannelUrl.trim().isNotEmpty) {
+      return _userProfile.youtubeChannelUrl.trim();
+    }
+    return _myApplication?.isApproved == true
+        ? _myApplication!.youtubeHandle.trim()
+        : '';
+  }
+
   String get _broadcastChannelHandle {
     final orgId = _selectedBroadcastOrgId;
     if (orgId != null) {
       return getStreamerById(orgId)?.youtubeHandle.trim() ?? '';
     }
-    return _myApplication?.youtubeHandle.trim() ?? '';
+    return _approvedChannelHandle;
   }
 
   Future<String?> _resolveChannelId(String handle) async {
@@ -3568,7 +3604,7 @@ class AppProvider extends ChangeNotifier {
           return const WatchLinkCheck(WatchLinkVerdict.live);
         }
         final app = _myApplication;
-        if (app != null && app.youtubeChannelUrl.isNotEmpty) {
+        if (app?.isApproved == true && app!.youtubeChannelUrl.isNotEmpty) {
           try {
             await validateChannelConfiguration(
                 app.youtubeChannelUrl, app.youtubeHandle);
@@ -4461,6 +4497,13 @@ class AppProvider extends ChangeNotifier {
 
     if (updated != null) {
       _applications = List.from(await _adminDbService!.loadApplications());
+    }
+
+    if (updated?.revisionOf != null) {
+      // The database published the revision in the same review transaction.
+      await loadVerifiedStreamersFromBackend();
+      notifyListeners();
+      return true;
     }
 
     final applicantProfileId =

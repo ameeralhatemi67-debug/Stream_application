@@ -18,12 +18,13 @@ class StreamerIdentityCard extends StatelessWidget {
     this.child,
     this.onTap,
     this.onClose,
+    this.headerAction,
   });
 
   final String name, title, avatarUrl, bannerUrl;
   final bool isVerified;
   final Widget status;
-  final Widget? child;
+  final Widget? child, headerAction;
   final VoidCallback? onTap, onClose;
 
   @override
@@ -37,6 +38,8 @@ class StreamerIdentityCard extends StatelessWidget {
         child: SizedBox(
           width: double.infinity,
           child: Material(
+            elevation: onClose == null ? 0 : 4,
+            shadowColor: AppTheme.shadow,
             color: AppTheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
@@ -78,27 +81,39 @@ class StreamerIdentityCard extends StatelessWidget {
                         ),
                         PositionedDirectional(
                           top: AppTheme.spaceSm,
-                          end: AppTheme.spaceSm,
+                          end: onClose != null || headerAction != null
+                              ? 56
+                              : AppTheme.spaceSm,
                           child: ConstrainedBox(
                             constraints: BoxConstraints(
                                 maxWidth: constraints.maxWidth - 80),
                             child: status,
                           ),
                         ),
-                        if (onClose != null)
+                        if (headerAction != null || onClose != null)
                           PositionedDirectional(
                             top: 0,
-                            start: 0,
-                            child: IconButton.filledTonal(
-                              tooltip: 'common.close'.tr(),
-                              onPressed: onClose,
-                              icon: const Icon(Icons.close_rounded),
-                              style: IconButton.styleFrom(
-                                backgroundColor: AppTheme.surface,
-                                foregroundColor: AppTheme.textSecondary,
-                                minimumSize: const Size(48, 48),
-                              ),
-                            ),
+                            end: 0,
+                            child: headerAction ??
+                                IconButton(
+                                  tooltip: 'common.close'.tr(),
+                                  onPressed: onClose,
+                                  constraints: const BoxConstraints(
+                                      minWidth: 48, minHeight: 48),
+                                  padding: const EdgeInsets.all(8),
+                                  icon: Container(
+                                    width: 32,
+                                    height: 32,
+                                    decoration: BoxDecoration(
+                                      shape: BoxShape.circle,
+                                      color: AppTheme.surface
+                                          .withValues(alpha: .6),
+                                    ),
+                                    child: const Icon(Icons.close_rounded,
+                                        size: 21.6,
+                                        color: AppTheme.textSecondary),
+                                  ),
+                                ),
                           ),
                         PositionedDirectional(
                           start: AppTheme.spaceMd,
