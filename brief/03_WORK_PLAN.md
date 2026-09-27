@@ -2,7 +2,7 @@
 
 ## Current execution and owner scope amendment, 2026-09-27
 
-The September 23 sequence and evidence counts below are historical. Current execution: Astra INT-01 is combining the completed map and streaming branches in `codex/hadayah-wave4v2-integration`; owner Wave4v2 testing is paused. Finish that audit/repair and conditional local merge, establish dedicated non-production Google/YouTube acceptance setup, then run one combined smoke and physical retest. P5/P6/P6S remain separately NOT ACCEPTED. Track current dispatches and dependencies in [management/TASK_BOARD.md](management/TASK_BOARD.md).
+The September 23 sequence and evidence counts below are historical. INT-01's combined source is now merged into local master at `c9e441f`, observed 2026-09-27 10:55 +03:00. The main checkout contains both map and streaming upgrades; owner documentation and evidence are preserved. Next establish the authorized test configuration/backend migration readiness, rebuild from main `project/`, identify the installed build, then perform W00 and combined smoke before resuming physical acceptance. P5/P6/P6S remain separately NOT ACCEPTED. Track current state in [management/TASK_BOARD.md](management/TASK_BOARD.md).
 
 Owner E4 Checks 2/8/15 defer advance scheduling/Upcoming Live, organization broadcasting/individual-organization broadcast switching/org-scoped broadcast revocation, and return-chip polish to after publication. The September 27 camera follow-up defers front switching for now with Coming Soon. Preserve safe disabled entry points and existing organization authorization; this is not a blanket P7 deferral. Exact sources, proposed enhancements and unresolved exclusions are in [management/RELEASE_SCOPE.md](management/RELEASE_SCOPE.md).
 

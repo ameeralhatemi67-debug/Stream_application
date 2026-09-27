@@ -6,6 +6,12 @@ updated: 2026-09-27
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
 
+## Local master integration, 2026-09-27 10:55 +03:00
+
+Owner requested one master checkout for testing. Local merge `c9e441f` now contains Opus map `74157ba`, Astra streaming `818cc12` and combined integration `8e28801`. Owner documentation was saved first in `571bcdd`; four documentation conflicts were reconciled without application/SQL changes. Project, supabase and build-script content exactly matches reviewed source `34d074a`. Fresh offline worker/page checks pass. Earlier 847 Flutter tests, zero analyzer issues, 462 SQL assertions and three concurrency checks remain inherited exact-source evidence, not rerun results.
+
+Both stashes, source branches and all 109 previously untracked files were preserved. No push, hosted migration, credential-file read or phone installation occurred. Use this main checkout's `project/` for the next full rebuild/relaunch; the already-installed phone app has not changed. Dedicated Google/YouTube configuration and both new database migrations on the intended authorized test backend still need readiness verification. P5/P6/P6S remain unaccepted; STREAM-D8 and physical/scope requirements remain open.
+
 ## 2026-09-27: manager handoff and concurrent work
 
 - Established [TASK_BOARD](../brief/management/TASK_BOARD.md), [EVENT_LOG](../brief/management/EVENT_LOG.md), [RELEASE_SCOPE](../brief/management/RELEASE_SCOPE.md) and [the successor prompt](../brief/management/HANDOFF_PROMPT.md). Archived the actual dispatched integration prompt and owner's configuration reply. Records separate dispatch, execution, review, merge and physical acceptance, with timestamps or explicit unknowns.

@@ -6,7 +6,7 @@ Hadayah is not publish-ready. This section and the updated Version 1.0 checkpoin
 
 | Order | Work | Current state / dependency |
 |---|---|---|
-| 1 | INT-01 combined streaming and map audit/repairs | Astra Xhigh is RUNNING on `codex/hadayah-wave4v2-integration`. Opus map `74157ba` and Astra camera `818cc12` are completed inputs. Conditional local merge only after its review/gates. |
+| 1 | INT-01 combined streaming and map audit/repairs | COMPLETE and locally merged into master at `c9e441f`, including Opus map `74157ba`, Astra camera `818cc12` and integration `8e28801`. Source identity verified; checkpoint acceptance remains open. |
 | 2 | Dedicated acceptance setup and combined smoke | Google/YouTube/non-production configuration is unconfirmed. Agent continues independent work; owner setup may run in parallel when concrete instructions are available. |
 | 3 | Consolidated Wave4v2 and focused repairs | Owner testing is PAUSED. One clearly identified Hadayah Test build, short smoke first, then two-phone/Chrome/OBS and offline-map cases. P5/P6/P6S each need their own closure evidence. |
 | 4 | Resolve STREAM-D8 and remaining launch scope | Server YouTube authorization is HIGH and release-blocking. Confirm remaining platform/mode exclusions and map-boundary/geography scope. These are not automatically deferred by the existing owner cuts. |

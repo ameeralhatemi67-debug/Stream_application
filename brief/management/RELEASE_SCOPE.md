@@ -29,7 +29,7 @@ Use qualified IDs above: streaming D8 and the map handoff's D8 geography decisio
 
 ## Route to publication
 
-1. INT-01 delivered source `34d074a` / evidence `8e28801`, observed 2026-09-27 10:32 +03:00. Source-review target was met in cycle 2; physical/backend scores remain provisional. Local master is still `7b54cb5`, not merged because protected owner documentation overlaps incoming paths. Preserve the candidate and reconcile those documents before any authorized promotion. Delivery does not accept a checkpoint.
+1. INT-01 source `34d074a` / final `8e28801` is now locally merged into master at `c9e441f`, observed 2026-09-27 10:55 +03:00. Owner documentation was committed and reconciled, preserving evidence and both source histories. Exact tested source identity was verified; physical/backend scores remain provisional and no checkpoint is accepted. Main `project/` is the owner's requested checkout for the next build.
 2. Resolve CFG-01 using INT-01's README setup checklist so one newly built, identified candidate can exercise the intended backend, Google sign-in and YouTube flows. The delivered artifacts are diagnostic; the dedicated setup is still missing. USB-routed local control-backend testing does not prove untethered backend transitions. No provisioning follow-up is dispatched.
 3. Run a short owner smoke test, then consolidated Wave4v2. Fix failures in focused slices; keep build-specific results and retest impacted paths. Do not restart every past test automatically.
 4. Resolve STREAM-D8 and remaining release-mode/scope decisions, alongside P5/P6/P6S evidence. Testing can identify other failures while D8 stays visibly open; it cannot waive it.

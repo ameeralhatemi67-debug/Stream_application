@@ -8,9 +8,15 @@ health: release_blocked
 
 # Project status: Streamer App
 
-## Current coordination and release status, 2026-09-27
+## Local master integration, 2026-09-27 10:55 +03:00
 
-Hadayah is **not release-ready**. P5/map, P6 and P6S are **NOT ACCEPTED**. This section supersedes earlier snapshots below. Current ownership and dependencies are in [the manager task board](../brief/management/TASK_BOARD.md), [event log](../brief/management/EVENT_LOG.md) and [release scope](../brief/management/RELEASE_SCOPE.md).
+Owner requested one master checkout for testing. Local merge `c9e441f` now contains Opus map `74157ba`, Astra streaming `818cc12` and combined integration `8e28801`. Owner documentation was saved first in `571bcdd`; four documentation conflicts were reconciled without application/SQL changes. Project, supabase and build-script content exactly matches reviewed source `34d074a`. Fresh offline worker/page checks pass. Earlier 847 Flutter tests, zero analyzer issues, 462 SQL assertions and three concurrency checks remain inherited exact-source evidence, not rerun results.
+
+Both stashes, source branches and all 109 previously untracked files were preserved. No push, hosted migration, credential-file read or phone installation occurred. Use this main checkout's `project/` for the next full rebuild/relaunch; the already-installed phone app has not changed. Dedicated Google/YouTube configuration and both new database migrations on the intended authorized test backend still need readiness verification. P5/P6/P6S remain unaccepted; STREAM-D8 and physical/scope requirements remain open.
+
+## Earlier coordination snapshot, 2026-09-27
+
+Hadayah is **not release-ready**. P5/map, P6 and P6S are **NOT ACCEPTED**. This historical section is superseded by the local master integration entry above. Current ownership and dependencies are in [the manager task board](../brief/management/TASK_BOARD.md), [event log](../brief/management/EVENT_LOG.md) and [release scope](../brief/management/RELEASE_SCOPE.md).
 
 - **Astra integration is RUNNING:** `codex/hadayah-wave4v2-integration`, worktree `C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app`. Chat: Integrate Hadayah streaming and map. It owns the combined audit, repairs, independent critic, conditional local merge and consolidated Wave4v2 sheet. No final outcome has been reviewed.
 - **Opus map implementation is finished but needs repair/acceptance:** branch `codex/tricity-map-upgrade`, tip `74157ba`, source `a57dda7`; critic **8/7/8/8**. Selected venue-card overflow, device/backend evidence, boundaries and geography scope remain. Recorded 734 tests and analysis 0 apply to that separate branch.
