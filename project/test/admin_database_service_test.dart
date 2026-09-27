@@ -9,7 +9,9 @@ import 'fixtures/admin_applications.dart';
 
 void main() {
   group('Admin Hub & Database Layer Unit Tests (Phase 1)', () {
-    test('TC-DB-01: BroadcasterApplicationModel JSON Round-Trip & Dual-Track Verification', () {
+    test(
+        'TC-DB-01: BroadcasterApplicationModel JSON Round-Trip & Dual-Track Verification',
+        () {
       final scholarApp = BroadcasterApplicationModel(
         id: 'app_scholar_test_01',
         accountType: ApplicationAccountType.individualScholar,
@@ -37,13 +39,27 @@ void main() {
       );
 
       final jsonScholar = scholarApp.toJson();
-      final reconstitutedScholar = BroadcasterApplicationModel.fromJson(jsonScholar);
+      jsonScholar['cityId'] = 'dhahran';
+      final reconstitutedScholar =
+          BroadcasterApplicationModel.fromJson(jsonScholar);
 
       expect(reconstitutedScholar.id, equals('app_scholar_test_01'));
+      expect(reconstitutedScholar.copyWith().cityId, 'dhahran');
+      expect(reconstitutedScholar.toJson()['cityId'], 'dhahran');
+      final legacy = Map<String, dynamic>.from(jsonScholar)
+        ..remove('cityId')
+        ..remove('latitude')
+        ..remove('longitude');
+      final unknown = BroadcasterApplicationModel.fromJson(legacy);
+      expect(unknown.cityId, isEmpty);
+      expect(unknown.latitude, 0);
+      expect(unknown.longitude, 0);
       expect(reconstitutedScholar.isOrganization, isFalse);
       expect(reconstitutedScholar.isPending, isTrue);
-      expect(reconstitutedScholar.getLocalizedTitle('en'), equals('Professor of Software Engineering'));
-      expect(reconstitutedScholar.getLocalizedTitle('ar'), equals('أستاذ هندسة البرمجيات'));
+      expect(reconstitutedScholar.getLocalizedTitle('en'),
+          equals('Professor of Software Engineering'));
+      expect(reconstitutedScholar.getLocalizedTitle('ar'),
+          equals('أستاذ هندسة البرمجيات'));
 
       final orgApp = BroadcasterApplicationModel(
         id: 'app_org_test_02',
@@ -76,16 +92,20 @@ void main() {
       expect(reconstitutedOrg.id, equals('app_org_test_02'));
       expect(reconstitutedOrg.isOrganization, isTrue);
       expect(reconstitutedOrg.seatingCapacity, equals(600));
-      expect(reconstitutedOrg.getLocalizedTitle('en'), equals('Technology Center & Auditorium'));
+      expect(reconstitutedOrg.getLocalizedTitle('en'),
+          equals('Technology Center & Auditorium'));
     });
 
-    test('TC-DB-02: TermsAndConditionsModel Serialization & Bilingual Helpers', () {
+    test('TC-DB-02: TermsAndConditionsModel Serialization & Bilingual Helpers',
+        () {
       final terms = TermsAndConditionsModel.createDefault();
       expect(terms.version, equals('v1.0.0'));
       expect(terms.getLocalizedTerms('en'), contains('Educational Purpose'));
       expect(terms.getLocalizedTerms('ar'), contains('الغرض التعليمي'));
-      expect(terms.getLocalizedGuidelines('en'), contains('Academic Integrity'));
-      expect(terms.getLocalizedGuidelines('ar'), contains('الأمانة الأكاديمية'));
+      expect(
+          terms.getLocalizedGuidelines('en'), contains('Academic Integrity'));
+      expect(
+          terms.getLocalizedGuidelines('ar'), contains('الأمانة الأكاديمية'));
 
       final json = terms.toJson();
       final reconstituted = TermsAndConditionsModel.fromJson(json);
@@ -135,10 +155,13 @@ void main() {
 
       expect(approved, isNotNull);
       expect(approved!.isApproved, isTrue);
-      expect(approved.adminReviewNotes, equals('Valid university credentials confirmed.'));
+      expect(approved.adminReviewNotes,
+          equals('Valid university credentials confirmed.'));
     });
 
-    test('TC-DB-05: AppProvider Verification State Machine (Approve Application -> Live Streamer)', () async {
+    test(
+        'TC-DB-05: AppProvider Verification State Machine (Approve Application -> Live Streamer)',
+        () async {
       final service = AdminDatabaseService(null);
       for (final fixture in sampleBroadcasterApplications()) {
         await service.submitApplication(fixture);
@@ -160,18 +183,23 @@ void main() {
       expect(success, isTrue);
       expect(provider.streamers.length, equals(initialStreamersCount + 1));
 
-      final newStreamer = provider.streamers.firstWhere((s) => s.streamerId == 'streamer_app_kfupm_ai_01');
+      final newStreamer = provider.streamers
+          .firstWhere((s) => s.streamerId == 'streamer_app_kfupm_ai_01');
       expect(newStreamer.isVerified, isTrue);
       expect(newStreamer.isOrganization, isTrue);
-      expect(newStreamer.fullNameEn, equals('KFUPM AI & Robotics Research Center'));
+      expect(newStreamer.fullNameEn,
+          equals('KFUPM AI & Robotics Research Center'));
       expect(newStreamer.latitude, equals(26.3050));
       expect(newStreamer.longitude, equals(50.1450));
 
       // Check notification created
-      expect(provider.notifications.any((n) => n.id.contains('app_kfupm_ai_01')), isTrue);
+      expect(
+          provider.notifications.any((n) => n.id.contains('app_kfupm_ai_01')),
+          isTrue);
     });
 
-    test('TC-DB-06: AppProvider Rejection Workflow and Reason Retention', () async {
+    test('TC-DB-06: AppProvider Rejection Workflow and Reason Retention',
+        () async {
       final service = AdminDatabaseService(null);
       for (final fixture in sampleBroadcasterApplications()) {
         await service.submitApplication(fixture);
@@ -186,9 +214,11 @@ void main() {
       );
 
       expect(success, isTrue);
-      final rejected = provider.rejectedApplications.firstWhere((a) => a.id == 'app_dr_tariq_02');
+      final rejected = provider.rejectedApplications
+          .firstWhere((a) => a.id == 'app_dr_tariq_02');
       expect(rejected.isRejected, isTrue);
-      expect(rejected.adminReviewNotes, equals('Please provide official medical faculty email.'));
+      expect(rejected.adminReviewNotes,
+          equals('Please provide official medical faculty email.'));
     });
   });
 }

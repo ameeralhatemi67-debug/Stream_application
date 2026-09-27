@@ -1,0 +1,19 @@
+{
+ "mermaid": "11.12.0",
+ "results": [
+  {
+   "file": "REPORT.md",
+   "index": 1,
+   "ok": true,
+   "type": "flowchart-v2",
+   "svgBytes": 26300
+  },
+  {
+   "file": "REPORT.md",
+   "index": 2,
+   "ok": true,
+   "type": "stateDiagram",
+   "svgBytes": 261695
+  }
+ ]
+}

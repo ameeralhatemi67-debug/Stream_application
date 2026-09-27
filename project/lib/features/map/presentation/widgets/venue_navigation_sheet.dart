@@ -11,13 +11,12 @@ import '../../models/map_models.dart';
 /// Modal Bottom Sheet for In-Person Venue Navigation, Campus Auditorium Info & Distance Estimation
 class VenueNavigationSheet extends StatelessWidget {
   final StreamerModel streamer;
-  final LatLng userCoordinates;
+  final LatLng? userCoordinates;
 
   const VenueNavigationSheet({
     super.key,
     required this.streamer,
-    this.userCoordinates =
-        const LatLng(26.2871, 50.2125), // Default: Al Khobar Center
+    this.userCoordinates,
   });
 
   /// Displays the venue navigation sheet as a modal bottom sheet
@@ -32,7 +31,7 @@ class VenueNavigationSheet extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (modalContext) => VenueNavigationSheet(
         streamer: streamer,
-        userCoordinates: userCoordinates ?? const LatLng(26.2871, 50.2125),
+        userCoordinates: userCoordinates,
       ),
     );
   }
@@ -41,14 +40,24 @@ class VenueNavigationSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final langCode = context.locale.languageCode;
     final auditoriumInfo = getAuditoriumInfoForStreamer(streamer);
-    final distanceKm = calculateDistanceKm(
-      userCoordinates.latitude,
-      userCoordinates.longitude,
-      streamer.latitude,
-      streamer.longitude,
-    );
-    final formattedDistance = formatDistanceKm(distanceKm, langCode);
-    final travelTimeStr = estimateTravelTime(distanceKm, langCode);
+    // An unpinned venue is stored as 0,0: no distance and no directions,
+    // rather than a distance to the Gulf of Guinea.
+    final hasPoint = isUsableVenuePoint(streamer.latitude, streamer.longitude);
+    final origin = userCoordinates;
+    final hasOrigin =
+        origin != null && isUsableVenuePoint(origin.latitude, origin.longitude);
+    final distanceKm = !hasPoint || !hasOrigin
+        ? null
+        : calculateDistanceKm(
+            origin.latitude,
+            origin.longitude,
+            streamer.latitude,
+            streamer.longitude,
+          );
+    final formattedDistance =
+        distanceKm == null ? '' : formatDistanceKm(distanceKm, langCode);
+    final travelTimeStr =
+        distanceKm == null ? '' : estimateTravelTime(distanceKm, langCode);
     final mapUrl = generateExternalMapUrl(
       streamer.latitude,
       streamer.longitude,
@@ -333,99 +342,127 @@ class VenueNavigationSheet extends StatelessWidget {
               ),
               const SizedBox(height: AppTheme.spaceMd),
 
-              // Distance Estimation Card
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spaceMd),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(
-                      color: AppTheme.primary.withValues(alpha: 0.4)),
+              if (!hasPoint)
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  decoration: BoxDecoration(
+                    color: AppTheme.surfaceAlt,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    border: Border.all(color: AppTheme.border),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.location_off_rounded,
+                          color: AppTheme.textMuted, size: 20),
+                      const SizedBox(width: AppTheme.spaceMd),
+                      Expanded(
+                        child: Text(
+                          'map.no_venue_location'.tr(),
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.2),
-                        shape: BoxShape.circle,
+              // Show distance only from an actual caller-provided location.
+              if (distanceKm != null)
+                Container(
+                  padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  decoration: BoxDecoration(
+                    color: AppTheme.primary.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                    border: Border.all(
+                        color: AppTheme.primary.withValues(alpha: 0.4)),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.directions_car_rounded,
+                          color: AppTheme.primary,
+                          size: 20,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.directions_car_rounded,
-                        color: AppTheme.primary,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spaceMd),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'venue.distance_label'.tr(),
-                            style: const TextStyle(
-                              color: AppTheme.primary,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                      const SizedBox(width: AppTheme.spaceMd),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'venue.distance_label'.tr(),
+                              style: const TextStyle(
+                                color: AppTheme.primary,
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          // Distance and drive time wrap rather than clip:
-                          // the Arabic forms are longer than the English ones
-                          // and overran a 320 px sheet.
-                          Wrap(
-                            spacing: AppTheme.spaceSm,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                formattedDistance,
-                                style: const TextStyle(
-                                  color: AppTheme.textPrimary,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
+                            const SizedBox(height: 2),
+                            // Distance and drive time wrap rather than clip:
+                            // the Arabic forms are longer than the English ones
+                            // and overran a 320 px sheet.
+                            Wrap(
+                              spacing: AppTheme.spaceSm,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Text(
+                                  formattedDistance,
+                                  style: const TextStyle(
+                                    color: AppTheme.textPrimary,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                '($travelTimeStr)',
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 12,
+                                Text(
+                                  '($travelTimeStr)',
+                                  style: const TextStyle(
+                                    color: AppTheme.textSecondary,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
               const SizedBox(height: AppTheme.spaceLg),
 
               // External Map Deep Link Action Button
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: ElevatedButton.icon(
-                  onPressed: () => _openInGoogleMaps(context, streamer, mapUrl),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: AppTheme.bg,
-                    elevation: 0,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+              if (hasPoint)
+                SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: ElevatedButton.icon(
+                    onPressed: () =>
+                        _openInGoogleMaps(context, streamer, mapUrl),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: AppTheme.bg,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      ),
                     ),
-                  ),
-                  icon: const Icon(Icons.map_rounded, size: 20),
-                  label: Text(
-                    'venue.open_maps'.tr(),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
+                    icon: const Icon(Icons.map_rounded, size: 20),
+                    label: Text(
+                      'venue.open_maps'.tr(),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         ),
@@ -445,6 +482,14 @@ class VenueNavigationSheet extends StatelessWidget {
     String fallbackMapUrl,
   ) async {
     Navigator.of(context).pop();
+    if (!isUsableVenuePoint(streamer.latitude, streamer.longitude)) {
+      // Never hand a 0,0 or invalid point to the clipboard fallback.
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text('map.no_venue_location'.tr()),
+      ));
+      return;
+    }
 
     if (await launchVenueDirections(streamer.latitude, streamer.longitude)) {
       return;

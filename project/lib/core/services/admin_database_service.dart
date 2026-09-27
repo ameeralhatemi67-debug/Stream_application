@@ -24,6 +24,7 @@ import '../../features/organization/models/org_broadcaster_permissions.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/profile/models/streamer_models.dart';
+import '../../features/map/models/map_tricity_domain.dart';
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -488,6 +489,7 @@ class AdminDatabaseService {
         'organization_type': a.organizationType,
         'venue_name_en': a.venueNameEn,
         'venue_name_ar': a.venueNameAr,
+        'city_id': a.cityId.isEmpty ? null : a.cityId,
         'latitude': a.latitude,
         'longitude': a.longitude,
         'seating_capacity': a.seatingCapacity,
@@ -525,6 +527,7 @@ class AdminDatabaseService {
       organizationType: row['organization_type'] as String?,
       venueNameEn: row['venue_name_en'] as String? ?? '',
       venueNameAr: row['venue_name_ar'] as String? ?? '',
+      cityId: row['city_id'] as String? ?? '',
       latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
       seatingCapacity: (row['seating_capacity'] as num?)?.toInt() ?? 0,
@@ -1292,6 +1295,7 @@ class AdminDatabaseService {
     BroadcasterApplicationModel app,
   ) async {
     if (!_useSupabase) throw Exception('Supabase not available');
+    final city = cityViewById(app.cityId);
     await _client.from('profiles').update({
       'is_streamer': true,
       'is_verified': true,
@@ -1301,6 +1305,8 @@ class AdminDatabaseService {
       'tags': app.tags,
       'venue_name_en': app.venueNameEn,
       'venue_name_ar': app.venueNameAr,
+      if (city != null) 'city_en': city.nameEn,
+      if (city != null) 'city_ar': city.nameAr,
       'latitude': app.latitude,
       'longitude': app.longitude,
       'youtube_handle': app.youtubeHandle,

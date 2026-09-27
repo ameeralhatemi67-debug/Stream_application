@@ -76,7 +76,7 @@ android {
             if (providers.gradleProperty("wave4v2TestApp").orNull == "true") {
                 applicationIdSuffix = ".wave4v2"
                 manifestPlaceholders["oauthScheme"] = "sa.hadayah.streamerapp.wave4v2"
-                manifestPlaceholders["appLabel"] = "Streamer Wave4v2"
+                manifestPlaceholders["appLabel"] = "Hadayah Test"
             }
         }
         release {

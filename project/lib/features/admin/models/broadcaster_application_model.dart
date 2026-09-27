@@ -39,6 +39,10 @@ class BroadcasterApplicationModel {
   final String? organizationType;
   final String venueNameEn;
   final String venueNameAr;
+
+  /// Explicit city selection; empty for legacy/unknown records. Never inferred
+  /// from a map centre or a coordinate rectangle.
+  final String cityId;
   final double latitude;
   final double longitude;
   final int seatingCapacity;
@@ -76,6 +80,7 @@ class BroadcasterApplicationModel {
     this.organizationType,
     required this.venueNameEn,
     required this.venueNameAr,
+    this.cityId = '',
     required this.latitude,
     required this.longitude,
     this.seatingCapacity = 0,
@@ -93,7 +98,8 @@ class BroadcasterApplicationModel {
     this.reviewedAt,
   });
 
-  bool get isOrganization => accountType == ApplicationAccountType.organizationVenue;
+  bool get isOrganization =>
+      accountType == ApplicationAccountType.organizationVenue;
   bool get isPending => status == ApplicationStatus.pending;
   bool get isApproved => status == ApplicationStatus.approved;
   bool get isRejected => status == ApplicationStatus.rejected;
@@ -105,17 +111,17 @@ class BroadcasterApplicationModel {
 
   String getLocalizedTitle(String languageCode) {
     if (isOrganization) {
-      return organizationType ?? (languageCode == 'ar' ? 'منظمة تعليمية' : 'Educational Organization');
+      return organizationType ??
+          (languageCode == 'ar' ? 'منظمة تعليمية' : 'Educational Organization');
     }
     return languageCode == 'ar'
         ? (academicTitleAr ?? 'محاضر أكاديمي')
         : (academicTitleEn ?? 'Academic Lecturer');
   }
 
-  String getLocalizedInstitution(String languageCode) =>
-      languageCode == 'ar'
-          ? (institutionAr ?? applicantNameAr)
-          : (institutionEn ?? applicantNameEn);
+  String getLocalizedInstitution(String languageCode) => languageCode == 'ar'
+      ? (institutionAr ?? applicantNameAr)
+      : (institutionEn ?? applicantNameEn);
 
   String getLocalizedVenue(String languageCode) =>
       languageCode == 'ar' ? venueNameAr : venueNameEn;
@@ -140,6 +146,7 @@ class BroadcasterApplicationModel {
     String? organizationType,
     String? venueNameEn,
     String? venueNameAr,
+    String? cityId,
     double? latitude,
     double? longitude,
     int? seatingCapacity,
@@ -173,6 +180,7 @@ class BroadcasterApplicationModel {
       organizationType: organizationType ?? this.organizationType,
       venueNameEn: venueNameEn ?? this.venueNameEn,
       venueNameAr: venueNameAr ?? this.venueNameAr,
+      cityId: cityId ?? this.cityId,
       latitude: latitude ?? this.latitude,
       longitude: longitude ?? this.longitude,
       seatingCapacity: seatingCapacity ?? this.seatingCapacity,
@@ -207,6 +215,7 @@ class BroadcasterApplicationModel {
         'organizationType': organizationType,
         'venueNameEn': venueNameEn,
         'venueNameAr': venueNameAr,
+        'cityId': cityId,
         'latitude': latitude,
         'longitude': longitude,
         'seatingCapacity': seatingCapacity,
@@ -227,8 +236,8 @@ class BroadcasterApplicationModel {
   factory BroadcasterApplicationModel.fromJson(Map<String, dynamic> json) =>
       BroadcasterApplicationModel(
         id: json['id'] as String,
-        accountType: ApplicationAccountType.values.byName(
-            json['accountType'] as String? ?? 'individualScholar'),
+        accountType: ApplicationAccountType.values
+            .byName(json['accountType'] as String? ?? 'individualScholar'),
         applicantNameEn: json['applicantNameEn'] as String? ?? '',
         applicantNameAr: json['applicantNameAr'] as String? ?? '',
         email: json['email'] as String? ?? '',
@@ -242,8 +251,9 @@ class BroadcasterApplicationModel {
         organizationType: json['organizationType'] as String?,
         venueNameEn: json['venueNameEn'] as String? ?? '',
         venueNameAr: json['venueNameAr'] as String? ?? '',
-        latitude: (json['latitude'] as num?)?.toDouble() ?? 26.2871,
-        longitude: (json['longitude'] as num?)?.toDouble() ?? 50.2125,
+        cityId: json['cityId'] as String? ?? '',
+        latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
+        longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
         seatingCapacity: (json['seatingCapacity'] as num?)?.toInt() ?? 0,
         officialWebsiteUrl: json['officialWebsiteUrl'] as String?,
         youtubeChannelUrl: json['youtubeChannelUrl'] as String? ?? '',

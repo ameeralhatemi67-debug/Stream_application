@@ -484,6 +484,23 @@ void main() {
   });
 
   for (final locale in [const Locale('en'), const Locale('ar')]) {
+    testWidgets('End confirmation at 568x240 and 2x text: $locale', (tester) async {
+      final db = _Db();
+      final p = await tester.runAsync(() => broadcaster(db));
+      await open(tester, p!, locale: locale, size: const Size(568, 240), textScale: 2);
+      await tester.tap(endButton);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final stay = find.byKey(const Key('phone-end-stay'));
+      await tester.ensureVisible(stay);
+      expect(stay.hitTestable(), findsOneWidget);
+      await tester.tap(stay);
+      await tester.pumpAndSettle();
+      await close(tester, p, db);
+    });
+  }
+
+  for (final locale in [const Locale('en'), const Locale('ar')]) {
     for (final size in [
       const Size(568, 240),
       const Size(740, 360),

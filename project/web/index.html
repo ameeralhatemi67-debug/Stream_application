@@ -31,6 +31,30 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>Hadayah Live</title>
+  <script>
+    // Offline map preparation: remember every file this page loads from its
+    // own origin and the Flutter/Google font CDNs, from the very start, so
+    // "Prepare offline map" can store the exact shell, engine and fonts in
+    // use (the browser's own timing list keeps only 250 entries). URLs only.
+    (function () {
+      var seen = window.__streamerResources = [];
+      var allowed = [location.origin, 'https://www.gstatic.com', 'https://fonts.gstatic.com'];
+      function add(entries) {
+        entries.forEach(function (entry) {
+          try {
+            var url = new URL(entry.name);
+            if (allowed.indexOf(url.origin) >= 0 && seen.indexOf(entry.name) < 0 && seen.length < 3000) {
+              seen.push(entry.name);
+            }
+          } catch (e) {}
+        });
+      }
+      try {
+        new PerformanceObserver(function (list) { add(list.getEntries()); })
+          .observe({ type: 'resource', buffered: true });
+      } catch (e) {}
+    })();
+  </script>
   <link rel="manifest" href="manifest.json">
 </head>
 <body>
@@ -43,5 +67,23 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <!--
+    Offline map: a network-first worker that answers from the cache the app
+    fills only when the user prepares the offline map. See
+    streamer_offline_sw.js; it never caches other origins' API responses.
+  -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function () {
+        navigator.serviceWorker.register('streamer_offline_sw.js')
+          .then(function () { return navigator.serviceWorker.ready; })
+          .then(function (registration) {
+            // The page is committed now. During the navigation fetch its new
+            // client ID may not yet appear in clients.matchAll().
+            registration.active.postMessage('prune-offline');
+          }).catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>

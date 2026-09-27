@@ -19,6 +19,7 @@ import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../map/presentation/widgets/venue_navigation_sheet.dart';
+import '../../map/presentation/venue_directions_launcher.dart';
 import 'abstract_video_player.dart';
 import 'widgets/chat_message_actions_sheet.dart';
 import 'widgets/floating_reactions_overlay.dart';
@@ -2386,28 +2387,29 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           ),
         ),
         const SizedBox(height: AppTheme.spaceMd),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.textPrimary,
-              side: const BorderSide(color: AppTheme.border),
-              padding: const EdgeInsets.symmetric(vertical: 10),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+        if (isUsableVenuePoint(streamer.latitude, streamer.longitude))
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.textPrimary,
+                side: const BorderSide(color: AppTheme.border),
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+              ),
+              icon: const Icon(Icons.directions_car_rounded,
+                  color: AppTheme.primary, size: 16),
+              label: Text('live.get_directions'.tr(),
+                  style: const TextStyle(fontSize: 12)),
+              onPressed: () {
+                VenueNavigationSheet.show(
+                  context,
+                  streamer: streamer,
+                );
+              },
             ),
-            icon: const Icon(Icons.directions_car_rounded,
-                color: AppTheme.primary, size: 16),
-            label: Text('live.get_directions'.tr(),
-                style: const TextStyle(fontSize: 12)),
-            onPressed: () {
-              VenueNavigationSheet.show(
-                context,
-                streamer: streamer,
-              );
-            },
           ),
-        ),
       ],
     );
   }

@@ -372,6 +372,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           context: context,
           builder: (dialogContext) => AlertDialog(
             key: const Key('phone-end-confirm'),
+            scrollable: true,
             backgroundColor: AppTheme.surface,
             title: Text('live.end_confirm_title'.tr(),
                 style: const TextStyle(color: AppTheme.textPrimary)),

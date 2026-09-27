@@ -17,6 +17,7 @@ import '../services/connectivity_service.dart';
 import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
 import '../../features/map/models/map_models.dart';
+import '../../features/map/models/map_tricity_domain.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
@@ -4483,6 +4484,9 @@ class AppProvider extends ChangeNotifier {
     // Stage 2: Create StreamerModel & Inject into Discovery Feed
     onProgress?.call(
         2, 'Creating Broadcaster card & integrating into Discovery Feed...');
+    final existingStreamer = _streamers.where((s) =>
+        s.streamerId == (realOrgId ?? applicantProfileId ?? 'streamer_${app.id}')).firstOrNull;
+    final applicationCity = cityViewById(app.cityId);
     final newStreamer = StreamerModel(
       streamerId: realOrgId ?? applicantProfileId ?? 'streamer_${app.id}',
       fullNameEn: app.applicantNameEn,
@@ -4501,17 +4505,19 @@ class AppProvider extends ChangeNotifier {
       followerCount: 0,
       categoryId: app.categoryId,
       tags: app.tags,
-      cityEn: 'Al Khobar',
-      cityAr: 'الخبر',
+      cityEn: applicationCity?.nameEn ?? existingStreamer?.cityEn ?? '',
+      cityAr: applicationCity?.nameAr ?? existingStreamer?.cityAr ?? '',
       venueNameEn: app.venueNameEn,
       venueNameAr: app.venueNameAr,
-      latitude: app.latitude != 0.0 ? app.latitude : 26.2871,
-      longitude: app.longitude != 0.0 ? app.longitude : 50.2125,
+      // 0,0 is the application's "no pinned location"; keep it rather than
+      // inventing a venue point. The map and directions treat it as absent.
+      latitude: app.latitude,
+      longitude: app.longitude,
       isCurrentlyLive: false,
       broadcastType: BroadcastType.offline,
       isOrganization: app.isOrganization,
       youtubeHandle: app.youtubeHandle,
-      youtubeVideoId: 'dQw4w9WgXcQ',
+      youtubeVideoId: existingStreamer?.youtubeVideoId ?? '',
     );
 
     final streamerIdx =

@@ -16,7 +16,7 @@ void main() {
     // message list instead of invented comments. Real chat behaviour is
     // covered by live_chat_controller/chat widget tests.
     test('TC-VENUE-01: Haversine Venue Distance Calculation Helper', () {
-      final distanceKm = MapRegionModel.calculateHaversineDistance(
+      final distanceKm = calculateDistanceKm(
         26.2871, 50.2125, // Al Khobar Center
         26.3040, 50.1500, // KFUPM Auditorium
       );
@@ -25,8 +25,8 @@ void main() {
       expect(distanceKm,
           lessThan(30)); // Realistic intra-city distance in AlSharqia
 
-      final formattedEn = MapRegionModel.formatDistance(distanceKm, 'en');
-      final formattedAr = MapRegionModel.formatDistance(distanceKm, 'ar');
+      final formattedEn = formatDistanceKm(distanceKm, 'en');
+      final formattedAr = formatDistanceKm(distanceKm, 'ar');
 
       expect(formattedEn, contains('km'));
       expect(formattedAr, contains('كم'));

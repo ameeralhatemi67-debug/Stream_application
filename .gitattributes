@@ -1,1 +1,4 @@
 * text=auto
+# Hash-verified map pack: the app checks these exact bytes against
+# manifest.json, so line endings must never be rewritten on checkout.
+project/assets/maps/tricity/** -text

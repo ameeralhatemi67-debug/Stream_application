@@ -53,11 +53,15 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   final List<OrgApplicationSpeaker> _orgSpeakers = [];
 
   // Step 4 Controllers
-  String _selectedCity = 'khobar';
+  String _selectedCity = '';
   final TextEditingController _venueController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   String _preferredContact = 'whatsapp';
-  LatLng _selectedCoordinates = const LatLng(26.2172, 50.1971);
+
+  /// Exact venue point the applicant pinned; null until they pin one. An
+  /// unpinned application is submitted as 0,0, the existing "no location"
+  /// value, never as an invented Al Khobar point.
+  LatLng? _selectedCoordinates;
   final List<OrgBranchVenue> _orgBranches = [];
 
   // Step 5 Terms
@@ -78,6 +82,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     // of updating the first (issue_log.md: "I should not have the ability
     // to own two channels").
     if (existing != null) {
+      _selectedCity = existing.cityId;
       _nameController.text = existing.isOrganization
           ? existing.applicantNameEn
           : existing.applicantNameEn;
@@ -181,6 +186,10 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     } else if ((!_isOrganization && _currentStep == 3) ||
         (_isOrganization && _currentStep == 4)) {
       // Location & Phone Validation
+      if (_selectedCoordinates != null && _selectedCity.isEmpty) {
+        _showValidationToast('settings.city_label'.tr());
+        return false;
+      }
       final phone = _phoneController.text.replaceAll(RegExp(r'\s+'), '');
       if (phone.isNotEmpty) {
         final isValidSaudi = RegExp(r'^05[0-9]{8}$').hasMatch(phone) ||
@@ -357,8 +366,9 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         organizationType: _isOrganization ? 'Educational Academy' : null,
         venueNameEn: bilingual.venueNameEn,
         venueNameAr: bilingual.venueNameAr,
-        latitude: _selectedCoordinates.latitude,
-        longitude: _selectedCoordinates.longitude,
+        cityId: _selectedCity,
+        latitude: _selectedCoordinates?.latitude ?? 0.0,
+        longitude: _selectedCoordinates?.longitude ?? 0.0,
         seatingCapacity: _isOrganization ? 300 : 120,
         youtubeChannelUrl: channel.url,
         youtubeHandle: channel.stored,

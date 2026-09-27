@@ -16,6 +16,7 @@ void main() {
     final provider = AppProvider(AdminDatabaseService(null));
     final application = BroadcasterApplicationModel(
       id: 'sheet-url',
+      cityId: 'dhahran',
       accountType: ApplicationAccountType.individualScholar,
       applicantNameEn: 'Test',
       applicantNameAr: 'اختبار',
@@ -53,12 +54,19 @@ void main() {
     await tester.pumpAndSettle();
     await tester.tap(find.text('Open'));
     await tester.pumpAndSettle();
+    final city = find.widgetWithText(ChoiceChip, 'Dammam');
+    await tester.ensureVisible(city);
+    await tester.tap(city);
+    await tester.pumpAndSettle();
     final submit = find.byType(ElevatedButton);
     await tester.ensureVisible(submit);
     await tester.pumpAndSettle();
     await tester.tap(submit);
     await tester.pumpAndSettle();
     expect(provider.applications.single.youtubeHandle, 'lecture');
+    expect(provider.applications.single.cityId, 'dammam');
+    expect(provider.applications.single.latitude, 26);
+    expect(provider.applications.single.longitude, 50);
     expect(provider.applications.single.youtubeChannelUrl,
         'https://www.youtube.com/@lecture');
     expect(find.byType(BroadcasterApplicationSheet), findsNothing);
@@ -235,6 +243,7 @@ void main() {
 
       final app = BroadcasterApplicationModel(
         id: 'app_approval_test',
+        cityId: 'dammam',
         accountType: ApplicationAccountType.organizationVenue,
         applicantNameEn: 'Dammam Technology Hub',
         applicantNameAr: 'مركز الدمام للتقنية',
@@ -276,6 +285,9 @@ void main() {
       expect(createdStreamer.isOrganization, isTrue);
       expect(createdStreamer.latitude, equals(26.4300));
       expect(createdStreamer.longitude, equals(50.1000));
+      expect(createdStreamer.cityEn, 'Dammam');
+      expect(createdStreamer.cityAr, 'الدمام');
+      expect(createdStreamer.youtubeVideoId, isEmpty);
     });
   });
 }

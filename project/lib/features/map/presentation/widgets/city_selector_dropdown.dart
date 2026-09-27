@@ -1,23 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../models/map_models.dart';
+import '../../models/map_tricity_domain.dart';
 
+/// Id used for the "All three cities" overview entry.
+const String kAllCitiesId = 'all';
+
+/// City view selector for the three-city map. Choosing an entry only moves
+/// the map view; it never claims a municipal boundary.
 class CitySelectorDropdown extends StatelessWidget {
-  final MapRegionModel selectedCity;
-  final ValueChanged<MapRegionModel> onCitySelected;
+  final String selectedCityId;
+  final ValueChanged<String> onCitySelected;
 
   const CitySelectorDropdown({
     super.key,
-    required this.selectedCity,
+    this.selectedCityId = kAllCitiesId,
     required this.onCitySelected,
   });
+
+  static String labelFor(String cityId, String languageCode) =>
+      cityViewById(cityId)?.localizedName(languageCode) ??
+      'map.all_cities'.tr();
 
   @override
   Widget build(BuildContext context) {
     final langCode = context.locale.languageCode;
+    final ids = [kAllCitiesId, for (final view in kTricityCityViews) view.id];
 
-    return PopupMenuButton<MapRegionModel>(
+    return PopupMenuButton<String>(
       tooltip: 'map.choose_place'.tr(),
       onSelected: onCitySelected,
       color: AppTheme.surface,
@@ -27,21 +37,23 @@ class CitySelectorDropdown extends StatelessWidget {
       ),
       offset: const Offset(0, 44),
       itemBuilder: (context) {
-        return saudiMapPresets.map((region) {
-          final isCurrent = region.regionId == selectedCity.regionId;
-          return PopupMenuItem<MapRegionModel>(
-            value: region,
+        return ids.map((id) {
+          final isCurrent = id == selectedCityId;
+          return PopupMenuItem<String>(
+            value: id,
             child: Row(
               children: [
                 Icon(
-                  Icons.location_on_rounded,
+                  id == kAllCitiesId
+                      ? Icons.map_outlined
+                      : Icons.location_on_rounded,
                   size: 18,
                   color: isCurrent ? AppTheme.primary : AppTheme.textMuted,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    region.getLocalizedName(langCode),
+                    labelFor(id, langCode),
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight:
@@ -97,7 +109,7 @@ class CitySelectorDropdown extends StatelessWidget {
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
-                      selectedCity.getLocalizedName(langCode),
+                      labelFor(selectedCityId, langCode),
                       style: const TextStyle(
                         color: AppTheme.textPrimary,
                         fontSize: 12,
