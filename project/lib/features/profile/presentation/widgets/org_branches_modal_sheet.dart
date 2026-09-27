@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:url_launcher/url_launcher.dart';
+import '../../../map/presentation/venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../organization/models/org_venue_branch_model.dart';
 
@@ -28,13 +28,6 @@ class OrgBranchesModalSheet extends StatelessWidget {
         venues: venues,
       ),
     );
-  }
-
-  Future<void> _launchMap(double lat, double lng, String label) async {
-    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
-    if (await canLaunchUrl(uri)) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    }
   }
 
   @override
@@ -267,7 +260,8 @@ class OrgBranchesModalSheet extends StatelessWidget {
 
           const SizedBox(height: 14),
 
-          // Action: Get directions
+          // Action: only a real pinned venue can offer directions.
+          if (isUsableVenuePoint(venue.latitude, venue.longitude))
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
@@ -281,10 +275,10 @@ class OrgBranchesModalSheet extends StatelessWidget {
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 ),
               ),
-              onPressed: () => _launchMap(
+              onPressed: () => openVenueDirections(
+                context,
                 venue.latitude,
                 venue.longitude,
-                venue.getLocalizedName(lang),
               ),
             ),
           ),
