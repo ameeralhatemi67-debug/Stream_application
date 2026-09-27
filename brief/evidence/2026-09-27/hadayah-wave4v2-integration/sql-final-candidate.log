@@ -1,0 +1,29 @@
+Connecting to local database...
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/admin_safety_actions.test.sql ............ ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/admin_user_directory.test.sql ............ ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/application_and_ban_guards.test.sql ...... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/application_city.test.sql ................ ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/asset_listing.test.sql ................... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/audited_broadcaster_moderation.test.sql .. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/broadcast_identity_boundaries.test.sql ... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/broadcast_session_authority.test.sql ..... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/broadcast_session_fencing.test.sql ....... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/broadcast_sessions.test.sql .............. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/broadcaster_columns.test.sql ............. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/broadcaster_device_claim_state.test.sql .. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/chat_blocks_and_app_flags.test.sql ....... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/chat_keyword_audit.test.sql .............. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/chat_keyword_filter.test.sql ............. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/chat_moderation_authority.test.sql ....... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/chat_rate_limit.test.sql ................. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/follows_and_bookmarks.test.sql ........... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/live_flag_expiry_and_privilege.test.sql .. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/organization_public_location.test.sql .... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/rls_catalog.test.sql ..................... ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/streamer_assets.test.sql ................. ok
+/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/brief/.runtime/hadayah-integration/supabase/tests/viewer_presence.test.sql ................. ok
+All tests successful.
+Files=23, Tests=462,  2 wallclock secs ( 0.12 usr  0.08 sys +  0.21 cusr  0.19 csys =  0.60 CPU)
+Result: PASS
+A new version of Supabase CLI is available: v2.118.0 (currently installed v2.115.0)
+We recommend updating regularly for new features and bug fixes: https://supabase.com/docs/guides/cli/getting-started#updating-the-supabase-cli

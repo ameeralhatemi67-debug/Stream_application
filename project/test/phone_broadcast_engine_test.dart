@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart';
@@ -146,29 +147,36 @@ void main() {
     },
   );
 
-  test('switchCamera toggles isFrontCamera on success', () async {
-    messenger.setMockMethodCallHandler(methodChannel, (call) async => null);
-
+  test('front camera is unavailable and never reaches native switching',
+      () async {
+    final calls = <String>[];
+    messenger.setMockMethodCallHandler(methodChannel, (call) async {
+      calls.add(call.method);
+      return null;
+    });
     final engine = RtmpPublishEngine();
+    await expectLater(engine.switchCamera(), throwsUnsupportedError);
     expect(engine.isFrontCamera, isFalse);
-
-    await engine.switchCamera();
-
-    expect(engine.isFrontCamera, isTrue);
+    expect(calls, isEmpty);
+    engine.dispose();
   });
 
-  test('switchCamera surfaces an error without flipping isFrontCamera',
+  test('settings completions after disposal cannot notify a dead controller',
       () async {
-    messenger.setMockMethodCallHandler(methodChannel, (call) async {
-      throw PlatformException(
-          code: 'SWITCH_FAILED', message: 'no second camera');
-    });
-
-    final engine = RtmpPublishEngine();
-    await engine.switchCamera();
-
-    expect(engine.isFrontCamera, isFalse);
-    expect(engine.lastError, 'no second camera');
+    for (final method in ['setMuted', 'setAudioOnly']) {
+      final gate = Completer<void>();
+      messenger.setMockMethodCallHandler(methodChannel, (call) async {
+        if (call.method == method) await gate.future;
+        return null;
+      });
+      final engine = RtmpPublishEngine();
+      final pending = method == 'setMuted'
+          ? engine.setMuted(true)
+          : engine.setAudioOnly(true);
+      engine.dispose();
+      gate.complete();
+      await expectLater(pending, completes);
+    }
   });
 
   test("initializeCamera sends the selected preset's width/height/bitrate",
@@ -184,7 +192,7 @@ void main() {
 
     expect(capturedArgs, {
       'width': 640,
-      'height': 480,
+      'height': 360,
       'videoBitrate': 800000,
     });
   });
@@ -200,7 +208,13 @@ void main() {
     await engine.startPublishing('rtmp://example.com/live2/key');
 
     expect(captured?.method, 'startStream');
-    expect(captured?.arguments, {'url': 'rtmp://example.com/live2/key'});
+    expect(captured?.arguments, {
+      'url': 'rtmp://example.com/live2/key',
+      'generation': 1,
+      'muted': false,
+      'audioOnly': false,
+      'front': false
+    });
     expect(engine.state, RtmpPublishState.connecting);
   });
 

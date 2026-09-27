@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "result": {
+    "build": "7cab6d0-local-diag-1",
+    "status": 200,
+    "sha256": "fe071eb93a04e6e3dba1fec65319836516ef3b870b5a2a938f1c7f30860d5356"
+  }
+}

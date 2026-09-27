@@ -1,0 +1,5 @@
+Analyzing project...                                            
+
+   info - Statements in an if should be enclosed in a block - lib\features\map\models\map_models.dart:135:26 - curly_braces_in_flow_control_structures
+
+1 issue found. (ran in 25.5s)

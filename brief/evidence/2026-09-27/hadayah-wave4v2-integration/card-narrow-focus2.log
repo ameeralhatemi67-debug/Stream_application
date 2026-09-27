@@ -1,0 +1,78 @@
+00:00 +0: loading C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart
+00:00 +0: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:00 +0: selected card en width=320.0 text=2.0 BroadcastType.offline
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+unhandled element <defs/>; Picture key: Svg loader
+00:02 +1: selected card en width=320.0 text=2.0 BroadcastType.liveVideo
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:02 +2: selected card en width=320.0 text=2.0 BroadcastType.liveAudio
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+══╡ EXCEPTION CAUGHT BY FLUTTER TEST FRAMEWORK ╞════════════════════════════════════════════════════
+The following TestFailure was thrown running a test:
+Expected: null
+  Actual: FlutterError:<A RenderFlex overflowed by 37 pixels on the right.>
+
+When the exception was thrown, this was the stack:
+#4      main.<anonymous closure> (file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart:166:13)
+<asynchronous suspension>
+#5      testWidgets.<anonymous closure>.<anonymous closure> (package:flutter_test/src/widget_tester.dart:192:15)
+<asynchronous suspension>
+#6      TestWidgetsFlutterBinding._runTestBody (package:flutter_test/src/binding.dart:1682:5)
+<asynchronous suspension>
+<asynchronous suspension>
+(elided one frame from package:stack_trace)
+
+This was caught by the test expectation on the following line:
+  file:///C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/map_tricity_widgets_test.dart line 166
+The test description was:
+  selected card en width=320.0 text=2.0 BroadcastType.liveAudio
+════════════════════════════════════════════════════════════════════════════════════════════════════
+00:03 +2 -1: selected card en width=320.0 text=2.0 BroadcastType.liveAudio [E]
+  Test failed. See exception logs above.
+  The test description was: selected card en width=320.0 text=2.0 BroadcastType.liveAudio
+  
+00:03 +2 -1: (tearDownAll)
+00:03 +2 -1: Some tests failed.

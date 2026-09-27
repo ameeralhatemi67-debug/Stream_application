@@ -1,15 +1,20 @@
 import '../../profile/models/streamer_models.dart';
 import '../models/map_models.dart';
-import 'package:latlong2/latlong.dart';
+import '../models/map_tricity_domain.dart';
 
 /// The map and its search use the same current, public catalog snapshot.
+/// Only verified, map-visible records whose exact coordinates fall inside
+/// the three-city map domain are drawn. Records elsewhere (or with invalid
+/// coordinates) are untouched and stay in the feed, profiles and
+/// directions; they are simply not placed on this map.
 List<StreamerModel> visibleMapStreamers(Iterable<StreamerModel> streamers) =>
     streamers
         .where((streamer) =>
             streamer.isVerified &&
             !streamer.isTemporarilyHiddenFromMap &&
-            saudiMapBounds
-                .contains(LatLng(streamer.latitude, streamer.longitude)))
+            (isTricityVenueCity(streamer.cityEn) ||
+                isTricityVenueCity(streamer.cityAr)) &&
+            isInTricityMapDomain(streamer.latitude, streamer.longitude))
         .toList();
 
 /// When a public catalog exists it can remove stale pins. On a cold start
@@ -21,8 +26,10 @@ List<MapMarkerModel> visibleCachedMapMarkers(
 }) =>
     cached
         .where((marker) =>
-            currentVisibleIds == null ||
-            currentVisibleIds.contains(marker.streamerId))
+            isTricityVenueCity(marker.cityId) &&
+            isInTricityMapDomain(marker.latitude, marker.longitude) &&
+            (currentVisibleIds == null ||
+                currentVisibleIds.contains(marker.streamerId)))
         .toList();
 
 List<StreamerModel> searchMapStreamers(

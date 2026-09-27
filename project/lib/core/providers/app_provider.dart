@@ -1,3 +1,4 @@
+import '../services/youtube_channel_reference.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -809,7 +810,7 @@ class AppProvider extends ChangeNotifier {
   /// (another phone app). Recorded on the server session so the modes are
   /// never confused with one another.
   void setBroadcastSenderMode(String mode) {
-    const allowed = {'phone_direct', 'obs_laptop', 'external_phone'};
+    const allowed = {'phone_direct', 'obs_laptop'};
     _broadcastSenderMode = allowed.contains(mode) ? mode : 'unspecified';
   }
 
@@ -1184,6 +1185,63 @@ class AppProvider extends ChangeNotifier {
       return true;
     } catch (_) {
       return true;
+    }
+  }
+
+  /// Recovery may only resume this exact server session on this device. A
+  /// failed read is uncertainty, never permission. Unlike ordinary ingest
+  /// reporting this deliberately bypasses the dedup cache.
+  Future<bool?> authorizeBroadcastRecovery() async {
+    final session = _liveSessionId;
+    final device = _currentDeviceSession;
+    final generation = _deviceGeneration;
+    final epoch = _liveAssertionEpoch;
+    final watch = _liveWatchId;
+    bool current() =>
+        !_disposed &&
+        _isBroadcastingLive &&
+        session != null &&
+        _liveSessionId == session &&
+        generation == _deviceGeneration &&
+        epoch == _liveAssertionEpoch &&
+        _currentDeviceSession?.deviceId == device?.deviceId &&
+        _currentDeviceSession?.isPrimaryBroadcaster == true;
+    if (!current() ||
+        _adminDbService == null ||
+        _authService.currentSession == null) {
+      return false;
+    }
+    try {
+      final status = await _adminDbService!.loadMyBroadcastStatus();
+      if (!current()) return false;
+      if (status['live'] != true ||
+          status['session_id'] != session ||
+          status['stream_id'] != watch ||
+          status['device_id'] != device?.deviceId) {
+        _endBroadcastRemotely('ended');
+        return false;
+      }
+      final permitted = await _adminDbService!.canBroadcast(
+          orgId: _selectedBroadcastOrgId, type: _customBroadcastType.name);
+      if (!current()) return false;
+      if (!permitted) {
+        _endBroadcastRemotely('approval_revoked');
+        return false;
+      }
+      // This RPC locks and verifies the exact session/device against End,
+      // transfer and moderation. It does not start or recreate a session.
+      await _adminDbService!.reportBroadcastIngest(
+          sessionId: session!, deviceId: device!.deviceId, sending: false);
+      return current();
+    } on PostgrestException catch (e) {
+      if (!current()) return false;
+      if (e.code == '42501' || e.code == '55000') {
+        _endBroadcastRemotely('ended');
+        return false;
+      }
+      return null;
+    } catch (_) {
+      return current() ? null : false;
     }
   }
 
@@ -1901,10 +1959,17 @@ class AppProvider extends ChangeNotifier {
       if (_lastLiveFlagSweepAt == null ||
           now.difference(_lastLiveFlagSweepAt!) >= _liveFlagSweepInterval) {
         _lastLiveFlagSweepAt = now;
-        await _adminDbService!.sweepStaleLiveFlags();
+        // Cleanup is optional for reading public truth; a slow sweep must not
+        // strand all catalog reads and keep an ended room alive indefinitely.
+        try {
+          await _adminDbService!
+              .sweepStaleLiveFlags()
+              .timeout(const Duration(seconds: 2));
+        } on TimeoutException {/* the catalog read can still succeed */}
       }
       final backendStreamers = await _adminDbService!
-          .loadVerifiedStreamersFromBackend(requireSuccess: true);
+          .loadVerifiedStreamersFromBackend(requireSuccess: true)
+          .timeout(const Duration(seconds: 5));
       if (_disposed || epoch != _catalogEpoch || !isOnline) return;
       _lastLoadedPublicStreamers = List.of(backendStreamers);
 
@@ -2486,33 +2551,11 @@ class AppProvider extends ChangeNotifier {
       List.unmodifiable(_selectedCoSpeakerIds);
 
   void setSelectedBroadcastOrgId(String? orgId) {
+    // Organization broadcasting is explicitly deferred for this release.
+    if (orgId != null) return;
     _selectedBroadcastOrgId = orgId;
-    if (orgId != null) {
-      final venues = getOrganizationVenues(orgId);
-      final mainHq = venues.firstWhere(
-        (v) => v.isMainHeadquarters,
-        orElse: () => venues.isNotEmpty
-            ? venues.first
-            : const OrgVenueBranchModel(
-                venueId: '',
-                nameEn: '',
-                nameAr: '',
-                cityEn: '',
-                cityAr: '',
-                latitude: 0,
-                longitude: 0,
-                seatingCapacity: 0),
-      );
-      _selectedVenueBranchId = mainHq.venueId.isNotEmpty
-          ? mainHq.venueId
-          : (venues.isNotEmpty ? venues.first.venueId : null);
-      final speakers = getOrganizationSpeakers(orgId);
-      _selectedCoSpeakerIds =
-          speakers.isNotEmpty ? [speakers.first.speakerId] : [];
-    } else {
-      _selectedVenueBranchId = null;
-      _selectedCoSpeakerIds = [];
-    }
+    _selectedVenueBranchId = null;
+    _selectedCoSpeakerIds = [];
     notifyListeners();
   }
 
@@ -2968,11 +3011,32 @@ class AppProvider extends ChangeNotifier {
     );
   }
 
+  Future<void> validateChannelConfiguration(String url, String handle) async {
+    final error = YouTubeChannelReference.pairError(url, handle);
+    if (error != null) throw FormatException(error);
+    final a = YouTubeChannelReference.parse(url, requireUrl: true)!;
+    final b = YouTubeChannelReference.parse(handle)!;
+    if (a.sameAs(b)) return;
+    final ids = await Future.wait(
+        [_resolveChannelId(a.stored), _resolveChannelId(b.stored)]);
+    if (ids.any((id) => id == null)) {
+      throw const FormatException('live.channel_lookup_required');
+    }
+    if (ids[0] != ids[1]) throw const FormatException('live.channel_mismatch');
+  }
+
   /// Submits a multi-step Broadcaster / Organization verification application
   Future<void> submitBroadcasterApplication(
       BroadcasterApplicationModel application) async {
+    await validateChannelConfiguration(
+        application.youtubeChannelUrl, application.youtubeHandle);
+    final channel = YouTubeChannelReference.parse(application.youtubeChannelUrl,
+        requireUrl: true)!;
+    // Keep one normalized identity in the pending application. Approval remains
+    // a separate server decision; never update an approved public channel here.
+    application = application.copyWith(
+        youtubeChannelUrl: channel.url, youtubeHandle: channel.stored);
     _adminDbService ??= await AdminDatabaseService.create();
-    _applications.insert(0, application);
     await _adminDbService!.submitApplication(application);
     _applications = List.from(await _adminDbService!.loadApplications());
 
@@ -3460,8 +3524,6 @@ class AppProvider extends ChangeNotifier {
     return _myApplication?.youtubeHandle.trim() ?? '';
   }
 
-  final Map<String, String> _channelIdByHandle = {};
-
   Future<String?> _resolveChannelId(String handle) async {
     if (handle.isEmpty) return null;
     // A channel URL (/channel/UC...) or a whole bare channel ID needs no
@@ -3470,12 +3532,9 @@ class AppProvider extends ChangeNotifier {
             r'^(?:(?:https?://)?(?:www\.|m\.)?youtube\.com/)?(?:channel/)?(UC[A-Za-z0-9_-]{22})/?$')
         .firstMatch(handle.trim());
     if (direct != null) return direct.group(1);
-    final cached = _channelIdByHandle[handle];
-    if (cached != null) return cached;
     final details = await _youTubeService.fetchChannelDetails(handle);
     final id = details['channelId'];
     if (id == null || id.isEmpty) return null;
-    _channelIdByHandle[handle] = id;
     return id;
   }
 
@@ -3505,6 +3564,19 @@ class AppProvider extends ChangeNotifier {
           return const WatchLinkCheck(WatchLinkVerdict.scheduledLater);
         }
         final onRecord = _broadcastChannelHandle;
+        if (onRecord.isEmpty) {
+          return const WatchLinkCheck(WatchLinkVerdict.live);
+        }
+        final app = _myApplication;
+        if (app != null && app.youtubeChannelUrl.isNotEmpty) {
+          try {
+            await validateChannelConfiguration(
+                app.youtubeChannelUrl, app.youtubeHandle);
+          } on FormatException catch (e) {
+            return WatchLinkCheck(WatchLinkVerdict.unverified,
+                channelConfigurationErrorKey: e.message);
+          }
+        }
         final expected = await _resolveChannelId(onRecord);
         if (expected != null &&
             status.channelId != null &&
@@ -3657,6 +3729,11 @@ class AppProvider extends ChangeNotifier {
 
   Future<bool> checkBroadcastPermission() async {
     final generation = _deviceGeneration;
+    if (_selectedBroadcastOrgId != null) {
+      _broadcastSessionError = 'live.org_broadcast_deferred';
+      notifyListeners();
+      return false;
+    }
     if (_currentDeviceSession?.isPrimaryBroadcaster != true) {
       _broadcastSessionError = 'broadcast_primary_required';
       notifyListeners();
@@ -3683,6 +3760,11 @@ class AppProvider extends ChangeNotifier {
       setBroadcasterLive(!_isBroadcastingLive, context);
 
   Future<void> setBroadcasterLive(bool live, [BuildContext? context]) async {
+    if (live && _selectedBroadcastOrgId != null) {
+      _broadcastSessionError = 'live.org_broadcast_deferred';
+      notifyListeners();
+      return;
+    }
     final generation = _deviceGeneration;
     while (_liveStateBusy) {
       await _liveStateCompletion?.future;
@@ -4401,6 +4483,12 @@ class AppProvider extends ChangeNotifier {
     // Stage 2: Create StreamerModel & Inject into Discovery Feed
     onProgress?.call(
         2, 'Creating Broadcaster card & integrating into Discovery Feed...');
+    final existingStreamer = _streamers
+        .where((s) =>
+            s.streamerId ==
+            (realOrgId ?? applicantProfileId ?? 'streamer_${app.id}'))
+        .firstOrNull;
+    final applicationCity = app.city;
     final newStreamer = StreamerModel(
       streamerId: realOrgId ?? applicantProfileId ?? 'streamer_${app.id}',
       fullNameEn: app.applicantNameEn,
@@ -4419,17 +4507,19 @@ class AppProvider extends ChangeNotifier {
       followerCount: 0,
       categoryId: app.categoryId,
       tags: app.tags,
-      cityEn: 'Al Khobar',
-      cityAr: 'الخبر',
+      cityEn: applicationCity?.nameEn ?? existingStreamer?.cityEn ?? '',
+      cityAr: applicationCity?.nameAr ?? existingStreamer?.cityAr ?? '',
       venueNameEn: app.venueNameEn,
       venueNameAr: app.venueNameAr,
-      latitude: app.latitude != 0.0 ? app.latitude : 26.2871,
-      longitude: app.longitude != 0.0 ? app.longitude : 50.2125,
+      // 0,0 is the application's "no pinned location"; keep it rather than
+      // inventing a venue point. The map and directions treat it as absent.
+      latitude: app.latitude,
+      longitude: app.longitude,
       isCurrentlyLive: false,
       broadcastType: BroadcastType.offline,
       isOrganization: app.isOrganization,
       youtubeHandle: app.youtubeHandle,
-      youtubeVideoId: 'dQw4w9WgXcQ',
+      youtubeVideoId: existingStreamer?.youtubeVideoId ?? '',
     );
 
     final streamerIdx =
@@ -4696,12 +4786,14 @@ class AppProvider extends ChangeNotifier {
       followerCount: (row['follower_count'] as num?)?.toInt() ?? 0,
       categoryId: row['category_id'] as String? ?? 'general',
       tags: List<String>.from(row['tags'] as List? ?? const []),
-      cityEn: '',
-      cityAr: '',
-      venueNameEn: '',
-      venueNameAr: '',
-      latitude: 0,
-      longitude: 0,
+      cityEn:
+          BroadcasterApplicationModel.cityNames[row['city_id']]?.nameEn ?? '',
+      cityAr:
+          BroadcasterApplicationModel.cityNames[row['city_id']]?.nameAr ?? '',
+      venueNameEn: row['venue_name_en'] as String? ?? '',
+      venueNameAr: row['venue_name_ar'] as String? ?? '',
+      latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
       isCurrentlyLive: row['is_currently_live'] as bool? ?? false,
       isOrganization: true,
       youtubeHandle: row['youtube_handle'] as String? ?? '',
@@ -6123,7 +6215,10 @@ enum WatchLinkVerdict {
 
 class WatchLinkCheck {
   const WatchLinkCheck(this.verdict,
-      {this.channelVerified = false, this.channelOnRecord = false});
+      {this.channelVerified = false,
+      this.channelOnRecord = false,
+      this.channelConfigurationErrorKey});
+  final String? channelConfigurationErrorKey;
   final WatchLinkVerdict verdict;
 
   /// A channel handle is on record for this account (whether or not it
@@ -6161,7 +6256,9 @@ class WatchLinkCheck {
           verdict == WatchLinkVerdict.upcoming);
 
   /// Explanation for a refused link, or null when it may be used.
-  String? get errorKey => switch (verdict) {
+  String? get errorKey =>
+      channelConfigurationErrorKey ??
+      switch (verdict) {
         WatchLinkVerdict.notFound => 'live_studio.watch_check_not_found',
         WatchLinkVerdict.ended => 'live_studio.watch_check_ended',
         WatchLinkVerdict.notLive => 'live_studio.watch_check_not_live',

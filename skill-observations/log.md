@@ -113,3 +113,12 @@ Observations captured during task-oriented work.
 **Suggested improvement:** Maintain stable task IDs with prompt/dispatch/response provenance, branch and build identity, execution/review/merge/acceptance states, dependencies and observed timestamps. Update only tasks supported by new evidence. Record manager-owned concurrent documentation changes so preservation checks do not erase them.
 
 **Principle:** Completion is scoped to a task and artifact; it does not propagate to parallel work or dependent acceptance without evidence.
+
+### Observation 8: Verify publication and client commitment separately
+
+**Status:** OPEN
+**Date:** 2026-09-27
+**Skill:** task-observer / reusable offline verification candidate
+**Issue:** Download-interruption tests passed while final cache publication, initial page claim and concurrent navigation cleanup still failed. An update can also complete installation after a page has messaged its old controller.
+**Suggested improvement:** Probe final publication after all downloads, first-claimed pages, reserved navigation clients, controller replacement, worker restart and real concurrent tabs against actual artifacts. Keep deterministic state fixtures distinct from browser/physical evidence.
+**Principle:** Successful download and compilation do not establish a safely published, usable application generation.

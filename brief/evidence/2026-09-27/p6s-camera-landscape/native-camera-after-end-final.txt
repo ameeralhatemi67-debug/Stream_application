@@ -1,0 +1,20 @@
+
+== Service global info: ==
+
+Number of camera devices: 1
+Number of normal camera devices: 1
+Number of public camera devices visible to API1: 1
+    Device 0 maps to "1"
+Active Camera Clients:
+[]
+Allowed user IDs: 0
+
+== Camera service events log (most recent at top): ==
+  09-27 01:38:56 : DISCONNECT device 1 client for package sa.hadayah.streamer_app.wave4v2 (PID 3790)
+  09-27 01:37:55 : CONNECT device 1 client for package sa.hadayah.streamer_app.wave4v2 (PID 3790)
+  09-27 01:37:54 : DISCONNECT device 1 client for package sa.hadayah.streamer_app.wave4v2 (PID 3790)
+  09-27 01:37:54 : CONNECT device 1 client for package sa.hadayah.streamer_app.wave4v2 (PID 3790)
+  09-27 01:34:33 : USER_SWITCH previous allowed user IDs: <None>, current allowed user IDs: 0
+  09-27 01:34:14 : ADD device 1, reason: (Device added)
+
+== Camera device 1 dynamic info: ==

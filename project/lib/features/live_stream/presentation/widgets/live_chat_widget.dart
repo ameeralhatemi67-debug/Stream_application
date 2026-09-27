@@ -8,6 +8,7 @@ class LiveChatWidget extends StatefulWidget {
   final List<ChatMessageModel> messages;
   final ChatConnectionState connectionState;
   final Function(String messageText) onSendTextMessage;
+  final TextEditingController? textController;
 
   /// Long-press on any message tile, own or someone else's (Cluster 4 Task
   /// 13 widened this from the Checkpoint 3 Phase 1 original, which only
@@ -21,6 +22,7 @@ class LiveChatWidget extends StatefulWidget {
     required this.messages,
     required this.connectionState,
     required this.onSendTextMessage,
+    this.textController,
     this.onMessageLongPress,
   });
 
@@ -29,17 +31,28 @@ class LiveChatWidget extends StatefulWidget {
 }
 
 class _LiveChatWidgetState extends State<LiveChatWidget> {
-  final TextEditingController _textController = TextEditingController();
+  late final TextEditingController _textController =
+      widget.textController ?? TextEditingController();
   final FocusNode _focusNode = FocusNode();
+
+  bool get _readOnly =>
+      MediaQuery.orientationOf(context) == Orientation.landscape;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (_readOnly) _focusNode.unfocus();
+  }
 
   @override
   void dispose() {
-    _textController.dispose();
+    if (widget.textController == null) _textController.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
   void _handleSendText() {
+    if (_readOnly) return;
     final text = _textController.text.trim();
     if (text.isNotEmpty) {
       widget.onSendTextMessage(text);
@@ -85,7 +98,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                       ),
                 )),
                 const SizedBox(width: AppTheme.spaceSm),
-                _ConnectionStatusChip(state: widget.connectionState),
+                Flexible(
+                    child:
+                        _ConnectionStatusChip(state: widget.connectionState)),
                 const SizedBox(width: 6),
                 Container(
                   padding:
@@ -134,69 +149,77 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
             ),
           ),
 
-          // Text Input Bar
-          Container(
-            padding: const EdgeInsets.all(AppTheme.spaceMd),
-            decoration: const BoxDecoration(
-              color: AppTheme.surface,
-              border: Border(
-                top: BorderSide(color: AppTheme.border, width: 1),
+          if (_readOnly)
+            Padding(
+              padding: const EdgeInsets.all(AppTheme.spaceSm),
+              child: Text('live.landscape_chat_read_only'.tr(),
+                  maxLines: 2, overflow: TextOverflow.ellipsis),
+            )
+          else
+            Container(
+              padding: const EdgeInsets.all(AppTheme.spaceMd),
+              decoration: const BoxDecoration(
+                color: AppTheme.surface,
+                border: Border(
+                  top: BorderSide(color: AppTheme.border, width: 1),
+                ),
               ),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextField(
-                    controller: _textController,
-                    focusNode: _focusNode,
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 13,
-                    ),
-                    textInputAction: TextInputAction.send,
-                    onSubmitted: (_) => _handleSendText(),
-                    decoration: InputDecoration(
-                      hintText: 'live.chat_placeholder'.tr(),
-                      hintStyle: const TextStyle(
-                        color: AppTheme.textMuted,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextField(
+                      controller: _textController,
+                      focusNode: _focusNode,
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
                         fontSize: 13,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spaceMd,
-                        vertical: 10,
-                      ),
-                      filled: true,
-                      fillColor: AppTheme.surfaceAlt,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        borderSide: const BorderSide(
-                          color: AppTheme.primary,
-                          width: 1,
+                      textInputAction: TextInputAction.send,
+                      onSubmitted: (_) => _handleSendText(),
+                      decoration: InputDecoration(
+                        hintText: 'live.chat_placeholder'.tr(),
+                        hintStyle: const TextStyle(
+                          color: AppTheme.textMuted,
+                          fontSize: 13,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spaceMd,
+                          vertical: 10,
+                        ),
+                        filled: true,
+                        fillColor: AppTheme.surfaceAlt,
+                        border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: BorderSide.none,
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
+                          borderSide: const BorderSide(
+                            color: AppTheme.primary,
+                            width: 1,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: AppTheme.spaceSm),
-                IconButton.filled(
-                  onPressed: _handleSendText,
-                  icon: const Icon(Icons.send_rounded, size: 18),
-                  style: IconButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: AppTheme.bg,
-                    padding: const EdgeInsets.all(12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  IconButton.filled(
+                    onPressed: _handleSendText,
+                    icon: const Icon(Icons.send_rounded, size: 18),
+                    style: IconButton.styleFrom(
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: AppTheme.bg,
+                      padding: const EdgeInsets.all(12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -407,11 +430,14 @@ class _ConnectionStatusChip extends StatelessWidget {
           decoration: BoxDecoration(color: color, shape: BoxShape.circle),
         ),
         const SizedBox(width: 4),
-        Text(
+        Flexible(
+            child: Text(
           label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
               color: color, fontSize: 10, fontWeight: FontWeight.bold),
-        ),
+        )),
       ],
     );
   }

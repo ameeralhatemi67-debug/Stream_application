@@ -1,0 +1,8 @@
+{
+  "ok": true,
+  "result": {
+    "build": "34d074a-local-diag-1",
+    "rejected": true,
+    "error": "TypeError: Failed to fetch"
+  }
+}

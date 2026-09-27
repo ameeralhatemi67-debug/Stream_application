@@ -27,9 +27,13 @@ class PhoneCameraPreview extends StatelessWidget {
         ),
       );
     }
-    return const AndroidView(
-      viewType: viewType,
-      creationParamsCodec: StandardMessageCodec(),
+    // This SurfaceView only renders camera pixels. Let the surrounding Flutter
+    // controls receive taps instead of sending them to an inert native view.
+    return const IgnorePointer(
+      child: AndroidView(
+        viewType: viewType,
+        creationParamsCodec: StandardMessageCodec(),
+      ),
     );
   }
 }

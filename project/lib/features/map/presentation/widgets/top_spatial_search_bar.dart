@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
+import '../../models/map_tricity_domain.dart';
 import '../map_visible_catalog.dart';
 
 class SearchResultItem {
@@ -11,32 +11,41 @@ class SearchResultItem {
   final String subtitle;
   final IconData icon;
   final bool isLive;
-  final LatLng coordinates;
-  final double zoomLevel;
+  final String? cityId;
   final String? streamerId;
+  final MapMarkerModel? cachedMarker;
 
   SearchResultItem({
     required this.title,
     required this.subtitle,
     required this.icon,
     this.isLive = false,
-    required this.coordinates,
-    required this.zoomLevel,
+    this.cityId,
     this.streamerId,
+    this.cachedMarker,
   });
 }
 
+/// Search over the three city views and the venues currently eligible for
+/// the map. Every selection goes back to the map screen's single camera
+/// policy; this widget never moves the camera itself.
 class TopSpatialSearchBar extends StatefulWidget {
   final List<StreamerModel> visibleStreamers;
-  final Function(LatLng coordinates, double zoom, String label)
-      onSearchResultSelected;
+
+  /// Saved venue pins, searched by name only when no current public catalog
+  /// is loaded (cold offline start). Their details stay unavailable.
+  final List<MapMarkerModel> cachedMarkers;
+  final ValueChanged<String> onCitySelected;
   final ValueChanged<String>? onStreamerSelected;
+  final ValueChanged<MapMarkerModel>? onCachedMarkerSelected;
 
   const TopSpatialSearchBar({
     super.key,
     this.visibleStreamers = const [],
-    required this.onSearchResultSelected,
+    this.cachedMarkers = const [],
+    required this.onCitySelected,
     this.onStreamerSelected,
+    this.onCachedMarkerSelected,
   });
 
   @override
@@ -76,35 +85,46 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
     final List<SearchResultItem> matches = [];
     final langCode = EasyLocalization.of(context)?.locale.languageCode ?? 'en';
 
-    for (final region in saudiMapPresets) {
-      final name = region.getLocalizedName(langCode);
-      if (region.nameEn.toLowerCase().contains(q) ||
-          region.nameAr.toLowerCase().contains(q)) {
+    for (final view in kTricityCityViews) {
+      if (view.matchesSearch(q)) {
         matches.add(SearchResultItem(
-          title: name,
+          title: view.localizedName(langCode),
           subtitle: 'map.place_preset'.tr(),
           icon: Icons.location_city_rounded,
-          coordinates: region.centerCoordinates,
-          zoomLevel: region.zoomLevelTarget,
+          cityId: view.id,
         ));
       }
     }
 
     // Recompute from the current visible catalog on every build. A provider
     // refresh removes withdrawn/hidden/unverified results immediately.
+    final streamerIds = <String>{};
     for (final streamer in searchMapStreamers(widget.visibleStreamers, q)) {
-      final name = streamer.getLocalizedName(langCode);
-      final venue = streamer.getLocalizedVenue(langCode);
+      streamerIds.add(streamer.streamerId);
       matches.add(SearchResultItem(
-        title: name,
-        subtitle: venue,
+        title: streamer.getLocalizedName(langCode),
+        subtitle: streamer.getLocalizedVenue(langCode),
         icon: streamer.isCurrentlyLive
             ? Icons.sensors_rounded
             : Icons.place_rounded,
         isLive: streamer.isCurrentlyLive,
-        coordinates: LatLng(streamer.latitude, streamer.longitude),
-        zoomLevel: 14.5,
         streamerId: streamer.streamerId,
+      ));
+    }
+    for (final marker in widget.cachedMarkers) {
+      if (streamerIds.contains(marker.streamerId)) continue;
+      final hit = [
+        marker.displayNameEn,
+        marker.displayNameAr,
+        marker.venueNameEn,
+        marker.venueNameAr,
+      ].any((v) => v.toLowerCase().contains(q));
+      if (!hit) continue;
+      matches.add(SearchResultItem(
+        title: marker.getLocalizedName(langCode),
+        subtitle: marker.getLocalizedVenue(langCode),
+        icon: Icons.place_outlined,
+        cachedMarker: marker,
       ));
     }
 
@@ -270,12 +290,12 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                         )
                       : null,
                   onTap: () {
-                    if (result.streamerId != null &&
-                        widget.onStreamerSelected != null) {
-                      widget.onStreamerSelected!(result.streamerId!);
-                    } else {
-                      widget.onSearchResultSelected(
-                          result.coordinates, result.zoomLevel, result.title);
+                    if (result.streamerId != null) {
+                      widget.onStreamerSelected?.call(result.streamerId!);
+                    } else if (result.cachedMarker != null) {
+                      widget.onCachedMarkerSelected?.call(result.cachedMarker!);
+                    } else if (result.cityId != null) {
+                      widget.onCitySelected(result.cityId!);
                     }
                     _searchController.text = result.title;
                     setState(() => _showResults = false);

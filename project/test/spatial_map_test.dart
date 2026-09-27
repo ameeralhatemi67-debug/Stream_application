@@ -1,11 +1,14 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:crypto/crypto.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/map/models/map_models.dart';
-import 'package:streamer_app/features/map/presentation/spatial_map_screen.dart';
+import 'package:streamer_app/features/map/models/map_tricity_domain.dart';
+import 'package:streamer_app/features/map/services/map_pack_controller.dart';
 import 'package:streamer_app/features/map/presentation/widgets/offline_marker.dart';
 import 'package:streamer_app/features/map/presentation/widgets/pulsing_live_marker.dart';
 import 'package:streamer_app/features/map/presentation/widgets/spatial_streamer_marker.dart';
@@ -30,27 +33,17 @@ Finder _findStrokeRingMarkerContainer() {
 
 void main() {
   group('Spatial Map GIS Data Models Test', () {
-    test('Verify AlSharqia Core Regions Configuration', () {
-      expect(alSharqiaRegions.length, greaterThanOrEqualTo(3));
-
-      final khobar = alSharqiaRegions.firstWhere((r) => r.regionId == 'khobar');
+    test('Three city views are named views, not bundled outlines', () {
+      expect(kTricityCityViews.map((v) => v.id),
+          equals(['khobar', 'dhahran', 'dammam']));
+      final khobar = cityViewById('khobar')!;
       expect(khobar.nameEn, equals('Al Khobar'));
       expect(khobar.nameAr, equals('الخبر'));
-      expect(khobar.centerCoordinates.latitude, closeTo(26.28, 0.1));
-      expect(khobar.centerCoordinates.longitude, closeTo(50.21, 0.1));
-      expect(khobar.svgElementId, equals('path5'));
-      expect(khobar.zoomLevelTarget, equals(13.5));
-
-      final dhahran =
-          alSharqiaRegions.firstWhere((r) => r.regionId == 'dhahran');
-      expect(dhahran.nameEn, equals('Dhahran'));
-      expect(dhahran.nameAr, equals('الظهران'));
-      expect(dhahran.svgElementId, equals('path15'));
-
-      final dammam = alSharqiaRegions.firstWhere((r) => r.regionId == 'dammam');
-      expect(dammam.nameEn, equals('Dammam'));
-      expect(dammam.nameAr, equals('الدمام'));
-      expect(dammam.svgElementId, equals('path14'));
+      expect(cityViewById('dhahran')!.nameAr, equals('الظهران'));
+      expect(cityViewById('dammam')!.nameAr, equals('الدمام'));
+      // Unknown or legacy ids fall back to the three-city overview.
+      expect(cityViewById('riyadh'), isNull);
+      expect(cityViewById(null), isNull);
     });
 
     test('Verify MapMarkerModel Conversion from Streamer', () {
@@ -84,17 +77,19 @@ void main() {
       expect(offlineMarker.status, equals(MarkerStatus.offline));
     });
 
-    test('Verify MapRegionModel Localization Helper', () {
-      final region = alSharqiaRegions.first;
-      expect(region.getLocalizedName('en'), equals(region.nameEn));
-      expect(region.getLocalizedName('ar'), equals(region.nameAr));
+    test('City view names localize', () {
+      final view = kTricityCityViews.first;
+      expect(view.localizedName('en'), equals(view.nameEn));
+      expect(view.localizedName('ar'), equals(view.nameAr));
     });
 
-    test('Verify Al Khobar Auto-Center GPS Target Coordinates', () {
-      final khobar = alSharqiaRegions.firstWhere((r) => r.regionId == 'khobar');
-      expect(khobar.centerCoordinates.latitude, equals(26.2871));
-      expect(khobar.centerCoordinates.longitude, equals(50.2125));
-      expect(khobar.zoomLevelTarget, equals(13.5));
+    test('The overview frames all three city cores', () {
+      for (final view in kTricityCityViews) {
+        final c = view.view.center;
+        expect(kTricityOverviewExtent.contains(c.latitude, c.longitude),
+            isTrue,
+            reason: view.id);
+      }
     });
 
     test('Verify Category Filter Matching for Streamer Markers', () {
@@ -157,35 +152,19 @@ void main() {
       expect(url, contains('KFUPM'));
     });
 
-    test('Verify Spatial Map Bounds Locking Bounds Inclusion', () {
-      const minLat = 25.40;
-      const maxLat = 27.10;
-      const minLng = 49.20;
-      const maxLng = 50.70;
-
-      for (final region in alSharqiaRegions) {
-        expect(region.centerCoordinates.latitude, greaterThanOrEqualTo(minLat));
-        expect(region.centerCoordinates.latitude, lessThanOrEqualTo(maxLat));
-        expect(
-            region.centerCoordinates.longitude, greaterThanOrEqualTo(minLng));
-        expect(region.centerCoordinates.longitude, lessThanOrEqualTo(maxLng));
-
-        for (final pt in region.polygonPoints) {
-          expect(pt.latitude, greaterThanOrEqualTo(minLat));
-          expect(pt.latitude, lessThanOrEqualTo(maxLat));
-          expect(pt.longitude, greaterThanOrEqualTo(minLng));
-          expect(pt.longitude, lessThanOrEqualTo(maxLng));
-        }
+    test('City views and overview sit inside the navigation extent, which '
+        'sits inside the bundled pack coverage', () {
+      bool inside(GeoExtent inner, GeoExtent outer) =>
+          inner.west >= outer.west &&
+          inner.east <= outer.east &&
+          inner.south >= outer.south &&
+          inner.north <= outer.north;
+      for (final view in kTricityCityViews) {
+        expect(inside(view.view, kTricityNavigationExtent), isTrue,
+            reason: view.id);
       }
-    });
-
-    test('Verify MapRegionModel Static Haversine & Format Helpers', () {
-      final dist = MapRegionModel.calculateHaversineDistance(
-          26.2871, 50.2125, 26.4207, 50.0888);
-      expect(dist, greaterThan(10.0));
-
-      expect(MapRegionModel.formatDistance(12.34, 'en'), equals('12.3 km'));
-      expect(MapRegionModel.formatDistance(12.34, 'ar'), equals('12.3 كم'));
+      expect(inside(kTricityOverviewExtent, kTricityNavigationExtent), isTrue);
+      expect(inside(kTricityNavigationExtent, kTricityPackCoverage), isTrue);
     });
 
     test('Verify MapMarkerModel Localized Name and Venue Getters', () {
@@ -271,17 +250,33 @@ void main() {
   group('Cluster 2 -- Tile Provider, White Markers & Google Maps (Task 7-9)',
       () {
     test(
-        'Task 7 (UI-07): free light basemap tile URL has zero watermark and '
-        'zero API key requirement', () {
-      expect(kSpatialMapTileUrlTemplate, contains('server.arcgisonline.com'));
-      expect(kSpatialMapTileUrlTemplate, contains('World_Light_Gray_Base'));
-      expect(kSpatialMapTileUrlTemplate, contains('{z}/{y}/{x}'));
-    });
-
-    test('Task 7: zero-API-key fallback points at plain OpenStreetMap tiles',
-        () {
-      expect(kSpatialMapTileFallbackUrl,
-          equals('https://tile.openstreetmap.org/{z}/{x}/{y}.png'));
+        'Basemap is the bundled local pack: styles name no remote tile, '
+        'glyph or sprite URL, and every file matches its manifest hash', () {
+      final dir = Directory('assets/maps/tricity');
+      final manifest = jsonDecode(
+              File('${dir.path}/manifest.json').readAsStringSync())
+          as Map<String, dynamic>;
+      final files = manifest['files'] as Map<String, dynamic>;
+      expect(files.keys,
+          containsAll(['basemap.pmtiles', 'style-en.json', 'style-ar.json']));
+      for (final entry in files.entries) {
+        final bytes = File('${dir.path}/${entry.key}').readAsBytesSync();
+        final meta = entry.value as Map<String, dynamic>;
+        expect(bytes.length, meta['bytes'], reason: entry.key);
+        expect(sha256.convert(bytes).toString(), meta['sha256'],
+            reason: entry.key);
+      }
+      for (final lang in ['en', 'ar']) {
+        final style = jsonDecode(
+                File('${dir.path}/style-$lang.json').readAsStringSync())
+            as Map<String, dynamic>;
+        expect(MapPackController.isLocalOnlyStyle(style), isTrue);
+        // Only the attribution text may carry a link; no layer or source
+        // names a fetchable resource.
+        expect(jsonEncode(style['layers']), isNot(contains('http')));
+        expect(jsonEncode(style['sources']), isNot(contains('pmtiles://')));
+      }
+      expect(manifest['boundaries'], isNull);
     });
 
     test(

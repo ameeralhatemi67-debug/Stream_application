@@ -107,8 +107,9 @@ class MarkerSummaryCard extends StatelessWidget {
                 icon: const Icon(Icons.close_rounded,
                     size: 18, color: AppTheme.textMuted),
                 onPressed: onClose,
+                tooltip: 'common.close'.tr(),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               ),
             ],
           ),
@@ -119,6 +120,7 @@ class MarkerSummaryCard extends StatelessWidget {
             onTap: () => VenueNavigationSheet.show(context, streamer: streamer),
             borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             child: Container(
+              constraints: const BoxConstraints(minHeight: 48),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
               decoration: BoxDecoration(
                 color: AppTheme.surface,
@@ -150,8 +152,11 @@ class MarkerSummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Row 3: Live Status Badge + In-Person Direction + Watch / Profile Button
-          Row(
+          // Actions wrap independently of translated labels and text size.
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            crossAxisAlignment: WrapCrossAlignment.center,
             children: [
               Container(
                 padding:
@@ -171,8 +176,8 @@ class MarkerSummaryCard extends StatelessWidget {
                             : AppTheme.border,
                   ),
                 ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
                     if (isAudio) ...[
                       const Icon(
@@ -213,25 +218,25 @@ class MarkerSummaryCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Spacer(),
               // Task 9 -- one-click external Google Maps launch, distinct
               // from the "Visit Venue"button below which opens the in-app
               // VenueNavigationSheet with full auditorium/distance details.
-              IconButton(
-                icon: const Icon(Icons.directions_rounded,
-                    color: AppTheme.primary, size: 20),
-                tooltip: 'venue.open_maps'.tr(),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
-                onPressed: () => _openInGoogleMaps(streamer),
-              ),
-              const SizedBox(width: 6),
+              if (isUsableVenuePoint(streamer.latitude, streamer.longitude))
+                IconButton(
+                  icon: const Icon(Icons.directions_rounded,
+                      color: AppTheme.primary, size: 20),
+                  tooltip: 'venue.open_maps'.tr(),
+                  padding: EdgeInsets.zero,
+                  constraints:
+                      const BoxConstraints(minWidth: 48, minHeight: 48),
+                  onPressed: () => _openInGoogleMaps(context, streamer),
+                ),
               IconButton(
                 icon: const Icon(Icons.info_outline_rounded,
                     color: AppTheme.primary, size: 20),
                 tooltip: 'venue.visit_venue'.tr(),
                 padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
                 onPressed: () =>
                     VenueNavigationSheet.show(context, streamer: streamer),
               ),
@@ -261,7 +266,7 @@ class MarkerSummaryCard extends StatelessWidget {
                         : BorderSide.none,
                   ),
                   elevation: 0,
-                  minimumSize: const Size(0, 30),
+                  minimumSize: const Size(48, 48),
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
                 icon: Icon(
@@ -292,12 +297,11 @@ class MarkerSummaryCard extends StatelessWidget {
   }
 
   /// Task 9 -- opens the streamer's venue coordinates directly in Google
-  /// Maps (native app if installed, browser fallback otherwise). Silently
-  /// no-ops if no maps handler exists on the device, same as the plan's
-  /// other two launch sites -- this is a convenience shortcut, not the only
-  /// way to navigate (VenueNavigationSheet's own button remains the
-  /// full-featured path with a clipboard fallback).
-  static Future<void> _openInGoogleMaps(StreamerModel streamer) async {
-    await launchVenueDirections(streamer.latitude, streamer.longitude);
+  /// Maps (native app if installed, browser fallback otherwise). If no maps
+  /// handler can take it, a localized message says so (VenueNavigationSheet
+  /// keeps its fuller clipboard fallback).
+  static Future<void> _openInGoogleMaps(
+      BuildContext context, StreamerModel streamer) async {
+    await openVenueDirections(context, streamer.latitude, streamer.longitude);
   }
 }

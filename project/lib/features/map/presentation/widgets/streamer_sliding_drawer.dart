@@ -285,7 +285,7 @@ class StreamerSlidingDrawer extends StatelessWidget {
                     color: AppTheme.primary,
                   ),
                   tooltip: 'venue.open_maps'.tr(),
-                  onPressed: () => _openInGoogleMaps(streamer),
+                  onPressed: () => _openInGoogleMaps(context, streamer),
                 ),
               ],
             ),
@@ -296,9 +296,10 @@ class StreamerSlidingDrawer extends StatelessWidget {
   }
 
   /// Task 9 -- opens the streamer's venue coordinates directly in Google
-  /// Maps (native app if installed, browser fallback otherwise). Silently
-  /// no-ops if no maps handler exists on the device.
-  static Future<void> _openInGoogleMaps(StreamerModel streamer) async {
-    await launchVenueDirections(streamer.latitude, streamer.longitude);
+  /// Maps (native app if installed, browser fallback otherwise), with a
+  /// localized message if no maps handler can take it.
+  static Future<void> _openInGoogleMaps(
+      BuildContext context, StreamerModel streamer) async {
+    await openVenueDirections(context, streamer.latitude, streamer.longitude);
   }
 }

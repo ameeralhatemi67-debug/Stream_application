@@ -1,3 +1,4 @@
+import '../../../../core/services/youtube_channel_reference.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -21,7 +22,8 @@ class StreamerEditorSheet extends StatefulWidget {
       isScrollControlled: true,
       backgroundColor: AppTheme.surface,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+        borderRadius:
+            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       builder: (context) => StreamerEditorSheet(existingStreamer: streamer),
     );
@@ -58,7 +60,11 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
   String _selectedCity = 'Al Khobar';
   String _selectedCategory = 'computer_science';
 
-  static const List<String> supportedCities = ['Al Khobar', 'Dhahran', 'Dammam'];
+  static const List<String> supportedCities = [
+    'Al Khobar',
+    'Dhahran',
+    'Dammam'
+  ];
 
   @override
   void initState() {
@@ -73,14 +79,14 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
     _avatarUrlController = TextEditingController(text: s?.avatarUrl ?? '');
     _bannerUrlController = TextEditingController(text: s?.bannerUrl ?? '');
     _venueController = TextEditingController(text: s?.venueNameEn ?? '');
-    _tagsController = TextEditingController(text: s?.tags.join(', ') ?? '#AI, #Tech');
+    _tagsController =
+        TextEditingController(text: s?.tags.join(', ') ?? '#AI, #Tech');
     _youtubeController = TextEditingController(text: s?.youtubeHandle ?? '');
     _streamKeyController = TextEditingController();
 
     if (s != null && supportedCities.contains(s.cityEn)) {
       _selectedCity = s.cityEn;
     }
-
   }
 
   /// True when the signed-in account is editing its own broadcaster
@@ -120,12 +126,14 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             border: Border.all(color: AppTheme.danger, width: 1.5),
             boxShadow: const [
-              BoxShadow(color: AppTheme.shadow, blurRadius: 16, offset: Offset(0, 4)),
+              BoxShadow(
+                  color: AppTheme.shadow, blurRadius: 16, offset: Offset(0, 4)),
             ],
           ),
           child: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded, color: AppTheme.danger, size: 22),
+              const Icon(Icons.warning_amber_rounded,
+                  color: AppTheme.danger, size: 22),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
@@ -154,14 +162,16 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
 
     // Required Field 1: Name
     if (name.isEmpty) {
-      _showErrorBanner('${'settings.required_field_missing'.tr()}${'settings.full_name'.tr()} *');
+      _showErrorBanner(
+          '${'settings.required_field_missing'.tr()}${'settings.full_name'.tr()} *');
       _scrollToKey(_nameKey);
       return;
     }
 
     // Required Field 2: Title
     if (title.isEmpty) {
-      _showErrorBanner('${'settings.required_field_missing'.tr()}${'settings.academic_title'.tr()} *');
+      _showErrorBanner(
+          '${'settings.required_field_missing'.tr()}${'settings.academic_title'.tr()} *');
       _scrollToKey(_titleKey);
       return;
     }
@@ -175,7 +185,8 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
 
     // Required Field 4: Venue Name
     if (venue.isEmpty) {
-      _showErrorBanner('${'settings.required_field_missing'.tr()}${'settings.venue_label'.tr()} *');
+      _showErrorBanner(
+          '${'settings.required_field_missing'.tr()}${'settings.venue_label'.tr()} *');
       _scrollToKey(_venueKey);
       return;
     }
@@ -195,8 +206,9 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
     }
 
     // Required Field 6: YouTube Account / Handle
-    if (youtube.isEmpty) {
-      _showErrorBanner('${'settings.required_field_missing'.tr()}${'settings.linked_youtube'.tr()} *');
+    if (YouTubeChannelReference.parse(youtube) == null) {
+      _showErrorBanner(
+          '${'settings.required_field_missing'.tr()}${'settings.linked_youtube'.tr()} *');
       _scrollToKey(_youtubeKey);
       return;
     }
@@ -212,10 +224,18 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
         ? _bannerUrlController.text.trim()
         : 'https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80';
 
-    final nameAr = _nameArController.text.trim().isNotEmpty ? _nameArController.text.trim() : name;
-    final titleAr = _titleArController.text.trim().isNotEmpty ? _titleArController.text.trim() : title;
-    final org = _orgController.text.trim().isNotEmpty ? _orgController.text.trim() : 'Independent Broadcaster';
-    final bio = _bioController.text.trim().isNotEmpty ? _bioController.text.trim() : 'Educational Broadcaster in AlSharqia.';
+    final nameAr = _nameArController.text.trim().isNotEmpty
+        ? _nameArController.text.trim()
+        : name;
+    final titleAr = _titleArController.text.trim().isNotEmpty
+        ? _titleArController.text.trim()
+        : title;
+    final org = _orgController.text.trim().isNotEmpty
+        ? _orgController.text.trim()
+        : 'Independent Broadcaster';
+    final bio = _bioController.text.trim().isNotEmpty
+        ? _bioController.text.trim()
+        : 'Educational Broadcaster in AlSharqia.';
 
     // Approximate Coordinates for supported Eastern Province cities
     double lat = 26.2871;
@@ -230,7 +250,8 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
 
     final provider = context.read<AppProvider>();
     final isEditing = widget.existingStreamer != null;
-    final streamerId = widget.existingStreamer?.streamerId ?? 'custom_streamer_${DateTime.now().millisecondsSinceEpoch}';
+    final streamerId = widget.existingStreamer?.streamerId ??
+        'custom_streamer_${DateTime.now().millisecondsSinceEpoch}';
 
     final newStreamer = StreamerModel(
       streamerId: streamerId,
@@ -249,14 +270,16 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
       categoryId: _selectedCategory,
       tags: parsedTags,
       cityEn: _selectedCity,
-      cityAr: _selectedCity == 'Al Khobar' ? 'الخبر' : (_selectedCity == 'Dhahran' ? 'الظهران' : 'الدمام'),
+      cityAr: _selectedCity == 'Al Khobar'
+          ? 'الخبر'
+          : (_selectedCity == 'Dhahran' ? 'الظهران' : 'الدمام'),
       venueNameEn: venue,
       venueNameAr: venue,
       latitude: lat,
       longitude: lng,
       isCurrentlyLive: false,
       activeViewerCount: 0,
-      youtubeHandle: youtube.replaceAll('@', ''),
+      youtubeHandle: YouTubeChannelReference.parse(youtube)!.stored,
     );
 
     if (isEditing) {
@@ -305,13 +328,17 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
               Row(
                 children: [
                   Icon(
-                    isEditing ? Icons.edit_rounded : Icons.person_add_alt_1_rounded,
+                    isEditing
+                        ? Icons.edit_rounded
+                        : Icons.person_add_alt_1_rounded,
                     color: AppTheme.danger,
                     size: 22,
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    isEditing ? 'settings.edit_streamer'.tr() : 'settings.add_streamer'.tr(),
+                    isEditing
+                        ? 'settings.edit_streamer'.tr()
+                        : 'settings.add_streamer'.tr(),
                     style: const TextStyle(
                       color: AppTheme.textPrimary,
                       fontSize: 16,
@@ -321,7 +348,8 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                 ],
               ),
               IconButton(
-                icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.textMuted),
+                icon: const Icon(Icons.close_rounded,
+                    size: 20, color: AppTheme.textMuted),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
@@ -339,83 +367,101 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   Text(
                     'settings.add_streamer_desc'.tr(),
-                    style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 12),
                   ),
                   const SizedBox(height: 16),
 
                   // 1. Full Name (Required)
-                  _buildSectionHeader('1. ${'settings.full_name'.tr()} *', key: _nameKey),
+                  _buildSectionHeader('1. ${'settings.full_name'.tr()} *',
+                      key: _nameKey),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _nameEnController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'e.g. Dr. Salman Al-Fahad',
                       labelText: 'Full Name (English) *',
-                      prefixIcon: Icon(Icons.person_rounded, size: 18, color: AppTheme.danger),
+                      prefixIcon: Icon(Icons.person_rounded,
+                          size: 18, color: AppTheme.danger),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _nameArController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'مثال: د. سلمان الفهد',
                       labelText: 'الاسم الكامل (بالعربي)',
-                      prefixIcon: Icon(Icons.person_outline_rounded, size: 18, color: AppTheme.primary),
+                      prefixIcon: Icon(Icons.person_outline_rounded,
+                          size: 18, color: AppTheme.primary),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // 2. Academic Title / Role (Required)
-                  _buildSectionHeader('2. ${'settings.academic_title'.tr()} *', key: _titleKey),
+                  _buildSectionHeader('2. ${'settings.academic_title'.tr()} *',
+                      key: _titleKey),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _titleEnController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'e.g. Associate Professor of AI',
                       labelText: 'Academic Title / Role (English) *',
-                      prefixIcon: Icon(Icons.school_rounded, size: 18, color: AppTheme.danger),
+                      prefixIcon: Icon(Icons.school_rounded,
+                          size: 18, color: AppTheme.danger),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _titleArController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: const InputDecoration(
                       hintText: 'مثال: أستاذ مشارك في الذكاء الاصطناعي',
                       labelText: 'المسمى الأكاديمي (بالعربي)',
-                      prefixIcon: Icon(Icons.school_outlined, size: 18, color: AppTheme.primary),
+                      prefixIcon: Icon(Icons.school_outlined,
+                          size: 18, color: AppTheme.primary),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // 3. Organization (Optional)
-                  _buildSectionHeader('3. ${'settings.university_org'.tr()} (Optional)'),
+                  _buildSectionHeader(
+                      '3. ${'settings.university_org'.tr()} (Optional)'),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _orgController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'e.g. KFUPM / Dhahran Techno Valley',
                       labelText: 'settings.university_org'.tr(),
-                      prefixIcon: const Icon(Icons.business_rounded, size: 18, color: AppTheme.textMuted),
+                      prefixIcon: const Icon(Icons.business_rounded,
+                          size: 18, color: AppTheme.textMuted),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // 4. Description / Bio (Optional)
-                  _buildSectionHeader('4. ${'settings.bio_research'.tr()} (Optional)'),
+                  _buildSectionHeader(
+                      '4. ${'settings.bio_research'.tr()} (Optional)'),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _bioController,
                     maxLines: 2,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
-                      hintText: 'Brief summary of lectures, topics, or research...',
+                      hintText:
+                          'Brief summary of lectures, topics, or research...',
                       labelText: 'settings.bio_research'.tr(),
-                      prefixIcon: const Icon(Icons.description_outlined, size: 18, color: AppTheme.textMuted),
+                      prefixIcon: const Icon(Icons.description_outlined,
+                          size: 18, color: AppTheme.textMuted),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -425,12 +471,15 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _avatarUrlController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'https://... or assets/images/...',
                       labelText: 'settings.profile_pic_url'.tr(),
-                      prefixIcon: const Icon(Icons.account_circle_outlined, size: 18, color: AppTheme.primary),
-                      helperText: 'Leave empty for default clean gray avatar placeholder',
+                      prefixIcon: const Icon(Icons.account_circle_outlined,
+                          size: 18, color: AppTheme.primary),
+                      helperText:
+                          'Leave empty for default clean gray avatar placeholder',
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -440,26 +489,32 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _bannerUrlController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'https://... or assets/images/...',
                       labelText: 'settings.banner_pic_url'.tr(),
-                      prefixIcon: const Icon(Icons.image_outlined, size: 18, color: AppTheme.primary),
-                      helperText: 'Leave empty for default dark abstract background',
+                      prefixIcon: const Icon(Icons.image_outlined,
+                          size: 18, color: AppTheme.primary),
+                      helperText:
+                          'Leave empty for default dark abstract background',
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // 7. Location: City & Venue (Required - Must be Khobar, Dhahran, Dammam)
-                  _buildSectionHeader('7. ${'settings.city_label'.tr()} *', key: _cityKey),
+                  _buildSectionHeader('7. ${'settings.city_label'.tr()} *',
+                      key: _cityKey),
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedCity,
                     dropdownColor: AppTheme.surfaceAlt,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       labelText: 'settings.city_label'.tr(),
-                      prefixIcon: const Icon(Icons.location_city_rounded, size: 18, color: AppTheme.danger),
+                      prefixIcon: const Icon(Icons.location_city_rounded,
+                          size: 18, color: AppTheme.danger),
                     ),
                     items: supportedCities.map((city) {
                       return DropdownMenuItem<String>(
@@ -478,26 +533,31 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                     key: _venueKey,
                     child: TextField(
                       controller: _venueController,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                      style: const TextStyle(
+                          color: AppTheme.textPrimary, fontSize: 13),
                       decoration: InputDecoration(
                         hintText: 'e.g. Grand Auditorium Hall / Campus Center',
                         labelText: '${'settings.venue_label'.tr()} *',
-                        prefixIcon: const Icon(Icons.pin_drop_rounded, size: 18, color: AppTheme.danger),
+                        prefixIcon: const Icon(Icons.pin_drop_rounded,
+                            size: 18, color: AppTheme.danger),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
 
                   // 8. Tags (Required - At least 1 tag)
-                  _buildSectionHeader('8. ${'settings.tags_label'.tr()} *', key: _tagsKey),
+                  _buildSectionHeader('8. ${'settings.tags_label'.tr()} *',
+                      key: _tagsKey),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _tagsController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: '#AI, #MachineLearning, #Cloud',
                       labelText: '${'settings.tags_label'.tr()} *',
-                      prefixIcon: const Icon(Icons.tag_rounded, size: 18, color: AppTheme.danger),
+                      prefixIcon: const Icon(Icons.tag_rounded,
+                          size: 18, color: AppTheme.danger),
                       helperText: 'Add at least one tag (comma separated)',
                     ),
                   ),
@@ -509,16 +569,26 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   DropdownButtonFormField<String>(
                     initialValue: _selectedCategory,
                     dropdownColor: AppTheme.surfaceAlt,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: const InputDecoration(
                       labelText: 'Academic Category',
-                      prefixIcon: Icon(Icons.category_rounded, size: 18, color: AppTheme.primary),
+                      prefixIcon: Icon(Icons.category_rounded,
+                          size: 18, color: AppTheme.primary),
                     ),
                     items: [
-                      DropdownMenuItem(value: 'computer_science', child: Text('design_ui.computer_science_ai'.tr())),
-                      DropdownMenuItem(value: 'islamic_studies', child: Text('design_ui.islamic_studies_sharia'.tr())),
-                      DropdownMenuItem(value: 'engineering', child: Text('design_ui.engineering_innovation'.tr())),
-                      DropdownMenuItem(value: 'medicine', child: Text('design_ui.medicine_health'.tr())),
+                      DropdownMenuItem(
+                          value: 'computer_science',
+                          child: Text('design_ui.computer_science_ai'.tr())),
+                      DropdownMenuItem(
+                          value: 'islamic_studies',
+                          child: Text('design_ui.islamic_studies_sharia'.tr())),
+                      DropdownMenuItem(
+                          value: 'engineering',
+                          child: Text('design_ui.engineering_innovation'.tr())),
+                      DropdownMenuItem(
+                          value: 'medicine',
+                          child: Text('design_ui.medicine_health'.tr())),
                     ],
                     onChanged: (val) {
                       if (val != null) {
@@ -529,15 +599,18 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 16),
 
                   // 10. YouTube Account / Handle (Required)
-                  _buildSectionHeader('10. ${'settings.linked_youtube'.tr()} *', key: _youtubeKey),
+                  _buildSectionHeader('10. ${'settings.linked_youtube'.tr()} *',
+                      key: _youtubeKey),
                   const SizedBox(height: 6),
                   TextField(
                     controller: _youtubeController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'e.g. ahmedamercaller or full URL',
                       labelText: '${'settings.linked_youtube'.tr()} *',
-                      prefixIcon: const Icon(Icons.smart_display_rounded, size: 18, color: AppTheme.danger),
+                      prefixIcon: const Icon(Icons.smart_display_rounded,
+                          size: 18, color: AppTheme.danger),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -547,11 +620,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _streamKeyController,
-                    style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'rtmp://... (Optional for testing)',
                       labelText: 'settings.stream_key'.tr(),
-                      prefixIcon: const Icon(Icons.key_rounded, size: 18, color: AppTheme.textMuted),
+                      prefixIcon: const Icon(Icons.key_rounded,
+                          size: 18, color: AppTheme.textMuted),
                     ),
                   ),
                   // 12. Custom Stream Cards (Cluster 1 Task 4b).
@@ -586,12 +661,20 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                 backgroundColor: AppTheme.danger,
                 foregroundColor: AppTheme.onMedia,
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               ),
-              icon: Icon(isEditing ? Icons.check_circle_rounded : Icons.add_circle_rounded, size: 18),
+              icon: Icon(
+                  isEditing
+                      ? Icons.check_circle_rounded
+                      : Icons.add_circle_rounded,
+                  size: 18),
               label: Text(
-                isEditing ? 'settings.save_profile'.tr() : 'settings.add_streamer'.tr(),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                isEditing
+                    ? 'settings.save_profile'.tr()
+                    : 'settings.add_streamer'.tr(),
+                style:
+                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
               ),
             ),
           ),

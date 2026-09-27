@@ -24,6 +24,8 @@ if [[ -n "${SUPABASE_URL:-}" || -n "${SUPABASE_ANON_KEY:-}" ]]; then
 fi
 
 cd "$repo_root/project"
+build_id="$(git rev-parse HEAD)-$(date -u +%Y%m%d%H%M%S)"
 "$flutter_bin" pub get
-"$flutter_bin" build web --release --no-tree-shake-icons "${defines[@]}"
+"$flutter_bin" build web --release --no-tree-shake-icons "--dart-define=HADAYAH_BUILD_ID=$build_id" "${defines[@]}"
+node tool/stamp_offline_build.mjs build/web "$build_id"
 test -s build/web/index.html

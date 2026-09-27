@@ -1,0 +1,65 @@
+{
+  "checkedAt": "2026-09-27T02:02:43.462785+00:00",
+  "repositories": [
+    {
+      "root": "C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app",
+      "filesChecked": 401,
+      "changed": [
+        {
+          "path": "brief/LEDGER.md",
+          "state": "changed"
+        },
+        {
+          "path": "Core_files/progres.md",
+          "state": "changed"
+        },
+        {
+          "path": "Core_files/STATUS.md",
+          "state": "changed"
+        },
+        {
+          "path": "Roadmap.md",
+          "state": "changed"
+        },
+        {
+          "path": "skill-observations/log.md",
+          "state": "changed"
+        }
+      ],
+      "headUnchanged": true,
+      "statusUnchanged": false
+    },
+    {
+      "root": "C:/Users/User/.codex/worktrees/p6s-wave4v2-repair/Streamer_app",
+      "filesChecked": 408,
+      "changed": [],
+      "headUnchanged": true,
+      "statusUnchanged": true
+    },
+    {
+      "root": "C:/Users/User/.codex/worktrees/p5-basemap-spike/Streamer_app",
+      "filesChecked": 405,
+      "changed": [],
+      "headUnchanged": true,
+      "statusUnchanged": true
+    }
+  ],
+  "protectedBranchesUnchanged": true,
+  "stashesUnchanged": true,
+  "stashIdentities": [
+    "stash@{0} d646b945d0007d55ec52690f1ca085a3879ccab8 On master: owner-brief-settings-before-window2-2026-09-20",
+    "stash@{1} d53c178e116328e8c3d349f36af795733dc31ee4 On master: preexisting-before-budget-stop-2026-09-20"
+  ],
+  "localMaster": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
+  "promotionOverlaps": [
+    "Core_files/STATUS.md",
+    "brief/LEDGER.md",
+    "issue_encountered.md",
+    "skill-observations/log.md"
+  ],
+  "integrationCommit": "34d074a5c577cd35944813f0a3db5315f4c85e96",
+  "matchesOriginalBaseline": false,
+  "concurrentOwnerWorkUnchangedSinceObserved": true,
+  "originalDifferencesAccountedFor": true,
+  "pass": true
+}

@@ -56,6 +56,8 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        manifestPlaceholders["oauthScheme"] = "sa.hadayah.streamerapp"
+        manifestPlaceholders["appLabel"] = "@string/app_name"
     }
 
     signingConfigs {
@@ -70,6 +72,13 @@ android {
     }
 
     buildTypes {
+        debug {
+            if (providers.gradleProperty("wave4v2TestApp").orNull == "true") {
+                applicationIdSuffix = ".wave4v2"
+                manifestPlaceholders["oauthScheme"] = "sa.hadayah.streamerapp.wave4v2"
+                manifestPlaceholders["appLabel"] = "Hadayah Test"
+            }
+        }
         release {
             // No debug fallback: without key.properties the release build fails rather than
             // producing a debug-signed artifact (VULN-BUILD-01, gate G8).

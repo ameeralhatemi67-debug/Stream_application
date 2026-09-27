@@ -1,0 +1,17 @@
+{
+  "ok": true,
+  "result": {
+    "faults": 1,
+    "pointerUnchanged": true,
+    "oldBuild": "7cab6d0-local-diag-1",
+    "missing": [],
+    "caches": [
+      "hadayah-offline-meta-v2",
+      "hadayah-offline-v2-46fd6096-fb37-4816-afdc-98874bcb0091"
+    ],
+    "locks": {
+      "held": [],
+      "pending": []
+    }
+  }
+}

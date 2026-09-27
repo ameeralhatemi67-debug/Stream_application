@@ -17,6 +17,8 @@ Future<void> showChatMessageActionsSheet(
 }) async {
   final action = await showModalBottomSheet<_ChatMessageAction>(
     context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: AppTheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius:
@@ -91,7 +93,7 @@ Future<void> _handleEdit(
   required LiveChatController controller,
 }) async {
   final textController = TextEditingController(text: message.body);
-  final newBody = await showDialog<String>(
+  final route = DialogRoute<String>(
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: AppTheme.surface,
@@ -104,17 +106,20 @@ Future<void> _handleEdit(
         style: const TextStyle(
             color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
       ),
-      content: TextField(
-        controller: textController,
-        autofocus: true,
-        maxLength: 500,
-        maxLines: 3,
-        style: const TextStyle(color: AppTheme.textPrimary),
-        decoration: InputDecoration(
-          hintText: 'live.edit_message_hint'.tr(),
-          hintStyle: const TextStyle(color: AppTheme.textMuted),
-        ),
-      ),
+      scrollable: true,
+      content: MediaQuery.orientationOf(dialogContext) == Orientation.landscape
+          ? Text('live.landscape_chat_read_only'.tr())
+          : TextField(
+              controller: textController,
+              autofocus: true,
+              maxLength: 500,
+              maxLines: 3,
+              style: const TextStyle(color: AppTheme.textPrimary),
+              decoration: InputDecoration(
+                hintText: 'live.edit_message_hint'.tr(),
+                hintStyle: const TextStyle(color: AppTheme.textMuted),
+              ),
+            ),
       actions: [
         TextButton(
           onPressed: () => Navigator.of(dialogContext).pop(),
@@ -126,13 +131,18 @@ Future<void> _handleEdit(
             backgroundColor: AppTheme.primary,
             foregroundColor: AppTheme.onMedia,
           ),
-          onPressed: () =>
-              Navigator.of(dialogContext).pop(textController.text),
+          onPressed:
+              MediaQuery.orientationOf(dialogContext) == Orientation.landscape
+                  ? null
+                  : () => Navigator.of(dialogContext).pop(textController.text),
           child: Text('live.save_edit'.tr()),
         ),
       ],
     ),
   );
+  final newBody = await Navigator.of(context, rootNavigator: true).push(route);
+  // The pop result precedes the reverse animation; the field can still rebuild.
+  await route.completed;
   textController.dispose();
   if (newBody == null || newBody.trim().isEmpty || !context.mounted) return;
   if (newBody.trim() == message.body) return;
@@ -235,6 +245,8 @@ Future<void> _handleReport(
 }) async {
   final reason = await showModalBottomSheet<String>(
     context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
     backgroundColor: AppTheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius:
@@ -291,7 +303,8 @@ class _ChatMessageActionsMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
@@ -315,8 +328,7 @@ class _ChatMessageActionsMenu extends StatelessWidget {
           ),
           if (message.isCurrentUser) ...[
             ListTile(
-              leading:
-                  const Icon(Icons.edit_outlined, color: AppTheme.primary),
+              leading: const Icon(Icons.edit_outlined, color: AppTheme.primary),
               title: Text(
                 'live.edit_message'.tr(),
                 style: const TextStyle(color: AppTheme.textPrimary),
@@ -335,8 +347,7 @@ class _ChatMessageActionsMenu extends StatelessWidget {
             ),
           ] else ...[
             ListTile(
-              leading:
-                  const Icon(Icons.flag_outlined, color: AppTheme.warning),
+              leading: const Icon(Icons.flag_outlined, color: AppTheme.warning),
               title: Text(
                 'live.report_message'.tr(),
                 style: const TextStyle(color: AppTheme.textPrimary),
@@ -353,8 +364,7 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.hide),
             ),
             ListTile(
-              leading:
-                  const Icon(Icons.block_rounded, color: AppTheme.danger),
+              leading: const Icon(Icons.block_rounded, color: AppTheme.danger),
               title: Text(
                 'live.block_user'.tr(),
                 style: const TextStyle(color: AppTheme.textPrimary),
@@ -364,14 +374,13 @@ class _ChatMessageActionsMenu extends StatelessWidget {
             if (canModerate) ...[
               const Divider(color: AppTheme.border, height: 1),
               ListTile(
-                leading: const Icon(Icons.mic_off_rounded,
-                    color: AppTheme.warning),
+                leading:
+                    const Icon(Icons.mic_off_rounded, color: AppTheme.warning),
                 title: Text(
                   'live.mute_user'.tr(),
                   style: const TextStyle(color: AppTheme.textPrimary),
                 ),
-                onTap: () =>
-                    Navigator.of(context).pop(_ChatMessageAction.mute),
+                onTap: () => Navigator.of(context).pop(_ChatMessageAction.mute),
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline_rounded,
@@ -409,7 +418,7 @@ class _ChatMessageActionsMenu extends StatelessWidget {
           ],
           const SizedBox(height: AppTheme.spaceSm),
         ],
-      ),
+      )),
     );
   }
 }
@@ -430,7 +439,8 @@ class _ReportReasonMenu extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SafeArea(
-      child: Column(
+      child: SingleChildScrollView(
+          child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Padding(
@@ -462,7 +472,7 @@ class _ReportReasonMenu extends StatelessWidget {
             ),
           const SizedBox(height: AppTheme.spaceSm),
         ],
-      ),
+      )),
     );
   }
 }

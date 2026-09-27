@@ -1,0 +1,57 @@
+{
+  "sourceCommit": "34d074a5c577cd35944813f0a3db5315f4c85e96",
+  "command": "flutter test --no-pub --concurrency=1 --total-shards=8 --shard-index=N --reporter=expanded",
+  "allShards": 8,
+  "passed": 847,
+  "result": "PASS",
+  "shards": [
+    {
+      "index": 0,
+      "passed": 110,
+      "testDuration": "01:54",
+      "log": "flutter-final-shard-0.log"
+    },
+    {
+      "index": 1,
+      "passed": 110,
+      "testDuration": "02:16",
+      "log": "flutter-final-shard-1.log"
+    },
+    {
+      "index": 2,
+      "passed": 99,
+      "testDuration": "01:30",
+      "log": "flutter-final-shard-2.log"
+    },
+    {
+      "index": 3,
+      "passed": 119,
+      "testDuration": "01:53",
+      "log": "flutter-final-shard-3.log"
+    },
+    {
+      "index": 4,
+      "passed": 99,
+      "testDuration": "01:48",
+      "log": "flutter-final-shard-4.log"
+    },
+    {
+      "index": 5,
+      "passed": 109,
+      "testDuration": "01:42",
+      "log": "flutter-final-shard-5.log"
+    },
+    {
+      "index": 6,
+      "passed": 100,
+      "testDuration": "01:44",
+      "log": "flutter-final-shard-6.log"
+    },
+    {
+      "index": 7,
+      "passed": 101,
+      "testDuration": "01:40",
+      "log": "flutter-final-shard-7.log"
+    }
+  ]
+}

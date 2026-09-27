@@ -2,19 +2,23 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../admin/models/broadcaster_application_model.dart';
 import '../widgets/location_picker_modal.dart';
 
 class OrgBranchVenue {
   String branchName;
   String city;
   String address;
-  LatLng coordinates;
+
+  /// Exact pinned point, or null when the user did not pin the branch (no
+  /// placeholder coordinate is invented).
+  LatLng? coordinates;
 
   OrgBranchVenue({
     required this.branchName,
     required this.city,
     required this.address,
-    required this.coordinates,
+    this.coordinates,
   });
 }
 
@@ -49,14 +53,9 @@ class ApplyStep4Location extends StatefulWidget {
     required this.onRemoveBranch,
   });
 
-  static const Map<String, String> cityOptions = {
-    'khobar': 'Al Khobar (الخبر)',
-    'dhahran': 'Dhahran (الظهران)',
-    'dammam': 'Dammam (الدمام)',
-    'ahsa': 'Al-Ahsa (الأحساء)',
-    'jubail': 'Jubail (الجبيل)',
-    'riyadh': 'Riyadh (الرياض)',
-    'other': 'Other KSA Region',
+  static final cityOptions = {
+    for (final city in BroadcasterApplicationModel.cityNames.entries)
+      city.key: '${city.value.nameEn} (${city.value.nameAr})',
   };
 
   @override
@@ -117,31 +116,47 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
     }
   }
 
-  Future<void> _openMapPinpoint({Function(LocationPickerResult res)? onResult}) async {
+  /// Main venue pin. Only the exact point changes: the typed venue
+  /// name/address and the chosen city stay exactly as the user entered
+  /// them, and cancelling keeps the previous point.
+  Future<void> _openMapPinpoint() async {
     final result = await LocationPickerModal.show(
       context: context,
       initialCity: widget.selectedCity,
       initialLocation: widget.selectedCoordinates,
     );
-
     if (result != null) {
-      if (onResult != null) {
-        onResult(result);
-      } else {
-        setState(() {
-          widget.venueController.text = result.suggestedAddress;
-          widget.onCityChanged(result.city);
-          widget.onCoordinatesSelected(result.coordinates);
-        });
-      }
+      widget.onCoordinatesSelected(result.coordinates);
     }
+  }
+
+  Widget _pinnedPointLine(LatLng? point) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: Row(
+        children: [
+          Icon(point == null ? Icons.location_off_outlined : Icons.pin_drop_outlined,
+              color: AppTheme.primary, size: 14),
+          const SizedBox(width: 4),
+          Expanded(
+            child: Text(
+              point == null
+                  ? 'map.picker_no_point'.tr()
+                  : 'map.picker_pinned_point'
+                      .tr(namedArgs: {'coords': formatPickerCoordinates(point)}),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showAddBranchDialog() {
     final branchNameCtrl = TextEditingController();
     final addressCtrl = TextEditingController();
     String branchCity = widget.selectedCity;
-    LatLng branchCoord = const LatLng(26.2172, 50.1971);
+    LatLng? branchCoord;
 
     showDialog(
       context: context,
@@ -201,8 +216,6 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                           );
                           if (res != null) {
                             setDialogState(() {
-                              addressCtrl.text = res.suggestedAddress;
-                              branchCity = res.city;
                               branchCoord = res.coordinates;
                             });
                           }
@@ -210,6 +223,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                       ),
                     ],
                   ),
+                  _pinnedPointLine(branchCoord),
                 ],
               ),
             ),
@@ -317,6 +331,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               ),
             ),
+            _pinnedPointLine(widget.selectedCoordinates),
             if (addressText.isNotEmpty) ...[
               const SizedBox(height: 6),
               Row(
@@ -339,7 +354,10 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
       );
     } else {
       //  Standard Individual Broadcaster Location Input
-      return Row(
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+      Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Expanded(
@@ -379,6 +397,9 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
               onPressed: () => _openMapPinpoint(),
             ),
           ),
+        ],
+      ),
+          _pinnedPointLine(widget.selectedCoordinates),
         ],
       );
     }
@@ -428,7 +449,9 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: widget.selectedCity,
+                value: ApplyStep4Location.cityOptions.containsKey(widget.selectedCity)
+                    ? widget.selectedCity : null,
+                hint: Text('settings.city_label'.tr()),
                 isExpanded: true,
                 dropdownColor: AppTheme.surfaceAlt,
                 style: const TextStyle(color: AppTheme.textPrimary),

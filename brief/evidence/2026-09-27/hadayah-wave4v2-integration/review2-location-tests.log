@@ -1,0 +1,79 @@
+00:00 +0: loading C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/organization_location_reload_test.dart
+00:00 +0: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/organization_location_reload_test.dart: all offered application cities persist through creation and catalog reload
+00:00 +0 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/organization_location_reload_test.dart: all offered application cities persist through creation and catalog reload [E]
+  Null check operator used on a null value
+  package:postgrest/src/postgrest_builder.dart 462:27  PostgrestBuilder._parseResponse
+  package:postgrest/src/postgrest_builder.dart 412:18  PostgrestBuilder._execute
+  
+00:00 +0 -1: loading C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/admin_database_service_test.dart
+00:01 +0 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-01: BroadcasterApplicationModel JSON Round-Trip & Dual-Track Verification
+00:01 +1 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-02: TermsAndConditionsModel Serialization & Bilingual Helpers
+00:01 +2 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-03: ViewerAnalyticsModel Serialization & Metrics Default
+00:01 +3 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-04: Submitted Applications & Application Mutations
+00:01 +4 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-05: AppProvider Verification State Machine (Approve Application -> Live Streamer)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_loadMapMarkerCacheFromDisk failed: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:01 +5 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-06: AppProvider Rejection Workflow and Reason Retention
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_loadMapMarkerCacheFromDisk failed: Binding has not yet been initialized.
+The "instance" getter on the ServicesBinding binding mixin is only available once that binding has been initialized.
+Typically, this is done by calling "WidgetsFlutterBinding.ensureInitialized()" or "runApp()" (the latter calls the former). Typically this call is done in the "void main()" method. The "ensureInitialized" method is idempotent; calling it multiple times is not harmful. After calling that method, the "instance" getter will return the binding.
+In a test, one can call "TestWidgetsFlutterBinding.ensureInitialized()" as the first line in the test's "main()" method to initialize the binding.
+If ServicesBinding is a custom binding mixin, there must also be a custom binding class, like WidgetsFlutterBinding, but that mixes in the selected binding, and that is the class that must be constructed before using the "instance" getter.
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:01 +6 -1: loading C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart
+00:02 +6 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart: (setUpAll)
+[90m[🌎 Easy Localization] [DEBUG] Localization initialized[0m
+00:02 +6 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart: handle URL survives the complete sheet submission
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+[90m[🌎 Easy Localization] [DEBUG] Start[0m
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+[90m[🌎 Easy Localization] [DEBUG] Init state[0m
+[32m[🌎 Easy Localization] [INFO] Start locale loaded en[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+[90m[🌎 Easy Localization] [DEBUG] Load Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Build[0m
+[90m[🌎 Easy Localization] [DEBUG] Init Localization Delegate[0m
+[90m[🌎 Easy Localization] [DEBUG] Init provider[0m
+00:04 +7 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-01: Dual-Track Application Distinction (Scholar vs Org)
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:04 +8 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-02: AppProvider Application Submission & Mutation
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:04 +9 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-03: Rejection with Admin Feedback Notes Lifecycle
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:04 +10 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-04: Approval Lifecycle & Auto Live Streamer Registration
+Realtime public streamer subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Realtime academic_categories subscription failed: 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+Supabase auth listener not attached (Supabase not initialized?): 'package:supabase_flutter/src/supabase.dart': Failed assertion: line 45 pos 7: '_instance._isInitialized': You must initialize the supabase instance before calling Supabase.instance
+loadVerifiedStreamersFromBackend failed: Bad state: Backend unavailable
+_refreshAcademicCategories failed: Bad state: Backend unavailable
+00:04 +11 -1: C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app/project/test/broadcaster_application_sheet_test.dart: (tearDownAll)
+00:04 +11 -1: Some tests failed.

@@ -46,6 +46,10 @@ class _Db extends AdminDatabaseService {
   bool failStop = false;
   bool useSession = false;
   bool rejectIngest = false;
+  bool permitted = true;
+  String? deviceId;
+  final statusOverrides = <String, dynamic>{};
+  Completer<Map<String, dynamic>>? statusGate;
   final reports = <bool>[];
 
   @override
@@ -60,12 +64,17 @@ class _Db extends AdminDatabaseService {
   }
 
   @override
-  Future<Map<String, dynamic>> loadMyBroadcastStatus() async => {
-        'live': !rejectIngest,
-        'stream_id': 'abcdefghijk',
-        'session_id': 'phone-session',
-        'last_ended': {'reason': 'admin_end'},
-      };
+  Future<Map<String, dynamic>> loadMyBroadcastStatus() async =>
+      statusGate != null
+          ? await statusGate!.future
+          : {
+              'live': !rejectIngest,
+              'stream_id': 'abcdefghijk',
+              'session_id': 'phone-session',
+              'device_id': deviceId,
+              'last_ended': {'reason': 'admin_end'},
+              ...statusOverrides,
+            };
 
   @override
   Future<void> endBroadcastSession(
@@ -89,7 +98,7 @@ class _Db extends AdminDatabaseService {
   Future<bool> heartbeatDevice(String deviceId) async => true;
   @override
   Future<bool> canBroadcast({String? orgId, required String type}) async =>
-      true;
+      permitted;
   @override
   Future<void> setLiveState(
       {required bool live,
@@ -110,6 +119,7 @@ class _Db extends AdminDatabaseService {
       required String deviceId,
       required String senderMode,
       String? orgId}) async {
+    this.deviceId = deviceId;
     starts++;
     return useSession ? 'phone-session' : null;
   }
@@ -141,7 +151,14 @@ void main() {
         events.name, (_) async => events.codec.encodeSuccessEnvelope(null));
     // The camera preview is a native view; the test only needs it to exist.
     messenger.setMockMethodCallHandler(SystemChannels.platform_views,
-        (call) async => call.method == 'create' ? 0 : null);
+        (call) async {
+      if (call.method == 'create') return 0;
+      if (call.method == 'resize') {
+        final args = call.arguments as Map;
+        return {'width': args['width'], 'height': args['height']};
+      }
+      return null;
+    });
   });
   tearDown(() {
     messenger.setMockMethodCallHandler(permissions, null);
@@ -167,7 +184,8 @@ void main() {
   /// encoder stays "connecting": no native connection event arrives).
   Future<void> open(WidgetTester tester, AppProvider p,
       {Locale locale = const Locale('en'),
-      Size size = const Size(412, 915)}) async {
+      Size size = const Size(412, 915),
+      double textScale = 1}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -181,6 +199,11 @@ void main() {
         builder: (context) => ChangeNotifierProvider.value(
           value: p,
           child: MaterialApp(
+            builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context)
+                  .copyWith(textScaler: TextScaler.linear(textScale)),
+              child: child!,
+            ),
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
@@ -213,6 +236,84 @@ void main() {
     p.dispose();
     await db.devices.close();
     await tester.pump(const Duration(seconds: 1));
+  }
+
+  for (final size in [const Size(412, 915), const Size(915, 412)]) {
+    testWidgets('one sender recovery surface at $size', (tester) async {
+      final db = _Db()..useSession = true;
+      final p = await tester.runAsync(() => broadcaster(db));
+      await open(tester, p!, size: size);
+      for (final event in ['live', 'disconnected']) {
+        messenger.handlePlatformMessage(events.name,
+            events.codec.encodeSuccessEnvelope({'type': event}), (_) {});
+        await tester.pump();
+      }
+      expect(
+          find.text('live.stream_interrupted_reconnecting_attempt'
+              .tr(namedArgs: {'current': '0', 'total': '10'})),
+          findsOneWidget);
+      await tester.pump(const Duration(seconds: 60));
+      await tester.pump();
+      expect(find.text('live.recovery_retry'.tr()), findsOneWidget);
+      final panel = find.byKey(const Key('sender-recovery-exhausted'));
+      expect(panel, findsOneWidget);
+      expect(
+          find.descendant(
+              of: panel, matching: find.text('live.recovery_leave'.tr())),
+          findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await close(tester, p, db);
+    });
+  }
+
+  for (final fault in [
+    'none',
+    'end',
+    'replacement',
+    'device',
+    'revoke',
+    'unreachable',
+    'lateEnd'
+  ]) {
+    test('recovery authorization checks exact live authority: $fault',
+        () async {
+      final db = _Db()..useSession = true;
+      final p = await broadcaster(db);
+      await p.setBroadcasterLive(true);
+      expect(p.isBroadcastingLive, isTrue);
+      if (fault == 'end') db.statusOverrides['live'] = false;
+      if (fault == 'replacement') {
+        db.statusOverrides['session_id'] = 'replacement';
+      }
+      if (fault == 'device') db.statusOverrides['device_id'] = 'other';
+      if (fault == 'revoke') db.permitted = false;
+      if (fault == 'unreachable' || fault == 'lateEnd') {
+        db.statusGate = Completer();
+      }
+      final pending = p.authorizeBroadcastRecovery();
+      if (fault == 'unreachable') {
+        db.statusGate!.completeError(StateError('offline'));
+      }
+      if (fault == 'lateEnd') {
+        await p.setBroadcasterLive(false);
+        db.statusGate!.complete({
+          'live': true,
+          'session_id': 'phone-session',
+          'stream_id': 'abcdefghijk',
+          'device_id': db.deviceId
+        });
+      }
+      expect(
+          await pending,
+          fault == 'none'
+              ? true
+              : fault == 'unreachable'
+                  ? null
+                  : false);
+      expect(db.reports, fault == 'none' ? [false] : isEmpty);
+      p.dispose();
+      await db.devices.close();
+    });
   }
 
   final endButton = find.byKey(const Key('phone-end-broadcast'));
@@ -272,13 +373,16 @@ void main() {
     await close(tester, p, db);
   });
 
-  testWidgets(
-      'landscape: End stays visible and tappable after the controls fade',
+  testWidgets('landscape: focused End stays visible when the media is tapped',
       (tester) async {
     final db = _Db();
     final p = await tester.runAsync(() => broadcaster(db));
     await open(tester, p!, size: const Size(915, 412));
     expect(endButton, findsOneWidget);
+    Focus.of(tester.element(
+            find.descendant(of: endButton, matching: find.byType(Text)).first))
+        .requestFocus();
+    await tester.pump();
     // Tap the picture to hide the overlay controls.
     await tester.tapAt(const Offset(450, 200));
     await tester.pumpAndSettle();
@@ -288,6 +392,61 @@ void main() {
     expect(find.byKey(const Key('phone-end-confirm')), findsOneWidget);
     await tester.tap(find.byKey(const Key('phone-end-stay')));
     await tester.pumpAndSettle();
+    expect(tester.takeException(), isNull);
+    await close(tester, p, db);
+  });
+
+  testWidgets('landscape has three toggled controls and End at the top left',
+      (tester) async {
+    final orientations = <List<dynamic>>[];
+    messenger.setMockMethodCallHandler(SystemChannels.platform, (call) async {
+      if (call.method == 'SystemChrome.setPreferredOrientations') {
+        orientations.add(List<dynamic>.from(call.arguments as List));
+      }
+      return null;
+    });
+    addTearDown(() =>
+        messenger.setMockMethodCallHandler(SystemChannels.platform, null));
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!, size: const Size(915, 412));
+    expect(orientations.single, [
+      'DeviceOrientation.portraitUp',
+      'DeviceOrientation.landscapeLeft',
+      'DeviceOrientation.landscapeRight',
+    ]);
+    expect(tester.getTopLeft(endButton).dx, lessThan(20));
+    expect(tester.getTopLeft(endButton).dy, lessThan(20));
+    expect(find.byIcon(Icons.fullscreen_exit_rounded), findsNothing);
+    FocusManager.instance.primaryFocus?.unfocus();
+    await tester.pump();
+    final starts = calls.where((c) => c == 'startStream').length;
+    await tester.tapAt(const Offset(450, 200));
+    await tester.pump();
+    expect(endButton, findsNothing);
+    expect(find.byIcon(Icons.more_vert_rounded), findsNothing);
+    expect(find.byIcon(Icons.chat_bubble_outline_rounded), findsNothing);
+    await tester.tapAt(const Offset(450, 200));
+    await tester.pump();
+    expect(endButton.hitTestable(), findsOneWidget);
+    await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('live.front_camera_coming_soon'.tr()));
+    await tester.pumpAndSettle();
+    expect(find.byType(AlertDialog), findsOneWidget);
+    expect(calls, isNot(contains('switchCamera')));
+    expect(calls.where((c) => c == 'startStream').length, starts);
+    await tester.tap(find.text('common.ok'.tr()));
+    await tester.pumpAndSettle();
+    Navigator.of(
+            tester.element(find.text('live.front_camera_coming_soon'.tr())))
+        .pop();
+    await tester.pumpAndSettle();
+    tester.view.physicalSize = const Size(412, 915);
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('phone-landscape-media')), findsNothing);
+    expect(find.byIcon(Icons.fullscreen_rounded), findsNothing);
+    expect(calls.where((c) => c == 'startStream').length, starts);
     expect(tester.takeException(), isNull);
     await close(tester, p, db);
   });
@@ -323,6 +482,59 @@ void main() {
     expect('live.ctrl_video_hidden_sub'.tr(), contains('camera stays on'));
     await close(tester, p, db);
   });
+
+  for (final locale in [const Locale('en'), const Locale('ar')]) {
+    testWidgets('End confirmation at 568x240 and 2x text: $locale', (tester) async {
+      final db = _Db();
+      final p = await tester.runAsync(() => broadcaster(db));
+      await open(tester, p!, locale: locale, size: const Size(568, 240), textScale: 2);
+      await tester.tap(endButton);
+      await tester.pumpAndSettle();
+      expect(tester.takeException(), isNull);
+      final stay = find.byKey(const Key('phone-end-stay'));
+      await tester.ensureVisible(stay);
+      expect(stay.hitTestable(), findsOneWidget);
+      await tester.tap(stay);
+      await tester.pumpAndSettle();
+      await close(tester, p, db);
+    });
+  }
+
+  for (final locale in [const Locale('en'), const Locale('ar')]) {
+    for (final size in [
+      const Size(568, 240),
+      const Size(740, 360),
+      const Size(1366, 768)
+    ]) {
+      testWidgets('landscape settings and chat at 2x: $locale $size',
+          (tester) async {
+        final db = _Db();
+        final p = await tester.runAsync(() => broadcaster(db));
+        await open(tester, p!, locale: locale, size: size, textScale: 2);
+        tester.view.viewInsets = const FakeViewPadding(bottom: 190);
+        await tester.pump();
+        await tester.tap(find.byTooltip('live.tooltip_toggle_chat'.tr()));
+        await tester.pump();
+        expect(find.byType(TextField), findsNothing);
+        expect(find.text('live.landscape_chat_read_only'.tr()), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.byType(SingleChildScrollView), findsWidgets);
+        expect(tester.takeException(), isNull);
+        await tester.ensureVisible(
+            find.text('design_ui.broadcaster_studio_end_stream'.tr()));
+        await tester
+            .tap(find.text('design_ui.broadcaster_studio_end_stream'.tr()));
+        await tester.pumpAndSettle();
+        expect(find.byType(TextField), findsNothing);
+        expect(
+            find.text('live.landscape_settings_portrait'.tr()), findsOneWidget);
+        expect(tester.takeException(), isNull);
+        await close(tester, p, db);
+      });
+    }
+  }
 
   Future<void> goLive(WidgetTester tester) async {
     // The native encoder reports a connection.

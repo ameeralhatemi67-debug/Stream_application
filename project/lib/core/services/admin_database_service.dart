@@ -1,3 +1,4 @@
+import 'youtube_channel_reference.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
@@ -231,6 +232,15 @@ class AdminDatabaseService {
 
   Future<void> submitApplication(
       BroadcasterApplicationModel application) async {
+    final error = YouTubeChannelReference.pairError(
+        application.youtubeChannelUrl, application.youtubeHandle);
+    if (error != null) throw FormatException(error);
+    final channel = YouTubeChannelReference.parse(application.youtubeChannelUrl,
+        requireUrl: true)!;
+    if (!channel
+        .sameAs(YouTubeChannelReference.parse(application.youtubeHandle)!)) {
+      throw const FormatException('live.channel_lookup_required');
+    }
     if (_useSupabase) {
       try {
         final applicantId = _client.auth.currentUser?.id;
@@ -478,6 +488,7 @@ class AdminDatabaseService {
         'organization_type': a.organizationType,
         'venue_name_en': a.venueNameEn,
         'venue_name_ar': a.venueNameAr,
+        'city_id': a.cityId.isEmpty ? null : a.cityId,
         'latitude': a.latitude,
         'longitude': a.longitude,
         'seating_capacity': a.seatingCapacity,
@@ -515,6 +526,7 @@ class AdminDatabaseService {
       organizationType: row['organization_type'] as String?,
       venueNameEn: row['venue_name_en'] as String? ?? '',
       venueNameAr: row['venue_name_ar'] as String? ?? '',
+      cityId: row['city_id'] as String? ?? '',
       latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
       seatingCapacity: (row['seating_capacity'] as num?)?.toInt() ?? 0,
@@ -1237,7 +1249,7 @@ class AdminDatabaseService {
   Future<Map<String, dynamic>?> loadOrganizationProfile(String orgId) async {
     if (!_useSupabase || !_looksLikeUuid(orgId)) return null;
     return await _client
-        .from('organizations')
+        .from('organization_public_profiles')
         .select()
         .eq('id', orgId)
         .maybeSingle();
@@ -1259,6 +1271,7 @@ class AdminDatabaseService {
         .from('organizations')
         .insert({
           'owner_profile_id': ownerProfileId,
+          'approved_application_id': app.id,
           'name_en': app.applicantNameEn,
           'name_ar': app.applicantNameAr,
           'avatar_url': app.avatarUrl,
@@ -1282,6 +1295,7 @@ class AdminDatabaseService {
     BroadcasterApplicationModel app,
   ) async {
     if (!_useSupabase) throw Exception('Supabase not available');
+    final city = app.city;
     await _client.from('profiles').update({
       'is_streamer': true,
       'is_verified': true,
@@ -1291,6 +1305,8 @@ class AdminDatabaseService {
       'tags': app.tags,
       'venue_name_en': app.venueNameEn,
       'venue_name_ar': app.venueNameAr,
+      if (city != null) 'city_en': city.nameEn,
+      if (city != null) 'city_ar': city.nameAr,
       'latitude': app.latitude,
       'longitude': app.longitude,
       'youtube_handle': app.youtubeHandle,
@@ -1476,12 +1492,16 @@ class AdminDatabaseService {
             followerCount: followerCount,
             categoryId: categoryId,
             tags: tagsList,
-            cityEn: 'Al Khobar',
-            cityAr: 'الخبر',
-            venueNameEn: nameEn,
-            venueNameAr: nameAr,
-            latitude: 26.2871,
-            longitude: 50.2125,
+            cityEn:
+                BroadcasterApplicationModel.cityNames[row['city_id']]?.nameEn ??
+                    '',
+            cityAr:
+                BroadcasterApplicationModel.cityNames[row['city_id']]?.nameAr ??
+                    '',
+            venueNameEn: row['venue_name_en'] as String? ?? '',
+            venueNameAr: row['venue_name_ar'] as String? ?? '',
+            latitude: (row['latitude'] as num?)?.toDouble() ?? 0,
+            longitude: (row['longitude'] as num?)?.toDouble() ?? 0,
             isCurrentlyLive: isLive,
             broadcastType: rowLive
                 ? (row['broadcast_type'] == 'liveAudio'

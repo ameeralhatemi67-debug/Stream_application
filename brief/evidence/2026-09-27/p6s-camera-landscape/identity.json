@@ -1,0 +1,181 @@
+{
+  "created_utc": "2026-09-26T22:52:50.1079935Z",
+  "source_commit": "ddcb52178e126894e1b456aa06516a3d789cdac0",
+  "branch": "codex/p6s-wave4v2-repair",
+  "previous_candidate_tip": "23cfa662947c3e0d096adef9609522b57438455e",
+  "master_base": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
+  "configuration": "Local Streamer_wave4v2 loopback API55921, anon key only, no YouTube key or Google OAuth; diagnostic, not E2E acceptance",
+  "package": "sa.hadayah.streamer_app.wave4v2",
+  "label": "Streamer Wave4v2",
+  "oauth_scheme": "sa.hadayah.streamerapp.wave4v2",
+  "backend_state": "Stopped with backup from previous task; not operated for this follow-up",
+  "native_probe_source": "ddcb52178e126894e1b456aa06516a3d789cdac0",
+  "native_probe_limits": "Synthetic rear camera; 484 frames / 48.742 s video timestamp span; 9.91 delivered fps; System UI ANR unresolved; no physical or YouTube acceptance",
+  "build_commands": [
+    "flutter build apk --debug --no-pub --android-project-arg=wave4v2TestApp=true --dart-define-from-file=../brief/.runtime/wave4v2/defines.no-key.json",
+    "flutter build web --no-pub --dart-define-from-file=../brief/.runtime/wave4v2/defines.no-key.json"
+  ],
+  "toolchain": {
+    "frameworkVersion": "3.41.2",
+    "channel": "stable",
+    "repositoryUrl": "https://github.com/flutter/flutter.git",
+    "frameworkRevision": "90673a4eef275d1a6692c26ac80d6d746d41a73a",
+    "frameworkCommitDate": "2026-02-18 13:54:59 -0800",
+    "engineRevision": "6c0baaebf70e0148f485f27d5616b3d3382da7bf",
+    "engineCommitDate": "2026-02-18 19:22:23.000Z",
+    "engineContentHash": "d96704abcce17ff165bbef9d77123407ef961017",
+    "engineBuildDate": "2026-02-18 22:59:17.409",
+    "dartSdkVersion": "3.11.0",
+    "devToolsVersion": "2.54.1",
+    "flutterVersion": "3.41.2"
+  },
+  "rootencoder": "2.7.5",
+  "artifacts": [
+    {
+      "path": "project/pubspec.lock",
+      "bytes": 43572,
+      "sha256": "26b890254de0a91cc3f5487fdd8bdedf0cd0b7b6371ff81dd9db898d04721a4d"
+    },
+    {
+      "path": "brief/.runtime/wave4v2/defines.no-key.json",
+      "bytes": 333,
+      "sha256": "e4b485f2caf7f1b9a0ed6231530543e53c4839a5e17ad8ca5863f25854ee6512"
+    },
+    {
+      "path": "brief/.runtime/camera-landscape/hadayah-ddcb521-no-key.apk",
+      "bytes": 214510932,
+      "sha256": "0f952bca8b2cd9474b0b491a0649e63e8f390bef756fc0451837513a6f40eb82"
+    },
+    {
+      "path": "brief/.runtime/camera-landscape/hadayah-ddcb521-web-no-key.zip",
+      "bytes": 22312724,
+      "sha256": "f6d17abc1648d6a8dfa83aa1d59b5c28900e51fdb856706954ed2bfc076d89d7"
+    },
+    {
+      "path": "project/build/web/main.dart.js",
+      "bytes": 5129155,
+      "sha256": "502fa24302037ad6e04e3ed68b16818b3d7e3555751aa458d991bf3890276326"
+    },
+    {
+      "path": "project/build/web/index.html",
+      "bytes": 1729,
+      "sha256": "b2bb8407e0f7d697c16afde2191442157cc57e9e89ba536289737c72fb9dc8c2"
+    },
+    {
+      "path": "brief/.runtime/camera-landscape/native-probe-final-source.apk",
+      "bytes": 208841526,
+      "sha256": "0a4278d7e4637f5d5f48fed587b429e3f5af8e93da48ab9481842745b3e0a864"
+    },
+    {
+      "path": "brief/.runtime/camera-landscape/native-received-final.mkv",
+      "bytes": 1382423,
+      "sha256": "b2f4149b6ed21f793d0afc8db2e2b2db2fc7f3efa5d192776b4acb06001e3b45"
+    }
+  ],
+  "changed_source_files": [
+    {
+      "path": "project/android/app/src/main/java/sa/hadayah/streamer_app/streaming/CameraFraming.java",
+      "bytes": 1344,
+      "sha256": "3fd6df9bcec97750f7be7c1f959d29e339b0cb9c8b58e26e62f524442736bff5"
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/MainActivity.kt",
+      "bytes": 1599,
+      "sha256": "c616866560eb71d3bb5e4454be6f942a461be4b2452f6200bc90ea1d884a08f8"
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RearCameraSource.kt",
+      "bytes": 1875,
+      "sha256": "22a42b986a609284de5f6b581922d2325a344bfd941702736e87ff051058be06"
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherBridge.kt",
+      "bytes": 10042,
+      "sha256": "5b86843850c83d07cc69392c500556f318ff6f3b52e7f0417d62380dc422a300"
+    },
+    {
+      "path": "project/assets/i18n/ar.json",
+      "bytes": 121121,
+      "sha256": "9ba6b333ffa82871528a74b527de35cc1a2d3a74a55bd6b274c7793985e88271"
+    },
+    {
+      "path": "project/assets/i18n/en.json",
+      "bytes": 90647,
+      "sha256": "8386254d7b6d2938b57703441d5a0729dc56f42c121dc26156ed12f75d129d48"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/live_broadcast_screen.dart",
+      "bytes": 98061,
+      "sha256": "7c61222940d64dca9d902592197a7e94650e772b316282b7855f990ff331410b"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/screens/phone_broadcast_screen.dart",
+      "bytes": 91000,
+      "sha256": "1c972b548911b50b3d5015666b37d4bb5e123442899f219ec19ee090ecb9c366"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/widgets/chat_message_actions_sheet.dart",
+      "bytes": 17008,
+      "sha256": "fb8c5f5872d742929346d3043837016da12e8f34fde5d43e7f779e83aa8ae1b5"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/widgets/phone_camera_preview.dart",
+      "bytes": 1461,
+      "sha256": "b7fd19a61ba8012bd7994c2861cb0d1574196e0da4f5da60420dd7d8bbde7a13"
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/widgets/rtmp_ip_dialog.dart",
+      "bytes": 69188,
+      "sha256": "450a76674751eba55a5b6a3c6e56afc8976ffba1e9d142222b675f78f38b39bc"
+    },
+    {
+      "path": "project/lib/features/live_stream/services/rtmp_publish_engine.dart",
+      "bytes": 21176,
+      "sha256": "9c46c2b6479f0edfbff84a28b9491902deb8bf5e66c01c92dc9af985bfbe85b2"
+    },
+    {
+      "path": "project/test/landscape_chat_input_test.dart",
+      "bytes": 4100,
+      "sha256": "721b28457f6d23e186bd12670eaae2fceeecaabed9e2597ed960c20835c29de5"
+    },
+    {
+      "path": "project/test/p6s_wave3_group5_test.dart",
+      "bytes": 24027,
+      "sha256": "b03103d680d2a2d0c66fe6e7844cfd050816c9e3575880be7a4eff6ef16ad277"
+    },
+    {
+      "path": "project/test/phone_broadcast_end_test.dart",
+      "bytes": 29457,
+      "sha256": "c5d96cfafafb67a003c80bf94c5d33b1143a1509829e6671c01399e777726b76"
+    },
+    {
+      "path": "project/test/phone_broadcast_engine_test.dart",
+      "bytes": 15076,
+      "sha256": "cbcf2efaf528bca21254fe60abf6bfee90220d4940baaedfc86fe96f187e7898"
+    },
+    {
+      "path": "project/tool/CameraFramingCheck.java",
+      "bytes": 2308,
+      "sha256": "ff0dd1b29f2b3b50d96326400df50b9c31550c1d9ad33279689f1f5eae7ac406"
+    },
+    {
+      "path": "project/tool/wave4v2_native_probe.dart",
+      "bytes": 3061,
+      "sha256": "0966ed3a4b9a2822b7284cd9e1b862d895adf105428048fbd802b2546da547c9"
+    }
+  ],
+  "verification": {
+    "analyzer_issues": 0,
+    "flutter_tests_passed": 730,
+    "gates_pass": 26,
+    "gates_info": 5,
+    "gates_fail": 0,
+    "java_geometry": "16 rotation combinations, 6 exact rectangles, 50 aspect/fit cases, invalid dimensions PASS",
+    "android_build": "PASS",
+    "web_build": "PASS with inherited CupertinoIcons font warning",
+    "sql": "NOT RERUN; no SQL changes",
+    "physical": "NOT RUN",
+    "critic": "No follow-up review; previous three rounds exhausted; no score for changed source",
+    "d8": "HIGH release blocker explicitly retained"
+  }
+}

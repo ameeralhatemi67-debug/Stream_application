@@ -1,0 +1,233 @@
+{
+  "checked_utc": "2026-09-26T22:47:19.7245578Z",
+  "master": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
+  "master_unchanged": true,
+  "main_status_unchanged": true,
+  "stashes_unchanged": true,
+  "protected_hashes": [
+    {
+      "path": "brief/evidence/2026-09-21/screenshots/scheme_a_evidence/phone_broadcast_ar.png",
+      "unchanged": true
+    },
+    {
+      "path": "brief/evidence/2026-09-21/screenshots/scheme_a_evidence/phone_broadcast_en.png",
+      "unchanged": true
+    },
+    {
+      "path": "brief/LEDGER.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\android-build.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\android-initial-build.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\backend-probe-cold-start.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\backend-probe.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\BROWSER_PROBE.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\build-hashes.json",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\concurrency-final.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\E4_ACCEPTANCE_RESULTS.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\E4_RETEST_SCRIPT.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\embed-runtime.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-analyze.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-full-log-hash.json",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\flutter-tests.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\gates.json",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\identity-after.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\identity-before.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\INTEGRATION.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\ISSUE_RECORD_ADDENDUM.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\local-stack.toml",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\main-checkout-after.json",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\main-checkout-before.json",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\race-after.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\race-before.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\REPORT.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\SCREENSHOTS_AUDIT.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_bottom_sheet_overflow_17px.jpg",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_keyboard_overflow_90px.jpg",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_side_chat_overlap.jpg",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_streamer_landscape_sideways_camera_and_header.jpg",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\screenshots\\c15_youtube_web_pillarbox_orientation_mismatch.png",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\sql-suite.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\sweep-before.txt",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\VERIFICATION.md",
+      "unchanged": true
+    },
+    {
+      "path": "brief\\evidence\\2026-09-26\\p6s-astra-audit\\web-build.txt",
+      "unchanged": true
+    },
+    {
+      "path": "Core_files/progres.md",
+      "unchanged": true
+    },
+    {
+      "path": "Core_files/STATUS.md",
+      "unchanged": true
+    },
+    {
+      "path": "issue_encountered.md",
+      "unchanged": true
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherBridge.kt",
+      "unchanged": true
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherView.kt",
+      "unchanged": true
+    },
+    {
+      "path": "project/android/app/src/main/kotlin/sa/hadayah/streamer_app/streaming/RtmpPublisherViewFactory.kt",
+      "unchanged": true
+    },
+    {
+      "path": "project/lib/core/providers/app_provider.dart",
+      "unchanged": true
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/adapters/youtube_player_adapter.dart",
+      "unchanged": true
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/live_broadcast_screen.dart",
+      "unchanged": true
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/screens/phone_broadcast_screen.dart",
+      "unchanged": true
+    },
+    {
+      "path": "project/lib/features/live_stream/presentation/widgets/live_chat_widget.dart",
+      "unchanged": true
+    },
+    {
+      "path": "project/lib/features/live_stream/services/rtmp_publish_engine.dart",
+      "unchanged": true
+    },
+    {
+      "path": "project/pubspec.lock",
+      "unchanged": true
+    },
+    {
+      "path": "project/test/phone_broadcast_end_test.dart",
+      "unchanged": true
+    },
+    {
+      "path": "project/test/phone_broadcast_engine_test.dart",
+      "unchanged": true
+    },
+    {
+      "path": "Roadmap.md",
+      "unchanged": true
+    },
+    {
+      "path": "skill-observations/log.md",
+      "unchanged": true
+    }
+  ],
+  "historical_pack_unchanged": true,
+  "owner_apps_installed": false,
+  "hosted_database_operations": false,
+  "opus_checkout_modified_by_this_task": false,
+  "stashes": [
+    "stash@{0} d646b945d0007d55ec52690f1ca085a3879ccab8 On master: owner-brief-settings-before-window2-2026-09-20",
+    "stash@{1} d53c178e116328e8c3d349f36af795733dc31ee4 On master: preexisting-before-budget-stop-2026-09-20"
+  ]
+}

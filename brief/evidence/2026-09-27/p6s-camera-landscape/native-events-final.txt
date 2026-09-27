@@ -1,0 +1,12 @@
+09-27 01:37:48.309  3790  3790 I flutter : WAVE4V2 2803ms initializingCamera retry=null
+09-27 01:37:54.357  3790  3790 I flutter : WAVE4V2 8853ms ready retry=null
+09-27 01:37:54.378  3790  3790 I flutter : WAVE4V2 8874ms connecting retry=null
+09-27 01:37:59.698  3790  3790 I flutter : WAVE4V2 14197ms live retry=null
+09-27 01:38:15.521  3790  3790 I flutter : WAVE4V2 action=30
+09-27 01:38:25.520  3790  3790 I flutter : WAVE4V2 action=40
+09-27 01:38:30.509  3790  3790 I flutter : WAVE4V2 action=45
+09-27 01:38:30.547  3790  3790 I flutter : WAVE4V2 front camera correctly unavailable
+09-27 01:38:35.533  3790  3790 I flutter : WAVE4V2 action=50
+09-27 01:38:45.531  3790  3790 I flutter : WAVE4V2 action=60
+09-27 01:38:55.542  3790  3790 I flutter : WAVE4V2 action=70
+09-27 01:38:56.981  3790  3790 I flutter : WAVE4V2 71480ms stopped retry=null

@@ -1,3 +1,4 @@
+import '../../../../core/services/youtube_channel_reference.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../admin/models/broadcaster_application_model.dart';
+import '../../../map/models/map_tricity_domain.dart';
 
 /// Interactive In-App Application Sheet for Viewers applying to become
 /// Verified Scholars or Registering Organization Auditoriums.
@@ -78,32 +80,40 @@ class _BroadcasterApplicationSheetState
   late final TextEditingController _bioArController;
 
   bool _isSubmitting = false;
+  String _cityId = '';
 
   @override
   void initState() {
     super.initState();
     final app = widget.existingApplication;
-    _selectedRole = app?.accountType ?? ApplicationAccountType.individualScholar;
+    _cityId = app?.cityId ?? '';
+    _selectedRole =
+        app?.accountType ?? ApplicationAccountType.individualScholar;
 
     final provider = context.read<AppProvider>();
-    final defaultEmail = provider.currentUserEmail ?? provider.googleUserEmail ?? '';
+    final defaultEmail =
+        provider.currentUserEmail ?? provider.googleUserEmail ?? '';
     final defaultName = provider.googleUserName ?? provider.userProfile.nameEn;
 
-    _nameEnController = TextEditingController(text: app?.applicantNameEn ?? (defaultName.isNotEmpty ? defaultName : ''));
+    _nameEnController = TextEditingController(
+        text: app?.applicantNameEn ??
+            (defaultName.isNotEmpty ? defaultName : ''));
     _nameArController = TextEditingController(
         text: app?.applicantNameAr ??
-            (provider.userProfile.nameAr.isNotEmpty ? provider.userProfile.nameAr : (defaultName.isNotEmpty ? defaultName : '')));
+            (provider.userProfile.nameAr.isNotEmpty
+                ? provider.userProfile.nameAr
+                : (defaultName.isNotEmpty ? defaultName : '')));
     _emailController = TextEditingController(text: app?.email ?? defaultEmail);
     _phoneController = TextEditingController(text: app?.phone ?? '+966 ');
 
-    _academicTitleEnController =
-        TextEditingController(text: app?.academicTitleEn ?? 'Assistant Professor');
+    _academicTitleEnController = TextEditingController(
+        text: app?.academicTitleEn ?? 'Assistant Professor');
     _academicTitleArController =
         TextEditingController(text: app?.academicTitleAr ?? 'أستاذ مساعد');
-    _institutionEnController =
-        TextEditingController(text: app?.institutionEn ?? 'King Fahd University');
-    _institutionArController =
-        TextEditingController(text: app?.institutionAr ?? 'جامعة الملك فهد للبترول والمعادن');
+    _institutionEnController = TextEditingController(
+        text: app?.institutionEn ?? 'King Fahd University');
+    _institutionArController = TextEditingController(
+        text: app?.institutionAr ?? 'جامعة الملك فهد للبترول والمعادن');
     _tagsController = TextEditingController(
         text: app?.tags.isNotEmpty == true
             ? app!.tags.join(', ')
@@ -113,23 +123,23 @@ class _BroadcasterApplicationSheetState
         text: app?.organizationType ?? 'University & Research Center');
     _venueNameEnController =
         TextEditingController(text: app?.venueNameEn ?? 'Grand Auditorium');
-    _venueNameArController =
-        TextEditingController(text: app?.venueNameAr ?? 'المدرج الأكاديمي الرئيسي');
+    _venueNameArController = TextEditingController(
+        text: app?.venueNameAr ?? 'المدرج الأكاديمي الرئيسي');
     _seatingCapacityController = TextEditingController(
         text: app?.seatingCapacity != null && app!.seatingCapacity > 0
             ? app.seatingCapacity.toString()
             : '350');
     _websiteController =
         TextEditingController(text: app?.officialWebsiteUrl ?? 'https://');
-    _latController = TextEditingController(
-        text: app?.latitude.toString() ?? '26.3050');
-    _lngController = TextEditingController(
-        text: app?.longitude.toString() ?? '50.1450');
+    _latController =
+        TextEditingController(text: app?.latitude.toString() ?? '');
+    _lngController =
+        TextEditingController(text: app?.longitude.toString() ?? '');
 
-    _youtubeChannelController = TextEditingController(
-        text: app?.youtubeChannelUrl ?? 'https://youtube.com/@channel');
+    _youtubeChannelController =
+        TextEditingController(text: app?.youtubeChannelUrl ?? '');
     _youtubeHandleController =
-        TextEditingController(text: app?.youtubeHandle ?? 'academic_channel');
+        TextEditingController(text: app?.youtubeHandle ?? '');
     _bioEnController = TextEditingController(
         text: app?.bioEn ??
             'Dedicated academic researcher delivering open lectures in the Eastern Province.');
@@ -220,21 +230,6 @@ class _BroadcasterApplicationSheetState
     );
   }
 
-  void _fillCityCoordinates(String cityName) {
-    setState(() {
-      if (cityName == 'Al Khobar') {
-        _latController.text = '26.2871';
-        _lngController.text = '50.2125';
-      } else if (cityName == 'Dhahran') {
-        _latController.text = '26.3050';
-        _lngController.text = '50.1450';
-      } else if (cityName == 'Dammam') {
-        _latController.text = '26.4207';
-        _lngController.text = '50.0888';
-      }
-    });
-  }
-
   Future<void> _handleSubmit() async {
     final nameEn = _nameEnController.text.trim();
     final nameAr = _nameArController.text.trim();
@@ -243,7 +238,8 @@ class _BroadcasterApplicationSheetState
 
     if (nameEn.isEmpty || nameAr.isEmpty) {
       _scrollToKey(_nameKey);
-      _showErrorBanner('${'settings.required_field_missing'.tr()} Name (En/Ar)');
+      _showErrorBanner(
+          '${'settings.required_field_missing'.tr()} Name (En/Ar)');
       return;
     }
 
@@ -271,14 +267,25 @@ class _BroadcasterApplicationSheetState
       }
     }
 
-    if (_youtubeHandleController.text.trim().isEmpty) {
+    final channelError = YouTubeChannelReference.pairError(
+        _youtubeChannelController.text, _youtubeHandleController.text);
+    if (channelError != null) {
       _scrollToKey(_youtubeKey);
-      _showErrorBanner(
-          '${'settings.required_field_missing'.tr()} YouTube Handle');
+      _showErrorBanner(channelError.tr());
       return;
     }
-
     setState(() => _isSubmitting = true);
+    try {
+      await context.read<AppProvider>().validateChannelConfiguration(
+          _youtubeChannelController.text, _youtubeHandleController.text);
+    } on FormatException catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        _showErrorBanner(e.message.tr());
+      }
+      return;
+    }
+    if (!mounted) return;
 
     final tags = _tagsController.text
         .split(',')
@@ -286,9 +293,22 @@ class _BroadcasterApplicationSheetState
         .where((t) => t.isNotEmpty)
         .toList();
 
-    final lat = double.tryParse(_latController.text.trim()) ?? 26.2871;
-    final lng = double.tryParse(_lngController.text.trim()) ?? 50.2125;
-    final capacity = int.tryParse(_seatingCapacityController.text.trim()) ?? 250;
+    final noPoint = _latController.text.trim().isEmpty &&
+        _lngController.text.trim().isEmpty;
+    final lat = noPoint ? 0.0 : double.tryParse(_latController.text.trim());
+    final lng = noPoint ? 0.0 : double.tryParse(_lngController.text.trim());
+    if (lat == null ||
+        lng == null ||
+        !lat.isFinite ||
+        !lng.isFinite ||
+        lat.abs() > 90 ||
+        lng.abs() > 180) {
+      setState(() => _isSubmitting = false);
+      _showErrorBanner('map.pin_invalid'.tr());
+      return;
+    }
+    final capacity =
+        int.tryParse(_seatingCapacityController.text.trim()) ?? 250;
 
     final application = BroadcasterApplicationModel(
       id: widget.existingApplication?.id ?? newId(),
@@ -311,17 +331,19 @@ class _BroadcasterApplicationSheetState
           : null,
       categoryId: _selectedCategory,
       tags: tags.isNotEmpty ? tags : ['#Education', '#SaudiLectures'],
-      organizationType: _selectedRole == ApplicationAccountType.organizationVenue
-          ? _orgTypeController.text.trim()
-          : null,
+      organizationType:
+          _selectedRole == ApplicationAccountType.organizationVenue
+              ? _orgTypeController.text.trim()
+              : null,
       venueNameEn: _venueNameEnController.text.trim(),
       venueNameAr: _venueNameArController.text.trim(),
+      cityId: _cityId,
       latitude: lat,
       longitude: lng,
       seatingCapacity: capacity,
       officialWebsiteUrl: _websiteController.text.trim(),
       youtubeChannelUrl: _youtubeChannelController.text.trim(),
-      youtubeHandle: _youtubeHandleController.text.trim().replaceAll('@', ''),
+      youtubeHandle: _youtubeHandleController.text.trim(),
       bioEn: _bioEnController.text.trim(),
       bioAr: _bioArController.text.trim(),
       avatarUrl: widget.existingApplication?.avatarUrl ??
@@ -333,7 +355,15 @@ class _BroadcasterApplicationSheetState
     );
 
     final appProvider = Provider.of<AppProvider>(context, listen: false);
-    await appProvider.submitBroadcasterApplication(application);
+    try {
+      await appProvider.submitBroadcasterApplication(application);
+    } catch (_) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        _showErrorBanner('offline_experience.form_preserved'.tr());
+      }
+      return;
+    }
 
     if (mounted) {
       setState(() => _isSubmitting = false);
@@ -662,7 +692,8 @@ class _BroadcasterApplicationSheetState
                       color: isSelected
                           ? AppTheme.textPrimary
                           : AppTheme.textSecondary,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.w500,
                       fontSize: 12,
                     ),
                   ),
@@ -681,8 +712,8 @@ class _BroadcasterApplicationSheetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('application.section_academic'.tr(),
-              Icons.school_outlined),
+          _buildSectionHeader(
+              'application.section_academic'.tr(), Icons.school_outlined),
           const SizedBox(height: AppTheme.spaceSm),
           Row(
             children: [
@@ -745,8 +776,8 @@ class _BroadcasterApplicationSheetState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionHeader('application.section_academic'.tr(),
-            Icons.domain_outlined),
+        _buildSectionHeader(
+            'application.section_academic'.tr(), Icons.domain_outlined),
         const SizedBox(height: AppTheme.spaceSm),
         _buildTextField(
           controller: _orgTypeController,
@@ -790,8 +821,8 @@ class _BroadcasterApplicationSheetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('application.section_venue'.tr(),
-              Icons.location_on_outlined),
+          _buildSectionHeader(
+              'application.section_venue'.tr(), Icons.location_on_outlined),
           const SizedBox(height: AppTheme.spaceSm),
           _buildTextField(
             controller: _venueNameEnController,
@@ -808,15 +839,14 @@ class _BroadcasterApplicationSheetState
           ),
           const SizedBox(height: AppTheme.spaceSm),
 
-          // Quick GPS Coordinate Presets
-          // Wrap: the label and three chips did not fit a 320 px sheet, and
-          // the chips carried English city names into the Arabic form.
+          // City membership is independent of the exact venue coordinates.
           Wrap(
             spacing: AppTheme.spaceXs,
             runSpacing: AppTheme.spaceXs,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Text('design_ui.alsharqia_presets'.tr(),
+              Text(
+                'settings.city_label'.tr(),
                 style: const TextStyle(
                   color: AppTheme.textSecondary,
                   fontSize: 11,
@@ -860,24 +890,13 @@ class _BroadcasterApplicationSheetState
     );
   }
 
-  /// [cityName] stays the English lookup key `_fillCityCoordinates` matches
-  /// on; [labelKey] is what the broadcaster actually reads.
   Widget _buildPresetChip(String cityName, String labelKey) {
-    return InkWell(
-      onTap: () => _fillCityCoordinates(cityName),
-      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceAlt,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: Border.all(color: AppTheme.border),
-        ),
-        child: Text(
-          labelKey.tr(),
-          style: const TextStyle(color: AppTheme.primary, fontSize: 10),
-        ),
-      ),
+    final city =
+        kTricityCityViews.firstWhere((view) => view.nameEn == cityName);
+    return ChoiceChip(
+      label: Text(labelKey.tr()),
+      selected: _cityId == city.id,
+      onSelected: (_) => setState(() => _cityId = city.id),
     );
   }
 
@@ -887,8 +906,8 @@ class _BroadcasterApplicationSheetState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionHeader('application.section_stream'.tr(),
-              Icons.videocam_outlined),
+          _buildSectionHeader(
+              'application.section_stream'.tr(), Icons.videocam_outlined),
           const SizedBox(height: AppTheme.spaceSm),
           Row(
             children: [
@@ -1023,8 +1042,8 @@ class _BroadcasterApplicationSheetState
           style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
           decoration: InputDecoration(
             hintText: hint,
-            hintStyle: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12),
+            hintStyle:
+                const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
             prefixIcon: Icon(icon, size: 18, color: AppTheme.textSecondary),
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 12, vertical: 10),

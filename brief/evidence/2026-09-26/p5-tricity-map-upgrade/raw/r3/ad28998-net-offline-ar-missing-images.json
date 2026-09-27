@@ -1,0 +1,1700 @@
+[
+ {
+  "t": 1790459709650,
+  "url": "http://localhost:8765/",
+  "method": "GET",
+  "type": "document"
+ },
+ {
+  "t": 1790459709683,
+  "url": "http://localhost:8765/",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459709703,
+  "url": "http://localhost:8765/flutter_bootstrap.js",
+  "method": "GET",
+  "type": "script"
+ },
+ {
+  "t": 1790459709706,
+  "url": "http://localhost:8765/flutter_bootstrap.js",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459709715,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.wasm",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459709715,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.js",
+  "method": "GET",
+  "type": "script"
+ },
+ {
+  "t": 1790459709717,
+  "url": "http://localhost:8765/main.dart.js",
+  "method": "GET",
+  "type": "script"
+ },
+ {
+  "t": 1790459709717,
+  "url": "http://localhost:8765/manifest.json",
+  "method": "GET",
+  "type": "manifest"
+ },
+ {
+  "t": 1790459709726,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.wasm",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459709740,
+  "url": "http://localhost:8765/manifest.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459709740,
+  "url": "https://www.gstatic.com/flutter-canvaskit/6c0baaebf70e0148f485f27d5616b3d3382da7bf/chromium/canvaskit.js",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710010,
+  "url": "http://localhost:8765/main.dart.js",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710539,
+  "url": "http://localhost:8765/assets/FontManifest.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710553,
+  "url": "http://localhost:8765/assets/FontManifest.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710560,
+  "url": "http://localhost:8765/assets/fonts/MaterialIcons-Regular.otf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710560,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710561,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710561,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-400.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710561,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-700.ttf",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710562,
+  "url": "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710562,
+  "url": "http://localhost:8765/icons/Icon-192.png",
+  "method": "GET",
+  "type": "other"
+ },
+ {
+  "t": 1790459710572,
+  "url": "http://localhost:8765/assets/fonts/MaterialIcons-Regular.otf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710572,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710573,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSans-Variable.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710573,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-400.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710576,
+  "url": "http://localhost:8765/icons/Icon-192.png",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710577,
+  "url": "http://localhost:8765/assets/assets/fonts/IBMPlexSansArabic-700.ttf",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710580,
+  "url": "https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Me4GZLCzYlKw.woff2",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710724,
+  "url": "http://localhost:8765/assets/assets/i18n/en.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710724,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710725,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710725,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459710725,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459710728,
+  "url": "http://localhost:8765/assets/assets/i18n/en.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459710730,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459710732,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459710808,
+  "url": "http://localhost:8765/assets/assets/logo/colored.svg",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459710989,
+  "url": "http://localhost:8765/assets/assets/logo/colored.svg",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459711740,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459711751,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459711751,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459711758,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459712196,
+  "url": "http://localhost:8765/assets/assets/Language.svg",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459712208,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459712209,
+  "url": "http://localhost:8765/assets/assets/Language.svg",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459712210,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459712210,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459712277,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459713291,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459713291,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459713291,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459713291,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459713754,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459713755,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459713755,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459713755,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459715295,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459715296,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459715296,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459715296,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459717762,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459717763,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459717763,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459717763,
+  "url": "http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459717767,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459717768,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459717768,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459717768,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459718695,
+  "url": "http://localhost:8765/assets/assets/i18n/ar.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459718732,
+  "url": "http://localhost:8765/assets/assets/i18n/ar.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459718828,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459718829,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459718829,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459718890,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459719307,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459719313,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459719313,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459719316,
+  "url": "http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459720900,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459720901,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459720901,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459720901,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459724911,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459724911,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459724911,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459724911,
+  "url": "http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459724915,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459724915,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459724915,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459724915,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459725702,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459725703,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459725918,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459725918,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459725918,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459725918,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459726344,
+  "url": "http://localhost:8765/assets/AssetManifest.bin.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459726345,
+  "url": "http://localhost:8765/assets/AssetManifest.bin.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459726382,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459726382,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459726382,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459726383,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459726414,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459726419,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459726420,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459726420,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459727922,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459727923,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459727923,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459727923,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459729371,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729372,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729373,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729373,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729390,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729391,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729391,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729391,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729428,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729428,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729429,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729429,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729471,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729472,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729478,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729478,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729511,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729512,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729513,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729513,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459729533,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729535,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729535,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459729536,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730483,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730484,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730485,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730485,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730490,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730494,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730495,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730495,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730520,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730520,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730520,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730521,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730527,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730528,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730528,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730529,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730561,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730561,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730562,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730563,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730566,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730567,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730568,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730569,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730603,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730607,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730608,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730609,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730613,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730613,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730614,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730615,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730655,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730656,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730656,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730656,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730660,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730661,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730661,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730662,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730701,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730704,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730705,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730705,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730711,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730712,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730712,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730713,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730746,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730747,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730747,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730747,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730756,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730757,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730757,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730757,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730792,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730794,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730794,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730797,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730800,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730801,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730802,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730803,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730837,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730838,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730838,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730838,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459730847,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730848,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730848,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459730848,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731019,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731020,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731020,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731021,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731022,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731023,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731043,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731044,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731100,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731101,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731101,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731101,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731123,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731124,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731124,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731124,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731200,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731200,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731201,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731204,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731204,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731205,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731205,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731205,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731247,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731248,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731248,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731248,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731316,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_1.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731317,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_2.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731318,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_3.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731318,
+  "url": "http://localhost:8765/assets/assets/images/avatars/neutral_4.png",
+  "failed": "net::ERR_FAILED"
+ },
+ {
+  "t": 1790459731938,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731939,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459731939,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459731939,
+  "url": "http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459731943,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459731943,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459731944,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459731944,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459732958,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459732959,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459732959,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459732959,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459734972,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459734973,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459734973,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459734973,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459736116,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/manifest.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459736116,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/manifest.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459736139,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/basemap.pmtiles",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459736150,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/basemap.pmtiles",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459736214,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-en.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459736237,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-en.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459736241,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-ar.json",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459736269,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/style-ar.json",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459736278,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/NOTICE.txt",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459736319,
+  "url": "http://localhost:8765/assets/assets/maps/tricity/NOTICE.txt",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459737898,
+  "url": "https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvvnCBFQLaig.woff2",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459737938,
+  "url": "https://fonts.gstatic.com/s/notosansarabic/v28/nwpxtLGrOAZMl5nJ_wfgRg3DrWFZWsnVBJ_sS6tlqHHFlhQ5l3sQWIHPqzCfyGyvvnCBFQLaig.woff2",
+  "status": 200,
+  "fromSW": true,
+  "fromCache": true
+ },
+ {
+  "t": 1790459738977,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459738977,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459738978,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459738978,
+  "url": "http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459738980,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459738981,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459738981,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459738981,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459739985,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459739986,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459739986,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459739986,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459740716,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459740717,
+  "url": "http://127.0.0.1:9/rest/v1/",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459741989,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459741990,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459741990,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459741990,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459746000,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459746001,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459746001,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459746001,
+  "url": "http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459746005,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "method": "POST",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459746006,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459746006,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459746006,
+  "url": "http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459746009,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459746016,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459746016,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459746016,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459747026,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "GET",
+  "type": "fetch"
+ },
+ {
+  "t": 1790459747027,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "method": "OPTIONS",
+  "type": "other"
+ },
+ {
+  "t": 1790459747027,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ },
+ {
+  "t": 1790459747027,
+  "url": "http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast",
+  "failed": "net::ERR_UNSAFE_PORT"
+ }
+]

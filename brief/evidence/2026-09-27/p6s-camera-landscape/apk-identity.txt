@@ -1,0 +1,3 @@
+package: name='sa.hadayah.streamer_app.wave4v2' versionCode='1' versionName='1.0.0' platformBuildVersionName='16' platformBuildVersionCode='36' compileSdkVersion='36' compileSdkVersionCodename='16'
+application-label:'Streamer Wave4v2'
+launchable-activity: name='sa.hadayah.streamer_app.MainActivity'  label='' icon=''

@@ -92,6 +92,7 @@ void main() {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
@@ -115,6 +116,7 @@ void main() {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
@@ -142,6 +144,7 @@ void main() {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
 
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
@@ -204,12 +207,25 @@ void main() {
       // Verify all 3 branches rendered in bottom sheet
       expect(find.text('Khobar Academic Campus (Main HQ)'), findsOneWidget);
       expect(find.text('Dhahran Tech Innovation Hall'), findsOneWidget);
-      expect(find.text('Dammam Executive Training Suite'), findsOneWidget);
-
-      // Verify seating counts
       expect(find.textContaining('350'), findsOneWidget);
       expect(find.textContaining('150'), findsOneWidget);
+      // Lazy branch rows must be reachable by scrolling, independent of a
+      // previous test's viewport/devicePixelRatio.
+      await tester.scrollUntilVisible(find.text('Dammam Executive Training Suite'), 150);
+      expect(find.text('Dammam Executive Training Suite'), findsOneWidget);
       expect(find.textContaining('100'), findsOneWidget);
+    });
+
+    testWidgets('unpinned organization branch offers no directions', (tester) async {
+      final provider = AppProvider(AdminDatabaseService(null));
+      seedStreamerFixtures(provider);
+      final venue = provider.getOrganizationVenues('org_dalilk_04').first;
+      await pumpTestApp(tester, Scaffold(body: OrgBranchesModalSheet(
+        orgName: 'Test organization',
+        venues: [venue.copyWith(latitude: 0, longitude: 0)],
+      )), provider);
+      expect(find.byIcon(Icons.directions_rounded), findsNothing);
+      expect(find.text(venue.nameEn), findsOneWidget);
     });
 
     testWidgets(

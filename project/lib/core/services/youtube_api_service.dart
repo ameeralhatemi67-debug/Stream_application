@@ -1,3 +1,4 @@
+import 'youtube_channel_reference.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -68,26 +69,13 @@ class YouTubeApiService {
   /// Resolves channel handle or URL (e.g. '@ahmedamercaller'or 'https://www.youtube.com/@dalilk4english_podcast/videos') to channel ID and uploads playlist ID
   Future<Map<String, String>> fetchChannelDetails(String handleOrUrl) async {
     if (handleOrUrl.trim().isEmpty || apiKey.isEmpty) return {};
-    String cleanHandle = handleOrUrl.trim();
-    cleanHandle = cleanHandle.replaceAll('https://www.youtube.com/', '');
-    cleanHandle = cleanHandle.replaceAll('http://www.youtube.com/', '');
-    cleanHandle = cleanHandle.replaceAll('https://youtube.com/', '');
-    cleanHandle = cleanHandle.replaceAll('http://youtube.com/', '');
-    cleanHandle = cleanHandle.replaceAll('www.youtube.com/', '');
-    cleanHandle = cleanHandle.replaceAll('youtube.com/', '');
-    cleanHandle = cleanHandle.replaceAll('/videos', '');
-    cleanHandle = cleanHandle.replaceAll('/featured', '');
-    cleanHandle = cleanHandle.replaceAll('/playlists', '');
-    cleanHandle = cleanHandle.replaceAll('/streams', '');
-    cleanHandle = cleanHandle.replaceAll('@', '');
-    if (cleanHandle.contains('?')) {
-      cleanHandle = cleanHandle.split('?').first;
-    }
-    cleanHandle = cleanHandle.replaceAll('/', '').trim();
-
-    final url = Uri.parse(
-      '$_baseUrl/channels?part=snippet,contentDetails&forHandle=$cleanHandle&key=$apiKey',
-    );
+    final channel = YouTubeChannelReference.parse(handleOrUrl);
+    if (channel == null || channel.parameter == 'custom') return {};
+    final url = Uri.parse('$_baseUrl/channels').replace(queryParameters: {
+      'part': 'snippet,contentDetails',
+      channel.parameter: channel.value,
+      'key': apiKey,
+    });
 
     try {
       final response = await _client.get(url).timeout(lookupTimeout);

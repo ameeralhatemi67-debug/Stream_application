@@ -1,10 +1,21 @@
 # Issues encountered during release hardening
 
-Updated: 2026-09-24. This is a local troubleshooting record, not proof that the database tests passed.
+Updated: 2026-09-27. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
 
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
+
+- **Selected venue card overflows Arabic narrow screen** — repaired in integration; populated 320–412dp matrix, physical acceptance pending.
+- **Offline save mixes application generations or loses page pins** — immutable publication, build identity and acknowledged durable client pins; local browser/worker faults verified.
+- **Organization reload invents a venue and application city fails constraint** — approved public application projection and all existing city choices; local SQL/privacy tests pass.
+- **Flutter test shard loses lazy organization branch** — test pixel ratio leaked; reset and scroll to verify the last branch.
+- **Chrome Cache.put InvalidAccessError in long test profile path** — short isolated profile works; precise browser filesystem cause unconfirmed.
+
+- **Phone retry loses authority or mute intent** — bounded fresh-authority recovery and native generation/intent guards; physical recovery pending.
+- **Viewer controls toggle covered by status row** — confirmed and unconfirmed states repaired; physical hit testing pending.
+- **Native emulator ANR and sparse output** — unresolved; not a native UX pass.
+- **Channel URL contradicts stale handle** — shared parser/save guard; ownership proof remains a release blocker.
 
 - **Docker Inference manager `dockerInference` socket bind collision** — currently operational; earlier root cause unresolved.
 - **Supabase CLI telemetry temp-file `EPERM`** — workaround: `DO_NOT_TRACK=1`.
@@ -35,6 +46,12 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Offline map pins disappear without a public catalog snapshot** — FIXED locally with vetted marker-only cache fallback; phone cold start open.
 - **Transferred broadcaster keeps stale LIVE card** — UNRESOLVED on receiving physical phone; server/viewer state differed until restart.
 - **Viewer room plays unrelated YouTube video** — UNVERIFIED cause; supplied screenshot does not show the phone broadcast.
+
+- **Live room stays uncertain after End during viewer outage** — source regression repaired; physical convergence pending.
+- **Landscape chat and settings overflow at large text** — synthetic en/ar layouts pass; physical IME/TalkBack pending.
+- **Camera rotation follows Flutter virtual display** — actual Activity display ID fixes unchanged portrait framing; physical uprightness pending.
+- **Java helper missing from Android APK** — move Java source to src/main/java; runtime receive path verified.
+- **Custom viewport defeats video mute** — clear stream viewport while hidden; received black frame verified.
 
 ## Recording format
 
@@ -280,3 +297,83 @@ Cause: unknown. The entered watch ID, public catalog row and Studio event were n
 Fix/workaround: check that all three refer to the same broadcast ID, then test video and audio on an independent viewer.
 Verification: screenshot inspection only; no code defect assigned or fix made.
 Evidence: `brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/R06-viewer-in-live-room-chat-paused.png` and `brief/evidence/2026-09-24/p6-wave3-review.md`.
+
+## Live room stays uncertain after End during viewer outage
+Cause: recovery required a live entry before End reconciliation, discarded polling with room services, and did not fence same-watch replacement sessions. Fix: retain original actor/watch/session, reconcile successful fresh catalog first and keep polling through interruption. Verification: new baseline regression failed; targeted suite43 passed. Healthy-network owner timing still needs physical reproduction; polling is20s with2s optional sweep/5s public-read timeouts; healthy room target30s/discovery40s. See Wave4v2 evidence.
+
+## Landscape chat and settings overflow at large text
+Cause: composer stayed present on rotation; sheet did not scroll; connection status could exceed narrow chat header. Fix: read-only landscape, screen-owned sender draft, scrollable safe-area sheet, flexible header labels and readable sheet colors. Verification:740x360/190px synthetic inset/2x/en-ar tests17 pass; initial new tests exposed71/87px overflow. Actual90/17px screenshot device cases remain NOT RUN.
+
+2026-09-27 follow-up: own-message Edit and studio opened from video could still offer text entry in landscape. Both now show a portrait-edit prompt while retaining drafts. Dialog controllers are disposed after route completion, fixing a disposed-controller error caught by the rotation/cancel test. Message action/report sheets scroll. Sender settings checks include 568x240, 740x360 and 1366x768 at 2x text in en/ar. The obsolete sender fullscreen lock was removed so physical rotation owns layout; AndroidView ignores pointers so the media tap reaches Flutter. See `brief/evidence/2026-09-27/p6s-camera-landscape/VERIFICATION.md`; real IME/TalkBack pending.
+
+## Phone retry loses authority or mute intent
+
+Cause: native retry could reconnect without checking current server ownership; callback flapping and watchdog shutdown could reset bounds or lose native mute. Fix: one Dart-owned 3s/10-attempt/60s episode, fresh session/device/permission RPC checks, native generation fence and explicit mute/camera flags per start. SDK rotation moves to RtmpStream with independent fitted preview and stable output dimensions. Verify native/received video separately; mock/compile results are not physical acceptance.
+
+## Viewer controls toggle covered by status row
+
+New toggle was initially behind the full-width header hit region. A widget tap regression reproduced it. Reserve a separate 48dp slot; media pointer observer does not claim the native gesture arena. Confirmed-state regression passes. Final review5162add found a full-width unconfirmed notice above the eye toggle: text intercepted its normal tap center. The owner-requested 2026-09-27 follow-up reserves that space and exercises the actual unconfirmed-state tap. Source fix verified in widget tests; physical/TalkBack checks remain pending. No fourth critic review or score applies to the follow-up.
+
+## Channel URL contradicts stale handle
+
+Cause: independent fields and permissive legacy path stripping saved conflicting identities. Fix: shared syntactic parser, pair validation before save, authoritative resolution for mixed references, canonical pending application. Vanity /c URLs require a current handle/UC URL. No ownership claim: D8 server/OAuth coordination remains explicitly release-blocking. Physical form/account checks pending.
+
+## Native emulator ANR and sparse output
+
+Status: UNRESOLVED. Fresh private Android16/API36 emulator with synthetic cameras produced H2641280x720/AAC and stopped resources, but only48frames over37.603s; preview screenshot shows System UI ANR. Cause unestablished; low-resource emulator is not a smooth/native/physical pass. Evidence: Wave4v2 NATIVE_PROBE.md and native screenshots. Real received-video orientation, recovery, long-duration/thermal and Home/lock tests remain required.
+
+2026-09-27 final local probe: 484 frames over 48.742 s video timestamp span (9.91 delivered fps, largest gap 1 s); both landscape framing changes and a black Hide-video frame observed, camera/service release confirmed. System UI ANR still visible; cause remains unestablished. This is not a native UX/performance pass. See `brief/evidence/2026-09-27/p6s-camera-landscape/NATIVE_PROBE.md`.
+
+## Camera rotation follows Flutter virtual display
+Status: fixed in local receive probe; physical orientation UNVERIFIED.
+Observed: UI rotates but transmitted frames stay portrait despite a display listener.
+Cause: Flutter hosts the preview SurfaceView on a virtual display whose rotation stays zero.
+Fix/workaround: pass the Activity display ID into the bridge; use DisplayManager for that display. Apply inverse display rotation after the camera texture's sensor transform, then fit portrait/crop landscape using actual advertised capture dimensions. Do not add a fixed -90 degree transform or restart the encoder on rotation.
+Verification: local H.264 received frames show portrait, both landscape rotations, then portrait; geometry assertions cover 16 sensor/display combinations and different ratios. The emulator's fixed house scene does not prove real-world uprightness. Two-phone TOP-arrow checks remain required.
+Evidence: `brief/evidence/2026-09-27/p6s-camera-landscape/NATIVE_PROBE.md`.
+
+## Java helper missing from Android APK
+Status: FIXED.
+Observed: new CameraFraming helper compiled but runtime failed with NoClassDefFoundError.
+Cause: Java file placed under src/main/kotlin was available to Kotlin compilation but omitted from the packaged Java classes.
+Fix/workaround: place it under src/main/java with the matching package; keep Kotlin bridge/source under src/main/kotlin.
+Verification: rebuilt isolated probe executes the helper during successful local capture/rotation. Compilation alone did not catch the defect.
+Evidence: `brief/evidence/2026-09-27/p6s-camera-landscape/native-packaging-failure.txt` and final native events.
+
+## Custom viewport defeats video mute
+Status: FIXED locally; physical Hide/Show acceptance pending.
+Observed: inspection of RootEncoder 2.7.5 shows a custom stream viewport takes precedence over muteVideo's zero-sized draw viewport.
+Cause: the new custom fit/crop geometry could override the SDK's video-hide mechanism.
+Fix/workaround: setStreamViewPort(null) while audioOnly is true, including rotation/resize/reconnect synchronization. Restore framing when showing video.
+Verification: final native receiver gets a black frame after Hide video. Camera remains active by existing design; this does not prove resource release while hidden.
+Evidence: `brief/evidence/2026-09-27/p6s-camera-landscape/received-final-49.png`.
+
+## Selected venue card overflows Arabic narrow screen
+Status: FIXED locally; physical acceptance pending.
+Observed: Row actions/badges and fixed popup size clipped selected venue actions at narrow widths and large text.
+Cause/fix: Wrap actions/badges;48dp targets and a scrollable selected overlay. Related short End/failure surfaces scroll.
+Verification:72 populated en/ar card combinations,320/360/384/412dp,1/1.6/2x; integration evidence pack. Not an empty-map or phone PASS.
+
+## Offline save mixes application generations or loses page pins
+Status: FIXED in local verified paths; browser eviction and five-minute reserved-client grace remain explicit limits.
+Observed: Map-only readiness missed app updates, file-wise promotion could mix generations, worker restart/first claim/pruning lost page identity.
+Fix: Build+pack identity, hashed app files, immutable generations/atomic pointer, bounded fetch, Web Locks, durable pins, page-build acknowledgement and controllerchange retry. Failed Dart callbacks settle JS lock promises before rethrowing.
+Verification: Real Chrome publication/download faults, cold Arabic startup,52-file inventory, worker restart/hang/multi-tab; deterministic actual-worker and HTML-script regressions. See integration VERIFICATION for artifact scope.
+
+## Organization reload invents a venue and application city fails constraint
+Status: FIXED locally; configured owner flow pending.
+Observed: Public reader assigned every organization Khobar coordinates; four offered application cities failed a new three-city constraint.
+Fix: Persist all existing application city choices separately from map scope. Organization public location comes only from a linked approved organization application with matching owner. Unknown remains unknown; private branch rows stay private and unchanged; no0,0 directions in branch sheet.
+Verification: Application/HTTP catalog regressions and fresh SQL including foreign/pending/individual links, combined owner/reference attack and exact-coordinate retention.
+
+## Flutter test shard loses lazy organization branch
+Status: FIXED test isolation.
+Observed: TC-ORG-UI-04 failed alone/in shard5 because a previous test left devicePixelRatio altered and the assertion expected an offscreen lazy row.
+Fix: Reset pixel ratio in teardown; scroll to third branch, retaining all three names/seating assertions.
+Verification: Full six-test organization profile file passes independently; final full-suite results in integration evidence. Separate host JIT OOM attempts remain failed logs.
+
+## Chrome Cache.put InvalidAccessError in long test profile path
+Status: UNRESOLVED precise cause; working isolated-profile alternative verified.
+Observed: Every put, including unrelated fresh-cache keys, failed in the deeply nested disposable integration profile. Identical candidate passed in a short temporary profile.
+Action: Preserve failed profile; use short dedicated test profile and capture Chromium filesystem diagnostics if repeated. Do not patch app behavior or clear owner caches to hide it.
+Verification: Initial-page acknowledgement and all52 offline assets pass under the short profile. Path/profile-related explanation is an inference, not proven Chromium root cause.

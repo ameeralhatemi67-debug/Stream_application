@@ -1,0 +1,12 @@
+Analyzing project...
+
+   info - Statements in an if should be enclosed in a block - lib\core\providers\app_provider.dart:3023:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\auth\presentation\steps\apply_step_3_professional.dart:664:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\live_stream\presentation\screens\phone_broadcast_screen.dart:841:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\features\live_stream\services\rtmp_publish_engine.dart:386:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - test\phone_broadcast_end_test.dart:251:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - test\phone_broadcast_end_test.dart:255:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - test\phone_broadcast_end_test.dart:258:9 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - test\wave4v2_recovery_and_channel_test.dart:32:9 - curly_braces_in_flow_control_structures
+
+8 issues found. (ran in 22.0s)

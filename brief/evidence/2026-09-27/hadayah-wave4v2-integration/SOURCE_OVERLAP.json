@@ -1,0 +1,12 @@
+{
+  "base": "7b54cb5e565011c33dcd03351735b7cc45a0926a",
+  "streaming": "818cc127f8d89f0f2c5a08bca7390cc50aa67368",
+  "map": "74157bad63279053774a01cfc5b2399bea390bd0",
+  "shared": [
+    "project/android/app/build.gradle.kts",
+    "project/assets/i18n/ar.json",
+    "project/assets/i18n/en.json",
+    "project/lib/core/providers/app_provider.dart",
+    "project/lib/features/auth/presentation/streamer_apply_screen.dart"
+  ]
+}

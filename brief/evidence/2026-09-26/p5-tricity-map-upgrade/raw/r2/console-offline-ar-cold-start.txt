@@ -1,0 +1,89 @@
+debug: Injecting <script> tag. Using callback.
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+warn: [.WebGL-0x224c0018ae00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadApplications failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: AppFlags: refresh failed: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/app_flags?select=key%2Cenabled%2Cupdated_at
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadTerms failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadAnalytics failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadAuditLogs failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+warn: [.WebGL-0x224c0018ae00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+warn: [.WebGL-0x224c0018ae00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels
+warn: [.WebGL-0x224c0018ae00]GL Driver Message (OpenGL, Performance, GL_CLOSE_PATH_NV, High): GPU stall due to ReadPixels (this message will no longer repeat)
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadAffiliationRequests failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: sweepStaleLiveFlags failed: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/rpc/sweep_stale_live_flags
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Error loading streamer_public_profiles: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast
+log: loadVerifiedStreamersFromBackend failed: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/streamer_public_profiles?select=%2A&order=display_name_en.asc.nullslast
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadApplications failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/broadcaster_applications?select=%2A&order=submitted_at.desc.nullslast
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadTerms failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/terms_and_conditions?select=%2A&is_active=eq.true
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadAnalytics failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/platform_analytics?select=%2A&id=eq.true
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadAuditLogs failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/audit_logs?select=%2A&order=created_at.desc.nullslast
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+log: Supabase loadAffiliationRequests failed, falling back: ClientException: Failed to fetch, uri=http://127.0.0.1:9/rest/v1/affiliation_requests?select=%2A&order=created_at.desc.nullslast
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: Failed to load resource: net::ERR_UNSAFE_PORT
+error: WebSocket connection to 'ws://127.0.0.1:9/realtime/v1/websocket?apikey=local-placeholder-not-a-key&vsn=2.0.0' failed: Error in connection establishment: net::ERR_UNSAFE_PORT
