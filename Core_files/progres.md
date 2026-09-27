@@ -1,10 +1,30 @@
 ---
 type: progress
 project: Streamer_app
-updated: 2026-09-24
+updated: 2026-09-27
 ---
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
+
+## 2026-09-27: manager handoff and concurrent work
+
+- Established [TASK_BOARD](../brief/management/TASK_BOARD.md), [EVENT_LOG](../brief/management/EVENT_LOG.md), [RELEASE_SCOPE](../brief/management/RELEASE_SCOPE.md) and [the successor prompt](../brief/management/HANDOFF_PROMPT.md). Archived the actual dispatched integration prompt and owner's configuration reply. Records separate dispatch, execution, review, merge and physical acceptance, with timestamps or explicit unknowns.
+- Confirmed Astra integration chat is active in its isolated worktree on `codex/hadayah-wave4v2-integration`. Opus map work and the earlier Astra camera task are finished; owner testing remains paused. No combined result or merge is assumed.
+- Reconciled the last four acceptance/audit files and camera report. E4 explicitly defers organization broadcasting/identity switching/org-scoped broadcast revocation, Upcoming Live/advance scheduling and return-chip polish. Front switching is deferred for now. Duplicate-channel indicators/alerts have no approved delivery date. D8 and other unresolved requirements remain open.
+- Updated STATUS, roadmap and plan/ledger pointers while retaining prior owner text. These intentional documentation edits must survive INT-01's preservation checks. No source changes, app tests/builds, installs, database operations, commits, merges or pushes were performed for this handoff.
+
+## 2026-09-25 to 2026-09-27: source progress and evidence limits
+
+- Opus streaming wave3 ended at `531f63d`; Astra audited/fixed and merged locally at `7b54cb5`. Recorded evidence: 695 Flutter tests, 440 SQL assertions, 3 concurrent cases and Android/web builds. Cold Realtime failure and warm passing probe remain separately documented.
+- Owner completed Wave 4/E4 on September 26. Matching phone/OBS audiovisual reception and several player/admin/transfer paths passed; ordinary End convergence, reconnect, camera rotation and landscape usability needed repairs. Read observations beneath PASS headings. Preserve owner results in `brief/evidence/2026-09-26/p6s-astra-audit/`.
+- First Wave4v2 candidate `5162add` / pack `23cfa66` reported 722 tests and critic 8/7/7/7. Owner began testing, then paused for targeted camera/layout repairs.
+- Camera follow-up `ddcb521`, evidence `818cc12`, reports 730 tests, analysis 0 and builds. Rotation/framing, three landscape controls, keyboard guards, scrolling settings and front-camera Coming Soon are implemented. No fresh independent score; physical acceptance and emulator ANR/frame questions remain.
+- Opus map source `a57dda7`, tip `74157ba`, reports 734 tests, analysis 0, browser offline evidence and critic 8/7/8/8. Selected-card overflow, device/backend coverage and accurate outlines remain. Both branches now feed INT-01.
+- Dedicated acceptance configuration remains unconfirmed. P5/P6/P6S are NOT ACCEPTED. Follow the manager board's dependencies rather than launching duplicate repairs.
+
+## Earlier progress entries
+
+2026-09-24 wave 3 review: Read the owner's new test sheet and all six associated images. Two-phone conflict/transfer, hardware YouTube Studio ingest, chat/block and pause are owner-observed physical results. A false LIVE card persisted on the receiving phone after transfer until restart; the viewer screenshot played an unrelated YouTube Developers video, so matching viewer playback is unverified. R07/R08, R09 post-repair, audio-only and P5 offline map acceptance remain open. The owner reports hosted migration application, unverified by this review. No app/SQL changes or new tests; see `brief/evidence/2026-09-24/p6-wave3-review.md`. P6/P5 remain not accepted, P6S incomplete.
 
 2026-09-24 local integration: P6 repairs through `938dc22` are on master; P5.4/P5.5 map changes and a marker-only offline-cache correction are merged locally. Combined Flutter 587 passed; analyzer 0; focused new cache test passed; G5c/G6/G7=0 and G11a=5 remains for private owner review. Opus's SQL 330 passed only on disposable local DB. No hosted migration, push or deploy. P6/P5 physical acceptance and P6S remain open.
 

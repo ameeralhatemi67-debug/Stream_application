@@ -1,14 +1,35 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-09-24
+updated: 2026-09-27
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
 
-Local P6/P5 integration, 2026-09-24: P6 retest repairs are on `master` through `938dc22`; P5.4/P5.5 map work and a focused offline marker-cache correction are merged locally. The combined Flutter suite passed **587** tests, analyzer found **0** issues, and the added cache test passed separately. G5c/G6/G7 are 0; G11a still flags five local credential-shaped hits for private owner review. Opus's 330 SQL assertions passed on a disposable backend; the two new P6 migrations have **not** been applied to a hosted test backend. Two-phone/YouTube and physical offline-map acceptance remain open. **P6 and P5 are not accepted; P6S is incomplete.**
+## Current coordination and release status, 2026-09-27
+
+Hadayah is **not release-ready**. P5/map, P6 and P6S are **NOT ACCEPTED**. This section supersedes earlier snapshots below. Current ownership and dependencies are in [the manager task board](../brief/management/TASK_BOARD.md), [event log](../brief/management/EVENT_LOG.md) and [release scope](../brief/management/RELEASE_SCOPE.md).
+
+- **Astra integration is RUNNING:** `codex/hadayah-wave4v2-integration`, worktree `C:/Users/User/.codex/worktrees/hadayah-wave4v2-integration/Streamer_app`. Chat: Integrate Hadayah streaming and map. It owns the combined audit, repairs, independent critic, conditional local merge and consolidated Wave4v2 sheet. No final outcome has been reviewed.
+- **Opus map implementation is finished but needs repair/acceptance:** branch `codex/tricity-map-upgrade`, tip `74157ba`, source `a57dda7`; critic **8/7/8/8**. Selected venue-card overflow, device/backend evidence, boundaries and geography scope remain. Recorded 734 tests and analysis 0 apply to that separate branch.
+- **Astra camera follow-up is finished but unaccepted:** `codex/p6s-wave4v2-repair`, source `ddcb521`, evidence tip `818cc12`; reported 730 tests, analysis 0 and Android/web builds. Physical camera/YouTube behaviour and poor emulator frames/System UI ANR remain open. The prior 8/7/7/7 critic score does not review this later source.
+- **Owner Wave4v2 testing is PAUSED.** Wave 4/E4 was completed with findings; Wave4v2 stopped after camera/layout problems and build-identity confusion. Resume on one identified, configured Hadayah Test candidate after the integration handoff and a short smoke test.
+- **Acceptance configuration is unconfirmed.** The owner has no confirmed dedicated Google/YouTube/non-production configuration path. INT-01 may investigate authorized reuse and finish independent local work. Its setup question has been answered; no production fallback is authorized.
+- **Last verified master is `7b54cb5`**, with owner edits and untracked evidence. The September 26 audit recorded 695 Flutter tests, 440 SQL assertions and 3 concurrency cases. INT-01 may later advance local master; refresh before reporting a merge.
+
+Approved later work: organization broadcasting/individual-organization broadcast switching/org-scoped broadcast revocation; advance scheduling/Upcoming Live management; return-to-broadcast shortcut polish. Front switching is deferred for now with Coming Soon. Sources and boundaries are in the [scope register](../brief/management/RELEASE_SCOPE.md). These cuts do not waive all P7, full PiP, Local/private modes or other unresolved requirements.
+
+**STREAM-D8 server-side YouTube authorization remains HIGH and release-blocking.** Accurate map boundaries, supported-mode decisions and physical evidence remain open. Publication also needs retained P7 scope, P8B data-rights/store/legal work, owner signing and signed AAB/secret scan, physical release smoke and P9 gates. Main-checkout G11a findings in the September 26 manager review are not cleared by another worktree's clean gates.
+
+These owner-authorized management edits are concurrent with INT-01. Preserve them against its earlier protected-file baseline. No app source, database, build or installed app changed in this update.
+
+## Earlier status snapshots
+
+Wave 3 owner retest review, 2026-09-24: The owner reports two-phone broadcaster conflict and transfer working, physical Android camera ingest reaching YouTube Studio, in-sheet studio errors, two-phone chat/blocking, and a platform pause notice. On transfer during a live broadcast, the receiving phone kept a false LIVE display until restart although the sender and viewer stopped; the exact refresh failure is not yet isolated. The supplied viewer screenshot plays an unrelated YouTube Developers video, so this broadcast's viewer playback remains unverified. Admin End/Remove, reports and owner moderation, audio-only, full rotation/background/reconnect, R09 post-repair actions and P5 offline map remain open. The owner reports the two new migrations applied to the hosted project; this review did not verify or access it. See `brief/evidence/2026-09-24/p6-wave3-review.md`. **P6/P5 are NOT ACCEPTED; P6S is INCOMPLETE; P8B is NOT ACCEPTED; no Play release is ready.**
+
+Local P6/P5 integration, 2026-09-24: P6 retest repairs are on `master` through `938dc22`; P5.4/P5.5 map work and a focused offline marker-cache correction are merged locally. The combined Flutter suite passed **587** tests, analyzer found **0** issues, and the added cache test passed separately. G5c/G6/G7 are 0; G11a still flags five local credential-shaped hits for private owner review. Opus's 330 SQL assertions passed on a disposable backend. At this local checkpoint the two new P6 migrations had not been applied to a hosted backend; the later owner report above supersedes that target-status statement. **P6 and P5 are not accepted; P6S is incomplete.**
 
 P6 retest repair, 2026-09-24 (branch `codex/p6-retest-repair`, commits `748ed87`, `c5869dd`, `e821adf`; not merged): R02's missing conflict dialog was reproduced (opened on `/splash` during hydration and removed by the next navigation) and fixed, together with a locked claim-or-report RPC, read-after-join device updates, persisted viewer choice and server-confirmed demotion. The studio buttons were not inert: their refusals were hidden under the bottom sheet; errors now show in the sheet, Phone/OBS preflight is explicit and Local is marked unavailable. R09 map visibility and revocation now use authorized, atomic, audited server actions; revocation no longer deletes organizations. Ban/unban, approval refresh, the application exit and the blank avatar were fixed. Verification: full Flutter **577 passed**, analyzer **0**, fresh local SQL **Files=18, Tests=330, PASS**, gates G6=1 (unchanged) and G11a=0 in this worktree (not a clearance of master's five hits). Two new migrations need an owner decision before any hosted retest. The Chrome reload hang and old PGRST205 did not reproduce locally. **P6 remains NOT ACCEPTED; P6S remains INCOMPLETE.** Evidence and the two-phone retest script: `brief/evidence/2026-09-24/p6-retest-repair/README.md`.
 

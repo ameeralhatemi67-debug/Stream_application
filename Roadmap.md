@@ -1,5 +1,27 @@
 # 🗺️ Streamer App — Evolutionary Master Roadmap
 
+## Current release path, 2026-09-27
+
+Hadayah is not publish-ready. This section and the updated Version 1.0 checkpoint map supersede older snapshots and calendar estimates below. [Task board](brief/management/TASK_BOARD.md) tracks active owners/branches; [release scope](brief/management/RELEASE_SCOPE.md) records evidence-backed deferrals.
+
+| Order | Work | Current state / dependency |
+|---|---|---|
+| 1 | INT-01 combined streaming and map audit/repairs | Astra Xhigh is RUNNING on `codex/hadayah-wave4v2-integration`. Opus map `74157ba` and Astra camera `818cc12` are completed inputs. Conditional local merge only after its review/gates. |
+| 2 | Dedicated acceptance setup and combined smoke | Google/YouTube/non-production configuration is unconfirmed. Agent continues independent work; owner setup may run in parallel when concrete instructions are available. |
+| 3 | Consolidated Wave4v2 and focused repairs | Owner testing is PAUSED. One clearly identified Hadayah Test build, short smoke first, then two-phone/Chrome/OBS and offline-map cases. P5/P6/P6S each need their own closure evidence. |
+| 4 | Resolve STREAM-D8 and remaining launch scope | Server YouTube authorization is HIGH and release-blocking. Confirm remaining platform/mode exclusions and map-boundary/geography scope. These are not automatically deferred by the existing owner cuts. |
+| 5 | Retained P7 obligations and P8B | Reconcile organization security/profile scope after the broadcast deferral; finish data rights, store/compliance artifacts and owner/legal decisions. Independent preparation can run alongside earlier work. |
+| 6 | Signed release and P9 | Owner signing, signed AAB, artifact secret scan, physical release smoke, final gates and approval. No calendar commitment is established. |
+
+### Owner-approved later features
+
+- Organization broadcasting, individual/organization broadcast switching and organization-scoped broadcast revocation: post-publication. Preserve existing organization security and unrelated functions; unsupported selection needs a clear future-feature explanation.
+- Advance scheduling and full Upcoming Live management: post-publication. Keep required live/watch safety checks.
+- Return-to-broadcast shortcut polish: post-publication. This is not a real PiP acceptance claim.
+- Front-camera switching: deferred for now with Coming Soon; no promised delivery date. Rear capture must remain uninterrupted.
+
+Sources: owner E4 Checks 2, 8 and 15, plus the September 27 camera follow-up; see [the scope register](brief/management/RELEASE_SCOPE.md). E4 Check 7's duplicate-channel indicator and owner/admin alerts are enhancement proposals, not a substitute for STREAM-D8 enforcement and not an approved release date commitment. Local/private, full PiP, accurate city outlines and all P7 work have not been blanket-deferred.
+
 > **Operational Git & Release Protocol:**
 > - **Versions:** Major stable working releases of the application.
 > - **Checkpoints:** Working snapshots combining multiple phases. The current release brief prohibits agent pushes; the owner controls publication and remote updates.
@@ -45,9 +67,14 @@ gantt
     Reality audit of the whole app              :done, audit, 2026-09-17, 3d
 ```
 
+<details>
+<summary>Historical September 23 scheduling estimates, superseded by the current dependency plan above</summary>
+
+These charts preserve the earlier plan. Their dates, ordering and completion labels are not current release commitments or evidence of acceptance.
+
 ```mermaid
 gantt
-    title 2. Hardening run: done, in progress, planned (estimate, one window per day)
+    title 2. Historical hardening estimate from September 23
     dateFormat  YYYY-MM-DD
     axisFormat  %b %d
     tickInterval 1day
@@ -95,7 +122,9 @@ gantt
     Version 1.1 iOS integration                 :r5, 2026-10-10, 2026-10-24
 ```
 
-### Where the hardening run stands (2026-09-23)
+</details>
+
+### Historical hardening snapshot (2026-09-23)
 
 | Phase | Status | Evidence | Roadmap link |
 |---|---|---|---|
@@ -523,6 +552,8 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 ---
 ## Version 1.0 — hardening and release
 
+> Current 2026-09-27 checkpoint: INT-01 is integrating the completed streaming and map branches; owner Wave4v2 is paused. Use the current release path above and checkpoint map below. Dated paragraphs and legacy task checkboxes retain their historical scope; they do not override the approved deferrals or count as current acceptance.
+
 > 2026-09-24 integration checkpoint: P6 repairs are locally merged through `938dc22`; P5.4/P5.5 map work and the corrected offline marker-cache fallback are merged locally. The combined Flutter suite passed 587 tests and analyzer 0; G5c/G6/G7=0, G11a=5. The two P6 migrations remain unapplied to any hosted test backend. P6/P5 device acceptance, P6S, basemap performance/licensing decision and release gates remain open.
 
 > 2026-09-24 owner retest and integration: P6 remains NOT ACCEPTED. Two-phone broadcaster collision failed, and studio actions did not start a live room, blocking chat, live admin end/remove and physical ingest checks. See `brief/evidence/2026-09-24/p6-retest-review.md`. P5.1–P5.3 offline code and hardening are on local master at `96a67f6` with 549 worktree Flutter tests and analyzer 0, but P5 physical acceptance and P5.4/P5.5 remain open. Scanner fixes reduce G6 to 1 and G11a to 5; the latter still needs private owner classification. P6S and release gates remain open. Nothing was pushed or run against production during integration.
@@ -629,6 +660,8 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 
 ### Checkpoint 1.0.6: P6 chat, moderation and admin `[Admin & Governance Track]`
 
+Current status: implementation and substantial local evidence exist on master `7b54cb5`; full physical acceptance remains open. The old task descriptions below predate later repairs. P6S has camera/reconnect/player repairs in the separate completed branch and is now under INT-01 integration; it is not an unstarted phase. Neither checkpoint is accepted.
+
 #### Phase 1.0.6.1: chat client and moderation UX
 
 - [x] Task 1.0.6.1.1: Enforce the 1.2-second message floor, slow mode and chat-off state on the server.
@@ -644,25 +677,29 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 
 - [/] Task 1.0.6.3.1: Directory actions and device reads passed 33 local SQL assertions in `1832b3e`. Account deletion and Auth-session revocation now have locally verified, audited backend actions in `4f1dbda`; real Auth HTTP and storage cases remain unverified.
 - [/] Task 1.0.6.3.2: Audited live end/feed removal works from the directory against app state. A dedicated live list/count view and physical broadcaster reaction remain open; the action does not stop external YouTube ingest.
-- [ ] Task 1.0.6.3.3: Add the audit-log viewer and keyword manager.
+- [/] Task 1.0.6.3.3: Audit-log viewer and keyword manager are implemented; retain their real-session, permission and audit acceptance checks.
 - [/] Task 1.0.6.3.4: Server-enforced chat/registration flags exist. Build admin and availability UI, then verify deleted-account cache invalidation beyond the directory.
 - [ ] Task 1.0.6.3.5: Complete the tag explorer and broadcaster mapping.
 
 ### Checkpoint 1.0.7: P5 map and offline experience `[GIS & Spatial Track]`
 
+Current status: older offline/catalog/presentation work is on master. The bundled vector upgrade exists on `codex/tricity-map-upgrade` and is being audited/repaired in INT-01. No physical map acceptance or approved accurate municipal outlines yet.
+
 #### Phase 1.0.7.1: connectivity and offline data
 
-- [ ] Task 1.0.7.1.1: Add debounced connectivity and reachability state.
-- [ ] Task 1.0.7.1.2: Cache the last good catalog with a version and timestamp.
-- [ ] Task 1.0.7.1.3: Add offline banners, cached-card state, disabled-action explanations and live-room recovery.
+- [/] Task 1.0.7.1.1: Connectivity/reachability implementation exists; verify on the combined candidate and actual network transitions.
+- [/] Task 1.0.7.1.2: Catalog caching exists; verify current identity, expiry and moderation behaviour with map/live integration.
+- [/] Task 1.0.7.1.3: Offline banners, cached-card states, unavailable explanations and recovery exist; combined physical acceptance remains open.
 
 #### Phase 1.0.7.2: map data and licensing
 
-- [ ] Task 1.0.7.2.1: Choose and test the permitted offline map strategy with attribution and cache controls.
-- [ ] Task 1.0.7.2.2: Add Saudi bounds, presets, clustering, provider-backed search and native directions.
-- [ ] Task 1.0.7.2.3: Record map licensing and remove any remaining disallowed map assets.
+- [/] Task 1.0.7.2.1: Bundled regional vector pack implemented in the map branch; INT-01 audits offline app-version consistency, update failure handling and physical qualification.
+- [/] Task 1.0.7.2.2: Focus navigation and venue scope on Al Khobar, Dhahran and Dammam; verify presets/search/directions and unpinned venues. Wider venue scope is not approved. Accurate municipal outlines remain unmet.
+- [/] Task 1.0.7.2.3: Pack attribution/notices are recorded; verify the integrated assets and licensing scope. Do not fabricate official boundaries or remove required credits.
 
 ### Checkpoint 1.0.8: P7 organizations `[Admin & Governance Track]`
+
+Owner scope amendment: organization broadcasting, individual/organization broadcast switching and organization-scoped broadcast revocation move to the post-publication backlog. This does not waive all tasks below. Reconcile the remaining initial-release roles/profile/admin scope, preserve security for existing records and keep deferred entry points unavailable with an explanation. See POST-01 in `brief/management/RELEASE_SCOPE.md`.
 
 #### Phase 1.0.8.1: organization roles and public profiles
 
@@ -675,10 +712,10 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 
 #### Phase 1.0.9.1: store documentation and data rights
 
-- [ ] Task 1.0.9.1.1: Draft truthful Data Safety, permissions, foreground-service and UGC-moderation documents.
+- [/] Task 1.0.9.1.1: Store drafts are prepared; reconcile Data Safety, permissions, foreground-service and UGC claims with the final implemented release and obtain required owner review.
 - [ ] Task 1.0.9.1.2: Extend data export to every user-linked table and verify consent withdrawal.
-- [ ] Task 1.0.9.1.3: Draft Arabic/English listing text and mark all legal claims for counsel review.
-- [ ] Task 1.0.9.1.4: Prepare the PDPL, CST/GCAM, minors, retention and cross-border questions for a lawyer.
+- [/] Task 1.0.9.1.3: Arabic/English listing drafts exist; update final claims and obtain owner/counsel decisions.
+- [/] Task 1.0.9.1.4: Counsel question drafts exist; required PDPL, CST/GCAM, minors, retention and cross-border decisions remain pending.
 
 ### Checkpoint 1.0.10: P9 final verification and release gate `[Backend & Security Track]`
 
@@ -699,15 +736,16 @@ To ensure architectural clarity across multi-agent sessions, tasks and checkpoin
 | 1.0.3 P3 true viewer presence | Partial | Presence service, count RPCs and grants are present. SQL runtime, expiry and multi-client device probes remain open. |
 | 1.0.4 P4 design and responsive app pass | Complete to recorded E1/E2 evidence | Scheme A, white theme, fonts, localization and responsive tests are complete. Physical-device visual QA remains open. |
 | 1.0.5 P8A Android release identity and branding | Partial, complete to available inputs | Identity, assets, permissions, target SDK, 16 KB checks and fail-closed signing are complete. No keystore, AAB, release scan or device smoke test exists. |
-| 1.0.6 P6 chat, moderation and admin | Not accepted | Local repair through `938dc22` is merged; 330 disposable SQL assertions passed. Two migrations need an authorized test-backend rollout and R02→studio→chat/admin two-phone retest. |
-| 1.0.7 P5 map and offline experience | Partial | P5.1–P5.3 and P5.5 code are merged locally; P5.4 has a decision note but no accepted basemap. Physical map/offline acceptance remains open. |
-| 1.0.8 P7 organizations | Not started | Co-owner roles, invitations, public organization profile and audit scope remain open. |
+| 1.0.6 P6 chat, moderation and admin | Not accepted | Main baseline `7b54cb5`; 440 local SQL assertions and later owner E4 evidence exist. Combined chat/admin/account physical acceptance is pending. |
+| P6S broadcast, access, playback and exits | Not accepted; integration running | Streaming source `ddcb521`, evidence `818cc12`, feeds INT-01. Camera/recovery/player physical checks and STREAM-D8 release blocker remain. |
+| 1.0.7 P5 map and offline experience | Implemented branch; needs repair/acceptance | Map tip `74157ba` feeds INT-01. Selected-card regression, phone/backend evidence and city boundaries/scope remain open. |
+| 1.0.8 P7 organizations | Partial scope deferred; retained work needs reconciliation | Broadcast switching/revocation is post-release; remaining roles, invitations, profiles and security are not blanket-waived. |
 | 1.0.9 P8B store and Saudi-compliance package | Drafts prepared; not accepted | Seven `store/` drafts exist; complete export/withdrawal/deletion work and owner/counsel review remain open. |
 | 1.0.10 P9 final verification and release gate | Not started | Full re-verification, gates, SQL, devices, release diff, store package and owner approvals remain open. |
 
 ### Release gate
 
-Version 1.0 is not release-ready. Finish P6 acceptance, then P6S broadcast, access, playback and exit-path reliability before P5, P7, P8B and P9. The owner has decided that exact coordinates are public venue coordinates for map navigation, not home addresses. The release track still needs venue-only data-entry verification, a production schema comparison before any owner-approved `db push`, physical-device verification, an owner-supplied keystore and signed AAB, and the P8B legal/store package. Do not mark the version complete from static code review or widget tests alone.
+Version 1.0 is not release-ready. Finish the active combined integration and configured smoke/acceptance sequence, resolve STREAM-D8 and outstanding supported-mode decisions, reconcile retained P7 scope, then complete P8B and P9. P5/P6/P6S require separate evidence even when tested in one build. Exact coordinates are public venue coordinates for navigation, not home addresses; verify venue-only entry. The release still needs an owner-reviewed hosted schema comparison before any separately authorized migration, physical-device evidence, owner signing and a signed AAB with secret scan, and the legal/store package. Source merge, scores and widget tests do not establish publication readiness.
 
 ---
 
@@ -766,6 +804,10 @@ Verification: 8 focused Flutter tests; 25 admin safety + 26 block/flag SQL asser
 ## 2026-09-24 build preflight for third device retest
 
 The local Windows debug build now passes with a compiler compatibility definition scoped to `permission_handler_windows_plugin` (MSVC 14.51). The local Android debug APK also builds; the owner's earlier missing `dart_plugin_registrant.dart` error did not recur and its cause is unconfirmed. These are build checks only, not app launch, signed-in flow, physical-device, P6, or P5 acceptance evidence. P6 and P5 remain NOT ACCEPTED; P6S remains INCOMPLETE. No hosted migration, production access, push, or release action occurred. See `issue_encountered.md` and the latest `brief/LEDGER.md` RESUME block.
+
+## 2026-09-24 wave 3 owner retest review
+
+The owner reports two-phone conflict and transfer, Android camera publishing with YouTube Studio receiving the stream, and live chat/block/pause across clients. A live transfer left the receiving phone displaying stale LIVE until restart; the provided viewer screenshot plays an unrelated YouTube Developers video, so matched viewer playback is still unverified. Admin End/Remove, reports/owner moderation, audio-only, full rotation/background/reconnect, R09 post-repair retest and physical offline-map acceptance remain open. The owner reports the two P6 repair migrations on the hosted target; this review did not independently access or verify it. Matrix and actions: `brief/evidence/2026-09-24/p6-wave3-review.md`. P6/P5 are not accepted, P6S incomplete, and Play release blocked.
 
 ## 2026-09-24 Android device build recovery
 

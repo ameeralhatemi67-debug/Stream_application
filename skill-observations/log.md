@@ -82,3 +82,34 @@ Observations captured during task-oriented work.
 **Suggested improvement:** Verify snapshot readiness and channel subscription separately; test a mutation after join, then test the startup window and documented fallback without adding duplicate listeners.
 
 **Principle:** A successful initial read does not establish readiness to receive subsequent events.
+
+### Observation 6: Match each acceptance claim to the captured media
+
+**Status:** OPEN
+**Date:** 2026-09-24
+**Session context:** Reviewed owner-run physical broadcast results and attached screenshots against release gates.
+**Skill:** New skill candidate: Evidence-to-gate review
+**Type:** open-source
+**Phase/Area:** Acceptance evidence review
+
+**Issue:** A screenshot attached to a claimed live broadcast showed an unrelated prerecorded video. The narrative also reported chat delivery, while the image showed an empty chat. The owner observation remained useful, but the image could not prove those two subchecks.
+
+**Suggested improvement:** For each gate, record the exact artifact and what it visibly or measurably proves. Compare stream identifiers across sender, ingest dashboard and viewer. Keep owner observation and automated evidence separate, and mark unmatched media claims unverified.
+
+**Principle:** Evidence proves only the state it directly captures; related end-to-end claims need matching identifiers across clients.
+**Reference file:** brief/evidence/2026-09-24/p6-wave3-review.md
+
+### Observation 7: Keep independent task states across manager handoffs
+
+**Status:** OPEN
+**Date:** 2026-09-27
+**Session context:** Owner requested persistent coordination records while implementation, integration and physical testing ran on different timelines.
+**Skill:** New skill candidate: Concurrent project coordination
+**Type:** open-source
+**Phase/Area:** Handoffs and dependency tracking
+
+**Issue:** A manager relying on conversational order can treat one returned task as completion of unrelated running work, duplicate an assignment or send a tester to an obsolete build.
+
+**Suggested improvement:** Maintain stable task IDs with prompt/dispatch/response provenance, branch and build identity, execution/review/merge/acceptance states, dependencies and observed timestamps. Update only tasks supported by new evidence. Record manager-owned concurrent documentation changes so preservation checks do not erase them.
+
+**Principle:** Completion is scoped to a task and artifact; it does not propagate to parallel work or dependent acceptance without evidence.

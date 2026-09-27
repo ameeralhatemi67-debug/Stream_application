@@ -1,5 +1,15 @@
 # 03 — Work plan (ordered by risk and dependency)
 
+## Current execution and owner scope amendment, 2026-09-27
+
+The September 23 sequence and evidence counts below are historical. Current execution: Astra INT-01 is combining the completed map and streaming branches in `codex/hadayah-wave4v2-integration`; owner Wave4v2 testing is paused. Finish that audit/repair and conditional local merge, establish dedicated non-production Google/YouTube acceptance setup, then run one combined smoke and physical retest. P5/P6/P6S remain separately NOT ACCEPTED. Track current dispatches and dependencies in [management/TASK_BOARD.md](management/TASK_BOARD.md).
+
+Owner E4 Checks 2/8/15 defer advance scheduling/Upcoming Live, organization broadcasting/individual-organization broadcast switching/org-scoped broadcast revocation, and return-chip polish to after publication. The September 27 camera follow-up defers front switching for now with Coming Soon. Preserve safe disabled entry points and existing organization authorization; this is not a blanket P7 deferral. Exact sources, proposed enhancements and unresolved exclusions are in [management/RELEASE_SCOPE.md](management/RELEASE_SCOPE.md).
+
+STREAM-D8 YouTube server authorization remains HIGH and release-blocking. Local/private/PiP, accurate map boundaries and other unapproved cuts remain scope/evidence decisions, not automatic deferrals. After combined acceptance and focused blocker repairs, reconcile retained P7 obligations, finish P8B and owner signing/AAB/secret scan, and run P9. No historical four-day estimate or calendar date overrides those gates. Authorized independent store/setup work may proceed in parallel.
+
+This amendment records owner decisions and present ordering without reopening already completed implementation merely because the old checklists below say not started. Do not apply earlier no-branch/push defaults over the current isolated-branch and no-push instructions.
+
 Conventions: one commit per phase (more if a phase is large) with conventional messages; **never push**; **never touch a linked/production Supabase** (local stack only, see 05 D-14). Every phase ends with the technical checkpoint: `flutter analyze` = 0, `flutter test` green, `node brief/tools/gates.mjs`, and a ledger entry. Use the current provider-specific budget rule in 04 §J (Codex) or §K (Claude Opus); the older §C meter step does not apply to unmetered Opus runs.
 
 Canonical release sequence (2026-09-23): completed P0–P4, P8A and the server-backed P6.4 item 1 directory repair → finish remaining P6 → **P6S broadcast and navigation reliability** → P5 → P7 → P8B → P9. P1 policy work is substantially implemented, but release-artifact secret scanning remains deferred until a signed AAB exists. P1.2 is a prerequisite for P3/P6/P7 and is recorded as implemented; its database/runtime evidence must be checked at the relevant local SQL gates. P6.4 item 1 passed the disposable-local database gate; account deletion and Auth-session revocation remain separate unfinished work. See `README.md` for current state and `06_VERIFICATION.md` for evidence levels. This file is the sole release plan.

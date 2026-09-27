@@ -33,6 +33,8 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Spatial map pairwise marker displacement scales quadratically** — FIXED locally with bounded grid clusters; phone paint timing open.
 - **Map search and cached pins outlive catalog refresh** — FIXED locally for current provider snapshots; offline revocation timing open.
 - **Offline map pins disappear without a public catalog snapshot** — FIXED locally with vetted marker-only cache fallback; phone cold start open.
+- **Transferred broadcaster keeps stale LIVE card** — UNRESOLVED on receiving physical phone; server/viewer state differed until restart.
+- **Viewer room plays unrelated YouTube video** — UNVERIFIED cause; supplied screenshot does not show the phone broadcast.
 
 ## Recording format
 
@@ -262,3 +264,19 @@ Cause: an absent catalog and an authoritative empty catalog were both represente
 Fix/workaround: distinguish those states; retain marker-only pins until a catalog is available, then filter by its visible IDs. Version the marker cache to v2 and save only verified, map-visible pins; older unvetted cache entries are ignored.
 Verification: focused map/catalog tests passed, combined Flutter suite 587 passed, analyzer 0. Physical airplane-mode cold start remains open.
 Evidence: local P5/P6 merge checkpoint in `brief/LEDGER.md`.
+
+## Transferred broadcaster keeps stale LIVE card
+Status: UNRESOLVED; owner observed on physical devices in wave 3.
+Observed: after Phone 2 took broadcaster ownership from a live Phone 1, Phone 1's encoder stopped and viewers saw offline, but Phone 2 kept showing LIVE until a full restart.
+Cause: unknown. The server-side forced claim clears live state; device ownership and public streamer models refresh through separate client paths. The missed path has not been reproduced in a controlled trace.
+Fix/workaround: restart cleared the display in the owner's run; this is not acceptance. Capture server profile state, both clients and Realtime/catalog refresh at transfer, then fix and add a focused regression.
+Verification: owner two-phone observation only; no new automated test or repair in this review.
+Evidence: `brief/evidence/2026-09-24/p6-retest-repair/REPAIR_RETEST_RESULTS.md` and `brief/evidence/2026-09-24/p6-wave3-review.md`.
+
+## Viewer room plays unrelated YouTube video
+Status: UNVERIFIED cause; matched playback remains open.
+Observed: the attached paused-chat viewer-room image visibly plays a YouTube Developers video while the owner reports a separate phone broadcast reaching YouTube Studio.
+Cause: unknown. The entered watch ID, public catalog row and Studio event were not compared.
+Fix/workaround: check that all three refer to the same broadcast ID, then test video and audio on an independent viewer.
+Verification: screenshot inspection only; no code defect assigned or fix made.
+Evidence: `brief/evidence/2026-09-24/p6-retest-repair/screenshots/good/R06-viewer-in-live-room-chat-paused.png` and `brief/evidence/2026-09-24/p6-wave3-review.md`.
