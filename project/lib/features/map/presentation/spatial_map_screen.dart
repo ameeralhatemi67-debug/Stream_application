@@ -874,75 +874,64 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     ),
                   ),
 
-                  // Floating Action Map Controls (bottom end, above the credit rail)
+                  // Keep the card above a shared attribution/control row.
                   PositionedDirectional(
-                    bottom: 64,
-                    end: 16,
+                    top: _safePadding.top,
+                    bottom: 0,
+                    start: 0,
+                    end: 0,
                     child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        _buildFloatingMapButton(
-                          icon: Icons.zoom_out_map_rounded,
-                          tooltip: 'map.overview_button'.tr(),
-                          onTap: _showOverview,
-                        ),
-                        const SizedBox(height: 10),
-
-                        // Open Broadcasters List Drawer Button
-                        _buildFloatingMapButton(
-                          icon: Icons.format_list_bulleted_rounded,
-                          tooltip: 'map.broadcasters_list'.tr(),
-                          onTap: () {
-                            _scaffoldKey.currentState?.openEndDrawer();
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Selected Streamer Summary Modal Card (Mobile Bottom Floating Overlay for Mid-Zoom)
-                  ValueListenableBuilder<double>(
-                    valueListenable: _zoomNotifier,
-                    builder: (context, currentZoom, child) {
-                      if (selectedStreamer == null) {
-                        return const SizedBox.shrink();
-                      }
-                      return PositionedDirectional(
-                        bottom: 56,
-                        start: 16,
-                        end: 76,
-                        child: Center(
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(
-                                maxHeight:
-                                    MediaQuery.sizeOf(context).height * 0.55),
-                            child: SingleChildScrollView(
-                              child: MarkerSummaryCard(
-                                streamer: selectedStreamer,
-                                onClose: () {
-                                  setState(() {
-                                    _selectedStreamerId = null;
-                                  });
-                                },
+                        if (selectedStreamer != null)
+                          Flexible(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 8),
+                              child: Center(
+                                heightFactor: 1,
+                                child: ConstrainedBox(
+                                  constraints: BoxConstraints(
+                                    maxWidth: 420,
+                                    maxHeight: available.height * 0.55,
+                                  ),
+                                  child: SingleChildScrollView(
+                                    child: MarkerSummaryCard(
+                                      streamer: selectedStreamer,
+                                      onClose: () => setState(() {
+                                        _selectedStreamerId = null;
+                                      }),
+                                    ),
+                                  ),
+                                ),
                               ),
                             ),
                           ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Align(
+                                alignment: AlignmentDirectional.centerStart,
+                                child: ListenableBuilder(
+                                  listenable: _pack,
+                                  builder: (context, _) => MapAttributionRail(
+                                    controller: _pack,
+                                    onDetails: _openDetails,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            _buildFloatingMapButton(
+                              icon: Icons.format_list_bulleted_rounded,
+                              tooltip: 'map.broadcasters_list'.tr(),
+                              onTap: () =>
+                                  _scaffoldKey.currentState?.openEndDrawer(),
+                            ),
+                            const SizedBox(width: 16),
+                          ],
                         ),
-                      );
-                    },
-                  ),
-
-                  // Required map credit: always visible, above sheets and
-                  // cards, in every connectivity state.
-                  PositionedDirectional(
-                    bottom: 0,
-                    start: 0,
-                    child: ListenableBuilder(
-                      listenable: _pack,
-                      builder: (context, _) => MapAttributionRail(
-                        controller: _pack,
-                        onDetails: _openDetails,
-                      ),
+                      ],
                     ),
                   ),
                 ],

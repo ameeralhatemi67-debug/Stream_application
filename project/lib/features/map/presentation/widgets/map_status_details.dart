@@ -34,28 +34,30 @@ class MapAttributionRail extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Semantics(
-            link: true,
-            label: 'map.credit_link_label'.tr(namedArgs: {'credit': credit}),
-            excludeSemantics: true,
-            child: InkWell(
-              onTap: () => launchUrl(Uri.parse(url),
-                  mode: LaunchMode.externalApplication),
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 48),
-                child: Padding(
-                  padding: const EdgeInsetsDirectional.only(
-                      start: AppTheme.spaceSm, end: AppTheme.spaceXs),
-                  child: Center(
-                    widthFactor: 1,
-                    child: Text(
-                      credit,
-                      textDirection: TextDirection.ltr,
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 12,
-                        decoration: TextDecoration.underline,
-                        decorationColor: AppTheme.textSecondary,
+          Flexible(
+            child: Semantics(
+              link: true,
+              label: 'map.credit_link_label'.tr(namedArgs: {'credit': credit}),
+              excludeSemantics: true,
+              child: InkWell(
+                onTap: () => launchUrl(Uri.parse(url),
+                    mode: LaunchMode.externalApplication),
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                        start: AppTheme.spaceSm, end: AppTheme.spaceXs),
+                    child: Center(
+                      widthFactor: 1,
+                      child: Text(
+                        credit,
+                        textDirection: TextDirection.ltr,
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
+                          fontSize: 12,
+                          decoration: TextDecoration.underline,
+                          decorationColor: AppTheme.textSecondary,
+                        ),
                       ),
                     ),
                   ),
@@ -264,7 +266,8 @@ class MapPackStatusCard extends StatelessWidget {
       ),
       child: Semantics(
         liveRegion: true,
-        child: SingleChildScrollView(child: Column(
+        child: SingleChildScrollView(
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

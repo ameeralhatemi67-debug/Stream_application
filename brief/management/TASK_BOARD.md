@@ -1,5 +1,9 @@
 # Hadayah manager task board
 
+## Current UI adjustment, 2026-09-27
+
+FIX-02: Owner screenshots show restored map pins and an open profile card; profile-editor retest remains unreported. Owner requests drawer control aligned with OpenStreetMap attribution, expand control hidden for now, and a consistent responsive card capped on desktop. Implemented directly on master after `0f7d474`. Usage baseline 54% of the weekly window; owner permits at most 3 additional percentage points (57% ceiling), checked through the app meter. No delegation or new branch. Card uses available width with 16px side margins and a 420px cap, fixed content order/full-width primary action, and scrolling in short viewports. Attribution and drawer share a row with wrapping credit. Analyzer is clean; expanded 280–1280px, en/ar, 1–2x text and all stream-state matrix passes; complete suite passed: 905 tests in eight disjoint file batches. [Verification](../evidence/2026-09-27/map-card-ui/VERIFICATION.md). Physical confirmation pending.
+
 ## Current repair, 2026-09-27
 
 Owner is doing exploratory testing on the upgraded map and explicitly requested repairing missing map/drawer profiles and the Edit Account Profile `cs_tech` dropdown crash together. MGR-02 has implemented FIX-01 directly on main master, based on pushed snapshot `e820119`. No new branch, duplicate agent assignment or hosted data operation. The repaired source has passed fresh verification: 851 Flutter tests across all eight disjoint shards and analyzer zero issues. See [FIX-01 evidence and owner retest](../evidence/2026-09-27/map-profile-repair/README.md). Physical confirmation remains pending. P5/P6 remain NOT ACCEPTED and P6S INCOMPLETE / NOT ACCEPTED.

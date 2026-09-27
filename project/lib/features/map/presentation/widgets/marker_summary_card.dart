@@ -34,7 +34,8 @@ class MarkerSummaryCard extends StatelessWidget {
     }
 
     return Container(
-      width: 320,
+      width: double.infinity,
+      constraints: const BoxConstraints(maxWidth: 420),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppTheme.surface,
@@ -240,56 +241,58 @@ class MarkerSummaryCard extends StatelessWidget {
                 onPressed: () =>
                     VenueNavigationSheet.show(context, streamer: streamer),
               ),
-              const SizedBox(width: 6),
-              ElevatedButton.icon(
-                onPressed: () {
-                  if (isLive && streamer.activeStreamId != null) {
-                    context.push('/live/${streamer.activeStreamId}');
-                  } else {
-                    context.push('/profile/${streamer.streamerId}');
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: isVideo
-                      ? AppTheme.danger
-                      : isAudio
-                          ? AppTheme.media
-                          : AppTheme.primary,
-                  foregroundColor: AppTheme.onMedia,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    side: isAudio
-                        ? const BorderSide(
-                            color: AppTheme.textMuted, width: 1.0)
-                        : BorderSide.none,
-                  ),
-                  elevation: 0,
-                  minimumSize: const Size(48, 48),
-                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ],
+          ),
+          const SizedBox(height: AppTheme.spaceSm),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: () {
+                if (isLive && streamer.activeStreamId != null) {
+                  context.push('/live/${streamer.activeStreamId}');
+                } else {
+                  context.push('/profile/${streamer.streamerId}');
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: isVideo
+                    ? AppTheme.danger
+                    : isAudio
+                        ? AppTheme.media
+                        : AppTheme.primary,
+                foregroundColor: AppTheme.onMedia,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  side: isAudio
+                      ? const BorderSide(color: AppTheme.textMuted, width: 1.0)
+                      : BorderSide.none,
                 ),
-                icon: Icon(
-                  isVideo
-                      ? Icons.play_arrow_rounded
-                      : isAudio
-                          ? Icons.mic_rounded
-                          : Icons.person_rounded,
-                  size: 14,
-                ),
-                label: Text(
-                  isVideo
-                      ? 'live.watch_live'.tr()
-                      : isAudio
-                          ? 'live.listen_live'.tr()
-                          : 'nav.profile'.tr(),
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
+                elevation: 0,
+                minimumSize: const Size(48, 48),
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              ),
+              icon: Icon(
+                isVideo
+                    ? Icons.play_arrow_rounded
+                    : isAudio
+                        ? Icons.mic_rounded
+                        : Icons.person_rounded,
+                size: 14,
+              ),
+              label: Text(
+                isVideo
+                    ? 'live.watch_live'.tr()
+                    : isAudio
+                        ? 'live.listen_live'.tr()
+                        : 'nav.profile'.tr(),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
-            ],
+            ),
           ),
         ],
       ),

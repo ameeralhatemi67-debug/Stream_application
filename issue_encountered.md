@@ -10,7 +10,7 @@ Updated: 2026-09-27. This is a local troubleshooting record, not proof that the 
 
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
 
-- **Selected venue card overflows Arabic narrow screen** — repaired in integration; populated 320–412dp matrix, physical acceptance pending.
+- **Selected venue card overflows Arabic narrow screen** — responsive layout updated; populated 280–1280dp matrix, physical acceptance pending.
 - **Offline save mixes application generations or loses page pins** — immutable publication, build identity and acknowledged durable client pins; local browser/worker faults verified.
 - **Organization reload invents a venue and application city fails constraint** — approved public application projection and all existing city choices; local SQL/privacy tests pass.
 - **Flutter test shard loses lazy organization branch** — test pixel ratio leaked; reset and scroll to verify the last branch.
@@ -357,6 +357,7 @@ Status: FIXED locally; physical acceptance pending.
 Observed: Row actions/badges and fixed popup size clipped selected venue actions at narrow widths and large text.
 Cause/fix: Wrap actions/badges;48dp targets and a scrollable selected overlay. Related short End/failure surfaces scroll.
 Verification:72 populated en/ar card combinations,320/360/384/412dp,1/1.6/2x; integration evidence pack. Not an empty-map or phone PASS.
+2026-09-27 FIX-02: Owner requested the drawer beside attribution and expand hidden. Removed the card-side control gutter, capped responsive width at 420dp with 16dp phone margins, stabilized the primary-action row and retained bounded scrolling. Attribution wraps beside the drawer. Expanded regression matrix: 126 combinations, widths 280 through 1280, short landscape, en/ar and up to 2x text; owner-device confirmation pending. See brief/evidence/2026-09-27/map-card-ui/VERIFICATION.md.
 
 ## Offline save mixes application generations or loses page pins
 Status: FIXED in local verified paths; browser eviction and five-minute reserved-client grace remain explicit limits.

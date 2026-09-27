@@ -26,6 +26,7 @@ import 'package:streamer_app/features/map/presentation/widgets/marker_summary_ca
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 import 'fixtures/streamer_fixtures.dart';
 import 'package:streamer_app/features/map/presentation/widgets/spatial_streamer_marker.dart';
+import 'package:streamer_app/features/map/presentation/widgets/map_status_details.dart';
 import 'package:streamer_app/features/map/presentation/widgets/streamer_sliding_drawer.dart';
 
 late Map<String, dynamic> enData, arData;
@@ -184,7 +185,7 @@ void main() {
   });
 
   for (final lang in ['en', 'ar']) {
-    for (final width in [320.0, 360.0, 384.0, 412.0]) {
+    for (final width in [280.0, 320.0, 360.0, 384.0, 412.0, 600.0, 1280.0]) {
       for (final scale in [1.0, 1.6, 2.0]) {
         for (final type in BroadcastType.values) {
           testWidgets('selected card $lang width=$width text=$scale $type',
@@ -195,7 +196,7 @@ void main() {
               previousError?.call(details);
             };
             addTearDown(() => FlutterError.onError = previousError);
-            tester.view.physicalSize = Size(width, 800);
+            tester.view.physicalSize = Size(width, width == 600 ? 360 : 800);
             tester.view.devicePixelRatio = 1;
             addTearDown(tester.view.resetPhysicalSize);
             addTearDown(tester.view.resetDevicePixelRatio);
@@ -224,6 +225,16 @@ void main() {
             await tester.pump(const Duration(milliseconds: 500));
             await tester.pump();
             expect(find.byType(MarkerSummaryCard), findsOneWidget);
+            final cardWidth =
+                tester.getSize(find.byType(MarkerSummaryCard)).width;
+            expect(cardWidth, closeTo(width < 452 ? width - 32 : 420, 0.1));
+            expect(find.byIcon(Icons.zoom_out_map_rounded), findsNothing);
+            final drawer = find.byTooltip('map.broadcasters_list'.tr());
+            final credit = find.byType(MapAttributionRail);
+            expect(tester.getCenter(drawer).dy,
+                closeTo(tester.getCenter(credit).dy, 0.1));
+            expect(tester.getRect(drawer).overlaps(tester.getRect(credit)),
+                isFalse);
             final action = find.descendant(
                 of: find.byType(MarkerSummaryCard),
                 matching: find.byType(ElevatedButton));
@@ -282,7 +293,7 @@ void main() {
       expect(find.textContaining('Offline ·'), findsOneWidget);
       expect(find.text(kOsmCreditFallback), findsOneWidget);
       expect(find.byTooltip('Map details and credits'), findsOneWidget);
-      expect(find.byTooltip('Show all three cities'), findsOneWidget);
+      expect(find.byTooltip('Show all three cities'), findsNothing);
       expect(find.textContaining('Esri'), findsNothing);
 
       // Dropdown lists exactly the overview plus the three cities.
@@ -317,7 +328,9 @@ void main() {
           findsOneWidget);
 
       // Overview returns to all three cities.
-      await tester.tap(find.byTooltip('Show all three cities'));
+      await tester.tap(find.byType(CitySelectorDropdown));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('All three cities').last);
       await tester.pumpAndSettle();
       expect(
           find.descendant(
@@ -378,7 +391,7 @@ void main() {
           lang: 'ar'));
       await tester.pumpAndSettle();
       expect(find.text('المدن الثلاث'), findsOneWidget);
-      expect(find.byTooltip('عرض المدن الثلاث'), findsOneWidget);
+      expect(find.byTooltip('عرض المدن الثلاث'), findsNothing);
       expect(find.text(kOsmCreditFallback), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
