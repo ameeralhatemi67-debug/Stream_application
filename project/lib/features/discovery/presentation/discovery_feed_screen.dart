@@ -48,8 +48,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
       if (!mounted) return;
       final provider = context.read<AppProvider>();
       if (provider.isOnline) {
-        unawaited(provider
-            .refreshCatalogIfOlderThan(const Duration(seconds: 30)));
+        unawaited(
+            provider.refreshCatalogIfOlderThan(const Duration(seconds: 30)));
       }
     });
   }
@@ -195,9 +195,6 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     final langCode = context.locale.languageCode;
     final isOnline = context.select<AppProvider, bool>((p) => p.isOnline);
     final availableLiveStreamers = isOnline ? liveStreamers : <StreamerModel>[];
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isDesktop = screenWidth >= 900;
-    final streamerGridColumns = isDesktop ? 4 : (screenWidth > 600 ? 3 : 2);
 
     final isUserStreamerLive = isStreamerModeEnabled && isBroadcastingLive;
 
@@ -223,7 +220,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     if (customBroadcastType == BroadcastType.liveAudio) ...[
-                      const Icon(Icons.mic_rounded, size: 12, color: AppTheme.onMedia),
+                      const Icon(Icons.mic_rounded,
+                          size: 12, color: AppTheme.onMedia),
                       const SizedBox(width: 5),
                       Text(
                         'live.audio_live_indicator'.tr(),
@@ -307,13 +305,18 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                     height: AppTheme.searchBarHeight,
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppTheme.searchBarRadius),
+                      borderRadius:
+                          BorderRadius.circular(AppTheme.searchBarRadius),
                       // UI-01: same shape/border contract as the spatial-map
                       // search bar (AppTheme.searchBar* tokens), plus a
                       // focus ring neither field had before.
                       border: Border.all(
-                        color: _isSearchFocused ? AppTheme.primary : AppTheme.border,
-                        width: _isSearchFocused ? 1.6 : AppTheme.searchBarBorderWidth,
+                        color: _isSearchFocused
+                            ? AppTheme.primary
+                            : AppTheme.border,
+                        width: _isSearchFocused
+                            ? 1.6
+                            : AppTheme.searchBarBorderWidth,
                       ),
                     ),
                     child: TextField(
@@ -463,21 +466,19 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             // Cluster 3 Task 10: category chips are driven by the live
             // AppProvider.academicCategories list (admin-managed, Task 11)
             // instead of a hardcoded id/i18n-key pair per chip.
-            final categories =
-                context.watch<AppProvider>().academicCategories;
+            final categories = context.watch<AppProvider>().academicCategories;
             final langCode = context.locale.languageCode;
             return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
+              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
               child: Row(
                 children: [
-                  _buildCategoryFilterChip(
-                      context, selectedCategory, 'all', 'feed.category_all'.tr()),
+                  _buildCategoryFilterChip(context, selectedCategory, 'all',
+                      'feed.category_all'.tr()),
                   for (final category in categories.where((c) => c.isActive))
                     Padding(
-                      padding:
-                          const EdgeInsetsDirectional.only(start: AppTheme.spaceSm),
+                      padding: const EdgeInsetsDirectional.only(
+                          start: AppTheme.spaceSm),
                       child: _buildCategoryFilterChip(
                         context,
                         selectedCategory,
@@ -494,7 +495,10 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
           //  "Streamers"Grid Section (Replacing old Lecture Archive)
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: Wrap(alignment: WrapAlignment.spaceBetween, spacing: AppTheme.spaceMd, runSpacing: AppTheme.spaceSm,
+            child: Wrap(
+              alignment: WrapAlignment.spaceBetween,
+              spacing: AppTheme.spaceMd,
+              runSpacing: AppTheme.spaceSm,
               children: [
                 Text(
                   'feed.streamers'.tr(),
@@ -506,8 +510,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 ),
                 Text(
                   '${displayedStreamers.length} ${'feed.streamers_count'.tr()}',
-                  style: const TextStyle(
-                      color: AppTheme.textMuted, fontSize: 12),
+                  style:
+                      const TextStyle(color: AppTheme.textMuted, fontSize: 12),
                 ),
               ],
             ),
@@ -516,24 +520,25 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
 
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: streamerGridColumns,
-                mainAxisSpacing: AppTheme.spaceMd,
-                crossAxisSpacing: AppTheme.spaceMd,
-                childAspectRatio: isDesktop ? 0.85 : 0.80,
-              ),
-              itemCount: displayedStreamers.length,
-              itemBuilder: (context, index) {
-                final streamer = displayedStreamers[index];
-                return StreamerGridCard(
-                  streamer: streamer,
-                  langCode: langCode,
-                );
-              },
-            ),
+            child: LayoutBuilder(builder: (context, constraints) {
+              final columns = (constraints.maxWidth / 300).floor().clamp(1, 4);
+              final width =
+                  ((constraints.maxWidth - AppTheme.spaceMd * (columns - 1)) /
+                          columns)
+                      .clamp(0.0, 420.0);
+              return Wrap(
+                alignment: WrapAlignment.center,
+                spacing: AppTheme.spaceMd,
+                runSpacing: AppTheme.spaceMd,
+                children: [
+                  for (final streamer in displayedStreamers)
+                    SizedBox(
+                        width: width,
+                        child: StreamerGridCard(
+                            streamer: streamer, langCode: langCode)),
+                ],
+              );
+            }),
           ),
           const SizedBox(height: AppTheme.space2Xl),
         ],
@@ -730,15 +735,15 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         }
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: isVideo
-                            ? AppTheme.danger
-                            : AppTheme.media,
+                        backgroundColor:
+                            isVideo ? AppTheme.danger : AppTheme.media,
                         foregroundColor: AppTheme.onMedia,
                         shape: RoundedRectangleBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
                           side: isAudio
-                              ? const BorderSide(color: AppTheme.textMuted, width: 1.0)
+                              ? const BorderSide(
+                                  color: AppTheme.textMuted, width: 1.0)
                               : BorderSide.none,
                         ),
                       ),
@@ -747,7 +752,9 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                         size: 16,
                       ),
                       label: Text(
-                        isVideo ? 'feed.watch_live'.tr() : 'live.listen_live'.tr(),
+                        isVideo
+                            ? 'feed.watch_live'.tr()
+                            : 'live.listen_live'.tr(),
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ),

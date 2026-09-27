@@ -184,6 +184,10 @@
     "your_channel_badge": "قناتك"
   },
   "profile": {
+    "view_channel": "عرض القناة",
+    "show_more": "عرض المزيد",
+    "show_less": "عرض أقل",
+    "reminder_on": "تم ضبط التذكير",
     "title": "الملف الشخصي للمحاضر",
     "followers": "متابع",
     "schedule": "الجدول القادم",

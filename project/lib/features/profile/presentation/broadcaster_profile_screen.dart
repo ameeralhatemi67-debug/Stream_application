@@ -7,6 +7,7 @@ import '../../../core/providers/app_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/streamer_avatar.dart';
+import '../../../core/widgets/streamer_identity_card.dart';
 import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
 import '../models/streamer_models.dart';
 import '../models/vod_models.dart';
@@ -29,6 +30,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     with SingleTickerProviderStateMixin {
   TabController? _tabController;
   String? _selectedSpeakerId;
+  bool _detailsExpanded = false;
 
   @override
   void initState() {
@@ -219,485 +221,206 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     List<VodModel> allVods,
     List<PlaylistModel> allPlaylists,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
+    final uncertain = !appProvider.isOnline || appProvider.isUsingCachedCatalog;
+    return Column(
+      children: [
+        StreamerIdentityCard(
+          name: streamer.getLocalizedName(lang),
+          title: streamer.getLocalizedTitle(lang),
+          avatarUrl: streamer.avatarUrl,
+          bannerUrl: streamer.bannerUrl,
+          isVerified: streamer.isVerified,
+          status: StreamerCardStatus(
+            isLive: !uncertain && streamer.isCurrentlyLive,
+            isAudio: streamer.isAudioLive,
+            label:
+                uncertain ? 'offline_experience.status_unavailable'.tr() : null,
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Hero Avatar Image with Status Ring (Squircle for Org, Circle for Scholar)
-              Hero(
-                tag: 'avatar_${streamer.streamerId}',
-                child: StreamerAvatar(
-                  avatarUrl: streamer.avatarUrl,
-                  name: streamer.getLocalizedName(lang),
-                  radius: 38,
-                  square: streamer.isOrganization,
-                  borderWidth: 2.5,
-                  borderColor: streamer.isCurrentlyLive
-                      ? AppTheme.danger
-                      : (streamer.isOrganization
-                          ? AppTheme.warning
-                          : AppTheme.primary),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spaceLg),
-
-              // Name, Title, Verification Badge & Venue
-              Expanded(
+              Container(
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                decoration: BoxDecoration(
+                    color: AppTheme.surfaceAlt,
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            streamer.getLocalizedName(lang),
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (streamer.isVerified)
-                          Container(
-                            margin: const EdgeInsetsDirectional.only(start: 6),
-                            child: Icon(
-                              Icons.verified_rounded,
-                              color: streamer.isOrganization
-                                  ? AppTheme.warning
-                                  : AppTheme.accent,
-                              size: 20,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      streamer.getLocalizedTitle(lang),
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 13,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Icon(
-                          streamer.isOrganization
-                              ? Icons.domain_rounded
-                              : Icons.account_balance_outlined,
-                          size: 14,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(
-                            streamer.getLocalizedOrganization(lang),
-                            style: const TextStyle(
-                              color: AppTheme.primary,
-                              fontSize: 12,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              // Desktop Top-Right Action Buttons: Follow Channel & Set Reminder
-              if (MediaQuery.of(context).size.width >= 700) ...[
-                const SizedBox(width: AppTheme.spaceLg),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 190),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      ElevatedButton.icon(
-                        onPressed: () =>
-                            appProvider.toggleFollow(streamer.streamerId),
-                        icon: Icon(
-                          isFollowing
-                              ? Icons.check_circle_rounded
-                              : Icons.person_add_rounded,
-                          size: 16,
-                        ),
-                        label: Text(
-                          isFollowing
-                              ? 'profile.following_btn'.tr()
-                              : 'profile.follow_btn'.tr(),
-                          style: const TextStyle(
-                              fontSize: 12.5, fontWeight: FontWeight.bold),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                          backgroundColor: isFollowing
-                              ? AppTheme.surfaceAlt
-                              : AppTheme.primary,
-                          foregroundColor: AppTheme.onMedia,
-                          side: isFollowing
-                              ? const BorderSide(
-                                  color: AppTheme.primary, width: 1.2)
-                              : BorderSide.none,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMd),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      OutlinedButton.icon(
-                        onPressed: () =>
-                            appProvider.toggleReminder(streamer.streamerId),
-                        icon: Icon(
-                          hasReminder
-                              ? Icons.notifications_active_rounded
-                              : Icons.notifications_none_rounded,
-                          size: 16,
-                          color: hasReminder
-                              ? AppTheme.accent
-                              : AppTheme.textSecondary,
-                        ),
-                        label: Text(
-                          hasReminder
-                              ? 'profile.following_btn'.tr()
-                              : 'profile.reminder_btn'.tr(),
-                          style: TextStyle(
-                            color: hasReminder
-                                ? AppTheme.accent
-                                : AppTheme.primary,
-                            fontSize: 12.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: OutlinedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 10),
-                          side: BorderSide(
-                            color:
-                                hasReminder ? AppTheme.accent : AppTheme.border,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMd),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ],
-          ),
-
-          const SizedBox(height: AppTheme.spaceSm),
-
-          // Metadata Badges Wrap (Spans full width on the left: Live YouTube Sync + Campus Locations)
-          Wrap(
-            spacing: 8,
-            runSpacing: 6,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
-                decoration: BoxDecoration(
-                  color: appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                      ? AppTheme.danger.withValues(alpha: 0.15)
-                      : AppTheme.surfaceAlt,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                  border: Border.all(
-                    color: appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                        ? AppTheme.danger
-                        : AppTheme.border,
-                    width: 0.8,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                          ? Icons.sensors_rounded
-                          : Icons.ondemand_video_rounded,
-                      size: 12,
-                      color:
-                          appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                              ? AppTheme.danger
-                              : AppTheme.textSecondary,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                          ? 'profile.live_youtube_sync'.tr()
-                          : 'profile.youtube_archive'.tr(),
-                      style: TextStyle(
-                        color:
-                            appProvider.isYouTubeLiveSynced(streamer.streamerId)
-                                ? AppTheme.danger
-                                : AppTheme.textSecondary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Campus branches trigger for Organizations
-              if (streamer.isOrganization && streamer.venues.isNotEmpty)
-                InkWell(
-                  onTap: () => OrgBranchesModalSheet.show(
-                    context,
-                    orgName: streamer.getLocalizedName(lang),
-                    venues: streamer.venues,
-                  ),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2.5),
-                    decoration: BoxDecoration(
-                      color: AppTheme.primary.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                      border: Border.all(
-                        color: AppTheme.primary.withValues(alpha: 0.5),
-                        width: 0.8,
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.location_city_rounded,
-                          size: 12,
-                          color: AppTheme.primary,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${streamer.venues.length} ${'profile.campus_branches_btn'.tr()}',
-                          style: const TextStyle(
+                    Text(streamer.getLocalizedOrganization(lang),
+                        style: const TextStyle(
                             color: AppTheme.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+                            fontWeight: FontWeight.w600)),
+                    const SizedBox(height: AppTheme.spaceSm),
+                    Text(
+                      streamer.getLocalizedBio(lang),
+                      maxLines: _detailsExpanded ? null : 2,
+                      overflow: _detailsExpanded ? null : TextOverflow.ellipsis,
+                      style: const TextStyle(
+                          color: AppTheme.textSecondary, fontSize: 13),
                     ),
-                  ),
-                ),
-
-              // Join an Organization Action (For Individual Broadcasters)
-              if (!streamer.isOrganization && appProvider.isLoggedInStreamer)
-                InkWell(
-                  onTap: () => JoinOrgModalSheet.show(context),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: 6, vertical: 2.5),
-                    decoration: BoxDecoration(
-                      color: AppTheme.accent.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                      border: Border.all(
-                        color: AppTheme.accent.withValues(alpha: 0.5),
-                        width: 0.8,
-                      ),
+                    TextButton(
+                      onPressed: () =>
+                          setState(() => _detailsExpanded = !_detailsExpanded),
+                      child: Text((_detailsExpanded
+                              ? 'profile.show_less'
+                              : 'profile.show_more')
+                          .tr()),
                     ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(
-                          Icons.domain_add_rounded,
-                          size: 12,
-                          color: AppTheme.accent,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'design_ui.join_an_organization'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.accent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-            ],
-          ),
-
-          // Live Stream Banner Trigger (If live)
-          if (streamer.isCurrentlyLive) ...[
-            const SizedBox(height: AppTheme.spaceMd),
-            Material(
-              color: AppTheme.danger.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-              child: InkWell(
-                onTap: () {
-                  context.push(
-                      '/live/${streamer.activeStreamId ?? "stream_live_992"}');
-                },
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                child: Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceMd),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: AppTheme.danger, width: 1.2),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.danger,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.spaceSm),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              '${'map.live_badge'.tr()} • ${appProvider.platformViewerCount(streamer.activeStreamId ?? '') ?? '—'} ${'feed.watching'.tr()}',
+                    if (_detailsExpanded)
+                      Wrap(
+                        spacing: AppTheme.spaceSm,
+                        runSpacing: AppTheme.spaceSm,
+                        children: [
+                          Text(
+                              (!uncertain &&
+                                          appProvider.isYouTubeLiveSynced(
+                                              streamer.streamerId)
+                                      ? 'profile.live_youtube_sync'
+                                      : 'profile.youtube_archive')
+                                  .tr(),
                               style: const TextStyle(
-                                color: AppTheme.danger,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
+                                  color: AppTheme.textSecondary, fontSize: 12)),
+                          if (streamer.isOrganization &&
+                              streamer.venues.isNotEmpty)
+                            TextButton(
+                              onPressed: () => OrgBranchesModalSheet.show(
+                                  context,
+                                  orgName: streamer.getLocalizedName(lang),
+                                  venues: streamer.venues),
+                              child: Text(
+                                  '${streamer.venues.length} ${'profile.campus_branches_btn'.tr()}'),
                             ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'profile.tap_to_join_live'.tr(),
-                              style: const TextStyle(
-                                color: AppTheme.danger,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
+                          if (!streamer.isOrganization &&
+                              appProvider.isLoggedInStreamer)
+                            TextButton(
+                                onPressed: () =>
+                                    JoinOrgModalSheet.show(context),
+                                child: Text(
+                                    'design_ui.join_an_organization'.tr())),
+                        ],
                       ),
-                      const Icon(
-                        Icons.play_circle_fill_rounded,
-                        color: AppTheme.danger,
-                        size: 28,
-                      ),
-                    ],
-                  ),
+                  ],
                 ),
               ),
-            ),
-          ],
-
-          const SizedBox(height: AppTheme.spaceMd),
-
-          // Bio Text
-          Text(
-            streamer.getLocalizedBio(lang),
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 13,
-              height: 1.4,
-            ),
-          ),
-
-          // Mobile Action Buttons (Below Bio for width < 700)
-          if (MediaQuery.of(context).size.width < 700) ...[
-            const SizedBox(height: AppTheme.spaceMd),
-            Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: () =>
-                        appProvider.toggleFollow(streamer.streamerId),
-                    icon: Icon(
-                      isFollowing
-                          ? Icons.check_circle_rounded
-                          : Icons.person_add_rounded,
-                      size: 16,
-                    ),
-                    label: Text(
-                      isFollowing
-                          ? 'profile.following_btn'.tr()
-                          : 'profile.follow_btn'.tr(),
-                      style: const TextStyle(
-                          fontSize: 12, fontWeight: FontWeight.bold),
-                    ),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      backgroundColor:
-                          isFollowing ? AppTheme.surfaceAlt : AppTheme.primary,
-                      foregroundColor: AppTheme.onMedia,
-                      side: isFollowing
-                          ? const BorderSide(
-                              color: AppTheme.primary, width: 1.2)
-                          : BorderSide.none,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+              const SizedBox(height: AppTheme.spaceMd),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton.icon(
+                      onPressed: () =>
+                          appProvider.toggleFollow(streamer.streamerId),
+                      icon: Icon(
+                          isFollowing
+                              ? Icons.check_rounded
+                              : Icons.person_add_rounded,
+                          size: 18),
+                      label: Text((isFollowing
+                              ? 'profile.following_btn'
+                              : 'profile.follow_btn')
+                          .tr()),
+                      style: ElevatedButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        backgroundColor: isFollowing
+                            ? AppTheme.surfaceAlt
+                            : AppTheme.primary,
+                        foregroundColor:
+                            isFollowing ? AppTheme.primary : AppTheme.onMedia,
                       ),
                     ),
                   ),
-                ),
-                const SizedBox(width: AppTheme.spaceSm),
-                Expanded(
-                  child: OutlinedButton.icon(
+                  const SizedBox(width: AppTheme.spaceSm),
+                  IconButton.outlined(
+                    isSelected: hasReminder,
+                    tooltip: (hasReminder
+                            ? 'profile.reminder_on'
+                            : 'profile.reminder_btn')
+                        .tr(),
                     onPressed: () =>
                         appProvider.toggleReminder(streamer.streamerId),
-                    icon: Icon(
-                      hasReminder
-                          ? Icons.notifications_active_rounded
-                          : Icons.notifications_none_rounded,
-                      size: 16,
-                      color: hasReminder
-                          ? AppTheme.accent
-                          : AppTheme.textSecondary,
-                    ),
-                    label: Text(
-                      hasReminder
-                          ? 'profile.following_btn'.tr()
-                          : 'profile.reminder_btn'.tr(),
-                      style: TextStyle(
-                        color: hasReminder ? AppTheme.accent : AppTheme.primary,
-                        fontSize: 12,
+                    icon: const Icon(Icons.notifications_none_rounded),
+                    selectedIcon:
+                        const Icon(Icons.notifications_active_rounded),
+                    style: IconButton.styleFrom(
+                        minimumSize: const Size(48, 48),
+                        foregroundColor: AppTheme.primary),
+                  ),
+                ],
+              ),
+              // Live Stream Banner Trigger (If live)
+              if (!uncertain &&
+                  streamer.isCurrentlyLive &&
+                  streamer.activeStreamId != null) ...[
+                const SizedBox(height: AppTheme.spaceMd),
+                Material(
+                  color: AppTheme.danger.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  child: InkWell(
+                    onTap: () {
+                      context.push('/live/${streamer.activeStreamId!}');
+                    },
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    child: Container(
+                      padding: const EdgeInsets.all(AppTheme.spaceMd),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: AppTheme.danger, width: 1.2),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       ),
-                    ),
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      side: BorderSide(
-                        color: hasReminder ? AppTheme.accent : AppTheme.border,
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: const BoxDecoration(
+                              color: AppTheme.danger,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: AppTheme.spaceSm),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  '${'map.live_badge'.tr()} • ${appProvider.platformViewerCount(streamer.activeStreamId ?? '') ?? '—'} ${'feed.watching'.tr()}',
+                                  style: const TextStyle(
+                                    color: AppTheme.danger,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'profile.tap_to_join_live'.tr(),
+                                  style: const TextStyle(
+                                    color: AppTheme.danger,
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(
+                            Icons.play_circle_fill_rounded,
+                            color: AppTheme.danger,
+                            size: 28,
+                          ),
+                        ],
                       ),
                     ),
                   ),
                 ),
               ],
-            ),
-          ],
 
-          // Featured Channels Full Cards (If Organization)
-          if (streamer.isOrganization && streamer.affiliatedSpeakers.isNotEmpty)
-            _buildFeaturedChannelsSection(
-                context, streamer, allVods, allPlaylists, lang),
-        ],
-      ),
+              const SizedBox(height: AppTheme.spaceMd),
+            ],
+          ),
+        ),
+        if (streamer.isOrganization && streamer.affiliatedSpeakers.isNotEmpty)
+          _buildFeaturedChannelsSection(
+              context, streamer, allVods, allPlaylists, lang),
+      ],
     );
   }
 
@@ -961,7 +684,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
 
   Widget _buildVodArchiveGrid(List<VodModel> vodList, StreamerModel streamer) {
     if (vodList.isEmpty) {
-      return Center(
+      return SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spaceXl),
           child: Column(
@@ -1018,7 +741,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     String lang,
   ) {
     if (playlists.isEmpty) {
-      return Center(
+      return SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spaceXl),
           child: Column(
@@ -1120,7 +843,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     final scheduleList = streamer.getLocalizedSchedule(lang);
 
     if (scheduleList.isEmpty) {
-      return Center(
+      return SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spaceXl),
           child: Column(

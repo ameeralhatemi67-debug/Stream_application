@@ -13,8 +13,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
-import '../../../core/widgets/safe_image_provider.dart';
 import '../../../core/widgets/streamer_avatar.dart';
+import '../../../core/widgets/streamer_identity_card.dart';
 import '../../profile/models/streamer_models.dart';
 import '../models/user_account_model.dart';
 import '../../admin/models/broadcaster_application_model.dart';
@@ -178,7 +178,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             iconColor: AppTheme.primary,
             title: 'design_copy.notification_preferences'.tr(),
             subtitle: isAr
-                ? '${appProvider.notificationPreferences.maxPer10Min} إشعارات كل 10 دقائق'
+                ? '${appProvider.notificationPreferences.maxPer10Min} Ø¥Ø´Ø¹Ø§Ø±Ø§Øª ÙƒÙ„ 10 Ø¯Ù‚Ø§Ø¦Ù‚'
                 : '${appProvider.notificationPreferences.maxPer10Min} alerts / 10min',
             onTap: () =>
                 _showNotificationPreferencesSheet(context, appProvider),
@@ -283,45 +283,51 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isAr = context.locale.languageCode == 'ar';
     final isStreamerCard = provider.isApprovedStreamer;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        isStreamerCard
-            ? _buildStreamerProfileCard(context, provider, isAr)
-            : _buildViewerProfileCard(context, provider, isAr),
-        const SizedBox(height: AppTheme.spaceSm),
-        SizedBox(
-          width: double.infinity,
-          child: OutlinedButton.icon(
-            icon: const Icon(Icons.edit_outlined, size: 15),
-            label: Text('settings.edit_profile'.tr()),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.textPrimary,
-              side: const BorderSide(color: AppTheme.border),
-              padding: const EdgeInsets.symmetric(vertical: 11),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 420),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            isStreamerCard
+                ? _buildStreamerProfileCard(context, provider, isAr)
+                : _buildViewerProfileCard(context, provider, isAr),
+            const SizedBox(height: AppTheme.spaceSm),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.edit_outlined, size: 15),
+                label: Text('settings.edit_profile'.tr()),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.textPrimary,
+                  side: const BorderSide(color: AppTheme.border),
+                  padding: const EdgeInsets.symmetric(vertical: 11),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  ),
+                ),
+                onPressed: () {
+                  // "Edit Profile"must never open the broadcaster onboarding
+                  // flow for a non-verified viewer -- issue_log.md: "clicking
+                  // 'Edit account Profile'as a non verified streamer should
+                  // not be an option, as it opened the streamer onboarding."
+                  // The broadcaster application flow stays reachable strictly
+                  // via the dedicated "Apply for Verification"card/button.
+                  if (provider.isApprovedStreamer) {
+                    BroadcasterApplicationSheet.show(
+                      context,
+                      application: provider.myApplication,
+                    );
+                  } else {
+                    ViewerProfileEditorDialog.show(context);
+                  }
+                },
               ),
             ),
-            onPressed: () {
-              // "Edit Profile"must never open the broadcaster onboarding
-              // flow for a non-verified viewer -- issue_log.md: "clicking
-              // 'Edit account Profile'as a non verified streamer should
-              // not be an option, as it opened the streamer onboarding."
-              // The broadcaster application flow stays reachable strictly
-              // via the dedicated "Apply for Verification"card/button.
-              if (provider.isApprovedStreamer) {
-                BroadcasterApplicationSheet.show(
-                  context,
-                  application: provider.myApplication,
-                );
-              } else {
-                ViewerProfileEditorDialog.show(context);
-              }
-            },
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 
@@ -410,131 +416,45 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final handle = _displayHandle(provider, profile);
     final email =
         provider.googleUserEmail ?? provider.myApplication?.email ?? '';
-    const bannerHeight = 96.0;
-    const avatarRadius = 36.0;
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: AppTheme.border),
+    final streamer = provider.getStreamerById(profile.id);
+    final uncertain =
+        !provider.isOnline || provider.isUsingCachedCatalog || streamer == null;
+    final bio = isAr ? profile.bioAr : profile.bioEn;
+    return StreamerIdentityCard(
+      name: isAr ? profile.nameAr : profile.nameEn,
+      title: isAr ? profile.titleAr : profile.titleEn,
+      avatarUrl: profile.avatarUrl,
+      bannerUrl: profile.bannerUrl,
+      isVerified: profile.isVerifiedScholar,
+      status: StreamerCardStatus(
+        isLive: !uncertain && streamer.isCurrentlyLive,
+        isAudio: streamer?.isAudioLive ?? false,
+        label: uncertain ? 'offline_experience.status_unavailable'.tr() : null,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.topCenter,
-            children: [
-              Column(
-                children: [
-                  Container(
-                    height: bannerHeight,
-                    decoration: const BoxDecoration(
-                      color: AppTheme.surfaceAlt,
-                    ),
-                    child: Image(
-                      image: buildSafeImageProvider(path: profile.bannerUrl),
-                      height: bannerHeight,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                    ),
-                  ),
-                  const SizedBox(height: avatarRadius),
-                ],
-              ),
-              Positioned(
-                top: bannerHeight - avatarRadius,
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: AppTheme.surface,
-                        shape: BoxShape.circle,
-                      ),
-                      child: CircleAvatar(
-                        radius: avatarRadius,
-                        backgroundImage:
-                            buildSafeImageProvider(path: profile.avatarUrl),
-                      ),
-                    ),
-                    PositionedDirectional(
-                      top: 0,
-                      end: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.surface,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(Icons.verified_rounded,
-                            color: AppTheme.success, size: 18),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppTheme.spaceMd),
+        decoration: BoxDecoration(
+            color: AppTheme.surfaceAlt,
+            borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (handle.isNotEmpty)
+              Text(handle, style: const TextStyle(color: AppTheme.primary)),
+            if (email.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              Text(email,
+                  style: const TextStyle(color: AppTheme.textSecondary)),
             ],
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(AppTheme.spaceLg,
-                AppTheme.spaceSm, AppTheme.spaceLg, AppTheme.spaceLg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Text(
-                  isAr ? profile.nameAr : profile.nameEn,
-                  textAlign: TextAlign.center,
+            if (bio.trim().isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              Text(bio,
                   style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                if (handle.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    handle,
-                    style:
-                        const TextStyle(color: AppTheme.primary, fontSize: 12),
-                  ),
-                ],
-                const SizedBox(height: 4),
-                Text(
-                  isAr ? profile.organizationAr : profile.organizationEn,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 11.5),
-                ),
-                if (email.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    email,
-                    style: const TextStyle(
-                        color: AppTheme.textMuted, fontSize: 11),
-                  ),
-                ],
-                if ((isAr ? profile.bioAr : profile.bioEn).isNotEmpty) ...[
-                  const SizedBox(height: AppTheme.spaceSm),
-                  Text(
-                    isAr ? profile.bioAr : profile.bioEn,
-                    textAlign: TextAlign.center,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11.5,
-                        height: 1.4),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ],
+                      color: AppTheme.textSecondary, fontSize: 13)),
+            ],
+          ],
+        ),
       ),
     );
   }
@@ -676,23 +596,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                             fontSize: 11,
                           ),
                         ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: AppTheme.danger.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            'design_ui.broadcaster'.tr(),
+                            style: const TextStyle(
+                              color: AppTheme.danger,
+                              fontSize: 9,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ],
-                    ),
-                  ),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.danger.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      'design_ui.broadcaster'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.danger,
-                        fontSize: 9,
-                        fontWeight: FontWeight.bold,
-                      ),
                     ),
                   ),
                 ],

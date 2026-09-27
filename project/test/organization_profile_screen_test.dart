@@ -106,8 +106,11 @@ void main() {
       // Verify Organization name is rendered
       expect(find.textContaining('Dalilk 4 IELTS'), findsWidgets);
 
+      await tester.tap(find.text('Show more'));
+      await tester.pumpAndSettle();
+
       // Verify Campus Branches button is rendered (3 branches)
-      expect(find.byIcon(Icons.location_city_rounded), findsWidgets);
+      expect(find.textContaining('Campus'), findsWidgets);
     });
 
     testWidgets(
@@ -129,7 +132,7 @@ void main() {
 
       // Check for Follow & Set Reminder buttons
       expect(find.text('Follow Channel'), findsOneWidget);
-      expect(find.text('Set Reminder'), findsOneWidget);
+      expect(find.byTooltip('Set Reminder'), findsOneWidget);
 
       // Check Featured Channels
       expect(find.text('Featured Channels'), findsOneWidget);
@@ -172,6 +175,9 @@ void main() {
       final sarahCard = find.text('@dalilk4english');
       expect(sarahCard, findsOneWidget);
       await tester.tap(sarahCard);
+      await tester.pumpAndSettle();
+
+      await tester.drag(find.byType(NestedScrollView), const Offset(0, -450));
       await tester.pumpAndSettle();
 
       // Verify filtered VOD grid contains Sarah's lecture

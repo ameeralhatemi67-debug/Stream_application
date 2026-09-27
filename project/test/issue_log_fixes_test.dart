@@ -148,7 +148,7 @@ void main() {
 
   group('Issue Log Fix QF-09: Discovery Feed Own-Card Highlight', () {
     testWidgets(
-        'StreamerGridCard renders white border and Your Channel badge for own profile',
+        'StreamerGridCard identifies own profile with Your Channel badge',
         (WidgetTester tester) async {
       final provider = AppProvider();
       seedStreamerFixtures(provider);
@@ -170,7 +170,6 @@ void main() {
             home: Scaffold(
               body: SizedBox(
                 width: 250,
-                height: 300,
                 child: StreamerGridCard(
                   streamer: ownStreamer,
                   langCode: 'en',
@@ -184,7 +183,6 @@ void main() {
 
       // Verify "Your Channel" badge is present
       expect(find.text('Your Channel'), findsOneWidget);
-      expect(find.byIcon(Icons.star_rounded), findsOneWidget);
     });
 
     testWidgets(
@@ -205,7 +203,6 @@ void main() {
             home: Scaffold(
               body: SizedBox(
                 width: 250,
-                height: 300,
                 child: StreamerGridCard(
                   streamer: otherStreamer,
                   langCode: 'en',

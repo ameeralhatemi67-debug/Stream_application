@@ -213,7 +213,6 @@ void main() {
         'en',
         SizedBox(
             width: 220,
-            height: 300,
             child: StreamerGridCard(streamer: staleLive, langCode: 'en'))));
     await tester.pumpAndSettle();
     expect(

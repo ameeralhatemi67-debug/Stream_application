@@ -5,381 +5,78 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/services/connectivity_service.dart';
-import '../../../../core/widgets/safe_image_provider.dart';
-import '../../../../core/widgets/streamer_avatar.dart';
+import '../../../../core/widgets/streamer_identity_card.dart';
 import '../../../profile/models/streamer_models.dart';
 
 class StreamerGridCard extends StatelessWidget {
   final StreamerModel streamer;
   final String langCode;
 
-  const StreamerGridCard({
-    super.key,
-    required this.streamer,
-    required this.langCode,
-  });
-
-  Widget _bannerPlaceholder() => Container(
-        color: AppTheme.surface,
-        alignment: Alignment.center,
-        child: const Icon(Icons.image_not_supported_outlined,
-            color: AppTheme.textMuted),
-      );
-
-  /// A card whose streamer has no banner shows the placeholder directly,
-  /// rather than asking the network for an empty URL and waiting for the
-  /// failure to reach [Image.errorBuilder].
-  Widget _buildBanner(String url) {
-    final provider = resolveImageProviderOrNull(url);
-    if (provider == null) return _bannerPlaceholder();
-    return Image(
-      image: provider,
-      fit: BoxFit.cover,
-      alignment: Alignment.center,
-      errorBuilder: (_, __, ___) => _bannerPlaceholder(),
-    );
-  }
+  const StreamerGridCard(
+      {super.key, required this.streamer, required this.langCode});
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = context.read<AppProvider?>();
-    final (networkStatus, cached) = context.select<
-        AppProvider,
-        (NetworkStatus, bool)>((p) =>
-        (p.networkStatus, p.isUsingCachedCatalog));
-    final isOwnCard = appProvider != null &&
-        (appProvider.isLoggedInStreamer || appProvider.isStreamerModeEnabled) &&
-        appProvider.isOwnStreamerProfile(streamer.streamerId);
-
-    final isLive = networkStatus == NetworkStatus.online &&
-        !cached && streamer.isCurrentlyLive;
-    final isAudio = isLive && streamer.isAudioLive;
-    final isVideo = isLive && streamer.isVideoLive;
-
-    Color borderColor;
-    double borderWidth;
-    if (isOwnCard) {
-      borderColor = AppTheme.onMedia;
-      borderWidth = 1.8;
-    } else if (isVideo) {
-      borderColor = AppTheme.danger.withValues(alpha: 0.8);
-      borderWidth = 1.5;
-    } else if (isAudio) {
-      borderColor = AppTheme.textMuted;
-      borderWidth = 1.5;
-    } else {
-      borderColor = AppTheme.border;
-      borderWidth = 1.0;
+    final (networkStatus, cached, isOwnCard) =
+        context.select<AppProvider, (NetworkStatus, bool, bool)>((p) => (
+              p.networkStatus,
+              p.isUsingCachedCatalog,
+              (p.isLoggedInStreamer || p.isStreamerModeEnabled) &&
+                  p.isOwnStreamerProfile(streamer.streamerId),
+            ));
+    final uncertain = cached || networkStatus != NetworkStatus.online;
+    final isLive = !uncertain && streamer.isCurrentlyLive;
+    void openChannel() {
+      if (isLive && streamer.activeStreamId != null) {
+        context.push('/live/${streamer.activeStreamId}');
+      } else {
+        context.push('/profile/${streamer.streamerId}');
+      }
     }
 
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          if (isLive && streamer.activeStreamId != null) {
-            context.push('/live/${streamer.activeStreamId}');
-          } else {
-            context.push('/profile/${streamer.streamerId}');
-          }
-        },
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        child: Container(
-          decoration: BoxDecoration(
-            color: AppTheme.surfaceAlt,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(
-              color: borderColor,
-              width: borderWidth,
-            ),
-            boxShadow: [
-              if (isOwnCard)
-                BoxShadow(
-                  color: AppTheme.onMedia.withValues(alpha: 0.3),
-                  blurRadius: 10,
-                  spreadRadius: 1,
-                )
-              else
-                BoxShadow(
-                  color: isVideo
-                      ? AppTheme.danger.withValues(alpha: 0.18)
-                      : isAudio
-                          ? AppTheme.textMuted.withValues(alpha: 0.15)
-                          : AppTheme.border,
-                  blurRadius: isLive ? 10 : 4,
-                  offset: const Offset(0, 3),
-                ),
-            ],
+    return StreamerIdentityCard(
+      name: streamer.getLocalizedName(langCode),
+      title: streamer.getLocalizedTitle(langCode),
+      avatarUrl: streamer.avatarUrl,
+      bannerUrl: streamer.bannerUrl,
+      isVerified: streamer.isVerified,
+      status: StreamerCardStatus(
+        isLive: isLive,
+        isAudio: streamer.isAudioLive,
+        label: uncertain
+            ? (cached
+                    ? 'offline_experience.cached_card'
+                    : 'offline_experience.status_unavailable')
+                .tr()
+            : null,
+      ),
+      onTap: openChannel,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (isOwnCard) ...[
+            Text('feed.your_channel_badge'.tr(),
+                style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
+            const SizedBox(height: AppTheme.spaceSm),
+          ],
+          ElevatedButton.icon(
+            onPressed: openChannel,
+            icon: Icon(
+                isLive
+                    ? (streamer.isAudioLive
+                        ? Icons.mic_rounded
+                        : Icons.play_arrow_rounded)
+                    : Icons.person_outline_rounded,
+                size: 18),
+            label: Text((isLive
+                    ? (streamer.isAudioLive
+                        ? 'live.listen_live'
+                        : 'live.watch_live')
+                    : 'profile.view_channel')
+                .tr()),
+            style: ElevatedButton.styleFrom(minimumSize: const Size(48, 48)),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              //  Top Banner: Flexible 45% height (BoxFit.cover cut-to-fit, NO morphing)
-              Expanded(
-                flex: 45,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    _buildBanner(streamer.bannerUrl),
-                    if (cached || networkStatus != NetworkStatus.online)
-                      PositionedDirectional(
-                        top: 6,
-                        start: 6,
-                        child: ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 160),
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: AppTheme.surface,
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusXs),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(4),
-                              child: Text((cached
-                                      ? 'offline_experience.cached_card'
-                                      : 'offline_experience.status_unavailable')
-                                  .tr(),
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                      color: AppTheme.textPrimary,
-                                      fontSize: 9)),
-                            ),
-                          ),
-                        ),
-                      ),
-                    // Subtle bottom scrim, so the badges and the name below
-                    // keep their contrast over any frame without hiding it.
-                    const DecoratedBox(
-                      decoration:
-                          BoxDecoration(gradient: AppGradients.mediaScrim),
-                    ),
-                    // LIVE Badge at top left (Video vs Audio)
-                    if (isLive)
-                      PositionedDirectional(
-                        top: 6,
-                        start: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2.5),
-                          decoration: BoxDecoration(
-                            color: isVideo ? AppTheme.danger : AppTheme.media,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                            border: Border.all(
-                              color: isVideo
-                                  ? AppTheme.danger.withValues(alpha: 0.6)
-                                  : AppTheme.border,
-                              width: 0.8,
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                isVideo ? Icons.videocam_rounded : Icons.mic_rounded,
-                                size: 10,
-                                color: AppTheme.onMedia,
-                              ),
-                              const SizedBox(width: 3.5),
-                              Text(
-                                isVideo
-                                    ? 'live.live_indicator'.tr()
-                                    : 'live.audio_live_indicator'.tr(),
-                                style: const TextStyle(
-                                  color: AppTheme.onMedia,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    //  "Your Channel / قناتك"Badge at top right
-                    if (isOwnCard)
-                      PositionedDirectional(
-                        top: 6,
-                        end: 6,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2.5),
-                          decoration: BoxDecoration(
-                            color: AppTheme.media.withValues(alpha: 0.8),
-                            borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-                            border: Border.all(color: AppTheme.onMedia, width: 1.0),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.star_rounded,
-                                  color: AppTheme.warning, size: 11),
-                              const SizedBox(width: 3),
-                              Text(
-                                'feed.your_channel_badge'.tr(),
-                                style: const TextStyle(
-                                  color: AppTheme.onMedia,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-
-              //  Bottom Content: Flexible 62% height with zero overflow risk
-              Expanded(
-                flex: 55,
-                child: Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Avatar & Name Row
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(1.0),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isLive
-                                    ? AppTheme.danger
-                                    : AppTheme.borderStrong,
-                                width: 1.2,
-                              ),
-                            ),
-                            child: StreamerAvatar(
-                              radius: 20,
-                              avatarUrl: streamer.avatarUrl,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Row(
-                                  children: [
-                                    Flexible(
-                                      child: Text(
-                                        streamer.getLocalizedName(langCode),
-                                        style: const TextStyle(
-                                          color: AppTheme.textPrimary,
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ),
-                                    if (streamer.isVerified) ...[
-                                      const SizedBox(width: 3),
-                                      const Icon(
-                                        Icons.verified_rounded,
-                                        size: 12,
-                                        color: AppTheme.accent,
-                                      ),
-                                    ],
-                                  ],
-                                ),
-                                Text(
-                                  streamer.getLocalizedTitle(langCode),
-                                  style: const TextStyle(
-                                    color: AppTheme.textSecondary,
-                                    fontSize: 9.5,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      //  Centered Tag Pills
-                      if (streamer.tags.isNotEmpty)
-                        SizedBox(
-                          height: 25,
-                          child: ListView.separated(
-                            scrollDirection: Axis.horizontal,
-                            itemCount: streamer.tags.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(width: 4),
-                            itemBuilder: (context, idx) {
-                              final tag = streamer.tags[idx];
-                              return Container(
-                                alignment: Alignment.center,
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.surface,
-                                  borderRadius: BorderRadius.circular(5),
-                                  border: Border.all(
-                                      color: AppTheme.border,
-                                      width: 0.8),
-                                ),
-                                child: Text(
-                                  tag,
-                                  style: const TextStyle(
-                                    color: AppTheme.primary,
-                                    fontSize: 9.5,
-                                    fontWeight: FontWeight.w600,
-                                    height: 1.0,
-                                  ),
-                                ),
-                              );
-                            },
-                          ),
-                        ),
-
-                      //  Bottom Venue & Location Tag
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 5, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusXs),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.location_on_outlined,
-                              size: 10,
-                              color: AppTheme.danger,
-                            ),
-                            const SizedBox(width: 3),
-                            Expanded(
-                              child: Text(
-                                '${streamer.getLocalizedCity(langCode)} • ${streamer.getLocalizedVenue(langCode)}',
-                                style: const TextStyle(
-                                  color: AppTheme.textMuted,
-                                  fontSize: 9,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
+        ],
       ),
     );
   }

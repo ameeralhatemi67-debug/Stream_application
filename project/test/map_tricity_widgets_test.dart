@@ -292,7 +292,7 @@ void main() {
                 isFalse);
             final action = find.descendant(
                 of: find.byType(MarkerSummaryCard),
-                matching: find.byType(ElevatedButton));
+                matching: find.byKey(const ValueKey('map-card-venue')));
             await tester.ensureVisible(action);
             expect(action.hitTestable(), findsOneWidget);
             expect(tester.getSize(action).height, greaterThanOrEqualTo(48));

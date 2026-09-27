@@ -1,0 +1,16 @@
+{
+  "project/assets/i18n/ar.json": "e80ff8d121b0f6d2910471040f57f058da7cc7ee9124ca19e4428fbe0abc3a62",
+  "project/assets/i18n/en.json": "9455365e3a3a589de54aaed4331cf6c77fcf06a8ef9f68dd5acab13e4f14959b",
+  "project/lib/features/discovery/presentation/discovery_feed_screen.dart": "a728b910242006aa28315839c509a7c01e639e880e9d0ed798a65eb41566729b",
+  "project/lib/features/discovery/presentation/widgets/streamer_grid_card.dart": "dcc81b337fe9b0364fe23e127abacb7f7ebea30e0dd0e3fdcd42e1cad37e3ca2",
+  "project/lib/features/map/presentation/venue_directions_launcher.dart": "8eeca001d3385b6bafd7ccb55e900edab4c1c8246ed15e0022e6e1c2d538dd26",
+  "project/lib/features/map/presentation/widgets/marker_summary_card.dart": "ee95cce915292636d8e5a536e2067ba59a9d2812cef04926c4dbf6510895a2de",
+  "project/lib/features/profile/presentation/broadcaster_profile_screen.dart": "2a8343e68438f187f803928acd6d6e12b4d155f2df528d501ad2041d20b537a5",
+  "project/lib/features/profile/presentation/settings_screen.dart": "c3822b22ba692c865e8455bdd545ac6441c7374e1665d7c7b59b393301c8a758",
+  "project/test/issue_log_fixes_test.dart": "e19502a4e536bfdc4bd29c01cb57343350cf2b56b08e843aa873770913e2cb4c",
+  "project/test/map_tricity_widgets_test.dart": "e5ac1e5a26358ea8e68a0eaa1d23c4a1a2c2ce0d77b4f18bc8eaba0b9a6b3fcf",
+  "project/test/offline_experience_test.dart": "c3819d5a87d799c82e79d79b2e7c5fc2d5cc3deda08cc09a39a0ecb7a329bd9a",
+  "project/test/organization_profile_screen_test.dart": "31c13bbb306b8c9142650837d1496669344b0ccb90eefef7b1a04cd30abd1f35",
+  "project/lib/core/widgets/streamer_identity_card.dart": "2714ffa70c1470cbd6f63c62f40768182f47a9e6d20eee9c6e4f3a1e104be72d",
+  "project/test/streamer_card_design_test.dart": "2a29294b97772ad30a046358da17fd9eb6c4c4d5689230249843386f58429dce"
+}

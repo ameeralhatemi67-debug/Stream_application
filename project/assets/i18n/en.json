@@ -184,6 +184,10 @@
     "your_channel_badge": "Your Channel"
   },
   "profile": {
+    "view_channel": "View channel",
+    "show_more": "Show more",
+    "show_less": "Show less",
+    "reminder_on": "Reminder set",
     "title": "Broadcaster Profile",
     "followers": "followers",
     "schedule": "Upcoming Schedule",

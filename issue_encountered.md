@@ -4,6 +4,8 @@ Updated: 2026-09-27. This is a local troubleshooting record, not proof that the 
 
 ## Issue-name index — scan this list first
 
+- **Expanded profile details overflow empty tabs** — empty states made scrollable; enlarged en/ar card checks pass, physical retest pending.
+
 - **Selected map pin disappears at close zoom** — source suppression removed; selected pin retained and pulses, device confirmation pending.
 
 - **Spatial Map and drawer hide legacy profiles with saved pins** — shared city filter repaired locally; owner confirmation pending.
@@ -414,3 +416,7 @@ Observed: Owner reports a profile pin disappears after selection while its summa
 Cause: The live marker builder skipped selected markers at zoom >=13.5, assuming an anchored card would replace them. The actual summary card is a separate bottom overlay.
 Fix: Always retain the selected marker at its exact coordinates and exclude it from cluster membership while selected. Reuse its animation controller for a 1.0–1.16 size pulse; reset when deselected, TickerMode is inactive or reduced motion is requested. Clear map selection when its tab is hidden, so returning does not restart a stale selection.
 Verification: Widget regression selects overlapping profiles, checks the selected marker/card remain together, observes scale change, zooms out and leaves/returns to the map. The 143-test map file passes, including the existing card-size matrix. Full result is recorded in brief/evidence/2026-09-27/studio-pin/VERIFICATION.md. Device playback is not claimed; the supplied MP4 could not be opened by the browser's file-URL policy.
+
+### Expanded profile details overflow empty tabs
+
+2026-09-27, DES-01. A long expanded profile header leaves little or no height for the nested tab body. The empty archive/playlist/upcoming states used a centered non-scrollable Column, producing a vertical RenderFlex overflow. These three empty states now scroll. Automated en/ar layout and card interaction cases pass; physical confirmation remains pending. See `brief/evidence/2026-09-27/unified-streamer-cards/VERIFICATION.md`.

@@ -29,10 +29,13 @@ bool isUsableVenuePoint(double lat, double lng) =>
     lng.abs() <= 180 &&
     !(lat == 0 && lng == 0);
 
-Future<bool> launchVenueDirections(double lat, double lng) async {
+Future<bool> launchVenueDirections(double lat, double lng,
+    {bool googleOnly = false}) async {
   if (!isUsableVenuePoint(lat, lng)) return false;
   final fallback = googleVenueDirectionsUri(lat, lng);
-  final preferred = nativeVenueDirectionsUri(lat, lng, defaultTargetPlatform);
+  final preferred = googleOnly
+      ? fallback
+      : nativeVenueDirectionsUri(lat, lng, defaultTargetPlatform);
   try {
     if (await launchUrl(preferred,
         mode: LaunchMode.externalNonBrowserApplication)) {
@@ -54,8 +57,8 @@ Future<bool> openVenueDirections(
   BuildContext context,
   double lat,
   double lng, {
-  @visibleForTesting Future<bool> Function(double lat, double lng) launcher =
-      launchVenueDirections,
+  bool googleOnly = false,
+  @visibleForTesting Future<bool> Function(double lat, double lng)? launcher,
 }) async {
   final messenger = ScaffoldMessenger.maybeOf(context);
   if (!isUsableVenuePoint(lat, lng)) {
@@ -67,7 +70,8 @@ Future<bool> openVenueDirections(
     );
     return false;
   }
-  final opened = await launcher(lat, lng);
+  final opened = await (launcher?.call(lat, lng) ??
+      launchVenueDirections(lat, lng, googleOnly: googleOnly));
   if (!opened) {
     messenger?.showSnackBar(
       SnackBar(
