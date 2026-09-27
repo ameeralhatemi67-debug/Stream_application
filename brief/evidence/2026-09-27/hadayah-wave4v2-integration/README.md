@@ -1,5 +1,15 @@
 # Hadayah Test — Wave4v2 integration
 
+## Current starting point, 2026-09-27
+
+The combined work is now merged into local **master** at `c9e441f` and pushed to GitHub through `df763da`. Use `C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app/project` for the next full rebuild/relaunch. Do not switch to an old agent worktree. Application/database/build source is identical to reviewed `34d074a`; subsequent commits update documentation only.
+
+Read this setup checklist, follow [WAVE4V2_RETEST_SCRIPT.md](WAVE4V2_RETEST_SCRIPT.md) starting at **W00**, and write observations in [WAVE4V2_ACCEPTANCE_RESULTS.md](WAVE4V2_ACCEPTANCE_RESULTS.md). These are the consolidated tests for the map and streaming changes. W00 must identify the newly installed build and authorized configuration/backend before dependent tests begin.
+
+The identity table and isolated-worktree statements below describe Astra's original diagnostic delivery before the master merge. Its ignored APK/web archives and local setup remain in that original worktree; GitHub contains the source and committed test records, not those ignored artifacts. A master rebuild needs its own artifact/configuration identity. The existing phone installation was not updated by the merge or push. Google/YouTube acceptance setup is still unconfirmed; stop dependent tests if W00 cannot confirm it. No physical acceptance is claimed.
+
+## Original diagnostic delivery
+
 **Status: diagnostic candidate; source-review target met in cycle 2 and required local verification passed. Not checkpoint-accepted or release-ready.** Google/YouTube acceptance configuration is absent. D8 server-side YouTube authorization remains an explicitly retained HIGH release blocker. Accurate city outlines, physical received-video acceptance and resource/background evidence remain open.
 
 Start with this file, then [WAVE4V2_RETEST_SCRIPT.md](WAVE4V2_RETEST_SCRIPT.md) at **W00**. Record only fresh results in [WAVE4V2_ACCEPTANCE_RESULTS.md](WAVE4V2_ACCEPTANCE_RESULTS.md). The short smoke comes before the longer tests and tells you where to stop.

@@ -6,6 +6,8 @@ TEST-02 remains paused pending a full rebuild/relaunch from main `project/` and 
 
 Owner explicitly keeps testing paused while repository/worktree confusion is explained. A read-only inventory after the merge reconciles the screenshot's 118 changes exactly: main has 102 untracked research/evidence/prompt files and zero modified tracked files; other checkouts have 12 generated Windows plugin files, 3 generated Android build reports and 1 untracked G11a review note. Repeated `Streamer_app` labels are folder names for separate worktrees, not duplicate branch names. Main is on master with the combined code; screenshot 1's active repository indicator is the old `p6-accept` / `p6-acceptance` checkout, so the editor context and actual launch target must not be assumed to be main. No worktree or branch cleanup authorized/performed in this explanation.
 
+Owner subsequently authorized pushing master as a cloud reference before testing. On 2026-09-27 at approximately 11:12 +03:00, normal push to `https://github.com/ameeralhatemi67-debug/Stream_application.git` advanced remote master from `aedff5e` to `df763da`. No force, other-branch push or new deployment command. The 102 untracked files remain local and are not included. Test README/script now point to main master; their original diagnostic artifact identities remain historical. This documentation update will be pushed as a follow-up to the recorded snapshot. W00/configuration and actual installed-build readiness still gate testing.
+
 ## Current dispatch and testing state
 
 | ID | Owner / task | State and evidence | Branch / working location | Dependency and next action |

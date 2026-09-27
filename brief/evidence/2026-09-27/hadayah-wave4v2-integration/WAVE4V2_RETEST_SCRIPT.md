@@ -1,5 +1,7 @@
 # Wave4v2 consolidated owner retest
 
+**Main-checkout update, 2026-09-27:** use the merged **master** checkout at `C:/Users/User/Documents/Amir Ob/projects/Ideas/Current/Streamer_app`, with Flutter under `project/`. The original integration-build hashes below are historical; record the actual rebuilt/installed master candidate in W00 and the results sheet. The merge/push does not update an installed phone app or supply missing test configuration. Keep all unperformed results NOT RUN.
+
 **Start with [README](README.md), then W00 below. The current candidate is diagnostic until the documented Google/YouTube setup is supplied and a newly hashed configured build is produced.** Fill [matching results](WAVE4V2_ACCEPTANCE_RESULTS.md); all rows initially NOT RUN.
 
 ## Roles, evidence and stop rules
