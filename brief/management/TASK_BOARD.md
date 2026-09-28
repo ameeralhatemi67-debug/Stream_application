@@ -1,5 +1,11 @@
 # Hadayah manager task board
 
+## TEST-03 — owner testing, fixing and polishing plan, 2026-09-28
+
+Owner requested a fresh comprehensive, grouped test plan and a careful repair-companion prompt. [Owner test sets](../testing/2026-09-28/OWNER_TEST_SETS.md) cover candidate/setup, the recent cards, map/offline, profile editing/review, studio/broadcast, live lifecycle, chat/moderation, cross-device/release gates and adjacent product regressions. All 72 new rows start **NOT RUN**; they organize, but do not erase or confer PASS on, the 36-case Wave4v2 sheet. [Repair companion prompt](../testing/2026-09-28/REPAIR_COMPANION_PROMPT.md) is **DRAFT for owner use**, recommending GPT-6 Sol/high. No agent was launched or assigned by this planning step.
+
+Local `master` was `ca579a9` at refresh, six commits ahead of the **local** `origin/master` reference, with one unrelated tracked logo SVG edit; its owner and contents were left untouched. Installed phone and Chrome build identities remain unverified. This was a documentation/planning action, not a new Flutter run, backend migration, push, device install or physical acceptance. Next dependency: T0 candidate and dedicated test configuration, including the intended backend's `20260927030000_profile_edit_review.sql` before profile-save tests; guest/diagnostic UI and offline-map checks can proceed independently. P5/P6 remain NOT ACCEPTED, P6S INCOMPLETE / NOT ACCEPTED, STREAM-D8 HIGH. Update this board and event log as actual test batches and repairs arrive.
+
 ## Current FIX-04 implementation, 2026-09-27
 
 Owner resumed the paused work. Card polish and the responsive verification form are implemented on master after `50349af`. Approved-profile editing now uses a server-reviewed save operation: descriptive edits publish immediately, sensitive edits stay pending while approved public details remain. No duplicate task or new branch. Analyzer is clean; SQL regression passes 478 assertions across 24 files in an isolated schema-only local database. Full Flutter suite passed 945 tests across 66 files; final source hashes and logs are retained. The new migration is not applied to a hosted backend and is required before profile-save retesting. [Behavior, verification and retest](../evidence/2026-09-27/profile-edit-card-polish/VERIFICATION.md). Acceptance blockers remain unchanged.
