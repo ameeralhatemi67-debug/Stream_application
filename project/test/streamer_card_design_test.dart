@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
+import 'package:streamer_app/core/widgets/language_switcher.dart';
 import 'package:streamer_app/core/widgets/streamer_identity_card.dart';
 import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
 import 'package:streamer_app/features/map/presentation/widgets/marker_summary_card.dart';
@@ -122,9 +123,23 @@ void main() {
             final surface = find
                 .descendant(of: cards.first, matching: find.byType(Material))
                 .first;
-            expect(tester.getSize(surface).width, lessThanOrEqualTo(420));
+            final cardWidth = tester.getSize(surface).width;
+            if (width >= 900 && location == 'profile') {
+              expect(cardWidth, greaterThan(900));
+            } else if (width >= 900 && location == 'settings') {
+              expect(cardWidth, greaterThan(420));
+            } else {
+              expect(cardWidth, lessThanOrEqualTo(420));
+            }
             expect(tester.takeException(), isNull);
             if (location == 'profile') {
+              if (width >= 900) {
+                expect(find.byType(AppBar), findsNothing);
+                final back = find.byIcon(Icons.arrow_back_rounded);
+                expect(back, findsOneWidget);
+                expect(tester.getTopLeft(back).dx,
+                    lessThan(tester.getCenter(surface).dx));
+              }
               await tester
                   .ensureVisible(find.byTooltip('profile.show_more'.tr()));
               await tester.pumpAndSettle();
@@ -159,6 +174,9 @@ void main() {
               expect(find.text('settings.edit_profile'.tr()), findsOneWidget);
             }
             if (location == 'discovery') {
+              if (width >= 900) {
+                expect(tester.getTopLeft(surface).dx, closeTo(16, 1));
+              }
               expect(find.text('profile.view_channel'.tr()), findsNothing);
               expect(find.text('#Physics'), findsOneWidget);
               expect(find.text('#Research'), findsOneWidget);
@@ -183,6 +201,69 @@ void main() {
   }
 
   for (final lang in ['en', 'ar']) {
+    testWidgets('desktop profile controls keep physical corners in $lang',
+        (tester) async {
+      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      final streamer = mockStreamers.first
+          .copyWith(avatarUrl: '', bannerUrl: '', isOrganization: false);
+      final provider = AppProvider(AdminDatabaseService(null))
+        ..addStreamerForTests(streamer);
+      await tester.pumpWidget(app(provider,
+          BroadcasterProfileScreen(streamerId: streamer.streamerId), lang, 1));
+      await tester.pumpAndSettle();
+      expect(tester.getCenter(find.byIcon(Icons.arrow_back_rounded)).dx,
+          lessThan(100));
+      expect(tester.getCenter(find.byType(LanguageSwitcher)).dx,
+          greaterThan(1100));
+      expect(tester.getCenter(find.byIcon(Icons.share_outlined)).dx,
+          greaterThan(1100));
+      expect(tester.getCenter(find.byIcon(Icons.person_add_rounded)).dx,
+          lessThan(400));
+      expect(
+          tester.getRect(find.byType(StreamerCardStatus)).top,
+          greaterThan(
+              tester.getRect(find.byIcon(Icons.share_outlined)).bottom));
+      expect(tester.takeException(), isNull);
+      await tester.pumpWidget(const SizedBox());
+      provider.dispose();
+    });
+
+    for (final layout in [(420.0, 1), (800.0, 2), (1000.0, 3), (1280.0, 4)]) {
+      testWidgets(
+          'discovery uses ${layout.$2} columns at ${layout.$1}px in $lang',
+          (tester) async {
+        tester.view.physicalSize = Size(layout.$1, 900);
+        tester.view.devicePixelRatio = 1;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+        final provider = AppProvider(AdminDatabaseService(null));
+        for (final streamer in mockStreamers.take(4)) {
+          provider.addStreamerForTests(
+              streamer.copyWith(avatarUrl: '', bannerUrl: ''));
+        }
+        await tester
+            .pumpWidget(app(provider, const DiscoveryFeedScreen(), lang, 1));
+        await tester.pumpAndSettle();
+        final cards = find.byType(StreamerIdentityCard);
+        expect(cards, findsNWidgets(4));
+        final firstTop = tester.getTopLeft(cards.first);
+        expect(
+            [
+              for (var i = 0; i < 4; i++)
+                if ((tester.getTopLeft(cards.at(i)).dy - firstTop.dy).abs() < 1)
+                  i
+            ].length,
+            layout.$2);
+        if (layout.$1 >= 900) expect(firstTop.dx, closeTo(16, 1));
+        expect(tester.takeException(), isNull);
+        await tester.pumpWidget(const SizedBox());
+        provider.dispose();
+      });
+    }
+
     testWidgets('short profile has no expansion arrow $lang', (tester) async {
       final streamer = mockStreamers.first.copyWith(
           avatarUrl: '',

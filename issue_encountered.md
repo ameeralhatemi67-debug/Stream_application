@@ -4,6 +4,10 @@ Updated: 2026-09-27. This is a local troubleshooting record, not proof that the 
 
 ## Issue-name index — scan this list first
 
+- **Desktop identity cards remain phone width** — Settings and channel use context-specific laptop widths; owner retest pending.
+- **Desktop map shows permanent list and dims on drawer open** — side panel removed; existing drawer opens from top control without scrim; owner retest pending.
+- **Sparse Discovery cards center on laptop** — desktop grid starts at physical left in both languages; owner retest pending.
+
 - **Expanded profile details overflow empty tabs** — empty states made scrollable; enlarged en/ar card checks pass, physical retest pending.
 
 - **Selected map pin disappears at close zoom** — source suppression removed; selected pin retained and pulses, device confirmation pending.
@@ -425,3 +429,24 @@ Verification: Widget regression selects overlapping profiles, checks the selecte
 ## Profile edits unnecessarily resubmit verification or report cached success
 
 2026-09-27 — FIX-04. Settings reused the initial application sheet submission for approved accounts. Every save attempted pending status on the existing application, although owner RLS only permits pending-row edits; database failures could then become cached success. Separate editing mode now calls `save_broadcaster_profile`, which checks ownership/approval/bans and classifies fields on the server. Safe edits publish immediately; sensitive edits use a pending revision, with atomic publication on approval and no revocation on rejection. Direct writes cannot bypass contact/location/YouTube review. Existing approved channel data remains the broadcasting source. Local SQL regression passes; analyzer clean; final Flutter result is in `brief/evidence/2026-09-27/profile-edit-card-polish/VERIFICATION.md`. Hosted migration and physical acceptance remain pending.
+
+## Desktop identity cards remain phone width
+Status: REPAIRED locally; owner laptop retest pending.
+Observed: DESK-01 Settings identity and DESK-02 streamer profile header stayed about 420px wide in owner laptop screenshots while surrounding sections/grid used more space.
+Cause: The shared identity card capped all contexts at 420px, with a second 420px cap around the Settings card. The profile header used the same cap and separate desktop AppBar controls.
+Fix: Keep the shared 420px default for phone, Map and Discovery. Settings uses its existing content rail; the desktop streamer header fills its available width, anchors actions left and overlays fixed-position controls. Phone paths retain their previous layout.
+Verification: Focused 45-case card tests pass, including en/ar, large text, fixed desktop corners and 1–4 Discovery columns. Analyzer and full-suite result are recorded in `brief/evidence/2026-09-28/laptop-layout-batch/VERIFICATION.md`. No new owner build launched.
+
+## Desktop map shows permanent list and dims on drawer open
+Status: REPAIRED locally; owner laptop retest pending.
+Observed: DESK-03 owner screenshot shows an always-visible 380px venue panel beside the map; the existing burger opens a separate dimming drawer.
+Cause: The map built a desktop-only side panel in addition to `StreamerSlidingDrawer`. Scaffold supplied its default modal scrim.
+Fix: Remove the side panel; use the existing drawer from a top-right laptop control and a transparent desktop scrim. Keep the phone control and drawer behavior.
+Verification: The 144-case map widget file passes, including drawer open/closed state and 280–1280px selected-card matrix. Physical and browser retest pending.
+
+## Sparse Discovery cards center on laptop
+Status: REPAIRED locally; owner laptop retest pending.
+Observed: DESK-04 owner screenshot shows two Discovery cards centered under a wide results area.
+Cause: The responsive four-column `Wrap` used center alignment; RTL would start at the physical right even after changing to start alignment.
+Fix: Start the desktop Wrap at the physical left in both locales. Keep existing card contents, width calculation and phone direction.
+Verification: Focused card tests pass for 4, 3, 2 and 1 columns in English and Arabic. Owner visual retest pending.

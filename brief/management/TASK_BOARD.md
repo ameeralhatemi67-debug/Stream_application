@@ -1,5 +1,9 @@
 # Hadayah manager task board
 
+## FIX-05 — laptop layout repair batch, 2026-09-28
+
+Owner supplied four laptop findings, DESK-01–04: narrow Settings/channel identity cards, permanent Map side list with dimmed drawer, and centered sparse Discovery cards. Source repair is on the existing `master` checkout; the logo SVG and unrelated owner evidence remain untouched. Local card tests pass 45, Map widget tests pass 144, the full Flutter suite passes 956 and analyzer has zero issues. Root causes and limits are in [batch verification](../evidence/2026-09-28/laptop-layout-batch/VERIFICATION.md). [Owner retest rows](../testing/2026-09-28/OWNER_TEST_SETS.md) remain NOT RUN on a new build. No build/install, hosted change or push was made. The top-right Map list button is a working choice while the owner resolves conflicting top-right/top-left wording. P5/P6/P6S acceptance and STREAM-D8 remain unchanged.
+
 ## TEST-03 — owner testing, fixing and polishing plan, 2026-09-28
 
 Owner requested a fresh comprehensive, grouped test plan and a careful repair-companion prompt. [Owner test sets](../testing/2026-09-28/OWNER_TEST_SETS.md) cover candidate/setup, the recent cards, map/offline, profile editing/review, studio/broadcast, live lifecycle, chat/moderation, cross-device/release gates and adjacent product regressions. All 72 new rows start **NOT RUN**; they organize, but do not erase or confer PASS on, the 36-case Wave4v2 sheet. [Repair companion prompt](../testing/2026-09-28/REPAIR_COMPANION_PROMPT.md) is **DRAFT for owner use**, recommending GPT-6 Sol/high. No agent was launched or assigned by this planning step.

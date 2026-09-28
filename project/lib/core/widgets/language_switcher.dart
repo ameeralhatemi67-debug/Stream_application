@@ -5,11 +5,13 @@ import '../theme/app_theme.dart';
 
 class LanguageSwitcher extends StatelessWidget {
   final bool showLabel;
+  final bool overlay;
   final EdgeInsetsGeometry? padding;
 
   const LanguageSwitcher({
     super.key,
     this.showLabel = true,
+    this.overlay = false,
     this.padding,
   });
 
@@ -18,52 +20,63 @@ class LanguageSwitcher extends StatelessWidget {
     final isArabic = context.locale.languageCode == 'ar';
     final targetLangCode = isArabic ? 'EN' : 'عربي';
 
-    return InkWell(
-      onTap: () {
-        if (isArabic) {
-          context.setLocale(const Locale('en'));
-        } else {
-          context.setLocale(const Locale('ar'));
-        }
-      },
-      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      child: Container(
-        padding: padding ??
-            const EdgeInsets.symmetric(
-              horizontal: AppTheme.spaceMd,
-              vertical: AppTheme.spaceSm,
-            ),
-        decoration: BoxDecoration(
-          color: AppTheme.surfaceAlt,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: Border.all(
-            color: AppTheme.border,
-            width: 1.0,
+    return Tooltip(
+      message: 'language.switch_lang'.tr(),
+      child: InkWell(
+        onTap: () {
+          if (isArabic) {
+            context.setLocale(const Locale('en'));
+          } else {
+            context.setLocale(const Locale('ar'));
+          }
+        },
+        borderRadius: BorderRadius.circular(
+            overlay ? AppTheme.radiusFull : AppTheme.radiusSm),
+        child: Container(
+          padding: padding ??
+              (overlay
+                  ? const EdgeInsets.all(15)
+                  : const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceMd,
+                      vertical: AppTheme.spaceSm,
+                    )),
+          decoration: BoxDecoration(
+            color: overlay
+                ? AppTheme.surface.withValues(alpha: .6)
+                : AppTheme.surfaceAlt,
+            borderRadius: BorderRadius.circular(
+                overlay ? AppTheme.radiusFull : AppTheme.radiusSm),
+            border: overlay
+                ? null
+                : Border.all(
+                    color: AppTheme.border,
+                    width: 1.0,
+                  ),
           ),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SvgPicture.asset(
-              'assets/Language.svg',
-              width: 18,
-              height: 18,
-              colorFilter: const ColorFilter.mode(
-                AppTheme.primary,
-                BlendMode.srcIn,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SvgPicture.asset(
+                'assets/Language.svg',
+                width: 18,
+                height: 18,
+                colorFilter: const ColorFilter.mode(
+                  AppTheme.primary,
+                  BlendMode.srcIn,
+                ),
               ),
-            ),
-            if (showLabel) ...[
-              const SizedBox(width: AppTheme.spaceXs),
-              Text(
-                targetLangCode,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.textPrimary,
-                    ),
-              ),
+              if (showLabel) ...[
+                const SizedBox(width: AppTheme.spaceXs),
+                Text(
+                  targetLangCode,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.textPrimary,
+                      ),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

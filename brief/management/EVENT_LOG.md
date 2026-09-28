@@ -1,5 +1,9 @@
 # Hadayah manager event log
 
+### H30, FIX-05 laptop layout batch, 2026-09-28 approximately 13:06 +03:00
+
+Owner sent four laptop screenshots and a channel sketch. Refreshed local `master` at `2ff8c94` and the project decisions, board, release scope and owner test sets before tracing shared card callers, the Map's separate desktop panel/drawer and Discovery's Wrap. Repaired DESK-01–04 in source on the existing checkout. Focused card and map tests pass; analyzer zero issues. Full-suite result is in [verification](../evidence/2026-09-28/laptop-layout-batch/VERIFICATION.md). Test rows require a newly identified owner build; no physical/browser acceptance is inferred. No phone installation, hosted backend operation or push. Unrelated owner logo and test-sheet updates are preserved.
+
 ### H27, FIX-04 investigation paused before implementation, 2026-09-27
 
 Owner requested final card refinements, real Discovery tags, conditional profile-detail arrows, a wider verification form, and field-specific reapproval rules for account editing. Read the form, Settings entry point, provider submission/hydration/approval paths, database service, schema and review guards. Found that approved editing currently reuses application submission, backend submission errors can fall back to local success, and pending revisions would need careful channel/rejection/organization handling. No implementation or migration was written. Owner then requested a safe stopping point before Wi-Fi disconnects. Verified master `50349af` with no tracked changes before saving this checkpoint; only management records are edited. No active task process, push, backend operation or duplicate dispatch. Resume details are in TASK_BOARD.md under FIX-04. Prior verification and all acceptance blockers remain unchanged.

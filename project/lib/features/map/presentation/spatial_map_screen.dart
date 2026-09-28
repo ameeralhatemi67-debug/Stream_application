@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:math' as math;
-import '../../../core/widgets/safe_image_provider.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -522,7 +521,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         ? 60 + notice.size.height + AppTheme.spaceSm
         : 56.0;
     final rtl = Directionality.of(context) == TextDirection.rtl;
-    final next = EdgeInsets.fromLTRB(rtl ? 72 : 16, top, rtl ? 16 : 72, bottom);
+    final desktop = MediaQuery.sizeOf(context).width >= 900;
+    final next = EdgeInsets.fromLTRB(
+        desktop || !rtl ? 16 : 72, top, desktop || !rtl ? 72 : 16, bottom);
     if ((next.top - _safePadding.top).abs() > 1 ||
         (next.bottom - _safePadding.bottom).abs() > 1 ||
         next.left != _safePadding.left) {
@@ -584,6 +585,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
 
     return Scaffold(
       key: _scaffoldKey,
+      drawerScrimColor: isDesktop ? Colors.transparent : null,
+      endDrawerEnableOpenDragGesture: !isDesktop,
       endDrawer: StreamerSlidingDrawer(
         streamers: displayedStreamers,
         onStreamerSelected: (streamer) => _selectStreamer(streamer),
@@ -800,9 +803,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                       bottom: false,
                       child: Padding(
                         key: _topControlsKey,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spaceMd,
-                          vertical: AppTheme.spaceSm,
+                        padding: EdgeInsets.fromLTRB(
+                          AppTheme.spaceMd,
+                          AppTheme.spaceSm,
+                          isDesktop ? 72 : AppTheme.spaceMd,
+                          AppTheme.spaceSm,
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -879,6 +884,25 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     ),
                   ),
 
+                  if (isDesktop)
+                    Positioned(
+                      right: AppTheme.spaceMd,
+                      top: 0,
+                      child: SafeArea(
+                        bottom: false,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              vertical: AppTheme.spaceSm),
+                          child: _buildFloatingMapButton(
+                            icon: Icons.format_list_bulleted_rounded,
+                            tooltip: 'map.broadcasters_list'.tr(),
+                            onTap: () =>
+                                _scaffoldKey.currentState?.openEndDrawer(),
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // Keep the card above a shared attribution/control row.
                   PositionedDirectional(
                     top: _safePadding.top,
@@ -927,13 +951,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                               ),
                             ),
                             const SizedBox(width: 8),
-                            _buildFloatingMapButton(
-                              icon: Icons.format_list_bulleted_rounded,
-                              tooltip: 'map.broadcasters_list'.tr(),
-                              onTap: () =>
-                                  _scaffoldKey.currentState?.openEndDrawer(),
-                            ),
-                            const SizedBox(width: 16),
+                            if (!isDesktop) ...[
+                              _buildFloatingMapButton(
+                                icon: Icons.format_list_bulleted_rounded,
+                                tooltip: 'map.broadcasters_list'.tr(),
+                                onTap: () =>
+                                    _scaffoldKey.currentState?.openEndDrawer(),
+                              ),
+                              const SizedBox(width: 16),
+                            ],
                           ],
                         ),
                       ],
@@ -943,134 +969,6 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               );
             }),
           ),
-
-          // Desktop Venue Side Inspection Panel (Width >= 900px)
-          if (isDesktop)
-            Container(
-              width: 380,
-              decoration: const BoxDecoration(
-                color: AppTheme.surface,
-                border: Border(left: BorderSide(color: AppTheme.border)),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.spaceLg),
-                    decoration: const BoxDecoration(
-                      border:
-                          Border(bottom: BorderSide(color: AppTheme.border)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.hub_rounded,
-                            color: AppTheme.danger, size: 20),
-                        const SizedBox(width: AppTheme.spaceSm),
-                        Expanded(
-                            child: Text(
-                          'design_copy.map_venues'.tr(namedArgs: {
-                            'count': '${displayedStreamers.length}'
-                          }),
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        )),
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: ListView.separated(
-                      padding: const EdgeInsets.all(AppTheme.spaceMd),
-                      itemCount: displayedStreamers.length,
-                      separatorBuilder: (context, index) =>
-                          const SizedBox(height: AppTheme.spaceSm),
-                      itemBuilder: (context, index) {
-                        final streamer = displayedStreamers[index];
-                        final isSelected =
-                            _selectedStreamerId == streamer.streamerId;
-
-                        return Material(
-                          color: isSelected
-                              ? AppTheme.danger.withValues(alpha: 0.12)
-                              : AppTheme.surfaceAlt,
-                          shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMd),
-                            side: BorderSide(
-                              color: isSelected
-                                  ? AppTheme.danger
-                                  : AppTheme.border,
-                              width: 1,
-                            ),
-                          ),
-                          child: InkWell(
-                            onTap: () => _selectStreamer(streamer),
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusMd),
-                            child: Padding(
-                              padding: const EdgeInsets.all(AppTheme.spaceMd),
-                              child: Row(
-                                children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundColor: AppTheme.surface,
-                                    backgroundImage: buildSafeImageProvider(
-                                        path: streamer.avatarUrl),
-                                  ),
-                                  const SizedBox(width: AppTheme.spaceMd),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          streamer.fullNameEn,
-                                          style: const TextStyle(
-                                            color: AppTheme.textPrimary,
-                                            fontWeight: FontWeight.w600,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                        Text(
-                                          streamer.venueNameEn,
-                                          style: const TextStyle(
-                                            color: AppTheme.textSecondary,
-                                            fontSize: 11,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  if (streamer.isCurrentlyLive)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          horizontal: 6, vertical: 2),
-                                      decoration: BoxDecoration(
-                                        color: AppTheme.danger,
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        'design_ui.live'.tr(),
-                                        style: const TextStyle(
-                                          color: AppTheme.onMedia,
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
         ],
       ),
     );

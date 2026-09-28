@@ -137,6 +137,43 @@ void main() {
   tearDown(() => MapPackController.debugShared = null);
 
   testWidgets(
+      'desktop map opens the existing list from the top right without dimming',
+      (tester) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final provider = AppProvider(AdminDatabaseService(null))
+      ..debugSetOnlineForTests(true)
+      ..addStreamerForTests(mockStreamers.first);
+    await tester.pumpWidget(
+        _app(SpatialMapScreen(packController: _unavailablePack()), provider));
+    await tester.pumpAndSettle();
+    final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+    expect(scaffold.drawerScrimColor, Colors.transparent);
+    expect(tester.getSize(find.byType(FlutterMap)).width, greaterThan(1100));
+    final openList = find.byTooltip('Broadcasters list');
+    expect(tester.getTopRight(openList).dx, greaterThan(1200));
+    expect(tester.getTopLeft(openList).dy, lessThan(100));
+    expect(
+        tester
+            .state<ScaffoldState>(find.byType(Scaffold).first)
+            .isEndDrawerOpen,
+        isFalse);
+    await tester.tap(openList);
+    await tester.pumpAndSettle();
+    expect(
+        tester
+            .state<ScaffoldState>(find.byType(Scaffold).first)
+            .isEndDrawerOpen,
+        isTrue);
+    expect(find.byType(StreamerSlidingDrawer), findsOneWidget);
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+    provider.dispose();
+  });
+
+  testWidgets(
       'selected pin survives clusters, pulses and clears on leaving map',
       (tester) async {
     final venue = mockStreamers.first;
@@ -286,8 +323,13 @@ void main() {
             expect(find.byIcon(Icons.zoom_out_map_rounded), findsNothing);
             final drawer = find.byTooltip('map.broadcasters_list'.tr());
             final credit = find.byType(MapAttributionRail);
-            expect(tester.getCenter(drawer).dy,
-                closeTo(tester.getCenter(credit).dy, 0.1));
+            if (width >= 900) {
+              expect(tester.getTopRight(drawer).dx, greaterThan(width - 80));
+              expect(tester.getTopLeft(drawer).dy, lessThan(100));
+            } else {
+              expect(tester.getCenter(drawer).dy,
+                  closeTo(tester.getCenter(credit).dy, 0.1));
+            }
             expect(tester.getRect(drawer).overlaps(tester.getRect(credit)),
                 isFalse);
             final action = find.descendant(

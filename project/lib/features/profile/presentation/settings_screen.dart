@@ -282,11 +282,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       BuildContext context, AppProvider provider) {
     final isAr = context.locale.languageCode == 'ar';
     final isStreamerCard = provider.isApprovedStreamer;
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded;
 
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: BoxConstraints(maxWidth: wide ? double.infinity : 420),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -422,6 +423,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         !provider.isOnline || provider.isUsingCachedCatalog || streamer == null;
     final bio = isAr ? profile.bioAr : profile.bioEn;
     return StreamerIdentityCard(
+      maxWidth: MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded
+          ? double.infinity
+          : 420,
       name: isAr ? profile.nameAr : profile.nameEn,
       title: isAr ? profile.titleAr : profile.titleEn,
       avatarUrl: profile.avatarUrl,

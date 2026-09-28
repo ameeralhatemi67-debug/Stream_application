@@ -19,6 +19,8 @@ class StreamerIdentityCard extends StatelessWidget {
     this.onTap,
     this.onClose,
     this.headerAction,
+    this.maxWidth = 420,
+    this.statusTop = AppTheme.spaceSm,
   });
 
   final String name, title, avatarUrl, bannerUrl;
@@ -26,6 +28,7 @@ class StreamerIdentityCard extends StatelessWidget {
   final Widget status;
   final Widget? child, headerAction;
   final VoidCallback? onTap, onClose;
+  final double maxWidth, statusTop;
 
   @override
   Widget build(BuildContext context) {
@@ -34,7 +37,7 @@ class StreamerIdentityCard extends StatelessWidget {
       alignment: Alignment.topCenter,
       heightFactor: 1,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 420),
+        constraints: BoxConstraints(maxWidth: maxWidth),
         child: SizedBox(
           width: double.infinity,
           child: Material(
@@ -49,9 +52,10 @@ class StreamerIdentityCard extends StatelessWidget {
             child: InkWell(
               onTap: onTap,
               child: LayoutBuilder(builder: (context, constraints) {
-                final bannerHeight =
-                    (constraints.maxWidth * .28).clamp(80.0, 112.0);
-                const avatarSize = 64.0;
+                final wide = constraints.maxWidth > 420;
+                final bannerHeight = (constraints.maxWidth * .28)
+                    .clamp(80.0, wide ? 160.0 : 112.0);
+                final avatarSize = wide ? 96.0 : 64.0;
                 return Column(
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -80,7 +84,7 @@ class StreamerIdentityCard extends StatelessWidget {
                           ),
                         ),
                         PositionedDirectional(
-                          top: AppTheme.spaceSm,
+                          top: statusTop,
                           end: onClose != null || headerAction != null
                               ? 56
                               : AppTheme.spaceSm,

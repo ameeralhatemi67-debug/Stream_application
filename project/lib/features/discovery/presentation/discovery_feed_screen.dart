@@ -1,10 +1,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../core/layout/content_width.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/connectivity_banner.dart';
@@ -527,7 +528,11 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                           columns)
                       .clamp(0.0, 420.0);
               return Wrap(
-                alignment: WrapAlignment.center,
+                alignment: WrapAlignment.start,
+                textDirection:
+                    MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded
+                        ? TextDirection.ltr
+                        : null,
                 spacing: AppTheme.spaceMd,
                 runSpacing: AppTheme.spaceMd,
                 children: [

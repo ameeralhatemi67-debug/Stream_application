@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/layout/content_width.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/streamer_avatar.dart';
@@ -69,6 +70,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
   Widget build(BuildContext context) {
     final appProvider = Provider.of<AppProvider>(context);
     final lang = context.locale.languageCode;
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded;
 
     // Missing channels have an explicit unavailable state.
     final streamer = appProvider.getStreamerById(widget.streamerId);
@@ -104,48 +106,47 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
-      appBar: AppBar(
-        title: Text(streamer.getLocalizedName(lang)),
-        actions: [
-          // Broadcaster Studio Access -- single unified entry point (v0.9)
-          // for going live with an encoder or the phone camera. Strictly
-          // the broadcaster's own profile page, zero admin override --
-          // issue_log.md: "an admin account does not give ability to see
-          // and use others accounts cell tower", "no one other than the
-          // streamer himself should have the ability to see their cell
-          // tower."
-          if (appProvider.isLoggedInStreamer &&
-              appProvider.isApprovedStreamer &&
-              appProvider.isStreamerModeEnabled &&
-              appProvider.isOwnStreamerProfile(streamer.streamerId))
-            IconButton(
-              icon: Icon(
-                Icons.cell_tower_rounded,
-                color: appProvider.isPitchDirectorModeEnabled
-                    ? AppTheme.danger
-                    : AppTheme.textSecondary,
-              ),
-              tooltip: 'live.rtmp_ip_tooltip'.tr(),
-              onPressed: () => LiveBroadcasterStudioSheet.show(context),
+      appBar: wide
+          ? null
+          : AppBar(
+              title: Text(streamer.getLocalizedName(lang)),
+              actions: [
+                // Broadcaster Studio Access -- single unified entry point (v0.9)
+                // for going live with an encoder or the phone camera. Strictly
+                // the broadcaster's own profile page, zero admin override --
+                // issue_log.md: "an admin account does not give ability to see
+                // and use others accounts cell tower", "no one other than the
+                // streamer himself should have the ability to see their cell
+                // tower."
+                if (appProvider.isLoggedInStreamer &&
+                    appProvider.isApprovedStreamer &&
+                    appProvider.isStreamerModeEnabled &&
+                    appProvider.isOwnStreamerProfile(streamer.streamerId))
+                  IconButton(
+                    icon: Icon(
+                      Icons.cell_tower_rounded,
+                      color: appProvider.isPitchDirectorModeEnabled
+                          ? AppTheme.danger
+                          : AppTheme.textSecondary,
+                    ),
+                    tooltip: 'live.rtmp_ip_tooltip'.tr(),
+                    onPressed: () => LiveBroadcasterStudioSheet.show(context),
+                  ),
+                const LanguageSwitcher(),
+                const SizedBox(width: AppTheme.spaceXs),
+                // Shares the channel's real YouTube URL. The button is absent when
+                // the channel has no handle yet -- there is nothing truthful to
+                // share, and a share sheet holding a made-up link is worse than no
+                // button (05 D-03).
+                if (streamer.youtubeHandle.trim().isNotEmpty)
+                  IconButton(
+                    icon: const Icon(Icons.share_outlined),
+                    tooltip: 'profile.share_btn'.tr(),
+                    onPressed: () => _shareChannel(streamer, lang),
+                  ),
+                const SizedBox(width: AppTheme.spaceSm),
+              ],
             ),
-          const LanguageSwitcher(),
-          const SizedBox(width: AppTheme.spaceXs),
-          // Shares the channel's real YouTube URL. The button is absent when
-          // the channel has no handle yet -- there is nothing truthful to
-          // share, and a share sheet holding a made-up link is worse than no
-          // button (05 D-03).
-          if (streamer.youtubeHandle.trim().isNotEmpty)
-            IconButton(
-              icon: const Icon(Icons.share_outlined),
-              tooltip: 'profile.share_btn'.tr(),
-              onPressed: () => Share.share(
-                'https://www.youtube.com/@${streamer.youtubeHandle.trim().replaceFirst('@', '')}',
-                subject: streamer.getLocalizedName(lang),
-              ),
-            ),
-          const SizedBox(width: AppTheme.spaceSm),
-        ],
-      ),
       body: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) {
           return [
@@ -222,6 +223,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     List<PlaylistModel> allPlaylists,
   ) {
     final uncertain = !appProvider.isOnline || appProvider.isUsingCachedCatalog;
+    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded;
     return Column(
       children: [
         LayoutBuilder(builder: (context, constraints) {
@@ -233,7 +235,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             textDirection: Directionality.of(context),
             textScaler: MediaQuery.textScalerOf(context),
             maxLines: 2,
-          )..layout(maxWidth: constraints.maxWidth.clamp(0.0, 420.0) - 64);
+          )..layout(
+              maxWidth: (wide
+                      ? constraints.maxWidth
+                      : constraints.maxWidth.clamp(0.0, 420.0)) -
+                  64);
           final hasBranches =
               streamer.isOrganization && streamer.venues.isNotEmpty;
           final canJoin = !streamer.isOrganization &&
@@ -241,8 +247,10 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               appProvider.isOwnStreamerProfile(streamer.streamerId);
           final hasMore = measure.didExceedMaxLines || hasBranches || canJoin;
           measure.dispose();
-          return StreamerIdentityCard(
-            headerAction: hasMore
+          final card = StreamerIdentityCard(
+            maxWidth: wide ? double.infinity : 420,
+            statusTop: wide ? 64 : AppTheme.spaceSm,
+            headerAction: !wide && hasMore
                 ? IconButton(
                     tooltip: (_detailsExpanded
                             ? 'profile.show_less'
@@ -281,10 +289,25 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(streamer.getLocalizedOrganization(lang),
-                          style: const TextStyle(
-                              color: AppTheme.primary,
-                              fontWeight: FontWeight.w600)),
+                      Row(children: [
+                        Expanded(
+                            child: Text(streamer.getLocalizedOrganization(lang),
+                                style: const TextStyle(
+                                    color: AppTheme.primary,
+                                    fontWeight: FontWeight.w600))),
+                        if (wide && hasMore)
+                          IconButton(
+                            tooltip: (_detailsExpanded
+                                    ? 'profile.show_less'
+                                    : 'profile.show_more')
+                                .tr(),
+                            onPressed: () => setState(
+                                () => _detailsExpanded = !_detailsExpanded),
+                            icon: Icon(_detailsExpanded
+                                ? Icons.keyboard_arrow_up_rounded
+                                : Icons.keyboard_arrow_down_rounded),
+                          ),
+                      ]),
                       const SizedBox(height: AppTheme.spaceSm),
                       Text(
                         streamer.getLocalizedBio(lang),
@@ -321,49 +344,57 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () =>
-                            appProvider.toggleFollow(streamer.streamerId),
-                        icon: Icon(
-                            isFollowing
-                                ? Icons.check_rounded
-                                : Icons.person_add_rounded,
-                            size: 18),
-                        label: Text((isFollowing
-                                ? 'profile.following_btn'
-                                : 'profile.follow_btn')
-                            .tr()),
-                        style: ElevatedButton.styleFrom(
-                          minimumSize: const Size(48, 48),
-                          backgroundColor: isFollowing
-                              ? AppTheme.surfaceAlt
-                              : AppTheme.primary,
-                          foregroundColor:
-                              isFollowing ? AppTheme.primary : AppTheme.onMedia,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spaceSm),
-                    IconButton.outlined(
-                      isSelected: hasReminder,
-                      tooltip: (hasReminder
-                              ? 'profile.reminder_on'
-                              : 'profile.reminder_btn')
-                          .tr(),
-                      onPressed: () =>
-                          appProvider.toggleReminder(streamer.streamerId),
-                      icon: const Icon(Icons.notifications_none_rounded),
-                      selectedIcon:
-                          const Icon(Icons.notifications_active_rounded),
-                      style: IconButton.styleFrom(
-                          minimumSize: const Size(48, 48),
-                          foregroundColor: AppTheme.primary),
-                    ),
-                  ],
-                ),
+                Align(
+                    alignment: wide ? Alignment.centerLeft : Alignment.center,
+                    child: ConstrainedBox(
+                        constraints: BoxConstraints(
+                            maxWidth: wide ? 360 : double.infinity),
+                        child: Row(
+                          textDirection: wide ? TextDirection.ltr : null,
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                onPressed: () => appProvider
+                                    .toggleFollow(streamer.streamerId),
+                                icon: Icon(
+                                    isFollowing
+                                        ? Icons.check_rounded
+                                        : Icons.person_add_rounded,
+                                    size: 18),
+                                label: Text((isFollowing
+                                        ? 'profile.following_btn'
+                                        : 'profile.follow_btn')
+                                    .tr()),
+                                style: ElevatedButton.styleFrom(
+                                  minimumSize: const Size(48, 48),
+                                  backgroundColor: isFollowing
+                                      ? AppTheme.surfaceAlt
+                                      : AppTheme.primary,
+                                  foregroundColor: isFollowing
+                                      ? AppTheme.primary
+                                      : AppTheme.onMedia,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: AppTheme.spaceSm),
+                            IconButton.outlined(
+                              isSelected: hasReminder,
+                              tooltip: (hasReminder
+                                      ? 'profile.reminder_on'
+                                      : 'profile.reminder_btn')
+                                  .tr(),
+                              onPressed: () => appProvider
+                                  .toggleReminder(streamer.streamerId),
+                              icon:
+                                  const Icon(Icons.notifications_none_rounded),
+                              selectedIcon: const Icon(
+                                  Icons.notifications_active_rounded),
+                              style: IconButton.styleFrom(
+                                  minimumSize: const Size(48, 48),
+                                  foregroundColor: AppTheme.primary),
+                            ),
+                          ],
+                        ))),
                 // Live Stream Banner Trigger (If live)
                 if (!uncertain &&
                     streamer.isCurrentlyLive &&
@@ -436,6 +467,47 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               ],
             ),
           );
+          if (!wide) return card;
+          return Directionality(
+            textDirection: TextDirection.ltr,
+            child: Stack(children: [
+              card,
+              Positioned(
+                left: AppTheme.spaceSm,
+                top: AppTheme.spaceSm,
+                child: _overlayButton(
+                  Icons.arrow_back_rounded,
+                  MaterialLocalizations.of(context).backButtonTooltip,
+                  () => context.canPop() ? context.pop() : context.go('/feed'),
+                ),
+              ),
+              Positioned(
+                right: AppTheme.spaceSm,
+                top: AppTheme.spaceSm,
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  if (appProvider.isLoggedInStreamer &&
+                      appProvider.isApprovedStreamer &&
+                      appProvider.isStreamerModeEnabled &&
+                      appProvider
+                          .isOwnStreamerProfile(streamer.streamerId)) ...[
+                    _overlayButton(
+                        Icons.cell_tower_rounded,
+                        'live.rtmp_ip_tooltip'.tr(),
+                        () => LiveBroadcasterStudioSheet.show(context)),
+                    const SizedBox(width: AppTheme.spaceSm),
+                  ],
+                  const LanguageSwitcher(showLabel: false, overlay: true),
+                  if (streamer.youtubeHandle.trim().isNotEmpty) ...[
+                    const SizedBox(width: AppTheme.spaceSm),
+                    _overlayButton(
+                        Icons.share_outlined,
+                        'profile.share_btn'.tr(),
+                        () => _shareChannel(streamer, lang)),
+                  ],
+                ]),
+              ),
+            ]),
+          );
         }),
         if (streamer.isOrganization && streamer.affiliatedSpeakers.isNotEmpty)
           _buildFeaturedChannelsSection(
@@ -443,6 +515,24 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
       ],
     );
   }
+
+  void _shareChannel(StreamerModel streamer, String lang) => Share.share(
+        'https://www.youtube.com/@${streamer.youtubeHandle.trim().replaceFirst('@', '')}',
+        subject: streamer.getLocalizedName(lang),
+      );
+
+  Widget _overlayButton(
+          IconData icon, String tooltip, VoidCallback onPressed) =>
+      IconButton(
+        icon: Icon(icon),
+        tooltip: tooltip,
+        onPressed: onPressed,
+        style: IconButton.styleFrom(
+          backgroundColor: AppTheme.surface.withValues(alpha: .6),
+          foregroundColor: AppTheme.textPrimary,
+          minimumSize: const Size(48, 48),
+        ),
+      );
 
   Widget _buildFeaturedChannelsSection(
     BuildContext context,
