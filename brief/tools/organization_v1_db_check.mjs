@@ -17,7 +17,7 @@ if(process.argv.includes('--rebuild')) {
 function sql(input) {
   const result=spawnSync(docker,['exec','-i',container,'psql','-XAt','-v','ON_ERROR_STOP=1',
     '-U','supabase_admin','-d',database],{input,encoding:'utf8',windowsHide:true,timeout:60000,maxBuffer:8e6});
-  if(result.error || result.status!==0) throw new Error(result.stderr || result.error?.message);
+  if(result.error || result.status!==0) throw new Error((result.stderr || result.error?.message)+'\n'+(result.stdout??'').split('\n').filter(line=>/^(?:ok|not ok|#)/.test(line)).join('\n'));
   return result.stdout;
 }
 assert.equal(sql('select current_database();').trim(),database);
@@ -31,7 +31,7 @@ for(const file of readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql'
   sql(`insert into supabase_migrations.schema_migrations(version) values('${version}');`);
   console.log('APPLIED '+file);
 }
-for(const name of ['memberships','channels']) {
+for(const name of ['memberships','channels','sessions']) {
   const file=`supabase/tests/organization_v1_${name}.test.sql`;
   const output=sql(readFileSync(file,'utf8'));
   writeFileSync(out+'/'+name+'-sql.txt',output);
