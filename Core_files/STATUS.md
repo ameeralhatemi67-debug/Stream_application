@@ -8,6 +8,8 @@ health: release_blocked
 
 # Project status: Streamer App
 
+Organization V1 implementation started 2026-10-01 on the existing master checkout. Membership authority and invitation RPCs are under local verification; provider authorization, canonical sessions, client completion and the real three-show pilot remain open. See [evidence](../brief/evidence/2026-10-01/organization-v1/README.md). Organization broadcasting remains disabled pending those gates. Owner budget: 86% baseline, 95% implementation stop, 96% weekly hard ceiling.
+
 ## Local master integration, 2026-09-27 10:55 +03:00
 
 Owner requested one master checkout for testing. Local merge `c9e441f` now contains Opus map `74157ba`, Astra streaming `818cc12` and combined integration `8e28801`. Owner documentation was saved first in `571bcdd`; four documentation conflicts were reconciled without application/SQL changes. Project, supabase and build-script content exactly matches reviewed source `34d074a`. Fresh offline worker/page checks pass. Earlier 847 Flutter tests, zero analyzer issues, 462 SQL assertions and three concurrency checks remain inherited exact-source evidence, not rerun results.

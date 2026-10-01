@@ -35,6 +35,7 @@ class BroadcasterApplicationModel {
   // update on approval.
   final String? applicantProfileId;
   final ApplicationAccountType accountType;
+  final bool organizationOnly;
   final String applicantNameEn;
   final String applicantNameAr;
   final String email;
@@ -81,6 +82,7 @@ class BroadcasterApplicationModel {
     this.revisionOf,
     this.applicantProfileId,
     required this.accountType,
+    this.organizationOnly = false,
     required this.applicantNameEn,
     required this.applicantNameAr,
     required this.email,
@@ -148,6 +150,7 @@ class BroadcasterApplicationModel {
     String? revisionOf,
     String? applicantProfileId,
     ApplicationAccountType? accountType,
+    bool? organizationOnly,
     String? applicantNameEn,
     String? applicantNameAr,
     String? email,
@@ -183,6 +186,7 @@ class BroadcasterApplicationModel {
       revisionOf: revisionOf ?? this.revisionOf,
       applicantProfileId: applicantProfileId ?? this.applicantProfileId,
       accountType: accountType ?? this.accountType,
+      organizationOnly: organizationOnly ?? this.organizationOnly,
       applicantNameEn: applicantNameEn ?? this.applicantNameEn,
       applicantNameAr: applicantNameAr ?? this.applicantNameAr,
       email: email ?? this.email,
@@ -219,6 +223,7 @@ class BroadcasterApplicationModel {
         'id': id,
         'revisionOf': revisionOf,
         'accountType': accountType.name,
+        'organizationOnly': organizationOnly,
         'applicantNameEn': applicantNameEn,
         'applicantNameAr': applicantNameAr,
         'email': email,
@@ -254,6 +259,7 @@ class BroadcasterApplicationModel {
       BroadcasterApplicationModel(
         id: json['id'] as String,
         revisionOf: json['revisionOf'] as String?,
+        organizationOnly: json['organizationOnly'] == true,
         accountType: ApplicationAccountType.values
             .byName(json['accountType'] as String? ?? 'individualScholar'),
         applicantNameEn: json['applicantNameEn'] as String? ?? '',

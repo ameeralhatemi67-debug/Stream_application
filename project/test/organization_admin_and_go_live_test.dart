@@ -9,10 +9,6 @@ import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/admin/presentation/widgets/org_management_view.dart';
-import 'package:streamer_app/features/organization/models/org_venue_branch_model.dart';
-import 'package:streamer_app/features/organization/models/org_speaker_model.dart';
-import 'package:streamer_app/features/organization/models/org_audit_log_entry.dart';
-import 'package:streamer_app/features/organization/models/org_broadcaster_permissions.dart';
 import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 import 'fixtures/streamer_fixtures.dart';
@@ -137,135 +133,21 @@ void main() {
       expect(provider.auditLogs.length, equals(initialLogsCount));
     });
 
-    test(
-        'TC-ORG-ADMIN-01: Branch CRUD operations update organization venues and audit trail',
-        () async {
-      final initialBranches = provider.getOrganizationVenues('org_dalilk_04');
-      expect(initialBranches.length, equals(3));
-
-      // 1. Add new branch
-      const newBranch = OrgVenueBranchModel(
-        venueId: 'branch_jubail_04',
-        nameEn: 'Jubail Industrial Center',
-        nameAr: 'مركز الجبيل الصناعي',
-        cityEn: 'Jubail',
-        cityAr: 'الجبيل',
-        latitude: 27.0046,
-        longitude: 49.6591,
-        seatingCapacity: 75,
-        availableFacilities: ['Interactive Lab', 'High-Speed Wi-Fi'],
-      );
-
-      await provider.addOrganizationBranch('org_dalilk_04', newBranch);
-      final branchesAfterAdd = provider.getOrganizationVenues('org_dalilk_04');
-      expect(branchesAfterAdd.length, equals(4));
-      expect(
-          branchesAfterAdd.any((b) => b.venueId == 'branch_jubail_04'), isTrue);
-      expect(provider.auditLogs.first.action,
-          equals(OrgAuditAction.addVenueBranch));
-
-      // 2. Update branch
-      final updatedBranch = newBranch.copyWith(seatingCapacity: 150);
-      await provider.updateOrganizationBranch('org_dalilk_04', updatedBranch);
-      final branchesAfterUpd = provider.getOrganizationVenues('org_dalilk_04');
-      expect(
-          branchesAfterUpd
-              .firstWhere((b) => b.venueId == 'branch_jubail_04')
-              .seatingCapacity,
-          equals(150));
-      expect(provider.auditLogs.first.action,
-          equals(OrgAuditAction.updateVenueBranch));
-
-      // 3. Delete branch
-      await provider.deleteOrganizationBranch(
-          'org_dalilk_04', 'branch_jubail_04');
-      final branchesAfterDel = provider.getOrganizationVenues('org_dalilk_04');
-      expect(branchesAfterDel.length, equals(3));
-      expect(branchesAfterDel.any((b) => b.venueId == 'branch_jubail_04'),
-          isFalse);
-      expect(provider.auditLogs.first.action,
-          equals(OrgAuditAction.removeVenueBranch));
-    });
-
-    test(
-        'TC-ORG-ADMIN-02: Speaker CRUD operations update organization roster and audit trail',
-        () async {
-      final initialSpeakers = provider.getOrganizationSpeakers('org_dalilk_04');
-      expect(initialSpeakers.length, equals(3));
-
-      // 1. Add speaker
-      const newSpeaker = OrgSpeakerModel(
-        speakerId: 'spk_nasser_04',
-        nameEn: 'Dr. Nasser Al-Qahtani',
-        nameAr: 'د. ناصر القحطاني',
-        roleOrTitleEn: 'Advanced Writing Specialist',
-        roleOrTitleAr: 'أخصائي الكتابة المتقدمة',
-        avatarUrl: 'assets/images/Dalilak/profile1.jpg',
-        bioEn: 'IELTS Writing Task 2 mentor.',
-        bioAr: 'مدرب مهام الكتابة المتقدمة لاختبار الآيلتس.',
-        isPermanentStaff: false,
-        permissions: OrgBroadcasterPermissions(
-          canGoLiveVideo: true,
-          canGoAudioOnly: true,
-        ),
-      );
-
-      await provider.addOrganizationSpeaker('org_dalilk_04', newSpeaker);
-      final speakersAfterAdd =
-          provider.getOrganizationSpeakers('org_dalilk_04');
-      expect(speakersAfterAdd.length, equals(4));
-      expect(
-          speakersAfterAdd.any((s) => s.speakerId == 'spk_nasser_04'), isTrue);
-      expect(provider.auditLogs.first.action,
-          equals(OrgAuditAction.addSpeakerToRoster));
-
-      // 2. Update speaker
-      final updatedSpeaker =
-          newSpeaker.copyWith(roleOrTitleEn: 'Head of IELTS Writing');
-      await provider.updateOrganizationSpeaker('org_dalilk_04', updatedSpeaker);
-      final speakersAfterUpd =
-          provider.getOrganizationSpeakers('org_dalilk_04');
-      expect(
-          speakersAfterUpd
-              .firstWhere((s) => s.speakerId == 'spk_nasser_04')
-              .roleOrTitleEn,
-          equals('Head of IELTS Writing'));
-      expect(provider.auditLogs.first.action,
-          equals(OrgAuditAction.updateSpeakerDetails));
-
-      // 3. Delete speaker
-      await provider.deleteOrganizationSpeaker(
-          'org_dalilk_04', 'spk_nasser_04');
-      final speakersAfterDel =
-          provider.getOrganizationSpeakers('org_dalilk_04');
-      expect(speakersAfterDel.length, equals(3));
-      expect(
-          speakersAfterDel.any((s) => s.speakerId == 'spk_nasser_04'), isFalse);
-      expect(provider.auditLogs.first.action,
-          equals(OrgAuditAction.removeSpeakerFromRoster));
-    });
-
-    test(
-        'TC-ORG-ADMIN-03: RBAC permission adjustment updates speaker permissions and records audit entry',
-        () async {
-      final speaker = provider.getOrganizationSpeakers('org_dalilk_04').first;
-      expect(speaker.permissions.canChangeLocation, isFalse);
-
-      // Grant location change permission
-      final updatedPerms =
-          speaker.permissions.copyWith(canChangeLocation: true);
-      await provider.updateSpeakerPermissions(
-          'org_dalilk_04', speaker.speakerId, updatedPerms);
-
-      final updatedSpeaker = provider
-          .getOrganizationSpeakers('org_dalilk_04')
-          .firstWhere((s) => s.speakerId == speaker.speakerId);
-      expect(updatedSpeaker.permissions.canChangeLocation, isTrue);
-
-      final auditLog = provider.auditLogs.first;
-      expect(auditLog.action, equals(OrgAuditAction.grantBroadcastPermission));
-      expect(auditLog.organizationId, equals('org_dalilk_04'));
-      expect(auditLog.descriptionEn, contains(speaker.nameEn));
+    test('Organization writes fail without a backend and preserve visible data', () async {
+      final venues = provider.getOrganizationVenues('org_dalilk_04');
+      final speakers = provider.getOrganizationSpeakers('org_dalilk_04');
+      final audits = provider.auditLogs.length;
+      await expectLater(provider.addOrganizationBranch('org_dalilk_04', venues.first), throwsException);
+      await expectLater(provider.updateOrganizationBranch('org_dalilk_04', venues.first), throwsException);
+      await expectLater(provider.deleteOrganizationBranch('org_dalilk_04', venues.first.venueId), throwsException);
+      await expectLater(provider.addOrganizationSpeaker('org_dalilk_04', speakers.first), throwsException);
+      await expectLater(provider.updateOrganizationSpeaker('org_dalilk_04', speakers.first), throwsException);
+      await expectLater(provider.deleteOrganizationSpeaker('org_dalilk_04', speakers.first.speakerId), throwsException);
+      await expectLater(provider.updateSpeakerPermissions('org_dalilk_04', speakers.first.speakerId,
+          speakers.first.permissions.copyWith(canGoLiveVideo: true)), throwsStateError);
+      expect(provider.getOrganizationVenues('org_dalilk_04'), venues);
+      expect(provider.getOrganizationSpeakers('org_dalilk_04'), speakers);
+      expect(provider.auditLogs.length, audits);
     });
 
     testWidgets(

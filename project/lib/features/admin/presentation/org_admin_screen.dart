@@ -5,6 +5,8 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
 import 'widgets/org_management_view.dart';
+import '../../organization/presentation/org_membership_panel.dart';
+import '../../organization/models/org_membership.dart';
 
 /// Org-scoped admin surface for Permitted Admins (Org Owners & Co-Owners --
 /// v0.8 Checkpoint 3 Phase 1). Reuses OrgManagementView, the same widget
@@ -61,6 +63,10 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
     _selectedOrgId ??= orgIds.first;
     final activeOrgId =
         orgIds.contains(_selectedOrgId) ? _selectedOrgId! : orgIds.first;
+    final membership = context.select<AppProvider, OrgMembership?>((p) => p.orgMemberships
+      .where((m) => m.organizationId == activeOrgId && m.active).firstOrNull);
+    final profileAccess = membership == null ||
+      {OrgRole.owner, OrgRole.coOwner}.contains(membership.role);
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
@@ -99,11 +105,11 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
       // showAuditTrail: false -- audit_logs is admin-tier-only at the RLS
       // layer (20260821203100), so a Permitted Admin would just see an
       // always-empty tab there. See OrgManagementView's doc comment.
-      body: OrgManagementView(
-        key: ValueKey(activeOrgId),
-        orgId: activeOrgId,
-        showAuditTrail: false,
-      ),
+      body: ListView(children: [
+        OrgMembershipPanel(key: ValueKey('members_$activeOrgId'), orgId: activeOrgId),
+        if (profileAccess) OrgManagementView(
+          key: ValueKey(activeOrgId), orgId: activeOrgId, showAuditTrail: false),
+      ]),
     );
   }
 }

@@ -72,6 +72,10 @@ updated: 2026-08-09
 
 ---
 
+## ADR-009: Organization broadcasting V1
+
+Owner decision 2026-10-01: membership rows authorize organization actions; roster cards are display data. Roles are scoped and independent from platform broadcaster approval and video/audio grants. Personal and organization approval are separate. Use owner OAuth and encrypted server credentials for a single verified YouTube channel, with three independent non-reusable feeds. Canonical sessions carry presenter/content owner/destination/occurrence identity; every occurrence requires acceptance. Organization-only presenters need no personal channel. Default rollout off, explicitly enable pilot organizations, and require a real three-show pilot before release. Complete broadcasts before feed retirement; show termination pending on provider failure. Ownership transfer requires both parties and no active sessions, followed by channel reconnection. Public replays are best effort with accurate status. This supersedes the organization deferral and ADR-007's absence of a co-owner model; it grants no platform-wide privileges to organization staff.
+
 ## ADR-008: Bundled Three-City Vector Map Pack, One Viewport Policy
 * **Status:** `PROPOSED` (branch `codex/tricity-map-upgrade`, 2026-09-26; awaiting independent audit and owner approval)
 * **Context:** The Spatial Map drew Esri/OSM raster tiles only while the backend was reachable, fell back to three unsourced city polygons offline, allowed a Saudi-wide camera (zoom 5, centre-only constraint) and showed missing-data tiles at deep zoom. The venue picker used its own online OSM layer and guessed neighbourhood addresses from latitude thresholds. Research and plan: `brief/research/p5-tricity-map-upgrade/`.

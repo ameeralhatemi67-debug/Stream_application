@@ -47,6 +47,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   final TextEditingController _orgNameController = TextEditingController();
   List<String> _selectedCategories = ['cs_tech'];
   bool _isOrganization = false;
+  bool _organizationOnly = false;
   final List<String> _selectedTags = ['#AI', '#Software'];
 
   // Step 3.5 Organization Speakers
@@ -96,6 +97,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
           existing.isOrganization ? existing.applicantNameEn : '';
       _selectedCategories = [existing.categoryId];
       _isOrganization = existing.isOrganization;
+      _organizationOnly = existing.organizationOnly;
       _selectedTags.clear();
       _selectedTags.addAll(existing.tags);
       _venueController.text = existing.venueNameEn;
@@ -161,7 +163,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         _showValidationToast('wizard_steps.step3_org_name_label'.tr());
         return false;
       }
-      if (_youtubeController.text.trim().isEmpty) {
+      if (!_organizationOnly && _youtubeController.text.trim().isEmpty) {
         _showValidationToast('wizard_steps.step3_youtube_label'.tr());
         return false;
       }
@@ -172,7 +174,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
           yt.startsWith('youtube.com/@') ||
           yt.startsWith('www.youtube.com/@') ||
           (yt.startsWith('@') && yt.length > 2);
-      if (!validYt) {
+      if (!_organizationOnly && !validYt) {
         _showValidationToast('wizard_steps.step3_yt_invalid'.tr());
         return false;
       }
@@ -277,7 +279,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
 
   Future<void> _submitApplication() async {
     final channel = YouTubeChannelReference.parse(_youtubeController.text);
-    if (channel == null || channel.parameter == 'custom') {
+    if (!_organizationOnly && (channel == null || channel.parameter == 'custom')) {
       _showValidationToast('live.channel_invalid'.tr());
       return;
     }
@@ -353,6 +355,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         accountType: _isOrganization
             ? ApplicationAccountType.organizationVenue
             : ApplicationAccountType.individualScholar,
+        organizationOnly: _organizationOnly,
         applicantNameEn: bilingual.nameEn,
         applicantNameAr: bilingual.nameAr,
         email: email,
@@ -370,8 +373,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         latitude: _selectedCoordinates?.latitude ?? 0.0,
         longitude: _selectedCoordinates?.longitude ?? 0.0,
         seatingCapacity: _isOrganization ? 300 : 120,
-        youtubeChannelUrl: channel.url,
-        youtubeHandle: channel.stored,
+        youtubeChannelUrl: _organizationOnly ? '' : channel!.url,
+        youtubeHandle: _organizationOnly ? '' : channel!.stored,
         bioEn: bilingual.bioEn,
         bioAr: bilingual.bioAr,
         avatarUrl: finalAvatarUrl,
@@ -428,6 +431,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         orgNameController: _orgNameController,
         selectedCategories: _selectedCategories,
         isOrganization: _isOrganization,
+        organizationOnly: _organizationOnly,
+        onOrganizationOnlyChanged: (value) => setState(() => _organizationOnly = value),
         selectedTags: _selectedTags,
         onCategoriesChanged: (cats) =>
             setState(() => _selectedCategories = cats),

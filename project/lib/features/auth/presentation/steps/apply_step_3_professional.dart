@@ -21,6 +21,8 @@ class ApplyStep3Professional extends StatefulWidget {
   final TextEditingController orgNameController;
   final List<String> selectedCategories;
   final bool isOrganization;
+  final bool organizationOnly;
+  final ValueChanged<bool>? onOrganizationOnlyChanged;
   final List<String> selectedTags;
   final Function(List<String> categories) onCategoriesChanged;
   final Function(bool isOrg) onTypeChanged;
@@ -33,6 +35,8 @@ class ApplyStep3Professional extends StatefulWidget {
     required this.orgNameController,
     required this.selectedCategories,
     required this.isOrganization,
+    this.organizationOnly = false,
+    this.onOrganizationOnlyChanged,
     required this.selectedTags,
     required this.onCategoriesChanged,
     required this.onTypeChanged,
@@ -383,6 +387,15 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
+          if (!widget.isOrganization && widget.onOrganizationOnlyChanged != null)
+            SwitchListTile.adaptive(
+              contentPadding: EdgeInsets.zero,
+              title: Text('organization_v1.apply_org_only'.tr()),
+              subtitle: Text('organization_v1.apply_org_only_hint'.tr()),
+              value: widget.organizationOnly,
+              onChanged: widget.onOrganizationOnlyChanged,
+            ),
+          if (!widget.organizationOnly) ...[
           //  YouTube Channel Handle / URL (With Live Automated Channel Checker)
           TextField(
             controller: widget.youtubeController,
@@ -424,6 +437,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
+          ],
           //  Primary Academic Fields (Headline & Selection)
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,

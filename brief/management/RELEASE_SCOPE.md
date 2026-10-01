@@ -1,5 +1,9 @@
 # Hadayah release scope and post-release register
 
+## Organization V1 scope amendment — owner decision, 2026-10-01
+
+The approved Organization broadcasting V1 plan supersedes POST-01 and the organization application deferral below. It also brings server-created YouTube resources during preflight into scope under POST-02. Deliver membership/RBAC, separate personal and organization approval, owner OAuth/Vault channel connections, accepted scheduled occurrences, three concurrent session identities, Android/OBS publishing, scoped moderation, durable notifications and truthful replay/recovery states. STREAM-D8 must be closed by the shared server authorization path. Start disabled, enable named pilot organizations, and retain end/recovery controls when starts are disabled. Three simultaneous real-channel shows and physical Android verification remain mandatory release gates. No production deployment is approved by this amendment; unrelated release blockers remain open.
+
 Updated 2026-09-27. Sources are owner evidence and explicit owner messages. This register separates approved deferrals from unapproved cuts. It does not approve release or blanket-defer P7.
 
 ## Explicit owner deferrals

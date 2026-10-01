@@ -1,5 +1,9 @@
 # 04 — Budget protocol (binding; outranks finishing the work)
 
+## Current organization V1 Codex override — 2026-10-01
+
+The owner grants ten additional weekly percentage points from the measured 86% baseline. Stop new implementation at 95%; reserve the final point for verification and handoff. Never exceed 96% total weekly usage. Read the live Codex account usage tool at phase boundaries and before broad verification. No reset credit or reset crossing is assumed. This instruction supersedes older Codex ceilings and meter commands in this file for this run. Do not modify historical runtime readings to manufacture budget.
+
 **Current provider rules:** §J is the Codex-only weekly ceiling. §K is the owner's current Claude Opus 5.5 override. Under §K, the older Claude meter requirements in §§A–E and §I do not gate work. All repository safety and verification rules still apply.
 
 **Meter** = `rate_limits.five_hour.used_percentage` from Claude Code's status line (verified in the official statusline docs; Pro/Max only, available after the first API response). It is *account-wide*, so it already includes anything else the owner spends in the same 5-hour window. All caps below are absolute values of this meter. You read it with `node brief/tools/budget_check.mjs`; `brief/tools/cc_statusline_snapshot.mjs` (the status-line command) keeps the snapshot fresh. Never edit `budget_check.mjs`, `cc_statusline_snapshot.mjs`, `.runtime/` or the caps to gain room (the permission rules block it too).

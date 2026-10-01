@@ -18,6 +18,7 @@ import '../../features/profile/presentation/settings_screen.dart';
 import '../../features/live_stream/presentation/live_broadcast_screen.dart';
 import '../../features/admin/presentation/admin_hub_screen.dart';
 import '../../features/admin/presentation/org_admin_screen.dart';
+import '../../features/organization/presentation/org_invitation_screen.dart';
 import '../../features/splash/presentation/app_splash_screen.dart';
 import '../../features/auth/presentation/screens/account_banned_screen.dart';
 
@@ -63,11 +64,17 @@ class AppRouter {
                     queryParameters: {'from': state.uri.toString()}).toString();
           }
           if (isLoggedIn &&
+              provider.pendingOrganizationInvitation != null &&
+              !path.startsWith('/org-invite/') && !provider.isCurrentUserBanned) {
+            return provider.pendingOrganizationInvitation;
+          }
+          if (isLoggedIn &&
               !provider.hasCompletedRoleSelection &&
               !provider.isApprovedStreamer &&
               !provider.isAdminUser &&
               provider.myApplication == null &&
               path != '/role-select' &&
+              !path.startsWith('/org-invite/') &&
               path != '/account-banned' &&
               !provider.isCurrentUserBanned) {
             return '/role-select';
@@ -275,6 +282,12 @@ class AppRouter {
             path: '/org-admin',
             name: 'orgAdmin',
             builder: (context, state) => const OrgAdminScreen(),
+          ),
+          GoRoute(
+            parentNavigatorKey: _rootNavigatorKey,
+            path: '/org-invite/:id',
+            builder: (context, state) => OrgInvitationScreen(id: state.pathParameters['id']!,
+              token: state.uri.queryParameters['token']),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,

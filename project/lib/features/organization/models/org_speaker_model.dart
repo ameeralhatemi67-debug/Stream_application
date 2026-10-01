@@ -12,6 +12,7 @@ class OrgSpeakerModel {
   final String bioAr;
   final bool isPermanentStaff;
   final String? linkedEmail;
+  final String? linkedProfileId;
   final String? youtubeHandle;
   final OrgBroadcasterPermissions permissions;
 
@@ -26,6 +27,7 @@ class OrgSpeakerModel {
     required this.bioAr,
     this.isPermanentStaff = true,
     this.linkedEmail,
+    this.linkedProfileId,
     this.youtubeHandle,
     this.permissions = const OrgBroadcasterPermissions(),
   });
@@ -51,6 +53,7 @@ class OrgSpeakerModel {
       bioAr: json['bio_ar'] as String? ?? '',
       isPermanentStaff: json['is_permanent_staff'] as bool? ?? true,
       linkedEmail: json['linked_email'] as String?,
+      linkedProfileId: json['linked_profile_id'] as String?,
       youtubeHandle: json['youtube_handle'] as String?,
       permissions: json['permissions'] != null
           ? OrgBroadcasterPermissions.fromJson(
@@ -71,6 +74,7 @@ class OrgSpeakerModel {
       'bio_ar': bioAr,
       'is_permanent_staff': isPermanentStaff,
       'linked_email': linkedEmail,
+      'linked_profile_id': linkedProfileId,
       'youtube_handle': youtubeHandle,
       'permissions': permissions.toJson(),
     };
@@ -87,6 +91,7 @@ class OrgSpeakerModel {
     String? bioAr,
     bool? isPermanentStaff,
     String? linkedEmail,
+    String? linkedProfileId,
     String? youtubeHandle,
     OrgBroadcasterPermissions? permissions,
   }) {
@@ -101,6 +106,7 @@ class OrgSpeakerModel {
       bioAr: bioAr ?? this.bioAr,
       isPermanentStaff: isPermanentStaff ?? this.isPermanentStaff,
       linkedEmail: linkedEmail ?? this.linkedEmail,
+      linkedProfileId: linkedProfileId ?? this.linkedProfileId,
       youtubeHandle: youtubeHandle ?? this.youtubeHandle,
       permissions: permissions ?? this.permissions,
     );

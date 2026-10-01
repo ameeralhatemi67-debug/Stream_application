@@ -1571,5 +1571,30 @@
     "link_vs_key_body": "The watch link is public: viewers use it. The stream key is secret: only the sending app uses it, and anyone with it can send to your channel. Never paste the key into the watch-link field or share it.",
     "open_studio": "Open YouTube Studio",
     "close": "Close"
-  }
+  },
+  "organization_v1": {
+  "apply_org_only": "Present for an organization",
+  "apply_org_only_hint": "Apply for organization broadcasting without a personal YouTube channel. Platform approval and an organization grant are both required.",
+  "members": "Members and permissions",
+  "invite": "Invite member",
+  "email": "Verified account email",
+  "role": "Role",
+  "save": "Save",
+  "failure": "The organization change was not saved. Try again.",
+  "share_invite": "Share invitation",
+  "revoke": "Revoke membership",
+  "transfer": "Propose ownership transfer",
+  "accept_transfer": "Accept ownership transfer",
+  "owner": "Owner",
+  "co_owner": "Co-owner",
+  "manager": "Manager",
+  "moderator": "Moderator",
+  "broadcaster": "Broadcaster",
+  "video": "Video broadcasting",
+  "audio": "Audio broadcasting",
+  "accept": "Accept",
+  "decline": "Decline",
+  "invitation": "Organization invitation",
+  "invite_hint": "Sign in with the verified email this invitation was sent to. Invitations expire after seven days."
+}
 }

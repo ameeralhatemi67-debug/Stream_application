@@ -13,6 +13,8 @@ import '../services/notifications/watch_session_tracker.dart';
 import '../services/youtube_api_service.dart';
 import '../services/supabase_auth_service.dart';
 import '../services/admin_database_service.dart';
+import '../services/organization_broadcast_service.dart';
+import '../../features/organization/models/org_membership.dart';
 import '../services/connectivity_service.dart';
 import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
@@ -584,6 +586,7 @@ class AppProvider extends ChangeNotifier {
       }
       final prefs = await SharedPreferences.getInstance();
       if (_authGeneration != generation) return;
+      _pendingOrganizationInvitation = prefs.getString('pending_org_invitation');
       _hasCompletedRoleSelection =
           prefs.getBool('has_completed_role_selection_${user.id}') ?? false;
       await _flushPendingConsentIfAny(user.id);
@@ -769,6 +772,7 @@ class AppProvider extends ChangeNotifier {
       final ids = await _adminDbService!.loadPermittedAdminOrgIds();
       if (_authGeneration != generation) return;
       _permittedAdminOrgIds = ids;
+      await refreshOrgMemberships();
     } catch (e) {
       if (_authGeneration != generation) return;
       debugPrint('Permitted admin org lookup failed: $e');
@@ -777,8 +781,46 @@ class AppProvider extends ChangeNotifier {
   }
 
   bool _isApprovedStreamer = false;
-  bool get isApprovedStreamer =>
-      _isApprovedStreamer || _permittedAdminOrgIds.isNotEmpty;
+  bool get isApprovedStreamer => _isApprovedStreamer;
+  bool _personalBroadcastApproved = false;
+  bool _organizationBroadcastApproved = false;
+  bool get personalBroadcastApproved => _personalBroadcastApproved;
+  bool get organizationBroadcastApproved => _organizationBroadcastApproved;
+  final _organizationBroadcastService = OrganizationBroadcastService();
+  List<OrgMembership> _orgMemberships = [];
+  List<OrgMembership> get orgMemberships => List.unmodifiable(_orgMemberships);
+
+  Future<void> refreshOrgMemberships() async {
+    final generation = _authGeneration;
+    final rows = await _organizationBroadcastService.memberships();
+    if (generation != _authGeneration) return;
+    _orgMemberships = rows;
+    notifyListeners();
+  }
+
+  Future<List<OrgMembership>> organizationMembers(String orgId) =>
+      _organizationBroadcastService.memberships(organizationId: orgId);
+
+  Future<Map<String, dynamic>> inviteOrganizationMember(String orgId,
+      String email, String role, Map<String, bool> permissions) =>
+      _organizationBroadcastService.invite(orgId, email, role, permissions);
+
+  Future<void> setOrganizationMember(String orgId, String profileId,
+      String role, String status, Map<String, bool> permissions) async {
+    await _organizationBroadcastService.setMember(
+        orgId, profileId, role, status, permissions);
+    await refreshOrgMemberships();
+  }
+
+  Future<void> answerOrganizationInvite(String id, bool accept, {String? token}) async {
+    await _organizationBroadcastService.answerInvite(id, accept, token: token);
+    await refreshOrgMemberships();
+  }
+
+  Future<void> transferOrganizationOwner(String orgId, {String? toProfileId}) async {
+    await _organizationBroadcastService.transferOwner(orgId, toProfileId: toProfileId);
+    await refreshOrgMemberships();
+  }
 
   BroadcasterApplicationModel? _myApplication;
   BroadcasterApplicationModel? get myApplication => _myApplication;
@@ -1613,6 +1655,8 @@ class AppProvider extends ChangeNotifier {
       final profile = await _adminDbService!.loadOwnProfile(user.id);
       if (_authGeneration != generation) return;
       if (profile != null) {
+        _personalBroadcastApproved = profile['personal_broadcast_approved'] == true;
+        _organizationBroadcastApproved = profile['organization_broadcast_approved'] == true;
         _userProfile = UserProfileModel.defaultProfile.copyWith(
           nameEn: profile['display_name_en'] as String? ?? _googleUserName,
           nameAr: profile['display_name_ar'] as String? ?? _googleUserName,
@@ -1679,6 +1723,8 @@ class AppProvider extends ChangeNotifier {
         }
       } else {
         _isApprovedStreamer = false;
+    _personalBroadcastApproved = false;
+    _organizationBroadcastApproved = false;
         _isStreamerModeEnabled = false;
 
         if (previousApp != null && myApp == null) {
@@ -2045,6 +2091,9 @@ class AppProvider extends ChangeNotifier {
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
     _isApprovedStreamer = false;
+    _personalBroadcastApproved = false;
+    _organizationBroadcastApproved = false;
+    _orgMemberships = [];
     _myApplication = null;
     _googleUserEmail = null;
     _googleUserName = null;
@@ -2463,7 +2512,11 @@ class AppProvider extends ChangeNotifier {
   bool get isAdminUser => _isLoggedInStreamer && _isAdminFromRoles;
   bool get isMasterAdmin => _isLoggedInStreamer && _isMasterAdminFromRoles;
   List<String> get permittedAdminOrgIds =>
-      _isLoggedInStreamer ? List.unmodifiable(_permittedAdminOrgIds) : const [];
+      _isLoggedInStreamer ? List.unmodifiable({
+        ..._permittedAdminOrgIds,
+        ..._orgMemberships.where((m) => m.active && m.role != OrgRole.broadcaster)
+            .map((m) => m.organizationId),
+      }) : const [];
   bool get isPermittedAdmin => permittedAdminOrgIds.isNotEmpty;
 
   List<BroadcasterApplicationModel> get applications =>
@@ -2997,6 +3050,19 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  String? _pendingOrganizationInvitation;
+  String? get pendingOrganizationInvitation => _pendingOrganizationInvitation;
+  Future<void> rememberOrganizationInvitation(String? destination) async {
+    if (destination != null && !destination.startsWith('/org-invite/')) {
+      throw ArgumentError('Invalid invitation destination');
+    }
+    final prefs = await SharedPreferences.getInstance();
+    if (destination == null) { await prefs.remove('pending_org_invitation'); }
+    else { await prefs.setString('pending_org_invitation', destination); }
+    _pendingOrganizationInvitation = destination;
+    notifyListeners();
+  }
+
   /// Uploads binary media (avatar/banner) to Supabase Storage 'streamer-assets'bucket
   Future<String?> uploadStreamerMediaAsset({
     required String fileName,
@@ -3054,14 +3120,11 @@ class AppProvider extends ChangeNotifier {
   /// Submits a multi-step Broadcaster / Organization verification application
   Future<void> submitBroadcasterApplication(
       BroadcasterApplicationModel application) async {
-    await validateChannelConfiguration(
-        application.youtubeChannelUrl, application.youtubeHandle);
-    final channel = YouTubeChannelReference.parse(application.youtubeChannelUrl,
-        requireUrl: true)!;
-    // Keep one normalized identity in the pending application. Approval remains
-    // a separate server decision; never update an approved public channel here.
-    application = application.copyWith(
-        youtubeChannelUrl: channel.url, youtubeHandle: channel.stored);
+    if (!application.organizationOnly) {
+      await validateChannelConfiguration(application.youtubeChannelUrl, application.youtubeHandle);
+      final channel = YouTubeChannelReference.parse(application.youtubeChannelUrl, requireUrl: true)!;
+      application = application.copyWith(youtubeChannelUrl: channel.url, youtubeHandle: channel.stored);
+    }
     _adminDbService ??= await AdminDatabaseService.create();
     await _adminDbService!.submitApplication(application);
     _applications = List.from(await _adminDbService!.loadApplications());
@@ -3120,7 +3183,7 @@ class AppProvider extends ChangeNotifier {
   }) async {
     final targetOrg = _streamers.firstWhere(
       (s) => s.streamerId == orgId,
-      orElse: () => _streamers.first,
+      orElse: () => throw StateError('Organization unavailable'),
     );
 
     final req = OrgAffiliationRequestModel(
@@ -3142,89 +3205,30 @@ class AppProvider extends ChangeNotifier {
       createdAt: DateTime.now(),
     );
 
-    _affiliationRequests.insert(0, req);
-    await _adminDbService?.submitAffiliationRequest(req);
-
-    await recordOrgAuditAction(
-      OrgAuditLogEntry(
-        logId: newId(),
-        organizationId: orgId,
-        timestamp: DateTime.now(),
-        actorEmail: _googleUserEmail ?? 'broadcaster@platform.com',
-        actorName: _userProfile.nameEn,
-        action: OrgAuditAction.addSpeakerToRoster,
-        descriptionEn:
-            '${_userProfile.nameEn} submitted an affiliation request to join ${targetOrg.fullNameEn}.',
-        descriptionAr:
-            'قدم ${_userProfile.nameAr} طلب انضمام إلى ${targetOrg.fullNameAr}.',
-        metadata: {
-          'org_id': orgId,
-          'proposed_role': proposedRoleEn ?? 'Guest Instructor',
-        },
-      ),
-    );
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.submitAffiliationRequest(req);
+    _affiliationRequests = List.from(await _adminDbService!.loadAffiliationRequests());
 
     notifyListeners();
   }
 
-  /// Accepts an incoming affiliation request and adds speaker to Org roster
-  Future<void> acceptOrgAffiliationRequest(String requestId) async {
-    final idx = _affiliationRequests.indexWhere((r) => r.id == requestId);
-    if (idx == -1) return;
+  Future<void> acceptOrgAffiliationRequest(String requestId) =>
+      _answerAffiliation(requestId, AffiliationStatus.accepted);
 
-    final req = _affiliationRequests[idx];
-    final updated = await _adminDbService?.updateAffiliationRequestStatus(
-      requestId,
-      AffiliationStatus.accepted,
-    );
+  Future<void> declineOrgAffiliationRequest(String requestId) =>
+      _answerAffiliation(requestId, AffiliationStatus.declined);
 
-    if (updated != null) {
-      _affiliationRequests[idx] = updated;
-
-      // Add to the Org's active roster
-      final speaker = OrgSpeakerModel(
-        speakerId: 'spk_${req.streamerId}',
-        nameEn: req.streamerNameEn,
-        nameAr: req.streamerNameAr,
-        roleOrTitleEn: req.proposedRoleEn ?? 'Affiliated Instructor',
-        roleOrTitleAr: req.proposedRoleAr ?? 'مدرب معتمد',
-        avatarUrl: req.streamerAvatarUrl,
-        bioEn: req.note,
-        bioAr: req.note,
-        isPermanentStaff: false,
-        linkedEmail: req.streamerEmail,
-        permissions: const OrgBroadcasterPermissions(
-          canGoLiveVideo: true,
-          canGoAudioOnly: true,
-          canChangeLocation: false,
-          canEditDescription: true,
-          canEditStreamTime: false,
-          canAddExternalLinks: true,
-        ),
-      );
-
-      await orgAddSpeaker(req.orgId, speaker);
-    }
-    notifyListeners();
-  }
-
-  /// Declines an incoming affiliation request
-  Future<void> declineOrgAffiliationRequest(String requestId) async {
-    final idx = _affiliationRequests.indexWhere((r) => r.id == requestId);
-    if (idx == -1) return;
-
-    final updated = await _adminDbService?.updateAffiliationRequestStatus(
-      requestId,
-      AffiliationStatus.declined,
-    );
-    if (updated != null) {
-      _affiliationRequests[idx] = updated;
-    }
+  Future<void> _answerAffiliation(String id, AffiliationStatus status) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.updateAffiliationRequestStatus(id, status);
+    _affiliationRequests = List.from(await _adminDbService!.loadAffiliationRequests());
+    await refreshOrgMemberships();
     notifyListeners();
   }
 
   /// Adds a speaker to an Organization's roster
   Future<void> orgAddSpeaker(String orgId, OrgSpeakerModel speaker) async {
+    await _writeThroughOrgSpeaker(orgId, speaker);
     _streamers = _streamers.map((s) {
       if (s.streamerId == orgId) {
         final existing = List<OrgSpeakerModel>.from(s.affiliatedSpeakers);
@@ -3235,7 +3239,6 @@ class AppProvider extends ChangeNotifier {
       }
       return s;
     }).toList();
-    await _writeThroughOrgSpeaker(orgId, speaker);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -3261,6 +3264,7 @@ class AppProvider extends ChangeNotifier {
 
   /// Removes a speaker from an Organization's roster
   Future<void> orgRemoveSpeaker(String orgId, String speakerId) async {
+    await _writeThroughDeleteOrgSpeaker(orgId, speakerId);
     _streamers = _streamers.map((s) {
       if (s.streamerId == orgId) {
         final existing = List<OrgSpeakerModel>.from(s.affiliatedSpeakers)
@@ -3269,7 +3273,6 @@ class AppProvider extends ChangeNotifier {
       }
       return s;
     }).toList();
-    await _writeThroughDeleteOrgSpeaker(orgId, speakerId);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -3288,41 +3291,9 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Updates permissions for an affiliated speaker in an Organization
-  Future<void> orgUpdateSpeakerPermissions(
-    String orgId,
-    String speakerId,
-    OrgBroadcasterPermissions permissions,
-  ) async {
-    _streamers = _streamers.map((s) {
-      if (s.streamerId == orgId) {
-        final updatedSpeakers = s.affiliatedSpeakers.map((spk) {
-          if (spk.speakerId == speakerId) {
-            return spk.copyWith(permissions: permissions);
-          }
-          return spk;
-        }).toList();
-        return s.copyWith(affiliatedSpeakers: updatedSpeakers);
-      }
-      return s;
-    }).toList();
-
-    await recordOrgAuditAction(
-      OrgAuditLogEntry(
-        logId: newId(),
-        organizationId: orgId,
-        timestamp: DateTime.now(),
-        actorEmail: _googleUserEmail ?? 'admin@platform.com',
-        actorName: _googleUserName ?? 'Administrator',
-        action: OrgAuditAction.updatePermissions,
-        descriptionEn: 'Updated broadcast permissions for speaker $speakerId.',
-        descriptionAr: 'تم تحديث صلاحيات البث للمدرب $speakerId.',
-        metadata: permissions.toJson(),
-      ),
-    );
-
-    notifyListeners();
-  }
+  Future<void> orgUpdateSpeakerPermissions(String orgId, String speakerId,
+      OrgBroadcasterPermissions permissions) =>
+      updateSpeakerPermissions(orgId, speakerId, permissions);
 
   Future<void> logout() async {
     final device = _currentDeviceSession;
@@ -5698,158 +5669,52 @@ class AppProvider extends ChangeNotifier {
     await refreshCustomPlaceholders();
   }
 
-  /// Best-effort Supabase write-through for org venue/speaker mutations --
-  /// no-ops (with a debug log) for orgIds without a real backend row, since
-  /// _streamers is always updated separately by the caller regardless.
-  Future<void> _writeThroughOrgSpeaker(
-      String orgId, OrgSpeakerModel speaker) async {
-    try {
-      _adminDbService ??= await AdminDatabaseService.create();
-      await _adminDbService!.upsertOrgSpeaker(orgId, speaker);
-      final cached = _realOrgSpeakers[orgId];
-      if (cached != null) {
-        final list = List<OrgSpeakerModel>.from(cached);
-        final idx = list.indexWhere((s) => s.speakerId == speaker.speakerId);
-        if (idx != -1) {
-          list[idx] = speaker;
-        } else {
-          list.add(speaker);
-        }
-        _realOrgSpeakers[orgId] = list;
-      }
-    } catch (e) {
-      debugPrint('Supabase org speaker write-through failed: $e');
-    }
+  Future<void> _writeThroughOrgSpeaker(String orgId, OrgSpeakerModel speaker) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.upsertOrgSpeaker(orgId, speaker);
+    _realOrgSpeakers.remove(orgId);
   }
 
-  Future<void> _writeThroughOrgVenue(
-      String orgId, OrgVenueBranchModel venue) async {
-    try {
-      _adminDbService ??= await AdminDatabaseService.create();
-      await _adminDbService!.upsertOrgVenue(orgId, venue);
-      final cached = _realOrgVenues[orgId];
-      if (cached != null) {
-        final list = List<OrgVenueBranchModel>.from(cached);
-        final idx = list.indexWhere((v) => v.venueId == venue.venueId);
-        if (idx != -1) {
-          list[idx] = venue;
-        } else {
-          list.add(venue);
-        }
-        _realOrgVenues[orgId] = list;
-      }
-    } catch (e) {
-      debugPrint('Supabase org venue write-through failed: $e');
-    }
+  Future<void> _writeThroughOrgVenue(String orgId, OrgVenueBranchModel venue) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.upsertOrgVenue(orgId, venue);
+    _realOrgVenues.remove(orgId);
   }
 
-  Future<void> _writeThroughDeleteOrgSpeaker(
-      String orgId, String speakerId) async {
-    try {
-      _adminDbService ??= await AdminDatabaseService.create();
-      await _adminDbService!.deleteOrgSpeaker(speakerId);
-      _realOrgSpeakers[orgId]?.removeWhere((s) => s.speakerId == speakerId);
-    } catch (e) {
-      debugPrint('Supabase org speaker delete write-through failed: $e');
-    }
+  Future<void> _writeThroughDeleteOrgSpeaker(String orgId, String speakerId) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.deleteOrgSpeaker(speakerId);
+    _realOrgSpeakers.remove(orgId);
   }
 
   Future<void> _writeThroughDeleteOrgVenue(String orgId, String venueId) async {
-    try {
-      _adminDbService ??= await AdminDatabaseService.create();
-      await _adminDbService!.deleteOrgVenue(venueId);
-      _realOrgVenues[orgId]?.removeWhere((v) => v.venueId == venueId);
-    } catch (e) {
-      debugPrint('Supabase org venue delete write-through failed: $e');
-    }
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.deleteOrgVenue(venueId);
+    _realOrgVenues.remove(orgId);
   }
 
-  Future<void> updateSpeakerPermissions(
-    String orgId,
-    String speakerId,
-    OrgBroadcasterPermissions newPermissions,
-  ) async {
-    final streamerIdx = _streamers.indexWhere((s) => s.streamerId == orgId);
-    if (streamerIdx == -1) return;
-
-    final currentOrg = _streamers[streamerIdx];
-    final speakerIdx = currentOrg.affiliatedSpeakers
-        .indexWhere((s) => s.speakerId == speakerId);
-    if (speakerIdx == -1) return;
-
-    final updatedSpeakers =
-        List<OrgSpeakerModel>.from(currentOrg.affiliatedSpeakers);
-    final currentSpeaker = updatedSpeakers[speakerIdx];
-    updatedSpeakers[speakerIdx] =
-        currentSpeaker.copyWith(permissions: newPermissions);
-
-    _streamers[streamerIdx] =
-        currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
-    await _writeThroughOrgSpeaker(orgId, updatedSpeakers[speakerIdx]);
-
-    await recordOrgAuditAction(
-      OrgAuditLogEntry(
-        logId: newId(),
-        organizationId: orgId,
-        timestamp: DateTime.now(),
-        actorEmail: _googleUserEmail ?? 'admin@platform.com',
-        actorName: _googleUserName ?? 'Administrator',
-        action: OrgAuditAction.grantBroadcastPermission,
-        descriptionEn:
-            'Updated broadcast permissions for speaker ${currentSpeaker.nameEn}.',
-        descriptionAr: 'تم تحديث صلاحيات البث للمدرب ${currentSpeaker.nameAr}.',
-        metadata: {
-          'speaker_id': speakerId,
-          'permissions': newPermissions.toJson(),
-        },
-      ),
-    );
-
-    notifyListeners();
+  Future<void> updateSpeakerPermissions(String orgId, String speakerId,
+      OrgBroadcasterPermissions permissions) async {
+    final speaker = getStreamerById(orgId)?.affiliatedSpeakers
+        .where((s) => s.speakerId == speakerId).firstOrNull;
+    final profileId = speaker?.linkedProfileId;
+    if (profileId == null) throw StateError('Accept a membership invitation first');
+    final members = await organizationMembers(orgId);
+    final member = members.where((m) => m.profileId == profileId).firstOrNull;
+    if (member == null) throw StateError('Membership unavailable');
+    await setOrganizationMember(orgId, profileId, member.roleValue,
+        member.statusValue, permissions.toJson().cast<String, bool>());
   }
 
-  bool canUserBroadcastForOrg(String orgId, String? userEmail) {
-    if (userEmail == null || userEmail.isEmpty) return false;
-    final emailLower = userEmail.trim().toLowerCase();
-
-    // Super Admin can broadcast for any org
-    if (emailLower == _googleUserEmail?.trim().toLowerCase() && isAdminUser) {
-      return true;
-    }
-
-    final streamer = getStreamerById(orgId);
-    if (streamer == null || !streamer.isOrganization) return false;
-
-    // Check if user is an affiliated speaker with canGoLiveVideo or canGoAudioOnly
-    final speaker = streamer.affiliatedSpeakers.firstWhere(
-      (s) => (s.linkedEmail?.trim().toLowerCase() == emailLower),
-      orElse: () => const OrgSpeakerModel(
-        speakerId: '',
-        nameEn: '',
-        nameAr: '',
-        roleOrTitleEn: '',
-        roleOrTitleAr: '',
-        avatarUrl: '',
-        bioEn: '',
-        bioAr: '',
-        isPermanentStaff: false,
-        permissions: OrgBroadcasterPermissions(
-          canGoLiveVideo: false,
-          canGoAudioOnly: false,
-        ),
-      ),
-    );
-
-    if (speaker.speakerId.isNotEmpty) {
-      return speaker.permissions.canGoLiveVideo ||
-          speaker.permissions.canGoAudioOnly;
-    }
-
-    return false;
-  }
+  bool canUserBroadcastForOrg(String orgId, String? userEmail) =>
+      _organizationBroadcastApproved && userEmail != null &&
+      userEmail.toLowerCase() == _googleUserEmail?.toLowerCase() &&
+      _orgMemberships.any((m) => m.organizationId == orgId && m.active &&
+          (m.permissions.canGoLiveVideo || m.permissions.canGoAudioOnly));
 
   Future<void> addOrganizationBranch(
       String orgId, OrgVenueBranchModel branch) async {
+    await _writeThroughOrgVenue(orgId, branch);
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
@@ -5857,7 +5722,6 @@ class AppProvider extends ChangeNotifier {
     final updatedVenues = List<OrgVenueBranchModel>.from(currentOrg.venues)
       ..add(branch);
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
-    await _writeThroughOrgVenue(orgId, branch);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -5879,6 +5743,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> updateOrganizationBranch(
       String orgId, OrgVenueBranchModel branch) async {
+    await _writeThroughOrgVenue(orgId, branch);
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
@@ -5887,7 +5752,6 @@ class AppProvider extends ChangeNotifier {
         .map((v) => v.venueId == branch.venueId ? branch : v)
         .toList();
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
-    await _writeThroughOrgVenue(orgId, branch);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -5906,6 +5770,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> deleteOrganizationBranch(String orgId, String venueId) async {
+    await _writeThroughDeleteOrgVenue(orgId, venueId);
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
@@ -5925,7 +5790,6 @@ class AppProvider extends ChangeNotifier {
     final updatedVenues =
         currentOrg.venues.where((v) => v.venueId != venueId).toList();
     _streamers[idx] = currentOrg.copyWith(venues: updatedVenues);
-    await _writeThroughDeleteOrgVenue(orgId, venueId);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -5947,6 +5811,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> addOrganizationSpeaker(
       String orgId, OrgSpeakerModel speaker) async {
+    await _writeThroughOrgSpeaker(orgId, speaker);
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
@@ -5954,7 +5819,6 @@ class AppProvider extends ChangeNotifier {
     final updatedSpeakers =
         List<OrgSpeakerModel>.from(currentOrg.affiliatedSpeakers)..add(speaker);
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
-    await _writeThroughOrgSpeaker(orgId, speaker);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -5976,6 +5840,7 @@ class AppProvider extends ChangeNotifier {
 
   Future<void> updateOrganizationSpeaker(
       String orgId, OrgSpeakerModel speaker) async {
+    await _writeThroughOrgSpeaker(orgId, speaker);
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
@@ -5984,7 +5849,6 @@ class AppProvider extends ChangeNotifier {
         .map((s) => s.speakerId == speaker.speakerId ? speaker : s)
         .toList();
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
-    await _writeThroughOrgSpeaker(orgId, speaker);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(
@@ -6003,6 +5867,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<void> deleteOrganizationSpeaker(String orgId, String speakerId) async {
+    await _writeThroughDeleteOrgSpeaker(orgId, speakerId);
     final idx = _streamers.indexWhere((s) => s.streamerId == orgId);
     if (idx == -1) return;
 
@@ -6023,7 +5888,6 @@ class AppProvider extends ChangeNotifier {
         .where((s) => s.speakerId != speakerId)
         .toList();
     _streamers[idx] = currentOrg.copyWith(affiliatedSpeakers: updatedSpeakers);
-    await _writeThroughDeleteOrgSpeaker(orgId, speakerId);
 
     await recordOrgAuditAction(
       OrgAuditLogEntry(

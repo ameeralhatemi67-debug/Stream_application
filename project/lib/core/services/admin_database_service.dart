@@ -243,6 +243,8 @@ class AdminDatabaseService {
 
   Future<void> submitApplication(
       BroadcasterApplicationModel application) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    if (!application.organizationOnly) {
     final error = YouTubeChannelReference.pairError(
         application.youtubeChannelUrl, application.youtubeHandle);
     if (error != null) throw FormatException(error);
@@ -251,6 +253,7 @@ class AdminDatabaseService {
     if (!channel
         .sameAs(YouTubeChannelReference.parse(application.youtubeHandle)!)) {
       throw const FormatException('live.channel_lookup_required');
+    }
     }
     if (_useSupabase) {
       try {
@@ -496,6 +499,7 @@ class AdminDatabaseService {
 
   Map<String, dynamic> _applicationToRow(BroadcasterApplicationModel a) => {
         'account_type': a.accountType.name,
+        'broadcast_scope': a.organizationOnly ? 'organization_only' : 'personal',
         'applicant_name_en': a.applicantNameEn,
         'applicant_name_ar': a.applicantNameAr,
         'email': a.email,
@@ -531,6 +535,7 @@ class AdminDatabaseService {
   ) {
     return BroadcasterApplicationModel(
       id: row['id'] as String,
+      organizationOnly: row['broadcast_scope'] == 'organization_only',
       revisionOf: row['revision_of'] as String?,
       applicantProfileId: row['applicant_profile_id'] as String?,
       accountType:
@@ -962,30 +967,18 @@ class AdminDatabaseService {
 
   Future<void> submitAffiliationRequest(
       OrgAffiliationRequestModel request) async {
-    if (_useSupabase) {
-      try {
-        await _client.from('affiliation_requests').upsert({
-          'id': request.id,
-          'organization_id': request.orgId,
-          'streamer_profile_id': request.streamerId,
-          'direction': request.direction.name,
-          'status': request.status.name,
-          'proposed_role_en': request.proposedRoleEn,
-          'proposed_role_ar': request.proposedRoleAr,
-          'note': request.note,
-          'permissions': request.permissions.toJson(),
-          'created_at': request.createdAt.toIso8601String(),
-          'resolved_at': request.resolvedAt?.toIso8601String(),
-        });
-        _upsertCachedAffiliation(request);
-        return;
-      } catch (e) {
-        debugPrint(
-            'Supabase submitAffiliationRequest failed, falling back: $e');
-      }
+    if (!_useSupabase) throw StateError('Organization backend unavailable');
+    if (request.direction != AffiliationDirection.streamerToOrg) {
+      throw StateError('Use the organization invitation flow');
     }
-    _upsertCachedAffiliation(request);
-    await _saveAffiliationRequestsToPrefs();
+    final id = await _client.rpc('org_v1_request_join', params: {
+      'p_org_id': request.orgId,
+      'p_note': request.note,
+      'p_role_en': request.proposedRoleEn,
+      'p_role_ar': request.proposedRoleAr,
+    });
+    final row = await _client.from('affiliation_requests').select().eq('id', id).single();
+    _upsertCachedAffiliation((await _affiliationsFromRows([row])).single);
   }
 
   void _upsertCachedAffiliation(OrgAffiliationRequestModel request) {
@@ -1002,50 +995,20 @@ class AdminDatabaseService {
     String id,
     AffiliationStatus newStatus,
   ) async {
-    if (_useSupabase) {
-      try {
-        final row = await _client
-            .from('affiliation_requests')
-            .update({
-              'status': newStatus.name,
-              'resolved_at': DateTime.now().toIso8601String(),
-            })
-            .eq('id', id)
-            .select()
-            .single();
-        final updated = (await _affiliationsFromRows([row])).first;
-        _upsertCachedAffiliation(updated);
-        return updated;
-      } catch (e) {
-        debugPrint(
-            'Supabase updateAffiliationRequestStatus failed, falling back: $e');
-      }
+    if (!_useSupabase) throw StateError('Organization backend unavailable');
+    if (newStatus != AffiliationStatus.accepted && newStatus != AffiliationStatus.declined) {
+      throw ArgumentError('Use the invitation revocation flow');
     }
-
-    final idx = _cachedAffiliationRequests.indexWhere((r) => r.id == id);
-    if (idx == -1) return null;
-
-    final current = _cachedAffiliationRequests[idx];
-    final updated = current.copyWith(
-      status: newStatus,
-      resolvedAt: DateTime.now(),
-    );
-
-    _cachedAffiliationRequests[idx] = updated;
-    await _saveAffiliationRequestsToPrefs();
+    final original = await _client.from('affiliation_requests').select('direction').eq('id', id).single();
+    final outbound = original['direction'] == 'orgToStreamer';
+    await _client.rpc(outbound ? 'org_v1_answer_invite' : 'org_v1_resolve_request', params: {
+      outbound ? 'p_invitation_id' : 'p_request_id': id,
+      'p_accept': newStatus == AffiliationStatus.accepted,
+    });
+    final row = await _client.from('affiliation_requests').select().eq('id', id).single();
+    final updated = (await _affiliationsFromRows([row])).single;
+    _upsertCachedAffiliation(updated);
     return updated;
-  }
-
-  Future<void> _saveAffiliationRequestsToPrefs() async {
-    final prefs = _prefs;
-    if (prefs == null) return;
-    try {
-      final jsonList =
-          _cachedAffiliationRequests.map((r) => r.toJson()).toList();
-      await prefs.setString(_kAffiliationRequestsKey, jsonEncode(jsonList));
-    } catch (e) {
-      debugPrint('Error saving affiliation requests to SharedPreferences: $e');
-    }
   }
 
   /// affiliation_requests doesn't store the org/streamer display fields
@@ -1057,7 +1020,7 @@ class AdminDatabaseService {
 
     final orgIds = rows.map((r) => r['organization_id'] as String).toSet();
     final streamerIds =
-        rows.map((r) => r['streamer_profile_id'] as String).toSet();
+        rows.map((r) => r['streamer_profile_id']).whereType<String>().toSet();
 
     Map<String, Map<String, dynamic>> orgs = {};
     Map<String, Map<String, dynamic>> streamers = {};
@@ -1070,7 +1033,7 @@ class AdminDatabaseService {
         for (final r in (orgRows as List))
           (r as Map<String, dynamic>)['id'] as String: r,
       };
-      final profileRows = await _client
+      final profileRows = streamerIds.isEmpty ? <Map<String, dynamic>>[] : await _client
           .from('profiles')
           .select('id, display_name_en, avatar_url, email')
           .inFilter('id', streamerIds.toList());
@@ -1091,11 +1054,11 @@ class AdminDatabaseService {
         orgNameEn: org?['name_en'] as String? ?? '',
         orgNameAr: org?['name_ar'] as String? ?? '',
         orgAvatarUrl: org?['avatar_url'] as String? ?? '',
-        streamerId: row['streamer_profile_id'] as String,
+        streamerId: row['streamer_profile_id'] as String? ?? '',
         streamerNameEn: streamer?['display_name_en'] as String? ?? '',
         streamerNameAr: streamer?['display_name_en'] as String? ?? '',
         streamerAvatarUrl: streamer?['avatar_url'] as String? ?? '',
-        streamerEmail: streamer?['email'] as String? ?? '',
+        streamerEmail: streamer?['email'] as String? ?? row['target_email'] as String? ?? '',
         proposedRoleEn: row['proposed_role_en'] as String?,
         proposedRoleAr: row['proposed_role_ar'] as String?,
         note: row['note'] as String? ?? '',
@@ -1232,6 +1195,7 @@ class AdminDatabaseService {
         bioAr: row['bio_ar'] as String? ?? '',
         isPermanentStaff: row['is_permanent_staff'] as bool? ?? true,
         linkedEmail: row['linked_email'] as String?,
+        linkedProfileId: row['linked_profile_id'] as String?,
         youtubeHandle: row['youtube_handle'] as String?,
         permissions: row['permissions'] != null
             ? OrgBroadcasterPermissions.fromJson(
