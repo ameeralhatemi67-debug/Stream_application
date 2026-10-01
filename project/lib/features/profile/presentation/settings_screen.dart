@@ -200,6 +200,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Streaming Quality Defaults, both unchanged, just relocated).
           if (isStreamer) ...[
             _buildSummaryRow(
+              icon: Icons.video_library_outlined,
+              iconColor: AppTheme.primary,
+              title: 'organization_v1.channels'.tr(),
+              subtitle: 'organization_v1.channel_consent_hint'.tr(),
+              onTap: () => context.push('/channels'),
+            ),
+            const SizedBox(height: AppTheme.spaceMd),
+            _buildSummaryRow(
               icon: Icons.movie_creation_rounded,
               iconColor: AppTheme.danger,
               title: 'design_copy.broadcaster_studio_preferences'.tr(),

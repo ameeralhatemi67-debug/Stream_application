@@ -1595,6 +1595,19 @@
   "accept": "Accept",
   "decline": "Decline",
   "invitation": "Organization invitation",
-  "invite_hint": "Sign in with the verified email this invitation was sent to. Invitations expire after seven days."
+  "invite_hint": "Sign in with the verified email this invitation was sent to. Invitations expire after seven days.",
+  "channels": "YouTube connections",
+  "channel_consent_hint": "Connect the channel as its owner. This consent is separate from signing into Hadayah.",
+  "channel_failure": "Channel operation failed. End active shows before disconnecting; check setup or reconnect to retry.",
+  "personal_destination": "My personal channel",
+  "connect": "Connect YouTube",
+  "disconnect": "Disconnect",
+  "refresh": "Refresh",
+  "channel_connected": "Connected",
+  "channel_disconnected": "Disconnected",
+  "channel_reconnect_required": "Owner reconnection required",
+  "no_channel": "No verified channel connection yet.",
+  "close": "Close",
+  "share": "Share invitation"
 }
 }

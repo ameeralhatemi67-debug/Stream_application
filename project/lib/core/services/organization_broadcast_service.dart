@@ -1,12 +1,34 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/organization/models/org_membership.dart';
+import '../../features/organization/models/channel_connection.dart';
 
 /// Stateless organization operations. The server checks authority on every call.
 class OrganizationBroadcastService {
   OrganizationBroadcastService({SupabaseClient? client}) : _client = client;
   final SupabaseClient? _client;
   SupabaseClient get client => _client ?? Supabase.instance.client;
+
+  Future<List<ChannelConnection>> connections() async {
+    final rows = await client.from('channel_connections').select();
+    return rows.map(ChannelConnection.fromRow).toList();
+  }
+
+  Future<Uri> connectChannel({String? organizationId}) async {
+    final response = await client.functions.invoke('channel-authorization',body:{
+      'action':'connect','organization_id':organizationId,
+    });
+    if (response.status != 200) throw StateError('Channel consent unavailable');
+    final url = Uri.parse(response.data['authorization_url'] as String);
+    if (url.scheme != 'https' || url.host != 'accounts.google.com') {
+      throw StateError('Invalid authorization destination');
+    }
+    return url;
+  }
+
+  Future<void> disconnectChannel(String id) async {
+    await client.rpc('channel_disconnect',params:{'p_connection_id':id});
+  }
 
   Future<List<OrgMembership>> memberships({String? organizationId}) async {
     final rows = await client.rpc('org_v1_memberships',

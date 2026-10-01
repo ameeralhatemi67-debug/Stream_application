@@ -6,14 +6,15 @@ Baseline: master `5c4bc7025f39f26232dc93a52c03d97883b2a42f`, with existing owner
 
 Budget: measured weekly usage 86%; owner authorizes ten additional percentage points. Soft stop 95%; absolute stop 96%, including verification and handoff. Use the live Codex usage tool at phase boundaries. Historical 5% absolute and 90% guards do not apply to this effort. No reset crossing or reset credit.
 
-Shipping requires a dedicated configured test backend/channel, three real senders and real viewer playback. No hosted project or provider credential has been accessed. Implementation and acceptance are separate.
+Shipping requires a configured test backend/channel, three real senders and real viewer playback. The owner selected `streamer_app` (`zkkmfjsjouqzibvnzkau`) and `@amiralhatime4831`. Read-only inspection confirms the hosted backend is healthy and has migrations through `20260930010000`; no V1 hosted changes or provider credentials have been accessed. Implementation and acceptance are separate.
 
 ## Progress
 
 - Baseline static analysis: zero issues (25.7s).
 - Local database: isolated `org_v1_audit_20261001` in `supabase_db_P6_accept_disposable`; schema only copied, all later migrations applied. Existing database untouched. Membership pgTAP: 22/22 passed. Focused Flutter regressions: 6 passed. New UI analysis pending.
 - Phase 1 membership authority: implemented; local membership pgTAP 22/22, focused Flutter tests 6/6, zero-issue analysis. Owner source edits preserved separately from the phase commit. Later phase tests still need the full invitation and transfer matrix.
-- Phase 2 channel authorization: in progress. Channel/Vault migration applies locally; owner OAuth function and legacy-start fence are written. Provider boundary checks pass. Real OAuth consent and channel pilot are not run.
+- Phase 2 channel authorization: implemented. Disposable SQL security checks: 24/24 passed, including callback races, expired state/session, duplicate destination ownership, private credentials, transfer fencing and secret cleanup. Provider boundary checks pass. OAuth Edge bundle passes in Supabase Edge Runtime v1.74.3. Client channel identity model and management screens are implemented. Real OAuth consent and channel pilot are not run; see `doc/organization-v1-owner-setup.md`.
+- Phase 2 client verification: zero analysis issues (25.7s); seven focused Flutter checks passed. Weekly usage at the phase boundary: 88%. No public app deployment URL or configured Google OAuth web client was found in the repository; the owner does not know these values. They remain setup gates, not fabricated configuration.
 - Phase 3 canonical sessions: not started.
 - Phase 4 client/notifications/recovery: not started.
 - Real-channel pilot: NOT RUN. Release remains blocked.

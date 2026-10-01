@@ -1,0 +1,81 @@
+begin;
+set local search_path=public,extensions;
+select plan(24);
+insert into public.app_flags(key,enabled) values('registrations_open',true) on conflict(key) do update set enabled=true;
+insert into auth.users(id,email,email_confirmed_at) values
+ ('94000000-0000-4000-8000-000000000001','channel-owner@org.invalid',now()),
+ ('94000000-0000-4000-8000-000000000002','other-owner@org.invalid',now());
+insert into auth.sessions(id,user_id) values
+ ('95000000-0000-4000-8000-000000000001','94000000-0000-4000-8000-000000000001'),
+ ('95000000-0000-4000-8000-000000000002','94000000-0000-4000-8000-000000000002');
+insert into public.profiles(id,is_streamer,is_verified) values
+ ('94000000-0000-4000-8000-000000000001',true,true),
+ ('94000000-0000-4000-8000-000000000002',true,true);
+insert into public.organizations(id,owner_profile_id,name_en,name_ar,is_verified) values
+ ('96000000-0000-4000-8000-000000000001','94000000-0000-4000-8000-000000000001','Channel org','مؤسسة قناة',true);
+create temporary table consent(value jsonb,intent jsonb,connection uuid);
+grant all on consent to authenticated,service_role;
+create temporary table attempts(name text primary key,value jsonb,intent jsonb);
+grant all on attempts to authenticated,service_role;
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"94000000-0000-4000-8000-000000000001","role":"authenticated","session_id":"95000000-0000-4000-8000-000000000001"}',true);
+select lives_ok($$insert into consent(value) select public.channel_oauth_begin('96000000-0000-4000-8000-000000000001')$$,'Owner begins dedicated channel consent');
+select throws_ok($$select public.channel_oauth_consume('forged')$$,'42501',null,'Client cannot call server callback RPC');
+select throws_ok($$insert into public.channel_connections(owner_profile_id,youtube_channel_id,channel_title) values(auth.uid(),'UCaaaaaaaaaaaaaaaaaaaaaa','Forged')$$,'42501',null,'Client cannot forge a verified channel');
+select throws_ok($$select public.start_broadcast_session('liveVideo','abcdefghijk','forged',null,'obs_laptop')$$,'42501',null,'Legacy start cannot bypass provider authority');
+select throws_ok($$select public.set_live_state(true,'liveVideo','abcdefghijk','forged',null)$$,'42501',null,'Legacy live flag cannot bypass authority');
+set local role service_role;
+select set_config('request.jwt.claims','{"role":"service_role"}',true);
+select lives_ok($$update consent set intent=public.channel_oauth_consume(value->>'state')$$,'Server consumes valid state');
+select throws_ok($$select public.channel_oauth_consume((select value->>'state' from consent))$$,'42501',null,'OAuth state is single-use');
+select lives_ok($$update consent set connection=public.channel_oauth_commit((intent->>'id')::uuid,'UCaaaaaaaaaaaaaaaaaaaaaa','Verified channel','test-refresh-token')$$,'Server stores verified channel and encrypted credential');
+select throws_ok($$select public.channel_oauth_commit((select (intent->>'id')::uuid from consent),'UCaaaaaaaaaaaaaaaaaaaaaa','Replay','other-token')$$,'42501',null,'Callback cannot overwrite after completion');
+select throws_ok($$select * from vault.decrypted_secrets$$,'42501',null,'Service API cannot read Vault view directly');
+select ok((select public.channel_server_credential(connection,'94000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001')->>'channel_id'='UCaaaaaaaaaaaaaaaaaaaaaa' from consent),'Authorized server operation obtains the connection credential');
+select throws_ok($$select public.channel_server_credential((select connection from consent),'94000000-0000-4000-8000-000000000002','95000000-0000-4000-8000-000000000002')$$,'42501',null,'Wrong organization account cannot obtain credential');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"94000000-0000-4000-8000-000000000001","role":"authenticated","session_id":"95000000-0000-4000-8000-000000000001"}',true);
+insert into attempts(name,value) select 'older',public.channel_oauth_begin('96000000-0000-4000-8000-000000000001');
+set local role service_role;
+update attempts set intent=public.channel_oauth_consume(value->>'state') where name='older';
+set local role authenticated;
+insert into attempts(name,value) select 'newer',public.channel_oauth_begin('96000000-0000-4000-8000-000000000001');
+set local role service_role;
+update attempts set intent=public.channel_oauth_consume(value->>'state') where name='newer';
+select lives_ok($$select public.channel_oauth_commit((select (intent->>'id')::uuid from attempts where name='newer'),'UCaaaaaaaaaaaaaaaaaaaaaa','Current consent','new-refresh')$$,'New consent reconnects the destination');
+select throws_ok($$select public.channel_oauth_commit((select (intent->>'id')::uuid from attempts where name='older'),'UCbbbbbbbbbbbbbbbbbbbbbb','Late consent','stale-refresh')$$,'42501',null,'Consumed older callback cannot overwrite completed newer consent');
+select throws_ok($$select public.channel_oauth_consume('unknown-state')$$,'42501',null,'Forged state is denied');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"94000000-0000-4000-8000-000000000002","role":"authenticated","session_id":"95000000-0000-4000-8000-000000000002"}',true);
+insert into attempts(name,value) select 'duplicate',public.channel_oauth_begin();
+set local role service_role;
+update attempts set intent=public.channel_oauth_consume(value->>'state') where name='duplicate';
+select throws_ok($$select public.channel_oauth_commit((select (intent->>'id')::uuid from attempts where name='duplicate'),'UCaaaaaaaaaaaaaaaaaaaaaa','Stolen destination','other-token')$$,'23505',null,'A channel cannot belong to two active destinations');
+set local role authenticated;
+insert into attempts(name,value) select 'expired',public.channel_oauth_begin();
+reset role;
+update private.channel_oauth_requests set expires_at=now()-interval '1 second' where id=(select (value->>'id')::uuid from attempts where name='expired');
+set local role service_role;
+select throws_ok($$select public.channel_oauth_consume((select value->>'state' from attempts where name='expired'))$$,'42501',null,'Expired state cannot be consumed');
+reset role;
+update auth.sessions set not_after=now()-interval '1 second' where id='95000000-0000-4000-8000-000000000001';
+set local role service_role;
+select throws_ok($$select public.channel_server_credential((select connection from consent),'94000000-0000-4000-8000-000000000001','95000000-0000-4000-8000-000000000001')$$,'42501',null,'Expired app session cannot obtain credential');
+reset role;
+update auth.sessions set not_after=null where id='95000000-0000-4000-8000-000000000001';
+update public.organizations set owner_profile_id='94000000-0000-4000-8000-000000000002' where id='96000000-0000-4000-8000-000000000001';
+select ok((select status='reconnect_required' from public.channel_connections where id=(select connection from consent)),'Ownership change fences channel before reconnect');
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"94000000-0000-4000-8000-000000000001","role":"authenticated","session_id":"95000000-0000-4000-8000-000000000001"}',true);
+select throws_ok($$select public.channel_disconnect((select connection from consent))$$,'42501',null,'Previous owner cannot manage transferred channel');
+select throws_ok($$select * from private.channel_credentials$$,'42501',null,'Private credential identities inaccessible to client');
+reset role;
+create temporary table saved_secret as select secret_id from private.channel_credentials where connection_id=(select connection from consent);
+set local role authenticated;
+select set_config('request.jwt.claims','{"sub":"94000000-0000-4000-8000-000000000002","role":"authenticated","session_id":"95000000-0000-4000-8000-000000000002"}',true);
+select lives_ok($$select public.channel_disconnect((select connection from consent))$$,'Current owner may disconnect after transfer');
+reset role;
+select ok(not exists(select 1 from private.channel_credentials where connection_id=(select connection from consent)),'Disconnect removes credential mapping');
+select ok(not exists(select 1 from vault.secrets where id in(select secret_id from saved_secret)),'Disconnect removes the encrypted secret');
+select * from finish();
+rollback;

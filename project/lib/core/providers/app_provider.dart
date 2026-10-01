@@ -15,6 +15,7 @@ import '../services/supabase_auth_service.dart';
 import '../services/admin_database_service.dart';
 import '../services/organization_broadcast_service.dart';
 import '../../features/organization/models/org_membership.dart';
+import '../../features/organization/models/channel_connection.dart';
 import '../services/connectivity_service.dart';
 import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
@@ -788,13 +789,29 @@ class AppProvider extends ChangeNotifier {
   bool get organizationBroadcastApproved => _organizationBroadcastApproved;
   final _organizationBroadcastService = OrganizationBroadcastService();
   List<OrgMembership> _orgMemberships = [];
-  List<OrgMembership> get orgMemberships => List.unmodifiable(_orgMemberships);
+  List<OrgMembership> get orgMemberships => _orgMemberships;
+  List<ChannelConnection> _channelConnections = [];
+  List<ChannelConnection> get channelConnections => _channelConnections;
+
+  Future<void> refreshChannelConnections() async {
+    final generation = _authGeneration;
+    final rows = await _organizationBroadcastService.connections();
+    if (generation != _authGeneration) return;
+    _channelConnections = List.unmodifiable(rows);
+    notifyListeners();
+  }
+  Future<Uri> connectYouTubeChannel({String? organizationId}) =>
+      _organizationBroadcastService.connectChannel(organizationId:organizationId);
+  Future<void> disconnectYouTubeChannel(String id) async {
+    await _organizationBroadcastService.disconnectChannel(id);
+    await refreshChannelConnections();
+  }
 
   Future<void> refreshOrgMemberships() async {
     final generation = _authGeneration;
     final rows = await _organizationBroadcastService.memberships();
     if (generation != _authGeneration) return;
-    _orgMemberships = rows;
+    _orgMemberships = List.unmodifiable(rows);
     notifyListeners();
   }
 
@@ -2094,6 +2111,7 @@ class AppProvider extends ChangeNotifier {
     _personalBroadcastApproved = false;
     _organizationBroadcastApproved = false;
     _orgMemberships = [];
+    _channelConnections = [];
     _myApplication = null;
     _googleUserEmail = null;
     _googleUserName = null;

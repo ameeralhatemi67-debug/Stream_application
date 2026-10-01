@@ -31,7 +31,10 @@ for(const file of readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql'
   sql(`insert into supabase_migrations.schema_migrations(version) values('${version}');`);
   console.log('APPLIED '+file);
 }
-const output=sql(readFileSync('supabase/tests/organization_v1_memberships.test.sql','utf8'));
-writeFileSync(out+'/membership-sql.txt',output);
-console.log(output);
-assert.doesNotMatch(output,/not ok|Looks like you failed|planned \d+ tests but ran/);
+for(const name of ['memberships','channels']) {
+  const file=`supabase/tests/organization_v1_${name}.test.sql`;
+  const output=sql(readFileSync(file,'utf8'));
+  writeFileSync(out+'/'+name+'-sql.txt',output);
+  console.log(output.split('\n').filter(line=>/^(?:ok|not ok|1\.\.|#)/.test(line)).join('\n'));
+  assert.doesNotMatch(output,/not ok|Looks like you failed|planned \d+ tests but ran/);
+}

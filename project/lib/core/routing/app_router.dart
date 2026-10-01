@@ -19,6 +19,7 @@ import '../../features/live_stream/presentation/live_broadcast_screen.dart';
 import '../../features/admin/presentation/admin_hub_screen.dart';
 import '../../features/admin/presentation/org_admin_screen.dart';
 import '../../features/organization/presentation/org_invitation_screen.dart';
+import '../../features/organization/presentation/channel_connections_screen.dart';
 import '../../features/splash/presentation/app_splash_screen.dart';
 import '../../features/auth/presentation/screens/account_banned_screen.dart';
 
@@ -37,6 +38,8 @@ class AppRouter {
   static const Set<String> _authGuardedPaths = {
     '/admin',
     '/org-admin',
+    '/channels',
+    '/channel-connected',
     '/settings',
     '/streamer-apply',
     '/application-pending',
@@ -289,6 +292,10 @@ class AppRouter {
             builder: (context, state) => OrgInvitationScreen(id: state.pathParameters['id']!,
               token: state.uri.queryParameters['token']),
           ),
+          GoRoute(path:'/channels',parentNavigatorKey:_rootNavigatorKey,
+            builder:(context,state)=>const ChannelConnectionsScreen()),
+          GoRoute(path:'/channel-connected',parentNavigatorKey:_rootNavigatorKey,
+            builder:(context,state)=>const ChannelConnectionsScreen()),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/account-banned',

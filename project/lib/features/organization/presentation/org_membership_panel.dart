@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../models/org_membership.dart';
@@ -74,15 +75,22 @@ class _OrgMembershipPanelState extends State<OrgMembershipPanel> {
       if (member != null) {
         await p.setOrganizationMember(widget.orgId, member.profileId, role, 'active', grants);
       } else {
-        final invitation = await p.inviteOrganizationMember(widget.orgId, address, role, grants);
-        if (!mounted) return;
         final base = _publicAppUrl.isEmpty ? Uri.base : Uri.parse(_publicAppUrl);
-        if (!{'https','http'}.contains(base.scheme)) {
+        if (!{'https','http'}.contains(base.scheme) || base.host.isEmpty) {
           throw StateError('Configure PUBLIC_APP_URL for invitation sharing');
         }
+        final invitation = await p.inviteOrganizationMember(widget.orgId, address, role, grants);
+        if (!mounted) return;
         final url = base.replace(path: '/org-invite/${invitation['id']}',
           queryParameters: {'token': invitation['token'] as String}, fragment: '');
-        await Share.share(url.toString());
+        await showDialog<void>(context: context, builder: (dialog) => AlertDialog(
+          title: Text('organization_v1.invite'.tr()),
+          content: SelectableText(url.toString()),
+          actions: [TextButton(onPressed: () => Navigator.pop(dialog),
+            child: Text('organization_v1.close'.tr())),
+            FilledButton(onPressed: () => Share.share(url.toString()),
+              child: Text('organization_v1.share'.tr()))],
+        ));
       }
     });
   }
@@ -101,6 +109,8 @@ class _OrgMembershipPanelState extends State<OrgMembershipPanel> {
             onPressed: _busy ? null : () => _edit(owner: owner), icon: const Icon(Icons.person_add_alt_1),
             label: Text('organization_v1.invite'.tr()))]),
         if (_error != null) Text(_error!, style: const TextStyle(color: AppTheme.danger)),
+        if (owner) TextButton.icon(onPressed:()=>context.push('/channels'),
+          icon:const Icon(Icons.video_library_outlined),label:Text('organization_v1.channels'.tr())),
         FutureBuilder<List<OrgMembership>>(future: _members, builder: (context, snapshot) {
           if (snapshot.hasError) return Text('organization_v1.failure'.tr());
           if (!snapshot.hasData) return const SizedBox(height: AppTheme.spaceLg);
