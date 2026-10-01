@@ -14,6 +14,10 @@ class OrgMembership {
     required this.organizationNameAr,
     required this.nameEn,
     required this.nameAr,
+    this.v1Enabled = false,
+    this.transferToMe = false,
+    this.transferTargetId,
+    this.transferExpiresAt,
   });
 
   final String organizationId;
@@ -25,6 +29,13 @@ class OrgMembership {
   final String organizationNameAr;
   final String nameEn;
   final String nameAr;
+  /// Organization V1 is enabled for this organization (global flag or pilot).
+  final bool v1Enabled;
+  /// A pending ownership transfer addressed to this (signed-in) member.
+  final bool transferToMe;
+  /// The proposed new owner; only visible to the current owner.
+  final String? transferTargetId;
+  final DateTime? transferExpiresAt;
   bool get active => status == OrgMembershipStatus.active;
   String get roleValue => role == OrgRole.coOwner ? 'co_owner' : role.name;
   String get statusValue => status == OrgMembershipStatus.reviewRequired ? 'review_required' : status.name;
@@ -68,6 +79,12 @@ class OrgMembership {
       organizationNameAr: row['organization_name_ar'] as String? ?? '',
       nameEn: row['name_en'] as String? ?? '',
       nameAr: row['name_ar'] as String? ?? '',
+      v1Enabled: row['v1_enabled'] == true,
+      transferToMe: row['transfer_to_me'] == true,
+      transferTargetId: row['transfer_target_id'] as String?,
+      transferExpiresAt: row['transfer_expires_at'] == null
+          ? null
+          : DateTime.tryParse(row['transfer_expires_at'] as String),
     );
   }
 }

@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/translation/auto_translation_service.dart';
 import 'package:streamer_app/features/admin/models/broadcaster_application_model.dart';
+import 'support/fixture_application_db.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -12,7 +13,7 @@ void main() {
 
     setUp(() async {
       SharedPreferences.setMockInitialValues({});
-      provider = AppProvider();
+      provider = AppProvider(FixtureApplicationDb());
     });
 
     test('TC-WIZARD-01: AutoTranslationService transliterates & translates bilingual profile correctly', () async {

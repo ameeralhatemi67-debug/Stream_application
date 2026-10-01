@@ -22,6 +22,8 @@ import '../../map/presentation/widgets/venue_navigation_sheet.dart';
 import '../../map/presentation/venue_directions_launcher.dart';
 import 'abstract_video_player.dart';
 import 'widgets/chat_message_actions_sheet.dart';
+import 'widgets/live_chat_layout.dart';
+import 'widgets/live_audio_stage_multi_speaker.dart';
 import 'widgets/floating_reactions_overlay.dart';
 import 'widgets/live_player_overlay_controls.dart';
 import 'widgets/live_multi_speaker_overlay.dart';
@@ -31,6 +33,7 @@ import 'widgets/live_room_connection_view.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../admin/models/streamer_custom_placeholder_model.dart';
 import 'widgets/rtmp_ip_dialog.dart';
+import '../../../core/widgets/hadayah_loading_indicator.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
   final String streamId;
@@ -157,7 +160,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         _scheduleViewerRecovery();
         return;
       }
-      final revision = provider.successfulCatalogRevision;
+      final revision = provider.roomRevision(widget.streamId);
       _recoveryAttempts++;
       try {
         await provider
@@ -173,7 +176,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       _syncRoomConnection();
       if (_roomEnded || !_recovering) return;
       if (provider.isOnline &&
-          provider.successfulCatalogRevision > revision &&
+          provider.roomRevision(widget.streamId) > revision &&
           _roomActive) {
         setState(() {
           _playerReloads++;
@@ -221,7 +224,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    if (MediaQuery.orientationOf(context) == Orientation.landscape) {
+    if (isCompactLandscapeChat(context)) {
       _chatFocus.unfocus();
       SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     }
@@ -230,19 +233,44 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _roomProvider?.removeListener(_syncRoomConnection);
     _roomProvider = provider..addListener(_syncRoomConnection);
     _syncRoomConnection();
+    WidgetsBinding.instance.addPostFrameCallback((_) { if(mounted && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(widget.streamId)) _refreshRoom(); });
+  }
+
+  Future<void> _refreshRoom() async {
+    final p=_roomProvider;
+    if(p==null || !p.isOnline)return;
+    if(RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(widget.streamId)) {
+      try {await p.refreshBroadcastRoom(widget.streamId);} catch(_) {}
+    }
+    await p.loadVerifiedStreamersFromBackend();
   }
 
   void _syncRoomConnection() {
     final provider = _roomProvider;
-    if (provider == null || _roomEnded) return;
+    if (provider == null) return;
+    final session=provider.roomSession(widget.streamId);
+    if(session!=null && !session.live) {
+      if(session.replayStatus!='available') {
+        _stopRoom();
+        _liveStateTimer?.cancel();_liveStateTimer=null;
+        _scheduleLookup();
+        return;
+      }
+      if(_openedLive || _roomEnded) {
+        _stopRoom();_roomEnded=false;_openedLive=false;
+        _openedWatchId=null;_openedSessionId=null;_requiredCatalogRevision=null;
+        _playerReloads++;
+      }
+    }
+    if (_roomEnded) return;
     if (!provider.isOnline) {
       _beginViewerRecovery();
-      _requiredCatalogRevision ??= provider.successfulCatalogRevision;
+      _requiredCatalogRevision ??= provider.roomRevision(widget.streamId);
       _stopRoom();
       return;
     }
     final current = _findStreamer(provider);
-    final fresh = provider.successfulCatalogRevision >
+    final fresh = provider.roomRevision(widget.streamId) >
         (_requiredCatalogRevision ?? _openedCatalogRevision);
     // A network interruption disposes media, not the identity of this room.
     // Reconcile End before requiring a live catalog entry for recovery.
@@ -257,11 +285,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       return;
     }
     if (_requiredCatalogRevision case final revision?) {
-      if (provider.successfulCatalogRevision <= revision) {
+      if (provider.roomRevision(widget.streamId) <= revision) {
         _stopRoom();
         return;
       }
-      final confirmedLive = provider.streamers.any((s) =>
+      final confirmedLive = current?.isLiveForRoom == true || provider.streamers.any((s) =>
           s.isLiveForRoom &&
           (s.streamerId == widget.streamId ||
               s.activeStreamId == widget.streamId ||
@@ -287,7 +315,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       _openedStreamerId = current!.streamerId;
       _openedWatchId = current.liveWatchId;
       _openedSessionId = current.liveSessionId;
-      _openedCatalogRevision = provider.successfulCatalogRevision;
+      _openedCatalogRevision = provider.roomRevision(widget.streamId);
     }
     _startRoom();
   }
@@ -305,7 +333,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           : next;
       final p = _roomProvider;
       if (p != null && p.isOnline) {
-        unawaited(p.loadVerifiedStreamersFromBackend());
+        unawaited(_refreshRoom());
       }
       if (mounted && p != null && _findStreamer(p) == null) _scheduleLookup();
     });
@@ -317,6 +345,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _roomEnded = true;
     _cancelViewerRecovery();
     _liveStateTimer?.cancel();
+    _liveStateTimer=null;
     _stopRoom();
     if (mounted) setState(() {});
   }
@@ -335,20 +364,21 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _liveStateTimer ??= Timer.periodic(const Duration(seconds: 20), (_) {
       final p = _roomProvider;
       if (p != null && p.isOnline) {
-        unawaited(p.loadVerifiedStreamersFromBackend());
+        unawaited(_refreshRoom());
       }
     });
+    final roomId=opened?.liveSessionId ?? widget.streamId;
     _chatController = LiveBroadcastScreen.debugChatFactory?.call(
-            widget.streamId,
+            roomId,
             (type) => _reactionsController.spawnReaction(type)) ??
         LiveChatController(
-          streamId: widget.streamId,
+          streamId: roomId,
           onReaction: (type) => _reactionsController.spawnReaction(type),
         );
     _chatController.addListener(_handleChatConnectionChange);
     _presenceService =
-        LiveBroadcastScreen.debugPresenceFactory?.call(widget.streamId) ??
-            ViewerPresenceService(streamId: widget.streamId);
+        LiveBroadcastScreen.debugPresenceFactory?.call(roomId) ??
+            ViewerPresenceService(streamId: roomId);
     _presenceService.addListener(_onPresenceChanged);
     final generation = _roomGeneration;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -483,7 +513,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     // The composer already renders a reason and disables Send for every
     // blocked state (P6.2), so reaching here without canSend would be a bug --
     // guard anyway rather than posting into a refusal.
-    if (!_chatController.canSend) return;
+    if (!_chatController.canSend || _roomProvider?.roomSession(widget.streamId)?.live==false) return;
     _chatTextController.clear();
 
     _chatController.sendMessage(text).then((_) {
@@ -509,16 +539,23 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     setState(() => _isReactionMenuOpen = false);
   }
 
-  void _toggleRaiseHand() {
+  Future<void> _toggleRaiseHand() async {
     final raising = !_isHandRaised;
     setState(() => _isHandRaised = raising);
-    // Raising a hand now actually reaches the room: it travels the same
-    // Realtime reaction channel every other reaction uses, so the broadcaster
-    // and other viewers see it. It used to toggle a local icon only, which
-    // told the viewer their hand was up when nobody could see it (05 D-03).
-    if (raising) {
-      _reactionsController.spawnReaction('raise_hand');
-      _chatController.sendReaction('raise_hand');
+    try {
+      // A chat row gives the hand an authenticated sender and reaches people
+      // who join after the transient reaction has passed.
+      await _chatController.sendMessage(raising ? '✋' : '✋↓');
+      if (raising) {
+        _reactionsController.spawnReaction('raise_hand');
+        _chatController.sendReaction('raise_hand');
+      }
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _isHandRaised = !raising);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$error'), backgroundColor: AppTheme.danger),
+      );
     }
   }
 
@@ -527,7 +564,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   /// could put a stranger's broadcast behind this room's chat and title.
   StreamerModel? _findStreamer(AppProvider appProvider) {
     final opened = _openedStreamerId;
-    return appProvider.getStreamerById(opened ?? widget.streamId);
+    return appProvider.getRoomStreamer(opened ?? widget.streamId);
   }
 
   /// Which of the three streamer-brandable states (Task 4b) the current
@@ -741,7 +778,19 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final appProvider = context.watch<AppProvider>();
     final networkStatus =
         context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
-    if (_roomEnded) {
+    final choices=appProvider.roomChoices(widget.streamId);
+    if(choices.length>1) { return Scaffold(appBar:AppBar(title:Text('organization_v1.choose_show'.tr())),
+      body:ListView(children:choices.map((s)=>ListTile(title:Text(s.title(context.locale.languageCode)),
+        trailing:const Icon(Icons.play_arrow),onTap:()=>context.pushReplacement('/live/${s.id}'))).toList())); }
+    final session=appProvider.roomSession(widget.streamId);
+    if(session!=null && !session.live && session.replayStatus!='available') {
+      final key=['scheduled','preparing'].contains(session.state)?'scheduled_room':
+        session.replayStatus=='processing' || session.state=='processing_replay'?'replay_processing':'replay_missing';
+      return Scaffold(appBar:AppBar(title:Text(session.title(context.locale.languageCode))),body:Center(child:Padding(
+        padding:const EdgeInsets.all(AppTheme.spaceLg),child:Column(mainAxisSize:MainAxisSize.min,children:[
+        Text('organization_v1.$key'.tr()),TextButton(onPressed:_refreshRoom,child:Text('organization_v1.refresh'.tr()))]))));
+    }
+    if (_roomEnded && session?.replayStatus!='available') {
       return const _RoomStatusScaffold(
         key: Key('live-room-ended'),
         icon: Icons.stop_circle_outlined,
@@ -752,7 +801,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     // Once a catalog has loaded, a room that names no known channel says so
     // instead of waiting or borrowing another streamer.
     if (_findStreamer(appProvider) == null &&
-        appProvider.successfulCatalogRevision > 0) {
+        appProvider.roomRevision(widget.streamId) > 0) {
       return const _RoomStatusScaffold(
         key: Key('live-room-unavailable'),
         icon: Icons.videocam_off_outlined,
@@ -779,12 +828,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           status: networkStatus,
           awaitingFreshCatalog: networkStatus == NetworkStatus.online,
           liveNotConfirmed: _requiredCatalogRevision != null &&
-              appProvider.successfulCatalogRevision > _requiredCatalogRevision!,
+              appProvider.roomRevision(widget.streamId) > _requiredCatalogRevision!,
         )),
       );
     }
     final mediaQuery = MediaQuery.of(context);
-    final isDesktop = mediaQuery.size.width >= 900;
+    final isDesktop = isLaptopLiveLayout(context);
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
     final isSideBySide = isDesktop || isLandscape;
     final langCode = context.locale.languageCode;
@@ -877,9 +926,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             : Column(
                 children: [
                   // Mobile Portrait: Top 16:9 Video Player + Broadcaster Header
-                  _buildVideoViewport(
-                      appProvider, streamer, viewerCount, langCode,
-                      isSideBySide: false),
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 240),
+                    alignment: Alignment.topCenter,
+                    child: _buildVideoViewport(
+                        appProvider, streamer, viewerCount, langCode,
+                        isSideBySide: false),
+                  ),
                   if (!_isFullscreen)
                     _buildBroadcasterHeader(appProvider, streamer, langCode),
 
@@ -1008,8 +1061,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   },
                 ),
 
-              // Camera-off senders still use a visible YouTube player. Its own
-              // controls must remain reachable, including on Chrome.
+              // Keep the YouTube player mounted for audio, and restore the
+              // centered audio stage over its otherwise black video surface.
+              if (isAudioLive)
+                LiveAudioStageMultiSpeaker(
+                  streamer: streamer,
+                  langCode: langCode,
+                  viewerCount: viewerCount,
+                  isPlaying: _isPlaying,
+                  streamState: viewportState,
+                  onStageTap: () =>
+                      _overlayKey.currentState?.toggleControlsVisibility(),
+                ),
 
               // 2b. Multi-Speaker Floating Video Overlay
               if (!isAudioLive &&
@@ -1022,7 +1085,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     speakers: streamer.affiliatedSpeakers,
                     orgName: streamer.getLocalizedName(langCode),
                     allVods:
-                        appProvider.getVodsForStreamer(streamer.streamerId),
+                        appProvider.getVodsForStreamer(streamer.channelProfileId),
                   ),
                 ),
 
@@ -1188,6 +1251,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
     if (isSideBySide) return videoWidget;
 
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      return SizedBox(width: double.infinity, height: 100, child: videoWidget);
+    }
+
     return AspectRatio(
       aspectRatio: 16 / 9,
       child: videoWidget,
@@ -1196,7 +1263,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   Widget _buildBroadcasterHeader(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
-    final isFollowing = appProvider.isFollowing(streamer.streamerId);
+    final isFollowing = appProvider.isFollowing(streamer.channelProfileId);
 
     return Container(
       padding: const EdgeInsets.symmetric(
@@ -1208,7 +1275,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => context.push('/profile/${streamer.streamerId}'),
+            onTap: () => context.push('/profile/${streamer.channelProfileId}'),
             child: StreamerAvatar(
               radius: 18,
               avatarUrl: streamer.avatarUrl,
@@ -1264,7 +1331,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     : BorderSide.none,
               ),
             ),
-            onPressed: () => appProvider.toggleFollow(streamer.streamerId),
+            onPressed: () => appProvider.toggleFollow(streamer.channelProfileId),
             child: Text(
               isFollowing
                   ? 'profile.following_btn'.tr()
@@ -1808,12 +1875,16 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   Widget _buildChatComposer() {
-    if (MediaQuery.orientationOf(context) == Orientation.landscape) {
+    if (isCompactLandscapeChat(context)) {
       return _buildChatComposerNotice(
         icon: Icons.screen_rotation_rounded,
         color: AppTheme.textSecondary,
         message: 'live.landscape_chat_read_only'.tr(),
       );
+    }
+    if(_roomProvider?.roomSession(widget.streamId)?.live==false) {
+      return _buildChatComposerNotice(icon:Icons.history,color:AppTheme.textMuted,
+        message:'organization_v1.replay_chat_read_only'.tr());
     }
     switch (_chatController.composerState) {
       case ChatComposerState.guest:
@@ -1902,7 +1973,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   ? AppTheme.warning.withValues(alpha: 0.3)
                   : Colors.transparent,
             ),
-            onPressed: _toggleRaiseHand,
+            onPressed: canSend ? _toggleRaiseHand : null,
           ),
 
           // Text Input Field
@@ -2003,8 +2074,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   children: [
                     TextSpan(
                       text: message.badges.isEmpty
-                          ? '${message.senderName}: '
-                          : '${message.senderName} ${message.badges.map((b) => context.locale.languageCode == 'ar' ? b.labelAr : b.labelEn).join(', ')}: ',
+                          ? '${message.senderName}${message.body == '✋' ? ' ✋' : ''}: '
+                          : '${message.senderName} ${message.badges.map((b) => context.locale.languageCode == 'ar' ? b.labelAr : b.labelEn).join(', ')}${message.body == '✋' ? ' ✋' : ''}: ',
                       style: TextStyle(
                         color: message.isCurrentUser
                             ? AppTheme.danger
@@ -2014,7 +2085,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       ),
                     ),
                     TextSpan(
-                      text: message.body,
+                      text: message.body == '✋'
+                          ? 'live.hand_raised_message'.tr()
+                          : message.body == '✋↓'
+                              ? 'live.hand_lowered_message'.tr()
+                              : message.body,
                       style: const TextStyle(
                           color: AppTheme.textPrimary, fontSize: 12),
                     ),
@@ -2032,7 +2107,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               const SizedBox(
                 width: 9,
                 height: 9,
-                child: CircularProgressIndicator(
+                child: HadayahLoadingIndicator(
                     strokeWidth: 1.5, color: AppTheme.textMuted),
               )
             else

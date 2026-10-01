@@ -427,6 +427,10 @@ verify_jwt = false
 
 [functions.reconcile-broadcasts]
 verify_jwt = false
+
+[functions.dispatch-organization-events]
+# Scheduler job; authorizes with ORG_EVENTS_DISPATCH_KEY, never a user JWT.
+verify_jwt = false
 # Directory under `supabase/` where declarative files are written.
 # declarative_schema_path = "./schemas"
 # JSON string passed through to pg-delta SQL formatting.

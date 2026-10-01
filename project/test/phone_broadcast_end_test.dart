@@ -13,9 +13,13 @@ import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/services/supabase_auth_service.dart';
 import 'package:streamer_app/core/widgets/interactive_toast_overlay.dart';
 import 'package:streamer_app/features/live_stream/presentation/screens/phone_broadcast_screen.dart';
+import 'package:streamer_app/features/live_stream/presentation/widgets/phone_camera_preview.dart';
 import 'package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart';
 
 import 'support/localized_app.dart';
+import 'support/empty_broadcasts.dart';
+import 'package:streamer_app/features/live_stream/models/broadcast_session.dart';
+import 'package:streamer_app/features/organization/models/channel_connection.dart';
 
 /// P6S Group 3: the phone broadcaster can always see how to end, and leaving
 /// the screen never silently ends (or silently keeps) a broadcast.
@@ -125,6 +129,26 @@ class _Db extends AdminDatabaseService {
   }
 }
 
+class _CanonicalBroadcasts extends EmptyBroadcasts {
+  _CanonicalBroadcasts(this.db);
+  final _Db db;
+  static const destination=ChannelConnection(id:'connection',ownerId:'c',organizationId:null,channelId:'UC_test',title:'Channel',status:'connected',revision:1);
+  final row=<String,dynamic>{'id':'phone-session','owner_id':'c','state':'preparing','revision':1,
+    'title_en':'Phone','title_ar':'هاتف','broadcast_type':'liveVideo','channel_connection_id':'connection',
+    'sender_mode':'phone_direct','stream_id':'abcdefghijk','accepted_at':'2026-10-01'};
+  @override Future<BroadcastSession?> session(String id) async=>BroadcastSession.fromRow(row);
+  @override Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
+    db.deviceId=deviceId;
+    if(action=='prepare') {
+      if(!db.permitted)throw const FunctionException(status:403);
+      return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmp.youtube.com/live2','ingest_key':'test-key'};
+    }
+    if(action=='start') {db.starts++;row['state']='live';}
+    if(action=='end') {if(db.failStop)throw StateError('offline');db.stops++;row['state']='completed';}
+    return {'session':Map<String,dynamic>.of(row)};
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(initializeTestLocalization);
@@ -169,7 +193,7 @@ void main() {
 
   Future<AppProvider> broadcaster(_Db db) async {
     final p =
-        AppProvider.withServices(authService: _Auth(), adminDbService: db);
+        AppProvider.withServices(authService: _Auth(), adminDbService: db,organizationBroadcastService:_CanonicalBroadcasts(db));
     for (var i = 0; i < 200 && p.authHydrating; i++) {
       await Future<void>.delayed(const Duration(milliseconds: 2));
     }
@@ -177,6 +201,7 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 2));
     }
     p.setCustomStreamerYouTubeUrl('https://youtu.be/abcdefghijk');
+    await p.prepareBroadcast('phone-session','phone_direct',_CanonicalBroadcasts.destination);
     return p;
   }
 
@@ -373,7 +398,7 @@ void main() {
     await close(tester, p, db);
   });
 
-  testWidgets('landscape: focused End stays visible when the media is tapped',
+  testWidgets('landscape: tapping media hides and restores focused End',
       (tester) async {
     final db = _Db();
     final p = await tester.runAsync(() => broadcaster(db));
@@ -384,6 +409,9 @@ void main() {
         .requestFocus();
     await tester.pump();
     // Tap the picture to hide the overlay controls.
+    await tester.tapAt(const Offset(450, 200));
+    await tester.pumpAndSettle();
+    expect(endButton.hitTestable(), findsNothing);
     await tester.tapAt(const Offset(450, 200));
     await tester.pumpAndSettle();
     expect(endButton.hitTestable(), findsOneWidget);
@@ -484,10 +512,12 @@ void main() {
   });
 
   for (final locale in [const Locale('en'), const Locale('ar')]) {
-    testWidgets('End confirmation at 568x240 and 2x text: $locale', (tester) async {
+    testWidgets('End confirmation at 568x240 and 2x text: $locale',
+        (tester) async {
       final db = _Db();
       final p = await tester.runAsync(() => broadcaster(db));
-      await open(tester, p!, locale: locale, size: const Size(568, 240), textScale: 2);
+      await open(tester, p!,
+          locale: locale, size: const Size(568, 240), textScale: 2);
       await tester.tap(endButton);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
@@ -513,6 +543,13 @@ void main() {
         await open(tester, p!, locale: locale, size: size, textScale: 2);
         tester.view.viewInsets = const FakeViewPadding(bottom: 190);
         await tester.pump();
+        if (size.width >= 900 && size.height >= 600) {
+          expect(find.byType(TextField), findsWidgets);
+          expect(find.text('live.landscape_chat_read_only'.tr()), findsNothing);
+          expect(tester.takeException(), isNull);
+          await close(tester, p, db);
+          return;
+        }
         await tester.tap(find.byTooltip('live.tooltip_toggle_chat'.tr()));
         await tester.pump();
         expect(find.byType(TextField), findsNothing);
@@ -605,9 +642,9 @@ void main() {
     await tester.pump();
     await tester.tap(find.byTooltip('live.tooltip_studio'.tr()));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('design_ui.end_stream'.tr()));
+    await tester.ensureVisible(find.text('organization_v1.end'.tr()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('design_ui.end_stream'.tr()));
+    await tester.tap(find.text('organization_v1.end'.tr()));
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('phone-end-confirm')), findsOneWidget);
     await tester.tap(find.byKey(const Key('phone-end-confirm-end')));
@@ -668,8 +705,12 @@ void main() {
     final db = _Db();
     final p = await tester.runAsync(() => broadcaster(db));
     await open(tester, p!);
+    expect(find.byType(PhoneCameraPreview), findsOneWidget);
     tester.view.viewInsets = const FakeViewPadding(bottom: 300);
     await tester.pump();
+    expect(find.byType(PhoneCameraPreview), findsOneWidget);
+    expect(tester.getSize(find.byType(PhoneCameraPreview)).height, 100);
+    expect(find.byType(TextField), findsWidgets);
     expect(endButton.hitTestable(), findsOneWidget);
     expect(tester.getBottomLeft(endButton).dy, lessThan(615));
     expect(tester.takeException(), isNull);
@@ -747,14 +788,8 @@ void main() {
     await open(tester, p!);
     await tester.tap(find.byTooltip('live.tooltip_studio'.tr()));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('design_copy.phone'.tr()));
-    await tester.pumpAndSettle();
-    final cta = find.text('live_studio.btn_open_camera'.tr());
-    await tester.ensureVisible(cta);
-    await tester.tap(cta);
-    await tester.pump();
-    expect(
-        find.text('live_studio.error_phone_screen_open'.tr()), findsOneWidget);
+    expect(find.text('organization_v1.prepare'.tr()), findsNothing);
+    expect(calls.where((c) => c == 'startStream').length, 1);
     expect(find.byType(PhoneBroadcastScreen), findsOneWidget);
     await close(tester, p, db);
   });

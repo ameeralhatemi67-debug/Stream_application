@@ -107,7 +107,7 @@ void main() {
     });
 
     test(
-        'TC-ORG-GOLIVE-02: Org Live without a primary backend session is denied',
+        'TC-ORG-GOLIVE-02: Org Live without a prepared assignment is denied',
         () async {
       provider.setSelectedBroadcastOrgId('org_dalilk_04');
       provider.setSelectedVenueBranchId('dalilk_branch_dhahran');
@@ -118,7 +118,8 @@ void main() {
       // Go live as organization
       await provider.toggleBroadcasterGoLive();
       expect(provider.isBroadcastingLive, isFalse);
-      expect(provider.broadcastSessionError, 'broadcast_primary_required');
+      // No accepted, prepared canonical session: the studio must not go live.
+      expect(provider.broadcastSessionError, 'organization_v1.assignment_required');
 
       final org = provider.getStreamerById('org_dalilk_04');
       expect(org, isNotNull);

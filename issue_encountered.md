@@ -1,9 +1,39 @@
 # Issues encountered during release hardening
 
-Updated: 2026-09-27. This is a local troubleshooting record, not proof that the database tests passed.
+Updated: 2026-10-01. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
 
+- **Web deep links land on the splash screen** — consent return and invitation links now use the `#/` route; deployed-app retest pending.
+- **Application review tests fail with Backend unavailable** — tests use an explicit in-memory backend; offline writes stay refused.
+
+- **Canonical replay remains on loading after live ends** — local session/replay transition and hidden-room regression pass; real YouTube replay pending.
+
+- **Chrome deep link reports Library not defined** — Flutter debug assets bypass offline-worker caching/timeouts; regression and Chrome checks pass.
+- **Guest startup calls restricted live-flag sweep** — shared service skips the authenticated-only RPC without a session; public catalog reads remain available.
+
+- **Laptop chat is read-only as landscape (LIVE-01)** — compact-device guard added; laptop send and phone rotation checks pass.
+- **Chat actions hit the web video (LIVE-02)** — laptop action and follow-up surfaces moved to the chat side; browser retest pending.
+- **Raised hand is absent from chat (LIVE-03)** — sender-tagged hand event now uses chat rows; two-client retest pending.
+- **Audio-only room is black or plain (LIVE-04)** — existing avatar stage restored; speech-timed pulse remains unverified.
+- **Phone keyboard removes the live video (LIVE-05)** — compact viewport retained for sender and viewer; device retest pending.
+- **End and camera controls crowd the media (LIVE-06)** — End toggles with video taps; camera action stays in controls menu.
+- **Adaptive launcher mark touches mask (BRAND-07)** — foreground reduced to 0.68; installed icon retest pending.
+- **Loading surfaces use generic spinners (LOAD-08)** — four-capsule painter replaces indeterminate loaders; visual retest pending.
+- **Charity parent mark is missing (BRAND-09)** — supplied PNG placed in desktop header and phone Settings; visual retest pending.
+- **Streamer Verification has no language action (VQ-01)** — shared icon-only SVG added beside X; new phone build retest pending.
+- **Pending verification cannot be inspected (VQ-02)** — pending inspector and reviewed-edit tag added; real admin retest pending.
+- **Queue delete revokes approval or shows duplicate edit (VQ-03)** — queue-only archive and one-card projection added; SQL/owner retest pending.
+- **Verification queue lacks decision history and reversal (VQ-04)** — durable event migration and reversal action added; SQL/owner retest pending.
+- **Profile editor city chips crowd the location action (EDIT-05)** — three-city dropdown and separate location heading added; owner retest pending.
+
+- **Wide laptop map leaves side gutters** — desktop canvas fills its map pane; owner visual retest pending.
+- **Laptop shell repeats language control** — bottom sidebar control removed; page control remains; owner retest pending.
+- **Discovery own-channel label makes card taller** — label moved beside status and card minimum equalized; owner retest pending.
+- **Application accepts a point beyond bundled map** — shared client guard and local SQL trigger added; hosted/backend and owner retest pending.
+- **Sensitive profile save lacks approval warning** — conditional confirmation added before reviewed save; owner retest pending.
+- **Profile editor asks for GPS numbers** — reused Step 4 map picker; saved-point retest pending.
+- **Organization application remains selectable** — both new-application selectors show coming soon and refuse submission; owner retest pending.
 - **Desktop identity cards remain phone width** — Settings and channel use context-specific laptop widths; owner retest pending.
 - **Desktop map shows permanent list and dims on drawer open** — side panel removed; existing drawer opens from top control without scrim; owner retest pending.
 - **Sparse Discovery cards center on laptop** — desktop grid starts at physical left in both languages; owner retest pending.
@@ -65,6 +95,35 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Camera rotation follows Flutter virtual display** — actual Activity display ID fixes unchanged portrait framing; physical uprightness pending.
 - **Java helper missing from Android APK** — move Java source to src/main/java; runtime receive path verified.
 - **Custom viewport defeats video mute** — clear stream viewport while hidden; received black frame verified.
+
+## Chrome deep link reports Library not defined
+
+2026-10-01. Opening `/#/welcome` in Chrome could show a red `Library not defined ... Failed to initialize` screen; opening `/` then worked. Reproduced with `floating_stream_mini_player.dart` instead of `welcome_screen.dart`, and DDC retried 769 then 98 of 1,282 modules. The offline worker applied its four-second network deadline to mutable Flutter debug files. Fix: bypass the worker for DDC modules/runtime scripts, and use normal browser fetch for assets of unstamped development pages. Packaged, stamped offline generations retain their existing isolation and bounded recovery. Worker regression covers debug-module bypass and a slow unstamped entrypoint; existing generation/cleanup tests remain green. Chrome direct-link, refresh and new-tab checks are recorded for this fix; this does not promise immunity to unrelated future browser/compiler errors.
+
+## Guest startup calls restricted live-flag sweep
+
+2026-10-01. Public catalog polling called `sweep_stale_live_flags` without a signed-in session, producing PostgREST 42501 because its SQL grant intentionally excludes anon. Fix: `AdminDatabaseService.sweepStaleLiveFlags()` returns zero before calling the RPC when no current session exists. The regression confirms guests still read both public profile projections and make no sweep request. Database privileges remain unchanged.
+
+## Sensitive profile save lacks approval warning
+
+Status: UNVERIFIED on owner build. Observed: approved broadcaster edits could request contact, location or YouTube changes with no confirmation. Cause: the editor submitted directly to the existing reviewed-save RPC after validation. Fix: only those sensitive changes open an expandable admin-approval confirmation; X returns to the form. Verification: phone-width widget cancel/expand test and focused 211-test run pass; real approved account pending.
+
+## Profile editor asks for GPS numbers
+
+Status: UNVERIFIED on owner build. Observed: Edit Account Profile exposed latitude/longitude text inputs while verification Step 4 had a map pin picker. Cause: separate form UI for the same saved point. Fix: reuse `LocationPickerModal`, retain the exact point on cancel and keep the shared supported-map guard on save. Verification: picker entry widget and map-focused tests pass; physical pick/review/backend persistence pending.
+
+## Organization application remains selectable
+
+Status: UNVERIFIED on owner build. Observed: both application forms offered an organization path despite its deferred scope. Cause: the old role switches and submit branches stayed active. Fix: mute new selection, show a localized coming-soon notice and refuse new organization submissions while preserving existing approved organization edits. Verification: sheet widget and wizard focused tests pass; owner retest pending.
+Update 2026-10-01 (Organization V1): the coming-soon state is now the default of a server switch, `organization_applications_open` (off). A Master Admin can open it from Safety → Platform switches to onboard a pilot organization; a database trigger refuses new organization applications while it is off. Nothing changes for owners until the switch is turned on.
+
+## Web deep links land on the splash screen
+
+Status: FIXED in source; deployed-app retest pending. Observed: the deployed web app routes in the URL fragment (`https://stream-application-ten.vercel.app/#/welcome`), but the YouTube consent callback redirected to `/channel-connected` and invitation share links used `/org-invite/<id>?token=…` as a path. Flutter's default hash strategy ignores the path, so both opened the start screen and the invitation token was lost. Cause: links were built as path routes. Fix: `channel-authorization` now redirects to `<origin>/#/channel-connected?status=connected|failed` (a failed callback returns to the app instead of a JSON error page) and `organizationInvitationLink` puts the route and token after `#`. Verification: `organization_v1_journeys_test.dart` checks the link shape and the consent-return messages; the function bundles in Edge Runtime v1.74.3. Not verified: a real Google consent round trip and a real shared link on the deployed site.
+
+## Application review tests fail with Backend unavailable
+
+Status: FIXED (tests). Observed: 21 admin/application/wizard tests failed with `Bad state: Backend unavailable` (and one affiliation test with `Organization backend unavailable`). Cause: Phase 1 (`31aebbf`) correctly removed offline "local success" writes for applications and affiliation requests, but those tests still submitted through the offline service. Fix: `test/support/fixture_application_db.dart` is an explicit in-memory review backend; TC-DB-04 also asserts the offline refusal. TC-ORG-05 now checks the V1 authority model (membership grants, not admin role or roster email). Production code still refuses offline writes. Verification: the nine affected files pass (66 tests) and the full suite is green.
 
 ## Recording format
 
@@ -450,3 +509,64 @@ Observed: DESK-04 owner screenshot shows two Discovery cards centered under a wi
 Cause: The responsive four-column `Wrap` used center alignment; RTL would start at the physical right even after changing to start alignment.
 Fix: Start the desktop Wrap at the physical left in both locales. Keep existing card contents, width calculation and phone direction.
 Verification: Focused card tests pass for 4, 3, 2 and 1 columns in English and Arabic. Owner visual retest pending.
+
+## Wide laptop map leaves side gutters
+Status: REPAIRED locally; owner laptop retest pending.
+Observed: DESK-05 screenshot shows a centered map with unused side gutters. Cause: `feasibleCanvas` shrank wide viewports to preserve the three-city overview framing. Fix: use the full available canvas only at the laptop breakpoint; the existing camera constraint still keeps tiles inside the bundled map. Focused map tests pass; no new browser build was launched.
+
+## Laptop shell repeats language control
+Status: REPAIRED locally; owner retest pending.
+Observed: DESK-06 shows the page's top language button plus the desktop shell's bottom sidebar button. Fix: remove the sidebar duplicate; page controls remain. Focused en/ar card and map tests pass; physical/browser retest pending.
+
+## Discovery own-channel label makes card taller
+Status: REPAIRED locally; owner phone/laptop retest pending.
+Observed: CARD-07 own-channel text occupied a separate body line. Fix: place it as a chip next to the status and measure rendered card heights so the tallest content sets the grid height. A focused 320/1280px en/ar 1x/2x matrix passes. Real saved titles/tags still need visual retest.
+
+## Application accepts a point beyond bundled map
+Status: REPAIRED in source; backend/owner retest pending.
+Observed: LOC-08 application/profile forms accepted arbitrary coordinates while the picker and map used different geographic limits. Fix: use the bundled map's inset navigation extent for map display, picker, client submit/edit guard and a new SQL write trigger. This allows exact points beyond the three named city views but inside the map, without inferring municipal boundaries. Focused Flutter checks and full suite pass; the new SQL test has not run in an isolated database and the migration has not been applied to a hosted backend.
+
+## Streamer Verification has no language action (VQ-01)
+Status: REPAIRED locally; owner phone retest pending. The wizard AppBar contained only Back and X. Reused the shared SVG language switcher without its EN/AR text beside X. Analyzer and focused Flutter checks pass; installed build unchanged.
+
+## Pending verification cannot be inspected (VQ-02)
+Status: REPAIRED locally; saved-data/admin retest pending. The queue only exposed Inspect for reviewed rows, obscuring what was being approved. Pending rows now open the application inspector; sensitive revisions carry an edit tag and compare changed fields with the approved base. Automated widget checks do not establish two-admin or physical acceptance.
+
+## Queue delete revokes approval or shows duplicate edit (VQ-03)
+Status: REPAIRED in source; SQL/owner retest pending. `deleteApplication` physically removed the application and revoked related profile/organization data, while base/revision and legacy repeated personal rows rendered as duplicates. Deletion now archives only queue visibility; the projection shows one current card per real personal profile with pending review priority. An approved base remains available for later profile editing. Flutter regression verifies the sole archive PATCH and local account preservation; migration has not run on a database.
+
+## Verification queue lacks decision history and reversal (VQ-04)
+Status: REPAIRED in source; SQL/owner retest pending. Review status overwrote earlier decisions and there was no actor/reason history. A forward migration records review snapshots and adds an admin-only approval-reversal RPC; the UI log exposes inspect and latest-decision reversal. Reapproval of a rejected edit reopens it as pending so the existing publisher executes. Approval reversal restores reviewed fields or revokes that specific initial approval and ends affected live state. The 33 focused Flutter checks pass; pgTAP could not run without Docker/`psql`, and hosted backend is untouched.
+
+## Profile editor city chips crowd the location action (EDIT-05)
+Status: REPAIRED locally; owner phone/laptop retest pending. The approved-profile sheet reused seven application-city chips and put the pin action immediately beneath them. It now shows a dropdown for Al Khobar, Dhahran and Dammam, retains a visible legacy saved city until changed, and labels the separate current-location section. Focused sheet checks pass; actual saved-data and large-text device retest remains open.
+
+## Laptop chat is read-only as landscape (LIVE-01)
+Status: REPAIRED locally; browser/phone retest pending. Viewer and sender chat, message edit and the sender's fullscreen branch used landscape orientation without identifying a laptop. Shared layout detection now considers both edges: 915×412 remains phone landscape, while 1366×768 keeps side chat editable. Focused en tests pass; owner must repeat with signed-in EN/AR accounts.
+
+## Chat actions hit the web video (LIVE-02)
+Status: REPAIRED in source; real iframe retest pending. The full-width bottom sheet put chat actions over the YouTube platform view, where the owner observed clicks reaching video. Laptop action/reason/confirmation dialogs now stay beside the media in the chat column. A widget tap test passes, but it cannot reproduce Chrome's iframe hit testing or server role checks.
+
+## Raised hand is absent from chat (LIVE-03)
+Status: REPAIRED in source; two-client retest pending. The hand button only sent an anonymous ephemeral reaction. Eligible signed-in viewers now send authenticated hand-up/down chat rows, displayed with the sender and localized event text in both chat layouts. A refused send restores the local hand state and shows an error. Guest, muted, offline and slow-mode composers do not claim a sent hand event.
+
+## Audio-only room is black or plain (LIVE-04)
+Status: VISUAL REPAIR locally; speech timing remains OPEN. The viewer never mounted the existing centered audio stage over the YouTube player; the sender used a plain camera-off poster. Both now reuse the streamer avatar stage while keeping the player/encoder mounted. The viewer passes one streamer avatar to avoid rotating through affiliated speakers without an active-speaker signal. The viewer pulse follows active playback, and the sender pulse currently follows mute state because Android does not emit the `audioLevel` event read by `RtmpPublishEngine`. The label was corrected from “Speaking Now” to “Audio Live”; do not claim measured speech detection or physical camera release.
+
+## Phone keyboard removes the live video (LIVE-05)
+Status: REPAIRED locally; device/receiver retest pending. The sender's keyboard branch removed the video widget and replaced it with End, leaving chat cramped. Sender and viewer now retain a 100dp compact viewport and animate back when the keyboard closes. Sender widget test confirms preview and chat remain mounted; playback continuity on a physical receiver is unverified.
+
+## End and camera controls crowd the media (LIVE-06)
+Status: REPAIRED locally; device retest pending. Portrait End was explicitly pinned outside the fading controls, and a camera-on button sat on the audio poster. End now fades and stops hit testing with other media controls, including after focus; camera on/off remains in the three-dot sheet. Landscape/portrait End confirmation regressions pass.
+
+## Adaptive launcher mark touches mask (BRAND-07)
+Status: REPAIRED in generated resources; installed icon retest pending. The foreground mark fraction changed from 0.74 to 0.68 using the existing owner-artwork generator; Android adaptive and monochrome icons were regenerated. The owner SVG was not edited, and the installed phone build was not replaced.
+
+## Loading surfaces use generic spinners (LOAD-08)
+Status: REPAIRED in source; visual/reduced-motion retest pending. The user-supplied four-capsule geometry/timing/easing is rendered by a shared painter. Forty-one circular indeterminate indicators and two indeterminate linear waits now use it; determinate progress bars retain their real values. It uses the app green, localized loading semantics and a static drawing when reduced motion is requested. Automated suite/layout tests pass; real visual timing remains unverified.
+
+## Charity parent mark is missing (BRAND-09)
+Status: REPAIRED in source; owner visual retest pending. The supplied parent-mark PNG is copied unchanged into app assets and displayed at the bottom of phone Settings and in the desktop navigation header instead of the placeholder wordmark. The launcher artwork remains the application mark. EN/AR accessibility names are localized; a new build is needed to inspect sizing and RTL placement.
+
+## Canonical replay remains on loading after live ends
+Status: REPAIRED locally; real provider replay remains unverified. The viewer's terminal live-room guard prevented a later available replay from reopening the same canonical session. The room now closes live resources during processing, resumes only that session's available replay, and keeps archived chat read-only. Direct hidden-room reads and chat IDs stay canonical; a denied read invalidates stale catalog data. Check: `flutter test test/p6s_wave3_group1_test.dart --plain-name "viewer room identity hidden canonical room"` passes. Full-suite and release limits are recorded in the organization V1 handoff.

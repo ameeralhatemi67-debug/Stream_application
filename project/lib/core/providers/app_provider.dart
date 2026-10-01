@@ -9,23 +9,30 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../theme/app_theme.dart';
 import '../widgets/interactive_toast_overlay.dart';
 import '../services/notifications/notification_models.dart';
-import '../services/notifications/watch_session_tracker.dart';
 import '../services/youtube_api_service.dart';
 import '../services/supabase_auth_service.dart';
 import '../services/admin_database_service.dart';
 import '../services/organization_broadcast_service.dart';
 import '../../features/organization/models/org_membership.dart';
 import '../../features/organization/models/channel_connection.dart';
+import '../../features/organization/models/org_event.dart';
+import '../../features/organization/models/org_event_text.dart';
+import '../../features/organization/models/org_invitation.dart';
+import '../../features/live_stream/models/broadcast_session.dart';
+import '../services/upcoming_schedule_service.dart';
+import '../services/reminder_push_service.dart';
 import '../services/connectivity_service.dart';
 import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
 import '../../features/map/models/map_models.dart';
+import '../../features/map/models/map_tricity_domain.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_broadcaster_permissions.dart';
 import '../../features/organization/models/org_audit_log_entry.dart';
 import '../../features/organization/models/org_affiliation_request_model.dart';
 import '../../features/profile/models/streamer_models.dart';
+import '../../features/profile/models/upcoming_schedule.dart';
 import '../../features/profile/models/vod_models.dart';
 import '../../features/profile/models/user_account_model.dart';
 import '../../features/live_stream/models/qa_question_model.dart';
@@ -188,6 +195,7 @@ class AppProvider extends ChangeNotifier {
 
   // Admin Hub, Verification & Governance State
   List<BroadcasterApplicationModel> _applications = [];
+  List<Map<String, dynamic>> _applicationReviewEvents = [];
   List<OrgAuditLogEntry> _auditLogs = [];
   TermsAndConditionsModel _termsAndConditions =
       TermsAndConditionsModel.createDefault();
@@ -309,7 +317,7 @@ class AppProvider extends ChangeNotifier {
   // Live" > Stream tab so this phone's own camera/mic can publish there,
   // distinct from _customYouTubeLiveUrl above (which is the viewer-facing
   // watch link/video ID, not an RTMP ingest target).
-  String _phoneBroadcastRtmpUrl = 'rtmp://a.rtmp.youtube.com/live2';
+  String _phoneBroadcastRtmpUrl = '';
   String _phoneBroadcastStreamKey = '';
   int _streamReloadCount = 0;
   String _selectedStreamingQuality = 'Auto (1080p)';
@@ -378,6 +386,15 @@ class AppProvider extends ChangeNotifier {
   // Bookmarks, Reminders & RSVP Attendance
   final Set<String> _followedStreamerIds = {};
   final Set<String> _reminderStreamerIds = {};
+  final Set<String> _cardReminderIds = {};
+  int _reminderLeadMinutes = 15;
+  final Map<String, List<UpcomingSchedule>> _upcomingByStreamer = {};
+  final Map<String, String> _upcomingErrors = {};
+  final Set<String> _loadingUpcoming = {};
+  final UpcomingScheduleService _upcomingService = UpcomingScheduleService();
+  late final ReminderPushService _reminderPush =
+      ReminderPushService(_upcomingService);
+  ReminderPushStatus _reminderPushStatus = ReminderPushStatus.unavailable;
   // Starts empty and is filled from the backend for a signed-in account
   // (05 D-07). It used to ship with two sample recordings already saved.
   final Set<String> _bookmarkedLectureIds = {};
@@ -402,8 +419,10 @@ class AppProvider extends ChangeNotifier {
       {AdminDatabaseService? adminDbService,
       SupabaseAuthService? authService,
       ConnectivityService? connectivityService,
-      YouTubeApiService? youTubeService})
-      : _youTubeService = youTubeService ?? YouTubeApiService(),
+      YouTubeApiService? youTubeService,
+      OrganizationBroadcastService? organizationBroadcastService})
+      : _organizationBroadcastService = organizationBroadcastService ?? OrganizationBroadcastService(),
+        _youTubeService = youTubeService ?? YouTubeApiService(),
         _adminDbService = adminDbService,
         _authService = authService ?? SupabaseAuthService(),
         _connectivityService = connectivityService {
@@ -436,6 +455,7 @@ class AppProvider extends ChangeNotifier {
       _authStateSub = _authService.onAuthStateChange.listen((data) {
         final session = data.session;
         if (session == null) {
+          unawaited(_reminderPush.signOut());
           _clearAuthState();
           return;
         }
@@ -599,6 +619,15 @@ class AppProvider extends ChangeNotifier {
       await _refreshCurrentUserBanStatus();
       if (_authGeneration != generation) return;
       await loadViewerLibrary();
+      if (_authGeneration != generation) return;
+      try {
+        await refreshScheduleReminders();
+        unawaited(syncReminderPush(requestPermission: false, language: 'en'));
+      } catch (e) {
+        // An older backend may not have the new migration yet. Sign-in must
+        // remain usable while Upcoming Live reports its own unavailable state.
+        debugPrint('Schedule reminders unavailable: $e');
+      }
       if (_authGeneration != generation) return;
       await refreshMyApplicationAndStreamerStatus();
       if (_authGeneration != generation) return;
@@ -774,6 +803,11 @@ class AppProvider extends ChangeNotifier {
       if (_authGeneration != generation) return;
       _permittedAdminOrgIds = ids;
       await refreshOrgMemberships();
+      await Future.wait([refreshOrganizationInvitations(), refreshOrganizationEvents()])
+          .catchError((Object e) {
+        debugPrint('Organization inbox refresh failed: $e');
+        return const <void>[];
+      });
     } catch (e) {
       if (_authGeneration != generation) return;
       debugPrint('Permitted admin org lookup failed: $e');
@@ -787,7 +821,7 @@ class AppProvider extends ChangeNotifier {
   bool _organizationBroadcastApproved = false;
   bool get personalBroadcastApproved => _personalBroadcastApproved;
   bool get organizationBroadcastApproved => _organizationBroadcastApproved;
-  final _organizationBroadcastService = OrganizationBroadcastService();
+  final OrganizationBroadcastService _organizationBroadcastService;
   List<OrgMembership> _orgMemberships = [];
   List<OrgMembership> get orgMemberships => _orgMemberships;
   List<ChannelConnection> _channelConnections = [];
@@ -805,6 +839,114 @@ class AppProvider extends ChangeNotifier {
   Future<void> disconnectYouTubeChannel(String id) async {
     await _organizationBroadcastService.disconnectChannel(id);
     await refreshChannelConnections();
+  }
+
+  List<BroadcastSession> _broadcastSessions = [];
+  List<BroadcastSession> get broadcastSessions => _broadcastSessions;
+  final Map<String, BroadcastSession> _roomSessions = {};
+  final Map<String,int> _roomRevisions = {};
+  int roomRevision(String id) => successfulCatalogRevision + (_roomRevisions[id]??0);
+  BroadcastSession? roomSession(String id) => _roomSessions[id] ?? _broadcastSessions.where((s)=>s.id==id).firstOrNull;
+  List<BroadcastSession> roomChoices(String id) => _broadcastSessions.where((s)=>!s.hidden && s.live && (s.organizationId==id || s.presenterId==id)).toList();
+  BroadcastSession? _publishingSession;
+  ChannelConnection? _publishingDestination;
+  BroadcastSession? get publishingSession => _publishingSession;
+  Future<List<BroadcastSession>> organizationSessions({String? organizationId, bool mine=false}) =>
+      _organizationBroadcastService.sessions(organizationId:organizationId,mine:mine);
+  Future<void> refreshBroadcastRoom(String id) async {
+    final generation=_authGeneration;
+    final session=await _organizationBroadcastService.session(id);
+    if(generation!=_authGeneration) return;
+    if(session==null) { _roomSessions.remove(id); } else { _roomSessions[id]=session; }
+    _roomRevisions[id]=(_roomRevisions[id]??0)+1;
+    notifyListeners();
+  }
+  Future<void> answerBroadcastAssignment(BroadcastSession session,bool accept) =>
+      _organizationBroadcastService.answerAssignment(session,accept);
+  Future<String> saveOrganizationSchedule({required String orgId,String? scheduleId,required String presenterId,
+      required String kind,required String localTime,required List<int> weekdays,DateTime? once,
+      required String titleEn,required String titleAr,required String type,int duration=60,String? venueId}) =>
+      _organizationBroadcastService.saveSchedule(orgId:orgId,scheduleId:scheduleId,presenterId:presenterId,kind:kind,
+        localTime:localTime,weekdays:weekdays,once:once,titleEn:titleEn,titleAr:titleAr,type:type,duration:duration,venueId:venueId);
+  Future<void> editOrganizationOccurrence(BroadcastSession session,{required String presenterId,required DateTime start,
+      required DateTime end,required String type,String? venueId}) => _organizationBroadcastService.editOccurrence(session,
+        presenterId:presenterId,start:start,end:end,type:type,venueId:venueId);
+  Future<void> cancelOrganizationSchedule(String id) => _organizationBroadcastService.cancelSchedule(id);
+  Future<String> createPersonalBroadcast(String title,String type) => _organizationBroadcastService.createPersonal(title,type);
+  Future<BroadcastSession?> loadBroadcastSession(String id) => _organizationBroadcastService.session(id);
+
+  void _clearPublishingState() {
+    _clearOwnLiveProjection();
+    _publishingSession=null; _publishingDestination=null;
+    _phoneBroadcastRtmpUrl=''; _phoneBroadcastStreamKey='';
+    _liveSessionId=null; _liveWatchId=null; _lastReportedIngest=null;
+    _selectedBroadcastOrgId=null; _selectedVenueBranchId=null;
+    _broadcastSenderMode='unspecified';
+  }
+
+  Future<Map<String,dynamic>> prepareBroadcast(String id,String sender,ChannelConnection destination) async {
+    final generation=_deviceGeneration, authGeneration=_authGeneration;
+    final device=_currentDeviceSession;
+    if(device?.isPrimaryBroadcaster!=true) throw StateError('Primary device required');
+    bool current()=>!_disposed && generation==_deviceGeneration && authGeneration==_authGeneration &&
+      _currentDeviceSession?.isPrimaryBroadcaster==true;
+    try {
+      final result=await _organizationBroadcastService.control(id,device!.deviceId,sender,'prepare',destination:destination);
+      if(!current()) throw StateError('Device changed');
+      final session=BroadcastSession.fromRow(Map<String,dynamic>.from(result['session'] as Map));
+      if(session.channelConnectionId!=destination.id) throw StateError('Destination changed');
+      _publishingSession=session; _publishingDestination=destination;
+      _liveSessionId=session.id; _liveWatchId=session.watchId;
+      _selectedBroadcastOrgId=session.organizationId; _selectedVenueBranchId=session.venueId;
+      _broadcastSenderMode=sender;
+      _customLiveTitle=session.titleEn.isEmpty?session.titleAr:session.titleEn;
+      _customBroadcastType=session.broadcastType=='liveAudio'?BroadcastType.liveAudio:BroadcastType.liveVideo;
+      _customYouTubeVideoId=session.watchId??'';
+      _customYouTubeLiveUrl=session.watchId==null?'':'https://www.youtube.com/watch?v=${session.watchId}';
+      _phoneBroadcastRtmpUrl=result['ingest_url'] as String;
+      _phoneBroadcastStreamKey=result['ingest_key'] as String;
+      _isBroadcastingLive=session.live; _broadcastSessionError=null;
+      notifyListeners(); return result;
+    } catch (_) {
+      final partial=await loadBroadcastSession(id).catchError((_)=>null);
+      if(current() && partial!=null) {
+        _publishingSession=partial; _publishingDestination=destination;
+        _liveSessionId=partial.id; _broadcastSenderMode=partial.senderMode;
+        _phoneBroadcastRtmpUrl=''; _phoneBroadcastStreamKey='';
+        notifyListeners();
+      }
+      rethrow;
+    }
+  }
+  Future<void> endOrganizationSession(BroadcastSession session) async {
+    if(_publishingSession?.id==session.id) {
+      await setBroadcasterLive(false);
+      if(_publishingSession!=null) throw StateError('Termination not confirmed');
+    } else {
+      await _organizationBroadcastService.control(session.id,_currentDeviceSession?.deviceId??'management',
+        session.senderMode=='phone_direct'?'phone_direct':'obs_laptop','end');
+      await loadVerifiedStreamersFromBackend();
+    }
+  }
+  StreamerModel? _sessionProjection(BroadcastSession session) {
+    final base=_streamers.where((s)=>s.streamerId==(session.organizationId??session.presenterId)).firstOrNull;
+    if(base==null) return null;
+    final venue=base.venues.where((v)=>v.venueId==session.venueId).firstOrNull;
+    return base.copyWith(streamerId:session.id,contentOwnerId:session.organizationId??session.presenterId,
+      titleEn:session.titleEn,titleAr:session.titleAr.isEmpty?session.titleEn:session.titleAr,
+      isCurrentlyLive:session.live,isHiddenLiveSession:false,broadcastType:session.broadcastType=='liveAudio'?BroadcastType.liveAudio:BroadcastType.liveVideo,
+      clearLiveState:true,youtubeVideoId:session.live || session.replayStatus=='available'?session.watchId??'':'',fallbackYoutubeVideoIds:const [],activeViewerCount:0,
+      latitude:venue?.latitude,longitude:venue?.longitude,venueNameEn:venue?.nameEn,venueNameAr:venue?.nameAr,
+    ).copyWith(activeStreamId:session.live?session.watchId:null,liveSessionId:session.live?session.id:null);
+  }
+  StreamerModel? getRoomStreamer(String id) {
+    if(_roomRevisions.containsKey(id) && !_roomSessions.containsKey(id)) return null;
+    final exact=_roomSessions[id]??_broadcastSessions.where((s)=>s.id==id).firstOrNull;
+    if(exact!=null) return _sessionProjection(exact);
+    final candidates=_broadcastSessions.where((s)=>s.live&&(s.organizationId==id||s.presenterId==id||s.watchId==id)).toList();
+    if(candidates.length==1) return _sessionProjection(candidates.single);
+    if(candidates.length>1) return null;
+    return getStreamerById(id);
   }
 
   Future<void> refreshOrgMemberships() async {
@@ -839,6 +981,88 @@ class AppProvider extends ChangeNotifier {
     await refreshOrgMemberships();
   }
 
+  Future<void> cancelOrganizationTransfer(String orgId) async {
+    await _organizationBroadcastService.cancelTransfer(orgId);
+    await refreshOrgMemberships();
+  }
+
+  List<OrgInvitation> _myOrgInvitations = [];
+  List<OrgInvitation> get myOrganizationInvitations => _myOrgInvitations;
+  Future<void> refreshOrganizationInvitations() async {
+    final generation = _authGeneration;
+    final rows = await _organizationBroadcastService.myInvitations();
+    if (generation != _authGeneration) return;
+    _myOrgInvitations = List.unmodifiable(rows);
+    notifyListeners();
+  }
+  Future<List<OrgInvitation>> organizationInvitations(String orgId) =>
+      _organizationBroadcastService.invitations(orgId);
+  Future<void> revokeOrganizationInvite(String id) =>
+      _organizationBroadcastService.revokeInvite(id);
+
+  // Durable organization events (server rows). The notification center shows
+  // each unread one once; reading it there marks the server row read.
+  List<OrgEvent> _orgEvents = [];
+  List<OrgEvent> get organizationEvents => _orgEvents;
+  final Set<String> _announcedOrgEvents = {};
+  bool _orgEventsLoading = false;
+  Future<void> refreshOrganizationEvents() async {
+    if (_orgEventsLoading || !_isLoggedInStreamer) return;
+    final generation = _authGeneration;
+    _orgEventsLoading = true;
+    try {
+      final rows = await _organizationBroadcastService.events();
+      if (generation != _authGeneration) return;
+      _orgEvents = List.unmodifiable(rows);
+      for (final event in rows.reversed) {
+        if (event.read || !_announcedOrgEvents.add(event.id)) continue;
+        final en = orgEventText(event, 'en'), ar = orgEventText(event, 'ar');
+        addEnhancedNotification(AppNotificationModel(
+          id: 'org:${event.id}',
+          type: switch (event.kind) {
+            'show_live' => NotificationType.orgStreamerLiveStatus,
+            'membership_changed' => NotificationType.streamerRemovedFromOrg,
+            'assignment' || 'assignment_changed' || 'assignment_cancelled' ||
+            'assignment_answered' || 'assignment_reminder' || 'show_ending' =>
+              NotificationType.orgLiveGuestInvite,
+            _ => NotificationType.orgAffiliationInvite,
+          },
+          streamerId: event.organizationId ?? '',
+          streamerName: event.organizationName('en'),
+          titleEn: en.title, titleAr: ar.title, bodyEn: en.body, bodyAr: ar.body,
+          timestamp: event.createdAt.toLocal(),
+          streamId: event.liveAlert ? event.sessionId : null,
+          actionUrl: event.route,
+        ));
+      }
+      notifyListeners();
+    } finally {
+      _orgEventsLoading = false;
+    }
+  }
+  Future<void> markOrganizationEventsRead([List<String>? ids]) async {
+    await _organizationBroadcastService.markEventsRead(ids);
+    final now = DateTime.now();
+    _orgEvents = List.unmodifiable(_orgEvents.map((e) => e.read || (ids != null && !ids.contains(e.id))
+        ? e
+        : OrgEvent(id: e.id, kind: e.kind, createdAt: e.createdAt, organizationId: e.organizationId,
+            sessionId: e.sessionId, invitationId: e.invitationId, payload: e.payload, readAt: now)));
+    notifyListeners();
+  }
+  void _markOrgEventReadQuietly(List<String>? ids) {
+    if (!_isLoggedInStreamer) return;
+    unawaited(markOrganizationEventsRead(ids).catchError(
+        (Object e) => debugPrint('Organization event read sync failed: $e')));
+  }
+
+  /// Master Admin pilot controls. The server enforces the role.
+  Future<List<({String id, String nameEn, String nameAr, bool pilot})>> organizationPilotStatus() =>
+      _organizationBroadcastService.pilotStatus();
+  Future<void> setOrganizationPilot(String orgId, bool enabled) async {
+    await _organizationBroadcastService.setPilot(orgId, enabled);
+    await refreshOrgMemberships();
+  }
+
   BroadcasterApplicationModel? _myApplication;
   BroadcasterApplicationModel? get myApplication => _myApplication;
 
@@ -852,6 +1076,7 @@ class AppProvider extends ChangeNotifier {
   int _deviceGeneration = 0;
   bool _liveStateBusy = false;
   Completer<void>? _liveStateCompletion;
+  bool get broadcastOperationBusy => _liveStateBusy;
   // Bumped whenever this device asserts or withdraws LIVE, so a status read
   // that started before the assertion cannot be mistaken for a remote end.
   int _liveAssertionEpoch = 0;
@@ -870,6 +1095,7 @@ class AppProvider extends ChangeNotifier {
   /// never confused with one another.
   void setBroadcastSenderMode(String mode) {
     const allowed = {'phone_direct', 'obs_laptop'};
+    if (_publishingSession?.frozen == true) return;
     _broadcastSenderMode = allowed.contains(mode) ? mode : 'unspecified';
   }
 
@@ -1055,7 +1281,7 @@ class AppProvider extends ChangeNotifier {
       _heartbeatFailingSince = null;
       if (!primary) {
         _loseBroadcastDevice();
-      } else if (_isBroadcastingLive) {
+      } else if (_publishingSession?.active == true || _isBroadcastingLive) {
         // Realtime can miss an admin End; the heartbeat bounds that to 20 s.
         await _checkRemoteBroadcastEnd();
       }
@@ -1104,6 +1330,8 @@ class AppProvider extends ChangeNotifier {
   String? _lastSeenPrimaryDeviceId;
 
   void _loseBroadcastDevice() {
+    _deviceGeneration++;
+    _clearPublishingState();
     _remoteBroadcasterSession = null;
     if (_currentDeviceSession == null) return;
     if (_isBroadcastingLive) _clearOwnLiveProjection();
@@ -1133,7 +1361,7 @@ class AppProvider extends ChangeNotifier {
     final ownId = primaryOwnedStreamerId;
     if (ownId == null) return;
     _streamers = _streamers
-        .map((s) => s.streamerId == ownId && s.isLiveForRoom
+        .map((s) => (s.streamerId == ownId || s.streamerId == _publishingSession?.id) && s.isLiveForRoom
             ? s.copyWith(
                 isCurrentlyLive: false,
                 broadcastType: BroadcastType.offline,
@@ -1151,7 +1379,7 @@ class AppProvider extends ChangeNotifier {
     final generation = _deviceGeneration;
     final expected = _liveWatchId ?? _customYouTubeVideoId;
     final expectedSession = _liveSessionId;
-    if (!_isBroadcastingLive || _liveStateBusy || _adminDbService == null) {
+    if ((!_isBroadcastingLive && _publishingSession?.active != true) || _liveStateBusy || _adminDbService == null) {
       return;
     }
     final Map<String, dynamic> status;
@@ -1163,13 +1391,14 @@ class AppProvider extends ChangeNotifier {
     }
     if (epoch != _liveAssertionEpoch ||
         generation != _deviceGeneration ||
-        !_isBroadcastingLive ||
+        (!_isBroadcastingLive && _publishingSession?.active != true) ||
         _liveStateBusy) {
       return;
     }
     final sameSession = expectedSession == null ||
         status['session_id'] == null ||
         status['session_id'] == expectedSession;
+    if (_publishingSession?.state == 'preparing' && status['state']=='preparing' && sameSession) return;
     if (status['live'] == true &&
         status['stream_id'] == expected &&
         sameSession) {
@@ -1185,9 +1414,7 @@ class AppProvider extends ChangeNotifier {
     }
     if (reason == 'approval_revoked' || reason == 'ban') {
       // Their own refresh paths explain these; just stop claiming LIVE.
-      _isBroadcastingLive = false;
-      _clearOwnLiveProjection();
-      notifyListeners();
+      _endBroadcastRemotely(reason);
       return;
     }
     _endBroadcastRemotely(reason);
@@ -1198,6 +1425,7 @@ class AppProvider extends ChangeNotifier {
   /// this keeps the device's primary role, broadcaster mode and approval;
   /// the phone screen stops its encoder and the user may start again.
   void _endBroadcastRemotely(String reason) {
+    _clearPublishingState();
     _isBroadcastingLive = false;
     _liveSessionId = null;
     _liveWatchId = null;
@@ -1804,6 +2032,7 @@ class AppProvider extends ChangeNotifier {
   /// drop the device claim (the server has already demoted it) and leave
   /// broadcaster mode; the phone screen listens and releases camera/mic.
   void _revokeLocalBroadcastState() {
+    _clearPublishingState();
     _deviceGeneration++;
     _deviceHeartbeatTimer?.cancel();
     _deviceSubscription?.cancel();
@@ -2033,7 +2262,9 @@ class AppProvider extends ChangeNotifier {
       final backendStreamers = await _adminDbService!
           .loadVerifiedStreamersFromBackend(requireSuccess: true)
           .timeout(const Duration(seconds: 5));
+      final sessions=await _organizationBroadcastService.sessions().timeout(const Duration(seconds:5));
       if (_disposed || epoch != _catalogEpoch || !isOnline) return;
+      _broadcastSessions=List.unmodifiable(sessions);
       _lastLoadedPublicStreamers = List.of(backendStreamers);
 
       final backendIds = backendStreamers.map((s) => s.streamerId).toSet();
@@ -2058,6 +2289,11 @@ class AppProvider extends ChangeNotifier {
           _streamers.add(displayStreamer);
         }
       }
+      final canonicalOwners=sessions.where((s)=>s.live).map((s)=>s.organizationId??s.presenterId).toSet();
+      final presenters=sessions.where((s)=>s.live).map((s)=>s.presenterId).toSet();
+      _streamers=_streamers.where((s)=>s.contentOwnerId==null).map((s)=>canonicalOwners.contains(s.streamerId)||presenters.contains(s.streamerId)
+        ?s.copyWith(isCurrentlyLive:false,broadcastType:BroadcastType.offline,clearLiveState:true):s).toList();
+      _streamers.addAll(sessions.where((s)=>s.live && !s.hidden).map(_sessionProjection).whereType<StreamerModel>());
       _isUsingCachedCatalog = false;
       _successfulCatalogRevision++;
       _lastCatalogSuccessAt = DateTime.now();
@@ -2111,8 +2347,15 @@ class AppProvider extends ChangeNotifier {
     _personalBroadcastApproved = false;
     _organizationBroadcastApproved = false;
     _orgMemberships = [];
+    _myOrgInvitations = [];
+    _orgEvents = [];
+    _announcedOrgEvents.clear();
+    _notifications.removeWhere((n) => n.id.startsWith('org:'));
+    _enhancedNotifications.removeWhere((n) => n.id.startsWith('org:'));
     _channelConnections = [];
+    _broadcastSessions=[];_roomSessions.clear();_roomRevisions.clear();_clearPublishingState();
     _myApplication = null;
+    _debugUserId = null;
     _googleUserEmail = null;
     _googleUserName = null;
     _googleUserAvatar = null;
@@ -2126,6 +2369,14 @@ class AppProvider extends ChangeNotifier {
     // next account must not inherit its follows and saved recordings.
     _followedStreamerIds.clear();
     _bookmarkedLectureIds.clear();
+    _reminderStreamerIds.clear();
+    _cardReminderIds.clear();
+    _reminderLeadMinutes = 15;
+    _reminderPushStatus = ReminderPushStatus.unavailable;
+    _notifications.removeWhere((n) => n.id.startsWith('upcoming:'));
+    _upcomingByStreamer.clear();
+    _upcomingErrors.clear();
+    _loadingUpcoming.clear();
     notifyListeners();
   }
 
@@ -2147,7 +2398,13 @@ class AppProvider extends ChangeNotifier {
     List<String> permittedAdminOrgIds = const [],
     String? ownedStreamerId,
     String ownedYoutubeHandle = '',
+    bool personalBroadcastApproved = false,
+    bool organizationBroadcastApproved = false,
+    String? userId,
   }) {
+    _debugUserId = userId;
+    _personalBroadcastApproved = personalBroadcastApproved;
+    _organizationBroadcastApproved = organizationBroadcastApproved;
     _hasCompletedOnboarding = true;
     _isLoggedInStreamer = true;
     _isGuestViewer = false;
@@ -2240,6 +2497,7 @@ class AppProvider extends ChangeNotifier {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
       _applications = List.from(await _adminDbService!.loadApplications());
+      await _refreshApplicationReviewEvents();
       _termsAndConditions = await _adminDbService!.loadTerms();
       _viewerAnalytics = await _adminDbService!.loadAnalytics();
       _auditLogs = List.from(await _adminDbService!.loadAuditLogs());
@@ -2523,6 +2781,7 @@ class AppProvider extends ChangeNotifier {
     _unsubscribeFromAcademicCategoryChanges();
     _unsubscribeFromChatReportChanges();
     _connectivitySub?.cancel();
+    _reminderPush.dispose();
     super.dispose();
   }
 
@@ -2539,6 +2798,8 @@ class AppProvider extends ChangeNotifier {
 
   List<BroadcasterApplicationModel> get applications =>
       List.unmodifiable(_applications);
+  List<Map<String, dynamic>> get applicationReviewEvents =>
+      List.unmodifiable(_applicationReviewEvents);
   List<BroadcasterApplicationModel> get pendingApplications =>
       _applications.where((a) => a.isPending).toList();
   List<BroadcasterApplicationModel> get approvedApplications =>
@@ -2564,7 +2825,9 @@ class AppProvider extends ChangeNotifier {
   String? get guestViewerAvatar => _guestViewerAvatar;
   String? get googleUserEmail => _googleUserEmail;
   String? get currentUserEmail => _googleUserEmail;
-  String? get currentUserId => _authService.currentSession?.user.id;
+  String? get currentUserId => _authService.currentSession?.user.id ?? _debugUserId;
+  // Only debugSetSignedInForTests sets this; a real session always wins.
+  String? _debugUserId;
   String? get currentUserSessionId => _authService.currentSession?.user.id;
   String? get googleUserName => _googleUserName;
   String? get googleUserAvatar => _googleUserAvatar;
@@ -2622,8 +2885,8 @@ class AppProvider extends ChangeNotifier {
       List.unmodifiable(_selectedCoSpeakerIds);
 
   void setSelectedBroadcastOrgId(String? orgId) {
-    // Organization broadcasting is explicitly deferred for this release.
-    if (orgId != null) return;
+    if (_publishingSession?.frozen == true) return;
+    if (orgId != null && !_orgMemberships.any((m)=>m.organizationId==orgId && m.active)) return;
     _selectedBroadcastOrgId = orgId;
     _selectedVenueBranchId = null;
     _selectedCoSpeakerIds = [];
@@ -2681,6 +2944,13 @@ class AppProvider extends ChangeNotifier {
   void updateNotificationPreferences(NotificationPreferencesModel preferences) {
     _notificationPreferences = preferences;
     notifyListeners();
+    // Push delivery is decided on the server; mirror the switches it uses.
+    if (currentUserId != null) {
+      unawaited(_organizationBroadcastService.savePushPreferences(
+        live: preferences.liveVideoEnabled || preferences.liveAudioEnabled,
+        organization: preferences.orgInvitesEnabled,
+      ).catchError((Object e) => debugPrint('Push preference sync failed: $e')));
+    }
   }
 
   void setNotificationRateLimit(int maxPer10Min) {
@@ -2706,6 +2976,7 @@ class AppProvider extends ChangeNotifier {
       _notificationPreferences.isEntityMuted(entityId);
 
   void markNotificationAsRead(String id) {
+    if (id.startsWith('org:')) _markOrgEventReadQuietly([id.substring(4)]);
     final enhIdx = _enhancedNotifications.indexWhere((n) => n.id == id);
     if (enhIdx != -1) {
       _enhancedNotifications[enhIdx] =
@@ -2719,6 +2990,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   void markAllNotificationsAsRead() {
+    if (_orgEvents.any((e) => !e.read)) _markOrgEventReadQuietly(null);
     for (int i = 0; i < _enhancedNotifications.length; i++) {
       _enhancedNotifications[i] =
           _enhancedNotifications[i].copyWith(isRead: true);
@@ -3114,6 +3386,14 @@ class AppProvider extends ChangeNotifier {
     if (!isApprovedStreamer || _myApplication == null) {
       throw StateError('Approved profile required');
     }
+    if ((application.latitude != _myApplication!.latitude ||
+            application.longitude != _myApplication!.longitude ||
+            application.cityId != _myApplication!.cityId ||
+            application.venueNameEn != _myApplication!.venueNameEn ||
+            application.venueNameAr != _myApplication!.venueNameAr) &&
+        !isInTricityMapDomain(application.latitude, application.longitude)) {
+      throw const FormatException('map.location_outside_supported');
+    }
     // Unchanged legacy channel values must not force a new lookup or review.
     if (application.youtubeChannelUrl.trim() !=
             _myApplication!.youtubeChannelUrl.trim() ||
@@ -3138,6 +3418,9 @@ class AppProvider extends ChangeNotifier {
   /// Submits a multi-step Broadcaster / Organization verification application
   Future<void> submitBroadcasterApplication(
       BroadcasterApplicationModel application) async {
+    if (!isInTricityMapDomain(application.latitude, application.longitude)) {
+      throw const FormatException('map.location_outside_supported');
+    }
     if (!application.organizationOnly) {
       await validateChannelConfiguration(application.youtubeChannelUrl, application.youtubeHandle);
       final channel = YouTubeChannelReference.parse(application.youtubeChannelUrl, requireUrl: true)!;
@@ -3322,6 +3605,11 @@ class AppProvider extends ChangeNotifier {
       await _adminDbService?.upsertDeviceSession(
           userId: _authService.currentSession?.user.id ?? '',
           session: device.copyWith(isPrimaryBroadcaster: false));
+    }
+    try {
+      await _reminderPush.signOut();
+    } catch (e) {
+      debugPrint('Reminder token invalidation failed: $e');
     }
     _clearAuthState();
     try {
@@ -3753,31 +4041,19 @@ class AppProvider extends ChangeNotifier {
   }
 
   Future<bool> checkBroadcastPermission() async {
-    final generation = _deviceGeneration;
-    if (_selectedBroadcastOrgId != null) {
-      _broadcastSessionError = 'live.org_broadcast_deferred';
-      notifyListeners();
-      return false;
+    final session=_publishingSession, destination=_publishingDestination;
+    if (_currentDeviceSession?.isPrimaryBroadcaster!=true) {
+      _broadcastSessionError='broadcast_primary_required';notifyListeners();return false;
     }
-    if (_currentDeviceSession?.isPrimaryBroadcaster != true) {
-      _broadcastSessionError = 'broadcast_primary_required';
-      notifyListeners();
-      return false;
+    if(session==null || destination==null || _broadcastSenderMode!='phone_direct') {
+      _broadcastSessionError='organization_v1.assignment_required';notifyListeners();return false;
     }
     try {
-      final allowed = await _adminDbService?.canBroadcast(
-              orgId: _selectedBroadcastOrgId,
-              type: _customBroadcastType.name) ??
-          false;
-      if (generation != _deviceGeneration) return false;
-      _broadcastSessionError = allowed ? null : 'broadcast_approval_required';
-      notifyListeners();
-      return allowed;
-    } catch (_) {
-      if (generation != _deviceGeneration) return false;
-      _broadcastSessionError = 'broadcast_state_failed';
-      notifyListeners();
-      return false;
+      await prepareBroadcast(session.id,'phone_direct',destination);
+      final uri=Uri.tryParse(phoneBroadcastFullUrl);
+      return uri?.scheme=='rtmps' && RegExp(r'^(?:[a-z0-9-]+\.)*rtmp\.youtube\.com$').hasMatch(uri?.host??'') && _phoneBroadcastStreamKey.isNotEmpty;
+    } catch(error) {
+      _broadcastSessionError=OrganizationBroadcastService.errorKey(error);notifyListeners();return false;
     }
   }
 
@@ -3785,281 +4061,70 @@ class AppProvider extends ChangeNotifier {
       setBroadcasterLive(!_isBroadcastingLive, context);
 
   Future<void> setBroadcasterLive(bool live, [BuildContext? context]) async {
-    if (live && _selectedBroadcastOrgId != null) {
-      _broadcastSessionError = 'live.org_broadcast_deferred';
-      notifyListeners();
-      return;
-    }
-    final generation = _deviceGeneration;
-    while (_liveStateBusy) {
+    final generation=_deviceGeneration, authGeneration=_authGeneration;
+    bool current()=>!_disposed && generation==_deviceGeneration && authGeneration==_authGeneration;
+    while(_liveStateBusy) {
       await _liveStateCompletion?.future;
-      if (generation != _deviceGeneration) return;
+      if(!current()) return;
     }
-    if (live == _isBroadcastingLive) return;
-    final device = _currentDeviceSession;
-    if (_authService.currentSession == null ||
-        device == null ||
-        !device.isPrimaryBroadcaster ||
-        _adminDbService == null) {
-      _broadcastSessionError = 'broadcast_primary_required';
-      if (context != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('broadcast_primary_required'.tr())));
-      }
-      notifyListeners();
-      return;
+    final device=_currentDeviceSession, session=_publishingSession;
+    if(session==null || (live && device?.isPrimaryBroadcaster!=true)) {
+      _broadcastSessionError=session==null?'organization_v1.assignment_required':'broadcast_primary_required';notifyListeners();return;
     }
-    final nextLive = live;
-    final previousLive = _isBroadcastingLive;
-    _liveAssertionEpoch++;
-    _liveStateBusy = true;
-    final completion = Completer<void>();
-    _liveStateCompletion = completion;
-    notifyListeners();
+    _liveStateBusy=true; _liveAssertionEpoch++;
+    final completion=Completer<void>(); _liveStateCompletion=completion;
+    _broadcastSessionError=null; notifyListeners();
     try {
-      if (nextLive) {
-        final watchId = _customYouTubeVideoId;
-        final session = await _adminDbService!.startBroadcastSession(
-            type: _customBroadcastType.name,
-            streamId: watchId,
-            deviceId: device.deviceId,
-            senderMode: _broadcastSenderMode,
-            orgId: _selectedBroadcastOrgId);
-        if (generation != _deviceGeneration ||
-            _currentDeviceSession?.isPrimaryBroadcaster != true) {
-          return;
+      if(live) {
+        final deadline=DateTime.now().add(const Duration(seconds:65));
+        while(current() && DateTime.now().isBefore(deadline)) {
+          try {
+            await _organizationBroadcastService.control(session.id,device!.deviceId,_broadcastSenderMode,'start',destination:_publishingDestination);
+          } on FunctionException catch(error) {
+            if(!OrganizationBroadcastService.waitingForEncoder(error)) rethrow;
+          }
+          if(!current() || _currentDeviceSession?.isPrimaryBroadcaster!=true || _publishingSession?.id!=session.id) return;
+          final observed=await loadBroadcastSession(session.id);
+          if(!current()) return;
+          if(observed==null || !['preparing','live'].contains(observed.state)) throw StateError('Session ended');
+          _publishingSession=observed;
+          if(observed.live) {
+            _isBroadcastingLive=true; _liveWatchId=observed.watchId;
+            _remoteBroadcastEndReason=null; break;
+          }
+          await Future<void>.delayed(const Duration(seconds:3));
         }
-        _liveSessionId = session;
-        _liveWatchId = watchId;
-        // A phone start is recorded as sending by the server itself.
-        _lastReportedIngest =
-            session == null || _broadcastSenderMode != 'phone_direct'
-                ? null
-                : (session, true);
+        if(!_isBroadcastingLive) throw StateError('Provider confirmation pending');
       } else {
-        final session = _liveSessionId;
-        if (session != null) {
-          await _adminDbService!.endBroadcastSession(
-              sessionId: session, deviceId: device.deviceId);
-        } else {
-          await _adminDbService!.setLiveState(
-              live: false,
-              type: _customBroadcastType.name,
-              streamId: null,
-              deviceId: device.deviceId,
-              orgId: _selectedBroadcastOrgId);
-        }
-        if (generation == _deviceGeneration) {
-          _liveSessionId = null;
-          _liveWatchId = null;
-        }
+        // Remove credentials immediately; retain the session until termination is confirmed.
+        _phoneBroadcastStreamKey=''; _phoneBroadcastRtmpUrl='';
+        await _organizationBroadcastService.control(session.id,device?.deviceId??'management',
+          session.senderMode=='phone_direct'?'phone_direct':'obs_laptop','end');
+        if(!current()) return;
+        final observed=await loadBroadcastSession(session.id);
+        if(!current()) return;
+        if(observed==null || observed.active) throw StateError('Termination pending');
+        _isBroadcastingLive=false; _clearPublishingState();
       }
-      if (generation != _deviceGeneration ||
-          _currentDeviceSession?.isPrimaryBroadcaster != true) {
-        return;
-      }
-      _broadcastSessionError = null;
+      await loadVerifiedStreamersFromBackend();
     } catch (error) {
-      if (generation != _deviceGeneration) return;
-      _isBroadcastingLive =
-          previousLive && _currentDeviceSession?.isPrimaryBroadcaster == true;
-      _broadcastSessionError =
-          error is PostgrestException && error.code == '42501'
-              ? (error.message.contains('removed by moderation')
-                  // guard_removed_live_stream: this watch link was ended and
-                  // blocked by an admin; approval itself is unchanged.
-                  ? 'broadcast_watch_link_blocked'
-                  : 'broadcast_approval_required')
-              : 'broadcast_state_failed';
-      if (context != null && context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(_broadcastSessionError!.tr())));
+      if(!current()) return;
+      final observed=await loadBroadcastSession(session.id).catchError((_)=>null);
+      if(!current()) return;
+      if(observed!=null) {
+        _publishingSession=observed;
+        _isBroadcastingLive=observed.live;
+        if(!observed.active) _clearPublishingState();
       }
-      notifyListeners();
-      return;
+      _broadcastSessionError=observed?.terminationPending==true
+        ?'organization_v1.termination_pending':OrganizationBroadcastService.errorKey(error);
     } finally {
-      if (generation == _deviceGeneration) _liveStateBusy = false;
-      _liveAssertionEpoch++;
       completion.complete();
+      if(identical(_liveStateCompletion,completion)) {
+        _liveStateBusy=false; _liveStateCompletion=null; _liveAssertionEpoch++;
+      }
+      if(!_disposed) notifyListeners();
     }
-    _isBroadcastingLive = nextLive;
-    if (nextLive) _remoteBroadcastEndReason = null;
-
-    final orgId = _selectedBroadcastOrgId;
-    // Non-null here: the guard above already returned unless an authenticated
-    // session and a primary device exist, so primaryOwnedStreamerId resolves
-    // to the selected org, the caller's application or the auth user id.
-    final targetStreamerId = primaryOwnedStreamerId!;
-
-    // Synchronize target streamer model with the custom live data
-    _streamers = _streamers.map<StreamerModel>((streamer) {
-      if (streamer.streamerId == targetStreamerId) {
-        OrgVenueBranchModel? activeBranch;
-        if (orgId != null &&
-            _selectedVenueBranchId != null &&
-            streamer.venues.isNotEmpty) {
-          activeBranch = streamer.venues.firstWhere(
-            (v) => v.venueId == _selectedVenueBranchId,
-            orElse: () => streamer.venues.first,
-          );
-        }
-
-        return streamer.copyWith(
-          isCurrentlyLive: _isBroadcastingLive,
-          broadcastType: _isBroadcastingLive
-              ? _customBroadcastType
-              : BroadcastType.offline,
-          activeStreamId: _isBroadcastingLive ? _customYouTubeVideoId : null,
-          activeViewerCount: _isBroadcastingLive ? 0 : 0,
-          titleEn: _customLiveTitle,
-          titleAr: _customLiveTitle,
-          latitude:
-              activeBranch != null ? activeBranch.latitude : streamer.latitude,
-          longitude: activeBranch != null
-              ? activeBranch.longitude
-              : streamer.longitude,
-          venueNameEn:
-              activeBranch != null ? activeBranch.nameEn : streamer.venueNameEn,
-          venueNameAr:
-              activeBranch != null ? activeBranch.nameAr : streamer.venueNameAr,
-          activeLiveVenueId: _isBroadcastingLive
-              ? (_selectedVenueBranchId ?? streamer.activeLiveVenueId)
-              : null,
-        );
-      }
-      return streamer;
-    }).toList();
-
-    if (_isBroadcastingLive) {
-      // Start polling real viewer count from YouTube
-      _startLiveViewerPolling();
-      final isAudio = _customBroadcastType == BroadcastType.liveAudio;
-      // Names come from the broadcasting account itself (P1.6) -- never from
-      // a hardcoded sample streamer.
-      final broadcaster =
-          _streamers.where((s) => s.streamerId == targetStreamerId).firstOrNull;
-      final streamerNameEn =
-          broadcaster?.fullNameEn ?? (_googleUserName ?? _userProfile.nameEn);
-      final streamerNameAr =
-          broadcaster?.fullNameAr ?? (_googleUserName ?? _userProfile.nameAr);
-
-      addEnhancedNotification(
-        AppNotificationModel(
-          id: 'notif_live_${DateTime.now().millisecondsSinceEpoch}',
-          type: isAudio
-              ? NotificationType.streamerLiveAudio
-              : NotificationType.streamerLiveVideo,
-          streamerId: targetStreamerId,
-          streamerName: streamerNameEn,
-          titleEn:
-              isAudio ? 'Live Audio Stage Started' : 'Live Broadcast Started',
-          titleAr: isAudio ? 'مساحة صوتية مباشرة' : 'بدأ البث المباشر الآن',
-          bodyEn: isAudio
-              ? 'Live Audio Stage with $streamerNameEn: "$_customLiveTitle" .. Join in!'
-              : ' $streamerNameEn is live now: "$_customLiveTitle" .. Join and interact!',
-          bodyAr: isAudio
-              ? 'مساحة صوتية مباشرة مع $streamerNameAr: «$_customLiveTitle».. استمع وشارك برأيك'
-              : ' $streamerNameAr بدأ بثاً مباشراً الآن: «$_customLiveTitle».. حيّاك شاركنا وتفاعل!',
-          timestamp: DateTime.now(),
-          streamId: _customYouTubeVideoId,
-        ),
-        context: context != null && context.mounted ? context : null,
-      );
-
-      if (orgId != null) {
-        await recordOrgAuditAction(
-          OrgAuditLogEntry(
-            logId: newId(),
-            organizationId: orgId,
-            timestamp: DateTime.now(),
-            actorEmail: _googleUserEmail ?? 'admin@platform.com',
-            actorName: _googleUserName ?? 'Administrator',
-            action: OrgAuditAction.startLiveBroadcast,
-            descriptionEn:
-                'Started live broadcast "$_customLiveTitle" (${isAudio ? 'Audio-Only' : 'Video'}).',
-            descriptionAr:
-                'بدأ بث مباشر "$_customLiveTitle" (${isAudio ? 'صوتي' : 'مرئي'}).',
-            metadata: {
-              'venue_id': _selectedVenueBranchId,
-              'speakers': _selectedCoSpeakerIds,
-              'broadcast_type': isAudio ? 'audio' : 'video',
-              'youtube_id': _customYouTubeVideoId,
-              'description': _customLiveDescription,
-            },
-          ),
-        );
-      }
-    } else {
-      // Private Streaming: clear the live session's knock/attendee queues --
-      // they're transient per-session state. Visibility/whitelist/knock-gate
-      // stay sticky across sessions (matches customLiveTitle etc.).
-      _pendingKnockRequests.clear();
-      _admittedAttendees.clear();
-
-      //  Check and push 1-Hour Watch Milestone Notification if user watched >= 60 min
-      WatchSessionTracker.onStreamEnded(
-        'stream_live_992',
-        onMilestoneReached: (spkId, spkName, duration) {
-          addEnhancedNotification(
-            AppNotificationModel(
-              id: 'notif_milestone_${DateTime.now().millisecondsSinceEpoch}',
-              type: NotificationType.watchMilestoneOneHour,
-              streamerId: spkId.isNotEmpty ? spkId : targetStreamerId,
-              streamerName: spkName,
-              titleEn: 'Thank you for watching!',
-              titleAr: 'شكراً لوقتك الثمين!',
-              bodyEn:
-                  'We loved having you for over an hour in $spkName\'s broadcast. We hope it was valuable and inspiring!',
-              bodyAr:
-                  'سعدنا بحضورك ومتابعتك لأكثر من ساعة في بث $spkName. نتمنى لك دوام الفائدة والتوفيق!',
-              timestamp: DateTime.now(),
-            ),
-            context: context,
-          );
-        },
-      );
-
-      if (orgId != null) {
-        await recordOrgAuditAction(
-          OrgAuditLogEntry(
-            logId: newId(),
-            organizationId: orgId,
-            timestamp: DateTime.now(),
-            actorEmail: _googleUserEmail ?? 'admin@platform.com',
-            actorName: _googleUserName ?? 'Administrator',
-            action: OrgAuditAction.endLiveBroadcast,
-            descriptionEn: 'Ended live broadcast session.',
-            descriptionAr: 'تم إنهاء جلسة البث المباشر.',
-          ),
-        );
-
-        addEnhancedNotification(
-          AppNotificationModel(
-            id: 'notif_org_end_${DateTime.now().millisecondsSinceEpoch}',
-            type: NotificationType.orgStreamerLiveStatus,
-            streamerId: orgId,
-            streamerName: 'Dalilk 4 IELTS',
-            titleEn: 'Stream Session Concluded',
-            titleAr: 'انتهت جلسة البث المباشر',
-            bodyEn:
-                'Faculty member concluded their live session at Dalilk Auditorium.',
-            bodyAr: 'أنهى عضو الكادر جلسته التدريبية المباشرة في مدرج دليلك.',
-            timestamp: DateTime.now(),
-          ),
-          context: context != null && context.mounted ? context : null,
-        );
-      }
-      // Stop polling if no live streamers remain (Quran 24/7 excluded
-      // from this check because it never calls toggleBroadcasterGoLive)
-      final anyOtherLive = _streamers.any((s) => s.isCurrentlyLive);
-      if (!anyOtherLive) {
-        // Still keep polling for the always-on Quran stream if it is live
-        final quranStillLive = _streamers
-            .any((s) => s.streamerId == 'quran_4k_05' && s.isCurrentlyLive);
-        if (!quranStillLive) _stopLiveViewerPolling();
-      }
-    }
-    notifyListeners();
   }
 
   /// Returns the 11-character YouTube id in [url], or an empty string when
@@ -4299,12 +4364,199 @@ class AppProvider extends ChangeNotifier {
       _reminderStreamerIds.contains(streamerId);
   bool isReminderSet(String streamerId) =>
       _reminderStreamerIds.contains(streamerId);
-  void toggleReminder(String streamerId) {
-    if (_reminderStreamerIds.contains(streamerId)) {
-      _reminderStreamerIds.remove(streamerId);
-    } else {
-      _reminderStreamerIds.add(streamerId);
+  bool hasCardReminder(String scheduleId) =>
+      _cardReminderIds.contains(scheduleId);
+  int get reminderLeadMinutes => _reminderLeadMinutes;
+  ReminderPushStatus get reminderPushStatus => _reminderPushStatus;
+
+  void attachReminderPush({required Future<void> Function(String) onOpen,
+      Future<void> Function(String route)? onOpenRoute}) {
+    _reminderPush.attach(onMessage: (data) {
+      if (data['type'] == 'org_event') {
+        if (_isLoggedInStreamer && data['viewer_id'] == currentUserId) {
+          unawaited(refreshOrganizationEvents().catchError(
+              (Object e) => debugPrint('Organization event refresh failed: $e')));
+        }
+        return;
+      }
+      if (data['type'] != 'upcoming_reminder') return;
+      if (!_isLoggedInStreamer || data['viewer_id'] != currentUserId) return;
+      final streamerId = data['streamer_id']?.toString() ?? '';
+      final scheduleId = data['schedule_id']?.toString() ?? '';
+      if (!_uuidPattern.hasMatch(streamerId) ||
+          !_uuidPattern.hasMatch(scheduleId)) {
+        return;
+      }
+      addNotification(AppNotificationItem(
+        id: 'upcoming:$scheduleId:${data['occurrence_at']}',
+        streamerId: streamerId,
+        titleEn: data['title_en']?.toString() ?? '',
+        titleAr: data['title_ar']?.toString() ?? '',
+        bodyEn: data['body_en']?.toString() ?? '',
+        bodyAr: data['body_ar']?.toString() ?? '',
+        timestamp: DateTime.now(),
+      ));
+    }, onOpen: (data) {
+      if (data['type'] == 'org_event') {
+        final route = organizationEventRoute(data);
+        if (route != null && onOpenRoute != null) unawaited(onOpenRoute(route));
+        return;
+      }
+      final id = data['streamer_id']?.toString() ?? '';
+      if (_uuidPattern.hasMatch(id)) unawaited(onOpen(id));
+    });
+  }
+
+  /// The in-app route for an organization push, from validated identifiers
+  /// only; the push body itself is never used as a navigation target.
+  static String? organizationEventRoute(Map<String, dynamic> data) {
+    String? id(String key) {
+      final value = data[key]?.toString() ?? '';
+      return _uuidPattern.hasMatch(value) ? value : null;
     }
+    final kind = data['kind']?.toString() ?? '';
+    final eventId = id('event_id');
+    if (eventId == null || !OrgEvent.kinds.contains(kind)) return null;
+    return OrgEvent(id: eventId, kind: kind, createdAt: DateTime.now(),
+        organizationId: id('organization_id'), sessionId: id('session_id'),
+        invitationId: id('invitation_id')).route;
+  }
+
+  Future<void> syncReminderPush(
+      {required bool requestPermission, required String language}) async {
+    if (currentUserId == null) return;
+    final generation = _authGeneration;
+    try {
+      final status = await _reminderPush.sync(
+          requestPermission: requestPermission, language: language);
+      if (generation != _authGeneration) return;
+      _reminderPushStatus = status;
+    } catch (e) {
+      if (generation != _authGeneration) return;
+      debugPrint('Reminder push sync failed: $e');
+      _reminderPushStatus = ReminderPushStatus.unavailable;
+    }
+    notifyListeners();
+  }
+
+  List<UpcomingSchedule>? upcomingSchedulesFor(String streamerId) =>
+      _upcomingByStreamer[streamerId];
+  String? upcomingScheduleErrorFor(String streamerId) =>
+      _upcomingErrors[streamerId];
+  bool isLoadingUpcomingFor(String streamerId) =>
+      _loadingUpcoming.contains(streamerId);
+
+  Future<void> loadUpcomingSchedules(String streamerId) async {
+    if (_loadingUpcoming.contains(streamerId)) return;
+    final generation = _authGeneration;
+    _loadingUpcoming.add(streamerId);
+    _upcomingErrors.remove(streamerId);
+    notifyListeners();
+    try {
+      final rows = await _upcomingService.load(streamerId);
+      if (generation == _authGeneration) _upcomingByStreamer[streamerId] = rows;
+    } catch (e) {
+      if (generation == _authGeneration) {
+        _upcomingErrors[streamerId] = e.toString();
+      }
+    } finally {
+      if (generation == _authGeneration) {
+        _loadingUpcoming.remove(streamerId);
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<void> saveUpcomingSchedule(UpcomingSchedule schedule) async {
+    if (!isApprovedStreamer || !isOwnStreamerProfile(schedule.streamerId)) {
+      throw StateError('Approved channel owner required');
+    }
+    final generation = _authGeneration;
+    await _upcomingService.save(schedule);
+    if (generation != _authGeneration) return;
+    await loadUpcomingSchedules(schedule.streamerId);
+  }
+
+  Future<void> deleteUpcomingSchedule(UpcomingSchedule schedule) async {
+    if (!isApprovedStreamer || !isOwnStreamerProfile(schedule.streamerId)) {
+      throw StateError('Approved channel owner required');
+    }
+    final generation = _authGeneration;
+    await _upcomingService.delete(schedule.id);
+    if (generation != _authGeneration) return;
+    _cardReminderIds.remove(schedule.id);
+    await loadUpcomingSchedules(schedule.streamerId);
+  }
+
+  Future<void> refreshScheduleReminders() async {
+    final generation = _authGeneration;
+    final state = await _upcomingService.loadReminders();
+    if (generation != _authGeneration) return;
+    _reminderStreamerIds
+      ..clear()
+      ..addAll(state.channels);
+    _cardReminderIds
+      ..clear()
+      ..addAll(state.cards);
+    _reminderLeadMinutes = state.leadMinutes;
+    notifyListeners();
+  }
+
+  Future<void> toggleReminder(String streamerId,
+      {String language = 'en'}) async {
+    if (!isLoggedInStreamer) throw StateError('Sign in to set reminders');
+    final generation = _authGeneration;
+    final enabled = !_reminderStreamerIds.contains(streamerId);
+    await _upcomingService.setChannelReminder(streamerId, enabled);
+    if (generation != _authGeneration) return;
+    if (enabled) {
+      _reminderStreamerIds.add(streamerId);
+    } else {
+      _reminderStreamerIds.remove(streamerId);
+    }
+    notifyListeners();
+    if (enabled) {
+      await syncReminderPush(requestPermission: true, language: language);
+    }
+  }
+
+  Future<void> toggleCardReminder(String scheduleId,
+      {String language = 'en'}) async {
+    if (!isLoggedInStreamer) throw StateError('Sign in to set reminders');
+    final generation = _authGeneration;
+    final enabled = !_cardReminderIds.contains(scheduleId);
+    await _upcomingService.setCardReminder(scheduleId, enabled);
+    if (generation != _authGeneration) return;
+    if (enabled) {
+      _cardReminderIds.add(scheduleId);
+    } else {
+      _cardReminderIds.remove(scheduleId);
+    }
+    notifyListeners();
+    if (enabled) {
+      await syncReminderPush(requestPermission: true, language: language);
+    }
+  }
+
+  Future<void> setReminderLeadMinutes(int minutes) async {
+    final generation = _authGeneration;
+    await _upcomingService.setLeadMinutes(minutes);
+    if (generation != _authGeneration) return;
+    _reminderLeadMinutes = minutes;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void debugSetUpcomingSchedules(
+      String streamerId, List<UpcomingSchedule> rows) {
+    _upcomingByStreamer[streamerId] = rows;
+    _upcomingErrors.remove(streamerId);
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void debugSetChannelReminderForTests(String streamerId) {
+    _reminderStreamerIds.add(streamerId);
     notifyListeners();
   }
 
@@ -4412,15 +4664,6 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updatePhoneBroadcastTarget({
-    required String rtmpUrl,
-    required String streamKey,
-  }) {
-    _phoneBroadcastRtmpUrl = rtmpUrl.trim();
-    _phoneBroadcastStreamKey = streamKey.trim();
-    notifyListeners();
-  }
-
   void setSelectedStreamingQuality(String quality) {
     _selectedStreamingQuality = quality;
     notifyListeners();
@@ -4480,15 +4723,16 @@ class AppProvider extends ChangeNotifier {
     final updated = await _adminDbService!.updateApplicationStatus(
       applicationId,
       ApplicationStatus.approved,
+      expectedStatus: app.status,
       reviewNotes: adminNotes,
-      reviewedBy: _googleUserName ?? 'Amir Al-Hatemi (Super Admin)',
+      reviewedBy: _googleUserName ?? 'Administrator',
     );
 
-    if (updated != null) {
-      _applications = List.from(await _adminDbService!.loadApplications());
-    }
+    if (updated == null) return false;
+    _applications = List.from(await _adminDbService!.loadApplications());
+    await _refreshApplicationReviewEvents();
 
-    if (updated?.revisionOf != null) {
+    if (updated.revisionOf != null) {
       // The database published the revision in the same review transaction.
       await loadVerifiedStreamersFromBackend();
       notifyListeners();
@@ -4496,7 +4740,7 @@ class AppProvider extends ChangeNotifier {
     }
 
     final applicantProfileId =
-        updated?.applicantProfileId ?? app.applicantProfileId;
+        updated.applicantProfileId ?? app.applicantProfileId;
     String? realOrgId;
     if (applicantProfileId != null) {
       try {
@@ -4625,18 +4869,21 @@ class AppProvider extends ChangeNotifier {
 
     final app = _applications[idx];
     _adminDbService ??= await AdminDatabaseService.create();
-    final reviewer = (isAdminUser && _googleUserName != null)
-        ? '$_googleUserName (Super Admin)'
-        : 'Amir Al-Hatemi (Super Admin)';
+    final reviewer = _googleUserName ?? 'Administrator';
     final updated = await _adminDbService!.updateApplicationStatus(
       applicationId,
       ApplicationStatus.rejected,
+      expectedStatus: app.status,
       reviewNotes: reason,
       reviewedBy: reviewer,
     );
 
     if (updated != null) {
       _applications = List.from(await _adminDbService!.loadApplications());
+      await _refreshApplicationReviewEvents();
+      if (app.status == ApplicationStatus.approved) {
+        await loadVerifiedStreamersFromBackend();
+      }
 
       addEnhancedNotification(
         AppNotificationModel(
@@ -4644,12 +4891,18 @@ class AppProvider extends ChangeNotifier {
           type: NotificationType.streamerApplicationRejected,
           streamerId: applicationId,
           streamerName: app.applicantNameEn,
-          titleEn: 'Broadcaster Application Status Update',
-          titleAr: 'تحديث بخصوص طلب التوثيق الأكاديمي',
-          bodyEn:
-              'Thank you for applying. We could not approve the application at this time: "$reason". You are welcome to re-apply anytime!',
-          bodyAr:
-              'نشكر اهتمامك بالانضمام لمنصتنا. بعد المراجعة الدقيقة، تعذر قبول الطلب حالياً للملاحظات التالية: «$reason». يسعدنا تقديمك مجدداً بعد التعديل!',
+          titleEn: app.revisionOf == null
+              ? 'Broadcaster Application Status Update'
+              : 'Profile Edit Review',
+          titleAr: app.revisionOf == null
+              ? 'تحديث بخصوص طلب التوثيق الأكاديمي'
+              : 'مراجعة تعديل الملف الشخصي',
+          bodyEn: app.revisionOf == null
+              ? 'Your broadcaster application was rejected: "$reason".'
+              : 'Your proposed profile edit was rejected: "$reason". Your approved profile remains active.',
+          bodyAr: app.revisionOf == null
+              ? 'تم رفض طلب التوثيق: «$reason».'
+              : 'تم رفض تعديل ملفك الشخصي المقترح: «$reason». يبقى ملفك المعتمد نشطاً.',
           timestamp: DateTime.now(),
         ),
         context: context != null && context.mounted ? context : null,
@@ -4667,13 +4920,40 @@ class AppProvider extends ChangeNotifier {
     final success = await _adminDbService!.deleteApplication(applicationId);
     if (success) {
       if (idx != -1) _applications.removeAt(idx);
-      _streamers.removeWhere((s) =>
-          s.streamerId == applicationId ||
-          s.streamerId == 'streamer_$applicationId');
-      await loadVerifiedStreamersFromBackend();
+      await _refreshApplicationReviewEvents();
       notifyListeners();
     }
     return success;
+  }
+
+  Future<void> reverseApprovedApplication(String eventId, String reason) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    await _adminDbService!.reverseApprovedApplication(eventId, reason);
+    _applications = List.from(await _adminDbService!.loadApplications());
+    await _refreshApplicationReviewEvents();
+    await loadVerifiedStreamersFromBackend();
+    notifyListeners();
+  }
+
+  Future<bool> approveRejectedApplication(String applicationId,
+      {String? adminNotes}) async {
+    _adminDbService ??= await AdminDatabaseService.create();
+    final restored =
+        await _adminDbService!.restoreApplicationToQueue(applicationId);
+    _applications = [
+      ..._applications.where((a) => a.id != applicationId),
+      restored,
+    ];
+    return approveBroadcasterApplication(applicationId, adminNotes: adminNotes);
+  }
+
+  Future<void> _refreshApplicationReviewEvents() async {
+    try {
+      _applicationReviewEvents =
+          List.from(await _adminDbService!.loadApplicationReviewEvents());
+    } catch (e) {
+      debugPrint('Application review history unavailable: $e');
+    }
   }
 
   /// Batch approve for the verification queue's multi-select (v0.8
@@ -4989,6 +5269,11 @@ class AppProvider extends ChangeNotifier {
       } catch (_) {}
       _chatReportsChannel = null;
     }
+  }
+
+  Future<void> refreshChatReports() async {
+    await ensureChatReportsLoaded();
+    await _refreshChatReports();
   }
 
   Future<void> _refreshChatReports() async {

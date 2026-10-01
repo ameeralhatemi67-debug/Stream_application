@@ -4,6 +4,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../models/chat_message_model.dart';
 import '../../services/chat_block_list.dart';
 import '../../services/live_chat_controller.dart';
+import 'live_chat_layout.dart';
 
 /// Long-press action sheet for a chat message (Cluster 4 Task 13). Branches
 /// on `message.isCurrentUser`: the sender gets Edit/Delete on their own
@@ -15,16 +16,9 @@ Future<void> showChatMessageActionsSheet(
   required ChatMessageModel message,
   required LiveChatController controller,
 }) async {
-  final action = await showModalBottomSheet<_ChatMessageAction>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: AppTheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius:
-          BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
-    ),
-    builder: (context) => _ChatMessageActionsMenu(
+  final action = await _showChatMenu<_ChatMessageAction>(
+    context,
+    _ChatMessageActionsMenu(
       message: message,
       canModerate: controller.canModerate,
     ),
@@ -87,6 +81,47 @@ Future<void> showChatMessageActionsSheet(
   }
 }
 
+Future<T?> _showChatMenu<T>(BuildContext context, Widget menu) {
+  // A laptop's chat lives to the side of the embedded YouTube platform view.
+  // Keep the action surface in that column so iframe hit testing cannot take
+  // taps intended for the menu.
+  if (isLaptopLiveLayout(context)) {
+    return showDialog<T>(
+      context: context,
+      builder: (context) => Align(
+        alignment: AlignmentDirectional.centerEnd,
+        child: SizedBox(
+          width: 320,
+          child: Dialog(
+            insetPadding: EdgeInsets.zero,
+            backgroundColor: AppTheme.surface,
+            child: menu,
+          ),
+        ),
+      ),
+    );
+  }
+  return showModalBottomSheet<T>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: AppTheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius:
+          BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
+    ),
+    builder: (context) => menu,
+  );
+}
+
+Widget _placeChatDialog(BuildContext context, Widget dialog) {
+  if (!isLaptopLiveLayout(context)) return dialog;
+  return Align(
+    alignment: AlignmentDirectional.centerEnd,
+    child: SizedBox(width: 320, child: dialog),
+  );
+}
+
 Future<void> _handleEdit(
   BuildContext context, {
   required ChatMessageModel message,
@@ -95,49 +130,51 @@ Future<void> _handleEdit(
   final textController = TextEditingController(text: message.body);
   final route = DialogRoute<String>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      backgroundColor: AppTheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.border),
-      ),
-      title: Text(
-        'live.edit_message_title'.tr(),
-        style: const TextStyle(
-            color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
-      ),
-      scrollable: true,
-      content: MediaQuery.orientationOf(dialogContext) == Orientation.landscape
-          ? Text('live.landscape_chat_read_only'.tr())
-          : TextField(
-              controller: textController,
-              autofocus: true,
-              maxLength: 500,
-              maxLines: 3,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: InputDecoration(
-                hintText: 'live.edit_message_hint'.tr(),
-                hintStyle: const TextStyle(color: AppTheme.textMuted),
+    builder: (dialogContext) => _placeChatDialog(
+      dialogContext,
+      AlertDialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          side: const BorderSide(color: AppTheme.border),
+        ),
+        title: Text(
+          'live.edit_message_title'.tr(),
+          style: const TextStyle(
+              color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+        ),
+        scrollable: true,
+        content: isCompactLandscapeChat(dialogContext)
+            ? Text('live.landscape_chat_read_only'.tr())
+            : TextField(
+                controller: textController,
+                autofocus: true,
+                maxLength: 500,
+                maxLines: 3,
+                style: const TextStyle(color: AppTheme.textPrimary),
+                decoration: InputDecoration(
+                  hintText: 'live.edit_message_hint'.tr(),
+                  hintStyle: const TextStyle(color: AppTheme.textMuted),
+                ),
               ),
-            ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(),
-          child: Text('common.cancel'.tr(),
-              style: const TextStyle(color: AppTheme.textMuted)),
-        ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            foregroundColor: AppTheme.onMedia,
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text('common.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMuted)),
           ),
-          onPressed:
-              MediaQuery.orientationOf(dialogContext) == Orientation.landscape
-                  ? null
-                  : () => Navigator.of(dialogContext).pop(textController.text),
-          child: Text('live.save_edit'.tr()),
-        ),
-      ],
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primary,
+              foregroundColor: AppTheme.onMedia,
+            ),
+            onPressed: isCompactLandscapeChat(dialogContext)
+                ? null
+                : () => Navigator.of(dialogContext).pop(textController.text),
+            child: Text('live.save_edit'.tr()),
+          ),
+        ],
+      ),
     ),
   );
   final newBody = await Navigator.of(context, rootNavigator: true).push(route);
@@ -176,32 +213,35 @@ Future<void> _runModerationAction(
 Future<bool?> _confirmDelete(BuildContext context, {required String title}) {
   return showDialog<bool>(
     context: context,
-    builder: (context) => AlertDialog(
-      backgroundColor: AppTheme.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.border),
-      ),
-      title: Text(
-        title,
-        style: const TextStyle(
-            color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text('common.cancel'.tr(),
-              style: const TextStyle(color: AppTheme.textMuted)),
+    builder: (context) => _placeChatDialog(
+      context,
+      AlertDialog(
+        backgroundColor: AppTheme.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+          side: const BorderSide(color: AppTheme.border),
         ),
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.danger,
-            foregroundColor: AppTheme.onMedia,
+        title: Text(
+          title,
+          style: const TextStyle(
+              color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(false),
+            child: Text('common.cancel'.tr(),
+                style: const TextStyle(color: AppTheme.textMuted)),
           ),
-          onPressed: () => Navigator.of(context).pop(true),
-          child: Text('common.delete'.tr()),
-        ),
-      ],
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.danger,
+              foregroundColor: AppTheme.onMedia,
+            ),
+            onPressed: () => Navigator.of(context).pop(true),
+            child: Text('common.delete'.tr()),
+          ),
+        ],
+      ),
     ),
   );
 }
@@ -243,17 +283,8 @@ Future<void> _handleReport(
   required ChatMessageModel message,
   required LiveChatController controller,
 }) async {
-  final reason = await showModalBottomSheet<String>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: AppTheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius:
-          BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
-    ),
-    builder: (context) => const _ReportReasonMenu(),
-  );
+  final reason =
+      await _showChatMenu<String>(context, const _ReportReasonMenu());
   if (reason == null || !context.mounted) return;
 
   try {

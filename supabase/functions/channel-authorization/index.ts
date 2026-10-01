@@ -9,6 +9,13 @@ const clientSecret = Deno.env.get('YOUTUBE_OAUTH_CLIENT_SECRET') ?? '';
 const callbackUrl = Deno.env.get('YOUTUBE_OAUTH_CALLBACK_URL') ?? '';
 const appOrigin = Deno.env.get('PUBLIC_APP_ORIGIN') ?? '';
 
+// The web app routes in the URL fragment (Flutter's default hash strategy).
+// Fixed deployment origin, never a caller-supplied return URL.
+function appReturn(status: 'connected'|'failed'): string {
+  const destination = new URL('/',appOrigin);
+  destination.hash = `/channel-connected?status=${status}`;
+  return destination.toString();
+}
 function headers(): HeadersInit {
   return {'cache-control':'no-store','access-control-allow-origin':appOrigin,
     'access-control-allow-headers':'authorization,apikey,content-type,x-client-info',
@@ -42,10 +49,7 @@ Deno.serve(async request => {
       const channel = ownedChannel(await youtube(token.access_token,'channels',{part:'id,snippet',mine:'true'}));
       await rpc(server,'channel_oauth_commit',{p_request_id:intent.id,p_channel_id:channel.id,
         p_title:channel.title,p_refresh_token:token.refresh_token});
-      // Fixed deployment origin, never a caller-supplied return URL.
-      const destination = new URL('/channel-connected',appOrigin);
-      destination.searchParams.set('status','connected');
-      return new Response(null,{status:303,headers:{...headers(),location:destination.toString()}});
+      return new Response(null,{status:303,headers:{...headers(),location:appReturn('connected')}});
     }
     if (request.method!=='POST') return new Response('Method not allowed',{status:405,headers:headers()});
     if (request.headers.get('origin') && request.headers.get('origin')!==appOrigin) {
@@ -69,6 +73,10 @@ Deno.serve(async request => {
     return Response.json({authorization_url:consent.toString()},{headers:headers()});
   } catch (error) {
     // No OAuth code, token, request body or credential is logged or returned.
+    // A browser returning from Google gets the app back, not a JSON error page.
+    if (request.method==='GET' && url.searchParams.has('state')) {
+      return new Response(null,{status:303,headers:{...headers(),location:appReturn('failed')}});
+    }
     return Response.json({error:error instanceof Error ? error.message : 'Channel operation failed'},
       {status:409,headers:headers()});
   }

@@ -26,6 +26,30 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
   bool _isSearchFocused = false;
+  int? _cardLayoutSignature;
+  List<GlobalKey> _cardKeys = [];
+  double _cardMinHeight = 0;
+  bool _cardMeasureQueued = false;
+
+  void _measureCardHeights() {
+    if (_cardMeasureQueued) return;
+    _cardMeasureQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _cardMeasureQueued = false;
+      if (!mounted) return;
+      var tallest = 0.0;
+      // ponytail: one O(n) scan per layout change; virtualize if the feed grows.
+      for (final key in _cardKeys) {
+        final box = key.currentContext?.findRenderObject();
+        if (box is RenderBox && box.hasSize && box.size.height > tallest) {
+          tallest = box.size.height;
+        }
+      }
+      if (tallest > _cardMinHeight + 0.5) {
+        setState(() => _cardMinHeight = tallest);
+      }
+    });
+  }
 
   @override
   void initState() {
@@ -527,6 +551,19 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   ((constraints.maxWidth - AppTheme.spaceMd * (columns - 1)) /
                           columns)
                       .clamp(0.0, 420.0);
+              final signature = Object.hash(
+                constraints.maxWidth,
+                langCode,
+                MediaQuery.textScalerOf(context).scale(1),
+                Object.hashAll(displayedStreamers),
+              );
+              if (_cardLayoutSignature != signature) {
+                _cardLayoutSignature = signature;
+                _cardMinHeight = 0;
+                _cardKeys = List.generate(
+                    displayedStreamers.length, (_) => GlobalKey());
+              }
+              _measureCardHeights();
               return Wrap(
                 alignment: WrapAlignment.start,
                 textDirection:
@@ -536,11 +573,28 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                 spacing: AppTheme.spaceMd,
                 runSpacing: AppTheme.spaceMd,
                 children: [
-                  for (final streamer in displayedStreamers)
+                  for (var index = 0;
+                      index < displayedStreamers.length;
+                      index++)
                     SizedBox(
                         width: width,
-                        child: StreamerGridCard(
-                            streamer: streamer, langCode: langCode)),
+                        child:
+                            NotificationListener<SizeChangedLayoutNotification>(
+                          onNotification: (_) {
+                            _measureCardHeights();
+                            return false;
+                          },
+                          child: SizeChangedLayoutNotifier(
+                            child: ConstrainedBox(
+                              constraints:
+                                  BoxConstraints(minHeight: _cardMinHeight),
+                              child: StreamerGridCard(
+                                  key: _cardKeys[index],
+                                  streamer: displayedStreamers[index],
+                                  langCode: langCode),
+                            ),
+                          ),
+                        )),
                 ],
               );
             }),

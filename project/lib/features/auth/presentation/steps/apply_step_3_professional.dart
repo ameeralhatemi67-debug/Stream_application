@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 enum YoutubeVerificationState {
   unverified,
@@ -27,6 +28,8 @@ class ApplyStep3Professional extends StatefulWidget {
   final Function(List<String> categories) onCategoriesChanged;
   final Function(bool isOrg) onTypeChanged;
   final Function(String tag) onTagToggled;
+  /// Server switch `organization_applications_open` (or the V1 rollout).
+  final bool organizationApplicationsOpen;
 
   const ApplyStep3Professional({
     super.key,
@@ -41,6 +44,7 @@ class ApplyStep3Professional extends StatefulWidget {
     required this.onCategoriesChanged,
     required this.onTypeChanged,
     required this.onTagToggled,
+    this.organizationApplicationsOpen = false,
   });
 
   /// Robust parser that extracts the YouTube handle from various formats:
@@ -262,9 +266,16 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
 
     final orgButton = _buildTypeButton(
       title: 'wizard_steps.step3_type_org'.tr(),
-      subtitle: 'wizard_steps.step3_type_org_sub'.tr(),
+      subtitle: widget.organizationApplicationsOpen
+          ? 'wizard_steps.step3_type_org_sub'.tr()
+          : 'application.organization_coming_soon'.tr(),
       isSelected: widget.isOrganization,
-      onTap: () => widget.onTypeChanged(true),
+      unavailable: !widget.organizationApplicationsOpen,
+      onTap: widget.organizationApplicationsOpen
+          ? () => widget.onTypeChanged(true)
+          : () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text('application.organization_coming_soon'.tr()),
+              )),
     );
 
     if (isPhone) {
@@ -657,7 +668,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           child: SizedBox(
             width: 16,
             height: 16,
-            child: CircularProgressIndicator(
+            child: HadayahLoadingIndicator(
                 strokeWidth: 2, color: AppTheme.primary),
           ),
         );
@@ -707,54 +718,58 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
     required String subtitle,
     required bool isSelected,
     required VoidCallback onTap,
+    bool unavailable = false,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(AppTheme.spaceMd),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.danger.withValues(alpha: 0.12)
-              : AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(
-            color: isSelected ? AppTheme.danger : AppTheme.border,
-            width: isSelected ? 1.5 : 1.0,
+    return Opacity(
+      opacity: unavailable ? 0.5 : 1,
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.all(AppTheme.spaceMd),
+          decoration: BoxDecoration(
+            color: isSelected
+                ? AppTheme.danger.withValues(alpha: 0.12)
+                : AppTheme.surface,
+            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            border: Border.all(
+              color: isSelected ? AppTheme.danger : AppTheme.border,
+              width: isSelected ? 1.5 : 1.0,
+            ),
           ),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Expanded(
-                  child: Text(
-                    title,
-                    style: TextStyle(
-                      color: isSelected
-                          ? AppTheme.textPrimary
-                          : AppTheme.textSecondary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: Text(
+                      title,
+                      style: TextStyle(
+                        color: isSelected
+                            ? AppTheme.textPrimary
+                            : AppTheme.textSecondary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    overflow: TextOverflow.ellipsis,
                   ),
-                ),
-                if (isSelected)
-                  const Icon(Icons.check_circle_rounded,
-                      color: AppTheme.danger, size: 16),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(
-              subtitle,
-              style: const TextStyle(
-                color: AppTheme.textMuted,
-                fontSize: 11,
+                  if (isSelected)
+                    const Icon(Icons.check_circle_rounded,
+                        color: AppTheme.danger, size: 16),
+                ],
               ),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                subtitle,
+                style: const TextStyle(
+                  color: AppTheme.textMuted,
+                  fontSize: 11,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

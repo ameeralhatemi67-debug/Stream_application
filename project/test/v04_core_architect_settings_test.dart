@@ -161,7 +161,8 @@ void main() {
       // Toggle Amir Go Live with Audio-Only mode
       provider.toggleBroadcasterGoLive();
       expect(provider.isBroadcastingLive, isFalse);
-      expect(provider.broadcastSessionError, 'broadcast_primary_required');
+      // No accepted, prepared canonical session: the studio must not go live.
+      expect(provider.broadcastSessionError, 'organization_v1.assignment_required');
       // Keep audio/video marker coverage using the explicit local fixture tool.
       provider.setPitchDirectorMode(true);
       final amir = provider.getStreamerById('prof_alghamdi_01');

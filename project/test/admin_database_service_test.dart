@@ -6,6 +6,7 @@ import 'package:streamer_app/features/admin/models/terms_and_conditions_model.da
 import 'package:streamer_app/features/admin/models/viewer_analytics_model.dart';
 
 import 'fixtures/admin_applications.dart';
+import 'support/fixture_application_db.dart';
 
 void main() {
   group('Admin Hub & Database Layer Unit Tests (Phase 1)', () {
@@ -128,13 +129,19 @@ void main() {
 
     test('TC-DB-04: Submitted Applications & Application Mutations', () async {
       final service = AdminDatabaseService(null);
-      // The service no longer seeds sample applications (P1.6/P2): an empty
-      // queue is the truthful state, so this test submits its own fixtures.
+      // The service no longer seeds sample applications (P1.6/P2), and an
+      // offline submission is refused instead of becoming a local "success".
       expect(await service.loadApplications(), isEmpty);
+      await expectLater(
+          service.submitApplication(sampleBroadcasterApplications().first),
+          throwsStateError);
+      expect(await service.loadApplications(), isEmpty);
+
+      final backend = FixtureApplicationDb();
       for (final fixture in sampleBroadcasterApplications()) {
-        await service.submitApplication(fixture);
+        await backend.submitApplication(fixture);
       }
-      final apps = await service.loadApplications();
+      final apps = await backend.loadApplications();
 
       expect(apps.length, greaterThanOrEqualTo(2));
       expect(apps.any((a) => a.id == 'app_kfupm_ai_01'), isTrue);
@@ -145,10 +152,16 @@ void main() {
       expect(kfupmApp.seatingCapacity, equals(450));
       expect(kfupmApp.isPending, isTrue);
 
-      // Update status to Approved
-      final approved = await service.updateApplicationStatus(
+      // A stale expected status is a lost race, not an approval.
+      expect(
+          await backend.updateApplicationStatus(
+              'app_kfupm_ai_01', ApplicationStatus.approved,
+              expectedStatus: ApplicationStatus.rejected),
+          isNull);
+      final approved = await backend.updateApplicationStatus(
         'app_kfupm_ai_01',
         ApplicationStatus.approved,
+        expectedStatus: ApplicationStatus.pending,
         reviewNotes: 'Valid university credentials confirmed.',
         reviewedBy: 'Amir Al-Hatemi (Super Admin)',
       );
@@ -162,7 +175,7 @@ void main() {
     test(
         'TC-DB-05: AppProvider Verification State Machine (Approve Application -> Live Streamer)',
         () async {
-      final service = AdminDatabaseService(null);
+      final service = FixtureApplicationDb();
       for (final fixture in sampleBroadcasterApplications()) {
         await service.submitApplication(fixture);
       }
@@ -200,7 +213,7 @@ void main() {
 
     test('TC-DB-06: AppProvider Rejection Workflow and Reason Retention',
         () async {
-      final service = AdminDatabaseService(null);
+      final service = FixtureApplicationDb();
       for (final fixture in sampleBroadcasterApplications()) {
         await service.submitApplication(fixture);
       }

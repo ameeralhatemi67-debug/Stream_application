@@ -18,9 +18,13 @@ import '../../services/rtmp_publish_engine.dart';
 import '../widgets/chat_message_actions_sheet.dart';
 import '../widgets/floating_reactions_overlay.dart';
 import '../widgets/live_chat_widget.dart';
+import '../widgets/live_chat_layout.dart';
+import '../widgets/live_audio_stage_multi_speaker.dart';
+import '../abstract_video_player.dart';
 import '../widgets/permission_rationale_dialog.dart';
 import '../widgets/phone_camera_preview.dart';
 import '../widgets/rtmp_ip_dialog.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Full-featured Stream Page for Phone Broadcasters:
 /// Unifies the broadcaster's phone camera stream with the exact same
@@ -102,10 +106,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
     _tabController = TabController(length: 3, vsync: this);
     _chatController = LiveChatController(
-      streamId: context.read<AppProvider>().customYouTubeVideoId,
+      streamId: context.read<AppProvider>().liveSessionId ?? '',
       onReaction: (type) => _reactionsController.spawnReaction(type),
     );
-    if (context.read<AppProvider>().customYouTubeVideoId.isNotEmpty) {
+    if (context.read<AppProvider>().liveSessionId != null) {
       _chatController.start();
     }
     _chatController.addListener(_handleChatConnectionChange);
@@ -428,7 +432,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       // The camera has stopped either way. A failed end call leaves the
       // listing in place (the provider restores it), so say so instead of
       // implying the listing is gone.
-      confirmed = !owned || !_appProvider.isBroadcastingLive;
+      confirmed = !owned || (_appProvider.publishingSession == null && !_appProvider.isBroadcastingLive);
     } catch (e) {
       debugPrint('[PhoneBroadcastScreen] end failed: ${e.runtimeType}');
       confirmed = false;
@@ -545,6 +549,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   void _onMicSilenceChanged() {
     if (!_appProviderCaptured) return;
     _appProvider.setStreamerMicMuted(_engine.isMicSilent.value);
+    if (mounted) setState(() {});
   }
 
   void _restorePortraitChrome() {
@@ -616,7 +621,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     final description = _appProvider.customLiveDescription;
     final langCode = context.locale.languageCode;
     final mediaQuery = MediaQuery.of(context);
-    final isDesktop = mediaQuery.size.width >= 900;
+    final isDesktop = isLaptopLiveLayout(context);
     final isLandscape = mediaQuery.orientation == Orientation.landscape;
     final isSideBySide = isDesktop || isLandscape;
     final streamer = _appProvider.currentBroadcasterStreamer;
@@ -632,7 +637,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       );
     }
 
-    if (isLandscape) {
+    if (isLandscape && !isDesktop) {
       return Scaffold(
         backgroundColor: AppTheme.media,
         resizeToAvoidBottomInset: false,
@@ -800,17 +805,15 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               )
             : Column(
                 children: [
-                  if (mediaQuery.viewInsets.bottom == 0) ...[
-                    _buildVideoViewport(
+                  AnimatedSize(
+                    duration: const Duration(milliseconds: 240),
+                    alignment: Alignment.topCenter,
+                    child: _buildVideoViewport(
                         isSideBySide: false, streamer: streamer),
+                  ),
+                  if (mediaQuery.viewInsets.bottom == 0)
                     _buildTitleAndDescriptionStrip(
                         title, description, streamer, langCode),
-                  ] else ...[
-                    Padding(
-                      padding: const EdgeInsets.all(AppTheme.spaceSm),
-                      child: _endControl(),
-                    ),
-                  ],
                   Expanded(child: _buildCinemaTabPanel(langCode)),
                 ],
               ),
@@ -905,70 +908,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           children: [
             // 1. Camera Platform View (or Camera Off Audio Poster)
             if (_engine.isCameraOff)
-              Container(
-                color: AppTheme.bg,
-                alignment: Alignment.center,
-                // Keeps the poster's button clear of the pinned End control.
-                padding: const EdgeInsets.only(bottom: 56),
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      CircleAvatar(
-                        radius: 34,
-                        backgroundColor: AppTheme.surface,
-                        backgroundImage:
-                            resolveImageProviderOrNull(streamer.avatarUrl),
-                      ),
-                      const SizedBox(height: 10),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.warning.withValues(alpha: 0.2),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(
-                              color: AppTheme.warning.withValues(alpha: 0.5)),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(Icons.videocam_off_rounded,
-                                size: 14, color: AppTheme.warning),
-                            const SizedBox(width: 6),
-                            Text(
-                              'live.video_hidden_badge'.tr(),
-                              style: const TextStyle(
-                                color: AppTheme.warning,
-                                fontSize: 11,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      TextButton.icon(
-                        onPressed: () => _engine.toggleCamera(false),
-                        icon: const Icon(Icons.videocam_rounded, size: 16),
-                        label: Text('design_ui.turn_on_camera'.tr(),
-                            style: const TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold)),
-                        style: TextButton.styleFrom(
-                          // surfaceAlt is a near-white tint, not a media
-                          // surface, so the label takes the primary accent
-                          // rather than `onMedia` white on near-white.
-                          foregroundColor: AppTheme.primary,
-                          backgroundColor: AppTheme.surfaceAlt,
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 12, vertical: 6),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              LiveAudioStageMultiSpeaker(
+                streamer: streamer,
+                langCode: context.locale.languageCode,
+                viewerCount: null,
+                isPlaying: !_engine.isMicSilent.value,
+                streamState: _engine.state == RtmpPublishState.live
+                    ? StreamState.live
+                    : StreamState.initializing,
+                onStageTap: () =>
+                    setState(() => _controlsVisible = !_controlsVisible),
+                onSpeakerTap: (_) {},
               )
             else
               ClipRect(
@@ -982,7 +932,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               const ColoredBox(
                 color: AppTheme.media,
                 child: Center(
-                  child: CircularProgressIndicator(color: AppTheme.danger),
+                  child: HadayahLoadingIndicator(color: AppTheme.danger),
                 ),
               ),
 
@@ -1052,12 +1002,18 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               ),
             ),
 
-            // End is never faded with the other controls.
             PositionedDirectional(
               bottom: AppTheme.spaceSm,
               start: 0,
               end: 0,
-              child: Center(child: _endControl()),
+              child: AnimatedOpacity(
+                opacity: _controlsVisible ? 1 : 0,
+                duration: const Duration(milliseconds: 240),
+                child: IgnorePointer(
+                  ignoring: !_controlsVisible,
+                  child: Center(child: _endControl()),
+                ),
+              ),
             ),
 
             // 5. Error Banner
@@ -1103,6 +1059,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
 
     if (isSideBySide) return videoContent;
+
+    if (MediaQuery.viewInsetsOf(context).bottom > 0) {
+      return SizedBox(width: double.infinity, height: 100, child: videoContent);
+    }
 
     return AspectRatio(
       aspectRatio: 16 / 9,
@@ -1406,7 +1366,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           ? const SizedBox(
               width: 16,
               height: 16,
-              child: CircularProgressIndicator(
+              child: HadayahLoadingIndicator(
                   strokeWidth: 2, color: AppTheme.onPrimary),
             )
           : Icon(sending ? Icons.stop_circle_rounded : Icons.logout_rounded,
@@ -1827,11 +1787,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   void _toggleLandscapeControls() {
-    if (_controlsVisible &&
-        (_controlsFocus.hasFocus ||
-            MediaQuery.of(context).accessibleNavigation)) {
-      return;
-    }
+    if (MediaQuery.of(context).accessibleNavigation) return;
     setState(() => _controlsVisible = !_controlsVisible);
   }
 
@@ -1848,9 +1804,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         onTap: _toggleLandscapeControls,
         child: Stack(fit: StackFit.expand, children: [
           if (_engine.isCameraOff)
-            Center(
-                child: Text('live.video_hidden_badge'.tr(),
-                    style: const TextStyle(color: AppTheme.onMedia)))
+            LiveAudioStageMultiSpeaker(
+              streamer: streamer,
+              langCode: langCode,
+              viewerCount: null,
+              isPlaying: !_engine.isMicSilent.value,
+              streamState: _engine.state == RtmpPublishState.live
+                  ? StreamState.live
+                  : StreamState.initializing,
+              onStageTap: _toggleLandscapeControls,
+              onSpeakerTap: (_) {},
+            )
           else
             PhoneCameraPreview(key: _previewKey),
           FloatingReactionsOverlay(controller: _reactionsController),

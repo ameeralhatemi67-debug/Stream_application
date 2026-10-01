@@ -60,6 +60,8 @@ dependencies:
   # Backend
   supabase_flutter: ^2.17.2
   uuid: ^4.6.0
+  firebase_core: ^4.15.0
+  firebase_messaging: ^16.7.0
 
 dev_dependencies:
   fake_async: ^1.3.3
@@ -92,6 +94,7 @@ flutter:
     - assets/images/quran/
     - assets/images/avatars/
     - assets/images/studio_help/
+    - assets/images/hadayah_charity_parent.png
 
   fonts:
     - family: IBM Plex Sans

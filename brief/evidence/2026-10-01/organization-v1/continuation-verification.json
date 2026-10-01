@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-01",
+  "phase": "4 partial; budget stop",
+  "weekly_usage_last_read": 95,
+  "head": "cb1c10f6f5b63e5a32d09d902282b0cd2ab30d5b",
+  "analysis_issues": 0,
+  "flutter": {
+    "passed": 912,
+    "failed": 23,
+    "baseline_reproduced_failures": [
+      "admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-04: Submitted Applications & Application Mutations",
+      "admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-05: AppProvider Verification State Machine (Approve Application -> Live Streamer)",
+      "admin_database_service_test.dart: Admin Hub & Database Layer Unit Tests (Phase 1) TC-DB-06: AppProvider Rejection Workflow and Reason Retention",
+      "admin_hub_screen_test.dart: Admin Hub Dashboard & Multi-Account RBAC Tests (Phase 3) TC-ADMIN-02: Verification Queue Approval & Live Streamer Instantiation",
+      "admin_hub_screen_test.dart: Admin Hub Dashboard & Multi-Account RBAC Tests (Phase 3) TC-ADMIN-03: Rejection with Admin Feedback Note Retention",
+      "admin_hub_screen_test.dart: Admin Hub Dashboard & Multi-Account RBAC Tests (Phase 3) TC-ADMIN-06: Batch Approve Applies Every Selected Application",
+      "admin_hub_screen_test.dart: Admin Hub Dashboard & Multi-Account RBAC Tests (Phase 3) TC-ADMIN-07: Batch Reject Applies the Same Feedback to Every Selected Application",
+      "admin_hub_screen_test.dart: Admin Hub Dashboard & Multi-Account RBAC Tests (Phase 3) removing an approved queue row keeps the broadcaster",
+      "auth_onboarding_and_org_affiliation_test.dart: Auth, Onboarding & Streamer Application Wizard Tests TC-ORG-AFF-01: Bi-directional Org Affiliation submission and resolution",
+      "broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-02: AppProvider Application Submission & Mutation",
+      "broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-03: Rejection with Admin Feedback Notes Lifecycle",
+      "broadcaster_application_sheet_test.dart: Broadcaster Application Sheet & State Management Tests (Phase 2) TC-APP-04: Approval Lifecycle & Auto Live Streamer Registration",
+      "broadcaster_application_sheet_test.dart: saved category computer_science survives sheet editing and submission",
+      "broadcaster_application_sheet_test.dart: saved category cs_tech survives sheet editing and submission",
+      "broadcaster_application_sheet_test.dart: saved category custom_subject survives sheet editing and submission",
+      "organization_models_and_rbac_test.dart: Organization Feature Phase 1: Models & RBAC Unit Tests TC-ORG-05: AppProvider RBAC and Organization helpers",
+      "owner_mobile_layout_test.dart: populated admin phone layouts 360.0 ar",
+      "owner_mobile_layout_test.dart: populated admin phone layouts 360.0 en",
+      "owner_mobile_layout_test.dart: populated admin phone layouts 390.0 ar",
+      "owner_mobile_layout_test.dart: populated admin phone layouts 390.0 en",
+      "streamer_application_wizard_test.dart: Streamer Application Wizard & Staged Activation Tests TC-WIZARD-03: Staged approval pipeline executes all 5 stages and plots streamer on Map & Feed"
+    ],
+    "new_failures": [
+      "organization_admin_and_go_live_test.dart: Phase 4: Go Live Studio & Organization Management Tests TC-ORG-GOLIVE-02: Org Live without a primary backend session is denied",
+      "v04_core_architect_settings_test.dart: Version 0.4 Core Architect Settings & State Unit Tests TC-V04-SET-06: Broadcast Type & Audio-Only Live State Management"
+    ],
+    "baseline_harness_note": "Baseline 966 passed / 22 failed. One failure was a missing sibling tokens_A.json fixture; both typography tests passed after copying it. Remaining 21 reproduce in final."
+  },
+  "sql": {
+    "database": "org_v1_audit_20261001",
+    "passed": 107,
+    "failed": 0,
+    "groups": [
+      22,
+      24,
+      36,
+      25
+    ]
+  },
+  "provider_checks": "both passed",
+  "gates": {
+    "PASS": 22,
+    "INFO": 5,
+    "FAIL": 4
+  },
+  "android_debug": {
+    "path": "project/build/app/outputs/flutter-apk/app-debug.apk",
+    "sha256": "bd747479f8eed109fc9c5b3b92958e9598596d1a879a02c5bf1b96a15f38bd16",
+    "built": true,
+    "installed": false
+  },
+  "not_verified": [
+    "web candidate",
+    "current Edge bundle",
+    "hosted security advisors",
+    "real OAuth",
+    "physical Android",
+    "three-show pilot"
+  ],
+  "committed": false,
+  "pushed": false,
+  "deployed": false,
+  "phase4_completion": {
+    "date": "2026-10-01",
+    "agent": "claude",
+    "head": "cb1c10f6f5b63e5a32d09d902282b0cd2ab30d5b",
+    "analysis_issues": 0,
+    "flutter": {
+      "passed": 968,
+      "failed": 0,
+      "journeys_test": 33
+    },
+    "sql": {
+      "database": "org_v1_audit_20261001",
+      "passed": 155,
+      "failed": 0,
+      "groups": [
+        22,
+        24,
+        36,
+        25,
+        48
+      ]
+    },
+    "provider_checks": "passed",
+    "org_event_text_check": "30 renderings passed",
+    "edge_bundles": [
+      "dispatch-organization-events",
+      "channel-authorization",
+      "broadcast-control",
+      "reconcile-broadcasts"
+    ],
+    "web_release_build": true,
+    "android_debug": {
+      "built": true,
+      "installed": false,
+      "sha256": "42020ef527d1d3d1a23acbdf314a44caa428a3d77ea26db562e89f72b6742624"
+    },
+    "gates": {
+      "PASS": 23,
+      "INFO": 5,
+      "FAIL": 3,
+      "remaining_fail_ids": [
+        "G2d",
+        "G3",
+        "G11a"
+      ],
+      "feature_owned_failures": 0
+    },
+    "deployed_site": {
+      "url": "https://stream-application-ten.vercel.app",
+      "build": "cb1c10f-20261001114047",
+      "backend_configured": false
+    },
+    "not_verified": [
+      "hosted migrations/functions",
+      "hosted security advisors",
+      "real OAuth",
+      "real FCM delivery",
+      "physical Android",
+      "three-show pilot"
+    ],
+    "committed": true,
+    "pushed": false,
+    "deployed": false,
+    "commit_scope": "Phase 4 + owner dependencies (98 paths), owner decision 2026-10-01",
+    "isolated_commit_tree": {
+      "analysis_issues": 0,
+      "flutter_passed": 952,
+      "flutter_failed": 0
+    }
+  }
+}

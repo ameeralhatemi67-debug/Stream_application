@@ -15,7 +15,11 @@ class BroadcastSession {
   const BroadcastSession({required this.id,required this.presenterId,required this.organizationId,
     required this.state,required this.revision,required this.titleEn,required this.titleAr,required this.broadcastType,
     required this.startUtc,required this.endUtc,required this.accepted,required this.watchId,required this.replayStatus,
-    required this.terminationPending,required this.channelConnectionId,this.scheduleId,this.venueId});
+    required this.terminationPending,required this.channelConnectionId,this.scheduleId,this.venueId,
+    this.senderMode='unspecified',this.deviceId,this.hidden=false});
+  final bool hidden;
+  final String senderMode;
+  final String? deviceId;
   final String id,presenterId,state,titleEn,titleAr,broadcastType,replayStatus;
   final String? organizationId,watchId,channelConnectionId,scheduleId,venueId;
   final int revision;
@@ -33,5 +37,6 @@ class BroadcastSession {
     endUtc:DateTime.tryParse(row['expected_end_at'] as String? ?? '')?.toUtc(),accepted:row['accepted_at']!=null,
     watchId:row['stream_id'] as String?,replayStatus:row['replay_status'] as String? ?? 'not_started',
     terminationPending:row['termination_pending']==true,channelConnectionId:row['channel_connection_id'] as String?,
-    scheduleId:row['schedule_id'] as String?,venueId:row['venue_id'] as String?);
+    scheduleId:row['schedule_id'] as String?,venueId:row['venue_id'] as String?,
+    hidden:row['hidden_from_discovery']==true, senderMode:row['sender_mode'] as String? ?? 'unspecified',deviceId:row['device_id'] as String?);
 }

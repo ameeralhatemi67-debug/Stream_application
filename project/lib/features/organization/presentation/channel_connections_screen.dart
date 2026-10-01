@@ -9,7 +9,9 @@ import '../models/channel_connection.dart';
 import '../models/org_membership.dart';
 
 class ChannelConnectionsScreen extends StatefulWidget {
-  const ChannelConnectionsScreen({super.key});
+  const ChannelConnectionsScreen({super.key, this.returnStatus});
+  /// `connected` or `failed` when Google consent returns to the app.
+  final String? returnStatus;
   @override
   State<ChannelConnectionsScreen> createState() => _ChannelConnectionsScreenState();
 }
@@ -50,6 +52,10 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen> wit
       IconButton(onPressed:_busy?null:_refresh,icon:const Icon(Icons.refresh),tooltip:'organization_v1.refresh'.tr())]),
       body:ListView(padding:const EdgeInsets.all(AppTheme.spaceLg),children:[
         Text('organization_v1.channel_consent_hint'.tr()),
+        if (widget.returnStatus == 'connected' || widget.returnStatus == 'failed')
+          Padding(padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceSm),
+            child: Text('organization_v1.consent_${widget.returnStatus}'.tr(),
+              style: TextStyle(color: widget.returnStatus == 'failed' ? AppTheme.danger : AppTheme.success))),
         if (_busy) const Center(child:HadayahLoadingIndicator()),
         if (_error != null) Text(_error!,style:const TextStyle(color:AppTheme.danger)),
         if (personal) ListTile(title:Text('organization_v1.personal_destination'.tr()),

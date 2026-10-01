@@ -1,3 +1,4 @@
+import 'dart:async';
 import '../../../core/services/youtube_channel_reference.dart';
 import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
@@ -7,15 +8,19 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/widgets/language_switcher.dart';
 import '../../../core/services/translation/auto_translation_service.dart';
 import '../../../core/utils/id_generator.dart';
 import '../../admin/models/broadcaster_application_model.dart';
+import '../../map/models/map_tricity_domain.dart';
 import 'steps/apply_step_1_identity.dart';
 import 'steps/apply_step_2_media.dart';
 import 'steps/apply_step_3_professional.dart';
 import 'steps/apply_step_3_5_org_speakers.dart';
 import 'steps/apply_step_4_location.dart';
 import 'steps/apply_step_5_review.dart';
+import '../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../core/providers/app_flags.dart';
 
 /// Dynamic Streamer / Organization Verification Application Wizard
 class StreamerApplyScreen extends StatefulWidget {
@@ -73,6 +78,9 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   @override
   void initState() {
     super.initState();
+    // Organization applications follow a server switch; re-read it here.
+    AppFlags.instance.addListener(_flagsChanged);
+    unawaited(AppFlags.instance.refresh());
     final provider = context.read<AppProvider>();
     final existing = provider.myApplication;
 
@@ -121,8 +129,13 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     }
   }
 
+  void _flagsChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void dispose() {
+    AppFlags.instance.removeListener(_flagsChanged);
     _pageController.dispose();
     _nameController.dispose();
     _handleController.dispose();
@@ -278,6 +291,16 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
   }
 
   Future<void> _submitApplication() async {
+    if (_isOrganization && !AppFlags.instance.organizationApplicationsOpen) {
+      _showValidationToast('application.organization_coming_soon'.tr());
+      return;
+    }
+    final point = _selectedCoordinates;
+    if (point == null ||
+        !isInTricityMapDomain(point.latitude, point.longitude)) {
+      _showValidationToast('map.location_outside_supported'.tr());
+      return;
+    }
     final channel = YouTubeChannelReference.parse(_youtubeController.text);
     if (!_organizationOnly && (channel == null || channel.parameter == 'custom')) {
       _showValidationToast('live.channel_invalid'.tr());
@@ -431,6 +454,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         orgNameController: _orgNameController,
         selectedCategories: _selectedCategories,
         isOrganization: _isOrganization,
+        organizationApplicationsOpen: AppFlags.instance.organizationApplicationsOpen,
         organizationOnly: _organizationOnly,
         onOrganizationOnlyChanged: (value) => setState(() => _organizationOnly = value),
         selectedTags: _selectedTags,
@@ -546,6 +570,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         ),
         centerTitle: true,
         actions: [
+          const Center(child: LanguageSwitcher(showLabel: false)),
           IconButton(
             key: const Key('wizard-exit'),
             icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary),
@@ -668,7 +693,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                               ? const SizedBox(
                                   height: 20,
                                   width: 20,
-                                  child: CircularProgressIndicator(
+                                  child: HadayahLoadingIndicator(
                                     strokeWidth: 2,
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                         AppTheme.onMedia),

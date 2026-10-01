@@ -32,6 +32,17 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
   NotificationCategory _selectedCategory = NotificationCategory.all;
 
   @override
+  void initState() {
+    super.initState();
+    // Server-written organization events (assignments, invitations, starts).
+    final provider = context.read<AppProvider>();
+    if (provider.isLoggedInStreamer) {
+      provider.refreshOrganizationEvents().catchError(
+          (Object e) => debugPrint('Organization events unavailable: $e'));
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     // context.read for method calls -- doesn't need to rebuild this widget on
     // its own. context.select scopes the rebuild to just the 3 fields this

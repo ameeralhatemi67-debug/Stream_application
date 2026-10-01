@@ -230,7 +230,7 @@ void main() {
   });
 
   test(
-      'live state waits for RPC success; denial stays offline and explains approval',
+      'unprepared broadcast stays offline and requires a canonical assignment',
       () async {
     final auth = TestAuth();
     final db = SessionDb()
@@ -241,13 +241,13 @@ void main() {
     auth.signIn('a');
     await hydrated(p);
     expect(await p.checkBroadcastPermission(), isFalse);
-    expect(p.broadcastSessionError, 'broadcast_approval_required');
+    expect(p.broadcastSessionError, 'organization_v1.assignment_required');
     final attempt = p.setBroadcasterLive(true);
     expect(p.isBroadcastingLive, isFalse);
     db.liveDelay!.complete();
     await attempt;
     expect(p.isBroadcastingLive, isFalse);
-    expect(p.broadcastSessionError, 'broadcast_approval_required');
+    expect(p.broadcastSessionError, 'organization_v1.assignment_required');
     p.dispose();
     await auth.changes.close();
     await db.devices.close();

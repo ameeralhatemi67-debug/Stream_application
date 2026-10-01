@@ -16,11 +16,15 @@ import 'widgets/vod_grid_tile.dart';
 import 'widgets/org_branches_modal_sheet.dart';
 import 'widgets/join_org_modal_sheet.dart';
 import 'widgets/playlist_viewer_modal_sheet.dart';
+import 'widgets/upcoming_schedule_tab.dart';
+import '../../../core/services/reminder_push_service.dart';
 
 class BroadcasterProfileScreen extends StatefulWidget {
   final String streamerId;
+  final int initialTab;
 
-  const BroadcasterProfileScreen({super.key, required this.streamerId});
+  const BroadcasterProfileScreen({super.key, required this.streamerId,
+      this.initialTab = 0});
 
   @override
   State<BroadcasterProfileScreen> createState() =>
@@ -56,7 +60,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     const expectedTabs = 3;
     if (_tabController == null || _tabController!.length != expectedTabs) {
       _tabController?.dispose();
-      _tabController = TabController(length: expectedTabs, vsync: this);
+      _tabController = TabController(length: expectedTabs, vsync: this,
+          initialIndex: widget.initialTab);
     }
   }
 
@@ -170,6 +175,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               delegate: _SliverTabBarDelegate(
                 TabBar(
                   controller: _tabController,
+                  isScrollable: true,
+                  tabAlignment: TabAlignment.start,
                   indicatorColor: AppTheme.primary,
                   labelColor: AppTheme.primary,
                   unselectedLabelColor: AppTheme.textSecondary,
@@ -205,7 +212,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             _buildPlaylistsGrid(displayedPlaylists, streamer, lang),
 
             // Tab 3: Upcoming Schedule View
-            _buildUpcomingScheduleList(streamer, lang),
+            UpcomingScheduleTab(streamer: streamer),
           ],
         ),
       ),
@@ -383,18 +390,26 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                       ? 'profile.reminder_on'
                                       : 'profile.reminder_btn')
                                   .tr(),
-                              onPressed: () => appProvider
-                                  .toggleReminder(streamer.streamerId),
+                              onPressed: () => _toggleChannelReminder(
+                                  context, streamer.streamerId),
                               icon:
                                   const Icon(Icons.notifications_none_rounded),
                               selectedIcon: const Icon(
                                   Icons.notifications_active_rounded),
                               style: IconButton.styleFrom(
                                   minimumSize: const Size(48, 48),
+                                  backgroundColor: hasReminder
+                                      ? AppTheme.surfaceAlt : AppTheme.surface,
+                                  side: BorderSide(color: hasReminder
+                                      ? AppTheme.primary : AppTheme.border),
                                   foregroundColor: AppTheme.primary),
                             ),
                           ],
                         ))),
+                ...appProvider.broadcastSessions.where((s)=>!s.hidden &&
+                  (s.organizationId??s.presenterId)==streamer.streamerId && (s.live || s.replayStatus=='available')).map((s)=>
+                    ListTile(title:Text(s.title(lang)),subtitle:Text('organization_v1.state_${s.state}'.tr()),
+                      trailing:const Icon(Icons.play_circle_outline),onTap:()=>context.push('/live/${s.id}'))),
                 // Live Stream Banner Trigger (If live)
                 if (!uncertain &&
                     streamer.isCurrentlyLive &&
@@ -520,6 +535,44 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         'https://www.youtube.com/@${streamer.youtubeHandle.trim().replaceFirst('@', '')}',
         subject: streamer.getLocalizedName(lang),
       );
+
+  Future<void> _toggleChannelReminder(BuildContext context, String id) async {
+    final provider = context.read<AppProvider>();
+    if (!provider.isLoggedInStreamer) {
+      final signIn = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          title: Text('upcoming.sign_in_title'.tr()),
+          content: Text('upcoming.sign_in_body'.tr()),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext, false),
+                child: Text('upcoming.cancel'.tr())),
+            TextButton(onPressed: () => Navigator.pop(dialogContext, true),
+                child: Text('upcoming.sign_in'.tr())),
+          ],
+        ),
+      );
+      if (signIn == true && context.mounted) {
+        context.push('/welcome');
+      }
+      return;
+    }
+    try {
+      await provider.toggleReminder(id, language: context.locale.languageCode);
+      if (context.mounted && provider.hasReminder(id) &&
+          provider.reminderPushStatus != ReminderPushStatus.granted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
+          (provider.reminderPushStatus == ReminderPushStatus.notGranted
+              ? 'upcoming.permission_denied'
+              : 'upcoming.permission_unavailable').tr())));
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('upcoming.save_failed'.tr())));
+      }
+    }
+  }
 
   Widget _overlayButton(
           IconData icon, String tooltip, VoidCallback onPressed) =>
@@ -943,80 +996,6 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 ],
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildUpcomingScheduleList(StreamerModel streamer, String lang) {
-    final scheduleList = streamer.getLocalizedSchedule(lang);
-
-    if (scheduleList.isEmpty) {
-      return SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceXl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.event_busy_rounded,
-                color: AppTheme.textSecondary,
-                size: 48,
-              ),
-              const SizedBox(height: AppTheme.spaceMd),
-              Text(
-                'profile.no_upcoming_schedule'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      itemCount: scheduleList.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spaceMd),
-      itemBuilder: (context, index) {
-        final item = scheduleList[index];
-        return Container(
-          padding: const EdgeInsets.all(AppTheme.spaceMd),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spaceSm),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: const Icon(
-                  Icons.calendar_today_rounded,
-                  color: AppTheme.primary,
-                  size: 20,
-                ),
-              ),
-              const SizedBox(width: AppTheme.spaceMd),
-              Expanded(
-                child: Text(
-                  item,
-                  style: const TextStyle(
-                    color: AppTheme.onMedia,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
           ),
         );
       },

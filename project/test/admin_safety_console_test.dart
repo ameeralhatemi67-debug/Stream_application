@@ -701,7 +701,7 @@ void main() {
       p.addStreamerForTests(s);
       final profileId = s.streamerId.replaceFirst('streamer_', '');
       await p.toggleFollow(s.streamerId);
-      p.toggleReminder(s.streamerId);
+      p.debugSetChannelReminderForTests(s.streamerId);
       p.launchMiniPlayer(
           videoId: s.youtubeVideoId, title: 't', streamerName: 'n');
       expect(p.isFollowing(s.streamerId), isTrue);

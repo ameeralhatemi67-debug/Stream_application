@@ -2,6 +2,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../features/organization/models/org_membership.dart';
 import '../../features/organization/models/channel_connection.dart';
+import '../../features/organization/models/org_event.dart';
+import '../../features/organization/models/org_invitation.dart';
 import '../../features/live_stream/models/broadcast_session.dart';
 
 /// Stateless organization operations. The server checks authority on every call.
@@ -9,6 +11,33 @@ class OrganizationBroadcastService {
   OrganizationBroadcastService({SupabaseClient? client}) : _client = client;
   final SupabaseClient? _client;
   SupabaseClient get client => _client ?? Supabase.instance.client;
+
+  static bool waitingForEncoder(FunctionException error) =>
+      error.status == 409 && error.details is Map &&
+      error.details['error'] == 'waiting_for_encoder';
+
+  static String errorKey(Object error) {
+    if (error is FunctionException) {
+      if (error.status == 401 || error.status == 403) return 'organization_v1.authorization_failed';
+      if (error.status == 429) return 'organization_v1.quota_failed';
+      if (waitingForEncoder(error)) return 'organization_v1.waiting_encoder';
+    }
+    return 'organization_v1.publish_failure';
+  }
+
+  /// Management RPC failures, by the SQLSTATE the server raises.
+  static String actionErrorKey(Object error) {
+    if (error is PostgrestException) {
+      switch (error.code) {
+        case '42501': return 'organization_v1.denied_failed';
+        case '23P01': return 'organization_v1.overlap_failed';
+        case '55000': return 'organization_v1.conflict_failed';
+        case '23505': return 'organization_v1.duplicate_failed';
+        case '22023': return 'organization_v1.invalid_failed';
+      }
+    }
+    return 'organization_v1.failure';
+  }
 
   Future<List<ChannelConnection>> connections() async {
     final rows = await client.from('channel_connections').select();
@@ -20,16 +49,18 @@ class OrganizationBroadcastService {
     return (rows as List).map((r)=>BroadcastSession.fromRow(Map<String,dynamic>.from(r as Map))).toList();
   }
   Future<BroadcastSession?> session(String id) async {
-    final row=await client.from('broadcast_sessions').select().eq('id',id).maybeSingle();
-    return row==null?null:BroadcastSession.fromRow(row);
+    final row=await client.rpc('broadcast_room',params:{'p_id':id});
+    return row==null?null:BroadcastSession.fromRow(Map<String,dynamic>.from(row as Map));
   }
+  Future<void> cancelSchedule(String id) => client.rpc('broadcast_cancel_schedule',params:{'p_id':id});
   Future<void> answerAssignment(BroadcastSession session,bool accept) => client.rpc('broadcast_accept_assignment',
     params:{'p_id':session.id,'p_accept':accept,'p_revision':session.revision});
   Future<String> createPersonal(String title,String type) async => await client.rpc('broadcast_create_personal',
     params:{'p_title':title,'p_type':type}) as String;
-  Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action) async {
+  Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
     final result=await client.functions.invoke('broadcast-control',body:{'session_id':sessionId,
-      'device_id':deviceId,'sender_mode':sender,'action':action});
+      'device_id':deviceId,'sender_mode':sender,'action':action,
+      'connection_id':destination?.id,'channel_revision':destination?.revision});
     if(result.status!=200 || result.data is! Map) throw StateError('Broadcast operation unavailable');
     return Map<String,dynamic>.from(result.data as Map);
   }
@@ -99,4 +130,60 @@ class OrganizationBroadcastService {
       'p_org_id': orgId, 'p_to_profile_id': toProfileId,
     });
   }
+
+  Future<void> cancelTransfer(String orgId) =>
+      client.rpc('org_v1_cancel_transfer', params: {'p_org_id': orgId});
+
+  Future<List<OrgInvitation>> myInvitations() async {
+    final rows = await client.rpc('org_v1_my_invitations');
+    return (rows as List)
+        .map((row) => OrgInvitation.fromRow(Map<String, dynamic>.from(row as Map)))
+        .toList();
+  }
+
+  Future<List<OrgInvitation>> invitations(String orgId) async {
+    final rows = await client.rpc('org_v1_invitations', params: {'p_org_id': orgId});
+    return (rows as List)
+        .map((row) => OrgInvitation.fromRow(Map<String, dynamic>.from(row as Map)))
+        .toList();
+  }
+
+  Future<void> revokeInvite(String id) =>
+      client.rpc('org_v1_revoke_invite', params: {'p_invitation_id': id});
+
+  Future<List<OrgEvent>> events() async {
+    final rows = await client.rpc('org_v1_events', params: {'p_limit': 50});
+    return (rows as List)
+        .map((row) => Map<String, dynamic>.from(row as Map))
+        .where((row) => OrgEvent.kinds.contains(row['kind']))
+        .map(OrgEvent.fromRow)
+        .toList();
+  }
+
+  /// Null marks every unread event of the signed-in account.
+  Future<void> markEventsRead([List<String>? ids]) =>
+      client.rpc('org_v1_mark_events_read', params: {'p_ids': ids});
+
+  Future<void> savePushPreferences({required bool live, required bool organization}) async {
+    final user = client.auth.currentUser?.id;
+    if (user == null) return;
+    await client.from('notification_push_preferences').upsert({
+      'viewer_profile_id': user, 'live_enabled': live,
+      'organization_enabled': organization,
+      'updated_at': DateTime.now().toUtc().toIso8601String(),
+    });
+  }
+
+  Future<List<({String id, String nameEn, String nameAr, bool pilot})>> pilotStatus() async {
+    final rows = await client.rpc('org_v1_pilot_status');
+    return [
+      for (final raw in rows as List)
+        if (raw is Map)
+          (id: raw['id'] as String, nameEn: raw['name_en'] as String? ?? '',
+           nameAr: raw['name_ar'] as String? ?? '', pilot: raw['pilot'] == true),
+    ];
+  }
+
+  Future<void> setPilot(String orgId, bool enabled) => client.rpc('org_v1_set_pilot',
+      params: {'p_org_id': orgId, 'p_enabled': enabled});
 }

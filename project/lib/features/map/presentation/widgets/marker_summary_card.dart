@@ -25,7 +25,7 @@ class MarkerSummaryCard extends StatelessWidget {
       status: StreamerCardStatus(
           isLive: streamer.isCurrentlyLive, isAudio: streamer.isAudioLive),
       onClose: onClose,
-      onTap: () => context.push('/profile/${streamer.streamerId}'),
+      onTap: () => context.push(streamer.isCurrentlyLive ? '/live/${streamer.liveSessionId ?? streamer.streamerId}' : '/profile/${streamer.channelProfileId}'),
       child: Semantics(
         button: true,
         label: 'venue.open_maps'.tr(),

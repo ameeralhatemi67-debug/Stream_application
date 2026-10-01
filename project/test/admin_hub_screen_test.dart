@@ -1,11 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
-import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/features/admin/models/broadcaster_application_model.dart';
 import 'package:streamer_app/features/admin/models/terms_and_conditions_model.dart';
 import 'package:streamer_app/features/admin/models/viewer_analytics_model.dart';
 
 import 'fixtures/admin_applications.dart';
+import 'support/fixture_application_db.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -14,7 +14,7 @@ void main() {
     late AppProvider provider;
 
     setUp(() async {
-      final service = AdminDatabaseService(null);
+      final service = FixtureApplicationDb();
       provider = AppProvider(service);
       await Future.delayed(const Duration(milliseconds: 50));
     });
@@ -130,7 +130,8 @@ void main() {
       expect(provider.chatReports, isEmpty);
     });
 
-    test('TC-ADMIN-02: Verification Queue Approval & Live Streamer Instantiation',
+    test(
+        'TC-ADMIN-02: Verification Queue Approval & Live Streamer Instantiation',
         () async {
       provider.debugSetSignedInForTests(
         email: 'admin@example.com',
@@ -221,6 +222,58 @@ void main() {
       expect(fetched.reviewedBy, contains('Amir Al-Hatemi'));
     });
 
+    test('pending edit replaces its approved base in the queue', () {
+      final base = sampleBroadcasterApplications()
+          .first
+          .copyWith(status: ApplicationStatus.approved);
+      final edit = base.copyWith(
+        id: 'pending-edit',
+        revisionOf: base.id,
+        status: ApplicationStatus.pending,
+        cityId: 'dammam',
+      );
+      expect(verificationQueueRows([edit, base]).map((a) => a.id),
+          ['pending-edit']);
+      expect(
+          verificationQueueRows(
+                  [edit.copyWith(status: ApplicationStatus.rejected), base])
+              .map((a) => a.id),
+          [base.id]);
+    });
+
+    test('legacy personal applications show one current card per profile', () {
+      final older = sampleBroadcasterApplications().last.copyWith(
+            id: 'older',
+            applicantProfileId: 'profile-1',
+            status: ApplicationStatus.approved,
+            submittedAt: DateTime(2026, 1),
+          );
+      final newer = older.copyWith(id: 'newer', submittedAt: DateTime(2026, 2));
+      expect(verificationQueueRows([older, newer]).map((a) => a.id), ['newer']);
+      final edit = newer.copyWith(
+          id: 'edit',
+          revisionOf: newer.id,
+          status: ApplicationStatus.pending,
+          submittedAt: DateTime(2026, 3));
+      expect(verificationQueueRows([older, newer, edit]).map((a) => a.id),
+          ['edit']);
+    });
+
+    test('removing an approved queue row keeps the broadcaster', () async {
+      provider.debugSetSignedInForTests(
+          email: 'admin@example.com', isAdmin: true);
+      final app = sampleBroadcasterApplications().first;
+      await provider.submitBroadcasterApplication(app);
+      expect(await provider.approveBroadcasterApplication(app.id), isTrue);
+      final streamersBefore =
+          provider.streamers.map((s) => s.streamerId).toList();
+      expect(await provider.deleteBroadcasterApplication(app.id), isTrue);
+      expect(provider.applications.any((a) => a.id == app.id), isFalse);
+      expect(provider.streamers.map((s) => s.streamerId), streamersBefore);
+      expect(provider.applicationReviewEvents.map((e) => e['action']),
+          containsAll(['approved', 'removed']));
+    });
+
     test('TC-ADMIN-04: Dynamic Terms & Conditions Real-Time Save', () async {
       provider.debugSetSignedInForTests(
         email: 'polkgvd2@gmail.com',
@@ -232,7 +285,8 @@ void main() {
         termsOfServiceEn: 'Updated Platform Educational Terms 2026.',
         termsOfServiceAr: 'الشروط التعليمية المحدثة للمنصة 2026.',
         broadcasterGuidelinesEn: 'Updated Academic Integrity Code of Conduct.',
-        broadcasterGuidelinesAr: 'ميثاق النزاهة الأكاديمية وقواعد البث المحدثة.',
+        broadcasterGuidelinesAr:
+            'ميثاق النزاهة الأكاديمية وقواعد البث المحدثة.',
         privacyPolicyEn: 'Compliant with Saudi PDPL regulations 2026.',
         privacyPolicyAr: 'متوافق مع نظام حماية البيانات الشخصية السعودي 2026.',
         lastUpdated: DateTime.now(),
@@ -296,14 +350,15 @@ void main() {
       expect(result.failed, equals(0));
       expect(provider.streamers.length, equals(initialStreamers + 2));
       for (final app in batch) {
-        expect(provider.approvedApplications.any((a) => a.id == app.id),
-            isTrue);
-        expect(provider.pendingApplications.any((a) => a.id == app.id),
-            isFalse);
+        expect(
+            provider.approvedApplications.any((a) => a.id == app.id), isTrue);
+        expect(
+            provider.pendingApplications.any((a) => a.id == app.id), isFalse);
       }
     });
 
-    test('TC-ADMIN-07: Batch Reject Applies the Same Feedback to Every Selected Application',
+    test(
+        'TC-ADMIN-07: Batch Reject Applies the Same Feedback to Every Selected Application',
         () async {
       provider.debugSetSignedInForTests(
         email: 'polkgvd2@gmail.com',
@@ -327,8 +382,7 @@ void main() {
       expect(result.succeeded, equals(2));
       expect(result.failed, equals(0));
       for (final app in batch) {
-        final fetched =
-            provider.applications.firstWhere((a) => a.id == app.id);
+        final fetched = provider.applications.firstWhere((a) => a.id == app.id);
         expect(fetched.status, equals(ApplicationStatus.rejected));
         expect(fetched.adminReviewNotes, equals(feedback));
       }

@@ -80,32 +80,14 @@ void main() {
       () {
         final provider = AppProvider();
 
-        expect(
-          provider.phoneBroadcastRtmpUrl,
-          equals('rtmp://a.rtmp.youtube.com/live2'),
-        );
-        expect(provider.phoneBroadcastStreamKey, equals(''));
-        // No stream key yet -- full URL degrades to just the ingest URL
-        // rather than appending a trailing "/".
-        expect(
-          provider.phoneBroadcastFullUrl,
-          equals('rtmp://a.rtmp.youtube.com/live2'),
-        );
-
-        provider.updatePhoneBroadcastTarget(
-          rtmpUrl: 'rtmp://a.rtmp.youtube.com/live2',
-          streamKey: 'abcd-efgh-ijkl-mnop',
-        );
-
-        expect(provider.phoneBroadcastStreamKey, equals('abcd-efgh-ijkl-mnop'));
-        expect(
-          provider.phoneBroadcastFullUrl,
-          equals('rtmp://a.rtmp.youtube.com/live2/abcd-efgh-ijkl-mnop'),
-        );
+        expect(provider.phoneBroadcastRtmpUrl, isEmpty);
+        expect(provider.phoneBroadcastStreamKey, isEmpty);
+        expect(provider.phoneBroadcastFullUrl, isEmpty);
+        provider.dispose();
       },
     );
 
-    test('TC-FOLLOW-01: AppProvider Follow & Reminder State Management', () {
+    test('TC-FOLLOW-01: follows remain local for guests; reminders require sign-in', () async {
       final provider = AppProvider();
       const testStreamerId = 'prof_alghamdi_01';
 
@@ -115,8 +97,8 @@ void main() {
       provider.toggleFollow(testStreamerId);
       expect(provider.isFollowing(testStreamerId), isTrue);
 
-      provider.toggleReminder(testStreamerId);
-      expect(provider.hasReminder(testStreamerId), isTrue);
+      await expectLater(provider.toggleReminder(testStreamerId), throwsStateError);
+      expect(provider.hasReminder(testStreamerId), isFalse);
 
       provider.toggleFollow(testStreamerId);
       expect(provider.isFollowing(testStreamerId), isFalse);

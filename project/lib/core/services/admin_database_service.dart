@@ -92,6 +92,8 @@ class AdminDatabaseService {
   }
 
   static const String _kApplicationsKey = 'streamer_admin_applications_v1';
+  static const String _kReviewEventsKey =
+      'streamer_application_review_events_v1';
   static const String _kTermsKey = 'streamer_admin_terms_v1';
   static const String _kAnalyticsKey = 'streamer_admin_analytics_v1';
   static const String _kAuditLogsKey = 'streamer_org_audit_logs_v1';
@@ -101,6 +103,7 @@ class AdminDatabaseService {
   final bool _useSupabase;
   final SupabaseClient? _injectedClient;
   List<BroadcasterApplicationModel> _cachedApplications = [];
+  List<Map<String, dynamic>> _cachedReviewEvents = [];
   List<OrgAuditLogEntry> _cachedAuditLogs = [];
   List<OrgAffiliationRequestModel> _cachedAffiliationRequests = [];
   TermsAndConditionsModel? _cachedTerms;
@@ -163,8 +166,10 @@ class AdminDatabaseService {
         final reviewerNames = await _resolveDisplayNames(
           rows.map((r) => r['reviewed_by'] as String?),
         );
-        _cachedApplications =
-            rows.map((r) => _applicationFromRow(r, reviewerNames)).toList();
+        _cachedApplications = rows
+            .where((r) => r['queue_archived_at'] == null)
+            .map((r) => _applicationFromRow(r, reviewerNames))
+            .toList();
         return List.unmodifiable(_cachedApplications);
       } catch (e) {
         debugPrint('Supabase loadApplications failed, falling back: $e');
@@ -292,6 +297,7 @@ class AdminDatabaseService {
   Future<BroadcasterApplicationModel?> updateApplicationStatus(
     String id,
     ApplicationStatus newStatus, {
+    required ApplicationStatus expectedStatus,
     String? reviewNotes,
     String? reviewedBy,
   }) async {
@@ -307,19 +313,9 @@ class AdminDatabaseService {
               'reviewed_at': DateTime.now().toIso8601String(),
             })
             .eq('id', id)
+            .eq('status', expectedStatus.name)
             .select()
             .single();
-
-        if (newStatus == ApplicationStatus.rejected &&
-            row['revision_of'] == null) {
-          final applicantId = row['applicant_profile_id'] as String?;
-          if (applicantId != null && _looksLikeUuid(applicantId)) {
-            await _client.from('profiles').update({
-              'is_streamer': false,
-              'is_verified': false,
-            }).eq('id', applicantId);
-          }
-        }
 
         final reviewerNames =
             await _resolveDisplayNames([row['reviewed_by'] as String?]);
@@ -339,6 +335,7 @@ class AdminDatabaseService {
     if (idx == -1) return null;
 
     final existing = _cachedApplications[idx];
+    if (existing.status != expectedStatus) return null;
     final updated = existing.copyWith(
       status: newStatus,
       adminReviewNotes: reviewNotes,
@@ -347,6 +344,8 @@ class AdminDatabaseService {
     );
     _cachedApplications[idx] = updated;
     await _saveApplicationsToPrefs();
+    await _recordLocalReviewEvent(existing, newStatus.name,
+        actor: reviewedBy ?? 'Administrator', reason: reviewNotes);
     return updated;
   }
 
@@ -358,22 +357,31 @@ class AdminDatabaseService {
           .from('broadcaster_applications')
           .select()
           .eq('applicant_profile_id', profileId)
-          .order('submitted_at', ascending: false)
-          .limit(1);
+          .order('submitted_at', ascending: false);
       if (rows.isEmpty) return null;
-      if (rows.first['revision_of'] != null &&
-          rows.first['status'] != 'pending') {
+      final visible =
+          rows.where((r) => r['queue_archived_at'] == null).toList();
+      if (visible.isEmpty) {
+        final approvedBase = rows
+            .where((r) => r['revision_of'] == null && r['status'] == 'approved')
+            .firstOrNull;
+        return approvedBase == null
+            ? null
+            : _applicationFromRow(approvedBase, const {});
+      }
+      if (visible.first['revision_of'] != null &&
+          visible.first['status'] != 'pending') {
         final base = await _client
             .from('broadcaster_applications')
             .select()
-            .eq('id', rows.first['revision_of'])
+            .eq('id', visible.first['revision_of'])
             .single();
         return _applicationFromRow(base, const {});
       }
       final reviewerNames = await _resolveDisplayNames(
-        rows.map((r) => r['reviewed_by'] as String?),
+        visible.map((r) => r['reviewed_by'] as String?),
       );
-      return _applicationFromRow(rows.first, reviewerNames);
+      return _applicationFromRow(visible.first, reviewerNames);
     } catch (e) {
       debugPrint('loadMyApplication failed: $e');
       return null;
@@ -443,47 +451,103 @@ class AdminDatabaseService {
 
   Future<bool> deleteApplication(String id) async {
     if (_useSupabase) {
-      try {
-        final row = await _client
-            .from('broadcaster_applications')
-            .select('applicant_profile_id')
-            .eq('id', id)
-            .maybeSingle();
-        final applicantId = row?['applicant_profile_id'] as String?;
-
-        await _client.from('broadcaster_applications').delete().eq('id', id);
-
-        if (applicantId != null && _looksLikeUuid(applicantId)) {
-          await _client.from('profiles').update({
-            'is_streamer': false,
-            'is_verified': false,
-          }).eq('id', applicantId);
-
-          try {
-            await _client
-                .from('organizations')
-                .delete()
-                .eq('owner_profile_id', applicantId);
-          } catch (_) {}
-        }
-
-        _cachedApplications.removeWhere((a) => a.id == id);
-        await _saveApplicationsToPrefs();
-        if (applicantId != null) {
-          await _broadcastStreamerDeleted(applicantId);
-        }
-        return true;
-      } catch (e) {
-        debugPrint('Supabase deleteApplication failed, falling back: $e');
-      }
+      final rows = await _client
+          .from('broadcaster_applications')
+          .update(
+              {'queue_archived_at': DateTime.now().toUtc().toIso8601String()})
+          .eq('id', id)
+          .filter('queue_archived_at', 'is', null)
+          .select('id');
+      if (rows.isEmpty) return false;
+      _cachedApplications.removeWhere((a) => a.id == id);
+      return true;
     }
 
     final idx = _cachedApplications.indexWhere((a) => a.id == id);
     if (idx == -1) return false;
 
-    _cachedApplications.removeAt(idx);
+    final removed = _cachedApplications.removeAt(idx);
     await _saveApplicationsToPrefs();
+    await _recordLocalReviewEvent(removed, 'removed', actor: 'Local admin');
     return true;
+  }
+
+  Future<List<Map<String, dynamic>>> loadApplicationReviewEvents() async {
+    if (!_useSupabase) {
+      if (_cachedReviewEvents.isEmpty) {
+        final raw = _prefs?.getString(_kReviewEventsKey);
+        if (raw != null) {
+          try {
+            _cachedReviewEvents = (jsonDecode(raw) as List)
+                .map((e) => Map<String, dynamic>.from(e as Map))
+                .toList();
+          } catch (e) {
+            debugPrint('Local review history unavailable: $e');
+          }
+        }
+      }
+      return List.unmodifiable(_cachedReviewEvents);
+    }
+    final events = <Map<String, dynamic>>[];
+    for (var offset = 0;; offset += 500) {
+      final rows = await _client
+          .from('application_review_events')
+          .select()
+          .order('event_order', ascending: false)
+          .range(offset, offset + 499);
+      events.addAll(rows.map((r) => Map<String, dynamic>.from(r)));
+      if (rows.length < 500) break;
+    }
+    _cachedReviewEvents = events;
+    return List.unmodifiable(_cachedReviewEvents);
+  }
+
+  Future<void> _recordLocalReviewEvent(
+      BroadcasterApplicationModel app, String action,
+      {required String actor, String? reason}) async {
+    await loadApplicationReviewEvents();
+    _cachedReviewEvents.insert(0, {
+      'id': 'local-${DateTime.now().microsecondsSinceEpoch}',
+      'application_id': app.id,
+      'applicant_name_en': app.applicantNameEn,
+      'applicant_name_ar': app.applicantNameAr,
+      'actor_name': actor,
+      'action': action,
+      'reason': reason,
+      'application_snapshot': {
+        ..._applicationToRow(app),
+        'id': app.id,
+        'revision_of': app.revisionOf,
+      },
+      'created_at': DateTime.now().toUtc().toIso8601String(),
+    });
+    try {
+      await _prefs?.setString(
+          _kReviewEventsKey, jsonEncode(_cachedReviewEvents));
+    } catch (e) {
+      debugPrint('Local review history could not be saved: $e');
+    }
+  }
+
+  Future<void> reverseApprovedApplication(String eventId, String reason) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    await _client.rpc('reverse_approved_application', params: {
+      'p_event_id': eventId,
+      'p_reason': reason,
+    });
+  }
+
+  Future<BroadcasterApplicationModel> restoreApplicationToQueue(
+      String id) async {
+    if (!_useSupabase) throw StateError('Backend unavailable');
+    final row = await _client
+        .from('broadcaster_applications')
+        .update({'queue_archived_at': null, 'status': 'pending'})
+        .eq('id', id)
+        .eq('status', 'rejected')
+        .select()
+        .single();
+    return _applicationFromRow(row, const {});
   }
 
   Future<void> _saveApplicationsToPrefs() async {
@@ -1253,6 +1317,17 @@ class AdminDatabaseService {
     String ownerProfileId,
   ) async {
     if (!_useSupabase) throw Exception('Supabase not available');
+    final existing = await _client
+        .from('organizations')
+        .select('id')
+        .eq('approved_application_id', app.id)
+        .maybeSingle();
+    if (existing != null) {
+      await _client
+          .from('organizations')
+          .update({'is_verified': true}).eq('id', existing['id']);
+      return existing['id'] as String;
+    }
     final row = await _client
         .from('organizations')
         .insert({
@@ -2559,33 +2634,6 @@ class AdminDatabaseService {
     }).eq('id', placeholderId);
   }
 
-  /// Fires a one-shot Realtime broadcast so every connected client (mobile,
-  /// web, desktop) removes this streamer from local state immediately,
-  /// independent of postgres_changes replication timing (issue_log.md:
-  /// account deletion not propagating to other devices). Uses the same
-  /// topic ('public_streamers_discovery') that AppProvider's long-lived
-  /// subscription already listens on.
-  Future<void> _broadcastStreamerDeleted(String streamerId) async {
-    try {
-      final channel = _client.channel('public_streamers_discovery');
-      final joined = Completer<void>();
-      channel.subscribe((status, error) {
-        if (status == RealtimeSubscribeStatus.subscribed &&
-            !joined.isCompleted) {
-          joined.complete();
-        }
-      });
-      await joined.future.timeout(const Duration(seconds: 3), onTimeout: () {});
-      await channel.sendBroadcastMessage(
-        event: 'streamer_deleted',
-        payload: {'streamerId': streamerId},
-      );
-      await _client.removeChannel(channel);
-    } catch (e) {
-      debugPrint('broadcastStreamerDeleted failed: $e');
-    }
-  }
-
   // ---------------------------------------------------------------------
   // Multi-Device Session Governance (issue_log.md)
   // ---------------------------------------------------------------------
@@ -2884,7 +2932,7 @@ class AdminDatabaseService {
   /// before reading the feed. Returns how many broadcasts were cleared, or 0
   /// when there is no backend or the call fails.
   Future<int> sweepStaleLiveFlags() async {
-    if (!_useSupabase) return 0;
+    if (!_useSupabase || _client.auth.currentSession == null) return 0;
     try {
       final result = await _client.rpc('sweep_stale_live_flags');
       return result is int ? result : 0;

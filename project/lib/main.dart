@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
+import 'core/services/reminder_push_service.dart';
 import 'core/theme/app_theme.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
@@ -28,6 +29,8 @@ void main() async {
       'provided via --dart-define.',
     );
   }
+
+  await ReminderPushService.initializeIfConfigured();
 
   runApp(
     EasyLocalization(
@@ -69,6 +72,12 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     // app_router.dart) can react to auth state changes via refreshListenable
     // -- GoRouter must not be rebuilt on every frame.
     _router = AppRouter.build(_appProvider);
+    _appProvider.attachReminderPush(onOpen: (streamerId) async {
+      await _appProvider.loadVerifiedStreamersFromBackend();
+      if (mounted) _router.go('/profile/$streamerId?tab=upcoming');
+    }, onOpenRoute: (route) async {
+      if (mounted) _router.push(route);
+    });
     _deviceSessionPresenter =
         DeviceSessionPresenter(provider: _appProvider, router: _router)
           ..attach();

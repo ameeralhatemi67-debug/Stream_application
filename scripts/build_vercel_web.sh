@@ -22,6 +22,14 @@ if [[ -n "${SUPABASE_URL:-}" || -n "${SUPABASE_ANON_KEY:-}" ]]; then
   defines+=("--dart-define=SUPABASE_URL=$SUPABASE_URL")
   defines+=("--dart-define=SUPABASE_ANON_KEY=$SUPABASE_ANON_KEY")
 fi
+# Public, non-secret client settings. PUBLIC_APP_URL is the HTTPS origin used
+# in organization invitation links; Firebase web values enable push reminders.
+for name in PUBLIC_APP_URL FIREBASE_API_KEY FIREBASE_APP_ID FIREBASE_MESSAGING_SENDER_ID \
+  FIREBASE_PROJECT_ID FIREBASE_WEB_VAPID_KEY; do
+  if [[ -n "${!name:-}" ]]; then
+    defines+=("--dart-define=$name=${!name}")
+  fi
+done
 
 cd "$repo_root/project"
 build_id="$(git rev-parse HEAD)-$(date -u +%Y%m%d%H%M%S)"

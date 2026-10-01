@@ -12,6 +12,43 @@ enum ApplicationStatus {
   suspended,
 }
 
+/// A pending edit takes the approved application's place in the queue.
+/// Reviewed edits remain in the action log; the approved base remains public.
+List<BroadcasterApplicationModel> verificationQueueRows(
+    Iterable<BroadcasterApplicationModel> applications) {
+  final rows = applications.toList();
+  final basesWithPendingEdit = rows
+      .where((a) => a.revisionOf != null && a.isPending)
+      .map((a) => a.revisionOf)
+      .toSet();
+  final visible = rows
+      .where((a) => a.revisionOf == null
+          ? !basesWithPendingEdit.contains(a.id)
+          : a.isPending)
+      .toList();
+  final personalRows = <String, BroadcasterApplicationModel>{};
+  for (final app in visible) {
+    final profileId = app.applicantProfileId;
+    if (app.accountType != ApplicationAccountType.individualScholar ||
+        profileId == null) {
+      continue;
+    }
+    final previous = personalRows[profileId];
+    if (previous == null ||
+        (app.isPending && !previous.isPending) ||
+        (app.isPending == previous.isPending &&
+            app.submittedAt.isAfter(previous.submittedAt))) {
+      personalRows[profileId] = app;
+    }
+  }
+  return visible.where((app) {
+    final profileId = app.applicantProfileId;
+    return app.accountType != ApplicationAccountType.individualScholar ||
+        profileId == null ||
+        identical(personalRows[profileId], app);
+  }).toList();
+}
+
 /// Comprehensive Model for Broadcaster & Organization Verification Applications
 @immutable
 class BroadcasterApplicationModel {

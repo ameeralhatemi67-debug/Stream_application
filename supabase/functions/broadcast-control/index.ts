@@ -31,7 +31,8 @@ Deno.serve(async request=>{
       ||!/^[0-9a-f-]{36}$/i.test(body.session_id)||typeof body.device_id!=='string'||body.device_id.length>128
       ||!['phone_direct','obs_laptop'].includes(body.sender_mode)) return new Response('Invalid session operation',{status:400,headers});
     id=body.session_id;
-    const claim=await rpc(user,'broadcast_reserve',{p_id:id,p_device:body.device_id,p_sender:body.sender_mode,p_operation:body.action});
+    const claim=await rpc(user,'broadcast_reserve_confirmed',{p_id:id,p_device:body.device_id,p_sender:body.sender_mode,p_operation:body.action,
+      p_connection_id:body.connection_id??null,p_channel_revision:body.channel_revision??null});
     if(claim.done) return Response.json({done:true},{headers});
     reservation=claim.token;
     return Response.json(await runBroadcast(id!,reservation!,serverRpc,credentials),{headers});

@@ -11,6 +11,8 @@ enum BroadcastType {
 
 class StreamerModel {
   final String streamerId;
+  final String? contentOwnerId;
+  String get channelProfileId => contentOwnerId ?? streamerId;
   final String fullNameEn;
   final String fullNameAr;
   final String titleEn;
@@ -74,6 +76,7 @@ class StreamerModel {
 
   const StreamerModel({
     required this.streamerId,
+    this.contentOwnerId,
     required this.fullNameEn,
     required this.fullNameAr,
     required this.titleEn,
@@ -184,6 +187,7 @@ class StreamerModel {
 
   StreamerModel copyWith({
     String? streamerId,
+    String? contentOwnerId,
     String? fullNameEn,
     String? fullNameAr,
     String? titleEn,
@@ -227,6 +231,7 @@ class StreamerModel {
   }) {
     return StreamerModel(
       streamerId: streamerId ?? this.streamerId,
+      contentOwnerId: contentOwnerId ?? this.contentOwnerId,
       fullNameEn: fullNameEn ?? this.fullNameEn,
       fullNameAr: fullNameAr ?? this.fullNameAr,
       titleEn: titleEn ?? this.titleEn,

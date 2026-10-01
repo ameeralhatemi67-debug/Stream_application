@@ -24,6 +24,7 @@ import 'package:streamer_app/features/discovery/models/academic_category_model.d
 
 import 'fixtures/streamer_fixtures.dart';
 import 'support/localized_app.dart';
+import 'support/empty_broadcasts.dart';
 
 class _RoomCounts {
   int playersStarted = 0;
@@ -152,7 +153,7 @@ void main() {
         connectivityChanges: const Stream.empty(),
         probe: (_) async => throw StateError('Probe must not run offline'),
       );
-      final provider = AppProvider.withServices(connectivityService: service);
+      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),connectivityService: service);
       provider.debugSetOnlineForTests(false);
       await tester.pumpWidget(harness(
           provider, language, const Column(children: [ConnectivityBanner()])));
@@ -181,7 +182,7 @@ void main() {
       connectivityChanges: const Stream.empty(),
       probe: (_) async => reachable,
     );
-    final provider = AppProvider.withServices(connectivityService: service);
+    final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),connectivityService: service);
     await provider.refreshConnectivityNow();
     await tester.pumpWidget(harness(
         provider, 'en', const Column(children: [ConnectivityBanner()])));
@@ -230,7 +231,7 @@ void main() {
       connectivityChanges: const Stream.empty(),
       probe: (_) async => false,
     );
-    final provider = AppProvider.withServices(connectivityService: service);
+    final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),connectivityService: service);
     await tester.pumpWidget(harness(provider, 'ar',
         const LiveRoomConnectionView(status: NetworkStatus.degraded)));
     await tester.pumpAndSettle();
@@ -266,7 +267,7 @@ void main() {
     addTearDown(tester.view.resetDevicePixelRatio);
     final counts = _RoomCounts();
     final catalog = _RoomCatalog();
-    final provider = AppProvider.withServices(adminDbService: catalog);
+    final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
     final live = mockStreamers.first.copyWith(
       isCurrentlyLive: true,
       broadcastType: BroadcastType.liveVideo,
@@ -370,7 +371,7 @@ void main() {
       probe: (_) async => reachable,
     );
     final catalog = _RoomCatalog();
-    final provider = AppProvider.withServices(
+    final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),
         adminDbService: catalog, connectivityService: service);
     final live = mockStreamers.first.copyWith(
       isCurrentlyLive: true,
@@ -434,7 +435,7 @@ void main() {
   test('category loading shares one request and retries after failure',
       () async {
     final catalog = _CategoryCatalog();
-    final provider = AppProvider.withServices(adminDbService: catalog);
+    final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
     final first = provider.ensureAcademicCategoriesLoaded();
     final duplicate = provider.ensureAcademicCategoriesLoaded();
     expect(catalog.pending, hasLength(1));

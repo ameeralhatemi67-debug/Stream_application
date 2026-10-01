@@ -6,8 +6,9 @@ import '../../../../core/providers/app_flags.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/services/admin_safety_backend.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
-enum _SafetySection { live, audit, keywords, switches }
+enum _SafetySection { live, audit, keywords, switches, pilots }
 
 /// The P6 admin safety console: what is live right now, the audit trail, the
 /// chat keyword blocklist and (Master Admin only) the platform switches. Each
@@ -43,6 +44,7 @@ class _AdminSafetyViewState extends State<AdminSafetyView> {
       _SafetySection.audit,
       _SafetySection.keywords,
       if (isMaster) _SafetySection.switches,
+      if (isMaster) _SafetySection.pilots,
     ];
     final section = sections.contains(_section) ? _section : sections.first;
 
@@ -72,6 +74,7 @@ class _AdminSafetyViewState extends State<AdminSafetyView> {
             _SafetySection.audit => _AuditSection(backend: _backend),
             _SafetySection.keywords => _KeywordSection(backend: _backend),
             _SafetySection.switches => _SwitchesSection(flags: _flags),
+            _SafetySection.pilots => const _PilotsSection(),
           },
         ),
       ],
@@ -267,7 +270,7 @@ class _LiveSectionState extends State<_LiveSection> {
       return _StatusMessage(safetyFailureKey(_error!),
           key: const Key('safety-live-error'), onRetry: _load);
     }
-    if (rows == null) return const Center(child: CircularProgressIndicator());
+    if (rows == null) return const Center(child: HadayahLoadingIndicator());
     final known = rows.where((r) => r.viewerCount != null);
     final totalViewers = known.fold<int>(0, (a, r) => a + r.viewerCount!);
 
@@ -341,7 +344,7 @@ class _LiveSectionState extends State<_LiveSection> {
                       ),
                       const SizedBox(height: AppTheme.spaceSm),
                       if (_busy.contains(r.profileId))
-                        const LinearProgressIndicator()
+                        const Center(child: HadayahLoadingIndicator())
                       else
                         Wrap(
                           spacing: AppTheme.spaceSm,
@@ -559,7 +562,7 @@ class _AuditSectionState extends State<_AuditSection> {
                   key: const Key('safety-audit-error'),
                   onRetry: () => _load(reset: true))
               : _loading && _entries.isEmpty
-                  ? const Center(child: CircularProgressIndicator())
+                  ? const Center(child: HadayahLoadingIndicator())
                   : _entries.isEmpty
                       ? const _StatusMessage('safety.audit_empty',
                           key: Key('safety-audit-empty'))
@@ -575,7 +578,7 @@ class _AuditSectionState extends State<_AuditSection> {
                               if (!_hasMore) return const SizedBox.shrink();
                               return Center(
                                 child: _loading
-                                    ? const CircularProgressIndicator()
+                                    ? const HadayahLoadingIndicator()
                                     : TextButton(
                                         key: const Key('safety-audit-more'),
                                         onPressed: () => _load(reset: false),
@@ -759,7 +762,7 @@ class _KeywordSectionState extends State<_KeywordSection> {
           _StatusMessage(safetyFailureKey(_error!),
               key: const Key('safety-keyword-error'), onRetry: _load)
         else if (keywords == null)
-          const Center(child: CircularProgressIndicator())
+          const Center(child: HadayahLoadingIndicator())
         else if (keywords.isEmpty)
           const _StatusMessage('safety.keyword_empty',
               key: Key('safety-keyword-empty'))
@@ -879,6 +882,68 @@ class _SwitchesSectionState extends State<_SwitchesSection> {
                 : (v) => _toggle(key, v),
           ),
       ],
+    );
+  }
+}
+
+/// Organization V1 pilot list (Master Admin). Enabling a pilot lets that one
+/// organization start shows while the global rollout switch stays off;
+/// disabling it never interrupts termination or reconciliation.
+class _PilotsSection extends StatefulWidget {
+  const _PilotsSection();
+  @override
+  State<_PilotsSection> createState() => _PilotsSectionState();
+}
+
+class _PilotsSectionState extends State<_PilotsSection> {
+  late Future<List<({String id, String nameEn, String nameAr, bool pilot})>> _rows;
+  final Set<String> _busy = {};
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _rows = context.read<AppProvider>().organizationPilotStatus();
+  }
+
+  Future<void> _set(String id, bool enabled) async {
+    setState(() { _busy.add(id); _error = null; });
+    try {
+      await context.read<AppProvider>().setOrganizationPilot(id, enabled);
+      if (mounted) setState(() => _rows = context.read<AppProvider>().organizationPilotStatus());
+    } catch (_) {
+      if (mounted) setState(() => _error = 'safety.pilot_failed');
+    } finally {
+      if (mounted) setState(() => _busy.remove(id));
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final language = context.locale.languageCode;
+    return FutureBuilder<List<({String id, String nameEn, String nameAr, bool pilot})>>(
+      future: _rows,
+      builder: (context, snapshot) => ListView(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        children: [
+          Text('safety.pilots_hint'.tr(),
+              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+          if (_error != null) Text(_error!.tr(), style: const TextStyle(color: AppTheme.danger)),
+          if (snapshot.hasError) Text('safety.pilot_failed'.tr(), style: const TextStyle(color: AppTheme.danger)),
+          if (!snapshot.hasData && !snapshot.hasError)
+            const Padding(padding: EdgeInsets.all(AppTheme.spaceLg), child: Center(child: HadayahLoadingIndicator())),
+          if (snapshot.hasData && snapshot.data!.isEmpty) Text('safety.pilots_empty'.tr()),
+          for (final row in snapshot.data ?? const <({String id, String nameEn, String nameAr, bool pilot})>[])
+            SwitchListTile(
+              key: Key('safety-pilot-${row.id}'),
+              contentPadding: EdgeInsets.zero,
+              title: Text(language == 'ar' && row.nameAr.isNotEmpty ? row.nameAr : row.nameEn,
+                  style: const TextStyle(color: AppTheme.textPrimary)),
+              value: row.pilot,
+              onChanged: _busy.contains(row.id) ? null : (v) => _set(row.id, v),
+            ),
+        ],
+      ),
     );
   }
 }

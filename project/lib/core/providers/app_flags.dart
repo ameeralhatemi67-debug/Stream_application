@@ -8,10 +8,16 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 /// values only decide what the app explains, never what it allows.
 enum AppFlagKey {
   chatEnabled('chat_enabled'),
-  registrationsOpen('registrations_open');
+  registrationsOpen('registrations_open'),
+  // Organization V1 rollout switches (20261001095030, 20261001160000). These
+  // gate new capability, so an unread value counts as off, not on.
+  organizationsV1Enabled('organizations_v1_enabled', unknownValue: false),
+  organizationApplicationsOpen('organization_applications_open',
+      unknownValue: false);
 
-  const AppFlagKey(this.column);
+  const AppFlagKey(this.column, {this.unknownValue = true});
   final String column;
+  final bool unknownValue;
 }
 
 enum AppFlagsStatus { unknown, loaded, failed }
@@ -70,9 +76,14 @@ class AppFlags extends ChangeNotifier {
 
   AppFlagsStatus get status => _status;
 
-  /// An unread switch counts as on: the server refuses anything that is
-  /// really off, so a failed read must not lock people out of the app.
-  bool isEnabled(AppFlagKey key) => _values[key.column]?.enabled ?? true;
+  /// An unread safety switch counts as on: the server refuses anything that is
+  /// really off, so a failed read must not lock people out of the app. Rollout
+  /// switches count as off until read (see [AppFlagKey.unknownValue]).
+  bool isEnabled(AppFlagKey key) =>
+      _values[key.column]?.enabled ?? key.unknownValue;
+  bool get organizationApplicationsOpen =>
+      isEnabled(AppFlagKey.organizationApplicationsOpen) ||
+      isEnabled(AppFlagKey.organizationsV1Enabled);
   bool get chatEnabled => isEnabled(AppFlagKey.chatEnabled);
   bool get registrationsOpen => isEnabled(AppFlagKey.registrationsOpen);
 

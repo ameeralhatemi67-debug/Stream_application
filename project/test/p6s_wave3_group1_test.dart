@@ -1,3 +1,5 @@
+import 'package:streamer_app/features/live_stream/models/broadcast_session.dart';
+import 'package:streamer_app/features/organization/models/channel_connection.dart';
 // P6S wave 3, group 1: regressions for the completed 2026-09-25 owner retest.
 //  * The viewer room played the IFrame API sample video instead of the phone
 //    broadcast: it read the profile's featured youtube_video_id (never set by
@@ -33,6 +35,7 @@ import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 import 'fixtures/streamer_fixtures.dart';
 import 'support/localized_app.dart';
+import 'support/empty_broadcasts.dart';
 
 const _sampleVideo = 'M7lc1UVf-VE';
 
@@ -232,6 +235,34 @@ class _BroadcasterDb extends AdminDatabaseService {
   }
 }
 
+class _CanonicalBroadcasts extends EmptyBroadcasts {
+  _CanonicalBroadcasts(this.db);
+  final _BroadcasterDb db;
+  static const destination=ChannelConnection(id:'connection',ownerId:'c',organizationId:null,channelId:'UC_test',title:'Channel',status:'connected',revision:1);
+  final row=<String,dynamic>{'id':'session-1','owner_id':'c','state':'preparing','revision':1,
+    'title_en':'Phone','broadcast_type':'liveVideo','channel_connection_id':'connection',
+    'sender_mode':'phone_direct','stream_id':'LIVEvideo01','accepted_at':'2026-10-01'};
+  @override Future<BroadcastSession?> session(String id) async=>BroadcastSession.fromRow(row);
+  @override Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
+    if(action=='prepare') {row['state']='preparing';return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmp.youtube.com/live2','ingest_key':'test-key'};}
+    if(action=='start') {db.liveWrites.add(true);if(db.startGate!=null)await db.startGate!.future;row['state']='live';}
+    if(action=='end') {db.endedSessions.add(sessionId);row['state']='completed';}
+    return {'session':Map<String,dynamic>.of(row)};
+  }
+}
+
+class _RoomBroadcasts extends EmptyBroadcasts {
+  final rows=<String,Map<String,dynamic>>{};
+  @override Future<List<BroadcastSession>> sessions({String? organizationId,bool mine=false}) async =>
+    rows.values.where((r)=>r['hidden_from_discovery']!=true).map(BroadcastSession.fromRow).toList();
+  @override Future<BroadcastSession?> session(String id) async=>rows[id]==null?null:BroadcastSession.fromRow(rows[id]!);
+}
+class _RoomCatalog extends AdminDatabaseService {
+  @override Future<int> sweepStaleLiveFlags() async=>0;
+  @override Future<List<StreamerModel>> loadVerifiedStreamersFromBackend({bool requireSuccess=false}) async=>[
+    mockStreamers.first.copyWith(avatarUrl:'',bannerUrl:'',isCurrentlyLive:false,clearLiveState:true)];
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(initializeTestLocalization);
@@ -272,7 +303,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final catalog = _Catalog();
-      final provider = AppProvider.withServices(adminDbService: catalog);
+      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
       for (final s in [...others, streamer]) {
         provider.addStreamer(s);
       }
@@ -292,6 +323,52 @@ void main() {
       avatarUrl: '',
       bannerUrl: '',
     );
+
+    testWidgets('hidden canonical room uses exact chat ID and becomes a read-only replay', (tester) async {
+      tester.view.physicalSize=const Size(1280,800);tester.view.devicePixelRatio=1;
+      addTearDown(tester.view.reset);
+      const id='11111111-1111-4111-8111-111111111111';
+      final broadcasts=_RoomBroadcasts();
+      broadcasts.rows[id]={'id':id,'owner_id':'presenter','org_id':mockStreamers.first.streamerId,
+        'state':'live','revision':1,'title_en':'Hidden show','broadcast_type':'liveVideo',
+        'stream_id':'LIVEvideo01','hidden_from_discovery':true};
+      final chatIds=<String>[];
+      LiveBroadcastScreen.debugChatFactory=(id,_) {chatIds.add(id);return _Chat(id,counts);};
+      final p=AppProvider.withServices(organizationBroadcastService:broadcasts,adminDbService:_RoomCatalog());
+      await tester.pumpWidget(_room(p,id));
+      await tester.pump(const Duration(milliseconds:100));await tester.pump();
+      expect(counts.urls,['LIVEvideo01']);expect(chatIds,[id]);
+      expect(p.streamers.any((s)=>s.streamerId==id),isFalse);
+      broadcasts.rows[id]!['state']='processing_replay';
+      broadcasts.rows[id]!['replay_status']='processing';
+      await p.refreshBroadcastRoom(id);await tester.pump(const Duration(milliseconds:100));await tester.pump();
+      expect(find.text('organization_v1.replay_processing'.tr()),findsOneWidget);
+      expect(counts.chatsDisposed,1);
+      broadcasts.rows[id]!['state']='completed';
+      broadcasts.rows[id]!['replay_status']='available';
+      await p.refreshBroadcastRoom(id);await tester.pump(const Duration(milliseconds:100));await tester.pump();
+      expect(counts.urls,['LIVEvideo01','LIVEvideo01']);
+      expect(find.text('organization_v1.replay_chat_read_only'.tr()),findsOneWidget);
+      expect(tester.takeException(),isNull);
+      await tester.pumpWidget(const SizedBox());p.dispose();
+    });
+
+    test('concurrent shows keep separate identities and denied room reads invalidate the catalog',() async {
+      final broadcasts=_RoomBroadcasts();
+      for(final id in ['one','two']) {
+        broadcasts.rows[id]={'id':id,'owner_id':'presenter-$id','org_id':mockStreamers.first.streamerId,
+          'state':'live','revision':1,'title_en':id,'broadcast_type':'liveVideo','stream_id':'LIVEvideo01'};
+      }
+      final p=AppProvider.withServices(organizationBroadcastService:broadcasts,adminDbService:_RoomCatalog());
+      await p.loadVerifiedStreamersFromBackend();
+      expect(p.roomChoices(mockStreamers.first.streamerId).map((s)=>s.id),['one','two']);
+      expect(p.getRoomStreamer(mockStreamers.first.streamerId),isNull);
+      expect(p.getRoomStreamer('two')?.liveSessionId,'two');
+      broadcasts.rows.remove('two');await p.refreshBroadcastRoom('two');
+      expect(p.getRoomStreamer('two'),isNull);
+      expect(p.getRoomStreamer('one')?.liveSessionId,'one');
+      p.dispose();
+    });
 
     testWidgets('a phone broadcast plays its exact live watch ID',
         (tester) async {
@@ -486,7 +563,7 @@ void main() {
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
       final catalog = _Catalog();
-      final provider = AppProvider.withServices(adminDbService: catalog);
+      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
       provider.addStreamer(phoneLive);
       await tester
           .pumpWidget(_room(provider, phoneLive.streamerId, lang: 'ar'));
@@ -508,7 +585,7 @@ void main() {
     test('a request made during a load gets one fresh follow-up read',
         () async {
       final catalog = _Catalog();
-      final provider = AppProvider.withServices(adminDbService: catalog);
+      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
       addTearDown(provider.dispose);
       await Future<void>.delayed(Duration.zero);
       expect(catalog.pending, hasLength(1));
@@ -542,7 +619,7 @@ void main() {
         WidgetTester tester, _BroadcasterDb db) async {
       final auth = _Auth();
       final provider =
-          AppProvider.withServices(authService: auth, adminDbService: db);
+          AppProvider.withServices(organizationBroadcastService:_CanonicalBroadcasts(db),authService: auth, adminDbService: db);
       final router = AppRouter.build(provider);
       final presenter =
           DeviceSessionPresenter(provider: provider, router: router)..attach();
@@ -642,6 +719,7 @@ void main() {
       expect(db.statusReads, greaterThanOrEqualTo(1));
       // This device withdraws and re-asserts LIVE while the read is out.
       await provider.setBroadcasterLive(false);
+      await provider.prepareBroadcast('session-1','phone_direct',_CanonicalBroadcasts.destination);
       await provider.setBroadcasterLive(true);
       read.complete({
         'live': false,
@@ -673,10 +751,11 @@ void main() {
       final auth = _Auth();
       final db = _BroadcasterDb();
       final provider =
-          AppProvider.withServices(authService: auth, adminDbService: db);
+          AppProvider.withServices(organizationBroadcastService:_CanonicalBroadcasts(db),authService: auth, adminDbService: db);
       auth.signIn('c');
       await settle(tester);
       provider.setCustomStreamerYouTubeUrl('LIVEvideo01');
+      await provider.prepareBroadcast('session-1','phone_direct',_CanonicalBroadcasts.destination);
       db.startGate = Completer<String?>();
       final starting = provider.setBroadcasterLive(true);
       await tester.pump();
@@ -699,7 +778,7 @@ void main() {
         WidgetTester tester, _BroadcasterDb db) async {
       final auth = _Auth();
       final provider =
-          AppProvider.withServices(authService: auth, adminDbService: db);
+          AppProvider.withServices(organizationBroadcastService:_CanonicalBroadcasts(db),authService: auth, adminDbService: db);
       final router = AppRouter.build(provider);
       final presenter =
           DeviceSessionPresenter(provider: provider, router: router)..attach();
@@ -726,6 +805,7 @@ void main() {
       await settle(tester);
       provider.setCustomStreamerYouTubeUrl('LIVEvideo01');
       provider.setBroadcastSenderMode('phone_direct');
+      await provider.prepareBroadcast('session-1','phone_direct',_CanonicalBroadcasts.destination);
       await provider.setBroadcasterLive(true);
       expect(provider.isBroadcastingLive, isTrue);
       expect(provider.liveSessionId, 'session-1');
@@ -803,7 +883,7 @@ void main() {
       final db = _BroadcasterDb();
       final auth = _Auth();
       final provider =
-          AppProvider.withServices(authService: auth, adminDbService: db);
+          AppProvider.withServices(organizationBroadcastService:_CanonicalBroadcasts(db),authService: auth, adminDbService: db);
       final router = AppRouter.build(provider);
       final presenter =
           DeviceSessionPresenter(provider: provider, router: router)..attach();
@@ -865,7 +945,7 @@ void main() {
     });
 
     test('without a paused switch the refusal stays generic', () {
-      final provider = AppProvider.withServices(
+      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),
           authService: _Auth(), adminDbService: _BroadcasterDb());
       addTearDown(provider.dispose);
       provider.applyAuthRefusal(const AuthException('refused'),
@@ -918,7 +998,7 @@ void main() {
 
   test('a live mini-player closes when its broadcast ends', () async {
     final catalog = _Catalog();
-    final provider = AppProvider.withServices(adminDbService: catalog);
+    final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
     addTearDown(provider.dispose);
     final live = mockStreamers.first
         .copyWith(isCurrentlyLive: true, activeStreamId: 'LIVEvideo01');

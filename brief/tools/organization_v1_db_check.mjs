@@ -31,10 +31,11 @@ for(const file of readdirSync('supabase/migrations').filter(f=>f.endsWith('.sql'
   sql(`insert into supabase_migrations.schema_migrations(version) values('${version}');`);
   console.log('APPLIED '+file);
 }
-for(const name of ['memberships','channels','sessions']) {
+for(const name of ['memberships','channels','sessions','client','events']) {
   const file=`supabase/tests/organization_v1_${name}.test.sql`;
   const output=sql(readFileSync(file,'utf8'));
   writeFileSync(out+'/'+name+'-sql.txt',output);
   console.log(output.split('\n').filter(line=>/^(?:ok|not ok|1\.\.|#)/.test(line)).join('\n'));
   assert.doesNotMatch(output,/not ok|Looks like you failed|planned \d+ tests but ran/);
 }
+

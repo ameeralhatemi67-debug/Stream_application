@@ -28,6 +28,7 @@ import 'package:streamer_app/features/profile/models/streamer_models.dart';
 
 import 'fixtures/streamer_fixtures.dart';
 import 'support/localized_app.dart';
+import 'support/empty_broadcasts.dart';
 
 class _Log {
   int playerTaps = 0;
@@ -242,7 +243,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final catalog = roomCatalog = _Catalog();
-      final provider = AppProvider.withServices(adminDbService: catalog);
+      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
       provider.addStreamer(live);
       await tester.pumpWidget(
           _app(provider, LiveBroadcastScreen(streamId: live.streamerId)));
@@ -372,7 +373,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final catalog = _Catalog();
-      final provider = AppProvider.withServices(adminDbService: catalog);
+      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
       provider.addStreamer(live);
       await tester.pumpWidget(_app(
           provider, LiveBroadcastScreen(streamId: live.streamerId),

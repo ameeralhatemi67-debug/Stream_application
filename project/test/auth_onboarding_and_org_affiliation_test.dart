@@ -15,6 +15,8 @@ import 'package:streamer_app/features/auth/presentation/application_pending_scre
 import 'package:streamer_app/features/auth/presentation/steps/apply_step_3_professional.dart';
 
 import 'fixtures/streamer_fixtures.dart';
+import 'support/fixture_application_db.dart';
+import 'support/empty_broadcasts.dart';
 
 class DirectJsonAssetLoader extends AssetLoader {
   final Map<String, dynamic> enData;
@@ -255,6 +257,12 @@ void main() {
     });
 
     test('TC-ORG-AFF-01: Bi-directional Org Affiliation submission and resolution', () async {
+      // Requests are resolved by the organization RPCs; use an explicit
+      // backend double instead of the removed offline write fallback.
+      final provider = AppProvider.withServices(
+          adminDbService: FixtureApplicationDb(),
+          organizationBroadcastService: EmptyBroadcasts());
+      seedStreamerFixtures(provider);
       final initialAffCount = provider.affiliationRequests.length;
 
       // Submit affiliation request from individual streamer to Org

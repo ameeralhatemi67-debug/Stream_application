@@ -3,6 +3,8 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/chat_message_model.dart';
 import '../../services/live_chat_controller.dart';
+import 'live_chat_layout.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 class LiveChatWidget extends StatefulWidget {
   final List<ChatMessageModel> messages;
@@ -35,8 +37,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
       widget.textController ?? TextEditingController();
   final FocusNode _focusNode = FocusNode();
 
-  bool get _readOnly =>
-      MediaQuery.orientationOf(context) == Orientation.landscape;
+  bool get _readOnly => isCompactLandscapeChat(context);
 
   @override
   void didChangeDependencies() {
@@ -296,6 +297,9 @@ class _ChatTile extends StatelessWidget {
                               : AppTheme.textPrimary,
                         ),
                       ),
+                      if (message.body == '✋')
+                        const Icon(Icons.back_hand_rounded,
+                            size: 15, color: AppTheme.warning),
                       ...message.badges
                           .map((badge) => _buildSenderBadge(context, badge)),
                       if (message.isCurrentUser)
@@ -330,7 +334,7 @@ class _ChatTile extends StatelessWidget {
                         const SizedBox(
                           width: 9,
                           height: 9,
-                          child: CircularProgressIndicator(
+                          child: HadayahLoadingIndicator(
                             strokeWidth: 1.5,
                             color: AppTheme.textMuted,
                           ),
@@ -341,7 +345,13 @@ class _ChatTile extends StatelessWidget {
                   Text.rich(
                     TextSpan(
                       children: [
-                        TextSpan(text: message.body),
+                        TextSpan(
+                          text: message.body == '✋'
+                              ? 'live.hand_raised_message'.tr()
+                              : message.body == '✋↓'
+                                  ? 'live.hand_lowered_message'.tr()
+                                  : message.body,
+                        ),
                         if (message.isEdited)
                           TextSpan(
                             text: ' ${'live.message_edited_badge'.tr()}',

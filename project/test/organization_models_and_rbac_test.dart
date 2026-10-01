@@ -8,6 +8,8 @@ import 'package:streamer_app/features/organization/models/org_broadcaster_permis
 import 'package:streamer_app/features/organization/models/org_audit_log_entry.dart';
 
 import 'fixtures/streamer_fixtures.dart';
+import 'support/scripted_broadcasts.dart';
+import 'package:streamer_app/features/organization/models/org_membership.dart';
 
 import 'fixtures/vod_fixtures.dart';
 
@@ -135,7 +137,9 @@ void main() {
 
     test('TC-ORG-05: AppProvider RBAC and Organization helpers', () async {
       final db = await AdminDatabaseService.create();
-      final provider = AppProvider(db);
+      final broadcasts = ScriptedBroadcasts();
+      final provider = AppProvider.withServices(
+          adminDbService: db, organizationBroadcastService: broadcasts);
       seedStreamerFixtures(provider);
       // Verify venues and speakers getters
       final venues = provider.getOrganizationVenues('org_dalilk_04');
@@ -143,54 +147,79 @@ void main() {
       expect(venues.length, equals(3));
       expect(speakers.length, equals(3));
 
-      // Test RBAC for super admin (always allowed) -- admin status now comes
-      // from the currently-signed-in session's backend role, not a hardcoded
-      // email string, so simulate that session via debugSetSignedInForTests.
+      // Platform admin is not an organization grant (Organization V1).
       provider.debugSetSignedInForTests(
         email: 'amir.alhatemi@gmail.com',
         isAdmin: true,
+        organizationBroadcastApproved: true,
       );
+      expect(
+        provider.canUserBroadcastForOrg(
+            'org_dalilk_04', 'amir.alhatemi@gmail.com'),
+        isFalse,
+      );
+
+      // A roster card with a matching email is not authority either.
+      expect(
+        provider.canUserBroadcastForOrg(
+            'org_dalilk_04', 'abdulrahman@dalilk.com'),
+        isFalse,
+      );
+
+      // An active membership with a video grant is, for the signed-in account.
+      OrgMembership member(bool video, {String status = 'active'}) =>
+          OrgMembership.fromRow({
+            'organization_id': 'org_dalilk_04',
+            'profile_id': 'presenter',
+            'role': 'broadcaster',
+            'status': status,
+            'permissions': {'can_go_live_video': video},
+          });
+      broadcasts.mine = [member(true)];
+      await provider.refreshOrgMemberships();
       expect(
         provider.canUserBroadcastForOrg(
             'org_dalilk_04', 'amir.alhatemi@gmail.com'),
         isTrue,
       );
-
-      // Test RBAC for authorized speaker
       expect(
-        provider.canUserBroadcastForOrg(
-            'org_dalilk_04', 'abdulrahman@dalilk.com'),
-        isTrue,
-      );
-
-      // Test RBAC for unauthorized user
-      expect(
-        provider.canUserBroadcastForOrg(
-            'org_dalilk_04', 'stranger@gmail.com'),
+        provider.canUserBroadcastForOrg('org_dalilk_04', 'stranger@gmail.com'),
         isFalse,
       );
 
-      // Test update speaker permissions
-      await provider.updateSpeakerPermissions(
-        'org_dalilk_04',
-        'spk_sarah',
-        const OrgBroadcasterPermissions(
-          canGoLiveVideo: false,
-          canGoAudioOnly: false,
-        ),
-      );
-
-      final updatedSpeakers =
-          provider.getOrganizationSpeakers('org_dalilk_04');
-      final sarah =
-          updatedSpeakers.firstWhere((s) => s.speakerId == 'spk_sarah');
-      expect(sarah.permissions.canGoLiveVideo, isFalse);
-
-      // Since Sarah's video and audio permissions are revoked, canUserBroadcastForOrg returns false
+      // Revoked grants and suspended memberships deny immediately.
+      broadcasts.mine = [member(false)];
+      await provider.refreshOrgMemberships();
       expect(
-        provider.canUserBroadcastForOrg('org_dalilk_04', 'sarah@dalilk.com'),
+        provider.canUserBroadcastForOrg(
+            'org_dalilk_04', 'amir.alhatemi@gmail.com'),
         isFalse,
       );
+      broadcasts.mine = [member(true, status: 'suspended')];
+      await provider.refreshOrgMemberships();
+      expect(
+        provider.canUserBroadcastForOrg(
+            'org_dalilk_04', 'amir.alhatemi@gmail.com'),
+        isFalse,
+      );
+
+      // Without platform organization approval a grant is not enough.
+      provider.debugSetSignedInForTests(email: 'amir.alhatemi@gmail.com');
+      broadcasts.mine = [member(true)];
+      await provider.refreshOrgMemberships();
+      expect(
+        provider.canUserBroadcastForOrg(
+            'org_dalilk_04', 'amir.alhatemi@gmail.com'),
+        isFalse,
+      );
+
+      // Roster permission edits require an accepted membership on the server.
+      await expectLater(
+          provider.updateSpeakerPermissions('org_dalilk_04', 'spk_sarah',
+              const OrgBroadcasterPermissions(
+                  canGoLiveVideo: false, canGoAudioOnly: false)),
+          throwsStateError);
+      expect(broadcasts.calls, isEmpty);
     });
   });
 }

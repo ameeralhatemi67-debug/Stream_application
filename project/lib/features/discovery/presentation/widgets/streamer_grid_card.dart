@@ -22,11 +22,11 @@ class StreamerGridCard extends StatelessWidget {
               p.networkStatus,
               p.isUsingCachedCatalog,
               (p.isLoggedInStreamer || p.isStreamerModeEnabled) &&
-                  p.isOwnStreamerProfile(streamer.streamerId),
+                  p.isOwnStreamerProfile(streamer.channelProfileId),
             ));
     final uncertain = cached || networkStatus != NetworkStatus.online;
     final isLive = !uncertain && streamer.isCurrentlyLive;
-    void openChannel() => context.push('/profile/${streamer.streamerId}');
+    void openChannel() => context.push(isLive ? '/live/${streamer.liveSessionId ?? streamer.streamerId}' : '/profile/${streamer.channelProfileId}');
 
     return StreamerIdentityCard(
       name: streamer.getLocalizedName(langCode),
@@ -34,25 +34,39 @@ class StreamerGridCard extends StatelessWidget {
       avatarUrl: streamer.avatarUrl,
       bannerUrl: streamer.bannerUrl,
       isVerified: streamer.isVerified,
-      status: StreamerCardStatus(
-        isLive: isLive,
-        isAudio: streamer.isAudioLive,
-        label: uncertain
-            ? (cached
-                    ? 'offline_experience.cached_card'
-                    : 'offline_experience.status_unavailable')
-                .tr()
-            : null,
+      status: Wrap(
+        spacing: AppTheme.spaceXs,
+        runSpacing: AppTheme.spaceXs,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        children: [
+          StreamerCardStatus(
+            isLive: isLive,
+            isAudio: streamer.isAudioLive,
+            label: uncertain
+                ? (cached
+                        ? 'offline_experience.cached_card'
+                        : 'offline_experience.status_unavailable')
+                    .tr()
+                : null,
+          ),
+          if (isOwnCard)
+            Container(
+              padding: const EdgeInsets.symmetric(
+                  horizontal: AppTheme.spaceSm, vertical: AppTheme.spaceXs),
+              decoration: BoxDecoration(
+                color: AppTheme.surface,
+                borderRadius: BorderRadius.circular(AppTheme.radiusFull),
+              ),
+              child: Text('feed.your_channel_badge'.tr(),
+                  style:
+                      const TextStyle(color: AppTheme.primary, fontSize: 11)),
+            ),
+        ],
       ),
       onTap: openChannel,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (isOwnCard) ...[
-            Text('feed.your_channel_badge'.tr(),
-                style: const TextStyle(color: AppTheme.primary, fontSize: 12)),
-            const SizedBox(height: AppTheme.spaceSm),
-          ],
           Wrap(
             spacing: AppTheme.spaceSm,
             runSpacing: AppTheme.spaceXs,

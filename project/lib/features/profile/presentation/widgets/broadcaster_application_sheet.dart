@@ -3,11 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import 'package:top_snackbar_flutter/top_snack_bar.dart';
+import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/utils/id_generator.dart';
 import '../../../admin/models/broadcaster_application_model.dart';
 import '../../../map/models/map_tricity_domain.dart';
+import '../../../auth/presentation/widgets/location_picker_modal.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/providers/app_flags.dart';
 
 /// Interactive In-App Application Sheet for Viewers applying to become
 /// Verified Scholars or Registering Organization Auditoriums.
@@ -227,7 +231,80 @@ class _BroadcasterApplicationSheetState
     );
   }
 
+  Future<void> _openLocationPicker() async {
+    final lat = double.tryParse(_latController.text.trim());
+    final lng = double.tryParse(_lngController.text.trim());
+    final initial = lat != null &&
+            lng != null &&
+            lat.isFinite &&
+            lng.isFinite &&
+            !(lat == 0 && lng == 0)
+        ? LatLng(lat, lng)
+        : null;
+    final result = await LocationPickerModal.show(
+      context: context,
+      initialCity: _cityId,
+      initialLocation: initial,
+    );
+    if (!mounted || result == null) return;
+    setState(() {
+      _latController.text = result.coordinates.latitude.toString();
+      _lngController.text = result.coordinates.longitude.toString();
+    });
+  }
+
+  Future<bool> _confirmSensitiveEdit() async =>
+      await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+          scrollable: true,
+          title: Row(
+            children: [
+              Expanded(child: Text('profile.review_confirm_title'.tr())),
+              IconButton(
+                tooltip: 'design_ui.cancel'.tr(),
+                icon: const Icon(Icons.close_rounded),
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+              ),
+            ],
+          ),
+          content: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 380),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text('profile.review_confirm_message'.tr()),
+                ExpansionTile(
+                  tilePadding: EdgeInsets.zero,
+                  title: Text('profile.review_fields_title'.tr()),
+                  children: [
+                    Align(
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text('profile.review_fields_list'.tr()),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () => Navigator.of(dialogContext).pop(true),
+              child: Text('profile.review_confirm_yes'.tr()),
+            ),
+          ],
+        ),
+      ) ??
+      false;
+
   Future<void> _handleSubmit() async {
+    if (!widget.editingProfile &&
+        _selectedRole == ApplicationAccountType.organizationVenue &&
+        !AppFlags.instance.organizationApplicationsOpen) {
+      _showErrorBanner('application.organization_coming_soon'.tr());
+      return;
+    }
     final nameEn = _nameEnController.text.trim();
     final nameAr = _nameArController.text.trim();
     final email = _emailController.text.trim();
@@ -279,21 +356,6 @@ class _BroadcasterApplicationSheetState
       _showErrorBanner(channelError.tr());
       return;
     }
-    setState(() => _isSubmitting = true);
-    try {
-      if (channelChanged) {
-        await context.read<AppProvider>().validateChannelConfiguration(
-            _youtubeChannelController.text, _youtubeHandleController.text);
-      }
-    } on FormatException catch (e) {
-      if (mounted) {
-        setState(() => _isSubmitting = false);
-        _showErrorBanner(e.message.tr());
-      }
-      return;
-    }
-    if (!mounted) return;
-
     final tags = _tagsController.text
         .split(',')
         .map((t) => t.trim())
@@ -310,8 +372,20 @@ class _BroadcasterApplicationSheetState
         !lng.isFinite ||
         lat.abs() > 90 ||
         lng.abs() > 180) {
-      setState(() => _isSubmitting = false);
       _showErrorBanner('map.pin_invalid'.tr());
+      return;
+    }
+    final locationChanged = !widget.editingProfile ||
+        lat != widget.existingApplication?.latitude ||
+        lng != widget.existingApplication?.longitude ||
+        _cityId != widget.existingApplication?.cityId ||
+        _venueNameEnController.text.trim() !=
+            widget.existingApplication?.venueNameEn ||
+        _venueNameArController.text.trim() !=
+            widget.existingApplication?.venueNameAr;
+    if (locationChanged && !isInTricityMapDomain(lat, lng)) {
+      _scrollToKey(_venueKey);
+      _showErrorBanner('map.location_outside_supported'.tr());
       return;
     }
     final capacity = int.tryParse(_seatingCapacityController.text.trim()) ?? 0;
@@ -357,6 +431,31 @@ class _BroadcasterApplicationSheetState
       status: ApplicationStatus.pending,
       submittedAt: DateTime.now(),
     );
+
+    final previous = widget.existingApplication;
+    final sensitiveChanged = widget.editingProfile &&
+        previous != null &&
+        (email != previous.email ||
+            phone != previous.phone ||
+            locationChanged ||
+            channelChanged);
+    if (sensitiveChanged && !await _confirmSensitiveEdit()) return;
+    if (!mounted) return;
+
+    setState(() => _isSubmitting = true);
+    try {
+      if (channelChanged) {
+        await context.read<AppProvider>().validateChannelConfiguration(
+            _youtubeChannelController.text, _youtubeHandleController.text);
+      }
+    } on FormatException catch (e) {
+      if (mounted) {
+        setState(() => _isSubmitting = false);
+        _showErrorBanner(e.message.tr());
+      }
+      return;
+    }
+    if (!mounted) return;
 
     final appProvider = Provider.of<AppProvider>(context, listen: false);
     var needsReview = true;
@@ -611,7 +710,7 @@ class _BroadcasterApplicationSheetState
                                 const SizedBox(
                                   width: 18,
                                   height: 18,
-                                  child: CircularProgressIndicator(
+                                  child: HadayahLoadingIndicator(
                                     strokeWidth: 2,
                                     color: AppTheme.onMedia,
                                   ),
@@ -691,8 +790,19 @@ class _BroadcasterApplicationSheetState
     required IconData icon,
   }) {
     final isSelected = _selectedRole == type;
+    final unavailable = type == ApplicationAccountType.organizationVenue &&
+        !widget.editingProfile &&
+        !AppFlags.instance.organizationApplicationsOpen;
     return GestureDetector(
-      onTap: () => setState(() => _selectedRole = type),
+      onTap: () {
+        if (unavailable) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('application.organization_coming_soon'.tr()),
+          ));
+          return;
+        }
+        setState(() => _selectedRole = type);
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
@@ -708,7 +818,9 @@ class _BroadcasterApplicationSheetState
             Icon(
               icon,
               size: 20,
-              color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
+              color: unavailable
+                  ? AppTheme.textMuted
+                  : (isSelected ? AppTheme.primary : AppTheme.textSecondary),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -718,9 +830,11 @@ class _BroadcasterApplicationSheetState
                   Text(
                     title,
                     style: TextStyle(
-                      color: isSelected
-                          ? AppTheme.textPrimary
-                          : AppTheme.textSecondary,
+                      color: unavailable
+                          ? AppTheme.textMuted
+                          : isSelected
+                              ? AppTheme.textPrimary
+                              : AppTheme.textSecondary,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w500,
                       fontSize: 12,
@@ -890,70 +1004,55 @@ class _BroadcasterApplicationSheetState
           const SizedBox(height: AppTheme.spaceSm),
 
           // City membership is independent of the exact venue coordinates.
-          Wrap(
-            spacing: AppTheme.spaceXs,
-            runSpacing: AppTheme.spaceXs,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              Text(
-                'settings.city_label'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              _buildPresetChip('Al Khobar', 'map.khobar'),
-              _buildPresetChip('Dhahran', 'map.dhahran'),
-              _buildPresetChip('Dammam', 'map.dammam'),
-            ],
+          DropdownButtonFormField<String>(
+            initialValue:
+                const {'khobar', 'dhahran', 'dammam'}.contains(_cityId)
+                    ? _cityId
+                    : null,
+            isExpanded: true,
+            decoration: InputDecoration(
+              labelText: 'profile.city'.tr(),
+              helperText: _cityId.isNotEmpty &&
+                      !const {'khobar', 'dhahran', 'dammam'}.contains(_cityId)
+                  ? '${'profile.saved_city'.tr()}: '
+                      '${context.locale.languageCode == 'ar' ? BroadcasterApplicationModel.cityNames[_cityId]?.nameAr ?? _cityId : BroadcasterApplicationModel.cityNames[_cityId]?.nameEn ?? _cityId}'
+                  : null,
+            ),
+            items: BroadcasterApplicationModel.cityNames.entries
+                .where((city) =>
+                    const {'khobar', 'dhahran', 'dammam'}.contains(city.key))
+                .map((city) => DropdownMenuItem(
+                      value: city.key,
+                      child: Text(context.locale.languageCode == 'ar'
+                          ? city.value.nameAr
+                          : city.value.nameEn),
+                    ))
+                .toList(),
+            onChanged: (city) => setState(() => _cityId = city ?? ''),
           ),
           const SizedBox(height: AppTheme.spaceSm),
-
-          Flex(
-            direction: MediaQuery.sizeOf(context).width < 600
-                ? Axis.vertical
-                : Axis.horizontal,
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Flexible(
-                fit: FlexFit.loose,
-                child: _buildTextField(
-                  controller: _latController,
-                  label: 'application.latitude'.tr(),
-                  hint: '26.3050',
-                  icon: Icons.my_location_rounded,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                ),
-              ),
-              const SizedBox(width: AppTheme.spaceSm, height: AppTheme.spaceSm),
-              Flexible(
-                fit: FlexFit.loose,
-                child: _buildTextField(
-                  controller: _lngController,
-                  label: 'application.longitude'.tr(),
-                  hint: '50.1450',
-                  icon: Icons.explore_outlined,
-                  keyboardType:
-                      const TextInputType.numberWithOptions(decimal: true),
-                ),
-              ),
-            ],
+          Text('profile.current_location'.tr(),
+              style: const TextStyle(
+                  color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+          const SizedBox(height: AppTheme.spaceXs),
+          OutlinedButton.icon(
+            onPressed: _openLocationPicker,
+            icon: const Icon(Icons.pin_drop_outlined),
+            label: Text('design_ui.pinpoint_broadcast_location'.tr()),
+          ),
+          const SizedBox(height: AppTheme.spaceXs),
+          Text(
+            _latController.text.trim().isEmpty ||
+                    _lngController.text.trim().isEmpty
+                ? 'map.picker_no_point'.tr()
+                : 'map.picker_pinned_point'.tr(namedArgs: {
+                    'coords':
+                        '${_latController.text.trim()}, ${_lngController.text.trim()}',
+                  }),
+            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildPresetChip(String cityName, String labelKey) {
-    final city =
-        kTricityCityViews.firstWhere((view) => view.nameEn == cityName);
-    return ChoiceChip(
-      label: Text(labelKey.tr()),
-      selected: _cityId == city.id,
-      onSelected: (_) => setState(() => _cityId = city.id),
     );
   }
 

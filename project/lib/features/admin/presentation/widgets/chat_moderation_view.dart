@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/chat_report_model.dart';
 import '../../models/chat_mute_audit_entry.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../live_stream/services/live_chat_controller.dart'
     show ChatReportReason;
 
@@ -22,7 +23,8 @@ String _reasonLabel(String reason) =>
     ChatReportReason.labelKey(reason)?.tr() ?? reason;
 
 class ChatModerationView extends StatefulWidget {
-  const ChatModerationView({super.key});
+  const ChatModerationView({super.key,this.streamId});
+  final String? streamId;
 
   @override
   State<ChatModerationView> createState() => _ChatModerationViewState();
@@ -35,8 +37,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
   @override
   void initState() {
     super.initState();
-    context.read<AppProvider>().ensureChatReportsLoaded();
-    context.read<AppProvider>().ensureMutedChattersAuditLoaded();
+    context.read<AppProvider>().refreshChatReports();
+    if(widget.streamId==null) context.read<AppProvider>().ensureMutedChattersAuditLoaded();
   }
 
   @override
@@ -257,7 +259,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
     final reports = context
-        .select<AppProvider, List<ChatReportModel>>((p) => p.chatReports);
+        .select<AppProvider, List<ChatReportModel>>((p) => p.chatReports)
+        .where((r)=>widget.streamId==null || r.streamId==widget.streamId).toList();
 
     final query = _searchController.text.trim().toLowerCase();
     final filtered = query.isEmpty
@@ -311,7 +314,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           ),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
-            'design_ui.reported_live_chat_messages_platform_wide_dismiss_a_report_delete'
+            (widget.streamId==null?'design_ui.reported_live_chat_messages_platform_wide_dismiss_a_report_delete':'organization_v1.scoped_reports')
                 .tr(),
             style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
           ),
@@ -337,7 +340,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
             ),
           ),
           const SizedBox(height: AppTheme.spaceLg),
-          _buildMutedChattersAuditSection(context),
+          if(widget.streamId==null) _buildMutedChattersAuditSection(context),
           const SizedBox(height: AppTheme.spaceLg),
           Expanded(
             child: filtered.isEmpty
@@ -601,7 +604,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
               child: SizedBox(
                 width: 16,
                 height: 16,
-                child: CircularProgressIndicator(
+                child: HadayahLoadingIndicator(
                     strokeWidth: 2, color: AppTheme.primary),
               ),
             )
@@ -637,7 +640,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   label: Text('design_ui.mute_in_stream'.tr()),
                   onPressed: () => _showMuteDurationSheet(provider, report),
                 ),
-                OutlinedButton.icon(
+                if(provider.isAdminUser) OutlinedButton.icon(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.danger,
                     side: const BorderSide(color: AppTheme.danger),

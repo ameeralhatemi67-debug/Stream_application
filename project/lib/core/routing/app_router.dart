@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_provider.dart';
 import '../widgets/floating_stream_mini_player.dart';
-import '../widgets/language_switcher.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/viewer_setup_screen.dart';
 import '../../features/auth/presentation/role_select_screen.dart';
@@ -20,8 +19,11 @@ import '../../features/admin/presentation/admin_hub_screen.dart';
 import '../../features/admin/presentation/org_admin_screen.dart';
 import '../../features/organization/presentation/org_invitation_screen.dart';
 import '../../features/organization/presentation/channel_connections_screen.dart';
+import '../../features/organization/presentation/organization_shows_screen.dart';
+import '../../features/organization/presentation/organization_hub_screen.dart';
 import '../../features/splash/presentation/app_splash_screen.dart';
 import '../../features/auth/presentation/screens/account_banned_screen.dart';
+import '../widgets/hadayah_loading_indicator.dart';
 
 class AppRouter {
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
@@ -39,6 +41,8 @@ class AppRouter {
     '/admin',
     '/org-admin',
     '/channels',
+    '/shows',
+    '/organizations',
     '/channel-connected',
     '/settings',
     '/streamer-apply',
@@ -164,6 +168,10 @@ class AppRouter {
           ),
         ),
         routes: [
+          GoRoute(parentNavigatorKey:_rootNavigatorKey,path:'/shows',builder:(context,state)=>
+            OrganizationShowsScreen(initialOrganizationId:state.uri.queryParameters['org'])),
+          GoRoute(parentNavigatorKey:_rootNavigatorKey,path:'/organizations',
+            builder:(context,state)=>const OrganizationHubScreen()),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/login-callback',
@@ -250,7 +258,8 @@ class AppRouter {
                 (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
             builder: (context, state) {
               final id = state.pathParameters['id'] ?? '';
-              return BroadcasterProfileScreen(streamerId: id);
+              return BroadcasterProfileScreen(streamerId: id,
+                initialTab: state.uri.queryParameters['tab'] == 'upcoming' ? 2 : 0);
             },
           ),
           GoRoute(
@@ -274,11 +283,10 @@ class AppRouter {
             parentNavigatorKey: _rootNavigatorKey,
             path: '/admin',
             name: 'admin',
-            builder: (context, state) =>
-                context.select<AppProvider, bool>((p) => p.adminRoleLoading)
-                    ? const Scaffold(
-                        body: Center(child: CircularProgressIndicator()))
-                    : const AdminHubScreen(),
+            builder: (context, state) => context
+                    .select<AppProvider, bool>((p) => p.adminRoleLoading)
+                ? const Scaffold(body: Center(child: HadayahLoadingIndicator()))
+                : const AdminHubScreen(),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
@@ -295,7 +303,7 @@ class AppRouter {
           GoRoute(path:'/channels',parentNavigatorKey:_rootNavigatorKey,
             builder:(context,state)=>const ChannelConnectionsScreen()),
           GoRoute(path:'/channel-connected',parentNavigatorKey:_rootNavigatorKey,
-            builder:(context,state)=>const ChannelConnectionsScreen()),
+            builder:(context,state)=>ChannelConnectionsScreen(returnStatus:state.uri.queryParameters['status'])),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/account-banned',
@@ -351,54 +359,17 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // App Branding Header
+                      // Parent charity mark in the desktop navigation header.
                       Padding(
-                        padding: const EdgeInsets.all(AppTheme.spaceLg),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppTheme.danger.withValues(alpha: 0.15),
-                                borderRadius:
-                                    BorderRadius.circular(AppTheme.radiusSm),
-                                border: Border.all(
-                                    color: AppTheme.danger, width: 1.5),
-                              ),
-                              child: const Icon(
-                                Icons.school_rounded,
-                                color: AppTheme.danger,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spaceMd),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'design_ui.streamer'.tr(),
-                                    style: const TextStyle(
-                                      color: AppTheme.textPrimary,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 14,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                  Text(
-                                    'design_ui.alsharqia_hub'.tr(),
-                                    style: TextStyle(
-                                      color: AppTheme.primary
-                                          .withValues(alpha: 0.9),
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
+                        padding: const EdgeInsets.all(AppTheme.spaceSm),
+                        child: Semantics(
+                          label: 'common.hadayah_charity'.tr(),
+                          child: Image.asset(
+                            'assets/images/hadayah_charity_parent.png',
+                            width: 200,
+                            height: 124,
+                            fit: BoxFit.contain,
+                          ),
                         ),
                       ),
                       const Divider(color: AppTheme.border, height: 1),
@@ -502,15 +473,6 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                           ],
                         ),
                       ),
-
-                      // Language Switcher in Sidebar
-                      const Padding(
-                        padding: EdgeInsets.symmetric(
-                            horizontal: AppTheme.spaceMd,
-                            vertical: AppTheme.spaceSm),
-                        child: LanguageSwitcher(),
-                      ),
-                      const SizedBox(height: AppTheme.spaceSm),
                     ],
                   ),
                 ),

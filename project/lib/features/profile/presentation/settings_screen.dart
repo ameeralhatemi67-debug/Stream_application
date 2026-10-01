@@ -195,6 +195,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: AppTheme.spaceMd),
 
+          // Organizations: invitations, memberships, shows and transfers for
+          // every signed-in account, including organization-only presenters.
+          if (appProvider.isLoggedInStreamer) ...[
+            Builder(builder: (context) {
+              final invitations = context.select<AppProvider, int>(
+                  (p) => p.myOrganizationInvitations.length);
+              return _buildSummaryRow(
+                icon: Icons.apartment_outlined,
+                title: 'organization_v1.organizations'.tr(),
+                subtitle: invitations > 0
+                    ? 'organization_v1.invitations_waiting'
+                        .tr(namedArgs: {'count': '$invitations'})
+                    : 'organization_v1.organizations_hint'.tr(),
+                onTap: () => context.push('/organizations'),
+              );
+            }),
+            const SizedBox(height: AppTheme.spaceMd),
+          ],
+
           // Section 4 (Streamer Only): Broadcaster & Studio Preferences --
           // summary row opening a dedicated modal sheet (Go Live Studio +
           // Streaming Quality Defaults, both unchanged, just relocated).
@@ -280,6 +299,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: AppTheme.spaceSm),
           const AboutSettingsSection(),
+          if (MediaQuery.sizeOf(context).width < 900)
+            Center(
+              child: Semantics(
+                label: 'common.hadayah_charity'.tr(),
+                child: Image.asset(
+                  'assets/images/hadayah_charity_parent.png',
+                  width: 220,
+                  height: 220,
+                  fit: BoxFit.contain,
+                ),
+              ),
+            ),
           const SizedBox(height: AppTheme.spaceXl),
         ],
       )),

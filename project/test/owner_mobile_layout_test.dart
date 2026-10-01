@@ -16,6 +16,7 @@ import 'package:streamer_app/features/live_stream/presentation/screens/phone_bro
 import 'package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart';
 import 'fixtures/streamer_fixtures.dart';
 import 'fixtures/admin_applications.dart';
+import 'support/fixture_application_db.dart';
 
 late Map<String, dynamic> en, ar;
 
@@ -27,7 +28,7 @@ class DirectJsonAssetLoader extends AssetLoader {
 }
 
 class PopulatedAdmin extends AppProvider {
-  PopulatedAdmin() : super(AdminDatabaseService(null));
+  PopulatedAdmin() : super(FixtureApplicationDb());
   @override
   List<AdminRoleAssignmentModel> get roleAssignments => [
         AdminRoleAssignmentModel(

@@ -5,11 +5,96 @@ import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/features/admin/models/broadcaster_application_model.dart';
 import 'package:streamer_app/features/profile/presentation/widgets/broadcaster_application_sheet.dart';
+import 'fixtures/admin_applications.dart';
 import 'support/localized_app.dart';
+import 'support/fixture_application_db.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(initializeTestLocalization);
+
+  testWidgets(
+      'sensitive profile edit asks before saving and can return to form',
+      (tester) async {
+    tester.view.physicalSize = const Size(320, 844);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+    final provider = AppProvider(AdminDatabaseService(null));
+    final application = sampleBroadcasterApplications().last;
+    await tester.pumpWidget(ChangeNotifierProvider.value(
+      value: provider,
+      child: localizedApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => BroadcasterApplicationSheet.show(context,
+                  application: application, editingProfile: true),
+              child: const Text('Open editor'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open editor'));
+    await tester.pumpAndSettle();
+    expect(find.text('Pinpoint Broadcast Location'), findsOneWidget);
+    expect(find.text('Your current location'), findsOneWidget);
+    expect(find.text('Latitude (GPS)'), findsNothing);
+    final cityChoices = tester
+        .widgetList<DropdownButton<String>>(find.byType(DropdownButton<String>))
+        .firstWhere(
+            (button) => button.items!.any((item) => item.value == 'khobar'))
+        .items!
+        .map((item) => item.value)
+        .toSet();
+    expect(cityChoices, {'khobar', 'dhahran', 'dammam'});
+    final phone = find.byWidgetPredicate((widget) =>
+        widget is TextField && widget.keyboardType == TextInputType.phone);
+    await tester.ensureVisible(phone);
+    await tester.enterText(phone, '+966 50 111 2222');
+    final save = find.text('Save changes');
+    await tester.ensureVisible(save);
+    await tester.tap(save);
+    await tester.pumpAndSettle();
+    expect(find.text('Admin approval required'), findsOneWidget);
+    await tester.tap(find.text('Which changes need approval?'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Email and phone number'), findsOneWidget);
+    await tester.tap(find.byTooltip('Cancel'));
+    await tester.pumpAndSettle();
+    expect(find.byType(BroadcasterApplicationSheet), findsOneWidget);
+    await tester.pumpWidget(const SizedBox.shrink());
+    provider.dispose();
+  });
+
+  testWidgets('new organization application stays unavailable', (tester) async {
+    final provider = AppProvider(AdminDatabaseService(null));
+    await tester.pumpWidget(ChangeNotifierProvider.value(
+      value: provider,
+      child: localizedApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: TextButton(
+              onPressed: () => BroadcasterApplicationSheet.show(context),
+              child: const Text('Open application'),
+            ),
+          ),
+        ),
+      ),
+    ));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Open application'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Organization / Venue'));
+    await tester.pump();
+    expect(find.text('Organization / Center applications are coming soon.'),
+        findsOneWidget);
+    expect(find.text('Organization Entity Type'), findsNothing);
+    await tester.pumpWidget(const SizedBox.shrink());
+    provider.dispose();
+  });
 
   for (final categoryId in ['computer_science', 'cs_tech', 'custom_subject']) {
     testWidgets(
@@ -19,7 +104,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
-      final provider = AppProvider(AdminDatabaseService(null));
+      final provider = AppProvider(FixtureApplicationDb());
       final application = BroadcasterApplicationModel(
         id: 'sheet-url',
         cityId: 'dhahran',
@@ -62,13 +147,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       final dropdown = tester
-          .widget<DropdownButton<String>>(find.byType(DropdownButton<String>));
+          .widgetList<DropdownButton<String>>(
+              find.byType(DropdownButton<String>))
+          .firstWhere((item) =>
+              item.items!.any((option) => option.value == categoryId));
       expect(dropdown.value, categoryId);
       expect(dropdown.items!.where((item) => item.value == categoryId),
           hasLength(1));
-      final city = find.widgetWithText(ChoiceChip, 'Dammam');
+      final city = find.byType(DropdownButtonFormField<String>).last;
       await tester.ensureVisible(city);
       await tester.tap(city);
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Dammam').last);
       await tester.pumpAndSettle();
       final submit = find.byType(ElevatedButton);
       await tester.ensureVisible(submit);
@@ -94,7 +184,7 @@ void main() {
     late AppProvider provider;
 
     setUp(() async {
-      final service = AdminDatabaseService(null);
+      final service = FixtureApplicationDb();
       provider = AppProvider(service);
       await Future.delayed(const Duration(milliseconds: 50));
     });

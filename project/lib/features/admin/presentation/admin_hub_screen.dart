@@ -44,6 +44,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   final TextEditingController _streamerSearchController =
       TextEditingController();
   ApplicationStatus? _applicationFilter;
+  bool _showReviewLog = false;
   String _streamerTypeFilter = 'all';
 
   // Verification Queue Batch Selection (v0.8 Checkpoint 2 Phase 2) -- only
@@ -103,7 +104,6 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         TextEditingController(text: terms.broadcasterGuidelinesAr);
     _privacyEnController = TextEditingController(text: terms.privacyPolicyEn);
     _privacyArController = TextEditingController(text: terms.privacyPolicyAr);
-
   }
 
   @override
@@ -220,6 +220,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           List<BroadcasterApplicationModel> pendingApplications,
           List<StreamerModel> streamers,
           List<BroadcasterApplicationModel> applications,
+          List<Map<String, dynamic>> reviewEvents,
           TermsAndConditionsModel termsAndConditions,
           List<ChatReportModel> chatReports,
           bool isPitchDirectorModeEnabled,
@@ -233,6 +234,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           pendingApplications: p.pendingApplications,
           streamers: p.streamers,
           applications: p.applications,
+          reviewEvents: p.applicationReviewEvents,
           termsAndConditions: p.termsAndConditions,
           chatReports: p.chatReports,
           isPitchDirectorModeEnabled: p.isPitchDirectorModeEnabled,
@@ -809,7 +811,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   Widget _buildVerificationQueueTab(
       BuildContext context, AppProvider provider, bool isAr) {
-    var applications = provider.applications;
+    var applications = verificationQueueRows(provider.applications);
 
     if (_applicationFilter != null) {
       applications =
@@ -839,117 +841,334 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Filter Bar
           Wrap(
             spacing: AppTheme.spaceSm,
-            runSpacing: AppTheme.spaceSm,
             children: [
-              if (visiblePendingIds.isNotEmpty)
-                Tooltip(
-                  message: allVisiblePendingSelected
-                      ? 'Deselect all pending'
-                      : 'Select all pending',
-                  child: Checkbox(
-                    value: allVisiblePendingSelected,
-                    activeColor: AppTheme.primary,
-                    onChanged: (_) => setState(() {
-                      if (allVisiblePendingSelected) {
-                        _selectedApplicationIds
-                            .removeWhere(visiblePendingIds.contains);
-                      } else {
-                        _selectedApplicationIds.addAll(visiblePendingIds);
-                      }
-                    }),
-                  ),
-                ),
-              SizedBox(
-                width: double.infinity,
-                child: TextField(
-                  controller: _appSearchController,
-                  onChanged: (_) => setState(() {}),
-                  style: const TextStyle(
-                      color: AppTheme.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'admin.search_applications'.tr(),
-                    hintStyle: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12),
-                    prefixIcon: const Icon(Icons.search_rounded,
-                        color: AppTheme.textSecondary, size: 18),
-                    filled: true,
-                    fillColor: AppTheme.surface,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      borderSide: const BorderSide(color: AppTheme.border),
-                    ),
-                  ),
-                ),
+              ChoiceChip(
+                label: Text('admin.queue_tab'.tr()),
+                selected: !_showReviewLog,
+                onSelected: (_) => setState(() => _showReviewLog = false),
               ),
-              const SizedBox(width: AppTheme.spaceMd),
-
-              // Filter Chips
-              _buildAppFilterChip('admin.filter_all'.tr(), null),
-              const SizedBox(width: 6),
-              _buildAppFilterChip(
-                  'admin.filter_pending'.tr(), ApplicationStatus.pending),
-              const SizedBox(width: 6),
-              _buildAppFilterChip(
-                  'admin.filter_approved'.tr(), ApplicationStatus.approved),
-              const SizedBox(width: 6),
-              _buildAppFilterChip(
-                  'admin.filter_rejected'.tr(), ApplicationStatus.rejected),
-              const SizedBox(width: 8),
+              ChoiceChip(
+                label: Text('admin.review_log_tab'.tr()),
+                selected: _showReviewLog,
+                onSelected: (_) => setState(() => _showReviewLog = true),
+              ),
               IconButton(
-                tooltip: 'Refresh Applications',
+                tooltip: 'admin.refresh_reviews'.tr(),
                 icon:
                     const Icon(Icons.refresh_rounded, color: AppTheme.primary),
-                onPressed: () async {
-                  await provider.refreshAdminData();
-                  setState(() {});
-                },
+                onPressed: () => provider.refreshAdminData(),
               ),
             ],
           ),
-
-          if (_selectedApplicationIds.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spaceMd),
-            _buildBatchActionBar(context, provider),
-          ],
-          const SizedBox(height: AppTheme.spaceLg),
-
-          // Applications List
-          Expanded(
-            child: applications.isEmpty
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Icon(Icons.inbox_rounded,
-                            size: 48, color: AppTheme.textSecondary),
-                        const SizedBox(height: 12),
-                        Text(
-                          'design_ui.no_applications_match_the_selected_filter'
-                              .tr(),
-                          style: const TextStyle(color: AppTheme.textSecondary),
-                        ),
-                      ],
+          const SizedBox(height: AppTheme.spaceSm),
+          if (_showReviewLog)
+            Expanded(child: _buildReviewLog(context, provider, isAr))
+          else ...[
+            // Filter Bar
+            Wrap(
+              spacing: AppTheme.spaceSm,
+              runSpacing: AppTheme.spaceSm,
+              children: [
+                if (visiblePendingIds.isNotEmpty)
+                  Tooltip(
+                    message: allVisiblePendingSelected
+                        ? 'Deselect all pending'
+                        : 'Select all pending',
+                    child: Checkbox(
+                      value: allVisiblePendingSelected,
+                      activeColor: AppTheme.primary,
+                      onChanged: (_) => setState(() {
+                        if (allVisiblePendingSelected) {
+                          _selectedApplicationIds
+                              .removeWhere(visiblePendingIds.contains);
+                        } else {
+                          _selectedApplicationIds.addAll(visiblePendingIds);
+                        }
+                      }),
                     ),
-                  )
-                : ListView.separated(
-                    itemCount: applications.length,
-                    separatorBuilder: (_, __) =>
-                        const SizedBox(height: AppTheme.spaceMd),
-                    itemBuilder: (context, index) {
-                      final app = applications[index];
-                      return _buildApplicationCard(
-                          context, provider, app, isAr);
-                    },
                   ),
-          ),
+                SizedBox(
+                  width: double.infinity,
+                  child: TextField(
+                    controller: _appSearchController,
+                    onChanged: (_) => setState(() {}),
+                    style: const TextStyle(
+                        color: AppTheme.textPrimary, fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'admin.search_applications'.tr(),
+                      hintStyle: const TextStyle(
+                          color: AppTheme.textSecondary, fontSize: 12),
+                      prefixIcon: const Icon(Icons.search_rounded,
+                          color: AppTheme.textSecondary, size: 18),
+                      filled: true,
+                      fillColor: AppTheme.surface,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: const BorderSide(color: AppTheme.border),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: AppTheme.spaceMd),
+
+                // Filter Chips
+                _buildAppFilterChip('admin.filter_all'.tr(), null),
+                const SizedBox(width: 6),
+                _buildAppFilterChip(
+                    'admin.filter_pending'.tr(), ApplicationStatus.pending),
+                const SizedBox(width: 6),
+                _buildAppFilterChip(
+                    'admin.filter_approved'.tr(), ApplicationStatus.approved),
+                const SizedBox(width: 6),
+                _buildAppFilterChip(
+                    'admin.filter_rejected'.tr(), ApplicationStatus.rejected),
+              ],
+            ),
+
+            if (_selectedApplicationIds.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spaceMd),
+              _buildBatchActionBar(context, provider),
+            ],
+            const SizedBox(height: AppTheme.spaceLg),
+
+            // Applications List
+            Expanded(
+              child: applications.isEmpty
+                  ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.inbox_rounded,
+                              size: 48, color: AppTheme.textSecondary),
+                          const SizedBox(height: 12),
+                          Text(
+                            'design_ui.no_applications_match_the_selected_filter'
+                                .tr(),
+                            style:
+                                const TextStyle(color: AppTheme.textSecondary),
+                          ),
+                        ],
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: applications.length,
+                      separatorBuilder: (_, __) =>
+                          const SizedBox(height: AppTheme.spaceMd),
+                      itemBuilder: (context, index) {
+                        final app = applications[index];
+                        return _buildApplicationCard(
+                            context, provider, app, isAr);
+                      },
+                    ),
+            ),
+          ],
         ],
       ),
     );
+  }
+
+  Widget _buildReviewLog(
+      BuildContext context, AppProvider provider, bool isAr) {
+    final events = provider.applicationReviewEvents;
+    if (events.isEmpty) {
+      return Center(child: Text('admin.review_log_empty'.tr()));
+    }
+    return ListView.separated(
+      itemCount: events.length,
+      separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spaceSm),
+      itemBuilder: (context, index) {
+        final event = events[index];
+        final action = event['action'] as String? ?? '';
+        final id = event['application_id'] as String? ?? '';
+        final latest = events.firstWhere(
+            (e) => e['application_id'] == id && e['action'] != 'removed',
+            orElse: () => event);
+        final current =
+            provider.applications.where((a) => a.id == id).firstOrNull;
+        final localOnly = (event['id'] as String? ?? '').startsWith('local-');
+        final reversible = !localOnly &&
+            latest['id'] == event['id'] &&
+            (action == 'approved' || action == 'rejected') &&
+            (current == null || current.status.name == action);
+        final name = isAr
+            ? event['applicant_name_ar'] as String? ?? ''
+            : event['applicant_name_en'] as String? ?? '';
+        final when = DateTime.tryParse(event['created_at'] as String? ?? '')
+                ?.toLocal()
+                .toString()
+                .split('.')
+                .first ??
+            '';
+        return Card(
+          child: Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceMd),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Wrap(
+                    spacing: AppTheme.spaceSm,
+                    runSpacing: AppTheme.spaceXs,
+                    children: [
+                      Text(name,
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      Text('admin.log_$action'.tr()),
+                    ]),
+                Text('${event['actor_name'] ?? 'Admin'} • $when',
+                    style: const TextStyle(color: AppTheme.textSecondary)),
+                if ((event['reason'] as String? ?? '').isNotEmpty)
+                  Text(event['reason'] as String),
+                if (localOnly)
+                  Text('admin.local_log_notice'.tr(),
+                      style: const TextStyle(color: AppTheme.textSecondary)),
+                Wrap(spacing: AppTheme.spaceSm, children: [
+                  TextButton.icon(
+                    onPressed: () =>
+                        _showReviewEventDetails(context, event, isAr),
+                    icon: const Icon(Icons.visibility_outlined),
+                    label: Text('admin.btn_inspect'.tr()),
+                  ),
+                  if (reversible)
+                    TextButton.icon(
+                      onPressed: () =>
+                          _reverseReviewEvent(context, provider, event),
+                      icon: const Icon(Icons.undo_rounded),
+                      label: Text(action == 'approved'
+                          ? 'admin.reverse_approval'.tr()
+                          : 'admin.approve_instead'.tr()),
+                    ),
+                ]),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showReviewEventDetails(
+      BuildContext context, Map<String, dynamic> event, bool isAr) {
+    final snapshot = Map<String, dynamic>.from(
+        event['application_snapshot'] as Map? ?? const {});
+    final base =
+        Map<String, dynamic>.from(event['base_snapshot'] as Map? ?? const {});
+    final changes = <Widget>[];
+    if (base.isNotEmpty) {
+      for (final (key, label) in [
+        ('email', 'admin.field_email'),
+        ('phone', 'admin.field_phone'),
+        ('city_id', 'profile.city'),
+        (isAr ? 'venue_name_ar' : 'venue_name_en', 'admin.venue'),
+        ('latitude', 'admin.location'),
+        ('longitude', 'admin.location'),
+        ('youtube_channel_url', 'admin.field_youtube'),
+        ('youtube_handle', 'admin.field_youtube'),
+      ]) {
+        if (base[key] != snapshot[key]) {
+          changes.add(_buildDetailRow(
+              label.tr(), '${base[key] ?? ''} → ${snapshot[key] ?? ''}'));
+        }
+      }
+    }
+    showDialog<void>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: Text('admin.review_log_tab'.tr()),
+              content: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 520),
+                child: SingleChildScrollView(
+                    child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDetailRow('admin.audit_actor'.tr(),
+                        event['actor_name'] as String? ?? ''),
+                    _buildDetailRow('admin.audit_action'.tr(),
+                        'admin.log_${event['action']}'.tr()),
+                    _buildDetailRow('admin.reject_reason_label'.tr(),
+                        event['reason'] as String? ?? ''),
+                    if (changes.isNotEmpty) ...[
+                      const Divider(),
+                      Text('admin.edit_after_verification'.tr(),
+                          style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ...changes,
+                      const Divider(),
+                    ],
+                    _buildDetailRow(
+                        'admin.applicant'.tr(),
+                        isAr
+                            ? snapshot['applicant_name_ar'] as String? ?? ''
+                            : snapshot['applicant_name_en'] as String? ?? ''),
+                    _buildDetailRow('admin.field_email'.tr(),
+                        snapshot['email'] as String? ?? ''),
+                    _buildDetailRow('admin.field_phone'.tr(),
+                        snapshot['phone'] as String? ?? ''),
+                    _buildDetailRow(
+                        'admin.venue'.tr(),
+                        isAr
+                            ? snapshot['venue_name_ar'] as String? ?? ''
+                            : snapshot['venue_name_en'] as String? ?? ''),
+                    _buildDetailRow('admin.field_youtube'.tr(),
+                        snapshot['youtube_channel_url'] as String? ?? ''),
+                  ],
+                )),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(dialogContext),
+                  child: Text('design_ui.close'.tr()),
+                )
+              ],
+            ));
+  }
+
+  Future<void> _reverseReviewEvent(BuildContext context, AppProvider provider,
+      Map<String, dynamic> event) async {
+    final reasonController = TextEditingController();
+    final reason = await showDialog<String>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: Text('admin.reverse_title'.tr()),
+              content: TextField(
+                controller: reasonController,
+                maxLength: 500,
+                maxLines: 3,
+                decoration: InputDecoration(
+                    labelText: 'admin.reject_reason_label'.tr()),
+              ),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext),
+                    child: Text('settings.cancel'.tr())),
+                TextButton(
+                    onPressed: () {
+                      final reason = reasonController.text.trim();
+                      if (reason.isNotEmpty) {
+                        Navigator.pop(dialogContext, reason);
+                      }
+                    },
+                    child: Text('admin.reverse_confirm'.tr())),
+              ],
+            ));
+    reasonController.dispose();
+    if (reason == null || !mounted) return;
+    try {
+      if (event['action'] == 'approved') {
+        await provider.reverseApprovedApplication(
+            event['id'] as String, reason);
+      } else {
+        final success = await provider.approveRejectedApplication(
+            event['application_id'] as String,
+            adminNotes: reason);
+        if (!success) throw StateError('Review changed');
+      }
+      if (mounted) _showSuccessNotification('admin.review_reversed'.tr());
+    } catch (_) {
+      if (mounted) _showErrorNotification('admin.review_changed'.tr());
+    }
   }
 
   Widget _buildBatchActionBar(BuildContext context, AppProvider provider) {
@@ -969,7 +1188,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              '$count application${count == 1 ? '' : 's'} selected',
+              'admin.selected_count'.tr(namedArgs: {'count': '$count'}),
               style: const TextStyle(
                 color: AppTheme.textPrimary,
                 fontSize: 12.5,
@@ -1079,7 +1298,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             side: const BorderSide(color: AppTheme.border),
           ),
           title: Text(
-            'Reject ${ids.length} Selected Application${ids.length == 1 ? '' : 's'}?',
+            'admin.batch_reject_title'
+                .tr(namedArgs: {'count': '${ids.length}'}),
             style: const TextStyle(
                 color: AppTheme.textPrimary,
                 fontWeight: FontWeight.bold,
@@ -1129,17 +1349,23 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
-                final reason = reasonController.text.trim().isNotEmpty
-                    ? reasonController.text.trim()
-                    : 'Application rejected due to incomplete accreditation.';
+                final reason = reasonController.text.trim();
+                if (reason.isEmpty) return;
                 Navigator.pop(dialogContext);
                 final result = await provider.bulkRejectBroadcasterApplications(
                   ids,
                   reason: reason,
                 );
                 setState(() => _selectedApplicationIds.clear());
-                _showSuccessNotification(
-                    '${result.succeeded} application${result.succeeded == 1 ? '' : 's'} rejected.');
+                final message = 'admin.batch_reject_result'.tr(namedArgs: {
+                  'succeeded': '${result.succeeded}',
+                  'failed': '${result.failed}',
+                });
+                if (result.failed == 0) {
+                  _showSuccessNotification(message);
+                } else {
+                  _showErrorNotification(message);
+                }
               },
               child: Text('admin.btn_reject'.tr()),
             ),
@@ -1176,16 +1402,19 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     switch (app.status) {
       case ApplicationStatus.approved:
         statusColor = AppTheme.success;
-        statusText = 'APPROVED';
+        statusText = 'admin.filter_approved'.tr();
         break;
       case ApplicationStatus.rejected:
         statusColor = AppTheme.danger;
-        statusText = 'REJECTED';
+        statusText = 'admin.filter_rejected'.tr();
+        break;
+      case ApplicationStatus.suspended:
+        statusColor = AppTheme.danger;
+        statusText = 'admin.suspended'.tr();
         break;
       case ApplicationStatus.pending:
-      default:
         statusColor = AppTheme.warning;
-        statusText = 'PENDING REVIEW';
+        statusText = 'admin.filter_pending'.tr();
         break;
     }
 
@@ -1221,11 +1450,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               CircleAvatar(
                 radius: 24,
                 backgroundColor: AppTheme.surfaceAlt,
-                backgroundImage: buildSafeImageProvider(
-                  path: app.avatarUrl,
-                  defaultAsset:
-                      'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-                ),
+                backgroundImage: resolveImageProviderOrNull(app.avatarUrl),
                 child: app.avatarUrl.isEmpty
                     ? Icon(
                         app.isOrganization
@@ -1271,8 +1496,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           ),
                           child: Text(
                             app.isOrganization
-                                ? 'ORGANIZATION VENUE'
-                                : 'SCHOLAR',
+                                ? 'admin.application_org'.tr()
+                                : 'admin.application_scholar'.tr(),
                             style: TextStyle(
                               color: app.isOrganization
                                   ? AppTheme.accent
@@ -1282,6 +1507,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             ),
                           ),
                         ),
+                        if (app.revisionOf != null)
+                          Chip(
+                              label:
+                                  Text('admin.edit_after_verification'.tr())),
                         const SizedBox(width: 6),
                         Container(
                           padding: const EdgeInsets.symmetric(
@@ -1312,8 +1541,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     const SizedBox(height: 4),
                     Text(
                       app.isOrganization
-                          ? 'Venue: ${isAr ? app.venueNameAr : app.venueNameEn} • Capacity: ${app.seatingCapacity} seats • GPS: (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})'
-                          : 'Title: ${isAr ? (app.academicTitleAr ?? '') : (app.academicTitleEn ?? '')} • Institution: ${isAr ? (app.institutionAr ?? '') : (app.institutionEn ?? '')}',
+                          ? '${'admin.venue'.tr()}: ${isAr ? app.venueNameAr : app.venueNameEn} • ${'admin.field_capacity'.tr()}: ${app.seatingCapacity} ${'admin.field_seats'.tr()} • ${'admin.location'.tr()}: (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})'
+                          : '${'admin.field_title'.tr()}: ${isAr ? (app.academicTitleAr ?? '') : (app.academicTitleEn ?? '')} • ${'admin.field_institution'.tr()}: ${isAr ? (app.institutionAr ?? '') : (app.institutionEn ?? '')}',
                       style: const TextStyle(
                         color: AppTheme.textSecondary,
                         fontSize: 11.5,
@@ -1329,6 +1558,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 runSpacing: AppTheme.spaceSm,
                 children: [
                   if (app.status == ApplicationStatus.pending) ...[
+                    OutlinedButton.icon(
+                      onPressed: () =>
+                          _showApplicationDetailsDialog(context, app, isAr),
+                      icon: const Icon(Icons.visibility_outlined, size: 16),
+                      label: Text('admin.btn_inspect'.tr()),
+                    ),
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.success,
@@ -1337,7 +1572,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             horizontal: 12, vertical: 8),
                       ),
                       icon: const Icon(Icons.check_circle_rounded, size: 16),
-                      label: Text('admin.btn_approve'.tr()),
+                      label: Text(app.revisionOf == null
+                          ? 'admin.btn_approve'.tr()
+                          : 'admin.approve_edit'.tr()),
                       onPressed: () =>
                           _handleApproveApplication(context, provider, app),
                     ),
@@ -1350,7 +1587,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             horizontal: 12, vertical: 8),
                       ),
                       icon: const Icon(Icons.cancel_outlined, size: 16),
-                      label: Text('admin.btn_reject'.tr()),
+                      label: Text(app.revisionOf == null
+                          ? 'admin.btn_reject'.tr()
+                          : 'admin.reject_edit'.tr()),
                       onPressed: () =>
                           _showRejectDialog(context, provider, app),
                     ),
@@ -1372,11 +1611,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       icon: const Icon(Icons.delete_outline_rounded,
                           size: 18, color: AppTheme.danger),
                       tooltip: 'admin.btn_delete'.tr(),
-                      onPressed: () async {
-                        await provider.deleteBroadcasterApplication(app.id);
-                        _showSuccessNotification(
-                            'admin.app_deleted_toast'.tr());
-                      },
+                      onPressed: () =>
+                          _removeApplicationFromQueue(context, provider, app),
                     ),
                   ],
                 ],
@@ -1402,7 +1638,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      'Admin Review Notes: ${app.adminReviewNotes}',
+                      '${'admin.review_notes'.tr()}: ${app.adminReviewNotes}',
                       style: const TextStyle(
                           color: AppTheme.textSecondary, fontSize: 11),
                     ),
@@ -1480,18 +1716,22 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       ),
     );
 
-    final success = await provider.approveBroadcasterApplication(
-      app.id,
-      adminNotes: 'Verified official credentials and venue facilities.',
-      onProgress: (stage, desc) {
-        if (dialogSetState != null) {
-          dialogSetState!(() {
-            currentStage = stage;
-            stageDescription = desc;
-          });
-        }
-      },
-    );
+    var success = false;
+    try {
+      success = await provider.approveBroadcasterApplication(
+        app.id,
+        onProgress: (stage, desc) {
+          if (dialogSetState != null) {
+            dialogSetState!(() {
+              currentStage = stage;
+              stageDescription = desc;
+            });
+          }
+        },
+      );
+    } catch (_) {
+      success = false;
+    }
 
     if (context.mounted) {
       Navigator.of(context, rootNavigator: true).pop();
@@ -1499,6 +1739,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
     if (success) {
       _showSuccessNotification('admin.app_approved_toast'.tr());
+    } else if (mounted) {
+      _showErrorNotification('admin.review_changed'.tr());
     }
   }
 
@@ -1527,7 +1769,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Rejecting application for "${app.applicantNameEn}". Please specify the feedback note for the applicant:',
+                (app.revisionOf == null
+                        ? 'admin.reject_application_body'
+                        : 'admin.reject_edit_body')
+                    .tr(namedArgs: {
+                  'name': app
+                      .getLocalizedApplicantName(context.locale.languageCode),
+                }),
                 style: const TextStyle(
                     color: AppTheme.textSecondary, fontSize: 12),
               ),
@@ -1565,17 +1813,25 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
-                final reason = reasonController.text.trim().isNotEmpty
-                    ? reasonController.text.trim()
-                    : 'Application rejected due to incomplete accreditation.';
-                await provider.rejectBroadcasterApplication(app.id,
-                    reason: reason);
-                if (dialogContext.mounted) {
-                  Navigator.pop(dialogContext);
+                final reason = reasonController.text.trim();
+                if (reason.isEmpty) return;
+                try {
+                  final success = await provider
+                      .rejectBroadcasterApplication(app.id, reason: reason);
+                  if (!success) throw StateError('Review changed');
+                  if (dialogContext.mounted) Navigator.pop(dialogContext);
+                  if (mounted) {
+                    _showSuccessNotification('admin.app_rejected_toast'.tr());
+                  }
+                } catch (_) {
+                  if (mounted) {
+                    _showErrorNotification('admin.review_changed'.tr());
+                  }
                 }
-                _showSuccessNotification('admin.app_rejected_toast'.tr());
               },
-              child: Text('admin.btn_reject'.tr()),
+              child: Text(app.revisionOf == null
+                  ? 'admin.btn_reject'.tr()
+                  : 'admin.reject_edit'.tr()),
             ),
           ],
         );
@@ -1586,6 +1842,27 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   void _showApplicationDetailsDialog(
       BuildContext context, BroadcasterApplicationModel app, bool isAr) {
     final provider = context.read<AppProvider>();
+    final bannerImage = resolveImageProviderOrNull(app.bannerUrl);
+    final base =
+        provider.applications.where((a) => a.id == app.revisionOf).firstOrNull;
+    final changes = <({String label, String before, String after})>[];
+    if (base != null) {
+      void compare(String label, String before, String after) {
+        if (before != after) {
+          changes.add((label: label, before: before, after: after));
+        }
+      }
+
+      compare('admin.field_email'.tr(), base.email, app.email);
+      compare('admin.field_phone'.tr(), base.phone, app.phone);
+      compare('profile.city'.tr(), base.cityId, app.cityId);
+      compare('admin.venue'.tr(), isAr ? base.venueNameAr : base.venueNameEn,
+          isAr ? app.venueNameAr : app.venueNameEn);
+      compare('admin.location'.tr(), '${base.latitude}, ${base.longitude}',
+          '${app.latitude}, ${app.longitude}');
+      compare('YouTube', base.youtubeChannelUrl, app.youtubeChannelUrl);
+      compare('YouTube @', base.youtubeHandle, app.youtubeHandle);
+    }
     showDialog(
       context: context,
       builder: (dialogContext) {
@@ -1609,14 +1886,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       decoration: BoxDecoration(
                         borderRadius: const BorderRadius.vertical(
                             top: Radius.circular(AppTheme.radiusLg)),
-                        image: DecorationImage(
-                          image: buildSafeImageProvider(
-                            path: app.bannerUrl,
-                            defaultAsset:
-                                'assets/images/Amir_Alhatemi/amir_card_pic.jpg',
-                          ),
-                          fit: BoxFit.cover,
-                        ),
+                        image: bannerImage == null
+                            ? null
+                            : DecorationImage(
+                                image: bannerImage,
+                                fit: BoxFit.cover,
+                              ),
                       ),
                     ),
                     Container(
@@ -1646,11 +1921,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         ),
                         child: CircleAvatar(
                           radius: 34,
-                          backgroundImage: buildSafeImageProvider(
-                            path: app.avatarUrl,
-                            defaultAsset:
-                                'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-                          ),
+                          backgroundImage:
+                              resolveImageProviderOrNull(app.avatarUrl),
+                          child: app.avatarUrl.isEmpty
+                              ? const Icon(Icons.person_outline_rounded)
+                              : null,
                         ),
                       ),
                     ),
@@ -1668,7 +1943,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Row(
+                            Wrap(
                               children: [
                                 Text(
                                   isAr
@@ -1681,8 +1956,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                   ),
                                 ),
                                 const SizedBox(width: 8),
-                                const Icon(Icons.verified_rounded,
-                                    color: AppTheme.primary, size: 18),
+                                Icon(
+                                    app.isApproved
+                                        ? Icons.verified_rounded
+                                        : Icons.pending_outlined,
+                                    color: AppTheme.primary,
+                                    size: 18),
                               ],
                             ),
                             const SizedBox(height: 2),
@@ -1734,19 +2013,31 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        _buildDetailRow('Email', app.email),
-                        _buildDetailRow('Phone', app.phone),
+                        if (app.revisionOf != null) ...[
+                          Text('admin.edit_after_verification'.tr(),
+                              style:
+                                  const TextStyle(fontWeight: FontWeight.bold)),
+                          if (changes.isEmpty)
+                            Text('admin.no_reviewed_changes'.tr()),
+                          for (final change in changes)
+                            _buildDetailRow(change.label,
+                                '${change.before} → ${change.after}'),
+                          const Divider(),
+                        ],
+                        _buildDetailRow('admin.field_email'.tr(), app.email),
+                        _buildDetailRow('admin.field_phone'.tr(), app.phone),
+                        _buildDetailRow('admin.field_youtube'.tr(),
+                            '@${app.youtubeHandle}'),
                         _buildDetailRow(
-                            'YouTube Handle', '@${app.youtubeHandle}'),
-                        _buildDetailRow(
-                            'YouTube Channel', app.youtubeChannelUrl),
-                        _buildDetailRow('Category',
+                            'admin.field_youtube'.tr(), app.youtubeChannelUrl),
+                        _buildDetailRow('admin.field_category'.tr(),
                             app.categoryId.replaceAll('_', ' ').toUpperCase()),
                         if (app.tags.isNotEmpty)
-                          _buildDetailRow('Tags', app.tags.join(' ')),
+                          _buildDetailRow(
+                              'admin.field_tags'.tr(), app.tags.join(' ')),
                         _buildDetailRow(
-                          'Venue & Coordinates',
-                          '${app.venueNameEn} (Lat: ${app.latitude.toStringAsFixed(4)}, Lng: ${app.longitude.toStringAsFixed(4)})',
+                          'admin.location'.tr(),
+                          '${isAr ? app.venueNameAr : app.venueNameEn} (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})',
                         ),
                         const SizedBox(height: AppTheme.spaceSm),
                         const Divider(color: AppTheme.border),
@@ -1794,7 +2085,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         bottom: Radius.circular(AppTheme.radiusLg)),
                     border: Border(top: BorderSide(color: AppTheme.border)),
                   ),
-                  child: Row(
+                  child: Wrap(
+                    alignment: WrapAlignment.end,
+                    spacing: AppTheme.spaceXs,
+                    runSpacing: AppTheme.spaceXs,
                     children: [
                       if (app.status == ApplicationStatus.pending) ...[
                         ElevatedButton.icon(
@@ -1806,7 +2100,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           ),
                           icon:
                               const Icon(Icons.check_circle_rounded, size: 16),
-                          label: Text('design_ui.approve_broadcaster'.tr()),
+                          label: Text(app.revisionOf == null
+                              ? 'design_ui.approve_broadcaster'.tr()
+                              : 'admin.approve_edit'.tr()),
                           onPressed: () {
                             Navigator.pop(dialogContext);
                             _handleApproveApplication(context, provider, app);
@@ -1821,23 +2117,23 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                 horizontal: 14, vertical: 10),
                           ),
                           icon: const Icon(Icons.cancel_outlined, size: 16),
-                          label: Text('design_ui.reject'.tr()),
+                          label: Text(app.revisionOf == null
+                              ? 'design_ui.reject'.tr()
+                              : 'admin.reject_edit'.tr()),
                           onPressed: () {
                             Navigator.pop(dialogContext);
                             _showRejectDialog(context, provider, app);
                           },
                         ),
                       ],
-                      const Spacer(),
                       IconButton(
                         icon: const Icon(Icons.delete_outline_rounded,
                             color: AppTheme.danger, size: 20),
                         tooltip: 'Delete Application',
                         onPressed: () async {
                           Navigator.pop(dialogContext);
-                          await provider.deleteBroadcasterApplication(app.id);
-                          _showSuccessNotification(
-                              'admin.app_deleted_toast'.tr());
+                          await _removeApplicationFromQueue(
+                              context, provider, app);
                         },
                       ),
                       const SizedBox(width: 6),
@@ -1859,34 +2155,53 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   }
 
   Widget _buildDetailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 140,
-            child: Text(
-              label,
-              style: const TextStyle(
-                color: AppTheme.textMuted,
-                fontSize: 11.5,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 12,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
+    final title = Text(label,
+        style: const TextStyle(
+            color: AppTheme.textMuted,
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600));
+    final detail = Text(value,
+        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12));
+    return LayoutBuilder(
+        builder: (context, constraints) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: constraints.maxWidth < 400
+                  ? Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [title, detail])
+                  : Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                          SizedBox(width: 140, child: title),
+                          Expanded(child: detail),
+                        ]),
+            ));
+  }
+
+  Future<void> _removeApplicationFromQueue(BuildContext context,
+      AppProvider provider, BroadcasterApplicationModel app) async {
+    final remove = await showDialog<bool>(
+        context: context,
+        builder: (dialogContext) => AlertDialog(
+              title: Text('admin.remove_queue_title'.tr()),
+              content: Text('admin.remove_queue_body'.tr()),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, false),
+                    child: Text('settings.cancel'.tr())),
+                TextButton(
+                    onPressed: () => Navigator.pop(dialogContext, true),
+                    child: Text('admin.btn_delete'.tr())),
+              ],
+            ));
+    if (remove != true || !mounted) return;
+    try {
+      final success = await provider.deleteBroadcasterApplication(app.id);
+      if (!success) throw StateError('Application changed');
+      if (mounted) _showSuccessNotification('admin.app_deleted_toast'.tr());
+    } catch (_) {
+      if (mounted) _showErrorNotification('admin.review_changed'.tr());
+    }
   }
 
   // ==========================================

@@ -14,6 +14,7 @@ import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/widgets/language_switcher.dart';
 import 'package:streamer_app/core/widgets/streamer_identity_card.dart';
 import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
+import 'package:streamer_app/features/discovery/presentation/widgets/streamer_grid_card.dart';
 import 'package:streamer_app/features/map/presentation/widgets/marker_summary_card.dart';
 import 'package:streamer_app/features/profile/presentation/broadcaster_profile_screen.dart';
 import 'package:streamer_app/features/profile/presentation/settings_screen.dart';
@@ -70,6 +71,44 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     await EasyLocalization.ensureInitialized();
   });
+
+  for (final language in ['en', 'ar']) {
+    for (final width in [320.0, 1280.0]) {
+      for (final scale in [1.0, 2.0]) {
+        testWidgets('Discovery row height $language ${width}px ${scale}x',
+            (tester) async {
+          SharedPreferences.setMockInitialValues({});
+          tester.view.physicalSize = Size(width, 900);
+          tester.view.devicePixelRatio = 1;
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final provider = AppProvider(AdminDatabaseService(null))
+            ..addStreamerForTests(mockStreamers.first
+                .copyWith(avatarUrl: '', bannerUrl: '', tags: const ['#One']))
+            ..addStreamerForTests(mockStreamers[1].copyWith(
+                avatarUrl: '',
+                bannerUrl: '',
+                tags: const ['#Two', '#Three', '#Four']));
+          await tester.pumpWidget(
+              app(provider, const DiscoveryFeedScreen(), language, scale));
+          await tester.pumpAndSettle();
+          final cards = find.byType(StreamerGridCard);
+          expect(cards, findsNWidgets(2));
+          expect(tester.getSize(cards.first).height,
+              tester.getSize(cards.last).height);
+          if (width == 1280) {
+            tester.view.physicalSize = const Size(800, 900);
+            await tester.pumpAndSettle();
+            expect(tester.getSize(cards.first).height,
+                tester.getSize(cards.last).height);
+          }
+          expect(tester.takeException(), isNull);
+          await tester.pumpWidget(const SizedBox());
+          provider.dispose();
+        });
+      }
+    }
+  }
 
   for (final lang in ['en', 'ar']) {
     for (final width in [320.0, 1280.0]) {
@@ -164,7 +203,8 @@ void main() {
               await tester.ensureVisible(reminder);
               await tester.tap(reminder);
               await tester.pumpAndSettle();
-              expect(provider.hasReminder(streamer.streamerId), isTrue);
+              expect(provider.hasReminder(streamer.streamerId), isFalse);
+              expect(find.text('upcoming.sign_in_title'.tr()), findsOneWidget);
             }
             if (location == 'settings') {
               expect(
@@ -285,13 +325,13 @@ void main() {
   }
 
   testWidgets(
-      'venue tap launches exact Google destination; card tap opens profile',
+      'venue tap launches exact Google destination; live card opens its room',
       (tester) async {
     final streamer = mockStreamers.first.copyWith(
         avatarUrl: '',
         bannerUrl: '',
         isCurrentlyLive: true,
-        activeStreamId: 'abcdefghijk');
+        liveSessionId: 'room-session', activeStreamId: 'abcdefghijk');
     final provider = AppProvider(AdminDatabaseService(null));
     final calls = <MethodCall>[];
     const channel = MethodChannel('plugins.flutter.io/url_launcher');
@@ -308,7 +348,7 @@ void main() {
           builder: (_, __) => Scaffold(
               body: MarkerSummaryCard(streamer: streamer, onClose: () {}))),
       GoRoute(
-          path: '/profile/:id',
+          path: '/live/:id',
           builder: (_, state) =>
               Scaffold(body: Text('Opened ${state.pathParameters['id']}'))),
     ]);
@@ -324,7 +364,7 @@ void main() {
     expect(find.byType(MarkerSummaryCard), findsOneWidget);
     await tester.tap(find.text(streamer.fullNameEn));
     await tester.pumpAndSettle();
-    expect(find.text('Opened ${streamer.streamerId}'), findsOneWidget);
+    expect(find.text('Opened room-session'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());
     router.dispose();
     provider.dispose();

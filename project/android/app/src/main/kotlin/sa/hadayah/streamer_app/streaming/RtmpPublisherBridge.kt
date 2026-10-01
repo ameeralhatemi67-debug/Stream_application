@@ -115,6 +115,7 @@ class RtmpPublisherBridge(private val appContext: Context, private val displayId
         syncOrientation()
         if (muted) (current.audioSource as MicrophoneSource).mute()
         current.getStreamClient().apply {
+            setTlsHostVerification(true)
             setCheckServerAlive(true)
             shouldFailOnRead(true)
             setReTries(0) // Dart owns bounded, authorized recovery. No native retry loop.
