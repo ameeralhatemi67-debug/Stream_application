@@ -68,3 +68,12 @@ ImageProvider buildSafeImageProvider({
 
   return AssetImage(defaultAsset);
 }
+
+/// Decodes [provider] at no more than [width] x [height] pixels. Without this
+/// a 36 px avatar or a card banner decodes the source at full resolution
+/// (Google/phone photos are routinely 1-12 MP, i.e. 4-48 MB each in the image
+/// cache), which thrashes the cache and risks OOM on low-RAM phones (audit
+/// IMG-01). Aspect ratio is preserved; pass one dimension or both.
+ImageProvider downscaledImage(ImageProvider provider,
+        {int? width, int? height}) =>
+    ResizeImage.resizeIfNeeded(width, height, provider);

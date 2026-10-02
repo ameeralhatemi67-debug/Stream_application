@@ -301,7 +301,7 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isPhone = screenWidth < 600;
 
     return SingleChildScrollView(
@@ -565,7 +565,8 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
           Builder(builder: (context) {
             // Cluster 3 Task 12: suggests only admin-approved tags instead
             // of a hardcoded pool.
-            final approvedTags = context.watch<AppProvider>().approvedTags;
+            final approvedTags = context
+                .select<AppProvider, List<String>>((p) => p.approvedTags);
             return Wrap(
               spacing: 8,
               runSpacing: 8,
@@ -595,16 +596,18 @@ class _ApplyStep3ProfessionalState extends State<ApplyStep3Professional> {
               }).toList(),
             );
           }),
-          if (widget.selectedTags.any(
-              (t) => !context.watch<AppProvider>().approvedTags.contains(t)))
+          if (widget.selectedTags.any((t) => !context
+              .select<AppProvider, List<String>>((p) => p.approvedTags)
+              .contains(t)))
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Wrap(
                 spacing: 8,
                 runSpacing: 8,
                 children: widget.selectedTags
-                    .where((t) =>
-                        !context.watch<AppProvider>().approvedTags.contains(t))
+                    .where((t) => !context
+                        .select<AppProvider, List<String>>((p) => p.approvedTags)
+                        .contains(t))
                     .map((tag) => Chip(
                           label: Text(tag),
                           avatar: const Icon(Icons.hourglass_top_rounded,

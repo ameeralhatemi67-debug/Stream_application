@@ -540,7 +540,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
     final stepProgress = (_currentStep + 1) / _totalSteps;
 
     return Scaffold(

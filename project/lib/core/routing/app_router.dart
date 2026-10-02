@@ -15,8 +15,12 @@ import '../../features/discovery/presentation/discovery_feed_screen.dart';
 import '../../features/profile/presentation/broadcaster_profile_screen.dart';
 import '../../features/profile/presentation/settings_screen.dart';
 import '../../features/live_stream/presentation/live_broadcast_screen.dart';
-import '../../features/admin/presentation/admin_hub_screen.dart';
-import '../../features/admin/presentation/org_admin_screen.dart';
+// Admin surfaces are loaded on demand (deferred) so every visitor does not
+// download the admin hub and organization management code (audit WEB-04).
+import '../../features/admin/presentation/admin_hub_screen.dart'
+    deferred as admin_hub;
+import '../../features/admin/presentation/org_admin_screen.dart'
+    deferred as org_admin;
 import '../../features/organization/presentation/org_invitation_screen.dart';
 import '../../features/organization/presentation/channel_connections_screen.dart';
 import '../../features/organization/presentation/organization_shows_screen.dart';
@@ -59,7 +63,7 @@ class AppRouter {
         // Re-evaluates `redirect` whenever auth state changes (sign-in
         // completing after the OAuth redirect, sign-out, role refresh) --
         // without this, GoRouter would only re-check on navigation.
-        refreshListenable: provider,
+        refreshListenable: _RouteGate(provider),
         redirect: (context, state) {
           final path = state.matchedLocation;
           final isLoggedIn = provider.isLoggedInStreamer;
@@ -286,13 +290,19 @@ class AppRouter {
             builder: (context, state) => context
                     .select<AppProvider, bool>((p) => p.adminRoleLoading)
                 ? const Scaffold(body: Center(child: HadayahLoadingIndicator()))
-                : const AdminHubScreen(),
+                : _Deferred(
+                    loader: admin_hub.loadLibrary,
+                    builder: () => admin_hub.AdminHubScreen(),
+                  ),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/org-admin',
             name: 'orgAdmin',
-            builder: (context, state) => const OrgAdminScreen(),
+            builder: (context, state) => _Deferred(
+              loader: org_admin.loadLibrary,
+              builder: () => org_admin.OrgAdminScreen(),
+            ),
           ),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
@@ -325,7 +335,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
     final (
       isStreamerModeEnabled,
       isAdminUser,
@@ -605,6 +615,89 @@ class _DesktopNavItem extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Notifies the router only when a field its `redirect` reads has changed.
+/// The router used to listen to the whole [AppProvider], so each of its 150+
+/// notifications (heartbeats, chat reports, toasts...) re-parsed the current
+/// location and re-ran the redirect for nothing (audit RT-03).
+class _RouteGate extends ChangeNotifier {
+  _RouteGate(this._provider) {
+    _signature = _read();
+    _provider.addListener(_onProviderChanged);
+  }
+
+  final AppProvider _provider;
+  late List<Object?> _signature;
+
+  List<Object?> _read() => [
+        _provider.isLoggedInStreamer,
+        _provider.authHydrating,
+        _provider.pendingOrganizationInvitation,
+        _provider.isCurrentUserBanned,
+        _provider.hasCompletedRoleSelection,
+        _provider.isApprovedStreamer,
+        _provider.isAdminUser,
+        _provider.myApplication != null,
+        _provider.adminRoleLoading,
+        _provider.isPermittedAdmin,
+      ];
+
+  void _onProviderChanged() {
+    final next = _read();
+    var same = next.length == _signature.length;
+    for (var i = 0; same && i < next.length; i++) {
+      same = next[i] == _signature[i];
+    }
+    if (same) return;
+    _signature = next;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _provider.removeListener(_onProviderChanged);
+    super.dispose();
+  }
+}
+
+/// Shows [builder]'s widget once [loader] (a deferred library's loadLibrary)
+/// has finished. On native targets deferred libraries are already present and
+/// this resolves immediately.
+class _Deferred extends StatefulWidget {
+  const _Deferred({required this.loader, required this.builder});
+
+  final Future<void> Function() loader;
+  final Widget Function() builder;
+
+  @override
+  State<_Deferred> createState() => _DeferredState();
+}
+
+class _DeferredState extends State<_Deferred> {
+  late final Future<void> _loaded = widget.loader();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<void>(
+      future: _loaded,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Scaffold(
+              body: Center(child: HadayahLoadingIndicator()));
+        }
+        if (snapshot.hasError) {
+          return Scaffold(
+            body: Center(
+              child: Text('offline_experience.offline_title'.tr(),
+                  textAlign: TextAlign.center),
+            ),
+          );
+        }
+        return widget.builder();
+      },
     );
   }
 }

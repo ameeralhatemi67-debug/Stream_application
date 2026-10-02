@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:crypto/crypto.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../features/discovery/models/academic_category_model.dart';
@@ -19,19 +20,42 @@ class PublicCatalogCache {
   static const key = 'public_catalog_snapshot_v1';
   static const schemaVersion = 1;
 
+  /// Digest of the last content written and when, so an unchanged catalog is
+  /// not re-encoded into SharedPreferences after every poll (audit CA-01):
+  /// on Android that rewrites the whole XML file, on web `localStorage` is
+  /// synchronous on the UI thread. An unchanged snapshot is still refreshed
+  /// every [refreshInterval] so its "last updated" time does not go stale.
+  String? _lastDigest;
+  DateTime? _lastWriteAt;
+  static const refreshInterval = Duration(minutes: 5);
+
   Future<void> save(
     List<StreamerModel> streamers,
     List<AcademicCategoryModel> categories, {
     DateTime? updatedAt,
   }) async {
+    final when = updatedAt ?? DateTime.now();
+    final content = jsonEncode({
+      'streamers': streamers.map(_streamerToJson).toList(),
+      'categories': categories.map((c) => c.toJson()).toList(),
+    });
+    final digest = sha1.convert(utf8.encode(content)).toString();
+    final lastWrite = _lastWriteAt;
+    if (digest == _lastDigest &&
+        lastWrite != null &&
+        when.difference(lastWrite) < refreshInterval) {
+      return;
+    }
     final data = {
       'version': schemaVersion,
-      'updatedAt': (updatedAt ?? DateTime.now()).toUtc().toIso8601String(),
+      'updatedAt': when.toUtc().toIso8601String(),
       'streamers': streamers.map(_streamerToJson).toList(),
       'categories': categories.map((c) => c.toJson()).toList(),
     };
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(key, jsonEncode(data));
+    _lastDigest = digest;
+    _lastWriteAt = when;
   }
 
   Future<PublicCatalogSnapshot?> load() async {

@@ -205,11 +205,44 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     await muteUser(senderId);
   }
 
-  List<ChatMessageModel> get messages => List.unmodifiable(
-        _messages.where((m) =>
-            !_blockList.isBlocked(m.senderId) &&
-            !_hiddenMessageIds.contains(m.id)),
-      );
+  /// The filtered message list, memoized: every build used to filter and copy
+  /// the whole list several times per notification (audit LIVE-01). The cache
+  /// is dropped by [notifyListeners] (every mutation notifies) and by length.
+  List<ChatMessageModel>? _visibleCache;
+  List<ChatMessageModel>? _newestFirstCache;
+  int _visibleCacheLength = -1;
+
+  List<ChatMessageModel> get messages {
+    final cached = _visibleCache;
+    if (cached != null && _visibleCacheLength == _messages.length) return cached;
+    _newestFirstCache = null;
+    _visibleCacheLength = _messages.length;
+    return _visibleCache = List.unmodifiable(
+      _messages.where((m) =>
+          !_blockList.isBlocked(m.senderId) &&
+          !_hiddenMessageIds.contains(m.id)),
+    );
+  }
+
+  /// [messages] reversed (newest first), memoized alongside it.
+  List<ChatMessageModel> get messagesNewestFirst =>
+      _newestFirstCache ??= List.unmodifiable(messages.reversed);
+
+  @override
+  void notifyListeners() {
+    _visibleCache = null;
+    _newestFirstCache = null;
+    super.notifyListeners();
+  }
+
+  /// Chat is a rolling window: a 2-3 hour busy lecture used to grow this list
+  /// without bound and every message cost O(n) work.
+  static const int maxRetainedMessages = 500;
+
+  void _trimMessages() {
+    final extra = _messages.length - maxRetainedMessages;
+    if (extra > 0) _messages.removeRange(0, extra);
+  }
 
   bool isBlocked(String senderId) => _blockList.isBlocked(senderId);
   bool isHidden(String messageId) => _hiddenMessageIds.contains(messageId);
@@ -393,21 +426,21 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     }
     WidgetsBinding.instance.addObserver(this);
     _observingLifecycle = true;
-    await _blockList.refresh();
-    if (_disposed) return;
-    await _appFlags.refresh();
-    if (_disposed) return;
-    await _loadHiddenMessages();
-    if (_disposed) return;
-    await _loadCanModerate();
-    if (_disposed) return;
-    await _loadChatSettings();
-    if (_disposed) return;
-    await _refreshSelfStatus();
-    if (_disposed) return;
-    await _loadRecentMessages();
-    if (_disposed) return;
+    // Subscribe first, then run the seven independent reads together. They used
+    // to run one after another before the room subscribed, which on a slow
+    // link meant over a second before the first message and live inserts in
+    // that window were missed (audit NET-06). History is merged with anything
+    // that arrived meanwhile (see _loadRecentMessages).
     _subscribe();
+    await Future.wait<void>([
+      _blockList.refresh(),
+      _appFlags.refresh(),
+      _loadHiddenMessages(),
+      _loadCanModerate(),
+      _loadChatSettings(),
+      _refreshSelfStatus(),
+      _loadRecentMessages(),
+    ]);
   }
 
   Future<void> _loadCanModerate() async {
@@ -651,9 +684,14 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
           .limit(100);
       final resolved = await _rowsToMessages(rows.cast<Map<String, dynamic>>());
       if (_disposed) return;
+      // Keep anything that arrived (live insert, local pending send) while the
+      // history was loading; the history replaces rows it also contains.
+      final historyIds = resolved.map((m) => m.id).toSet();
+      final newer = _messages.where((m) => !historyIds.contains(m.id)).toList();
       _messages
         ..clear()
-        ..addAll(chronological(resolved));
+        ..addAll(chronological([...resolved, ...newer]));
+      _trimMessages();
       notifyListeners();
     } catch (e) {
       debugPrint('LiveChatController: failed to load recent messages: $e');
@@ -759,6 +797,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
       _messages[existingIdx] = message;
     } else {
       _messages.add(message);
+      _trimMessages();
     }
     notifyListeners();
   }
@@ -863,6 +902,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
       isCurrentUser: true,
       isPending: true,
     ));
+    _trimMessages();
     _syncSlowModeTicker();
     notifyListeners();
 
@@ -1025,6 +1065,7 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
   @visibleForTesting
   void debugAddMessageForTests(ChatMessageModel message, {bool? retryable}) {
     _messages.add(message);
+    _trimMessages();
     if (retryable != null) {
       _failureKinds[message.id] =
           _SendFailure(message.failureReason ?? '', retryable);

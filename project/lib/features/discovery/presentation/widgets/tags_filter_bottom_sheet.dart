@@ -25,7 +25,7 @@ class TagsFilterBottomSheet extends StatelessWidget {
     final appProvider = context.watch<AppProvider>();
     final selectedTag = appProvider.selectedTagFilter;
     final selectedCat = appProvider.currentCategoryFilter;
-    final screenHeight = MediaQuery.of(context).size.height;
+    final screenHeight = MediaQuery.sizeOf(context).height;
     final langCode = context.locale.languageCode;
     // Cluster 3 Task 12: only approved tags are ever offered here.
     final allTags = ['all', ...appProvider.approvedTags];
@@ -38,7 +38,7 @@ class TagsFilterBottomSheet extends StatelessWidget {
         left: AppTheme.spaceLg,
         right: AppTheme.spaceLg,
         top: AppTheme.spaceLg,
-        bottom: MediaQuery.of(context).viewInsets.bottom + AppTheme.spaceLg,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + AppTheme.spaceLg,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

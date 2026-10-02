@@ -87,7 +87,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
 
   @override
   Widget build(BuildContext context) {
-    final maxHeight = MediaQuery.of(context).size.height * 0.85;
+    final maxHeight = MediaQuery.sizeOf(context).height * 0.85;
     return Container(
       key: const Key('studio-guide'),
       constraints: BoxConstraints(maxHeight: maxHeight),

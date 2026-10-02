@@ -47,10 +47,14 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
 
   @override
   Widget build(BuildContext context) {
+    // Subscribe to the whole provider only while the chip is showing; the shell
+    // mounts this on every tab and it used to rebuild on every notification.
+    final active = context
+        .select<AppProvider, bool>((p) => p.isMiniPlayerActive);
+    if (!active) return const SizedBox.shrink();
     final provider = context.watch<AppProvider>();
-    if (!provider.isMiniPlayerActive) return const SizedBox.shrink();
 
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
     final width = (size.width - 2 * _edgeInset).clamp(160.0, 300.0);
     const height = 64.0;
     final position = _clampToScreen(_position, size, width, height);

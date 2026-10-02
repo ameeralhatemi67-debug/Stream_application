@@ -56,8 +56,26 @@
     })();
   </script>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* First-paint placeholder: shown before Flutter draws its first frame, so a
+       slow phone sees the brand colour and a spinner instead of a white page. */
+    #boot-splash { position: fixed; inset: 0; display: flex; align-items: center;
+      justify-content: center; background: #FFFFFF; z-index: 1; }
+    #boot-splash i { width: 28px; height: 28px; border-radius: 50%;
+      border: 3px solid #D9DDDE; border-top-color: #17643F;
+      animation: boot-spin .9s linear infinite; }
+    @keyframes boot-spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { #boot-splash i { animation: none; } }
+  </style>
 </head>
 <body>
+  <div id="boot-splash" aria-hidden="true"><i></i></div>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var splash = document.getElementById('boot-splash');
+      if (splash) splash.remove();
+    });
+  </script>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

@@ -35,7 +35,9 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
       }
       provider.ensureTagsLoaded();
     });
-    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+    // Schedules change over hours or days, not seconds; polling every 30 s per
+    // open profile was pure waste (audit NET-11). Opening the tab loads fresh.
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       if (mounted &&
           TickerMode.valuesOf(context).enabled &&
           WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed) {

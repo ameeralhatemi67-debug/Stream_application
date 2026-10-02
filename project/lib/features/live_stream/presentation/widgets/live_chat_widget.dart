@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
 import '../../models/chat_message_model.dart';
 import '../../services/live_chat_controller.dart';
 import 'live_chat_layout.dart';
@@ -261,8 +262,9 @@ class _ChatTile extends StatelessWidget {
                   (message.senderAvatarUrl?.startsWith('assets/') ?? false)
                       ? AssetImage(message.senderAvatarUrl!) as ImageProvider
                       : (message.senderAvatarUrl != null
-                          ? NetworkImage(message.senderAvatarUrl!)
-                              as ImageProvider
+                          ? downscaledImage(
+                              NetworkImage(message.senderAvatarUrl!),
+                              width: 96)
                           : null),
               child: message.senderAvatarUrl == null
                   ? Text(

@@ -162,7 +162,10 @@ class AdminDatabaseService {
         final rows = await _client
             .from('broadcaster_applications')
             .select()
-            .order('submitted_at', ascending: false);
+            .order('submitted_at', ascending: false)
+            // Newest first and bounded: the queue used to download every
+            // application ever submitted on each refresh (audit NET-10).
+            .limit(1000);
         final reviewerNames = await _resolveDisplayNames(
           rows.map((r) => r['reviewed_by'] as String?),
         );
@@ -221,10 +224,23 @@ class AdminDatabaseService {
         fileName: fileName,
         timestamp: DateTime.now().millisecondsSinceEpoch,
       );
+      // The cropper emits PNG while callers default to image/jpeg; label the
+      // object with what the bytes actually are.
+      final isPng = fileBytes.length > 8 &&
+          fileBytes[0] == 0x89 &&
+          fileBytes[1] == 0x50 &&
+          fileBytes[2] == 0x4E &&
+          fileBytes[3] == 0x47;
       await _client.storage.from('streamer-assets').uploadBinary(
             path,
             fileBytes,
-            fileOptions: FileOptions(contentType: contentType, upsert: true),
+            // Paths embed a timestamp, so an object never changes: let browsers
+            // and the CDN keep it for a year instead of Supabase's 1 h default.
+            fileOptions: FileOptions(
+              contentType: isPng ? 'image/png' : contentType,
+              upsert: true,
+              cacheControl: '31536000',
+            ),
           );
       final publicUrl =
           _client.storage.from('streamer-assets').getPublicUrl(path);
@@ -674,7 +690,9 @@ class AdminDatabaseService {
         if (_looksLikeUuid(organizationId)) {
           query = query.eq('organization_id', organizationId as Object);
         }
-        final rows = await query.order('created_at', ascending: false);
+        // Newest 500 entries; the history is unbounded (audit NET-10).
+        final rows =
+            await query.order('created_at', ascending: false).limit(500);
         _cachedAuditLogs = (rows as List)
             .map((r) => _auditLogFromRow(r as Map<String, dynamic>))
             .toList();
@@ -1414,12 +1432,25 @@ class AdminDatabaseService {
     }
     final List<StreamerModel> results = [];
 
+    // Both table reads start together instead of one after the other (audit
+    // NET-04). The builders are lazy, so each is wrapped in an async closure
+    // that sends its request immediately; ignore() only stops an unawaited
+    // failure from escaping when the first read throws before this one is awaited.
+    final streamerQuery = Future<List<dynamic>>.sync(() async => await _client
+        .from('streamer_public_profiles')
+        .select()
+        .order('display_name_en', ascending: true))
+      ..ignore();
+    final organizationQuery = Future<List<dynamic>>.sync(() async =>
+        await _client
+            .from('organization_public_profiles')
+            .select()
+            .order('name_en', ascending: true))
+      ..ignore();
+
     // 1. Fetch verified individual scholars from streamer_public_profiles
     try {
-      final streamerRows = await _client
-          .from('streamer_public_profiles')
-          .select()
-          .order('display_name_en', ascending: true);
+      final streamerRows = await streamerQuery;
 
       for (final row in streamerRows) {
         final id = row['id'] as String;
@@ -1507,10 +1538,7 @@ class AdminDatabaseService {
 
     // 2. Fetch verified organizations from organization_public_profiles
     try {
-      final orgRows = await _client
-          .from('organization_public_profiles')
-          .select()
-          .order('name_en', ascending: true);
+      final orgRows = await organizationQuery;
 
       for (final row in orgRows) {
         final id = row['id'] as String;
@@ -1788,7 +1816,8 @@ class AdminDatabaseService {
     final reportRows = await _client
         .from('chat_reports')
         .select()
-        .order('created_at', ascending: false);
+        .order('created_at', ascending: false)
+        .limit(500);
     if (reportRows.isEmpty) return const [];
 
     final messageIds =

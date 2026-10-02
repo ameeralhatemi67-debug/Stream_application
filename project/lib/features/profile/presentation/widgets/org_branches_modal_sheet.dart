@@ -36,7 +36,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.8,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.8,
       ),
       decoration: const BoxDecoration(
         color: AppTheme.bg,

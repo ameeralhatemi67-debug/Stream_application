@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import '../venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../profile/models/streamer_models.dart';
 import 'venue_navigation_sheet.dart';
 
@@ -182,7 +183,8 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   backgroundColor: AppTheme.surfaceAlt,
                   backgroundImage: streamer.avatarUrl.startsWith('assets/')
                       ? AssetImage(streamer.avatarUrl) as ImageProvider
-                      : NetworkImage(streamer.avatarUrl),
+                      : downscaledImage(NetworkImage(streamer.avatarUrl),
+                          width: 160),
                 ),
                 PositionedDirectional(
                   bottom: 0,

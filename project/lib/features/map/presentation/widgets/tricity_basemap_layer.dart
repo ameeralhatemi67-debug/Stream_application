@@ -20,6 +20,12 @@ class TricityBasemapLayer extends StatefulWidget {
   static const int memoryCacheBytes = 24 << 20;
   static const int rasterCacheBytes = 96 << 20;
 
+  /// Phones (shortest side under 600 logical px) get half the budget: 2-3 GB
+  /// devices also hold a WebView player, the 12 MB archive and decoded images
+  /// (audit MAP-03). Tablets, laptops and the web keep the full budget.
+  static const int phoneMemoryCacheBytes = 12 << 20;
+  static const int phoneRasterCacheBytes = 48 << 20;
+
   @override
   State<TricityBasemapLayer> createState() => _TricityBasemapLayerState();
 }
@@ -53,6 +59,7 @@ class _TricityBasemapLayerState extends State<TricityBasemapLayer> {
   Widget build(BuildContext context) {
     final languageCode = context.locale.languageCode;
     final textScale = MediaQuery.textScalerOf(context).scale(14) / 14;
+    final isPhone = MediaQuery.sizeOf(context).shortestSide < 600;
     return ListenableBuilder(
       listenable: widget.controller,
       builder: (context, _) {
@@ -65,8 +72,12 @@ class _TricityBasemapLayerState extends State<TricityBasemapLayer> {
           tileProviders: providers,
           // The pack is local already: no second on-disk tile copy.
           diskCacheMaximumSizeInBytes: 0,
-          memoryCacheMaxBytes: TricityBasemapLayer.memoryCacheBytes,
-          rasterCacheMaxBytes: TricityBasemapLayer.rasterCacheBytes,
+          memoryCacheMaxBytes: isPhone
+              ? TricityBasemapLayer.phoneMemoryCacheBytes
+              : TricityBasemapLayer.memoryCacheBytes,
+          rasterCacheMaxBytes: isPhone
+              ? TricityBasemapLayer.phoneRasterCacheBytes
+              : TricityBasemapLayer.rasterCacheBytes,
         );
       },
     );

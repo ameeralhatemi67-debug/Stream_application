@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../discovery/models/academic_category_model.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
@@ -58,6 +59,18 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
   String? _selectedStreamerId;
   late final ValueNotifier<double> _zoomNotifier;
   late final ValueNotifier<int> _cameraRevision;
+  double? _lastClusterZoom;
+
+  /// The camera for clustering, read from the controller rather than
+  /// `MapCamera.of(context)`: the inherited lookup subscribes the builder to
+  /// every camera change, which rebuilt the marker layer on every pan frame.
+  MapCamera _clusterCamera(BuildContext context) {
+    try {
+      return _mapController.camera;
+    } catch (_) {
+      return MapCamera.of(context);
+    }
+  }
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   final GlobalKey _topControlsKey = GlobalKey();
   final GlobalKey _emptyNoticeKey = GlobalKey();
@@ -95,6 +108,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     // Live markers expire with the catalog read behind them: other accounts'
     // live changes never reach this client over Realtime (profiles RLS).
     _catalogFreshnessTimer = Timer.periodic(const Duration(seconds: 15), (_) {
+      // Paused while the map tab is hidden or the app is backgrounded (the
+      // feed shares the same catalog read; audit NET-02).
+      if (!mounted || !TickerMode.valuesOf(context).enabled) return;
+      final state = WidgetsBinding.instance.lifecycleState;
+      if (state != null && state != AppLifecycleState.resumed) return;
       final provider = context.read<AppProvider>();
       if (provider.isOnline) {
         unawaited(
@@ -443,7 +461,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     return ValueListenableBuilder<int>(
       valueListenable: _cameraRevision,
       builder: (context, revision, child) {
-        final camera = MapCamera.of(context);
+        final camera = _clusterCamera(context);
         final groups = clusterMapPoints(
           visible.map((m) => MapClusterPoint(m.streamerId, m.coordinates)),
           project: camera.projectAtZoom,
@@ -561,7 +579,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     if (selectedStreamer == null) _selectedStreamerId = null;
     final currentCategoryFilter =
         context.select<AppProvider, String>((p) => p.currentCategoryFilter);
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
     // Backend reachability: decides current versus saved venue pins only.
     final isOnline = context.select<AppProvider, bool>((p) => p.isOnline);
     final cachedMarkers = context
@@ -628,7 +646,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               );
               final topicDropdown = TopicSelectorDropdown(
                 selectedCategoryId: currentCategoryFilter,
-                categories: context.watch<AppProvider>().academicCategories,
+                categories: context.select<AppProvider, List<AcademicCategoryModel>>(
+                    (p) => p.academicCategories),
                 onCategorySelected: (categoryId) {
                   context.read<AppProvider>().setCategoryFilter(categoryId);
                   if (selectedStreamer != null &&
@@ -677,7 +696,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             if (_zoomNotifier.value != camera.zoom) {
                               _zoomNotifier.value = camera.zoom;
                             }
-                            _cameraRevision.value++;
+                            // Clusters depend on zoom only (the grid is in absolute
+                            // world pixels), and MarkerLayer repositions markers on
+                            // pan by itself, so re-cluster only when the zoom
+                            // changes, not on every pan frame (audit MAP-01).
+                            if (_lastClusterZoom != camera.zoom) {
+                              _lastClusterZoom = camera.zoom;
+                              _cameraRevision.value++;
+                            }
                           },
                           onTap: (tapPosition, latLng) {
                             if (_selectedStreamerId != null) {
@@ -998,7 +1024,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     return ValueListenableBuilder<int>(
       valueListenable: _cameraRevision,
       builder: (context, revision, child) {
-        final camera = MapCamera.of(context);
+        final camera = _clusterCamera(context);
         if (displayedStreamers.isEmpty) {
           return const SizedBox.shrink();
         }
@@ -1057,7 +1083,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 onTap: () => _selectStreamer(streamer),
                 onDoubleTap: () => _focusVenue(
                   LatLng(streamer.latitude, streamer.longitude),
-                  math.min(camera.zoom + 2, kMapMaxZoom),
+                  math.min(_mapController.camera.zoom + 2, kMapMaxZoom),
                 ),
               ),
             ),

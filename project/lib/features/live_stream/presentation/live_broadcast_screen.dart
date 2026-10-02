@@ -363,6 +363,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     // room within about 20 seconds.
     _liveStateTimer ??= Timer.periodic(const Duration(seconds: 20), (_) {
       final p = _roomProvider;
+      // Not while the app is backgrounded (audit NET-02): the poll only exists
+      // to notice an ended broadcast, and resuming re-reads the room anyway.
+      final lifecycle = WidgetsBinding.instance.lifecycleState;
+      if (lifecycle != null && lifecycle != AppLifecycleState.resumed) return;
       if (p != null && p.isOnline) {
         unawaited(_refreshRoom());
       }
@@ -433,6 +437,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _lookupTimer?.cancel();
     _roomProvider?.removeListener(_syncRoomConnection);
     _stopRoom();
+    _chatTick.dispose();
     // Always restore portrait + the normal system chrome, even if the user
     // backed out of the room while still in fullscreen landscape -- leaving
     // the app locked to landscape after this screen is gone would strand
@@ -503,8 +508,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   void _handleChatConnectionChange() {
     if (!mounted) return;
     _trackChatArrivals();
-    setState(() {});
+    // Only the chat tab depends on the chat controller, so it rebuilds on this
+    // tick instead of the whole room (video, header, tabs) per message and per
+    // slow-mode second (audit RT-02). The tick fires after arrivals are
+    // counted, so the "new messages" pill is never one message behind.
+    _chatTick.bump();
   }
+
+  final _ChatTick _chatTick = _ChatTick();
 
   void _handleSendLocalMessage() {
     final text = _chatTextController.text.trim();
@@ -1423,7 +1434,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   //  Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
   Widget _buildChatTabView() {
     return ListenableBuilder(
-      listenable: _chatController,
+      listenable: _chatTick,
       builder: (context, _) => _buildChatTabViewContent(),
     );
   }
@@ -1482,7 +1493,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final isOffline = _isChatOffline;
     // Both lists are oldest-first; the reversed ListView wants newest-first
     // at index 0.
-    final messages = _chatController.messages.reversed.toList();
+    final messages = _chatController.messagesNewestFirst;
 
     return Stack(
       children: [
@@ -2560,4 +2571,9 @@ class _RoomStatusScaffold extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Rebuild trigger for the chat tab alone; see `_handleChatConnectionChange`.
+class _ChatTick extends ChangeNotifier {
+  void bump() => notifyListeners();
 }

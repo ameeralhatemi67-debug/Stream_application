@@ -18,14 +18,14 @@ async function pin(id, value) {
     new Response(JSON.stringify({ ...value, pinnedAt: Date.now() }),
       { headers: { 'content-type': 'application/json' } }));
 }
+// The timeout bounds time-to-headers only. The body is streamed straight to the
+// page: aborting a large download (12 MB map pack, CanvasKit wasm) after a fixed
+// total time failed on slower connections, and buffering it delayed first byte.
 async function boundedFetch(request) {
   const abort = new AbortController();
   const timer = setTimeout(() => abort.abort(), NETWORK_TIMEOUT_MS);
   try {
-    const response = await fetch(request, { signal: abort.signal });
-    const body = await response.arrayBuffer();
-    return new Response(body, { status: response.status, statusText: response.statusText,
-      headers: response.headers });
+    return await fetch(request, { signal: abort.signal });
   } finally { clearTimeout(timer); }
 }
 async function storedResponse(generation, request, navigate) {

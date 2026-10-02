@@ -540,8 +540,15 @@ class RtmpPublishEngine extends ChangeNotifier {
         }
         break;
       case 'bitrate':
-        _lastBitrateBps = (event['value'] as num?)?.toInt();
-        notifyListeners();
+        final bitrate = (event['value'] as num?)?.toInt();
+        // The sample arrives about once a second and rebuilt the whole studio
+        // screen each time while the phone is encoding. Only notify when the
+        // displayed kbit/s figure changes (audit RT-08).
+        final changed = bitrate == null ||
+            _lastBitrateBps == null ||
+            (bitrate / 1000).round() != (_lastBitrateBps! / 1000).round();
+        _lastBitrateBps = bitrate;
+        if (changed) notifyListeners();
         break;
       case 'audioLevel':
         // Normalised 0.0-1.0 RMS from the native encoder. The Android

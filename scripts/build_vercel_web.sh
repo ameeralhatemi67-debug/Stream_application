@@ -31,9 +31,16 @@ for name in PUBLIC_APP_URL FIREBASE_API_KEY FIREBASE_APP_ID FIREBASE_MESSAGING_S
   fi
 done
 
+# A production deploy without a backend ships a site that cannot sign anyone in
+# (the Phase 3 deployment did exactly that). Fail the build instead.
+if [[ "${VERCEL_ENV:-}" == "production" && -z "${SUPABASE_URL:-}" ]]; then
+  echo "Refusing to build production without SUPABASE_URL / SUPABASE_ANON_KEY." >&2
+  exit 1
+fi
+
 cd "$repo_root/project"
 build_id="$(git rev-parse HEAD)-$(date -u +%Y%m%d%H%M%S)"
 "$flutter_bin" pub get
-"$flutter_bin" build web --release --no-tree-shake-icons "--dart-define=HADAYAH_BUILD_ID=$build_id" "${defines[@]}"
+"$flutter_bin" build web --release "--dart-define=HADAYAH_BUILD_ID=$build_id" "${defines[@]}"
 node tool/stamp_offline_build.mjs build/web "$build_id"
 test -s build/web/index.html

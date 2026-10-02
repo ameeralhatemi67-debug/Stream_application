@@ -44,6 +44,8 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 90,
+        maxWidth: 1024,
+        maxHeight: 1024,
       );
       if (image != null) {
         final rawBytes = await image.readAsBytes();
@@ -70,6 +72,8 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
       final XFile? image = await _picker.pickImage(
         source: ImageSource.gallery,
         imageQuality: 90,
+        maxWidth: 1920,
+        maxHeight: 1920,
       );
       if (image != null) {
         final rawBytes = await image.readAsBytes();

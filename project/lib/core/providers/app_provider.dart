@@ -1304,6 +1304,8 @@ class AppProvider extends ChangeNotifier {
     final device = _currentDeviceSession;
     if (device == null) return;
     final primary = sessions.where((s) => s.isPrimaryBroadcaster).firstOrNull;
+    final wasPrimary = device.isPrimaryBroadcaster;
+    final previousRemote = _remoteBroadcasterSession;
     if (primary?.deviceId != _lastSeenPrimaryDeviceId) {
       _lastSeenPrimaryDeviceId = primary?.deviceId;
       // Ownership moved, so the account's public live state may have changed
@@ -1323,6 +1325,15 @@ class AppProvider extends ChangeNotifier {
         _loseBroadcastDevice();
         return;
       }
+    }
+    // The 20 s heartbeat rewrites last_active_at, which echoes back here via
+    // Realtime. Only notify when something a screen can show actually changed
+    // (audit RT-04); otherwise every approved broadcaster rebuilt the app and
+    // re-ran the router redirect every 20 s.
+    final nowPrimary = _currentDeviceSession?.isPrimaryBroadcaster ?? false;
+    if (nowPrimary == wasPrimary &&
+        previousRemote?.deviceId == _remoteBroadcasterSession?.deviceId) {
+      return;
     }
     notifyListeners();
   }
@@ -2120,6 +2131,27 @@ class AppProvider extends ChangeNotifier {
 
   RealtimeChannel? _publicStreamersChannel;
 
+  /// Realtime events on profiles/organizations/applications arrive in bursts
+  /// (one edit can touch several rows); each used to trigger a full catalog
+  /// read and, for admins, five admin reads (audit NET-10). Coalesce them.
+  Timer? _realtimeRefreshTimer;
+  bool _realtimeNeedsAdminRefresh = false;
+
+  void _scheduleRealtimeRefresh({required bool admin}) {
+    _realtimeNeedsAdminRefresh = _realtimeNeedsAdminRefresh || admin;
+    _realtimeRefreshTimer?.cancel();
+    _realtimeRefreshTimer = Timer(const Duration(seconds: 1), () {
+      final withAdmin = _realtimeNeedsAdminRefresh;
+      _realtimeNeedsAdminRefresh = false;
+      if (_disposed) return;
+      if (withAdmin) {
+        refreshAdminData(); // also reloads the public catalog
+      } else {
+        loadVerifiedStreamersFromBackend();
+      }
+    });
+  }
+
   /// Global Realtime subscription that listens for new verified streamers/organizations
   /// across the platform so all devices (Phone 2, etc.) update their Discovery & Map in real time.
   void _subscribeToPublicStreamerChanges() {
@@ -2134,10 +2166,7 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'profiles',
             callback: (payload) {
-              loadVerifiedStreamersFromBackend();
-              if (_isAdminFromRoles) {
-                refreshAdminData();
-              }
+              _scheduleRealtimeRefresh(admin: _isAdminFromRoles);
             },
           )
           .onPostgresChanges(
@@ -2145,10 +2174,7 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'organizations',
             callback: (payload) {
-              loadVerifiedStreamersFromBackend();
-              if (_isAdminFromRoles) {
-                refreshAdminData();
-              }
+              _scheduleRealtimeRefresh(admin: _isAdminFromRoles);
             },
           )
           .onPostgresChanges(
@@ -2156,8 +2182,7 @@ class AppProvider extends ChangeNotifier {
             schema: 'public',
             table: 'broadcaster_applications',
             callback: (payload) {
-              loadVerifiedStreamersFromBackend();
-              refreshAdminData();
+              _scheduleRealtimeRefresh(admin: true);
             },
           )
           // Explicit low-latency signal for admin-triggered deletions, in
@@ -2251,18 +2276,23 @@ class AppProvider extends ChangeNotifier {
       if (_lastLiveFlagSweepAt == null ||
           now.difference(_lastLiveFlagSweepAt!) >= _liveFlagSweepInterval) {
         _lastLiveFlagSweepAt = now;
-        // Cleanup is optional for reading public truth; a slow sweep must not
-        // strand all catalog reads and keep an ended room alive indefinitely.
-        try {
-          await _adminDbService!
-              .sweepStaleLiveFlags()
-              .timeout(const Duration(seconds: 2));
-        } on TimeoutException {/* the catalog read can still succeed */}
+        // Cleanup is optional for reading public truth, so it runs beside the
+        // read instead of in front of it (it used to delay every catalog load
+        // by up to 2 s once a minute, audit NET-04). Its effect shows in the
+        // next poll; a pg_cron job (supabase/cron/sweep_stale_live_flags.sql)
+        // is the durable replacement for this client call.
+        unawaited(_adminDbService!.sweepStaleLiveFlags());
       }
+      // The broadcast-session read is independent of the profile reads, so it
+      // runs beside them (audit NET-04).
+      final sessionsRead = _organizationBroadcastService
+          .sessions()
+          .timeout(const Duration(seconds: 5))
+        ..ignore();
       final backendStreamers = await _adminDbService!
           .loadVerifiedStreamersFromBackend(requireSuccess: true)
           .timeout(const Duration(seconds: 5));
-      final sessions=await _organizationBroadcastService.sessions().timeout(const Duration(seconds:5));
+      final sessions = await sessionsRead;
       if (_disposed || epoch != _catalogEpoch || !isOnline) return;
       _broadcastSessions=List.unmodifiable(sessions);
       _lastLoadedPublicStreamers = List.of(backendStreamers);
@@ -2446,12 +2476,16 @@ class AppProvider extends ChangeNotifier {
   Future<void> _initAdminDatabase() async {
     _subscribeToPublicStreamerChanges();
     _subscribeToAcademicCategoryChanges();
-    await loadVerifiedStreamersFromBackend();
-    await refreshAdminData(includePublicCatalog: false);
-    // Categories/approved-tags are public data (Cluster 3 Tasks 10/12) --
-    // loaded for every viewer, including guests, not just admin tiers.
-    await ensureAcademicCategoriesLoaded();
-    await ensureTagsLoaded();
+    // These four reads are independent, so they run together instead of as a
+    // chain of round-trips that held the feed chips behind the admin loads
+    // (audit NET-05). Categories/approved-tags are public data (Cluster 3
+    // Tasks 10/12) -- loaded for every viewer, including guests.
+    await Future.wait<void>([
+      loadVerifiedStreamersFromBackend(),
+      refreshAdminData(includePublicCatalog: false),
+      ensureAcademicCategoriesLoaded(),
+      ensureTagsLoaded(),
+    ]);
   }
 
   RealtimeChannel? _academicCategoriesChannel;
@@ -2496,13 +2530,21 @@ class AppProvider extends ChangeNotifier {
   Future<void> refreshAdminData({bool includePublicCatalog = true}) async {
     try {
       _adminDbService ??= await AdminDatabaseService.create();
-      _applications = List.from(await _adminDbService!.loadApplications());
-      await _refreshApplicationReviewEvents();
-      _termsAndConditions = await _adminDbService!.loadTerms();
-      _viewerAnalytics = await _adminDbService!.loadAnalytics();
-      _auditLogs = List.from(await _adminDbService!.loadAuditLogs());
-      _affiliationRequests =
-          List.from(await _adminDbService!.loadAffiliationRequests());
+      final db = _adminDbService!;
+      // Five independent reads, issued together (audit NET-05).
+      final (applications, _, terms, analytics, auditLogs, affiliations) = await (
+        db.loadApplications(),
+        _refreshApplicationReviewEvents(),
+        db.loadTerms(),
+        db.loadAnalytics(),
+        db.loadAuditLogs(),
+        db.loadAffiliationRequests(),
+      ).wait;
+      _applications = List.from(applications);
+      _termsAndConditions = terms;
+      _viewerAnalytics = analytics;
+      _auditLogs = List.from(auditLogs);
+      _affiliationRequests = List.from(affiliations);
       if (includePublicCatalog) await loadVerifiedStreamersFromBackend();
       notifyListeners();
     } catch (e) {
@@ -2510,25 +2552,33 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
-  /// Starts or restarts the 60-second polling loop that reads real
-  /// `concurrentViewers` from the YouTube Data API for every currently-live
-  /// streamer that has a known `youtubeVideoId`.
-  void _startLiveViewerPolling() {
-    if (_liveViewerTimer?.isActive == true) return; // already running
+  /// Polls YouTube's concurrent-viewer figure for the broadcaster's OWN stream,
+  /// and only while their studio is open ([startStudioViewerPolling] /
+  /// [stopStudioViewerPolling]). It used to run in every client for every live
+  /// stream, which spent the shared YouTube quota for a number only the studio
+  /// shows (audit NET-01).
+  String? _studioPollStreamerId;
+
+  void startStudioViewerPolling(String streamerId) {
+    if (streamerId.isEmpty) return;
+    if (_liveViewerTimer?.isActive == true &&
+        _studioPollStreamerId == streamerId) {
+      return;
+    }
     _liveViewerTimer?.cancel();
-    // Fire once immediately, then repeat every 60 s
+    _studioPollStreamerId = streamerId;
     _pollLiveViewers();
     _liveViewerTimer = Timer.periodic(_liveViewerPollInterval, (_) {
       _pollLiveViewers();
     });
   }
 
-  /// Public entry-point called by the real app root (e.g. main.dart or
-  /// MaterialApp's builder) after the provider tree is fully wired up.
-  /// Must NOT be called from widget tests.
-  void ensureLivePollingActive() {
-    _startLiveViewerPolling();
-  }
+  void stopStudioViewerPolling() => _stopLiveViewerPolling();
+
+  /// Kept for the app root and splash screen. Global YouTube polling was
+  /// removed (audit NET-01); the studio starts its own scoped poll through
+  /// [startStudioViewerPolling]. Intentionally does nothing.
+  void ensureLivePollingActive() {}
 
   /// Public entry-point (main.dart / app root only, same rule as
   /// [ensureLivePollingActive]) that starts live connectivity monitoring for
@@ -2668,6 +2718,8 @@ class AppProvider extends ChangeNotifier {
   /// itself proof the device was online a moment ago, so this is the natural
   /// "last known good" point to snapshot, without coupling it to the
   /// separate connectivity-monitoring subscription.
+  String? _lastMapMarkerJson;
+
   Future<void> _persistMapMarkerCache() async {
     try {
       final markers = _streamers
@@ -2678,11 +2730,19 @@ class AppProvider extends ChangeNotifier {
           .map(MapMarkerModel.fromStreamer)
           .toList();
       final now = DateTime.now();
+      // Skip the disk write and the marker re-instantiation when nothing
+      // changed since the last snapshot (audit CA-01); refresh the stored
+      // timestamp at most every five minutes.
+      final encoded = jsonEncode(markers.map((m) => m.toJson()).toList());
+      final lastWrite = _mapCacheUpdatedAt;
+      if (encoded == _lastMapMarkerJson &&
+          lastWrite != null &&
+          now.difference(lastWrite) < PublicCatalogCache.refreshInterval) {
+        return;
+      }
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(
-        _mapCacheKey,
-        jsonEncode(markers.map((m) => m.toJson()).toList()),
-      );
+      await prefs.setString(_mapCacheKey, encoded);
+      _lastMapMarkerJson = encoded;
       await prefs.setString(_mapCacheUpdatedAtKey, now.toIso8601String());
       _cachedMapMarkers = markers
           .map((m) => MapMarkerModel.fromCachedJson(m.toJson()))
@@ -2697,6 +2757,7 @@ class AppProvider extends ChangeNotifier {
   void _stopLiveViewerPolling() {
     _liveViewerTimer?.cancel();
     _liveViewerTimer = null;
+    _studioPollStreamerId = null;
   }
 
   // Platform viewer presence per stream id (P3 / 05 D-08). Absent means
@@ -2736,7 +2797,10 @@ class AppProvider extends ChangeNotifier {
   /// only shown in the broadcaster studio, labelled as YouTube's.
   Future<void> _pollLiveViewers() async {
     final liveStreamers = _streamers
-        .where((s) => s.isCurrentlyLive && s.youtubeVideoId.isNotEmpty)
+        .where((s) =>
+            s.streamerId == _studioPollStreamerId &&
+            s.isCurrentlyLive &&
+            s.youtubeVideoId.isNotEmpty)
         .toList();
 
     if (liveStreamers.isEmpty) return;
@@ -2781,6 +2845,8 @@ class AppProvider extends ChangeNotifier {
     _unsubscribeFromAcademicCategoryChanges();
     _unsubscribeFromChatReportChanges();
     _connectivitySub?.cancel();
+    _connectivityService?.dispose();
+    _realtimeRefreshTimer?.cancel();
     _reminderPush.dispose();
     super.dispose();
   }
@@ -5755,26 +5821,39 @@ class AppProvider extends ChangeNotifier {
   ) =>
       _approvedPlaceholderUrls[_placeholderCacheKey(streamerId, type)];
 
+  /// Keys already looked up (hit or miss) and when a failed lookup may be
+  /// retried. The old code cached hits only, so a streamer with no artwork
+  /// issued a new query on every rebuild of the live room (audit NET-07).
+  final Set<String> _placeholderLookupsDone = {};
+  final Map<String, DateTime> _placeholderRetryAfter = {};
+
   /// Fetches (once per streamer/type per session) the approved card for a
-  /// stream about to render a placeholder. A miss is cached as "no custom
-  /// card"by simply leaving the key absent, so a streamer with no artwork
-  /// does not re-query on every state change.
+  /// stream about to render a placeholder. A miss is remembered, so a streamer
+  /// with no artwork does not re-query on every state change; a failed lookup
+  /// is retried at most once a minute.
   Future<void> ensureApprovedPlaceholderLoaded(
     String streamerId,
     StreamPlaceholderType type,
   ) async {
     final key = _placeholderCacheKey(streamerId, type);
     if (_approvedPlaceholderUrls.containsKey(key)) return;
+    final retryAfter = _placeholderRetryAfter[key];
+    if (retryAfter != null && DateTime.now().isBefore(retryAfter)) return;
+    if (!_placeholderLookupsDone.add(key)) return;
     _adminDbService ??= await AdminDatabaseService.create();
     try {
       final url = await _adminDbService!.loadApprovedPlaceholderUrl(
         streamerId: streamerId,
         placeholderType: type,
       );
+      _placeholderRetryAfter.remove(key);
       if (url == null || url.isEmpty) return;
       _approvedPlaceholderUrls[key] = url;
       notifyListeners();
     } catch (e) {
+      _placeholderLookupsDone.remove(key);
+      _placeholderRetryAfter[key] =
+          DateTime.now().add(const Duration(minutes: 1));
       debugPrint('ensureApprovedPlaceholderLoaded failed: $e');
     }
   }

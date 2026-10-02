@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/safe_image_provider.dart';
 import '../../models/map_models.dart';
 
 /// High-Performance, Glitch-Free Spatial Streamer Marker Widget
@@ -113,8 +114,8 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
         errorBuilder: (context, error, stackTrace) => _buildFallbackIcon(),
       );
     } else if (url.startsWith('http://') || url.startsWith('https://')) {
-      imageWidget = Image.network(
-        url,
+      imageWidget = Image(
+        image: downscaledImage(NetworkImage(url), width: 128),
         fit: BoxFit.cover,
         width: double.infinity,
         height: double.infinity,
@@ -160,23 +161,32 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
     final languageCode =
         EasyLocalization.of(context)?.locale.languageCode ?? 'en';
 
-    return RepaintBoundary(
-      child: AnimatedBuilder(
-        animation: _pulseController,
-        builder: (context, child) {
-          final phase = _pulseController.value;
-          return Transform.scale(
-            key: ValueKey('selection-pulse-${widget.marker.streamerId}'),
-            scale: widget.isSelected
-                ? 1 +
+    final selectionKey =
+        ValueKey('selection-pulse-${widget.marker.streamerId}');
+    // The outer scale only animates for the selected pin. Every live marker
+    // used to rebuild and repaint this whole subtree each frame just to scale
+    // by 1; now only the radar ring below animates for them (audit MAP-02).
+    Widget scaled(Widget child) => widget.isSelected
+        ? AnimatedBuilder(
+            animation: _pulseController,
+            builder: (context, child) {
+              final phase = _pulseController.value;
+              return Transform.scale(
+                key: selectionKey,
+                scale: 1 +
                     0.16 *
                         Curves.easeInOut.transform(
-                            phase < 0.5 ? phase * 2 : (1 - phase) * 2)
-                : 1,
+                            phase < 0.5 ? phase * 2 : (1 - phase) * 2),
+                child: child,
+              );
+            },
             child: child,
-          );
-        },
-        child: Semantics(
+          )
+        : Transform.scale(key: selectionKey, scale: 1, child: child);
+
+    return RepaintBoundary(
+      child: scaled(
+        Semantics(
           selected: widget.isSelected,
           button: true,
           label: 'map.marker_accessibility'.tr(namedArgs: {
@@ -201,7 +211,8 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                 children: [
                   // 1. Radar Pulse Ring (Active only when streaming video or audio)
                   if (isLive)
-                    AnimatedBuilder(
+                    RepaintBoundary(
+                        child: AnimatedBuilder(
                       animation: _pulseController,
                       builder: (context, child) {
                         final opacity = _opacityAnimation.value.clamp(0.0, 1.0);
@@ -226,7 +237,7 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                           ),
                         );
                       },
-                    ),
+                    )),
 
                   // 2. Main Avatar Body Container with Outer Stroke Ring & Transparent Gap
                   Container(

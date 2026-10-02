@@ -68,7 +68,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
     return SafeArea(
       child: Container(
         constraints: BoxConstraints(
-          maxHeight: MediaQuery.of(context).size.height * 0.82,
+          maxHeight: MediaQuery.sizeOf(context).height * 0.82,
         ),
         padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceMd),
         child: Column(

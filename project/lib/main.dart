@@ -15,6 +15,13 @@ import 'core/routing/app_router.dart';
 import 'core/widgets/device_session_presenter.dart';
 
 void main() async {
+  // ~180 debugPrint calls (some on per-rebuild or per-failure paths) stay
+  // active in release builds and format strings, print to the console and, on
+  // web, cost a console call each. They are diagnostics for development only
+  // (audit LOG-01); errors still reach FlutterError/zone handlers.
+  if (kReleaseMode) {
+    debugPrint = (String? message, {int? wrapWidth}) {};
+  }
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
 

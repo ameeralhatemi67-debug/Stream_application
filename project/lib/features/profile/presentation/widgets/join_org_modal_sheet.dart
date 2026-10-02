@@ -102,7 +102,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
         top: 20,
         left: 20,
         right: 20,
-        bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+        bottom: MediaQuery.viewInsetsOf(context).bottom + 20,
       ),
       decoration: const BoxDecoration(
         color: AppTheme.surface,

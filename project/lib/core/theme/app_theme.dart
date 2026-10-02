@@ -93,7 +93,14 @@ abstract final class AppTheme {
     );
   }
 
-  static ThemeData forLocale(Locale locale) => ThemeData(
+  static final Map<String, ThemeData> _themeByLanguage = {};
+
+  /// One ThemeData per language: MaterialApp rebuilds used to build a fresh one
+  /// (and its text theme) every time (audit ST-01).
+  static ThemeData forLocale(Locale locale) => _themeByLanguage.putIfAbsent(
+      locale.languageCode, () => _buildTheme(locale));
+
+  static ThemeData _buildTheme(Locale locale) => ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
     fontFamily: locale.languageCode == 'ar' ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',

@@ -243,7 +243,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         ));
     final isAr = context.locale.languageCode == 'ar';
     final isDesktop =
-        MediaQuery.of(context).size.width >= AppBreakpoints.expanded;
+        MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded;
     if (_isMasterAdminForTabs != provider.isMasterAdmin) {
       final oldIndex = _tabController.index;
       const rolesIndex = 11 + (kDebugMode ? 1 : 0);

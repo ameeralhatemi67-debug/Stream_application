@@ -556,12 +556,23 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     _engine.setOrientation(0);
     SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+    // YouTube's viewer figure is only shown here, so only the studio polls it
+    // (and only for this broadcaster's own stream).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final provider = context.read<AppProvider>();
+      provider.startStudioViewerPolling(
+        provider.currentBroadcasterStreamer.streamerId,
+      );
+    });
   }
 
   @override
   void dispose() {
     if (_appProviderCaptured) {
       _appProvider.removeListener(_onBroadcastSessionChanged);
+      _appProvider.stopStudioViewerPolling();
     }
     _setWakelock(false);
     _restorePortraitChrome();

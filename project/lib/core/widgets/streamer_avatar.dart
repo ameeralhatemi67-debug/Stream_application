@@ -45,7 +45,11 @@ class StreamerAvatar extends StatelessWidget {
     final content = provider == null
         ? placeholder
         : Image(
-            image: provider,
+            // Decode at the pixel size actually drawn, not the source size.
+            image: downscaledImage(
+              provider,
+              width: (size * MediaQuery.devicePixelRatioOf(context)).ceil(),
+            ),
             width: size,
             height: size,
             fit: BoxFit.cover,

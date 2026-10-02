@@ -78,7 +78,13 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
     super.dispose();
   }
 
+  /// Reactions arrive over Realtime from the whole audience; an unbounded
+  /// burst meant hundreds of animated layers above the video platform view
+  /// (audit LIVE-02). Beyond this many on screen, further ones are dropped.
+  static const int maxConcurrentParticles = 20;
+
   void spawnReaction(String reactionType) {
+    if (_particles.length >= maxConcurrentParticles) return;
     final emoji = switch (reactionType) {
       'clap' => '👏',
       'raise_hand' => '✋',
@@ -153,26 +159,28 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
                   return PositionedDirectional(
                     start: x,
                     top: y,
-                    child: Opacity(
-                      opacity: particle.opacityAnimation.value.clamp(0.0, 1.0),
-                      child: Transform.scale(
-                        scale: particle.scaleAnimation.value,
-                        child: Container(
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: AppTheme.media.withValues(alpha: 0.4),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
+                    // Each particle gets its own repaint boundary and no blurred
+                    // shadow (a blur per particle over a platform view is
+                    // expensive on mobile GPUs).
+                    child: RepaintBoundary(
+                      child: Opacity(
+                        opacity:
+                            particle.opacityAnimation.value.clamp(0.0, 1.0),
+                        child: Transform.scale(
+                          scale: particle.scaleAnimation.value,
+                          child: Container(
+                            padding: const EdgeInsets.all(6),
+                            decoration: BoxDecoration(
+                              color: AppTheme.media.withValues(alpha: 0.4),
+                              shape: BoxShape.circle,
+                              border: Border.all(
                                 color: AppTheme.onMedia.withValues(alpha: 0.2),
-                                blurRadius: 8,
-                                spreadRadius: 1,
                               ),
-                            ],
-                          ),
-                          child: Text(
-                            particle.emoji,
-                            style: const TextStyle(fontSize: 24),
+                            ),
+                            child: Text(
+                              particle.emoji,
+                              style: const TextStyle(fontSize: 24),
+                            ),
                           ),
                         ),
                       ),

@@ -873,7 +873,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
       );
     }
 
-    final screenWidth = MediaQuery.of(context).size.width;
+    final screenWidth = MediaQuery.sizeOf(context).width;
     final isDesktop = screenWidth >= 900;
     final isTablet = screenWidth >= 600 && screenWidth < 900;
     final crossAxisCount = isDesktop ? 4 : (isTablet ? 3 : 2);

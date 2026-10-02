@@ -49,7 +49,7 @@ class VodPlayerModalSheet extends StatelessWidget {
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.9,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
       ),
       decoration: const BoxDecoration(
         color: AppTheme.surface,

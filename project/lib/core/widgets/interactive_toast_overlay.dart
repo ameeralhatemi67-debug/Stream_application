@@ -131,7 +131,7 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
 
   @override
   Widget build(BuildContext context) {
-    final topPadding = MediaQuery.of(context).padding.top;
+    final topPadding = MediaQuery.paddingOf(context).top;
 
     return PositionedDirectional(
       top: topPadding + 8,

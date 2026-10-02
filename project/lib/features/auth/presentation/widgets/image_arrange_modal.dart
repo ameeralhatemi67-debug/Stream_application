@@ -102,7 +102,12 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
         return;
       }
 
-      final ui.Image image = await boundary.toImage(pixelRatio: 3.0);
+      // Cap the export at 512 px (avatar) / 1280 px (banner) wide. A fixed 3x
+      // ratio produced multi-MB PNGs that every viewer downloaded per card.
+      final targetWidth =
+          widget.arrangeType == ImageArrangeType.avatarCircle ? 512.0 : 1280.0;
+      final ratio = (targetWidth / boundary.size.width).clamp(0.5, 3.0);
+      final ui.Image image = await boundary.toImage(pixelRatio: ratio);
       final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
 
       if (byteData != null) {
@@ -189,7 +194,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
     final isAvatar = widget.arrangeType == ImageArrangeType.avatarCircle;
     final cutoutWidth = isAvatar ? 260.0 : (size.width - 40).clamp(280.0, 520.0);
     final cutoutHeight = isAvatar ? 260.0 : (cutoutWidth * (9 / 16));

@@ -24,7 +24,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<AppProvider>();
     final reason = provider.currentUserBanReason;
-    final isDesktop = MediaQuery.of(context).size.width >= 900;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     // Explicit toast on top of the full reason page below -- Task 16 asks
     // for an unmissable alert the moment a banned account tries to sign in,

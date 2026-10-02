@@ -58,7 +58,9 @@ OrgEvent orgEvent(String kind, {String id = event, String? readAt, Map<String, d
       'id': id, 'kind': kind, 'organization_id': org, 'session_id': session, 'invitation_id': invite,
       'payload': payload ?? {'organization_name_en': 'Pilot Academy', 'organization_name_ar': 'أكاديمية',
         'title_en': 'Weekly lesson', 'title_ar': 'الدرس الأسبوعي', 'role': 'manager'},
-      'created_at': '2026-10-01T09:00:00Z', 'read_at': readAt,
+      // Relative: the provider drops notifications older than 12 h, so a fixed date
+      // made this test fail the day after it was written.
+      'created_at': DateTime.now().toUtc().subtract(const Duration(hours: 1)).toIso8601String(), 'read_at': readAt,
     });
 
 OrgInvitation invitation({String role = 'manager'}) => OrgInvitation.fromRow({

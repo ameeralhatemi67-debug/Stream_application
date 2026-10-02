@@ -145,4 +145,8 @@ await fetchPage(`${origin}/`, 'unstamped-debug-tab', true);
 networkMode = 'slow';
 assert.equal(await (await fetchPage(`${origin}/main.dart.js`, 'unstamped-debug-tab')).text(),
   'code-null', 'unstamped debug entrypoint survives a response slower than the offline timeout');
+// WEB-01: the timeout bounds time-to-headers only; bodies stream through untouched.
+assert.ok(!source.slice(source.indexOf('async function boundedFetch'),
+    source.indexOf('async function storedResponse')).includes('arrayBuffer'),
+  'boundedFetch must not buffer (and so cannot time out) large response bodies');
 console.log('PASS: initial claimed page, reserved-client concurrent prune, bounded orphan cleanup, cold start, durable worker restart, hanging network, app-only update, concurrent tabs, preparation bypass, backend exclusion, DDC bypass, slow unstamped startup');

@@ -66,7 +66,7 @@ class ApplyStep5Review extends StatelessWidget {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        height: MediaQuery.of(context).size.height * 0.85,
+        height: MediaQuery.sizeOf(context).height * 0.85,
         decoration: const BoxDecoration(
           color: AppTheme.bg,
           borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),

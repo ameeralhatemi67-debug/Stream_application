@@ -153,7 +153,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
+    final size = MediaQuery.sizeOf(context);
     final picked = _picked;
 
     return Container(

@@ -59,6 +59,12 @@ class YouTubeApiService {
   final Map<String, List<VodModel>> _cachedVods = {};
   final Map<String, List<PlaylistModel>> _cachedPlaylists = {};
 
+  /// A channel's id and uploads playlist never change, so a successful lookup
+  /// is remembered for the session. The profile screen, channel validation and
+  /// watch-link verification each used to re-query the same handle (1 quota
+  /// unit and a round-trip each; audit CA-04). Failures are not cached.
+  final Map<String, Map<String, String>> _cachedChannelDetails = {};
+
   YouTubeApiService({
     String? apiKey,
     http.Client? client,
@@ -71,6 +77,9 @@ class YouTubeApiService {
     if (handleOrUrl.trim().isEmpty || apiKey.isEmpty) return {};
     final channel = YouTubeChannelReference.parse(handleOrUrl);
     if (channel == null || channel.parameter == 'custom') return {};
+    final cacheKey = '${channel.parameter}:${channel.value.toLowerCase()}';
+    final cached = _cachedChannelDetails[cacheKey];
+    if (cached != null) return Map.of(cached);
     final url = Uri.parse('$_baseUrl/channels').replace(queryParameters: {
       'part': 'snippet,contentDetails',
       channel.parameter: channel.value,
@@ -93,10 +102,12 @@ class YouTubeApiService {
           final uploadsPlaylistId = relatedPlaylists?['uploads'] as String? ??
               'UU${channelId.substring(2)}';
 
-          return {
+          final details = {
             'channelId': channelId,
             'uploadsPlaylistId': uploadsPlaylistId,
           };
+          _cachedChannelDetails[cacheKey] = details;
+          return Map.of(details);
         }
       }
     } catch (e) {

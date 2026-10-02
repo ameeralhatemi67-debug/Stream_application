@@ -80,14 +80,27 @@ class ConnectivityService {
     }
   }
 
+  /// One client for the app's lifetime: a new client per probe meant a new
+  /// TCP + TLS handshake every 15 s (radio wake-ups, battery; audit NET-09).
+  /// HEAD is enough, any HTTP status proves the backend is reachable.
+  http.Client? _httpClient;
+
   Future<bool> _httpProbe(Uri target) async {
-    final client = http.Client();
+    final client = _httpClient ??= http.Client();
     try {
-      await client.get(target).timeout(probeTimeout);
+      await client.head(target).timeout(probeTimeout);
       return true;
-    } finally {
+    } catch (_) {
+      // A timed-out keep-alive connection may be dead; start fresh next time.
       client.close();
+      _httpClient = null;
+      rethrow;
     }
+  }
+
+  void dispose() {
+    _httpClient?.close();
+    _httpClient = null;
   }
 
   /// Debounce transport changes, then probe the latest network state.

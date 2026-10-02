@@ -523,11 +523,11 @@ class _BroadcasterApplicationSheetState
 
   @override
   Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return Container(
       constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.90,
+        maxHeight: MediaQuery.sizeOf(context).height * 0.90,
       ),
       padding: EdgeInsets.only(
         left: AppTheme.spaceLg,

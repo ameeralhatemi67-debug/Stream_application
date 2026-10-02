@@ -9,6 +9,8 @@ import '../../../core/layout/content_width.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/connectivity_banner.dart';
+import '../../../core/widgets/safe_image_provider.dart';
+import '../models/academic_category_model.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
 import 'widgets/streamer_grid_card.dart';
@@ -51,6 +53,17 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     });
   }
 
+  Timer? _searchDebounce;
+
+  /// A keystroke used to notify the whole app and re-filter the catalog twice
+  /// (feed + map); wait for a short pause in typing first (audit RT-07).
+  void _onSearchChanged(String value) {
+    _searchDebounce?.cancel();
+    _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+      if (mounted) context.read<AppProvider>().setSearchQuery(value);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -64,13 +77,14 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     // Live cards show the platform's own viewer count (P3 / 05 D-08). One
     // batched call covers every live card on screen; the provider throttles
     // it to one round trip per 30 s, and an unknown count renders as "—".
-    _viewerCountTimer = Timer.periodic(
-        const Duration(seconds: 30), (_) => _refreshVisibleViewerCounts());
+    _viewerCountTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (_isVisibleAndForeground) _refreshVisibleViewerCounts();
+    });
     // LIVE badges expire with the catalog read behind them: other accounts'
     // live changes never reach this client over Realtime (profiles RLS), so
     // a stale badge lasts at most about 45 seconds.
     _catalogFreshnessTimer = Timer.periodic(const Duration(seconds: 15), (_) {
-      if (!mounted) return;
+      if (!_isVisibleAndForeground) return;
       final provider = context.read<AppProvider>();
       if (provider.isOnline) {
         unawaited(
@@ -81,6 +95,14 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
 
   Timer? _viewerCountTimer;
   Timer? _catalogFreshnessTimer;
+
+  /// Pollers pause while this tab is hidden behind another tab or a pushed
+  /// route, and while the app is in the background (audit NET-02).
+  bool get _isVisibleAndForeground {
+    if (!mounted || !TickerMode.valuesOf(context).enabled) return false;
+    final state = WidgetsBinding.instance.lifecycleState;
+    return state == null || state == AppLifecycleState.resumed;
+  }
 
   void _onSearchFocusChanged() {
     if (mounted) setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
@@ -117,6 +139,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   void dispose() {
     _viewerCountTimer?.cancel();
     _catalogFreshnessTimer?.cancel();
+    _searchDebounce?.cancel();
     _searchController.dispose();
     _searchFocusNode.removeListener(_onSearchFocusChanged);
     _searchFocusNode.dispose();
@@ -181,42 +204,29 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   @override
   Widget build(BuildContext context) {
     // context.read for method calls (setSearchQuery) -- doesn't need to
-    // rebuild this widget on its own. context.select below scopes the
-    // rebuild to just the 8 fields this screen actually renders, instead of
-    // every AppProvider change (uses DeepCollectionEquality by default, so
-    // the two lists only trigger a rebuild when their contents actually
-    // change, not on every unrelated notifyListeners() call).
+    // rebuild this widget on its own. Each field is selected separately: a
+    // record holding lists never compares equal (record == falls back to List
+    // identity, and the getters allocate a new list per call), so the old
+    // single record select rebuilt the whole feed on every notification
+    // (audit RT-01). A bare List select uses DeepCollectionEquality, so these
+    // only rebuild when the streamers themselves change.
     final appProvider = context.read<AppProvider>();
-    final (
-      selectedCategory,
-      liveStreamers,
-      displayedStreamers,
-      isStreamerModeEnabled,
-      isBroadcastingLive,
-      customBroadcastType,
-      unreadNotificationsCount,
-      selectedTagFilter,
-    ) = context.select<
-        AppProvider,
-        (
-          String,
-          List<StreamerModel>,
-          List<StreamerModel>,
-          bool,
-          bool,
-          BroadcastType,
-          int,
-          String
-        )>((p) => (
-          p.currentCategoryFilter,
-          p.liveStreamers,
-          p.filteredStreamers,
-          p.isStreamerModeEnabled,
-          p.isBroadcastingLive,
-          p.customBroadcastType,
-          p.unreadNotificationsCount,
-          p.selectedTagFilter,
-        ));
+    final selectedCategory =
+        context.select<AppProvider, String>((p) => p.currentCategoryFilter);
+    final liveStreamers = context
+        .select<AppProvider, List<StreamerModel>>((p) => p.liveStreamers);
+    final displayedStreamers = context
+        .select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers);
+    final isStreamerModeEnabled =
+        context.select<AppProvider, bool>((p) => p.isStreamerModeEnabled);
+    final isBroadcastingLive =
+        context.select<AppProvider, bool>((p) => p.isBroadcastingLive);
+    final customBroadcastType = context
+        .select<AppProvider, BroadcastType>((p) => p.customBroadcastType);
+    final unreadNotificationsCount =
+        context.select<AppProvider, int>((p) => p.unreadNotificationsCount);
+    final selectedTagFilter =
+        context.select<AppProvider, String>((p) => p.selectedTagFilter);
     final langCode = context.locale.languageCode;
     final isOnline = context.select<AppProvider, bool>((p) => p.isOnline);
     final availableLiveStreamers = isOnline ? liveStreamers : <StreamerModel>[];
@@ -349,7 +359,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                       focusNode: _searchFocusNode,
                       style: const TextStyle(
                           color: AppTheme.textPrimary, fontSize: 14),
-                      onChanged: (value) => appProvider.setSearchQuery(value),
+                      onChanged: _onSearchChanged,
                       decoration: InputDecoration(
                         hintText: 'feed.search_feed'.tr(),
                         hintStyle: const TextStyle(
@@ -362,6 +372,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                                     size: 18, color: AppTheme.textMuted),
                                 onPressed: () {
                                   _searchController.clear();
+                                  _searchDebounce?.cancel();
                                   appProvider.setSearchQuery('');
                                 },
                               )
@@ -491,7 +502,8 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
             // Cluster 3 Task 10: category chips are driven by the live
             // AppProvider.academicCategories list (admin-managed, Task 11)
             // instead of a hardcoded id/i18n-key pair per chip.
-            final categories = context.watch<AppProvider>().academicCategories;
+            final categories = context.select<AppProvider, List<AcademicCategoryModel>>(
+                (p) => p.academicCategories);
             final langCode = context.locale.languageCode;
             return SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -672,9 +684,11 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
               AspectRatio(
                 aspectRatio: 16 / 9,
                 child: Image(
-                  image: streamer.bannerUrl.startsWith('assets/')
-                      ? AssetImage(streamer.bannerUrl)
-                      : NetworkImage(streamer.bannerUrl) as ImageProvider,
+                  image: downscaledImage(
+                      streamer.bannerUrl.startsWith('assets/')
+                          ? AssetImage(streamer.bannerUrl)
+                          : NetworkImage(streamer.bannerUrl) as ImageProvider,
+                      width: 800),
                   fit: BoxFit.cover,
                   errorBuilder: (_, __, ___) => Container(
                     color: AppTheme.surfaceAlt,
@@ -761,9 +775,12 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   children: [
                     CircleAvatar(
                       radius: 16,
-                      backgroundImage: streamer.avatarUrl.startsWith('assets/')
-                          ? AssetImage(streamer.avatarUrl)
-                          : NetworkImage(streamer.avatarUrl) as ImageProvider,
+                      backgroundImage: downscaledImage(
+                          streamer.avatarUrl.startsWith('assets/')
+                              ? AssetImage(streamer.avatarUrl)
+                              : NetworkImage(streamer.avatarUrl)
+                                  as ImageProvider,
+                          width: 96),
                     ),
                     const SizedBox(width: AppTheme.spaceSm),
                     Expanded(
@@ -862,9 +879,12 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
                   height: 110,
                   width: double.infinity,
                   child: Image(
-                    image: streamer.bannerUrl.startsWith('assets/')
-                        ? AssetImage(streamer.bannerUrl)
-                        : NetworkImage(streamer.bannerUrl) as ImageProvider,
+                    image: downscaledImage(
+                        streamer.bannerUrl.startsWith('assets/')
+                            ? AssetImage(streamer.bannerUrl)
+                            : NetworkImage(streamer.bannerUrl)
+                                as ImageProvider,
+                        width: 800),
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
                       color: AppTheme.surfaceAlt,

@@ -79,7 +79,8 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/logo/
+    # Only the two SVGs the app draws; the PNG/SVG masters stay on disk but
+    # are not bundled (they were 17 MB of unused assets).
     - assets/logo/colored.svg
     - assets/logo/black.svg
     - assets/Language.svg
