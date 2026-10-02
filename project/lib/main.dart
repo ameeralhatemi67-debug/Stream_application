@@ -21,6 +21,12 @@ void main() async {
   // (audit LOG-01); errors still reach FlutterError/zone handlers.
   if (kReleaseMode) {
     debugPrint = (String? message, {int? wrapWidth}) {};
+    // Flutter reports framework errors through debugPrint, so silencing it
+    // above would also hide them. Keep one line per error on the console.
+    FlutterError.onError = (details) {
+      // ignore: avoid_print
+      print('FlutterError: ${details.exceptionAsString()}');
+    };
   }
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
