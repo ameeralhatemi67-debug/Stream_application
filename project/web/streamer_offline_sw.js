@@ -83,6 +83,9 @@ self.addEventListener('fetch', (event) => {
   if (request.method !== 'GET' || request.cache === 'reload') return;
   const url = new URL(request.url);
   if (url.origin !== self.location.origin && !PUBLIC_CDNS.includes(url.origin)) return;
+  // DDC loads hundreds of mutable modules concurrently. The offline timeout
+  // can abort these and leave Dart libraries undefined; let Chrome load them.
+  if (/\.dart\.lib\.js(?:\.map)?$|\/(?:dart_sdk|ddc_module_loader|main_module\.bootstrap|stack_trace_mapper)\.js$/.test(url.pathname)) return;
   const result = (async () => {
     if (request.mode === 'navigate') {
       try {
@@ -108,6 +111,8 @@ self.addEventListener('fetch', (event) => {
     }
     // Durable client pins survive worker termination and concurrent tab updates.
     let page = event.clientId ? await record(pinPath(event.clientId)) : null;
+    // Unstamped development pages have no immutable offline generation.
+    if (!page?.buildId) return fetch(request);
     if (page?.buildId && !page.cacheName) {
       await locked(async () => {
         const active = await record(absolute(ACTIVE));

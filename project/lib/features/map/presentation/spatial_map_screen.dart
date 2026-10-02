@@ -597,7 +597,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
           Expanded(
             child: LayoutBuilder(builder: (context, constraints) {
               final available = constraints.biggest;
-              final canvas = _policy.feasibleCanvas(available, _safePadding);
+              final canvas = isDesktop
+                  ? available
+                  : _policy.feasibleCanvas(available, _safePadding);
               if (canvas != _canvas) {
                 _canvas = canvas;
                 WidgetsBinding.instance.addPostFrameCallback((_) {

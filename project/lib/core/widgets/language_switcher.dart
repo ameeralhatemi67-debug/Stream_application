@@ -1,6 +1,10 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:provider/provider.dart';
+import '../providers/app_provider.dart';
 import '../theme/app_theme.dart';
 
 class LanguageSwitcher extends StatelessWidget {
@@ -23,11 +27,12 @@ class LanguageSwitcher extends StatelessWidget {
     return Tooltip(
       message: 'language.switch_lang'.tr(),
       child: InkWell(
-        onTap: () {
-          if (isArabic) {
-            context.setLocale(const Locale('en'));
-          } else {
-            context.setLocale(const Locale('ar'));
+        onTap: () async {
+          final language = isArabic ? 'en' : 'ar';
+          await context.setLocale(Locale(language));
+          if (context.mounted) {
+            unawaited(context.read<AppProvider>().syncReminderPush(
+                requestPermission: false, language: language));
           }
         },
         borderRadius: BorderRadius.circular(

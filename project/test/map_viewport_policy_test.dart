@@ -180,6 +180,10 @@ void main() {
   test('map domain: finite, not null island, inside the navigation extent', () {
     expect(isInTricityMapDomain(26.2890, 50.2170), isTrue);
     expect(isInTricityMapDomain(26.4368, 50.1040), isTrue); // Dammam
+    expect(isInTricityMapDomain(26.72, 50.35),
+        isTrue); // inside pack, beyond three-city core
+    expect(isInTricityMapDomain(26.79, 50.35), isFalse); // beyond map edge
+    expect(isInTricityMapDomain(26.72, 50.44), isFalse);
     expect(isInTricityMapDomain(24.7136, 46.6753), isFalse); // Riyadh
     expect(isInTricityMapDomain(0, 0), isFalse);
     expect(isInTricityMapDomain(double.nan, 50.1), isFalse);

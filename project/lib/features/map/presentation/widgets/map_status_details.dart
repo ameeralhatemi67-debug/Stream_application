@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../services/map_offline_store.dart';
 import '../../services/map_pack_controller.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Always-visible map credit: the pack's short OpenStreetMap credit link plus a
 /// 48 px information button that opens the local notices and map status.
@@ -250,7 +251,7 @@ class MapPackStatusCard extends StatelessWidget {
           child: SizedBox(
             width: 28,
             height: 28,
-            child: CircularProgressIndicator(strokeWidth: 3),
+            child: HadayahLoadingIndicator(strokeWidth: 3),
           ),
         ),
       );
@@ -444,9 +445,9 @@ class _MapDetailsBody extends StatelessWidget {
               _body(_webText(web, pack?.bytes)),
               const SizedBox(height: AppTheme.spaceSm),
               if (web.state == WebOfflineState.preparing)
-                LinearProgressIndicator(
-                  value: web.total == 0 ? null : web.done / web.total,
-                )
+                web.total == 0
+                    ? const Center(child: HadayahLoadingIndicator())
+                    : LinearProgressIndicator(value: web.done / web.total)
               else if (web.state != WebOfflineState.unsupported)
                 Wrap(
                   spacing: AppTheme.spaceSm,

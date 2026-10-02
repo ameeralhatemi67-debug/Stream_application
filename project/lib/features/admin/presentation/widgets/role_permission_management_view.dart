@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/admin_role_assignment_model.dart';
 import '../../models/stream_moderator_model.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Master-Admin-only Role & Permission Management tab (v0.8 Checkpoint 2
 /// Phase 3). Lets a Master Admin view every user_roles grant, promote a
@@ -421,7 +422,7 @@ class _RolePermissionManagementViewState
                     ? const SizedBox(
                         width: 14,
                         height: 14,
-                        child: CircularProgressIndicator(
+                        child: HadayahLoadingIndicator(
                             strokeWidth: 2, color: AppTheme.onMedia),
                       )
                     : const Icon(Icons.person_add_alt_1_rounded, size: 16),

@@ -37,8 +37,9 @@ update public.broadcaster_applications set status='pending' where id='59000000-0
 select ok((select latitude is null from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000011'), 'pending application exposes no location');
 update public.broadcaster_applications set status='approved',account_type='individualScholar' where id='59000000-0000-4000-8000-000000000011';
 select ok((select latitude is null from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000011'), 'individual application cannot stand in for organization venue');
-update public.broadcaster_applications set account_type='organizationVenue',latitude=0,longitude=0 where id='59000000-0000-4000-8000-000000000011';
-select ok((select latitude=0 and longitude=0 from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000011'), 'unpinned organization stays unpinned');
+select throws_ok($$update public.broadcaster_applications set latitude=0,longitude=0 where id='59000000-0000-4000-8000-000000000011'$$,
+ '22023', null, 'approved public point cannot move outside the supported map');
+select ok((select latitude=26.4301234 and longitude=50.1004321 from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000011'), 'rejected location edit preserves approved point');
 select ok((select latitude=26.310789 and longitude=50.140123 from public.org_venues where organization_id='69000000-0000-4000-8000-000000000012'), 'legitimate private venue coordinates unchanged');
 select * from finish();
 rollback;

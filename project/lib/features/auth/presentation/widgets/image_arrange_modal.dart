@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 enum ImageArrangeType {
   avatarCircle,
@@ -238,7 +239,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                         ? const SizedBox(
                             width: 16,
                             height: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.media),
+                            child: HadayahLoadingIndicator(strokeWidth: 2, color: AppTheme.media),
                           )
                         : Text('design_ui.apply'.tr(),
                             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),

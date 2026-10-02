@@ -42,13 +42,9 @@ CANVAS = 1024
 # of the 108dp canvas, or 73dp -- effectively the 72dp guaranteed-visible area
 # already.
 #
-# UI-06: 0.92 combined with that built-in 68% inset still left the mark
-# spanning ~63% of the full icon canvas (0.92 * 0.68), which is enough that
-# an asymmetric mark's widest points sit right against a circular/squircle
-# mask's visible edge -- "too large, little breathing room" (brief/Ui_issues/
-# app_icon_main_page.jpg). 0.74 brings that down to ~50% of the full canvas,
-# a comfortable, still-legible-at-small-sizes fill for a simple bold mark.
-MARK_FRACTION = 0.74
+# Leave a little more space around the owner's mark in Android's adaptive
+# icon mask. The SVG and original artwork stay untouched.
+MARK_FRACTION = 0.68
 # Sampled from the owner's square.png tile, so the generated background matches
 # the supplied artwork rather than approximating it.
 TILE_BACKGROUND = (238, 255, 243, 255)

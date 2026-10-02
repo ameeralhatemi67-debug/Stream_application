@@ -31,6 +31,10 @@ abstract final class AppTheme {
   static const shadowSoft = Color(0x1F243536);
   static const shadow = Color(0x33243536);
   static const shadowStrong = Color(0x4D243536);
+
+  static const entrySurfaceShadow = [
+    BoxShadow(color: shadowSoft, blurRadius: 24, offset: Offset(0, 6)),
+  ];
   static const spaceXs = 4.0, spaceSm = 8.0, spaceMd = 12.0,
       spaceLg = 16.0, spaceXl = 24.0, space2Xl = 32.0, screenPadding = 18.0;
   static const radiusXs = 4.0, radiusSm = 8.0, radiusMd = 12.0,

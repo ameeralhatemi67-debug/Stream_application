@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Modal sheet enabling individual broadcasters to search and apply to join an Organization
 class JoinOrgModalSheet extends StatefulWidget {
@@ -288,7 +289,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                     ? const SizedBox(
                         height: 20,
                         width: 20,
-                        child: CircularProgressIndicator(
+                        child: HadayahLoadingIndicator(
                           strokeWidth: 2,
                           color: AppTheme.onMedia,
                         ),

@@ -66,7 +66,8 @@ Widget createTestWidget({
   );
 }
 
-Future<void> pumpTestApp(WidgetTester tester, Widget child, AppProvider provider) async {
+Future<void> pumpTestApp(
+    WidgetTester tester, Widget child, AppProvider provider) async {
   await tester.pumpWidget(createTestWidget(child: child, provider: provider));
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 100));
@@ -83,7 +84,9 @@ void main() {
   });
 
   group('Organization Feature Phase 3: Live Multi-Speaker Dynamics Tests', () {
-    testWidgets('TC-LIVE-SPK-01: Multi-speaker video overlay renders avatars for active instructors', (tester) async {
+    testWidgets(
+        'TC-LIVE-SPK-01: Multi-speaker video overlay renders avatars for active instructors',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
@@ -107,7 +110,9 @@ void main() {
       expect(find.byType(Tooltip), findsNWidgets(3));
     });
 
-    testWidgets('TC-LIVE-SPK-02: Overlay supports horizontal scrolling when > 5 speakers', (tester) async {
+    testWidgets(
+        'TC-LIVE-SPK-02: Overlay supports horizontal scrolling when > 5 speakers',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
@@ -143,7 +148,9 @@ void main() {
       expect(find.byType(ListView), findsOneWidget);
     });
 
-    testWidgets('TC-LIVE-SPK-03: Tapping an avatar in LiveMultiSpeakerOverlay triggers callback', (tester) async {
+    testWidgets(
+        'TC-LIVE-SPK-03: Tapping an avatar in LiveMultiSpeakerOverlay triggers callback',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
@@ -176,7 +183,9 @@ void main() {
       expect(tappedSpeaker!.nameEn, equals('Abdulrahman Hejazi'));
     });
 
-    testWidgets('TC-LIVE-SPK-04: LiveAudioStageMultiSpeaker renders kinetic multi-speaker roster', (tester) async {
+    testWidgets(
+        'TC-LIVE-SPK-04: LiveAudioStageMultiSpeaker renders kinetic multi-speaker roster',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
@@ -200,12 +209,39 @@ void main() {
       expect(find.text('Dr. Sarah Al-Dosari'), findsOneWidget);
       expect(find.text('Alex Thompson'), findsOneWidget);
 
-      // Verify speaking status bar
-      expect(find.text('Speaking Now'), findsOneWidget);
+      // Playback is known; speech detection is not available to viewers.
+      expect(find.text('AUDIO LIVE'), findsAtLeastNWidgets(1));
       expect(find.textContaining('840'), findsOneWidget);
     });
 
-    testWidgets('TC-LIVE-SPK-05: Tapping speaker in LiveAudioStageMultiSpeaker triggers inspection', (tester) async {
+    testWidgets('audio stage keeps its live label without reduced-motion ticks',
+        (tester) async {
+      final db = await AdminDatabaseService.create();
+      final provider = AppProvider(db);
+      seedStreamerFixtures(provider);
+      final streamer = provider.getStreamerById('org_dalilk_04')!;
+      await pumpTestApp(
+        tester,
+        MediaQuery(
+          data: const MediaQueryData(disableAnimations: true),
+          child: Scaffold(
+            body: LiveAudioStageMultiSpeaker(
+              streamer: streamer,
+              langCode: 'en',
+              viewerCount: null,
+            ),
+          ),
+        ),
+        provider,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('AUDIO LIVE'), findsAtLeastNWidgets(1));
+      expect(tester.takeException(), isNull);
+    });
+
+    testWidgets(
+        'TC-LIVE-SPK-05: Tapping speaker in LiveAudioStageMultiSpeaker triggers inspection',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);
@@ -239,7 +275,9 @@ void main() {
       expect(inspectedSpeaker!.speakerId, equals('spk_sarah'));
     });
 
-    testWidgets('TC-LIVE-SPK-06: Integrated video viewport stack correctly renders LiveMultiSpeakerOverlay for organizations', (tester) async {
+    testWidgets(
+        'TC-LIVE-SPK-06: Integrated video viewport stack correctly renders LiveMultiSpeakerOverlay for organizations',
+        (tester) async {
       final db = await AdminDatabaseService.create();
       final provider = AppProvider(db);
       seedStreamerFixtures(provider);

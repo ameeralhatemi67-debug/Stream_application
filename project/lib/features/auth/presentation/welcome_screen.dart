@@ -1,4 +1,5 @@
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/entry_background.dart';
 import '../../../core/config/app_identity.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -9,6 +10,7 @@ import '../../../core/providers/app_flags.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/consent_dialog.dart';
+import '../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Master Welcome & Authentication Landing Screen
 class WelcomeScreen extends StatefulWidget {
@@ -118,261 +120,268 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
 
     return Scaffold(
       backgroundColor: AppTheme.bg,
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spaceLg,
-              vertical: AppTheme.spaceMd,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isDesktop ? 680 : 440),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  //  Animated Logo & Identity Badge
-                  const AppLogo(size: 96),
-                  const SizedBox(height: AppTheme.spaceMd),
+      body: EntryBackground(
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppTheme.spaceLg,
+                vertical: AppTheme.spaceMd,
+              ),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(maxWidth: isDesktop ? 680 : 440),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    //  Animated Logo & Identity Badge
+                    const AppLogo(size: 96),
+                    const SizedBox(height: AppTheme.spaceMd),
 
-                  // Brand Title
-                  Text(
-                    AppIdentity.name(context.locale.languageCode),
-                    style: TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 24,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing:
-                          context.locale.languageCode == 'ar' ? 0.0 : 2.0,
+                    // Brand Title
+                    Text(
+                      AppIdentity.name(context.locale.languageCode),
+                      style: TextStyle(
+                        color: AppTheme.textPrimary,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing:
+                            context.locale.languageCode == 'ar' ? 0.0 : 2.0,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 6),
+                    const SizedBox(height: 6),
 
-                  // Subtitle & Regional Scope
-                  Text(
-                    'auth_welcome.subtitle'.tr(),
-                    style: TextStyle(
-                      color: AppTheme.primary.withValues(alpha: 0.9),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      height: 1.4,
+                    // Subtitle & Regional Scope
+                    Text(
+                      'auth_welcome.subtitle'.tr(),
+                      style: TextStyle(
+                        color: AppTheme.primary.withValues(alpha: 0.9),
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppTheme.spaceXl),
+                    const SizedBox(height: AppTheme.spaceXl),
 
-                  //  Authentication Card Container
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.spaceLg),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                      border: Border.all(
-                          color: AppTheme.border, width: 1.2),
-
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        Text(
-                          'auth_welcome.card_title'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 6),
-                        Text(
-                          'auth_welcome.card_subtitle'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 12,
-                            height: 1.4,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: AppTheme.spaceLg),
-
-                        if (!_flags.registrationsOpen)
-                          _buildRegistrationsPausedNotice(),
-
-                        //  1. Sign Up Primary Action (Google)
-                        ElevatedButton(
-                          key: const Key('welcome-signup'),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.onMedia,
-                            foregroundColor: AppTheme.textPrimary,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMd),
+                    //  Authentication Card Container
+                    Container(
+                      padding: const EdgeInsets.all(AppTheme.spaceLg),
+                      decoration: BoxDecoration(
+                        color: AppTheme.surface,
+                        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
+                        border:
+                            Border.all(color: AppTheme.surfaceAlt, width: 1.2),
+                        boxShadow: AppTheme.entrySurfaceShadow,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(
+                            'auth_welcome.card_title'.tr(),
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                            elevation: 2,
+                            textAlign: TextAlign.center,
                           ),
-                          onPressed: _isLoading || !_flags.registrationsOpen
-                              ? null
-                              : () => _handleGoogleAuth(),
-                          child: _isLoading
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: AppTheme.textPrimary,
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: AppTheme.onMedia,
-                                      ),
-                                      child: const Text(
-                                        'G',
-                                        style: TextStyle(
-                                          color: AppTheme.primary,
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 16,
+                          const SizedBox(height: 6),
+                          Text(
+                            'auth_welcome.card_subtitle'.tr(),
+                            style: const TextStyle(
+                              color: AppTheme.textSecondary,
+                              fontSize: 12,
+                              height: 1.4,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: AppTheme.spaceLg),
+
+                          if (!_flags.registrationsOpen)
+                            _buildRegistrationsPausedNotice(),
+
+                          //  1. Sign Up Primary Action (Google)
+                          ElevatedButton(
+                            key: const Key('welcome-signup'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.onMedia,
+                              foregroundColor: AppTheme.textPrimary,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd),
+                              ),
+                              elevation: 2,
+                              shadowColor: AppTheme.shadowSoft,
+                              surfaceTintColor: Colors.transparent,
+                            ),
+                            onPressed: _isLoading || !_flags.registrationsOpen
+                                ? null
+                                : () => _handleGoogleAuth(),
+                            child: _isLoading
+                                ? const SizedBox(
+                                    height: 20,
+                                    width: 20,
+                                    child: HadayahLoadingIndicator(
+                                      strokeWidth: 2,
+                                      color: AppTheme.textPrimary,
+                                    ),
+                                  )
+                                : Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          color: AppTheme.onMedia,
+                                        ),
+                                        child: const Text(
+                                          'G',
+                                          style: TextStyle(
+                                            color: AppTheme.primary,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 16,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    Flexible(
-                                      child: Text(
-                                        'auth_welcome.btn_google_signup'.tr(),
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
+                                      const SizedBox(width: 10),
+                                      Flexible(
+                                        child: Text(
+                                          'auth_welcome.btn_google_signup'.tr(),
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 14,
+                                          ),
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                    ),
-                                  ],
-                                ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceMd),
-
-                        //  2. Log In Secondary Action
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.textPrimary,
-                            side: const BorderSide(
-                              color: AppTheme.border,
-                              width: 1.2,
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMd),
-                            ),
-                          ),
-                          onPressed:
-                              _isLoading ? null : () => _handleGoogleAuth(),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(Icons.login_rounded, size: 18),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  'auth_welcome.btn_google_login'.tr(),
-                                  style: const TextStyle(
-                                    fontWeight: FontWeight.w600,
-                                    fontSize: 13,
+                                    ],
                                   ),
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
                           ),
-                        ),
-                        const SizedBox(height: AppTheme.spaceLg),
+                          const SizedBox(height: AppTheme.spaceMd),
 
-                        // Divider with OR
-                        Row(
-                          children: [
-                            const Expanded(
-                              child: Divider(color: AppTheme.border),
-                            ),
-                            Padding(
-                              padding:
-                                  const EdgeInsets.symmetric(horizontal: 12),
-                              child: Text(
-                                'auth_welcome.divider_or'.tr(),
-                                style: const TextStyle(
-                                  color: AppTheme.textMuted,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                ),
+                          //  2. Log In Secondary Action
+                          OutlinedButton(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.textPrimary,
+                              side: const BorderSide(
+                                color: AppTheme.border,
+                                width: 1.2,
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 13),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd),
                               ),
                             ),
-                            const Expanded(
-                              child: Divider(color: AppTheme.border),
+                            onPressed:
+                                _isLoading ? null : () => _handleGoogleAuth(),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.login_rounded, size: 18),
+                                const SizedBox(width: 8),
+                                Flexible(
+                                  child: Text(
+                                    'auth_welcome.btn_google_login'.tr(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 13,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: AppTheme.spaceMd),
-
-                        //  3. Continue as Guest Viewer Action
-                        TextButton(
-                          style: TextButton.styleFrom(
-                            foregroundColor: AppTheme.primary,
-                            padding: const EdgeInsets.symmetric(vertical: 10),
                           ),
-                          onPressed: () async {
-                            final consented = await _ensureConsent();
-                            if (!consented || !context.mounted) return;
-                            context.go('/viewer-setup');
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
+                          const SizedBox(height: AppTheme.spaceLg),
+
+                          // Divider with OR
+                          Row(
                             children: [
-                              const Icon(Icons.explore_outlined, size: 17),
-                              const SizedBox(width: 6),
-                              Flexible(
+                              const Expanded(
+                                child: Divider(color: AppTheme.border),
+                              ),
+                              Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 12),
                                 child: Text(
-                                  'auth_welcome.btn_guest'.tr(),
+                                  'auth_welcome.divider_or'.tr(),
                                   style: const TextStyle(
+                                    color: AppTheme.textMuted,
+                                    fontSize: 11,
                                     fontWeight: FontWeight.bold,
-                                    fontSize: 13,
                                   ),
-                                  overflow: TextOverflow.ellipsis,
                                 ),
+                              ),
+                              const Expanded(
+                                child: Divider(color: AppTheme.border),
                               ),
                             ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceXl),
+                          const SizedBox(height: AppTheme.spaceMd),
 
-                  //  Bottom Language Switcher Bar
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      border: Border.all(color: AppTheme.border),
+                          //  3. Continue as Guest Viewer Action
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              foregroundColor: AppTheme.primary,
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                            ),
+                            onPressed: () async {
+                              final consented = await _ensureConsent();
+                              if (!consented || !context.mounted) return;
+                              context.go('/viewer-setup');
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.explore_outlined, size: 17),
+                                const SizedBox(width: 6),
+                                Flexible(
+                                  child: Text(
+                                    'auth_welcome.btn_guest'.tr(),
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(Icons.language_rounded,
-                            size: 16, color: AppTheme.textMuted),
-                        SizedBox(width: 8),
-                        LanguageSwitcher(),
-                      ],
+                    const SizedBox(height: AppTheme.spaceXl),
+
+                    //  Bottom Language Switcher Bar
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [AppTheme.surface, AppTheme.surfaceAlt],
+                        ),
+                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                        border: Border.all(color: AppTheme.surfaceAlt),
+                        boxShadow: AppTheme.entrySurfaceShadow,
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.language_rounded,
+                              size: 16, color: AppTheme.textMuted),
+                          SizedBox(width: 8),
+                          LanguageSwitcher(),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

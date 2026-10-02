@@ -6,6 +6,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
+import 'package:streamer_app/core/widgets/hadayah_loading_indicator.dart';
 import 'package:streamer_app/features/organization/models/org_speaker_model.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/live_audio_stage_multi_speaker.dart';
 import 'package:streamer_app/features/splash/presentation/app_splash_screen.dart';
@@ -23,7 +24,8 @@ class _CatalogLoader extends AssetLoader {
   const _CatalogLoader();
   @override
   Future<Map<String, dynamic>> load(String path, Locale locale) async =>
-      jsonDecode(File('$path/${locale.languageCode}.json').readAsStringSync()) as Map<String, dynamic>;
+      jsonDecode(File('$path/${locale.languageCode}.json').readAsStringSync())
+          as Map<String, dynamic>;
 }
 
 void main() {
@@ -43,18 +45,21 @@ void main() {
         saveLocale: false,
         fallbackLocale: const Locale('en'),
         startLocale: const Locale('en'),
-        child: Builder(builder: (context) => MaterialApp(
-          locale: context.locale,
-          supportedLocales: context.supportedLocales,
-          localizationsDelegates: context.localizationDelegates,
-          home: Scaffold(body: child),
-        )),
+        child: Builder(
+            builder: (context) => MaterialApp(
+                  locale: context.locale,
+                  supportedLocales: context.supportedLocales,
+                  localizationsDelegates: context.localizationDelegates,
+                  home: Scaffold(body: child),
+                )),
       ),
     );
   }
 
   group('TC-POLISH-01: Audio-Only Live Stage Voice Activity Visuals', () {
-    testWidgets('Renders speaking equalizer waveform bars and active speaker callout', (tester) async {
+    testWidgets(
+        'Renders speaking equalizer waveform bars and active speaker callout',
+        (tester) async {
       final streamer = mockStreamers.first;
       final speakers = [
         const OrgSpeakerModel(
@@ -101,19 +106,26 @@ void main() {
   });
 
   group('TC-POLISH-02: App Startup Loader / Splash Screen Tests', () {
-    testWidgets('AppSplashScreen renders branding, progress indicator, and title', (tester) async {
+    testWidgets(
+        'AppSplashScreen renders branding, progress indicator, and title',
+        (tester) async {
       await tester.pumpWidget(buildTestableWidget(const AppSplashScreen()));
       await tester.pump();
 
       expect(find.text('Hadayah Live'), findsOneWidget);
-      expect(find.text('Initializing platform & map assets...'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(
+          find.text('Initializing platform & map assets...'), findsOneWidget);
+      expect(find.byType(HadayahLoadingIndicator), findsOneWidget);
     });
   });
 
-  group('TC-POLISH-03: PlaylistViewerModalSheet Dynamic Fetch & Play All Tests', () {
-    testWidgets('Renders playlist header, Play All button, and resolves lectures on demand', (tester) async {
-      final streamer = mockStreamers.firstWhere((s) => s.streamerId == 'org_dalilk_04');
+  group('TC-POLISH-03: PlaylistViewerModalSheet Dynamic Fetch & Play All Tests',
+      () {
+    testWidgets(
+        'Renders playlist header, Play All button, and resolves lectures on demand',
+        (tester) async {
+      final streamer =
+          mockStreamers.firstWhere((s) => s.streamerId == 'org_dalilk_04');
       final playlist = MockVodArchivePool.samplePlaylists.first;
 
       await tester.pumpWidget(
@@ -134,8 +146,11 @@ void main() {
     });
   });
 
-  group('TC-POLISH-04: Spatial Map Top Bar Controls 80% Transparency & Styling', () {
-    testWidgets('Renders top search bar, city selector, and topic selector without error', (tester) async {
+  group('TC-POLISH-04: Spatial Map Top Bar Controls 80% Transparency & Styling',
+      () {
+    testWidgets(
+        'Renders top search bar, city selector, and topic selector without error',
+        (tester) async {
       await tester.pumpWidget(
         buildTestableWidget(
           Column(

@@ -59,18 +59,10 @@ const GeoExtent kTricityPackCoverage =
 
 /// The whole visible map viewport stays inside this rectangle. It sits one
 /// z15 tile inside [kTricityPackCoverage], so edges never show missing data.
-/// It reaches further east and north (Gulf, Ras Tanura) than
-/// [kTricityVenueDomain] so that wide and tall screens can frame the
-/// three-city overview below the controls; it does not widen which venues
-/// appear.
+/// This inset area is also the supported venue-point area. It is a map-pack
+/// coverage limit, not a claim of municipal membership.
 const GeoExtent kTricityNavigationExtent =
     GeoExtent(west: 49.72, south: 25.97, east: 50.43, north: 26.78);
-
-/// Coordinate safety envelope, not the venue product scope. Catalog and
-/// saved pins use [isTricityMapVenue] for city membership and legacy pins.
-/// Padding never admits adjacent towns by itself.
-const GeoExtent kTricityVenueDomain =
-    GeoExtent(west: 49.72, south: 25.97, east: 50.33, north: 26.68);
 
 /// "All three cities" overview composition. Reviewed against the owner's
 /// overview screenshot (brief/assets/issues/should_be_max_zoom.jpg): the
@@ -169,7 +161,7 @@ bool isInTricityMapDomain(double latitude, double longitude) =>
     latitude.isFinite &&
     longitude.isFinite &&
     !(latitude == 0 && longitude == 0) &&
-    kTricityVenueDomain.contains(latitude, longitude);
+    kTricityNavigationExtent.contains(latitude, longitude);
 
 /// Use existing city metadata, never infer municipal membership from a box.
 /// Does not change missing or other city metadata.
@@ -180,15 +172,8 @@ bool isTricityVenueCity(String city) => kTricityCityViews.any((view) => [
       ...view.searchTerms
     ].map(normalizeSearchText).contains(normalizeSearchText(city)));
 
-/// Older profiles have exact pins but no city metadata. Keep those pins in
-/// the existing three-city overview, without assigning a municipal city or
-/// admitting unknown locations in the wider navigation padding.
+/// Exact coordinates decide map visibility. City metadata remains a display
+/// hint and must not exclude a supported point or invent city membership.
 bool isTricityMapVenue(
-    double latitude, double longitude, Iterable<String> cities) {
-  if (!isInTricityMapDomain(latitude, longitude)) return false;
-  final names = cities.where((city) => city.trim().isNotEmpty).toList();
-  // ponytail: legacy fallback uses the existing overview, not municipal borders;
-  // replace it when verified boundary geometry is available.
-  return names.any(isTricityVenueCity) ||
-      (names.isEmpty && kTricityOverviewExtent.contains(latitude, longitude));
-}
+        double latitude, double longitude, Iterable<String> cities) =>
+    isInTricityMapDomain(latitude, longitude);

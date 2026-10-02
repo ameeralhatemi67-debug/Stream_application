@@ -149,12 +149,13 @@ void main() {
     expect(visibleCachedMapMarkers(cached, currentVisibleIds: {}), isEmpty);
   });
 
-  test('padding does not admit adjacent towns or invent a city for a pin', () {
+  test('supported map points remain visible without inferred city membership',
+      () {
     final original =
         mockStreamers.first.copyWith(latitude: 26.52, longitude: 50.02);
     final adjacent = original.copyWith(cityEn: 'Saihat', cityAr: 'سيهات');
     final unknown = original.copyWith(cityEn: '', cityAr: '');
-    expect(visibleMapStreamers([adjacent, unknown]), isEmpty);
+    expect(visibleMapStreamers([adjacent, unknown]), [adjacent, unknown]);
     for (final city in kTricityCityViews) {
       final venue = original.copyWith(cityEn: city.nameEn, cityAr: city.nameAr);
       final result = visibleMapStreamers([venue]).single;
@@ -169,7 +170,7 @@ void main() {
     expect(
         visibleCachedMapMarkers([MapMarkerModel.fromStreamer(ambiguous)],
             currentVisibleIds: null),
-        isEmpty);
+        hasLength(1));
     final arabicOnly = original.copyWith(cityEn: '', cityAr: 'الخبر');
     expect(MapMarkerModel.fromStreamer(arabicOnly).cityId, 'khobar');
   });
@@ -197,17 +198,17 @@ void main() {
             venue.copyWith(isVerified: false),
             venue.copyWith(isTemporarilyHiddenFromMap: true),
             venue.copyWith(latitude: 0, longitude: 0),
-            venue.copyWith(cityEn: 'Riyadh'),
+            venue.copyWith(latitude: 24.7136, longitude: 46.6753),
           ]),
           isEmpty);
       expect(venue.cityEn, isEmpty);
       expect(venue.cityAr, isEmpty);
       final outsideCity = venue.copyWith(cityAr: 'الرياض');
-      expect(visibleMapStreamers([outsideCity]), isEmpty);
+      expect(visibleMapStreamers([outsideCity]), [outsideCity]);
       expect(
           visibleCachedMapMarkers([MapMarkerModel.fromStreamer(outsideCity)],
               currentVisibleIds: null),
-          isEmpty);
+          hasLength(1));
     }
   });
 

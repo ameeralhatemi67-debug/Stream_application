@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 
 import '../../../../core/theme/app_theme.dart';
 import '../abstract_video_player.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Cluster 1 Task 4a -- the single placeholder surface every non-playing
 /// [StreamState] renders through.
@@ -336,7 +337,7 @@ class _PlaceholderGlyphState extends State<_PlaceholderGlyph>
           SizedBox(
             width: 92,
             height: 92,
-            child: CircularProgressIndicator(
+            child: HadayahLoadingIndicator(
               strokeWidth: 2,
               valueColor: AlwaysStoppedAnimation<Color>(spec.accent),
             ),

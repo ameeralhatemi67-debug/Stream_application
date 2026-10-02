@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/banned_user_model.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Admin "Banned Accounts"manager (Cluster 4 Task 16): ban a platform
 /// account by email (reason + duration) and manage existing bans. A banned
@@ -329,7 +330,7 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
                               const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(
+                                child: HadayahLoadingIndicator(
                                     strokeWidth: 2, color: AppTheme.primary),
                               )
                             else

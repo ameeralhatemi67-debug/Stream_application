@@ -55,12 +55,20 @@ function worker() {
       navigator: { locks },
       clients: { claim() {}, async matchAll() { return [...liveClients].map((id) => ({id})); } }, skipWaiting() {},
       addEventListener: (name, callback) => { handlers[name] = callback; } },
-    fetch: async (request, { signal }) => {
+    fetch: async (request, { signal } = {}) => {
       networkCalls++;
       if (networkMode === 'offline') throw new Error('offline');
       if (networkMode === 'hanging') return new Promise((_, reject) =>
         signal.addEventListener('abort', () => reject(new Error('aborted'))));
-      return new Response(request.mode === 'navigate' ? html(networkBuild) : `code-${networkBuild}`);
+      if (networkMode === 'slow') await new Promise((resolve, reject) => {
+        const timer = setTimeout(resolve, 30);
+        signal?.addEventListener('abort', () => {
+          clearTimeout(timer); reject(new Error('aborted'));
+        });
+      });
+      return new Response(request.mode === 'navigate'
+        ? networkBuild ? html(networkBuild) : '<html>Flutter debug</html>'
+        : `code-${networkBuild}`);
     },
   });
   registerPage = (id, buildId) => {
@@ -126,4 +134,15 @@ await fetchPage(`${origin}/`, 'cold-tab', true);
 pruneWorker();
 await Promise.all(pending);
 assert.ok(!buckets.has('hadayah-offline-v2-build-old'), 'closed old tab is reclaimed after the reserved-client grace');
-console.log('PASS: initial claimed page, reserved-client concurrent prune, bounded orphan cleanup, cold start, durable worker restart, hanging network, app-only update, concurrent tabs, preparation bypass, backend exclusion');
+for (const path of ['packages/streamer_app/features/auth/presentation/welcome_screen.dart.lib.js',
+  'packages/streamer_app/core/widgets/floating_stream_mini_player.dart.lib.js',
+  'dart_sdk.js', 'ddc_module_loader.js', 'main_module.bootstrap.js', 'stack_trace_mapper.js']) {
+  assert.equal(fetchPage(`${origin}/${path}`, 'debug-tab'), undefined,
+    'debug modules bypass both offline caching and its timeout');
+}
+networkMode = 'online'; networkBuild = null;
+await fetchPage(`${origin}/`, 'unstamped-debug-tab', true);
+networkMode = 'slow';
+assert.equal(await (await fetchPage(`${origin}/main.dart.js`, 'unstamped-debug-tab')).text(),
+  'code-null', 'unstamped debug entrypoint survives a response slower than the offline timeout');
+console.log('PASS: initial claimed page, reserved-client concurrent prune, bounded orphan cleanup, cold start, durable worker restart, hanging network, app-only update, concurrent tabs, preparation bypass, backend exclusion, DDC bypass, slow unstamped startup');

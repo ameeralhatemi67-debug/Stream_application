@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/services/reminder_push_service.dart';
 import '../../../../core/theme/app_theme.dart';
 
 /// The notification preferences card, shown in its own modal sheet from
@@ -85,6 +86,41 @@ class NotificationSettingsSection extends StatelessWidget {
               provider.setNotificationRateLimit(val.round());
             },
           ),
+          const Divider(color: AppTheme.border, height: 24),
+
+          Text('upcoming.reminder_settings'.tr(),
+              style: const TextStyle(color: AppTheme.textPrimary,
+                  fontWeight: FontWeight.bold, fontSize: 13)),
+          const SizedBox(height: AppTheme.spaceSm),
+          Row(children: [
+            Expanded(child: Text('upcoming.lead_time'.tr(),
+                style: const TextStyle(color: AppTheme.textSecondary))),
+            DropdownButton<int>(
+              value: provider.reminderLeadMinutes,
+              items: [for (var minutes = 5; minutes <= 30; minutes += 5)
+                DropdownMenuItem(value: minutes,
+                    child: Text('$minutes ${isAr ? 'دقيقة' : 'min'}'))],
+              onChanged: provider.isLoggedInStreamer ? (value) async {
+                if (value == null) return;
+                try {
+                  await provider.setReminderLeadMinutes(value);
+                } catch (_) {
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                        content: Text('upcoming.save_failed'.tr())));
+                  }
+                }
+              } : null,
+            ),
+          ]),
+          if (provider.isLoggedInStreamer &&
+              provider.reminderPushStatus != ReminderPushStatus.granted) ...[
+            const SizedBox(height: AppTheme.spaceSm),
+            Text((provider.reminderPushStatus == ReminderPushStatus.notGranted
+                    ? 'upcoming.permission_denied'
+                    : 'upcoming.permission_unavailable').tr(),
+                style: const TextStyle(color: AppTheme.textSecondary)),
+          ],
           const Divider(color: AppTheme.border, height: 24),
 
           //  Granular Notification Category Toggles

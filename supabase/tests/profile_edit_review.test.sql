@@ -18,7 +18,7 @@ select is((select count(*)::int from public.broadcaster_applications where statu
 -- removes only that pending revision. No approved application is overwritten.
 do $$ declare field text; value jsonb; changes jsonb;
 begin
- for field,value in select * from jsonb_each('{"email":"new@example.invalid","phone":"456","city_id":"dammam","latitude":27,"longitude":51,"venue_name_en":"New hall","venue_name_ar":"New hall","youtube_channel_url":"https://www.youtube.com/@new","youtube_handle":"new"}'::jsonb) loop
+ for field,value in select * from jsonb_each('{"email":"new@example.invalid","phone":"456","city_id":"dammam","latitude":26.4,"longitude":50.2,"venue_name_en":"New hall","venue_name_ar":"New hall","youtube_channel_url":"https://www.youtube.com/@new","youtube_handle":"new"}'::jsonb) loop
    changes := public.save_broadcaster_profile('79000000-0000-4000-8000-000000000001',jsonb_build_object(field,value));
    if changes->>'status' <> 'pending' then raise exception 'Sensitive field bypass: %',field; end if;
    perform public.save_broadcaster_profile('79000000-0000-4000-8000-000000000001','{}');
@@ -36,14 +36,14 @@ update public.broadcaster_applications set status='rejected' where revision_of='
 select ok((select is_verified and is_streamer and youtube_handle='original' from public.profiles where id='69000000-0000-4000-8000-000000000001'),'rejection preserves original verified channel');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"69000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
-select public.save_broadcaster_profile('79000000-0000-4000-8000-000000000001','{"email":"new@example.invalid","phone":"789","latitude":27,"youtube_channel_url":"https://www.youtube.com/@new","youtube_handle":"new"}');
-select public.save_broadcaster_profile('79000000-0000-4000-8000-000000000001','{"email":"new@example.invalid","phone":"789","latitude":27,"youtube_channel_url":"https://www.youtube.com/@new","youtube_handle":"new"}');
+select public.save_broadcaster_profile('79000000-0000-4000-8000-000000000001','{"email":"new@example.invalid","phone":"789","latitude":26.4,"youtube_channel_url":"https://www.youtube.com/@new","youtube_handle":"new"}');
+select public.save_broadcaster_profile('79000000-0000-4000-8000-000000000001','{"email":"new@example.invalid","phone":"789","latitude":26.4,"youtube_channel_url":"https://www.youtube.com/@new","youtube_handle":"new"}');
 select is((select count(*)::int from public.broadcaster_applications where revision_of is not null and status='pending'),1,'repeat save keeps one pending revision');
 update public.broadcaster_applications set status='approved' where revision_of is not null and status='pending';
 select is((select count(*)::int from public.broadcaster_applications where revision_of is not null and status='pending'),1,'owner cannot self-approve');
 reset role;
 update public.broadcaster_applications set status='approved',reviewed_at=now() where revision_of is not null and status='pending';
-select ok((select is_verified and youtube_handle='new' and latitude=27 and email='new@example.invalid' from public.profiles where id='69000000-0000-4000-8000-000000000001'),'approval atomically publishes sensitive changes');
+select ok((select is_verified and youtube_handle='new' and latitude=26.4 and email='new@example.invalid' from public.profiles where id='69000000-0000-4000-8000-000000000001'),'approval atomically publishes sensitive changes');
 select is((select phone from public.broadcaster_applications where id='79000000-0000-4000-8000-000000000001'),'789','approved base stores reviewed phone');
 -- Organization revisions update the existing organization, never create a duplicate.
 insert into public.broadcaster_applications(id,applicant_profile_id,account_type,applicant_name_en,applicant_name_ar,email,phone,category_id,city_id,latitude,longitude,youtube_channel_url,youtube_handle,status)
@@ -51,11 +51,11 @@ insert into public.broadcaster_applications(id,applicant_profile_id,account_type
 insert into public.organizations(id,owner_profile_id,name_en,name_ar,is_verified,approved_application_id,youtube_handle)
  values('89000000-0000-4000-8000-000000000001','69000000-0000-4000-8000-000000000001','Org','Org',true,'79000000-0000-4000-8000-000000000002','org');
 set local role authenticated;
-select public.save_broadcaster_profile('79000000-0000-4000-8000-000000000002','{"applicant_name_en":"Updated org","latitude":28}');
+select public.save_broadcaster_profile('79000000-0000-4000-8000-000000000002','{"applicant_name_en":"Updated org","latitude":26.45}');
 select ok((select name_en='Updated org' and youtube_handle='org' from public.organizations where id='89000000-0000-4000-8000-000000000001'),'organization safe changes publish immediately');
 reset role;
 update public.broadcaster_applications set status='approved' where revision_of='79000000-0000-4000-8000-000000000002' and status='pending';
-select is((select latitude from public.organization_public_profiles where id='89000000-0000-4000-8000-000000000001'),28::double precision,'organization approved public location updates');
+select is((select latitude from public.organization_public_profiles where id='89000000-0000-4000-8000-000000000001'),26.45::double precision,'organization approved public location updates');
 select is((select count(*)::int from public.organizations where owner_profile_id='69000000-0000-4000-8000-000000000001'),1,'organization identity remains stable');
 select * from finish();
 rollback;

@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../admin/models/streamer_custom_placeholder_model.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Cluster 1 Task 4b -- the streamer-facing half of the custom stream-card
 /// pipeline: one upload slot per brandable stream state, each showing that
@@ -250,7 +251,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(
+                  child: HadayahLoadingIndicator(
                       strokeWidth: 2, color: AppTheme.primary),
                 )
               : OutlinedButton.icon(

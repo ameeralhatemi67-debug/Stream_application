@@ -6,6 +6,7 @@ import '../../../../core/providers/app_provider.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 class PrivacySettingsSection extends StatefulWidget {
   const PrivacySettingsSection({super.key});
@@ -133,7 +134,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: HadayahLoadingIndicator(
                         strokeWidth: 2,
                         color: AppTheme.primary,
                       ),
@@ -300,7 +301,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: HadayahLoadingIndicator(
                         strokeWidth: 2,
                         color: AppTheme.danger,
                       ),
@@ -440,7 +441,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: HadayahLoadingIndicator(
                           strokeWidth: 2, color: AppTheme.primary),
                     )
                   : const Icon(Icons.forum_outlined, size: 18),
@@ -465,7 +466,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                   ? const SizedBox(
                       width: 16,
                       height: 16,
-                      child: CircularProgressIndicator(
+                      child: HadayahLoadingIndicator(
                           strokeWidth: 2, color: AppTheme.danger),
                     )
                   : const Icon(Icons.delete_sweep_outlined, size: 18),

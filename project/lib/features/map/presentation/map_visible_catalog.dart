@@ -4,8 +4,8 @@ import '../models/map_tricity_domain.dart';
 
 /// The map and its search use the same current, public catalog snapshot.
 /// Only verified, map-visible records whose exact coordinates fall inside
-/// the three-city map domain are drawn, including legacy unnamed-city pins
-/// in the core overview. Records elsewhere (or with invalid
+/// the supported map-pack area are drawn, regardless of city label.
+/// Records elsewhere (or with invalid
 /// coordinates) are untouched and stay in the feed, profiles and
 /// directions; they are simply not placed on this map.
 List<StreamerModel> visibleMapStreamers(Iterable<StreamerModel> streamers) =>

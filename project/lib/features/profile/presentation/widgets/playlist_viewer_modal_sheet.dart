@@ -7,6 +7,7 @@ import '../../../../core/providers/app_provider.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
 import 'vod_player_modal_sheet.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Modal bottom sheet for viewing and playing lectures inside a playlist.
 /// Dynamically fetches playlist videos on demand with robust fallback resolution,
@@ -251,7 +252,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                           const SizedBox(
                             width: 28,
                             height: 28,
-                            child: CircularProgressIndicator(
+                            child: HadayahLoadingIndicator(
                               strokeWidth: 2.5,
                               color: AppTheme.primary,
                             ),

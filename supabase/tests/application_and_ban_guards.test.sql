@@ -14,10 +14,10 @@ values ('40000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-0000000
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"30000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 insert into public.broadcaster_applications (id, applicant_profile_id, account_type,
- applicant_name_en, applicant_name_ar, email, phone, category_id, status, reviewed_by, admin_review_notes)
+ applicant_name_en, applicant_name_ar, email, phone, category_id, status, reviewed_by, admin_review_notes, latitude, longitude)
 values ('50000000-0000-4000-8000-000000000001', auth.uid(), 'individualScholar',
  'Applicant', 'Applicant', 'applicant@example.invalid', '0500000000', 'education', 'approved',
- '30000000-0000-4000-8000-000000000002', 'Forged review');
+ '30000000-0000-4000-8000-000000000002', 'Forged review', 26.30, 50.14);
 select ok((select status = 'pending' and reviewed_by is null and reviewed_at is null and admin_review_notes is null
  from public.broadcaster_applications where id = '50000000-0000-4000-8000-000000000001'), 'A5 forged review INSERT is neutralized');
 update public.broadcaster_applications set status = 'approved',
@@ -53,8 +53,8 @@ select is((select bio_en from public.profiles where id = auth.uid()), 'Original'
 select throws_ok($$insert into public.chat_messages (stream_id, sender_id, body)
  values ('lecture123A', auth.uid(), 'Banned message')$$, '42501', null, 'A7 banned chat insert denied');
 select throws_ok($$insert into public.broadcaster_applications (applicant_profile_id, account_type,
- applicant_name_en, applicant_name_ar, email, phone, category_id)
- values (auth.uid(), 'individualScholar', 'A', 'A', 'applicant@example.invalid', '0500000000', 'education')$$,
+ applicant_name_en, applicant_name_ar, email, phone, category_id, latitude, longitude)
+ values (auth.uid(), 'individualScholar', 'A', 'A', 'applicant@example.invalid', '0500000000', 'education', 26.30, 50.14)$$,
  '42501', null, 'A7 banned application insert denied');
 select throws_ok($$insert into storage.objects (bucket_id, name)
  values ('streamer-assets', '30000000-0000-4000-8000-000000000001/banned.png')$$,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/providers/app_provider.dart';
 import '../../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 class AdminUserDirectoryView extends StatefulWidget {
   const AdminUserDirectoryView({super.key});
@@ -88,7 +89,7 @@ class _AdminUserDirectoryViewState extends State<AdminUserDirectoryView> {
             }),
         Expanded(
             child: _loading
-                ? const Center(child: CircularProgressIndicator())
+                ? const Center(child: HadayahLoadingIndicator())
                 : _failed
                     ? Center(
                         child:
@@ -243,7 +244,7 @@ class _AccountDetailState extends State<_AccountDetail> {
                     ]));
                   }
                   if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const Center(child: HadayahLoadingIndicator());
                   }
                   final row = snapshot.data!;
                   final ar = context.locale.languageCode == 'ar';

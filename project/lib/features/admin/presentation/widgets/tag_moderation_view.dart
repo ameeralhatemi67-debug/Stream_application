@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import '../../models/tag_moderation_model.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Admin Tag Moderation manager (Cluster 3 Task 12): approve, merge/rename,
 /// or blacklist tags submitted via the streamer application form before
@@ -251,7 +252,7 @@ class _TagModerationViewState extends State<TagModerationView> {
                       const Padding(
                         padding: EdgeInsets.all(AppTheme.spaceXl),
                         child: Center(
-                            child: CircularProgressIndicator(
+                            child: HadayahLoadingIndicator(
                                 color: AppTheme.primary)),
                       )
                     else if (items.isEmpty)
@@ -346,7 +347,7 @@ class _TagModerationViewState extends State<TagModerationView> {
               width: 12,
               height: 12,
               child:
-                  CircularProgressIndicator(strokeWidth: 2, color: AppTheme.primary),
+                  HadayahLoadingIndicator(strokeWidth: 2, color: AppTheme.primary),
             )
           else ...[
             if (tag.status != TagStatus.approved)

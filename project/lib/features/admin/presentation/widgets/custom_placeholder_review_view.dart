@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/streamer_custom_placeholder_model.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Streamer Custom Stream-Card Review Queue (Cluster 1 Task 4b).
 ///
@@ -385,7 +386,7 @@ class _CustomPlaceholderReviewViewState
                             ? const SizedBox(
                                 width: 14,
                                 height: 14,
-                                child: CircularProgressIndicator(
+                                child: HadayahLoadingIndicator(
                                     strokeWidth: 2, color: AppTheme.onMedia),
                               )
                             : const Icon(Icons.check_circle_rounded, size: 16),

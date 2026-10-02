@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../live_stream/presentation/widgets/chat_message_actions_sheet.dart'
     show chatBlockFailureKey;
 import '../../../live_stream/services/chat_block_list.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Lists the chat accounts this viewer has blocked, straight from the server
 /// (P6), and lets them unblock one. Opening the sheet refreshes the list, so
@@ -144,7 +145,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
               ],
               const SizedBox(height: AppTheme.spaceMd),
               if (_loading && ids.isEmpty)
-                const Center(child: CircularProgressIndicator())
+                const Center(child: HadayahLoadingIndicator())
               else if (ids.isEmpty)
                 Text(
                   'settings.blocked_accounts_empty'.tr(),
@@ -175,7 +176,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
                                 width: 20,
                                 height: 20,
                                 child:
-                                    CircularProgressIndicator(strokeWidth: 2),
+                                    HadayahLoadingIndicator(strokeWidth: 2),
                               )
                             : TextButton(
                                 onPressed: () => _unblock(id),

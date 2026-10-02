@@ -2,6 +2,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/stream_privacy_models.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Overlay reflecting this viewer's own relationship to a private stream
 /// (AppProvider.localViewerAccessState) -- a small non-blocking VIP badge, a
@@ -86,7 +87,7 @@ class _WaitingRoomOverlay extends StatelessWidget {
             const SizedBox(
               width: 56,
               height: 56,
-              child: CircularProgressIndicator(
+              child: HadayahLoadingIndicator(
                 strokeWidth: 2.5,
                 color: AppTheme.warning,
               ),

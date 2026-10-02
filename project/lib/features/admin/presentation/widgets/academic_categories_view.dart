@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../discovery/models/academic_category_model.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../map/presentation/widgets/topic_selector_dropdown.dart'
     show iconForCategoryIconName;
 
@@ -566,7 +567,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                               const SizedBox(
                                 width: 16,
                                 height: 16,
-                                child: CircularProgressIndicator(
+                                child: HadayahLoadingIndicator(
                                     strokeWidth: 2, color: AppTheme.primary),
                               )
                             else ...[

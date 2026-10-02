@@ -59,6 +59,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
 
   String? _currentSpeakingSpeakerId;
   Timer? _speakerRotationTimer;
+  bool _reduceMotion = false;
 
   bool get _shouldAnimate =>
       widget.isPlaying && widget.streamState == StreamState.live;
@@ -87,7 +88,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
   }
 
   void _syncAnimationState() {
-    if (_shouldAnimate) {
+    if (_shouldAnimate && !_reduceMotion) {
       if (!_voiceRippleController.isAnimating) {
         _voiceRippleController.repeat(reverse: false);
       }
@@ -102,6 +103,16 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
       _equalizerController.value = 0.0;
       _speakerRotationTimer?.cancel();
       _speakerRotationTimer = null;
+    }
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final reduceMotion = MediaQuery.disableAnimationsOf(context);
+    if (reduceMotion != _reduceMotion) {
+      _reduceMotion = reduceMotion;
+      _syncAnimationState();
     }
   }
 
@@ -368,7 +379,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                       Flexible(
                         child: Text(
                           _shouldAnimate
-                              ? 'live.speaking_now'.tr()
+                              ? 'live.audio_live_badge'.tr()
                               : (widget.streamState == StreamState.offline ||
                                       widget.streamState == StreamState.ended
                                   ? 'live.state_offline_title'.tr()

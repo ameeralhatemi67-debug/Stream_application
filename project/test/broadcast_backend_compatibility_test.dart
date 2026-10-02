@@ -6,6 +6,26 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 
 void main() {
+  test('guest catalog reads never call the authenticated-only live sweep',
+      () async {
+    final requests = <String>[];
+    final client = SupabaseClient('http://127.0.0.1:1', 'test-only',
+        httpClient: MockClient((request) async {
+      requests.add(request.url.path);
+      return http.Response('[]', 200,
+          request: request, headers: {'content-type': 'application/json'});
+    }));
+    final service = AdminDatabaseService.withClient(client);
+    expect(await service.sweepStaleLiveFlags(), 0);
+    expect(await service.loadVerifiedStreamersFromBackend(requireSuccess: true),
+        isEmpty);
+    expect(requests, [
+      '/rest/v1/streamer_public_profiles',
+      '/rest/v1/organization_public_profiles',
+    ]);
+    await client.dispose();
+  });
+
   test('missing session migration never falls back to an unfenced live write',
       () async {
     final requests = <String>[];

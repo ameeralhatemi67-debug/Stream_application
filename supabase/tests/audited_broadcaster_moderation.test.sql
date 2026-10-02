@@ -19,9 +19,9 @@ insert into public.organizations(id,owner_profile_id,name_en,name_ar,is_verified
  ('67000000-0000-4000-8000-000000000001','66000000-0000-4000-8000-000000000005','Org','Org',true),
  ('67000000-0000-4000-8000-000000000002','66000000-0000-4000-8000-000000000002','Caster Org','Caster Org',true);
 insert into public.broadcaster_applications(applicant_profile_id,account_type,applicant_name_en,applicant_name_ar,
- email,phone,category_id,status)
+ email,phone,category_id,status,latitude,longitude)
  values('66000000-0000-4000-8000-000000000002','individualScholar','Caster','Caster','caster@moderation.invalid',
- '0500000000','education','approved');
+ '0500000000','education','approved',26.30,50.14);
 
 select ok(not has_function_privilege('anon','public.admin_moderate_broadcaster(uuid,boolean,text,text)','execute'),
  'anon cannot moderate');

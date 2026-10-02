@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Lightweight Viewer / Student Quick Profile Setup
 class ViewerSetupScreen extends StatefulWidget {
@@ -266,7 +267,7 @@ class _ViewerSetupScreenState extends State<ViewerSetupScreen> {
                           ? const SizedBox(
                               height: 20,
                               width: 20,
-                              child: CircularProgressIndicator(
+                              child: HadayahLoadingIndicator(
                                 strokeWidth: 2,
                                 color: AppTheme.onMedia,
                               ),

@@ -31,7 +31,15 @@ IBM Plex Sans and IBM Plex Sans Arabic are bundled in `project/assets/fonts/`, i
 
 Cards, buttons and inputs use radius 12; chips use 999. Spacing tokens are 4, 8, 12, 16, 24 and 32; screen inset is 18. Cards have no shadow. Forms and settings should use a centered content width no greater than 720. Compact is below 600, medium below 900, expanded starts at 900. Use directional padding and native RTL.
 
+### Entry-screen depth, selected 2026-10-01
+
+Splash and Welcome use Option 2: pale mint gradient backgrounds with cropped,
+layered rounded diamonds at opposite directional corners. Welcome's white
+authentication card and language control use `AppTheme.entrySurfaceShadow`.
+Other screens retain their existing elevation. The supplied logo stays unchanged.
+
 ### Supplied logo assets
+
 
 All nine files in `project/assets/logo/` are owner-supplied and are preserved as delivered; none is regenerated. `AppLogo` renders `colored.svg` at runtime, with `black.svg` as the monochrome variant. `square.svg` / `square.png` and `cercal.svg` / `cercal.png` are the square and circular lockups reserved for launcher, adaptive and web icons in P8A; `colored.png` and `black.png` are the raster equivalents, and `logoInkscapeMaker.svg` is the editable source. The concept logo in the original token JSON is superseded by these files.
 

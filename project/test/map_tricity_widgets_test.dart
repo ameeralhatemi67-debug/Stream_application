@@ -151,7 +151,7 @@ void main() {
     await tester.pumpAndSettle();
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
     expect(scaffold.drawerScrimColor, Colors.transparent);
-    expect(tester.getSize(find.byType(FlutterMap)).width, greaterThan(1100));
+    expect(tester.getSize(find.byType(FlutterMap)).width, 1280);
     final openList = find.byTooltip('Broadcasters list');
     expect(tester.getTopRight(openList).dx, greaterThan(1200));
     expect(tester.getTopLeft(openList).dy, lessThan(100));

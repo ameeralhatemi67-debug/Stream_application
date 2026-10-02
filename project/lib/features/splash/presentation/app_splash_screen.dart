@@ -1,4 +1,5 @@
 import '../../../../core/widgets/app_logo.dart';
+import '../../../../core/widgets/entry_background.dart';
 import '../../../../core/config/app_identity.dart';
 import 'dart:async';
 import 'package:flutter/material.dart';
@@ -7,6 +8,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Clean, stutter-free App Startup Splash Screen.
 /// Displays high-fidelity branding, warms up provider services,
@@ -81,12 +83,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppTheme.bg,
-      body: Container(
-        width: double.infinity,
-        height: double.infinity,
-        decoration: const BoxDecoration(
-          color: AppTheme.surfaceAlt,
-        ),
+      body: EntryBackground(
         child: SafeArea(
           child: Center(
             child: Column(
@@ -135,7 +132,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                 SizedBox(
                   width: 28,
                   height: 28,
-                  child: CircularProgressIndicator(
+                  child: HadayahLoadingIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       AppTheme.primary.withValues(alpha: 0.85),

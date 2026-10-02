@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Lightweight editor for a non-verified viewer's own display identity
 /// (name EN/AR + avatar) -- strictly separate from the Broadcaster
@@ -236,7 +237,7 @@ class _ViewerProfileEditorDialogState
               ? const SizedBox(
                   width: 16,
                   height: 16,
-                  child: CircularProgressIndicator(
+                  child: HadayahLoadingIndicator(
                       strokeWidth: 2, color: AppTheme.onMedia),
                 )
               : Text('common.save'.tr()),

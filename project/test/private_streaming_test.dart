@@ -2,6 +2,7 @@ import 'support/localized_app.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
+import 'package:streamer_app/core/widgets/hadayah_loading_indicator.dart';
 import 'package:streamer_app/features/live_stream/models/stream_privacy_models.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/private_stream_viewer_gate.dart';
 
@@ -10,8 +11,7 @@ void main() {
   setUpAll(initializeTestLocalization);
 
   group('AppProvider: Private & Restricted Streaming (client-simulated)', () {
-    test('defaults to public with no whitelist and knock approval enabled',
-        () {
+    test('defaults to public with no whitelist and knock approval enabled', () {
       final provider = AppProvider();
       expect(provider.streamVisibility, equals(StreamVisibility.public));
       expect(provider.streamWhitelistHandles, isEmpty);
@@ -19,7 +19,8 @@ void main() {
       expect(provider.isActiveStreamPrivate, isFalse);
     });
 
-    test('configureStreamPrivacy retains the whitelist but forces public mode', () {
+    test('configureStreamPrivacy retains the whitelist but forces public mode',
+        () {
       final provider = AppProvider();
       provider.configureStreamPrivacy(
         visibility: StreamVisibility.private,
@@ -28,13 +29,12 @@ void main() {
       );
 
       expect(provider.streamVisibility, equals(StreamVisibility.public));
-      expect(provider.streamWhitelistHandles,
-          containsAll(['@sarah', '@khalid']));
+      expect(
+          provider.streamWhitelistHandles, containsAll(['@sarah', '@khalid']));
       expect(provider.requireKnockApproval, isFalse);
     });
 
-    test('add/removeStreamWhitelistHandle mutate the roster without dupes',
-        () {
+    test('add/removeStreamWhitelistHandle mutate the roster without dupes', () {
       final provider = AppProvider();
       provider.addStreamWhitelistHandle('@sarah');
       provider.addStreamWhitelistHandle('@sarah');
@@ -86,7 +86,8 @@ void main() {
       expect(provider.admittedAttendees, isEmpty);
     });
 
-    test('admitAttendeeByHandle adds a VIP attendee when the handle is '
+    test(
+        'admitAttendeeByHandle adds a VIP attendee when the handle is '
         'whitelisted', () {
       final provider = AppProvider();
       provider.addStreamWhitelistHandle('@sarah');
@@ -113,8 +114,7 @@ void main() {
       expect(link, isEmpty);
     });
 
-    test('localViewerAccessState is notApplicable when no stream is live',
-        () {
+    test('localViewerAccessState is notApplicable when no stream is live', () {
       final provider = AppProvider();
       expect(provider.localViewerAccessState,
           equals(ViewerAccessState.notApplicable));
@@ -161,7 +161,7 @@ void main() {
       await tester.pumpWidget(wrap(ViewerAccessState.knocking));
       await tester.pump();
       expect(find.text('Waiting for host to admit you...'), findsOneWidget);
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
+      expect(find.byType(HadayahLoadingIndicator), findsOneWidget);
     });
 
     testWidgets(

@@ -45,6 +45,82 @@ void main() {
     draft.dispose();
   });
 
+  testWidgets('laptop chat remains editable in a wide view', (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1366, 768);
+    addTearDown(tester.view.reset);
+    final sent = <String>[];
+    await tester.pumpWidget(localizedApp(
+        home: Scaffold(
+            body: LiveChatWidget(
+      messages: const [],
+      connectionState: ChatConnectionState.live,
+      onSendTextMessage: sent.add,
+    ))));
+    await tester.pumpAndSettle();
+    expect(find.byType(TextField), findsOneWidget);
+    expect(find.text('live.landscape_chat_read_only'.tr()), findsNothing);
+    await tester.enterText(find.byType(TextField), 'laptop chat works');
+    await tester.testTextInput.receiveAction(TextInputAction.send);
+    await tester.pump();
+    expect(sent, ['laptop chat works']);
+  });
+
+  testWidgets('raised hand has a sender badge and a chat event',
+      (tester) async {
+    final hand = ChatMessageModel(
+      id: 'hand-1',
+      streamId: 'room',
+      senderId: 'viewer-1',
+      senderName: 'Viewer',
+      body: '✋',
+      createdAt: DateTime(2026),
+    );
+    await tester.pumpWidget(localizedApp(
+        home: Scaffold(
+            body: LiveChatWidget(
+      messages: [hand],
+      connectionState: ChatConnectionState.live,
+      onSendTextMessage: (_) {},
+    ))));
+    await tester.pumpAndSettle();
+    expect(find.byIcon(Icons.back_hand_rounded), findsOneWidget);
+    expect(find.text('live.hand_raised_message'.tr()), findsOneWidget);
+  });
+
+  testWidgets('laptop action menu stays in the chat side and accepts taps',
+      (tester) async {
+    tester.view.devicePixelRatio = 1;
+    tester.view.physicalSize = const Size(1366, 768);
+    addTearDown(tester.view.reset);
+    final chat = LiveChatController(streamId: 'room');
+    chat.debugSetStateForTests(currentUserId: 'self');
+    final other = ChatMessageModel(
+      id: 'other-message',
+      streamId: 'room',
+      senderId: 'other',
+      senderName: 'Other',
+      body: 'hello',
+      createdAt: DateTime(2026),
+    );
+    await tester.pumpWidget(localizedApp(
+        home: Scaffold(
+            body: Builder(
+                builder: (context) => TextButton(
+                    onPressed: () => showChatMessageActionsSheet(context,
+                        message: other, controller: chat),
+                    child: const Text('actions'))))));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('actions'));
+    await tester.pumpAndSettle();
+    expect(tester.getTopLeft(find.text('live.hide_message'.tr())).dx,
+        greaterThan(900));
+    await tester.tap(find.text('live.hide_message'.tr()));
+    await tester.pumpAndSettle();
+    expect(chat.isHidden(other.id), isTrue);
+    chat.dispose();
+  });
+
   for (final moderate in [false, true]) {
     testWidgets(
         'message edit cannot open landscape keyboard (moderator=$moderate)',
