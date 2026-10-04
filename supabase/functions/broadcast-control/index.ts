@@ -23,8 +23,10 @@ Deno.serve(async request=>{
   let id:string|undefined,reservation:string|undefined;
   try {
     const authorization=request.headers.get('authorization')??'';
-    const user=createClient(url,anon,{global:{headers:{authorization}},auth:{persistSession:false}});
-    const {data:{user:actor},error}=await user.auth.getUser();
+    const token=/^Bearer\s+(.+)$/i.exec(authorization)?.[1];
+    if(!token) return new Response('Unauthorized',{status:401,headers});
+    const user=createClient(url,anon,{global:{headers:{Authorization:authorization}},auth:{persistSession:false,autoRefreshToken:false}});
+    const {data:{user:actor},error}=await user.auth.getUser(token);
     if(error||!actor) return new Response('Unauthorized',{status:401,headers});
     const body=await request.json();
     if(!['prepare','start','end','observe'].includes(body.action)||typeof body.session_id!=='string'

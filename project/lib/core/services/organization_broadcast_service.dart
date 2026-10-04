@@ -1,4 +1,6 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
+import '../config/supabase_config.dart';
 
 import '../../features/organization/models/org_membership.dart';
 import '../../features/organization/models/channel_connection.dart';
@@ -15,6 +17,28 @@ class OrganizationBroadcastService {
   static bool waitingForEncoder(FunctionException error) =>
       error.status == 409 && error.details is Map &&
       error.details['error'] == 'waiting_for_encoder';
+
+  static String channelErrorKey(Object error) {
+    if (error is FunctionException) {
+      final reason = error.details is Map ? error.details['error'] : null;
+      if (reason == 'channel_active_show') return 'organization_v1.channel_active_show';
+      if (reason == 'channel_browser_failed') return 'organization_v1.channel_browser_failed';
+      if (error.status == 401) return 'organization_v1.channel_sign_in_required';
+      if (error.status == 403) return 'organization_v1.channel_permission_required';
+      if (error.status == 404 || error.status == 503) return 'organization_v1.channel_setup_required';
+    }
+    if (error is PostgrestException) {
+      if (error.code == '55000') return 'organization_v1.channel_active_show';
+      if (error.code == '42501') return 'organization_v1.channel_permission_required';
+    }
+    return 'organization_v1.channel_failure';
+  }
+
+  Map<String, String> _sessionHeaders() {
+    final session = client.auth.currentSession;
+    if (session == null) throw const FunctionException(status: 401);
+    return {'Authorization': 'Bearer ${session.accessToken}'};
+  }
 
   static String errorKey(Object error) {
     if (error is FunctionException) {
@@ -58,7 +82,7 @@ class OrganizationBroadcastService {
   Future<String> createPersonal(String title,String type) async => await client.rpc('broadcast_create_personal',
     params:{'p_title':title,'p_type':type}) as String;
   Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
-    final result=await client.functions.invoke('broadcast-control',body:{'session_id':sessionId,
+    final result=await client.functions.invoke('broadcast-control',headers:_sessionHeaders(),body:{'session_id':sessionId,
       'device_id':deviceId,'sender_mode':sender,'action':action,
       'connection_id':destination?.id,'channel_revision':destination?.revision});
     if(result.status!=200 || result.data is! Map) throw StateError('Broadcast operation unavailable');
@@ -77,8 +101,10 @@ class OrganizationBroadcastService {
       'p_end':end.toUtc().toIso8601String(),'p_type':type,'p_venue':venueId});
 
   Future<Uri> connectChannel({String? organizationId}) async {
-    final response = await client.functions.invoke('channel-authorization',body:{
+    final response = await client.functions.invoke('channel-authorization',headers:_sessionHeaders(),body:{
       'action':'connect','organization_id':organizationId,
+      'return_platform':!kIsWeb && defaultTargetPlatform==TargetPlatform.android
+        ? (Uri.parse(SupabaseConfig.oauthRedirectUrl).scheme.endsWith('.wave4v2')?'android_test':'android') : 'web',
     });
     if (response.status != 200) throw StateError('Channel consent unavailable');
     final url = Uri.parse(response.data['authorization_url'] as String);

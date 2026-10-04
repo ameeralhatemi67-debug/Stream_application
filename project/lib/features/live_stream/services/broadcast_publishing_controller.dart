@@ -20,6 +20,13 @@ class BroadcastPublishingController extends ChangeNotifier {
   int _generation = 0;
   bool get frozen => session?.frozen == true || _createdId != null;
   bool get operating => busy || provider.broadcastOperationBusy;
+  List<ChannelConnection> get destinations => provider.channelConnections.where((c) =>
+    c.id == destination?.id || c.connected && (c.organizationId == null
+      ? provider.personalBroadcastApproved : provider.orgMemberships.any((m) =>
+        m.organizationId == c.organizationId && m.active &&
+        (m.permissions.canGoLiveVideo || m.permissions.canGoAudioOnly)))).toList();
+  bool get simplePersonalDestination => destinations.length == 1 &&
+    destination?.organizationId == null && destination?.connected == true;
 
   void _authorityChanged() {
     if (provider.currentDeviceSession?.isPrimaryBroadcaster == true &&
@@ -52,6 +59,8 @@ class BroadcastPublishingController extends ChangeNotifier {
     } else if (id != null) {
       session = null; _createdId = null; ingestUrl = ''; ingestKey = ''; confirmed = false;
     }
+    if (destination == null && destinations.length == 1) destination = destinations.single;
+    if (simplePersonalDestination) confirmed = true;
     notifyListeners();
   }
 

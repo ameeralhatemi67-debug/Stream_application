@@ -4,6 +4,9 @@ Updated: 2026-10-01. This is a local troubleshooting record, not proof that the 
 
 ## Issue-name index — scan this list first
 
+- **Connect YouTube fails before Google consent** — forwarded Authorization header collision reproduced and repaired; hosted functions deployed, real phone consent retest pending.
+- **Broadcast recovery job returns 500** — recovery RPC variable/alias collision repaired; scheduled responses now 200.
+
 - **Web deep links land on the splash screen** — consent return and invitation links now use the `#/` route; deployed-app retest pending.
 - **Application review tests fail with Backend unavailable** — tests use an explicit in-memory backend; offline writes stay refused.
 
@@ -570,3 +573,11 @@ Status: REPAIRED in source; owner visual retest pending. The supplied parent-mar
 
 ## Canonical replay remains on loading after live ends
 Status: REPAIRED locally; real provider replay remains unverified. The viewer's terminal live-room guard prevented a later available replay from reopening the same canonical session. The room now closes live resources during processing, resumes only that session's available replay, and keeps archived chat read-only. Direct hidden-room reads and chat IDs stay canonical; a denied read invalidates stale catalog data. Check: `flutter test test/p6s_wave3_group1_test.dart --plain-name "viewer room identity hidden canonical room"` passes. Full-suite and release limits are recorded in the organization V1 handoff.
+
+## Connect YouTube fails before Google consent
+Status: REPAIRED in source and hosted backend on 2026-10-04; physical Google consent/YouTube media remains UNVERIFIED. The initial backend lacked Edge Functions. After deployment, the real Connect POST returned 401 before allocating an OAuth request. Both handlers forwarded lowercase `authorization` while Supabase JS adds uppercase `Authorization`; the combined header was rejected by Auth. Reproduced against the real SDK with synthetic fetch responses. Fixed canonical header casing and explicit `getUser(token)` in channel-authorization and broadcast-control; Flutter also sends its current session explicitly. The former single catch message misleadingly mentioned active shows for every failure; localized messages now distinguish authentication, approval, backend setup and active-show errors.
+
+The native consent return now uses a fixed Android app route; OAuth state remains single-use and tokens stay server-side. One personal channel is selected automatically, Android phone is the default sender, and camera preview requires an explicit Go live. Checks: real-account rollback-only consent/Vault/phone-reservation/provider-context preflight passes after modeling a fresh device heartbeat; SDK/handler regression checks pass; 982 Flutter tests pass; analyzer zero; configured debug APK built. No real channel was connected or YouTube broadcast started by these tests. Evidence and remaining phone steps: `brief/evidence/2026-10-04/streaming-regression/README.md`.
+
+## Broadcast recovery job returns 500
+Status: HOSTED REPAIR VERIFIED on 2026-10-04. Installing the owner-approved recovery scheduler exposed PostgreSQL 42702 in `broadcast_reconcile_claim()`: local record `s` collided with UPDATE table alias `s`. A new migration renames the record and qualifies the revision increment. The service-only RPC now executes in a rollback test; anon/authenticated cannot invoke it or read the cron schema. Scheduled Edge responses return 200 with zero pending/complete work. The recovery job is release infrastructure and should remain enabled; temporary test diagnostics are not scheduled. Actual provider cleanup after an interrupted real show remains a phone/YouTube acceptance check.

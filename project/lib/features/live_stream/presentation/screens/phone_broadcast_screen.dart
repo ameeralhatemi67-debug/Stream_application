@@ -32,13 +32,14 @@ import '../../../../core/widgets/hadayah_loading_indicator.dart';
 /// venue info, viewer reactions, and integrated broadcaster studio controls).
 class PhoneBroadcastScreen extends StatefulWidget {
   final BroadcastQualityPreset? quickLaunchPreset;
+  final bool autoStart;
 
   /// A note from the studio's watch-link check (not checked, or channel not
   /// matched), shown once when this screen opens.
   final String? watchLinkNoteKey;
 
   const PhoneBroadcastScreen(
-      {super.key, this.quickLaunchPreset, this.watchLinkNoteKey});
+      {super.key, this.quickLaunchPreset, this.watchLinkNoteKey, this.autoStart=true});
 
   @override
   State<PhoneBroadcastScreen> createState() => _PhoneBroadcastScreenState();
@@ -68,7 +69,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   late AppProvider _appProvider;
   bool _appProviderCaptured = false;
   bool _weStartedBroadcast = false;
+  String? _openedSessionId;
+  bool get _ownsPreparedSession => !widget.autoStart && _openedSessionId != null &&
+      _appProvider.publishingSession?.id == _openedSessionId &&
+      _appProvider.publishingSession?.state == 'preparing' &&
+      _appProvider.currentDeviceSession?.isPrimaryBroadcaster == true;
   bool _starting = false;
+  bool get _showingPreview => !widget.autoStart && !_weStartedBroadcast &&
+      !_starting && !_appProvider.isBroadcastingLive;
+  bool get _canStartPreview => !widget.autoStart && !_weStartedBroadcast &&
+      !_starting && !_closing && _engine.state == RtmpPublishState.ready;
   bool _syncingLive = false;
   int _seenRemoteEnd = 0;
 
@@ -99,6 +109,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   @override
   void initState() {
     super.initState();
+    _openedSessionId = context.read<AppProvider>().publishingSession?.id;
     _engine.addListener(_onEngineChanged);
     _engine.isMicSilent.addListener(_onMicSilenceChanged);
     _preset = widget.quickLaunchPreset ?? BroadcastQualityPreset.medium;
@@ -185,7 +196,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       if (_appProvider.customBroadcastType == BroadcastType.liveAudio) {
         await _engine.setAudioOnly(true);
       }
-      if (widget.quickLaunchPreset != null && mounted) {
+      if (widget.quickLaunchPreset != null && widget.autoStart && mounted) {
         await _startBroadcast();
       }
     } catch (e) {
@@ -253,7 +264,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   Future<void> _startBroadcast() async {
     if (_starting || _weStartedBroadcast) return;
-    _starting = true;
+    setState(() => _starting = true);
     try {
       final permitted = await _appProvider.checkBroadcastPermission();
       if (!mounted) return;
@@ -426,7 +437,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     var confirmed = true;
     // Only an end this screen asked the server for can fail to be confirmed;
     // a Leave with nothing listed makes no server call at all.
-    final owned = _weStartedBroadcast;
+    final owned = _weStartedBroadcast || _ownsPreparedSession;
     try {
       await _stopBroadcast();
       // The camera has stopped either way. A failed end call leaves the
@@ -454,7 +465,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   Future<void> _stopBroadcast() async {
-    final owned = _weStartedBroadcast;
+    final owned = _weStartedBroadcast || _ownsPreparedSession;
     _weStartedBroadcast = false;
     _wasListed = false;
     await _engine.stopPublishing();
@@ -617,7 +628,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: !_isSending && !_closing,
+      canPop: !_isSending && !_closing && !_ownsPreparedSession,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _handleEndOrLeave();
       },
@@ -789,7 +800,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         ],
       ),
       body: SafeArea(
-        child: isSideBySide
+        child: _showingPreview
+          ? Column(children: [
+              Expanded(child: _buildVideoViewport(isSideBySide: true, streamer: streamer)),
+              Padding(padding: const EdgeInsets.all(AppTheme.spaceSm),
+                child: Column(mainAxisSize: MainAxisSize.min, children: [
+                  Text('organization_v1.public_start_hint'.tr(), textAlign: TextAlign.center),
+                  _startControl(),
+                ])),
+            ])
+          : isSideBySide
             ? Row(
                 children: [
                   Expanded(
@@ -1014,7 +1034,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             ),
 
             PositionedDirectional(
-              bottom: AppTheme.spaceSm,
+      bottom: AppTheme.spaceSm,
               start: 0,
               end: 0,
               child: AnimatedOpacity(
@@ -1365,6 +1385,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       },
     );
   }
+
+  Widget _startControl() => FilledButton.icon(
+    key: const Key('phone-start-broadcast'),
+    onPressed: _canStartPreview ? _startBroadcast : null,
+    icon: const Icon(Icons.videocam),
+    label: Text('organization_v1.go_live'.tr()),
+  );
 
   /// Revealed with the landscape controls; Back keeps the same confirmation.
   /// While nothing is sending it reads "Leave" and closes without asking.
@@ -1847,6 +1874,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             alignment: Alignment.centerLeft,
                             child: _endControl())),
                     const SizedBox(width: AppTheme.spaceSm),
+                    if (_canStartPreview) Tooltip(
+                      message: 'organization_v1.public_start_hint'.tr(),
+                      child: _startControl(),
+                    ),
                     IconButton.filled(
                       tooltip: 'live.tooltip_controls'.tr(),
                       onPressed: () => _showStreamerControlsSheet(streamer),

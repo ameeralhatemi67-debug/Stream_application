@@ -210,7 +210,8 @@ void main() {
   Future<void> open(WidgetTester tester, AppProvider p,
       {Locale locale = const Locale('en'),
       Size size = const Size(412, 915),
-      double textScale = 1}) async {
+      double textScale = 1,
+      bool autoStart = true}) async {
     tester.view.physicalSize = size;
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.reset);
@@ -236,8 +237,9 @@ void main() {
               builder: (c) => Scaffold(
                 body: TextButton(
                   onPressed: () => Navigator.of(c).push(MaterialPageRoute(
-                      builder: (_) => const PhoneBroadcastScreen(
-                          quickLaunchPreset: BroadcastQualityPreset.medium))),
+                      builder: (_) => PhoneBroadcastScreen(
+                          quickLaunchPreset: BroadcastQualityPreset.medium,
+                          autoStart: autoStart))),
                   child: const Text('home'),
                 ),
               ),
@@ -262,6 +264,49 @@ void main() {
     await db.devices.close();
     await tester.pump(const Duration(seconds: 1));
   }
+
+  for (final (locale, size, scale) in [
+    (const Locale('en'), const Size(412, 915), 1.0),
+    (const Locale('ar'), const Size(412, 915), 1.0),
+    (const Locale('en'), const Size(915, 412), 1.0),
+    (const Locale('ar'), const Size(915, 412), 1.0),
+    (const Locale('ar'), const Size(360, 780), 2.0),
+  ]) {
+    testWidgets('camera preview stays private and Back cancels preparation: $locale $size $scale',
+        (tester) async {
+      final db = _Db();
+      final p = await tester.runAsync(() => broadcaster(db));
+      await open(tester, p!, locale: locale, size: size, textScale: scale, autoStart: false);
+      expect(calls, contains('prepare'));
+      expect(calls, isNot(contains('startStream')));
+      expect(db.starts, 0);
+      expect(find.byKey(const Key('phone-start-broadcast')), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(db.stops, 1);
+      expect(p.publishingSession, isNull);
+      expect(find.byType(PhoneBroadcastScreen), findsNothing);
+      await close(tester, p, db);
+    });
+  }
+
+  testWidgets('Go live sends the encoder before requesting public live state',
+      (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!, autoStart: false);
+    await tester.tap(find.byKey(const Key('phone-start-broadcast')));
+    await tester.pump();
+    expect(calls.where((c) => c == 'startStream'), hasLength(1));
+    expect(db.starts, 0);
+    messenger.handlePlatformMessage(events.name,
+        events.codec.encodeSuccessEnvelope({'type': 'live'}), (_) {});
+    await tester.pump();
+    expect(db.starts, 1);
+    expect(p.isBroadcastingLive, isTrue);
+    await close(tester, p, db);
+  });
 
   for (final size in [const Size(412, 915), const Size(915, 412)]) {
     testWidgets('one sender recovery surface at $size', (tester) async {

@@ -89,7 +89,8 @@ class _StudioDb extends AdminDatabaseService {
       app;
   @override
   Future<Map<String, dynamic>?> loadOwnProfile(String id) async =>
-      {'display_name_en': 'C', 'is_streamer': true, 'is_verified': true};
+      {'display_name_en': 'C', 'is_streamer': true, 'is_verified': true,
+       'personal_broadcast_approved': true};
   @override
   Future<DeviceClaimResult> claimDeviceState(DeviceSessionModel device,
       {bool force = false}) async {
@@ -218,7 +219,7 @@ void main() {
     expect(broadcasts.creates,1);expect(broadcasts.prepares,2);
     studio.dispose();
     final restored=BroadcastPublishingController(p);await restored.load();
-    expect(restored.sender,'phone_direct');expect(restored.ingestKey,isEmpty);expect(restored.confirmed,isFalse);
+    expect(restored.sender,'phone_direct');expect(restored.ingestKey,isEmpty);expect(restored.confirmed,isTrue);
     p.applyDeviceSessions([]);
     expect(restored.session,isNull);expect(p.publishingSession,isNull);expect(p.phoneBroadcastStreamKey,isEmpty);
     restored.dispose();p.dispose();await db.devices.close();
@@ -250,7 +251,7 @@ void main() {
   });
 
   for(final locale in [const Locale('en'),const Locale('ar')]) {
-    testWidgets('studio has channel confirmation and no manual ingest inputs: $locale',(tester)async {
+    testWidgets('one personal channel is selected without extra confirmation: $locale',(tester)async {
       final db=_StudioDb();final p=await tester.runAsync(()=>_broadcaster(db));
       tester.view.physicalSize=const Size(390,844);tester.view.devicePixelRatio=1;addTearDown(tester.view.reset);
       await tester.pumpWidget(EasyLocalization(supportedLocales:const [Locale('en'),Locale('ar')],startLocale:locale,
@@ -258,7 +259,13 @@ void main() {
         ChangeNotifierProvider.value(value:p!,child:MaterialApp(locale:context.locale,localizationsDelegates:context.localizationDelegates,
           supportedLocales:context.supportedLocales,home:const Scaffold(body:LiveBroadcasterStudioSheet()))))));
       await tester.pumpAndSettle();
-      expect(find.byType(CheckboxListTile),findsOneWidget);expect(find.byType(TextField),findsOneWidget);
+      expect(find.byType(CheckboxListTile),findsNothing);
+      expect(find.byType(DropdownButtonFormField<String>),findsNothing);
+      expect(find.textContaining('Confirmed channel'),findsOneWidget);
+      expect(find.byType(TextField),findsOneWidget);
+      expect(tester.widget<FilledButton>(find.byType(FilledButton).first).onPressed,isNull);
+      await tester.enterText(find.byType(TextField),'My lesson');await tester.pump();
+      expect(tester.widget<FilledButton>(find.byType(FilledButton).first).onPressed,isNotNull);
       expect(find.textContaining('rtmp://'),findsNothing);expect(tester.takeException(),isNull);
       await close(tester,p!,db);
     });

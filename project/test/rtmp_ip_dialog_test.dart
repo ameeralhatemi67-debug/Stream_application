@@ -34,8 +34,9 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Keep this draft'),findsOneWidget);
       expect(find.byType(TextField),findsOneWidget,reason:'No manual ingest credential fields');
-      final prepare=find.ancestor(of:find.text('organization_v1.prepare'.tr()),matching:find.byType(FilledButton));
-      expect(tester.widget<FilledButton>(prepare).onPressed,isNull);
+      expect(find.text('organization_v1.prepare'.tr()),findsNothing);
+      final connect=find.ancestor(of:find.text('organization_v1.connect'.tr()),matching:find.byType(FilledButton));
+      expect(tester.widget<FilledButton>(connect).onPressed,isNotNull);
       expect(provider.phoneBroadcastStreamKey,isEmpty);
       expect(tester.takeException(),isNull);
       await tester.pumpWidget(const SizedBox());provider.dispose();

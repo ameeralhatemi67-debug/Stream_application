@@ -1,12 +1,20 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-09-27
+updated: 2026-10-04
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Streaming regression repair, 2026-10-04
+
+Connect YouTube's pre-consent 401 was reproduced with the real Supabase JS SDK: lowercase forwarded authorization collided with the SDK's default header. The channel and broadcast handlers now verify the explicit user token. Hosted channel-authorization, broadcast-control and reconcile-broadcasts are ACTIVE on the owner-designated streamer_app backend. The owner-approved recovery job is installed; a newly exposed recovery RPC alias collision was repaired by a new migration, and scheduled responses are 200.
+
+Android returns from Google directly to channel connections. A sole personal channel is selected automatically, phone is the default sender, and the title → camera preview → explicit Go live flow replaces repeated destination confirmation for that case. Multiple-channel/organization selection remains explicit. Fresh checks: analyzer zero, 982 Flutter tests green, real-account rollback-only channel/Vault/phone reservation/provider context check passes with a modeled fresh heartbeat, configured Android debug APK built. No phone was attached; real Google consent, YouTube ingest and interrupted-show cleanup remain unverified. Release acceptance remains open. [Repair evidence](../brief/evidence/2026-10-04/streaming-regression/README.md).
+
+## Organization V1 implementation snapshot, 2026-10-01
 
 Organization V1 phases 1–3 are implemented and pushed through cb1c10f. **Phase 4 (client, notifications, recovery) is implemented and committed locally, not pushed (2026-10-01, together with the owner work it depends on)**: canonical studio/shows, phone session authority, exact viewer rooms/replays and scoped chat; durable organization events with in-app inbox and a push job; an Organizations hub (invitations, memberships, transfer, owner setup checklist, activity); invitation/transfer journeys; rollout availability (pilot list, organization-application switch). Local evidence: analyzer 0, **full Flutter suite green**, **155/155** disposable organization SQL assertions, Edge bundles, release web and Android debug builds. Not done: hosted migration/function deployment, real OAuth, physical Android and the mandatory real three-show pilot; three pre-existing gate findings in unrelated owner work remain. The deployed web app (https://stream-application-ten.vercel.app) is still the Phase 3 build without a configured backend. See [current handoff](../brief/handoff/ORGANIZATION_V1_HANDOFF.md) and [evidence](../brief/evidence/2026-10-01/organization-v1/README.md). Organization broadcasting remains disabled pending the pilot.
 

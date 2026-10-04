@@ -18,7 +18,7 @@ import 'live_chat_layout.dart';
 enum StudioMode { obs, phone, local }
 
 class LiveBroadcasterStudioSheet extends StatefulWidget {
-  const LiveBroadcasterStudioSheet({super.key,this.initialMode=StudioMode.obs,this.onEndBroadcast,this.openedFromVideo=false});
+  const LiveBroadcasterStudioSheet({super.key,this.initialMode=StudioMode.phone,this.onEndBroadcast,this.openedFromVideo=false});
   final StudioMode initialMode;
   final Future<void> Function()? onEndBroadcast;
   final bool openedFromVideo;
@@ -38,6 +38,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
   @override
   void initState(){
     super.initState();_studio=BroadcastPublishingController(context.read<AppProvider>());
+    _title.addListener(_changed);
     _studio.sender=widget.initialMode==StudioMode.phone&&_android?'phone_direct':'obs_laptop';
     _studio.addListener(_changed);if(widget.initialMode!=StudioMode.local)_load();
   }
@@ -47,14 +48,18 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
     catch(_){if(mounted)setState(()=>_loadError='organization_v1.publish_failure');}
   }
   @override
-  void dispose(){_studio.removeListener(_changed);_studio.dispose();_title.dispose();super.dispose();}
+  void dispose(){_studio.removeListener(_changed);_studio.dispose();_title.removeListener(_changed);_title.dispose();super.dispose();}
+  Future<void> _connections() async {
+    await context.push('/channels');
+    if(mounted) await _load();
+  }
   Future<void> _prepare() async {
     if(widget.onEndBroadcast!=null && _studio.sender=='phone_direct') return;
     if(!await _studio.prepare(_title.text.trim(),_audio?'liveAudio':'liveVideo')||!mounted)return;
     if(_studio.sender=='phone_direct') {
       final navigator=Navigator.of(context);
       navigator.pop();
-      navigator.push(MaterialPageRoute<void>(builder:(_)=>const PhoneBroadcastScreen(quickLaunchPreset:BroadcastQualityPreset.medium)));
+      navigator.push(MaterialPageRoute<void>(builder:(_)=>const PhoneBroadcastScreen(quickLaunchPreset:BroadcastQualityPreset.medium,autoStart:false)));
     }
   }
   Future<void> _start() async {
@@ -78,11 +83,9 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
       child:Column(key:const ValueKey('local-unavailable'),mainAxisSize:MainAxisSize.min,children:[
         Text('live_studio.local_unavailable_body'.tr()),TextButton(onPressed:()=>Navigator.pop(context),child:Text('organization_v1.close'.tr()))]))); }
 
-    final (connections,memberships,personal,live,error)=context.select<AppProvider,(List<ChannelConnection>,List<OrgMembership>,bool,bool,String?)>(
+    final (_,_,_,live,error)=context.select<AppProvider,(List<ChannelConnection>,List<OrgMembership>,bool,bool,String?)>(
       (p)=>(p.channelConnections,p.orgMemberships,p.personalBroadcastApproved,p.isBroadcastingLive,p.broadcastSessionError));
-    final destinations=connections.where((c)=>c.id==_studio.destination?.id || c.connected&&(c.organizationId==null
-      ?personal:memberships.any((m)=>m.organizationId==c.organizationId&&m.active&&
-        (m.permissions.canGoLiveVideo||m.permissions.canGoAudioOnly)))).toList();
+    final destinations=_studio.destinations;
     final frozen=_studio.frozen;
     final operationBusy=context.select<AppProvider,bool>((p)=>p.broadcastOperationBusy)||_studio.busy;
     final choices=_studio.assignments.where((s)=>s.organizationId==_studio.destination?.organizationId).toList();
@@ -96,8 +99,13 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
           IconButton(onPressed:()=>Navigator.pop(context),tooltip:'organization_v1.close'.tr(),icon:const Icon(Icons.close))]),
         Text('organization_v1.publish_hint'.tr()),
         if(_loadError!=null) Text(_loadError!.tr(),style:const TextStyle(color:AppTheme.danger)),
-        TextButton(onPressed:()=>context.push('/channels'),child:Text('organization_v1.channels'.tr())),
-        DropdownButtonFormField<String>(key:ValueKey(_studio.destination?.id),initialValue:_studio.destination?.id,
+        if(destinations.isEmpty) ...[
+          Text('organization_v1.connect_before_live'.tr()),
+          FilledButton(onPressed:_connections,child:Text('organization_v1.connect'.tr())),
+        ] else TextButton(onPressed:_connections,child:Text('organization_v1.channels'.tr())),
+        if(_studio.simplePersonalDestination)
+          Text('organization_v1.going_live_on'.tr(namedArgs:{'channel':_studio.destination!.title}))
+        else if(destinations.isNotEmpty) DropdownButtonFormField<String>(key:ValueKey(_studio.destination?.id),initialValue:_studio.destination?.id,
           isExpanded:true,decoration:InputDecoration(labelText:'organization_v1.destination'.tr()),
           items:destinations.map((c)=>DropdownMenuItem(value:c.id,child:Text(c.title,overflow:TextOverflow.ellipsis))).toList(),
           onChanged:frozen||operationBusy?null:(id)=>setState((){_studio.destination=destinations.where((c)=>c.id==id).firstOrNull;
@@ -109,7 +117,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
             onChanged:frozen||operationBusy?null:(id)=>setState(()=>_studio.session=choices.where((s)=>s.id==id).firstOrNull)),
           TextButton(onPressed:()=>context.push('/shows'),child:Text('organization_v1.shows'.tr())),
         ] else if(!frozen) ...[
-          TextField(controller:_title,maxLength:100,decoration:InputDecoration(labelText:'organization_v1.title'.tr())),
+          TextField(controller:_title,enabled:!operationBusy,maxLength:100,decoration:InputDecoration(labelText:'organization_v1.title'.tr())),
           SwitchListTile(title:Text('organization_v1.audio'.tr()),value:_audio,onChanged:(v)=>setState(()=>_audio=v)),
         ],
         if(!frozen) ...[
@@ -118,10 +126,10 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
             selected:{_studio.sender},onSelectionChanged:(v)=>setState(()=>_studio.sender=v.single)),
         ],
         if(_studio.session?.state!='ending' && widget.onEndBroadcast==null) ...[
-          CheckboxListTile(value:_studio.confirmed,onChanged:operationBusy?null:(v)=>setState(()=>_studio.confirmed=v??false),
+          if(!_studio.simplePersonalDestination && destinations.isNotEmpty) CheckboxListTile(value:_studio.confirmed,onChanged:operationBusy?null:(v)=>setState(()=>_studio.confirmed=v??false),
             title:Text('organization_v1.confirm_destination'.tr(namedArgs:{'channel':_studio.destination?.title??''}))),
-          FilledButton(onPressed:operationBusy||!_studio.confirmed?null:_prepare,child:_studio.busy?
-            const SizedBox(width:20,height:20,child:HadayahLoadingIndicator()):Text('organization_v1.prepare'.tr())),
+          if(destinations.isNotEmpty) FilledButton(onPressed:operationBusy||!_studio.confirmed||(_studio.session==null&&_title.text.trim().isEmpty)?null:_prepare,child:_studio.busy?
+            const SizedBox(width:20,height:20,child:HadayahLoadingIndicator()):Text((_studio.sender=='phone_direct'?'organization_v1.preview':'organization_v1.prepare').tr())),
         ],
         if(frozen&&_studio.ingestKey.isNotEmpty&&_studio.sender=='obs_laptop') ...[
           Text('organization_v1.obs_hint'.tr()),
