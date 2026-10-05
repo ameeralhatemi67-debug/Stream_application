@@ -1,3 +1,5 @@
+import '../../../../core/widgets/ds/ca_fields.dart';
+import '../../../../core/widgets/ds/ca_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -16,8 +18,17 @@ class NotificationSettingsSection extends StatelessWidget {
   const NotificationSettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      _buildNotificationPreferencesCard(context, context.watch<AppProvider>());
+  Widget build(BuildContext context) {
+    context.select<AppProvider, Object?>((p) => (
+          p.notificationPreferences,
+          p.isLoggedInStreamer,
+          p.reminderLeadMinutes,
+          p.reminderPushStatus,
+          p.streamers
+        ));
+    return _buildNotificationPreferencesCard(
+        context, context.read<AppProvider>());
+  }
 
   Widget _buildNotificationPreferencesCard(
       BuildContext context, AppProvider provider) {
@@ -25,13 +36,7 @@ class NotificationSettingsSection extends StatelessWidget {
     final prefs = provider.notificationPreferences;
     final mutedIds = prefs.mutedEntityIds;
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
+    return CaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -42,7 +47,7 @@ class NotificationSettingsSection extends StatelessWidget {
               Text(
                 'design_copy.10_minute_alert_limit'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontWeight: FontWeight.bold,
                   fontSize: 13.5,
                 ),
@@ -61,7 +66,7 @@ class NotificationSettingsSection extends StatelessWidget {
                       : '${prefs.maxPer10Min} alerts',
                   style: const TextStyle(
                     color: AppTheme.primary,
-                    fontSize: 11,
+                    fontSize: AppTheme.captionFont,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -70,8 +75,10 @@ class NotificationSettingsSection extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'design_copy.prevents_notification_fatigue_by_bundling_excess_alerts_into_a_sm'.tr(),
-            style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+            'design_copy.prevents_notification_fatigue_by_bundling_excess_alerts_into_a_sm'
+                .tr(),
+            style: const TextStyle(
+                color: Canopy.haze, fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: 8),
           Slider(
@@ -80,63 +87,72 @@ class NotificationSettingsSection extends StatelessWidget {
             max: 10,
             divisions: 9,
             activeColor: AppTheme.primary,
-            inactiveColor: AppTheme.border,
+            inactiveColor: Canopy.hairline,
             label: '${prefs.maxPer10Min}',
             onChanged: (val) {
               provider.setNotificationRateLimit(val.round());
             },
           ),
-          const Divider(color: AppTheme.border, height: 24),
+          const Divider(color: Canopy.hairline, height: 24),
 
           Text('upcoming.reminder_settings'.tr(),
-              style: const TextStyle(color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold, fontSize: 13)),
+              style: const TextStyle(
+                  color: Canopy.ink,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13)),
           const SizedBox(height: AppTheme.spaceSm),
           Row(children: [
-            Expanded(child: Text('upcoming.lead_time'.tr(),
-                style: const TextStyle(color: AppTheme.textSecondary))),
+            Expanded(
+                child: Text('upcoming.lead_time'.tr(),
+                    style: const TextStyle(color: Canopy.slate))),
             DropdownButton<int>(
               value: provider.reminderLeadMinutes,
-              items: [for (var minutes = 5; minutes <= 30; minutes += 5)
-                DropdownMenuItem(value: minutes,
-                    child: Text('$minutes ${isAr ? 'دقيقة' : 'min'}'))],
-              onChanged: provider.isLoggedInStreamer ? (value) async {
-                if (value == null) return;
-                try {
-                  await provider.setReminderLeadMinutes(value);
-                } catch (_) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                        content: Text('upcoming.save_failed'.tr())));
-                  }
-                }
-              } : null,
+              items: [
+                for (var minutes = 5; minutes <= 30; minutes += 5)
+                  DropdownMenuItem(
+                      value: minutes,
+                      child: Text('$minutes ${isAr ? 'دقيقة' : 'min'}'))
+              ],
+              onChanged: provider.isLoggedInStreamer
+                  ? (value) async {
+                      if (value == null) return;
+                      try {
+                        await provider.setReminderLeadMinutes(value);
+                      } catch (_) {
+                        if (context.mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                              content: Text('upcoming.save_failed'.tr())));
+                        }
+                      }
+                    }
+                  : null,
             ),
           ]),
           if (provider.isLoggedInStreamer &&
               provider.reminderPushStatus != ReminderPushStatus.granted) ...[
             const SizedBox(height: AppTheme.spaceSm),
-            Text((provider.reminderPushStatus == ReminderPushStatus.notGranted
-                    ? 'upcoming.permission_denied'
-                    : 'upcoming.permission_unavailable').tr(),
-                style: const TextStyle(color: AppTheme.textSecondary)),
+            Text(
+                (provider.reminderPushStatus == ReminderPushStatus.notGranted
+                        ? 'upcoming.permission_denied'
+                        : 'upcoming.permission_unavailable')
+                    .tr(),
+                style: const TextStyle(color: Canopy.slate)),
           ],
-          const Divider(color: AppTheme.border, height: 24),
+          const Divider(color: Canopy.hairline, height: 24),
 
           //  Granular Notification Category Toggles
           Text(
             'design_copy.active_notification_categories'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
           ),
           const SizedBox(height: AppTheme.spaceSm),
 
-          _buildNotifSwitch(
-            title:
-                'design_copy.live_video_broadcasts'.tr(),
+          _buildNotifCaSwitch(
+            title: 'design_copy.live_video_broadcasts'.tr(),
             value: prefs.liveVideoEnabled,
             onChanged: (val) {
               provider.updateNotificationPreferences(
@@ -144,7 +160,7 @@ class NotificationSettingsSection extends StatelessWidget {
               );
             },
           ),
-          _buildNotifSwitch(
+          _buildNotifCaSwitch(
             title: 'design_copy.live_audio_stages'.tr(),
             value: prefs.liveAudioEnabled,
             onChanged: (val) {
@@ -153,7 +169,7 @@ class NotificationSettingsSection extends StatelessWidget {
               );
             },
           ),
-          _buildNotifSwitch(
+          _buildNotifCaSwitch(
             title: 'design_copy.1_hour_watch_milestone_rewards'.tr(),
             value: prefs.watchMilestonesEnabled,
             onChanged: (val) {
@@ -162,7 +178,7 @@ class NotificationSettingsSection extends StatelessWidget {
               );
             },
           ),
-          _buildNotifSwitch(
+          _buildNotifCaSwitch(
             title: 'design_copy.org_invites_guest_roles'.tr(),
             value: prefs.orgInvitesEnabled,
             onChanged: (val) {
@@ -171,7 +187,7 @@ class NotificationSettingsSection extends StatelessWidget {
               );
             },
           ),
-          _buildNotifSwitch(
+          _buildNotifCaSwitch(
             title: 'design_copy.administrative_governance_notes'.tr(),
             value: prefs.adminNotesEnabled,
             onChanged: (val) {
@@ -180,7 +196,7 @@ class NotificationSettingsSection extends StatelessWidget {
               );
             },
           ),
-          _buildNotifSwitch(
+          _buildNotifCaSwitch(
             title: 'design_copy.new_vods_lectures'.tr(),
             value: prefs.vodsEnabled,
             onChanged: (val) {
@@ -192,13 +208,13 @@ class NotificationSettingsSection extends StatelessWidget {
 
           //  Muted Streamers / Organizations List
           if (mutedIds.isNotEmpty) ...[
-            const Divider(color: AppTheme.border, height: 24),
+            const Divider(color: Canopy.hairline, height: 24),
             Text(
               isAr
                   ? 'القنوات المكتومة (${mutedIds.length})'
                   : 'Muted Channels (${mutedIds.length})',
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -213,14 +229,15 @@ class NotificationSettingsSection extends StatelessWidget {
                     ? streamer.getLocalizedName(isAr ? 'ar' : 'en')
                     : id;
                 return Chip(
-                  backgroundColor: AppTheme.surfaceAlt,
+                  backgroundColor: Canopy.mint,
                   label: Text(
                     name,
                     style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 11),
+                        color: Canopy.slate,
+                        fontSize: AppTheme.captionFont),
                   ),
                   deleteIcon: const Icon(Icons.close_rounded,
-                      size: 14, color: AppTheme.danger),
+                      size: 14, color: Canopy.liveCrimson),
                   onDeleted: () {
                     provider.toggleMuteEntity(id);
                   },
@@ -233,7 +250,7 @@ class NotificationSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildNotifSwitch({
+  Widget _buildNotifCaSwitch({
     required String title,
     required bool value,
     required ValueChanged<bool> onChanged,
@@ -246,13 +263,12 @@ class NotificationSettingsSection extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style: const TextStyle(
-                  color: AppTheme.textSecondary, fontSize: 12),
+              style:
+                  const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
           ),
-          Switch(
+          CaSwitch(
             value: value,
-            activeThumbColor: AppTheme.primary,
             onChanged: onChanged,
           ),
         ],

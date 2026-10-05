@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
@@ -17,16 +18,10 @@ class BlockedAccountsSheet extends StatefulWidget {
   final ChatBlockList? blockList;
 
   static Future<void> show(BuildContext context, {ChatBlockList? blockList}) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
-      ),
-      builder: (_) => BlockedAccountsSheet(blockList: blockList),
-    );
+    return showCaSheet<void>(context,
+        title: 'settings.blocked_accounts_title'.tr(),
+        body: BlockedAccountsSheet(blockList: blockList),
+        framed: false);
   }
 
   @override
@@ -85,7 +80,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text((errorKey ?? 'settings.unblocked_toast').tr()),
-        backgroundColor: errorKey == null ? null : AppTheme.danger,
+        backgroundColor: errorKey == null ? null : Canopy.liveCrimson,
       ),
     );
   }
@@ -107,7 +102,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
               Text(
                 'settings.blocked_accounts_title'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -116,7 +111,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
               Text(
                 'settings.blocked_accounts_hint'.tr(),
                 style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 12, height: 1.4),
+                    color: Canopy.slate, fontSize: 12, height: 1.4),
               ),
               if (_list.isStale && !_loading) ...[
                 const SizedBox(height: AppTheme.spaceSm),
@@ -150,7 +145,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
                 Text(
                   'settings.blocked_accounts_empty'.tr(),
                   key: const Key('blocked-accounts-empty'),
-                  style: const TextStyle(color: AppTheme.textMuted),
+                  style: const TextStyle(color: Canopy.haze),
                 )
               else
                 Flexible(
@@ -164,19 +159,18 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
                         key: Key('blocked-account-$id'),
                         contentPadding: EdgeInsets.zero,
                         leading: const Icon(Icons.block_rounded,
-                            color: AppTheme.textMuted),
+                            color: Canopy.haze),
                         title: Text(
                           (name == null || name.isEmpty)
                               ? 'settings.blocked_account_unknown'.tr()
                               : name,
-                          style: const TextStyle(color: AppTheme.textPrimary),
+                          style: const TextStyle(color: Canopy.ink),
                         ),
                         trailing: _pending.contains(id)
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    HadayahLoadingIndicator(strokeWidth: 2),
+                                child: HadayahLoadingIndicator(strokeWidth: 2),
                               )
                             : TextButton(
                                 onPressed: () => _unblock(id),

@@ -1,3 +1,5 @@
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/ds/ca_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,19 +17,15 @@ class LegalSettingsSection extends StatelessWidget {
   const LegalSettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      _buildGovernanceCard(context, context.watch<AppProvider>());
+  Widget build(BuildContext context) {
+    context.select<AppProvider, Object?>((p) => p.termsAndConditions);
+    return _buildGovernanceCard(context, context.read<AppProvider>());
+  }
 
   Widget _buildGovernanceCard(BuildContext context, AppProvider provider) {
     final terms = provider.termsAndConditions;
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
+    return CaCard(
       child: Column(
         children: [
           _buildGovernanceRow(
@@ -37,14 +35,14 @@ class LegalSettingsSection extends StatelessWidget {
                 '${'settings.terms_version_label'.tr()}: ${terms.version}',
             onTap: () => _openLegalReader(context, terms, 0),
           ),
-          const Divider(height: 16, color: AppTheme.border),
+          const Divider(height: 16, color: Canopy.hairline),
           _buildGovernanceRow(
             icon: Icons.verified_user_rounded,
             title: 'settings.view_guidelines'.tr(),
             subtitle: 'settings.view_guidelines_subtitle'.tr(),
             onTap: () => _openLegalReader(context, terms, 1),
           ),
-          const Divider(height: 16, color: AppTheme.border),
+          const Divider(height: 16, color: Canopy.hairline),
           _buildGovernanceRow(
             icon: Icons.privacy_tip_rounded,
             title: 'settings.view_privacy'.tr(),
@@ -78,7 +76,7 @@ class LegalSettingsSection extends StatelessWidget {
                   Text(
                     title,
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -87,15 +85,15 @@ class LegalSettingsSection extends StatelessWidget {
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      color: AppTheme.textMuted,
-                      fontSize: 11,
+                      color: Canopy.haze,
+                      fontSize: AppTheme.captionFont,
                     ),
                   ),
                 ],
               ),
             ),
             const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: AppTheme.textSecondary),
+                size: 14, color: Canopy.slate),
           ],
         ),
       ),
@@ -104,14 +102,10 @@ class LegalSettingsSection extends StatelessWidget {
 
   void _openLegalReader(
       BuildContext context, TermsAndConditionsModel terms, int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => LegalDocumentReaderScreen(
-          terms: terms,
-          initialDocumentIndex: index,
-        ),
-      ),
-    );
+    showCaSheet<void>(context,
+        title: 'settings.governance_legal'.tr(),
+        body: LegalDocumentReaderScreen(
+            terms: terms, initialDocumentIndex: index),
+        framed: false);
   }
 }

@@ -125,6 +125,9 @@ _Backdrop _backdropOf(Element element) {
     result = _composite(layers[i], result);
   }
   if (result.a < 1.0) {
+    // A translucent scrim over a gradient or image cannot be resolved to one
+    // colour; report it as unresolved rather than compositing it onto white.
+    if (indeterminate) return const _Backdrop(null, indeterminate: true);
     // Nothing opaque underneath: the scaffold is white in this theme.
     result = _composite(result, AppTheme.bg);
   }

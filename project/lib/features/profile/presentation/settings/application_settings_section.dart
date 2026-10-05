@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -15,8 +16,10 @@ class ApplicationSettingsSection extends StatelessWidget {
   const ApplicationSettingsSection({super.key});
 
   @override
-  Widget build(BuildContext context) =>
-      _buildApplicationSection(context, context.watch<AppProvider>());
+  Widget build(BuildContext context) {
+    context.select<AppProvider, Object?>((p) => p.myApplication);
+    return _buildApplicationSection(context, context.read<AppProvider>());
+  }
 
   Widget _buildApplicationSection(BuildContext context, AppProvider provider) {
     final isAr = context.locale.languageCode == 'ar';
@@ -30,13 +33,7 @@ class ApplicationSettingsSection extends StatelessWidget {
   }
 
   Widget _buildBecomeBroadcasterPromoCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.3)),
-      ),
+    return CaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -59,7 +56,7 @@ class ApplicationSettingsSection extends StatelessWidget {
                     Text(
                       'application.apply_card_title'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: Canopy.ink,
                         fontWeight: FontWeight.bold,
                         fontSize: 13.5,
                       ),
@@ -68,8 +65,8 @@ class ApplicationSettingsSection extends StatelessWidget {
                     Text(
                       'application.apply_card_desc'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11,
+                        color: Canopy.slate,
+                        fontSize: AppTheme.captionFont,
                       ),
                     ),
                   ],
@@ -116,13 +113,13 @@ class ApplicationSettingsSection extends StatelessWidget {
 
     switch (app.status) {
       case ApplicationStatus.approved:
-        statusColor = AppTheme.success;
+        statusColor = Canopy.leaf;
         statusIcon = Icons.verified_rounded;
         statusTitle = 'application.status_approved'.tr();
         statusSubtitle = 'application.status_approved_desc'.tr();
         break;
       case ApplicationStatus.rejected:
-        statusColor = AppTheme.danger;
+        statusColor = Canopy.liveCrimson;
         statusIcon = Icons.error_outline_rounded;
         statusTitle = 'application.status_rejected'.tr();
         statusSubtitle =
@@ -179,15 +176,15 @@ class ApplicationSettingsSection extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 1.5),
                           decoration: BoxDecoration(
-                            color: AppTheme.surfaceAlt,
+                            color: Canopy.mint,
                             borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                                color: AppTheme.border, width: 0.6),
+                            border:
+                                Border.all(color: Canopy.hairline, width: 0.6),
                           ),
                           child: Text(
                             app.isOrganization ? 'ORGANIZATION' : 'SCHOLAR',
                             style: const TextStyle(
-                                color: AppTheme.textMuted, fontSize: 8.5),
+                                color: Canopy.haze, fontSize: 8.5),
                           ),
                         ),
                       ],
@@ -196,8 +193,8 @@ class ApplicationSettingsSection extends StatelessWidget {
                     Text(
                       '${isAr ? app.applicantNameAr : app.applicantNameEn} • ${app.email}',
                       style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 11,
+                        color: Canopy.ink,
+                        fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -211,7 +208,7 @@ class ApplicationSettingsSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppTheme.spaceSm),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceAlt,
+              color: Canopy.mint,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
             child: Column(
@@ -222,13 +219,13 @@ class ApplicationSettingsSection extends StatelessWidget {
                   Row(
                     children: [
                       const Icon(Icons.info_outline_rounded,
-                          size: 13, color: AppTheme.danger),
+                          size: 13, color: Canopy.liveCrimson),
                       const SizedBox(width: 4),
                       Text(
                         'application.admin_feedback'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.danger,
-                          fontSize: 10.5,
+                          color: Canopy.liveCrimson,
+                          fontSize: AppTheme.captionFont,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -238,13 +235,15 @@ class ApplicationSettingsSection extends StatelessWidget {
                   Text(
                     app.reviewNotes!,
                     style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 11),
+                        color: Canopy.slate,
+                        fontSize: AppTheme.captionFont),
                   ),
                 ] else ...[
                   Text(
                     statusSubtitle,
                     style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 11),
+                        color: Canopy.slate,
+                        fontSize: AppTheme.captionFont),
                   ),
                 ],
               ],
@@ -261,7 +260,7 @@ class ApplicationSettingsSection extends StatelessWidget {
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppTheme.border),
+                side: const BorderSide(color: Canopy.hairline),
                 padding: const EdgeInsets.symmetric(vertical: 9),
               ),
               icon: const Icon(Icons.edit_note_rounded, size: 16),
@@ -269,7 +268,7 @@ class ApplicationSettingsSection extends StatelessWidget {
                 app.status == ApplicationStatus.rejected
                     ? 'application.reapply_btn'.tr()
                     : 'application.edit_btn'.tr(),
-                style: const TextStyle(fontSize: 11.5),
+                style: const TextStyle(fontSize: AppTheme.captionFont),
               ),
               onPressed: () => context.push('/streamer-apply'),
             ),
@@ -278,5 +277,4 @@ class ApplicationSettingsSection extends StatelessWidget {
       ),
     );
   }
-
 }

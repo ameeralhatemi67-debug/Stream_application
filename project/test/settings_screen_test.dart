@@ -51,7 +51,10 @@ Widget createTestWidget({
             theme: ThemeData.dark(useMaterial3: true).copyWith(
               scaffoldBackgroundColor: AppTheme.bg,
             ),
-            home: child,
+            home: MediaQuery(
+                data: MediaQueryData.fromView(View.of(context))
+                    .copyWith(disableAnimations: true),
+                child: child),
           ),
         );
       },
@@ -64,10 +67,8 @@ void main() {
 
   setUpAll(() async {
     SharedPreferences.setMockInitialValues({});
-    globalEnData =
-        jsonDecode(await File('assets/i18n/en.json').readAsString());
-    globalArData =
-        jsonDecode(await File('assets/i18n/ar.json').readAsString());
+    globalEnData = jsonDecode(await File('assets/i18n/en.json').readAsString());
+    globalArData = jsonDecode(await File('assets/i18n/ar.json').readAsString());
     await EasyLocalization.ensureInitialized();
   });
 
@@ -96,8 +97,7 @@ void main() {
 
     testWidgets(
         'TC-SET-02: an approved streamer sees the rich profile card with a '
-        'banner, verified badge, and derived @handle',
-        (tester) async {
+        'banner, verified badge, and derived @handle', (tester) async {
       useTallTestSurface(tester);
       final provider = AppProvider();
       provider.debugSetSignedInForTests(
@@ -371,6 +371,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Download My Data'), findsWidgets);
+      for (var i = 0;
+          i < 20 && find.text('Delete My Account').evaluate().isEmpty;
+          i++) {
+        await tester.drag(find.byType(ListView).first, const Offset(0, -400));
+        await tester.pumpAndSettle();
+      }
       expect(find.text('Delete My Account'), findsWidgets);
     });
   });

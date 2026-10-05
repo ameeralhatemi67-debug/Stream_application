@@ -113,7 +113,8 @@ void main() {
   for (final lang in ['en', 'ar']) {
     for (final width in [320.0, 1280.0]) {
       for (final scale in [1.0, 2.0]) {
-        for (final location in ['map', 'discovery', 'profile', 'settings']) {
+        // Settings now uses the redesigned account card (settings_screen_test).
+        for (final location in ['map', 'discovery', 'profile']) {
           testWidgets('$location card $lang ${width}px ${scale}x text',
               (tester) async {
             SharedPreferences.setMockInitialValues({});

@@ -1,3 +1,5 @@
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/ds/ca_cards.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -9,10 +11,13 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 class PrivacySettingsSection extends StatefulWidget {
-  const PrivacySettingsSection({super.key});
+  const PrivacySettingsSection(
+      {super.key, this.privacyOnly = false, this.dangerOnly = false});
+  final bool privacyOnly, dangerOnly;
   @override
   State<PrivacySettingsSection> createState() => _PrivacySettingsSectionState();
 }
+
 class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   bool _isDeletingAccount = false;
   bool _isExportingData = false;
@@ -20,15 +25,17 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   bool _isDeletingStreamMessages = false;
   @override
   Widget build(BuildContext context) {
+    context.select<AppProvider, Object?>((p) =>
+        (p.consentAcceptedAt, p.consentVersion, p.hasAcceptedCurrentConsent));
     final provider = context.read<AppProvider>();
     return Column(children: [
-      _buildConsentRecordCard(context, context.watch<AppProvider>()),
+      if (!widget.dangerOnly) _buildConsentRecordCard(context, provider),
       const SizedBox(height: AppTheme.spaceMd),
-      _buildDataExportCard(context, provider),
+      if (!widget.dangerOnly) _buildDataExportCard(context, provider),
       const SizedBox(height: AppTheme.spaceMd),
-      _buildChatHistoryCard(context, provider),
+      if (!widget.privacyOnly) _buildChatHistoryCard(context, provider),
       const SizedBox(height: AppTheme.spaceMd),
-      _buildDeleteAccountCard(context, provider),
+      if (!widget.privacyOnly) _buildDeleteAccountCard(context, provider),
     ]);
   }
 
@@ -56,14 +63,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           .tr(namedArgs: {'version': version});
     }
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
+    return CaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -76,7 +76,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                 child: Text(
                   'settings.consent_record_title'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                    color: Canopy.ink,
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -88,13 +88,15 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           Text(
             status,
             style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12, height: 1.5),
+                color: Canopy.slate, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             'settings.consent_withdraw_note'.tr(),
             style: const TextStyle(
-                color: AppTheme.textMuted, fontSize: 11.5, height: 1.5),
+                color: Canopy.haze,
+                fontSize: AppTheme.captionFont,
+                height: 1.5),
           ),
         ],
       ),
@@ -102,20 +104,14 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   }
 
   Widget _buildDataExportCard(BuildContext context, AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
+    return CaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'settings.data_export_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -124,7 +120,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           Text(
             'settings.data_export_desc'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 11),
+                color: Canopy.slate, fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
@@ -174,7 +170,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.data_export_error_toast'.tr()),
-          backgroundColor: AppTheme.danger,
+          backgroundColor: Canopy.liveCrimson,
         ),
       );
       return;
@@ -186,19 +182,19 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   }
 
   void _showDataExportDialog(BuildContext context, String jsonText) {
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return CaAlertDialog(
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.border),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text(
             'settings.data_export_dialog_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -212,23 +208,23 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                 Text(
                   'settings.data_export_dialog_desc'.tr(),
                   style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 12),
+                      color: Canopy.slate, fontSize: 12),
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 360),
                   padding: const EdgeInsets.all(AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceAlt,
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: Border.all(color: AppTheme.border),
+                    border: Border.all(color: Canopy.hairline),
                   ),
                   child: SingleChildScrollView(
                     child: SelectableText(
                       jsonText,
                       style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11.5,
+                        color: Canopy.slate,
+                        fontSize: AppTheme.captionFont,
                         fontFamily: 'monospace',
                         height: 1.4,
                       ),
@@ -243,7 +239,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'common.close'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton.icon(
@@ -274,7 +270,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
+        border: Border.all(color: Canopy.liveCrimson.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -282,7 +278,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           Text(
             'settings.delete_account_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -291,7 +287,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           Text(
             'settings.delete_account_desc'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 11),
+                color: Canopy.slate, fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
@@ -303,14 +299,14 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                       height: 16,
                       child: HadayahLoadingIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.danger,
+                        color: Canopy.liveCrimson,
                       ),
                     )
                   : const Icon(Icons.delete_forever_rounded, size: 18),
               label: Text('settings.delete_account_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.danger,
-                side: const BorderSide(color: AppTheme.danger),
+                foregroundColor: Canopy.liveCrimson,
+                side: const BorderSide(color: Canopy.liveCrimson),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -326,25 +322,25 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   }
 
   void _showDeleteAccountDialog(BuildContext context, AppProvider provider) {
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return CaAlertDialog(
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.border),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Row(
             children: [
               const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.danger, size: 22),
+                  color: Canopy.liveCrimson, size: 22),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'settings.delete_account_confirm_title'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                    color: Canopy.ink,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -354,20 +350,19 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           ),
           content: Text(
             'settings.delete_account_confirm_body'.tr(),
-            style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 13),
+            style: const TextStyle(color: Canopy.slate, fontSize: 13),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
+                backgroundColor: Canopy.liveCrimson,
                 foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () {
@@ -398,7 +393,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.delete_account_error_toast'.tr()),
-          backgroundColor: AppTheme.danger,
+          backgroundColor: Canopy.liveCrimson,
         ),
       );
     }
@@ -409,20 +404,14 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   // ==========================================
 
   Widget _buildChatHistoryCard(BuildContext context, AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
+    return CaCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'settings.chat_history_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -431,7 +420,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           Text(
             'settings.chat_history_desc'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 11),
+                color: Canopy.slate, fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
@@ -467,13 +456,13 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                       width: 16,
                       height: 16,
                       child: HadayahLoadingIndicator(
-                          strokeWidth: 2, color: AppTheme.danger),
+                          strokeWidth: 2, color: Canopy.liveCrimson),
                     )
                   : const Icon(Icons.delete_sweep_outlined, size: 18),
               label: Text('settings.delete_all_messages_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.danger,
-                side: const BorderSide(color: AppTheme.danger),
+                foregroundColor: Canopy.liveCrimson,
+                side: const BorderSide(color: Canopy.liveCrimson),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -490,24 +479,24 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
 
   void _showDeleteAllMessagesDialog(
       BuildContext context, AppProvider provider) {
-    showDialog(
+    showCaDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CaAlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.border),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Row(
           children: [
             const Icon(Icons.warning_amber_rounded,
-                color: AppTheme.danger, size: 22),
+                color: Canopy.liveCrimson, size: 22),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'settings.delete_all_messages_confirm_title'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -517,18 +506,17 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         ),
         content: Text(
           'settings.delete_all_messages_confirm_body'.tr(),
-          style:
-              const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
+          style: const TextStyle(color: Canopy.slate, fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
+                style: const TextStyle(color: Canopy.haze)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
+                backgroundColor: Canopy.liveCrimson,
                 foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
@@ -552,7 +540,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         content: Text(success
             ? 'settings.delete_all_messages_success_toast'.tr()
             : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : AppTheme.danger,
+        backgroundColor: success ? null : Canopy.liveCrimson,
       ),
     );
   }
@@ -562,17 +550,17 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
     final streamIds = await provider.loadMyMessageStreamIds();
     if (!context.mounted) return;
 
-    final selectedStreamId = await showDialog<String>(
+    final selectedStreamId = await showCaDialog<String>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CaAlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.border),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text('settings.select_stream_dialog_title'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+                color: Canopy.ink, fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: double.maxFinite,
           child: streamIds.isEmpty
@@ -580,7 +568,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
                   child: Text(
                     'settings.select_stream_dialog_empty'.tr(),
-                    style: const TextStyle(color: AppTheme.textSecondary),
+                    style: const TextStyle(color: Canopy.slate),
                   ),
                 )
               : ListView.builder(
@@ -592,8 +580,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                       leading: const Icon(Icons.forum_outlined,
                           color: AppTheme.primary),
                       title: Text(id,
-                          style:
-                              const TextStyle(color: AppTheme.textPrimary)),
+                          style: const TextStyle(color: Canopy.ink)),
                       onTap: () => Navigator.pop(dialogContext, id),
                     );
                   },
@@ -603,7 +590,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
+                style: const TextStyle(color: Canopy.haze)),
           ),
         ],
       ),
@@ -618,9 +605,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         content: Text(success
             ? 'settings.delete_messages_by_stream_success_toast'.tr()
             : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : AppTheme.danger,
+        backgroundColor: success ? null : Canopy.liveCrimson,
       ),
     );
   }
-
 }
