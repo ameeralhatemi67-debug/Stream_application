@@ -5,6 +5,9 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/services/notifications/notification_models.dart';
+import '../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/ds/ca_fields.dart';
 
 /// In-App Notification Center Bottom Sheet Modal.
 /// Features category filtering, read state tracking, swipe-to-delete,
@@ -13,19 +16,19 @@ class NotificationCenterSheet extends StatefulWidget {
   const NotificationCenterSheet({super.key});
 
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-      ),
-      builder: (ctx) => const NotificationCenterSheet(),
-    );
+    return showCaSheet<void>(context,
+        title: '',
+        framed: false,
+        fullWidthOnPhone: true,
+        flushOnPhone: true,
+        body: Builder(
+            builder: (ctx) => const SafeArea(
+                top: false, child: NotificationCenterSheet())));
   }
 
   @override
-  State<NotificationCenterSheet> createState() => _NotificationCenterSheetState();
+  State<NotificationCenterSheet> createState() =>
+      _NotificationCenterSheetState();
 }
 
 class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
@@ -63,85 +66,48 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
 
     final filteredNotifications = _selectedCategory == NotificationCategory.all
         ? allNotifications
-        : allNotifications.where((n) => n.category == _selectedCategory).toList();
+        : allNotifications
+            .where((n) => n.category == _selectedCategory)
+            .toList();
 
-    return SafeArea(
-      child: Container(
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.82,
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg, vertical: AppTheme.spaceMd),
-        child: Column(
+    return CaSheet(
+      bareChrome: true,
+      title: 'design_copy.notifications'.tr(),
+      headerStatus: unreadNotificationsCount > 0
+          ? Semantics(
+              label: 'design_ui.unread_count'
+                  .tr(namedArgs: {'count': '$unreadNotificationsCount'}),
+              child: ExcludeSemantics(
+                  child: Container(
+                      padding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: AppTheme.spaceSm,
+                          vertical: AppTheme.spaceXs),
+                      decoration: BoxDecoration(
+                          color: Canopy.mint,
+                          borderRadius:
+                              BorderRadius.circular(CanopyRadius.pill)),
+                      child: Text(
+                          'design_ui.unread_count'.tr(namedArgs: {
+                            'count': '$unreadNotificationsCount'
+                          }),
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelSmall
+                              ?.copyWith(color: Canopy.brandGreen)))))
+          : null,
+      onClose: () => Navigator.pop(context),
+      scrollBody: false,
+      actions: [
+        if (allNotifications.isNotEmpty)
+          CaButton(
+              label: 'design_copy.mark_all_read'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => appProvider.markAllNotificationsAsRead())
+      ],
+      body: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Sheet Handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: 12),
-                decoration: BoxDecoration(
-                  color: AppTheme.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-
-            // Header Row: Title, Unread Count & Action Controls
-            Row(
-              children: [
-                const Icon(Icons.notifications_rounded, color: AppTheme.primary, size: 22),
-                const SizedBox(width: 8),
-                Expanded(child: Text(
-                  'design_copy.notifications'.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 17,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )),
-                if (unreadNotificationsCount > 0) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppTheme.danger,
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      '$unreadNotificationsCount',
-                      style: const TextStyle(color: AppTheme.onMedia, fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                ],
-
-                if (allNotifications.isNotEmpty)
-                  TextButton.icon(
-                    onPressed: () => appProvider.markAllNotificationsAsRead(),
-                    icon: const Icon(Icons.done_all_rounded, size: 16),
-                    label: Text(
-                      'design_copy.mark_all_read'.tr(),
-                      style: const TextStyle(fontSize: 11.5),
-                    ),
-                    style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.primary,
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                  ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, size: 20, color: AppTheme.textMuted),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => Navigator.pop(context),
-                ),
-              ],
-            ),
-
-            const SizedBox(height: AppTheme.spaceMd),
-
             // Category Filter Chips
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -156,50 +122,62 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   _buildCategoryChip(
                     label: 'design_copy.live'.tr(),
                     category: NotificationCategory.live,
-                    count: allNotifications.where((n) => n.category == NotificationCategory.live).length,
+                    count: allNotifications
+                        .where((n) => n.category == NotificationCategory.live)
+                        .length,
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
                     label: 'design_copy.invites_admin'.tr(),
                     category: NotificationCategory.invitesAndAdmin,
-                    count: allNotifications.where((n) => n.category == NotificationCategory.invitesAndAdmin).length,
+                    count: allNotifications
+                        .where((n) =>
+                            n.category == NotificationCategory.invitesAndAdmin)
+                        .length,
                   ),
                   const SizedBox(width: 8),
                   _buildCategoryChip(
                     label: 'design_copy.vods'.tr(),
                     category: NotificationCategory.vods,
-                    count: allNotifications.where((n) => n.category == NotificationCategory.vods).length,
+                    count: allNotifications
+                        .where((n) => n.category == NotificationCategory.vods)
+                        .length,
                   ),
                 ],
               ),
             ),
 
             const SizedBox(height: AppTheme.spaceSm),
-            const Divider(color: AppTheme.border, height: 1),
+            const Divider(color: Canopy.hairline, height: 1),
             const SizedBox(height: AppTheme.spaceSm),
 
             // Notifications List or Empty State
             if (filteredNotifications.isEmpty)
-              Flexible(child: SingleChildScrollView(child: Padding(
+              Flexible(
+                  child: SingleChildScrollView(
+                      child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 40),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.notifications_none_rounded, color: AppTheme.textMuted, size: 44),
+                      const Icon(Icons.notifications_none_rounded,
+                          color: Canopy.haze, size: 44),
                       const SizedBox(height: 12),
                       Text(
                         'design_copy.no_notifications_in_this_category'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.textPrimary,
+                          color: Canopy.ink,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        'design_copy.you_will_receive_alerts_for_live_streams_lectures_and_invites_whe'.tr(),
-                        style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                        'design_copy.you_will_receive_alerts_for_live_streams_lectures_and_invites_whe'
+                            .tr(),
+                        style: const TextStyle(
+                            color: Canopy.haze, fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -211,16 +189,16 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                 child: ListView.separated(
                   shrinkWrap: true,
                   itemCount: filteredNotifications.length,
-                  separatorBuilder: (_, __) => const Divider(color: AppTheme.border, height: 1),
+                  separatorBuilder: (_, __) =>
+                      const Divider(color: Canopy.hairline, height: 1),
                   itemBuilder: (context, idx) {
                     final notif = filteredNotifications[idx];
-                    return _buildNotificationTile(context, notif, appProvider, isAr);
+                    return _buildNotificationTile(
+                        context, notif, appProvider, isAr);
                   },
                 ),
               ),
-          ],
-        ),
-      ),
+          ]),
     );
   }
 
@@ -230,22 +208,10 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
     required int count,
   }) {
     final isSelected = _selectedCategory == category;
-    return ChoiceChip(
-      label: Text('$label ($count)'),
-      selected: isSelected,
-      onSelected: (_) => setState(() => _selectedCategory = category),
-      labelStyle: TextStyle(
-        color: isSelected ? AppTheme.onMedia : AppTheme.textSecondary,
-        fontSize: 11.5,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      backgroundColor: AppTheme.surfaceAlt,
-      selectedColor: AppTheme.primary,
-      side: BorderSide(
-        color: isSelected ? AppTheme.primary : AppTheme.border,
-      ),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-    );
+    return CaChip(
+        label: '$label ($count)',
+        selected: isSelected,
+        onSelected: (_) => setState(() => _selectedCategory = category));
   }
 
   Widget _buildNotificationTile(
@@ -256,21 +222,27 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
   ) {
     final iconData = _getNotificationIcon(notif.type);
     final accentColor = _getNotificationColor(notif.type);
-    final isMuted = notif.streamerId.isNotEmpty && appProvider.isEntityMuted(notif.streamerId);
+    final isMuted = notif.streamerId.isNotEmpty &&
+        appProvider.isEntityMuted(notif.streamerId);
 
     return Dismissible(
       key: Key('notif_${notif.id}'),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: AppTheme.danger,
+        color: Canopy.liveCrimson,
         alignment: AlignmentDirectional.centerEnd,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            const Icon(Icons.delete_sweep_rounded, color: AppTheme.onMedia, size: 20),
+            const Icon(Icons.delete_sweep_rounded,
+                color: AppTheme.onMedia, size: 20),
             const SizedBox(width: 6),
-            Text('design_ui.dismiss'.tr(), style: const TextStyle(color: AppTheme.onMedia, fontSize: 12, fontWeight: FontWeight.bold)),
+            Text('design_ui.dismiss'.tr(),
+                style: const TextStyle(
+                    color: AppTheme.onMedia,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold)),
           ],
         ),
       ),
@@ -299,7 +271,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   width: 8,
                   height: 8,
                   decoration: const BoxDecoration(
-                    color: AppTheme.danger,
+                    color: AppTheme.primary,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -309,7 +281,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
         title: Text(
           notif.getLocalizedTitle(isAr ? 'ar' : 'en'),
           style: TextStyle(
-            color: notif.isRead ? AppTheme.textSecondary : AppTheme.textPrimary,
+            color: notif.isRead ? Canopy.slate : Canopy.ink,
             fontSize: 13,
             fontWeight: notif.isRead ? FontWeight.normal : FontWeight.bold,
           ),
@@ -320,14 +292,16 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
             const SizedBox(height: 2),
             Text(
               notif.getLocalizedBody(isAr ? 'ar' : 'en'),
-              style: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5, height: 1.3),
+              style: const TextStyle(
+                  color: Canopy.haze, fontSize: 12, height: 1.3),
             ),
             const SizedBox(height: 4),
             Row(
               children: [
                 Text(
                   _formatTimeAgo(notif.timestamp, isAr),
-                  style: const TextStyle(color: AppTheme.textMuted, fontSize: 10),
+                  style:
+                      const TextStyle(color: Canopy.haze, fontSize: 12),
                 ),
                 if (notif.streamerId.isNotEmpty) ...[
                   const SizedBox(width: 10),
@@ -337,14 +311,18 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                     },
                     borderRadius: BorderRadius.circular(4),
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 4, vertical: 2),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
-                            isMuted ? Icons.notifications_off_rounded : Icons.notifications_none_rounded,
+                            isMuted
+                                ? Icons.notifications_off_rounded
+                                : Icons.notifications_none_rounded,
                             size: 12,
-                            color: isMuted ? AppTheme.danger : AppTheme.primary,
+                            color:
+                                isMuted ? Canopy.haze : AppTheme.primary,
                           ),
                           const SizedBox(width: 3),
                           Text(
@@ -352,8 +330,10 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                                 ? ('design_copy.unmute'.tr())
                                 : ('design_copy.mute'.tr()),
                             style: TextStyle(
-                              color: isMuted ? AppTheme.danger : AppTheme.primary,
-                              fontSize: 10,
+                              color: isMuted
+                                  ? Canopy.haze
+                                  : AppTheme.primary,
+                              fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
                           ),
@@ -418,20 +398,20 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
     switch (type) {
       case NotificationType.streamerLiveVideo:
       case NotificationType.orgStreamerLiveStatus:
-        return AppTheme.danger;
+        return Canopy.liveCrimson;
       case NotificationType.streamerLiveAudio:
-        return AppTheme.textMuted;
+        return Canopy.haze;
       case NotificationType.watchMilestoneOneHour:
         return AppTheme.warning;
       case NotificationType.streamerApplicationApproved:
-        return AppTheme.success;
+        return Canopy.leaf;
       case NotificationType.streamerApplicationRejected:
         return AppTheme.warning;
       case NotificationType.orgLiveGuestInvite:
       case NotificationType.orgAffiliationInvite:
         return AppTheme.accent;
       case NotificationType.streamerRemovedFromOrg:
-        return AppTheme.textMuted;
+        return Canopy.haze;
       case NotificationType.adminNoteToStreamer:
       case NotificationType.adminNoteToOrg:
         return AppTheme.primary;
@@ -441,15 +421,19 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
       case NotificationType.newVodUpload:
         return AppTheme.primary;
       case NotificationType.systemAlert:
-        return AppTheme.textSecondary;
+        return Canopy.slate;
     }
   }
 
   String _formatTimeAgo(DateTime timestamp, bool isAr) {
     final diff = DateTime.now().difference(timestamp);
     if (diff.inSeconds < 60) return 'design_copy.just_now'.tr();
-    if (diff.inMinutes < 60) return isAr ? 'منذ ${diff.inMinutes} دقيقة' : '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return isAr ? 'منذ ${diff.inHours} ساعة' : '${diff.inHours}h ago';
+    if (diff.inMinutes < 60) {
+      return isAr ? 'منذ ${diff.inMinutes} دقيقة' : '${diff.inMinutes}m ago';
+    }
+    if (diff.inHours < 24) {
+      return isAr ? 'منذ ${diff.inHours} ساعة' : '${diff.inHours}h ago';
+    }
     return isAr ? 'منذ ${diff.inDays} يوم' : '${diff.inDays}d ago';
   }
 }

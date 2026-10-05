@@ -82,6 +82,17 @@ _Backdrop _backdropOf(Element element) {
       indeterminate = true;
       return null;
     }
+    if (w is Stack &&
+        w.children.whereType<Positioned>().any((p) =>
+            p.top == 0 &&
+            p.bottom == 0 &&
+            p.child is DecoratedBox &&
+            (p.child as DecoratedBox).decoration is BoxDecoration &&
+            ((p.child as DecoratedBox).decoration as BoxDecoration).gradient !=
+                null)) {
+      indeterminate = true;
+      return null; // Image/scrim siblings paint a spatial backdrop.
+    }
     if (w is ColoredBox) return w.color;
     if (w is Material) return w.color;
     if (w is DecoratedBox) {

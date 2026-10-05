@@ -27,7 +27,8 @@ class CaSheet extends StatelessWidget {
       this.headerStatus,
       this.onClose,
       this.scrollBody = true,
-      this.handle = true});
+      this.handle = true,
+      this.bareChrome = false});
   final String title;
   final Widget? headerStatus;
   final Widget body;
@@ -35,6 +36,10 @@ class CaSheet extends StatelessWidget {
   final VoidCallback? onClose;
   final bool handle;
   final bool scrollBody;
+
+  /// Icon-only header controls: the language glyph (no label) and the close
+  /// button are drawn without a circle or pill behind them.
+  final bool bareChrome;
   @override
   Widget build(BuildContext context) => ClipRRect(
       borderRadius: BorderRadius.circular(CanopyRadius.sheetTop),
@@ -69,9 +74,11 @@ class CaSheet extends StatelessWidget {
                                           .textTheme
                                           .titleLarge)),
                               const SizedBox(width: AppTheme.spaceSm),
-                              const CaLanguageChip(),
+                              CaLanguageChip(
+                                  compact: bareChrome, bare: bareChrome),
                               if (onClose != null)
                                 CaIconButton(
+                                    bare: bareChrome,
                                     icon: CaGlyph.close,
                                     label: MaterialLocalizations.of(context)
                                         .closeButtonTooltip,
@@ -245,6 +252,7 @@ Future<T?> showCaSheet<T>(BuildContext context,
     Color? barrierColor,
     BoxConstraints? constraints,
     bool fullWidthOnPhone = false,
+    bool flushOnPhone = false,
     Color edgeColor = Canopy.paper}) {
   final presentation =
       caSheetPresentation(MediaQuery.sizeOf(context).width, job);
@@ -259,6 +267,7 @@ Future<T?> showCaSheet<T>(BuildContext context,
           surfaceConstraints: constraints,
           scrimColor: barrierColor,
           fullWidthOnPhone: fullWidthOnPhone,
+          flushOnPhone: flushOnPhone,
           edgeColor: edgeColor,
           themes: InheritedTheme.capture(
               from: context,
@@ -283,6 +292,7 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
       this.surfaceConstraints,
       this.scrimColor,
       this.fullWidthOnPhone = false,
+      this.flushOnPhone = false,
       this.edgeColor = Canopy.paper,
       required this.barrierDismissible,
       required this.barrierLabel})
@@ -303,6 +313,10 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
   /// edge to edge and down behind the system navigation bar. The content keeps
   /// the inset width it would have had, so controls do not stretch.
   final bool fullWidthOnPhone;
+
+  /// With [fullWidthOnPhone], also drops the side inset: the body spans the
+  /// whole width and supplies its own padding (a [CaSheet] header band does).
+  final bool flushOnPhone;
   final Color edgeColor;
   @override
   final bool barrierDismissible;
@@ -371,9 +385,13 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
                           child: ColoredBox(
                               color: edgeColor,
                               child: Padding(
-                                  padding: const EdgeInsetsDirectional.only(
-                                      start: AppTheme.screenPadding,
-                                      end: AppTheme.screenPadding),
+                                  padding: EdgeInsetsDirectional.only(
+                                      start: flushOnPhone
+                                          ? 0
+                                          : AppTheme.screenPadding,
+                                      end: flushOnPhone
+                                          ? 0
+                                          : AppTheme.screenPadding),
                                   // The body keeps the bottom inset, so its own
                                   // SafeArea clears the navigation bar while
                                   // this surface paints behind it.

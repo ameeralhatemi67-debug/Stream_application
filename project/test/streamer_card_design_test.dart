@@ -12,6 +12,7 @@ import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/widgets/language_switcher.dart';
+import 'package:streamer_app/core/widgets/ds/ca_cards.dart';
 import 'package:streamer_app/core/widgets/streamer_identity_card.dart';
 import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
 import 'package:streamer_app/features/discovery/presentation/widgets/streamer_grid_card.dart';
@@ -158,7 +159,9 @@ void main() {
             };
             await tester.pumpWidget(app(provider, home, lang, scale));
             await tester.pumpAndSettle();
-            final cards = find.byType(StreamerIdentityCard);
+            final cards = location == 'discovery'
+                ? find.byType(CaScholarCard)
+                : find.byType(StreamerIdentityCard);
             expect(cards, findsWidgets);
             final surface = find
                 .descendant(of: cards.first, matching: find.byType(Material))
@@ -216,7 +219,9 @@ void main() {
             }
             if (location == 'discovery') {
               if (width >= 900) {
-                expect(tester.getTopLeft(surface).dx, closeTo(16, 1));
+                final rect = tester.getRect(surface);
+                expect(lang == 'en' ? rect.left : width - rect.right,
+                    closeTo(CanopyWindow.insetLarge, 1));
               }
               expect(find.text('profile.view_channel'.tr()), findsNothing);
               expect(find.text('#Physics'), findsOneWidget);
@@ -288,7 +293,7 @@ void main() {
         await tester
             .pumpWidget(app(provider, const DiscoveryFeedScreen(), lang, 1));
         await tester.pumpAndSettle();
-        final cards = find.byType(StreamerIdentityCard);
+        final cards = find.byType(CaScholarCard);
         expect(cards, findsNWidgets(4));
         final firstTop = tester.getTopLeft(cards.first);
         expect(
@@ -298,7 +303,16 @@ void main() {
                   i
             ].length,
             layout.$2);
-        if (layout.$1 >= 900) expect(firstTop.dx, closeTo(16, 1));
+        if (layout.$1 >= 900) {
+          final rect = tester.getRect(cards.first);
+          expect(
+              lang == 'en' ? rect.left : layout.$1 - rect.right,
+              closeTo(
+                  layout.$1 >= CanopyWindow.large
+                      ? CanopyWindow.insetLarge
+                      : CanopyWindow.insetExpanded,
+                  1));
+        }
         expect(tester.takeException(), isNull);
         await tester.pumpWidget(const SizedBox());
         provider.dispose();

@@ -37,7 +37,11 @@
     "settings": "Settings",
     "bookmarks": "Bookmarks",
     "notifications": "Notifications",
-    "search": "Search"
+    "search": "Search",
+    "discovery_hub": "Discovery Hub",
+    "spatial_gis_map": "Spatial GIS Map",
+    "streamer_mode": "Streamer Mode",
+    "viewer_mode": "Viewer Mode"
   },
   "map": {
     "pin_invalid": "Enter valid latitude and longitude, or leave both empty.",

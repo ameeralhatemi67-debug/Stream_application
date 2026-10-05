@@ -37,7 +37,11 @@
     "settings": "الإعدادات",
     "bookmarks": "المحفوظات",
     "notifications": "التنبيهات",
-    "search": "البحث"
+    "search": "البحث",
+    "discovery_hub": "مركز الاكتشاف",
+    "spatial_gis_map": "الخريطة المكانية",
+    "streamer_mode": "وضع المحاضر",
+    "viewer_mode": "وضع المستمع"
   },
   "map": {
     "pin_invalid": "أدخل خط عرض وخط طول صالحين، أو اتركهما فارغين.",

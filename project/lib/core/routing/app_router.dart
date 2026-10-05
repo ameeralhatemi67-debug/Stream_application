@@ -4,6 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_provider.dart';
+import '../widgets/app_logo.dart';
+import '../widgets/ds/ca_focus_ring.dart';
+import '../widgets/ds/ca_icon.dart';
+import '../widgets/ds/ca_navigation.dart';
 import '../widgets/floating_stream_mini_player.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/viewer_setup_screen.dart';
@@ -326,7 +330,9 @@ class AppRouter {
       );
 }
 
-/// Responsive Scaffold supporting Desktop NavigationRail and Mobile BottomNav
+/// Responsive Scaffold supporting the persistent laptop side navigation and the
+/// phone bottom navigation. Structure is master's; the look is the Canopy
+/// design system's (CaNavBar pill on phones, gradient pill items on laptops).
 class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -353,139 +359,145 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
         ));
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
+      backgroundColor: Canopy.dawn,
       body: Stack(
         children: [
           if (isDesktop)
             Row(
               children: [
-                // Desktop Persistent Sidebar NavigationRail
-                Container(
-                  width: 220,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border(
-                      right: BorderSide(color: AppTheme.border, width: 1.0),
+                // Desktop persistent side navigation.
+                SizedBox(
+                  width: CanopySize.railExpanded,
+                  child: DecoratedBox(
+                    decoration: const BoxDecoration(
+                      color: Canopy.paper,
+                      border: BorderDirectional(
+                        end: BorderSide(color: Canopy.hairline, width: 1.0),
+                      ),
                     ),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Parent charity mark in the desktop navigation header.
-                      Padding(
-                        padding: const EdgeInsets.all(AppTheme.spaceSm),
-                        child: Semantics(
-                          label: 'common.hadayah_charity'.tr(),
-                          child: Image.asset(
-                            'assets/images/hadayah_charity_parent.png',
-                            width: 200,
-                            height: 124,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
-                      ),
-                      const Divider(color: AppTheme.border, height: 1),
-                      const SizedBox(height: AppTheme.spaceMd),
+                    child: SafeArea(
+                      child: LayoutBuilder(
+                        builder: (context, constraints) =>
+                            SingleChildScrollView(
+                          child: ConstrainedBox(
+                            constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight),
+                            child: IntrinsicHeight(
+                              child: Padding(
+                                padding: const EdgeInsets.all(AppTheme.spaceSm),
+                                child: Column(
+                                  crossAxisAlignment:
+                                      CrossAxisAlignment.stretch,
+                                  children: [
+                                    const SizedBox(height: AppTheme.spaceLg),
+                                    const Center(
+                                        child: AppLogo(
+                                            size: CanopySize.railLogo)),
+                                    const SizedBox(height: AppTheme.spaceXl),
 
-                      // Navigation Items
-                      _DesktopNavItem(
-                        icon: Icons.grid_view_rounded,
-                        label: 'Discovery Hub',
-                        isSelected: navigationShell.currentIndex == 0,
-                        onTap: () => navigationShell.goBranch(0),
-                      ),
-                      _DesktopNavItem(
-                        icon: Icons.map_rounded,
-                        label: 'Spatial GIS Map',
-                        isSelected: navigationShell.currentIndex == 1,
-                        onTap: () => navigationShell.goBranch(1),
-                      ),
-                      if (isStreamerModeEnabled) ...[
-                        _DesktopNavItem(
-                          icon: Icons.person_rounded,
-                          label: 'Studio Profile',
-                          isSelected: false,
-                          onTap: () {
-                            final ownId = context
-                                .read<AppProvider>()
-                                .currentUserStreamerId;
-                            context.push(ownId == null || ownId.isEmpty
-                                ? '/feed'
-                                : '/profile/$ownId');
-                          },
-                        ),
-                      ],
-                      _DesktopNavItem(
-                        icon: Icons.settings_rounded,
-                        label: 'Settings',
-                        isSelected: false,
-                        onTap: () => context.push('/settings'),
-                      ),
-                      if (isAdminUser) ...[
-                        const SizedBox(height: 4),
-                        _DesktopNavItem(
-                          icon: Icons.admin_panel_settings_rounded,
-                          label: 'Admin Hub',
-                          badge:
-                              hasPendingApplications ? '$pendingCount' : null,
-                          isSelected: false,
-                          onTap: () => context.push('/admin'),
-                        ),
-                      ],
-                      if (isPermittedAdmin) ...[
-                        const SizedBox(height: 4),
-                        _DesktopNavItem(
-                          icon: Icons.apartment_rounded,
-                          label: 'Org Admin',
-                          isSelected: false,
-                          onTap: () => context.push('/org-admin'),
-                        ),
-                      ],
+                                    // Navigation Items
+                                    _DesktopNavItem(
+                                      icon: CaGlyph.list,
+                                      label: 'nav.discovery_hub'.tr(),
+                                      isSelected:
+                                          navigationShell.currentIndex == 0,
+                                      onTap: () => navigationShell.goBranch(0),
+                                    ),
+                                    _DesktopNavItem(
+                                      icon: CaGlyph.map,
+                                      label: 'nav.spatial_gis_map'.tr(),
+                                      isSelected:
+                                          navigationShell.currentIndex == 1,
+                                      onTap: () => navigationShell.goBranch(1),
+                                    ),
+                                    if (isStreamerModeEnabled)
+                                      _DesktopNavItem(
+                                        icon: CaGlyph.user,
+                                        label: 'ds.studio_profile'.tr(),
+                                        isSelected: false,
+                                        onTap: () {
+                                          final ownId = context
+                                              .read<AppProvider>()
+                                              .currentUserStreamerId;
+                                          context.push(
+                                              ownId == null || ownId.isEmpty
+                                                  ? '/feed'
+                                                  : '/profile/$ownId');
+                                        },
+                                      ),
+                                    _DesktopNavItem(
+                                      icon: CaGlyph.gear,
+                                      label: 'nav.settings'.tr(),
+                                      isSelected: false,
+                                      onTap: () => context.push('/settings'),
+                                    ),
+                                    if (isAdminUser)
+                                      _DesktopNavItem(
+                                        icon: CaGlyph.shield,
+                                        label: 'settings.admin_hub_title'.tr(),
+                                        badge: hasPendingApplications
+                                            ? '$pendingCount'
+                                            : null,
+                                        isSelected: false,
+                                        onTap: () => context.push('/admin'),
+                                      ),
+                                    if (isPermittedAdmin)
+                                      _DesktopNavItem(
+                                        icon: CaGlyph.home,
+                                        label: 'design_ui.organization_admin'
+                                            .tr(),
+                                        isSelected: false,
+                                        onTap: () =>
+                                            context.push('/org-admin'),
+                                      ),
 
-                      const Spacer(),
+                                    const Spacer(),
 
-                      // Streamer Mode Status Card
-                      Container(
-                        margin: const EdgeInsets.all(AppTheme.spaceMd),
-                        padding: const EdgeInsets.all(AppTheme.spaceMd),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceAlt,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
-                          border: Border.all(
-                            color: isStreamerModeEnabled
-                                ? AppTheme.danger
-                                : AppTheme.border,
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              isStreamerModeEnabled
-                                  ? Icons.videocam_rounded
-                                  : Icons.visibility_rounded,
-                              size: 18,
-                              color: isStreamerModeEnabled
-                                  ? AppTheme.danger
-                                  : AppTheme.primary,
-                            ),
-                            const SizedBox(width: AppTheme.spaceSm),
-                            Expanded(
-                              child: Text(
-                                isStreamerModeEnabled
-                                    ? 'Streamer Mode'
-                                    : 'Viewer Mode',
-                                style: const TextStyle(
-                                  color: AppTheme.textPrimary,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
+                                    // Streamer / Viewer Mode card
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          horizontal: AppTheme.spaceMd,
+                                          vertical: AppTheme.spaceSm),
+                                      decoration: BoxDecoration(
+                                        gradient: AppGradients.pill,
+                                        borderRadius: BorderRadius.circular(
+                                            CanopyRadius.input),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          CaIcon(
+                                            isStreamerModeEnabled
+                                                ? CaGlyph.video
+                                                : CaGlyph.user,
+                                            color: Canopy.paper,
+                                          ),
+                                          const SizedBox(
+                                              width: AppTheme.spaceSm),
+                                          Expanded(
+                                            child: Text(
+                                              isStreamerModeEnabled
+                                                  ? 'nav.streamer_mode'.tr()
+                                                  : 'nav.viewer_mode'.tr(),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .labelSmall
+                                                  ?.copyWith(
+                                                      color: Canopy.paper,
+                                                      fontWeight:
+                                                          FontWeight.w600),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
-                          ],
+                          ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
                 // Main Content
@@ -501,42 +513,11 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
       ),
       bottomNavigationBar: isDesktop
           ? null
-          : Container(
-              decoration: const BoxDecoration(
-                color: AppTheme.surface,
-                border: Border(
-                  top: BorderSide(color: AppTheme.border, width: 1.0),
-                ),
-              ),
-              child: BottomNavigationBar(
-                currentIndex: navigationShell.currentIndex,
-                backgroundColor: AppTheme.surface,
-                selectedItemColor: AppTheme.danger,
-                unselectedItemColor: AppTheme.textMuted,
-                selectedLabelStyle:
-                    const TextStyle(fontWeight: FontWeight.w600, fontSize: 11),
-                unselectedLabelStyle: const TextStyle(
-                    fontWeight: FontWeight.normal, fontSize: 11),
-                onTap: (index) {
-                  navigationShell.goBranch(
-                    index,
-                    initialLocation: index == navigationShell.currentIndex,
-                  );
-                },
-                items: [
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.grid_view_rounded),
-                    activeIcon: const Icon(Icons.grid_view_rounded,
-                        color: AppTheme.danger),
-                    label: context.tr('nav.feed'),
-                  ),
-                  BottomNavigationBarItem(
-                    icon: const Icon(Icons.map_rounded),
-                    activeIcon:
-                        const Icon(Icons.map_rounded, color: AppTheme.danger),
-                    label: context.tr('nav.map'),
-                  ),
-                ],
+          : CaNavBar(
+              index: navigationShell.currentIndex,
+              onChanged: (index) => navigationShell.goBranch(
+                index,
+                initialLocation: index == navigationShell.currentIndex,
               ),
             ),
     );
@@ -544,7 +525,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
 }
 
 class _DesktopNavItem extends StatelessWidget {
-  final IconData icon;
+  final CaGlyph icon;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
@@ -560,61 +541,74 @@ class _DesktopNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        margin: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spaceSm, vertical: 2),
-        padding: const EdgeInsets.symmetric(
-            horizontal: AppTheme.spaceMd, vertical: 10),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.danger.withValues(alpha: 0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: isSelected
-              ? Border.all(color: AppTheme.danger.withValues(alpha: 0.5))
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 20,
-              color: isSelected ? AppTheme.danger : AppTheme.textSecondary,
-            ),
-            const SizedBox(width: AppTheme.spaceMd),
-            Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  color: isSelected
-                      ? AppTheme.textPrimary
-                      : AppTheme.textSecondary,
-                  fontSize: 13,
-                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-            ),
-            if (badge != null) ...[
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                decoration: BoxDecoration(
-                  color: AppTheme.warning,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Text(
-                  badge!,
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
+    final color = isSelected ? Canopy.paper : Canopy.brandGreen;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
+      child: Semantics(
+        button: true,
+        selected: isSelected,
+        label: label,
+        child: CaFocusRing(
+          onDark: isSelected,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onTap,
+              borderRadius: BorderRadius.circular(CanopyRadius.pill),
+              child: ExcludeSemantics(
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minHeight: CanopySize.target),
+                  padding: const EdgeInsetsDirectional.symmetric(
+                      horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
+                  decoration: BoxDecoration(
+                    gradient: isSelected ? AppGradients.pill : null,
+                    borderRadius: BorderRadius.circular(CanopyRadius.pill),
+                  ),
+                  child: Row(
+                    children: [
+                      CaIcon(icon, color: color),
+                      const SizedBox(width: AppTheme.spaceSm),
+                      Expanded(
+                        child: Text(
+                          label,
+                          style:
+                              Theme.of(context).textTheme.labelLarge?.copyWith(
+                                    color: isSelected
+                                        ? Canopy.paper
+                                        : Canopy.slate,
+                                    fontWeight: isSelected
+                                        ? FontWeight.w700
+                                        : FontWeight.w500,
+                                  ),
+                        ),
+                      ),
+                      if (badge != null)
+                        Container(
+                          padding: const EdgeInsetsDirectional.symmetric(
+                              horizontal: AppTheme.spaceSm,
+                              vertical: AppTheme.spaceXs / 2),
+                          decoration: BoxDecoration(
+                            color: Canopy.warning,
+                            borderRadius:
+                                BorderRadius.circular(CanopyRadius.pill),
+                          ),
+                          child: Text(
+                            badge!,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelSmall
+                                ?.copyWith(
+                                    color: Canopy.paper,
+                                    fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                    ],
                   ),
                 ),
               ),
-            ],
-          ],
+            ),
+          ),
         ),
       ),
     );

@@ -1,3 +1,5 @@
+import '../../../core/widgets/ds/canopy_content_motion.dart';
+import '../../../core/widgets/ds/ca_navigation.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -5,17 +7,22 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/layout/content_width.dart';
+import '../../../core/layout/window_class.dart';
+import '../../../core/widgets/ds/ca_discovery.dart';
+import '../../../core/widgets/ds/ca_cards.dart';
+import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/ds/ca_fields.dart';
+import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/ds/ca_feedback.dart';
 import '../../../core/providers/app_provider.dart';
-import '../../../core/widgets/language_switcher.dart';
 import '../../../core/widgets/connectivity_banner.dart';
-import '../../../core/widgets/safe_image_provider.dart';
 import '../models/academic_category_model.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
 import 'widgets/streamer_grid_card.dart';
 import 'widgets/tags_filter_bottom_sheet.dart';
 import '../../../core/widgets/duplicate_channel_resolution_dialog.dart';
+import '../../../core/widgets/ds/ca_surfaces.dart';
 
 class DiscoveryFeedScreen extends StatefulWidget {
   const DiscoveryFeedScreen({super.key});
@@ -24,10 +31,40 @@ class DiscoveryFeedScreen extends StatefulWidget {
   State<DiscoveryFeedScreen> createState() => _DiscoveryFeedScreenState();
 }
 
-class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
+class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
+    with SingleTickerProviderStateMixin {
   final TextEditingController _searchController = TextEditingController();
   final FocusNode _searchFocusNode = FocusNode();
-  bool _isSearchFocused = false;
+
+  late final _entrance = AnimationController(
+      vsync: this,
+      duration: CanopyMotion.contentIn + CanopyMotion.feedStagger * 5);
+  bool _entranceStarted = false;
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (CanopyMotion.reduced(context) ||
+        !TickerMode.valuesOf(context).enabled) {
+      _entrance.value = 1;
+      _entranceStarted = true;
+    } else if (!_entranceStarted) {
+      _entranceStarted = true;
+      _entrance.forward();
+    }
+  }
+
+  Widget _firstPaint(Widget child, int index) {
+    final duration = _entrance.duration!.inMilliseconds;
+    final start = index.clamp(0, 5) * CanopyMotion.feedStagger.inMilliseconds;
+    final progress = _entrance.drive(CurveTween(
+        curve: Interval(start / duration,
+            (start + CanopyMotion.contentIn.inMilliseconds) / duration,
+            curve: CanopyMotion.easeOut)));
+    return CanopyContentMotion(
+        animation: progress,
+        child: FadeTransition(opacity: progress, child: child));
+  }
+
   int? _cardLayoutSignature;
   List<GlobalKey> _cardKeys = [];
   double _cardMinHeight = 0;
@@ -59,7 +96,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   /// (feed + map); wait for a short pause in typing first (audit RT-07).
   void _onSearchChanged(String value) {
     _searchDebounce?.cancel();
-    _searchDebounce = Timer(const Duration(milliseconds: 250), () {
+    _searchDebounce = Timer(CanopyMotion.searchDebounce, () {
       if (mounted) context.read<AppProvider>().setSearchQuery(value);
     });
   }
@@ -69,7 +106,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     super.initState();
     final appProvider = context.read<AppProvider>();
     _searchController.text = appProvider.searchQuery;
-    _searchFocusNode.addListener(_onSearchFocusChanged);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _checkDuplicateChannelsIfNeeded();
       _refreshVisibleViewerCounts();
@@ -104,10 +141,6 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
     return state == null || state == AppLifecycleState.resumed;
   }
 
-  void _onSearchFocusChanged() {
-    if (mounted) setState(() => _isSearchFocused = _searchFocusNode.hasFocus);
-  }
-
   void _refreshVisibleViewerCounts() {
     if (!mounted) return;
     final provider = context.read<AppProvider>();
@@ -137,11 +170,12 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
 
   @override
   void dispose() {
+    _entrance.dispose();
     _viewerCountTimer?.cancel();
     _catalogFreshnessTimer?.cancel();
     _searchDebounce?.cancel();
     _searchController.dispose();
-    _searchFocusNode.removeListener(_onSearchFocusChanged);
+
     _searchFocusNode.dispose();
     super.dispose();
   }
@@ -151,830 +185,311 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen> {
   }
 
   void _showBookmarksSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-      ),
-      builder: (context) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(AppTheme.spaceLg),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'feed.bookmarks_sheet_title'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    IconButton(
-                      icon: const Icon(Icons.close_rounded, size: 20),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                  ],
-                ),
-                const Divider(color: AppTheme.border),
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 24),
-                  child: Center(
-                    child: Text(
-                      'feed.no_bookmarks'.tr(),
-                      style: const TextStyle(color: AppTheme.textMuted),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    showCaSheet<void>(context,
+        title: '',
+        framed: false,
+        fullWidthOnPhone: true,
+        flushOnPhone: true,
+        body: Builder(
+            builder: (sheetContext) => SafeArea(
+                top: false,
+                child: CaSheet(
+                    bareChrome: true,
+                    title: 'feed.bookmarks_sheet_title'.tr(),
+                    onClose: () => Navigator.pop(sheetContext),
+                    body: Center(
+                        child: Text('feed.no_bookmarks'.tr(),
+                            style: const TextStyle(color: Canopy.haze)))))));
+  }
+
+  void _clearSearch() {
+    _searchController.clear();
+    _searchDebounce?.cancel();
+    context.read<AppProvider>().setSearchQuery('');
   }
 
   @override
   Widget build(BuildContext context) {
-    // context.read for method calls (setSearchQuery) -- doesn't need to
-    // rebuild this widget on its own. Each field is selected separately: a
-    // record holding lists never compares equal (record == falls back to List
-    // identity, and the getters allocate a new list per call), so the old
-    // single record select rebuilt the whole feed on every notification
-    // (audit RT-01). A bare List select uses DeepCollectionEquality, so these
-    // only rebuild when the streamers themselves change.
-    final appProvider = context.read<AppProvider>();
     final selectedCategory =
         context.select<AppProvider, String>((p) => p.currentCategoryFilter);
-    final liveStreamers = context
-        .select<AppProvider, List<StreamerModel>>((p) => p.liveStreamers);
-    final displayedStreamers = context
+    final displayed = context
         .select<AppProvider, List<StreamerModel>>((p) => p.filteredStreamers);
-    final isStreamerModeEnabled =
-        context.select<AppProvider, bool>((p) => p.isStreamerModeEnabled);
-    final isBroadcastingLive =
-        context.select<AppProvider, bool>((p) => p.isBroadcastingLive);
-    final customBroadcastType = context
-        .select<AppProvider, BroadcastType>((p) => p.customBroadcastType);
-    final unreadNotificationsCount =
+    final categories = context.select<AppProvider, List<AcademicCategoryModel>>(
+        (p) => p.academicCategories);
+    final unread =
         context.select<AppProvider, int>((p) => p.unreadNotificationsCount);
-    final selectedTagFilter =
-        context.select<AppProvider, String>((p) => p.selectedTagFilter);
-    final langCode = context.locale.languageCode;
-    final isOnline = context.select<AppProvider, bool>((p) => p.isOnline);
-    final availableLiveStreamers = isOnline ? liveStreamers : <StreamerModel>[];
-
-    final isUserStreamerLive = isStreamerModeEnabled && isBroadcastingLive;
-
-    return Scaffold(
-      backgroundColor: AppTheme.bg,
-      appBar: AppBar(
-        titleSpacing: AppTheme.spaceMd,
-        title: isUserStreamerLive
-            ? Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: customBroadcastType == BroadcastType.liveAudio
-                      ? AppTheme.media
-                      : AppTheme.danger.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(
-                    color: customBroadcastType == BroadcastType.liveAudio
-                        ? AppTheme.textMuted
-                        : AppTheme.danger.withValues(alpha: 0.8),
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    if (customBroadcastType == BroadcastType.liveAudio) ...[
-                      const Icon(Icons.mic_rounded,
-                          size: 12, color: AppTheme.onMedia),
-                      const SizedBox(width: 5),
-                      Text(
-                        'live.audio_live_indicator'.tr(),
-                        style: const TextStyle(
-                          color: AppTheme.onMedia,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ] else ...[
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.danger,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        'live.live_indicator'.tr(),
-                        style: const TextStyle(
-                          color: AppTheme.danger,
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              )
-            : const SizedBox.shrink(),
-        actions: [
-          const LanguageSwitcher(),
-          IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.notifications_outlined, size: 22),
-                if (unreadNotificationsCount > 0)
-                  PositionedDirectional(
-                    end: 0,
-                    top: 0,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.danger,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            tooltip: 'nav.notifications'.tr(),
-            onPressed: () => _showNotificationsSheet(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.bookmark_outline_rounded, size: 22),
-            tooltip: 'nav.bookmarks'.tr(),
-            onPressed: () => _showBookmarksSheet(context),
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, size: 22),
-            tooltip: 'nav.settings'.tr(),
-            onPressed: () => context.push('/settings'),
-          ),
-          const SizedBox(width: AppTheme.spaceSm),
-        ],
-      ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceSm),
-        children: [
-          const ConnectivityBanner(),
-          //  Search Bar + Tag Filter Action Row
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Container(
-                    height: AppTheme.searchBarHeight,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius:
-                          BorderRadius.circular(AppTheme.searchBarRadius),
-                      // UI-01: same shape/border contract as the spatial-map
-                      // search bar (AppTheme.searchBar* tokens), plus a
-                      // focus ring neither field had before.
-                      border: Border.all(
-                        color: _isSearchFocused
-                            ? AppTheme.primary
-                            : AppTheme.border,
-                        width: _isSearchFocused
-                            ? 1.6
-                            : AppTheme.searchBarBorderWidth,
-                      ),
-                    ),
-                    child: TextField(
-                      controller: _searchController,
-                      focusNode: _searchFocusNode,
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary, fontSize: 14),
-                      onChanged: _onSearchChanged,
-                      decoration: InputDecoration(
-                        hintText: 'feed.search_feed'.tr(),
-                        hintStyle: const TextStyle(
-                            color: AppTheme.textMuted, fontSize: 13),
-                        prefixIcon: const Icon(Icons.search_rounded,
-                            color: AppTheme.primary, size: 20),
-                        suffixIcon: _searchController.text.isNotEmpty
-                            ? IconButton(
-                                icon: const Icon(Icons.clear_rounded,
-                                    size: 18, color: AppTheme.textMuted),
-                                onPressed: () {
-                                  _searchController.clear();
-                                  _searchDebounce?.cancel();
-                                  appProvider.setSearchQuery('');
-                                },
-                              )
-                            : null,
-                        border: InputBorder.none,
-                        enabledBorder: InputBorder.none,
-                        focusedBorder: InputBorder.none,
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: AppTheme.spaceSm),
-                // Filter Tags Button
-                Material(
-                  color: AppTheme.surface,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14.0),
-                    side: BorderSide(
-                      color: selectedTagFilter != 'all'
-                          ? AppTheme.danger
-                          : AppTheme.border,
-                      width: 1.2,
-                    ),
-                  ),
-                  child: InkWell(
-                    onTap: () => TagsFilterBottomSheet.show(context),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    child: Container(
-                      width: 46,
-                      height: 46,
-                      alignment: Alignment.center,
-                      child: Icon(
-                        Icons.tune_rounded,
-                        color: selectedTagFilter != 'all'
-                            ? AppTheme.danger
-                            : AppTheme.textPrimary,
-                        size: 20,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceLg),
-
-          //  Top Featured Live Stream Hero (Only shown if a streamer is live!)
-          if (availableLiveStreamers.isNotEmpty) ...[
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-              child: _buildHeroLiveCarousel(
-                  context, availableLiveStreamers.first, langCode),
-            ),
-            const SizedBox(height: AppTheme.spaceXl),
-
-            //  "Live Now in AlSharqia"Section (Only shown if streamers are live!)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.danger,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: AppTheme.spaceSm),
-                      Text(
-                        'feed.live_in_sharqia'.tr(),
-                        style: const TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '${availableLiveStreamers.length} ${'feed.active_streams'.tr()}',
-                    style: const TextStyle(
-                        color: AppTheme.danger,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-
-            SizedBox(
-              height: 142 + MediaQuery.textScalerOf(context).scale(52),
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-                itemCount: availableLiveStreamers.length,
-                itemBuilder: (context, index) {
-                  final streamer = availableLiveStreamers[index];
-                  return _buildHorizontalLiveCard(context, streamer, langCode);
-                },
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceXl),
-          ],
-
-          //  Category Filter Chips
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: Text(
-              'feed.academic_fields'.tr(),
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceSm),
-          Builder(builder: (context) {
-            // Cluster 3 Task 10: category chips are driven by the live
-            // AppProvider.academicCategories list (admin-managed, Task 11)
-            // instead of a hardcoded id/i18n-key pair per chip.
-            final categories = context.select<AppProvider, List<AcademicCategoryModel>>(
-                (p) => p.academicCategories);
-            final langCode = context.locale.languageCode;
-            return SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-              child: Row(
-                children: [
-                  _buildCategoryFilterChip(context, selectedCategory, 'all',
-                      'feed.category_all'.tr()),
-                  for (final category in categories.where((c) => c.isActive))
-                    Padding(
-                      padding: const EdgeInsetsDirectional.only(
-                          start: AppTheme.spaceSm),
-                      child: _buildCategoryFilterChip(
-                        context,
-                        selectedCategory,
-                        category.id,
-                        category.getLocalizedName(langCode),
-                      ),
-                    ),
-                ],
-              ),
-            );
-          }),
-          const SizedBox(height: AppTheme.spaceXl),
-
-          //  "Streamers"Grid Section (Replacing old Lecture Archive)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: Wrap(
-              alignment: WrapAlignment.spaceBetween,
-              spacing: AppTheme.spaceMd,
-              runSpacing: AppTheme.spaceSm,
-              children: [
-                Text(
-                  'feed.streamers'.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                Text(
-                  '${displayedStreamers.length} ${'feed.streamers_count'.tr()}',
-                  style:
-                      const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-            child: LayoutBuilder(builder: (context, constraints) {
-              final columns = (constraints.maxWidth / 300).floor().clamp(1, 4);
-              final width =
-                  ((constraints.maxWidth - AppTheme.spaceMd * (columns - 1)) /
-                          columns)
-                      .clamp(0.0, 420.0);
-              final signature = Object.hash(
-                constraints.maxWidth,
-                langCode,
-                MediaQuery.textScalerOf(context).scale(1),
-                Object.hashAll(displayedStreamers),
-              );
-              if (_cardLayoutSignature != signature) {
-                _cardLayoutSignature = signature;
-                _cardMinHeight = 0;
-                _cardKeys = List.generate(
-                    displayedStreamers.length, (_) => GlobalKey());
-              }
-              _measureCardHeights();
-              return Wrap(
-                alignment: WrapAlignment.start,
-                textDirection:
-                    MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded
-                        ? TextDirection.ltr
-                        : null,
-                spacing: AppTheme.spaceMd,
-                runSpacing: AppTheme.spaceMd,
-                children: [
-                  for (var index = 0;
-                      index < displayedStreamers.length;
-                      index++)
-                    SizedBox(
-                        width: width,
-                        child:
-                            NotificationListener<SizeChangedLayoutNotification>(
-                          onNotification: (_) {
-                            _measureCardHeights();
-                            return false;
-                          },
-                          child: SizeChangedLayoutNotifier(
-                            child: ConstrainedBox(
-                              constraints:
-                                  BoxConstraints(minHeight: _cardMinHeight),
-                              child: StreamerGridCard(
-                                  key: _cardKeys[index],
-                                  streamer: displayedStreamers[index],
-                                  langCode: langCode),
-                            ),
-                          ),
-                        )),
-                ],
-              );
-            }),
-          ),
-          const SizedBox(height: AppTheme.space2Xl),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryFilterChip(
-    BuildContext context,
-    String selectedCategory,
-    String categoryKey,
-    String label,
-  ) {
-    final isSelected = selectedCategory == categoryKey;
-    return ChoiceChip(
-      label: Text(label),
-      selected: isSelected,
-      onSelected: (selected) {
-        context
-            .read<AppProvider>()
-            .setCategoryFilter(selected ? categoryKey : 'all');
-      },
-      selectedColor: AppTheme.danger,
-      backgroundColor: AppTheme.surface,
-      labelStyle: TextStyle(
-        color: isSelected ? AppTheme.onMedia : AppTheme.textPrimary,
-        fontSize: 13,
-        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-      ),
-      side: BorderSide(
-        color: isSelected ? AppTheme.danger : AppTheme.border,
-      ),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-      ),
-    );
-  }
-
-  Widget _buildHeroLiveCarousel(
-      BuildContext context, StreamerModel streamer, String langCode) {
-    final isAudio = streamer.isAudioLive;
-    final isVideo = streamer.isVideoLive;
-
-    Color borderColor = isVideo
-        ? AppTheme.danger.withValues(alpha: 0.4)
-        : AppTheme.textMuted.withValues(alpha: 0.5);
-
-    Color shadowColor = isVideo
-        ? AppTheme.danger.withValues(alpha: 0.15)
-        : AppTheme.textMuted.withValues(alpha: 0.15);
-
-    return Container(
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        border: Border.all(color: borderColor, width: 1.5),
-        boxShadow: [
-          BoxShadow(
-            color: shadowColor,
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Banner image
-          Stack(
+    final tag = context.select<AppProvider, String>((p) => p.selectedTagFilter);
+    final online = context.select<AppProvider, bool>((p) => p.isOnline);
+    final ownLive = context.select<AppProvider, bool>(
+        (p) => p.isStreamerModeEnabled && p.isBroadcastingLive);
+    final ownAudio = context.select<AppProvider, bool>(
+        (p) => p.customBroadcastType == BroadcastType.liveAudio);
+    final lang = context.locale.languageCode;
+    final live = online
+        ? displayed.where((s) => s.isCurrentlyLive).toList()
+        : <StreamerModel>[];
+    final inlineSearch =
+        context.windowClass != WindowClass.compact && !context.isPhoneLandscape;
+    if (context.isPhoneLandscape && _searchFocusNode.hasFocus) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _searchFocusNode.unfocus());
+    }
+    Widget search() => CaSearchField(
+        label: 'feed.search_feed'.tr(),
+        hint: 'feed.search_feed'.tr(),
+        clearLabel: 'feed.clear_search'.tr(),
+        controller: _searchController,
+        focusNode: _searchFocusNode,
+        readOnly: context.isPhoneLandscape,
+        onChanged: _onSearchChanged,
+        onClear: _searchController.text.isEmpty ? null : _clearSearch,
+        onFilter: () => TagsFilterBottomSheet.show(context),
+        filterLabel: 'feed.filters'.tr() + (tag == 'all' ? '' : ' • 1'));
+    final dock = context.usesPillNav &&
+        (MediaQuery.textScalerOf(context).scale(1) >= 1.3 ||
+            context.isPhoneLandscape);
+    final heroHeight = context.isPhoneLandscape
+        ? CanopySize.heroLandscape
+        : switch (context.windowClass) {
+            WindowClass.compact => CanopySize.heroCompact,
+            WindowClass.medium => CanopySize.heroMedium,
+            WindowClass.expanded => CanopySize.heroExpanded,
+            WindowClass.large => CanopySize.heroLarge
+          };
+    Widget liveTile(StreamerModel s, {bool stacked = false}) => CaLectureTile(
+        stacked: stacked,
+        statusKind: s.isAudioLive ? CaStatusKind.audio : CaStatusKind.live,
+        title: s.getLocalizedTitle(lang),
+        meta: s.getLocalizedName(lang),
+        imageUrl: s.bannerUrl,
+        onTap: () => s.activeStreamId == null
+            ? null
+            : context.push('/live/${s.activeStreamId}'));
+    Widget hero() => _firstPaint(
+        CaHeroCard(
+            title: live.first.getLocalizedTitle(lang),
+            presenter:
+                '${live.first.getLocalizedName(lang)} · ${live.first.getLocalizedVenue(lang)}',
+            imageUrl: live.first.bannerUrl,
+            audio: live.first.isAudioLive,
+            height: heroHeight,
+            showAction: !dock,
+            viewerLabel:
+                '${context.select<AppProvider, int?>((p) => p.platformViewerCount(live.first.activeStreamId ?? '')) ?? '—'} ${(live.first.isAudioLive ? 'live.listening_count' : 'feed.watching').tr()}',
+            action: (live.first.isAudioLive
+                    ? 'live.listen_live'
+                    : 'feed.watch_live')
+                .tr(),
+            onTap: live.first.activeStreamId == null
+                ? null
+                : () => context.push('/live/${live.first.activeStreamId}')),
+        0);
+    Widget heading(String label, int count) => Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+        child: Wrap(
+            alignment: WrapAlignment.spaceBetween,
+            spacing: AppTheme.spaceSm,
             children: [
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Image(
-                  image: downscaledImage(
-                      streamer.bannerUrl.startsWith('assets/')
-                          ? AssetImage(streamer.bannerUrl)
-                          : NetworkImage(streamer.bannerUrl) as ImageProvider,
-                      width: 800),
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => Container(
-                    color: AppTheme.surfaceAlt,
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.image_not_supported_outlined,
-                      color: AppTheme.textMuted,
-                      size: 40,
-                    ),
-                  ),
-                ),
-              ),
-              PositionedDirectional(
-                top: AppTheme.spaceMd,
-                start: AppTheme.spaceMd,
-                child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: isVideo ? AppTheme.danger : AppTheme.media,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: isAudio
-                        ? Border.all(color: AppTheme.textMuted, width: 0.8)
-                        : null,
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (isAudio) ...[
-                        const Icon(
-                          Icons.mic_rounded,
-                          size: 13,
-                          color: AppTheme.onMedia,
-                        ),
-                        const SizedBox(width: 5),
-                        Text(
-                          '${context.select<AppProvider, int?>((p) => p.platformViewerCount(streamer.activeStreamId ?? '')) ?? '—'} ${'live.listening_count'.tr()}',
-                          style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ] else ...[
-                        Container(
-                          width: 8,
-                          height: 8,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.onMedia,
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          '${context.select<AppProvider, int?>((p) => p.platformViewerCount(streamer.activeStreamId ?? '')) ?? '—'} ${'feed.watching'.tr()}',
-                          style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppTheme.spaceLg),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  streamer.getLocalizedTitle(langCode),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceSm),
-                Row(
-                  children: [
-                    CircleAvatar(
-                      radius: 16,
-                      backgroundImage: downscaledImage(
-                          streamer.avatarUrl.startsWith('assets/')
-                              ? AssetImage(streamer.avatarUrl)
-                              : NetworkImage(streamer.avatarUrl)
-                                  as ImageProvider,
-                          width: 96),
-                    ),
-                    const SizedBox(width: AppTheme.spaceSm),
+              Text(label, style: Theme.of(context).textTheme.titleMedium),
+              Text('$count', style: Theme.of(context).textTheme.bodySmall)
+            ]));
+    return Scaffold(
+        backgroundColor: Canopy.dawn,
+        appBar: CaAppBar(
+            compactLanguage: true,
+            languageBare: true,
+            toolbarHeight: MediaQuery.textScalerOf(context).scale(1) >= 1.3
+                ? CanopySize.appBarScaled
+                : null,
+            titleSpacing: AppTheme.spaceMd,
+            title: Row(children: [
+              if (inlineSearch) Expanded(child: search()),
+              if (ownLive)
+                Flexible(
+                    child: CaStatusChip(
+                        kind:
+                            ownAudio ? CaStatusKind.audio : CaStatusKind.live))
+            ]),
+            actions: [
+              if (inlineSearch) const CaAccountMenu(),
+              Stack(children: [
+                CaIconButton(
+                    bare: true,
+                    icon: CaGlyph.bell,
+                    label: 'nav.notifications'.tr() +
+                        (unread > 0 ? ' ($unread)' : ''),
+                    onPressed: () => _showNotificationsSheet(context)),
+                if (unread > 0)
+                  const PositionedDirectional(
+                      top: AppTheme.spaceSm,
+                      end: AppTheme.spaceSm,
+                      child: IgnorePointer(
+                          child: SizedBox.square(
+                              dimension: AppTheme.spaceSm,
+                              child: DecoratedBox(
+                                  decoration: BoxDecoration(
+                                      color: Canopy.brandGreen,
+                                      shape: BoxShape.circle))))),
+              ]),
+              CaIconButton(
+                  bare: true,
+                  icon: CaGlyph.bookmark,
+                  label: 'nav.bookmarks'.tr(),
+                  onPressed: () => _showBookmarksSheet(context)),
+              CaIconButton(
+                  bare: true,
+                  icon: CaGlyph.gear,
+                  label: 'nav.settings'.tr(),
+                  onPressed: () => context.push('/settings')),
+            ]),
+        bottomNavigationBar: dock && live.isNotEmpty
+            ? SafeArea(
+                top: false,
+                child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        AppTheme.spaceLg,
+                        AppTheme.spaceSm,
+                        AppTheme.spaceLg,
+                        AppTheme.spaceSm),
+                    child: CaButton(
+                        label: (live.first.isAudioLive
+                                ? 'live.listen_live'
+                                : 'feed.watch_live')
+                            .tr(),
+                        icon:
+                            live.first.isAudioLive ? CaGlyph.mic : CaGlyph.play,
+                        onPressed: live.first.activeStreamId == null
+                            ? null
+                            : () => context
+                                .push('/live/${live.first.activeStreamId}'))))
+            : null,
+        body: ListView(
+            padding: EdgeInsetsDirectional.fromSTEB(
+                context.windowInset,
+                AppTheme.spaceSm,
+                context.windowInset,
+                AppTheme.space2Xl),
+            children: [
+              const ConnectivityBanner(),
+              if (!inlineSearch) ...[
+                search(),
+                const SizedBox(height: AppTheme.spaceMd)
+              ],
+              CaChipRow(children: [
+                CaChip(
+                    label: 'feed.category_all'.tr(),
+                    selected: selectedCategory == 'all',
+                    onSelected: (_) =>
+                        context.read<AppProvider>().setCategoryFilter('all')),
+                for (final category in categories.where((c) => c.isActive))
+                  CaChip(
+                      label: category.getLocalizedName(lang),
+                      selected: selectedCategory == category.id,
+                      onSelected: (selected) => context
+                          .read<AppProvider>()
+                          .setCategoryFilter(selected ? category.id : 'all')),
+              ]),
+              const SizedBox(height: AppTheme.spaceLg),
+              if (live.isNotEmpty) ...[
+                if (context.windowClass.index >= WindowClass.expanded.index)
+                  Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Expanded(flex: 8, child: hero()),
+                    const SizedBox(width: AppTheme.spaceLg),
                     Expanded(
-                      child: Column(
+                        flex: 4,
+                        child: Column(children: [
+                          heading('feed.live_in_alsharqia'.tr(), live.length),
+                          for (final s in live.take(3))
+                            Padding(
+                                padding: const EdgeInsets.only(
+                                    bottom: AppTheme.spaceSm),
+                                child: liveTile(s))
+                        ])),
+                  ])
+                else ...[
+                  hero(),
+                  heading('feed.live_in_alsharqia'.tr(), live.length),
+                  if (context.windowClass == WindowClass.medium)
+                    Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            streamer.getLocalizedName(langCode),
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                          Text(
-                            streamer.getLocalizedVenue(langCode),
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        if (streamer.activeStreamId != null) {
-                          context.push('/live/${streamer.activeStreamId}');
-                        }
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor:
-                            isVideo ? AppTheme.danger : AppTheme.media,
-                        foregroundColor: AppTheme.onMedia,
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
-                          side: isAudio
-                              ? const BorderSide(
-                                  color: AppTheme.textMuted, width: 1.0)
-                              : BorderSide.none,
-                        ),
-                      ),
-                      icon: Icon(
-                        isVideo ? Icons.play_arrow_rounded : Icons.mic_rounded,
-                        size: 16,
-                      ),
-                      label: Text(
-                        isVideo
-                            ? 'feed.watch_live'.tr()
-                            : 'live.listen_live'.tr(),
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildHorizontalLiveCard(
-      BuildContext context, StreamerModel streamer, String langCode) {
-    final isAudio = streamer.isAudioLive;
-    final isVideo = streamer.isVideoLive;
-
-    return Container(
-      width: 260,
-      margin: const EdgeInsetsDirectional.only(end: AppTheme.spaceMd),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(
-          color: isVideo
-              ? AppTheme.danger.withValues(alpha: 0.6)
-              : isAudio
-                  ? AppTheme.textMuted.withValues(alpha: 0.6)
-                  : AppTheme.border,
-        ),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          if (streamer.activeStreamId != null) {
-            context.push('/live/${streamer.activeStreamId}');
-          }
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Stack(
-              children: [
-                SizedBox(
-                  height: 110,
-                  width: double.infinity,
-                  child: Image(
-                    image: downscaledImage(
-                        streamer.bannerUrl.startsWith('assets/')
-                            ? AssetImage(streamer.bannerUrl)
-                            : NetworkImage(streamer.bannerUrl)
-                                as ImageProvider,
-                        width: 800),
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.surfaceAlt,
-                      alignment: Alignment.center,
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: AppTheme.textMuted,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                ),
-                PositionedDirectional(
-                  top: 6,
-                  start: 6,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: isVideo ? AppTheme.danger : AppTheme.media,
-                      borderRadius: BorderRadius.circular(4),
-                      border: isAudio
-                          ? Border.all(color: AppTheme.textMuted, width: 0.8)
-                          : null,
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (isAudio) ...[
-                          const Icon(
-                            Icons.mic_rounded,
-                            size: 10,
-                            color: AppTheme.onMedia,
-                          ),
-                          const SizedBox(width: 3),
-                          Text(
-                            'feed.audio_live_badge'.tr(),
-                            style: const TextStyle(
-                              color: AppTheme.onMedia,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ] else ...[
-                          Text(
-                            'feed.live_badge'.tr(),
-                            style: const TextStyle(
-                              color: AppTheme.onMedia,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    streamer.getLocalizedTitle(langCode),
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    streamer.getLocalizedName(langCode),
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 11,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
+                          for (var i = 0; i < live.take(3).length; i++) ...[
+                            if (i > 0) const SizedBox(width: AppTheme.spaceMd),
+                            Expanded(child: liveTile(live[i], stacked: true)),
+                          ]
+                        ])
+                  else
+                    SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              for (final s in live)
+                                Padding(
+                                    padding: const EdgeInsetsDirectional.only(
+                                        end: AppTheme.spaceMd),
+                                    child: SizedBox(
+                                        width: CanopySize.liveTile,
+                                        child: liveTile(s, stacked: true)))
+                            ])),
                 ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+              ],
+              heading('feed.streamers'.tr(), displayed.length),
+              if (displayed.isEmpty)
+                CaEmptyState(
+                    title: 'feed.no_results'.tr(),
+                    body: 'feed.search_feed'.tr(),
+                    action: CaButton(
+                        label: 'feed.clear_search'.tr(),
+                        variant: CaButtonVariant.text,
+                        onPressed: _clearSearch))
+              else
+                LayoutBuilder(builder: (context, constraints) {
+                  // Master's column rule, kept on purpose: one card per row on
+                  // a phone, up to four on a laptop (never a forced pair).
+                  final columns =
+                      (constraints.maxWidth / 300).floor().clamp(1, 4);
+                  final width =
+                      ((constraints.maxWidth - AppTheme.spaceMd * (columns - 1)) /
+                              columns)
+                          .clamp(0.0, 420.0);
+                  final signature = Object.hash(
+                      constraints.maxWidth,
+                      lang,
+                      MediaQuery.textScalerOf(context).scale(1),
+                      Object.hashAll(displayed));
+                  if (_cardLayoutSignature != signature) {
+                    _cardLayoutSignature = signature;
+                    _cardMinHeight = 0;
+                    _cardKeys =
+                        List.generate(displayed.length, (_) => GlobalKey());
+                  }
+                  _measureCardHeights();
+                  return Wrap(
+                      spacing: AppTheme.spaceMd,
+                      runSpacing: AppTheme.spaceMd,
+                      children: [
+                        for (var i = 0; i < displayed.length; i++)
+                          SizedBox(
+                              width: width,
+                              child: NotificationListener<
+                                      SizeChangedLayoutNotification>(
+                                  onNotification: (_) {
+                                    _measureCardHeights();
+                                    return false;
+                                  },
+                                  child: SizeChangedLayoutNotifier(
+                                      child: ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                              minHeight: _cardMinHeight),
+                                          child: _firstPaint(
+                                              StreamerGridCard(
+                                                  key: _cardKeys[i],
+                                                  streamer: displayed[i],
+                                                  langCode: lang),
+                                              i + 1))))),
+                      ]);
+                }),
+            ]));
   }
 }
