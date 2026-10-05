@@ -28,6 +28,7 @@ import '../../map/presentation/widgets/venue_navigation_sheet.dart';
 import '../../map/presentation/venue_directions_launcher.dart';
 import 'abstract_video_player.dart';
 import 'widgets/chat_message_actions_sheet.dart';
+import 'widgets/chat_sender_profile_sheet.dart';
 import 'widgets/live_chat_layout.dart';
 import 'widgets/live_audio_stage_multi_speaker.dart';
 import 'widgets/floating_reactions_overlay.dart';
@@ -1333,6 +1334,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               name: streamer.getLocalizedName(langCode),
               url: streamer.avatarUrl,
               live: streamer.isLiveForRoom,
+              ring: CaAvatarRing.brand,
               org: streamer.isOrganization,
               radius: CanopySize.smallAvatar)),
       const SizedBox(width: AppTheme.spaceSm),
@@ -2007,24 +2009,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     .format(context),
             avatarUrl: message.senderAvatarUrl,
             isOwn: message.isCurrentUser,
-            isSpeaker: message.badges.contains(ChatSenderBadge.speaker),
+            pending: message.isPending,
+            handRaised: message.body == raisedHandGlyph,
+            role: message.chatRole,
             dark: true,
-            roleBadges: [
-              for (final badge in message.badges)
-                (
-                  icon: switch (badge) {
-                    ChatSenderBadge.speaker => CaGlyph.mic,
-                    ChatSenderBadge.admin ||
-                    ChatSenderBadge.moderator =>
-                      CaGlyph.shield,
-                    ChatSenderBadge.verified => CaGlyph.check,
-                    ChatSenderBadge.organization => CaGlyph.home,
-                  },
-                  label: context.locale.languageCode == 'ar'
-                      ? badge.labelAr
-                      : badge.labelEn
-                )
-            ],
+            onAvatarTap: () => showChatSenderProfile(context,
+                message: message, controller: _chatController),
           )),
     );
 

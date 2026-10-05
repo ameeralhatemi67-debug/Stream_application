@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
 import '../admin_surface.dart';
 import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
@@ -1378,9 +1379,11 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 children: [
                   AdminFlow(
                     children: [
-                      CircleAvatar(
+                      CaAvatar(
+                        name: req.getLocalizedStreamerName(langCode),
+                        url: req.streamerAvatarUrl,
                         radius: 20,
-                        backgroundImage: AssetImage(req.streamerAvatarUrl),
+                        ring: CaAvatarRing.brand,
                       ),
                       const SizedBox(width: 12),
                       Expanded(

@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
 import '../admin_surface.dart';
 import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
@@ -446,17 +447,15 @@ class _RolePermissionManagementViewState
               runSpacing: AppTheme.spaceSm,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                CircleAvatar(
+                CaAvatar(
+                  name: assignment.displayName,
+                  url: assignment.avatarUrl,
                   radius: 18,
-                  backgroundColor: tierColor.withValues(alpha: 0.15),
-                  backgroundImage: (assignment.avatarUrl != null &&
-                          assignment.avatarUrl!.isNotEmpty)
-                      ? NetworkImage(assignment.avatarUrl!)
-                      : null,
-                  child: (assignment.avatarUrl == null ||
-                          assignment.avatarUrl!.isEmpty)
-                      ? Icon(Icons.person_rounded, color: tierColor, size: 18)
-                      : null,
+                  // Admins wear the same green ring they have in chat.
+                  ring: assignment.role == 'master_admin' ||
+                          assignment.role == 'admin'
+                      ? CaAvatarRing.admin
+                      : CaAvatarRing.none,
                 ),
                 const SizedBox(width: AppTheme.spaceMd),
                 SizedBox(

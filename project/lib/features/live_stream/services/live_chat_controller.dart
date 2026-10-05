@@ -569,6 +569,20 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     );
   }
 
+  /// When [senderId] was made a moderator for this room, or null when it is
+  /// not known: no such appointment, or the chat_moderator_since function
+  /// (supabase/migrations/20261006090000) is not deployed yet.
+  Future<DateTime?> moderatorSince(String senderId) async {
+    try {
+      final result = await _client.rpc('chat_moderator_since',
+          params: {'p_stream_id': streamId, 'p_profile_id': senderId});
+      return result is String ? DateTime.tryParse(result)?.toLocal() : null;
+    } catch (e) {
+      debugPrint('LiveChatController: moderator date unavailable: $e');
+      return null;
+    }
+  }
+
   Future<void> unmuteUser(String senderId) async {
     await _client
         .from('chat_muted_users')

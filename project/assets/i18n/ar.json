@@ -266,6 +266,16 @@
     "upcoming_tab": "القادمة"
   },
   "live": {
+    "sender_profile_title": "ملف المشارك في الدردشة",
+    "sender_tag_admin": "المشرف العام",
+    "sender_tag_moderator": "مشرف البث",
+    "sender_tag_broadcaster": "محاضر",
+    "sender_tag_organization": "مؤسسة",
+    "sender_tag_viewer": "مستمع",
+    "sender_affiliation_admin": "إدارة المنصة",
+    "sender_moderator_since": "مشرف منذ {date}",
+    "sender_history_title": "رسائل في هذا البث",
+    "sender_history_empty": "لا توجد رسائل في هذا البث بعد.",
     "recovery_exhausted": "تعذر استعادة الاتصال. أعد المحاولة أو غادر.",
     "player_state_unconfirmed": "لم يتأكد التشغيل. استخدم أزرار يوتيوب أو أعد المحاولة.",
     "recovery_retry": "إعادة المحاولة",

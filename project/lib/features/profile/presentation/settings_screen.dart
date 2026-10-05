@@ -419,6 +419,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       CaAvatar(
           name: isAr ? profile.nameAr : profile.nameEn,
           url: profile.avatarUrl,
+          // Broadcaster and organization accounts wear the identity ring, and
+          // the spinning live ring while they are on air.
+          ring: isStreamerCard ? CaAvatarRing.brand : CaAvatarRing.none,
+          live: isStreamerCard && provider.isBroadcastingLive,
           verified: profile.isVerifiedScholar),
       const SizedBox(width: AppTheme.spaceMd),
       Expanded(

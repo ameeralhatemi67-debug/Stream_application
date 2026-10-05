@@ -496,6 +496,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                             name: streamer.getLocalizedName(lang),
                             url: streamer.avatarUrl,
                             live: live,
+                            ring: CaAvatarRing.brand,
                             verified: streamer.isVerified,
                             org: streamer.isOrganization,
                             radius: CanopySize.profileAvatar))),
@@ -596,7 +597,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               children: [
                                 CaAvatar(
                                     name: speaker.getLocalizedName(lang),
-                                    url: speaker.avatarUrl),
+                                    url: speaker.avatarUrl,
+                                    ring: CaAvatarRing.brand),
                                 Text(speaker.getLocalizedName(lang),
                                     style: Theme.of(context)
                                         .textTheme

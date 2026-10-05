@@ -1,3 +1,4 @@
+import '../../../core/widgets/ds/ca_cards.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_rows.dart';
 import 'admin_surface.dart';
@@ -1471,17 +1472,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       }),
                     ),
                   ),
-                CircleAvatar(
+                CaAvatar(
+                  name: app.applicantNameEn,
+                  url: app.avatarUrl,
                   radius: 24,
-                  backgroundColor: Canopy.mint,
-                  backgroundImage: resolveImageProviderOrNull(app.avatarUrl),
-                  child: app.avatarUrl.isEmpty
-                      ? Icon(
-                          app.isOrganization
-                              ? Icons.apartment_rounded
-                              : Icons.person_rounded,
-                          color: Canopy.slate)
-                      : null,
+                  org: app.isOrganization,
+                  ring: CaAvatarRing.brand,
                 ),
                 const SizedBox(width: AppTheme.spaceMd),
                 SizedBox(
@@ -1942,13 +1938,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             border:
                                 Border.all(color: AppTheme.surface, width: 3),
                           ),
-                          child: CircleAvatar(
+                          child: CaAvatar(
+                            name: app.applicantNameEn,
+                            url: app.avatarUrl,
                             radius: 34,
-                            backgroundImage:
-                                resolveImageProviderOrNull(app.avatarUrl),
-                            child: app.avatarUrl.isEmpty
-                                ? const Icon(Icons.person_outline_rounded)
-                                : null,
+                            org: app.isOrganization,
+                            ring: CaAvatarRing.brand,
                           ),
                         ),
                       ),
@@ -2318,14 +2313,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       runSpacing: AppTheme.spaceSm,
                       crossAxisAlignment: WrapCrossAlignment.center,
                       children: [
-                        CircleAvatar(
+                        CaAvatar(
+                          name: s.getLocalizedName(Localizations.localeOf(context).languageCode),
+                          url: s.avatarUrl,
                           radius: 20,
-                          backgroundColor: Canopy.mint,
-                          backgroundImage: buildSafeImageProvider(
-                            path: s.avatarUrl,
-                            defaultAsset:
-                                'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
-                          ),
+                          org: s.isOrganization,
+                          live: s.isCurrentlyLive,
+                          ring: CaAvatarRing.brand,
                         ),
                         const SizedBox(width: AppTheme.spaceMd),
                         SizedBox(

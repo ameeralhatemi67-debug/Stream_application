@@ -1,9 +1,9 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:go_router/go_router.dart';
 import '../venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/safe_image_provider.dart';
 import '../../../profile/models/streamer_models.dart';
 import 'venue_navigation_sheet.dart';
 
@@ -178,13 +178,13 @@ class StreamerSlidingDrawer extends StatelessWidget {
             // Avatar with status ring
             Stack(
               children: [
-                CircleAvatar(
+                CaAvatar(
+                  name: streamer.getLocalizedName(Localizations.localeOf(context).languageCode),
+                  url: streamer.avatarUrl,
                   radius: 22,
-                  backgroundColor: AppTheme.surfaceAlt,
-                  backgroundImage: streamer.avatarUrl.startsWith('assets/')
-                      ? AssetImage(streamer.avatarUrl) as ImageProvider
-                      : downscaledImage(NetworkImage(streamer.avatarUrl),
-                          width: 160),
+                  org: streamer.isOrganization,
+                  live: streamer.isCurrentlyLive,
+                  ring: CaAvatarRing.brand,
                 ),
                 PositionedDirectional(
                   bottom: 0,

@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
@@ -100,6 +101,11 @@ class CaStatusChip extends StatelessWidget {
   }
 }
 
+/// The ring around an account's picture. Broadcasters and organizations wear
+/// [brand]; chat admins wear the same green; chat moderators wear violet.
+/// A live account (CaAvatar.live) always wears the spinning crimson ring.
+enum CaAvatarRing { none, brand, admin, moderator }
+
 class CaAvatar extends StatefulWidget {
   const CaAvatar(
       {super.key,
@@ -108,25 +114,27 @@ class CaAvatar extends StatefulWidget {
       this.radius = CanopySize.avatarRadius,
       this.live = false,
       this.verified = false,
-      this.org = false});
+      this.org = false,
+      this.ring = CaAvatarRing.none});
   final String name;
   final String? url;
   final double radius;
   final bool live, verified, org;
+  final CaAvatarRing ring;
   @override
   State<CaAvatar> createState() => _CaAvatarState();
 }
 
 class _CaAvatarState extends State<CaAvatar>
     with SingleTickerProviderStateMixin {
-  late final _ring =
+  late final _spin =
       AnimationController(vsync: this, duration: CanopyMotion.avatarRing);
   void _sync() {
-    if (widget.live && !widget.org && !CanopyMotion.reduced(context)) {
-      if (!_ring.isAnimating) _ring.repeat();
+    if (widget.live && !CanopyMotion.reduced(context)) {
+      if (!_spin.isAnimating) _spin.repeat();
     } else {
-      _ring.stop();
-      _ring.value = 0;
+      _spin.stop();
+      _spin.value = 0;
     }
   }
 
@@ -144,9 +152,17 @@ class _CaAvatarState extends State<CaAvatar>
 
   @override
   void dispose() {
-    _ring.dispose();
+    _spin.dispose();
     super.dispose();
   }
+
+  SweepGradient? get _gradient => widget.live
+      ? CanopyGradients.liveRing
+      : switch (widget.ring) {
+          CaAvatarRing.none => null,
+          CaAvatarRing.brand || CaAvatarRing.admin => CanopyGradients.ring,
+          CaAvatarRing.moderator => CanopyGradients.moderatorRing,
+        };
 
   @override
   Widget build(BuildContext context) {
@@ -154,40 +170,52 @@ class _CaAvatarState extends State<CaAvatar>
     final initial = name.isEmpty
         ? '?'
         : String.fromCharCodes(name.runes.take(1)).toUpperCase();
+    final gradient = _gradient;
+    // The footprint stays 2r + 4 whether or not there is a ring, so a ring can
+    // be switched on without moving anything around it. A ring takes 3 px and
+    // a 2 px white gap out of that footprint; the picture shrinks to fit.
+    final footprint = widget.radius * 2 + AppTheme.spaceXs;
+    const band = 3.0, gap = 2.0;
+    final inset = gradient == null ? CanopySize.ring : band + gap;
+    final imageRadius = (footprint - inset * 2) / 2;
     final fallback = DecoratedBox(
         decoration:
             const BoxDecoration(gradient: CanopyGradients.avatarFallback),
         child: Center(
             child: Text(initial,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: Canopy.brandGreen, fontSize: widget.radius))));
-    final diameter = widget.radius * 2;
+                    color: Canopy.brandGreen, fontSize: imageRadius))));
     final content = StreamerAvatar(
         avatarUrl: widget.url,
-        radius: widget.radius,
+        radius: imageRadius,
         name: widget.name,
         square: widget.org,
         cornerRadius: CanopyRadius.orgAvatar,
         placeholder: fallback);
+    final outerCorner = CanopyRadius.orgAvatar + inset;
     return SizedBox.square(
-        dimension: diameter + AppTheme.spaceXs,
+        dimension: footprint,
         child: Stack(clipBehavior: Clip.none, children: [
-          if (widget.live)
+          if (gradient != null) ...[
             Positioned.fill(
-                child: widget.org
-                    ? DecoratedBox(
-                        decoration: BoxDecoration(
-                            gradient: AppGradients.ring,
-                            borderRadius:
-                                BorderRadius.circular(CanopyRadius.orgAvatar)))
-                    : RotationTransition(
-                        turns: _ring,
-                        child: const DecoratedBox(
-                            decoration: BoxDecoration(
-                                gradient: AppGradients.ring,
-                                shape: BoxShape.circle)))),
-          Padding(
-              padding: const EdgeInsets.all(CanopySize.ring), child: content),
+                child: AnimatedBuilder(
+                    animation: _spin,
+                    builder: (context, _) => CustomPaint(
+                        painter: _RingPainter(
+                            gradient: gradient,
+                            turns: _spin.value,
+                            corner: widget.org ? outerCorner : null)))),
+            Padding(
+                padding: const EdgeInsets.all(band),
+                child: DecoratedBox(
+                    decoration: BoxDecoration(
+                        color: Canopy.paper,
+                        shape: widget.org ? BoxShape.rectangle : BoxShape.circle,
+                        borderRadius: widget.org
+                            ? BorderRadius.circular(outerCorner - band)
+                            : null))),
+          ],
+          Padding(padding: EdgeInsets.all(inset), child: content),
           if (widget.verified)
             PositionedDirectional(
                 top: 0,
@@ -200,6 +228,35 @@ class _CaAvatarState extends State<CaAvatar>
   }
 }
 
+/// A sweep gradient turning inside a fixed circle or rounded square, so the
+/// ring spins while the picture and its shape stay still.
+class _RingPainter extends CustomPainter {
+  const _RingPainter(
+      {required this.gradient, required this.turns, required this.corner});
+  final SweepGradient gradient;
+  final double turns;
+  final double? corner;
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final paint = Paint()
+      ..shader = SweepGradient(
+              colors: gradient.colors,
+              transform: GradientRotation(turns * 2 * math.pi))
+          .createShader(rect);
+    if (corner == null) {
+      canvas.drawOval(rect, paint);
+    } else {
+      canvas.drawRRect(
+          RRect.fromRectAndRadius(rect, Radius.circular(corner!)), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_RingPainter old) =>
+      old.turns != turns || old.gradient != gradient || old.corner != corner;
+}
+
 class CaPersonRow extends StatelessWidget {
   const CaPersonRow(
       {super.key,
@@ -208,11 +265,13 @@ class CaPersonRow extends StatelessWidget {
       this.avatarUrl,
       this.live = false,
       this.verified = false,
+      this.ring = CaAvatarRing.none,
       this.onTap,
       this.trailing});
   final String name;
   final String? subtitle, avatarUrl;
   final bool live, verified;
+  final CaAvatarRing ring;
   final VoidCallback? onTap;
   final Widget? trailing;
   @override
@@ -233,6 +292,7 @@ class CaPersonRow extends StatelessWidget {
                           name: name,
                           url: avatarUrl,
                           live: live,
+                          ring: ring,
                           verified: verified),
                       const SizedBox(width: AppTheme.spaceMd),
                       Expanded(
@@ -329,6 +389,7 @@ class CaScholarCard extends StatelessWidget {
                                       name: name,
                                       url: avatarUrl,
                                       live: live,
+                                      ring: CaAvatarRing.brand,
                                       verified: verified,
                                       org: org)),
                               const SizedBox(width: AppTheme.spaceSm),
@@ -381,6 +442,7 @@ extension on CaScholarCard {
                   url: avatarUrl,
                   radius: radius,
                   live: live,
+                  ring: CaAvatarRing.brand,
                   verified: verified,
                   org: org)),
         ]));

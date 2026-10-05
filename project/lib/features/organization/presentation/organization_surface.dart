@@ -79,7 +79,7 @@ class OrganizationTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) =>
       Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        CaAvatar(name: name, org: true),
+        CaAvatar(name: name, org: true, ring: CaAvatarRing.brand),
         const SizedBox(width: AppTheme.spaceMd),
         Expanded(
             child: Text(name, style: Theme.of(context).textTheme.titleMedium)),
@@ -171,7 +171,7 @@ class OrganizationDetailRow extends StatelessWidget {
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
             Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              CaAvatar(name: title, org: true),
+              CaAvatar(name: title, org: true, ring: CaAvatarRing.brand),
               const SizedBox(width: AppTheme.spaceSm),
               Expanded(
                   child: Text(title,

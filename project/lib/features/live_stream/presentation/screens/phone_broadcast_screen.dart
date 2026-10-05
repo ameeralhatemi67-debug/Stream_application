@@ -26,6 +26,7 @@ import '../../models/stream_privacy_models.dart';
 import '../../services/live_chat_controller.dart';
 import '../../services/rtmp_publish_engine.dart';
 import '../widgets/chat_message_actions_sheet.dart';
+import '../widgets/chat_sender_profile_sheet.dart';
 import '../widgets/floating_reactions_overlay.dart';
 import '../widgets/live_chat_widget.dart';
 import '../widgets/live_chat_layout.dart';
@@ -1921,6 +1922,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               controller: _chatController,
             );
           },
+          onSenderTap: (msg) => showChatSenderProfile(context,
+              message: msg, controller: _chatController),
         );
       },
     );

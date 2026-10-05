@@ -1,10 +1,10 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:latlong2/latlong.dart';
 import '../venue_directions_launcher.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/streamer_avatar.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../models/map_models.dart';
 
@@ -164,7 +164,14 @@ class VenueNavigationSheet extends StatelessWidget {
                 ),
                 child: Row(
                   children: [
-                    StreamerAvatar(radius: 20, avatarUrl: streamer.avatarUrl),
+                    CaAvatar(
+                      name: streamer.getLocalizedName(Localizations.localeOf(context).languageCode),
+                      url: streamer.avatarUrl,
+                      radius: 20,
+                      org: streamer.isOrganization,
+                      live: streamer.isCurrentlyLive,
+                      ring: CaAvatarRing.brand,
+                    ),
                     const SizedBox(width: AppTheme.spaceMd),
                     Expanded(
                       child: Column(

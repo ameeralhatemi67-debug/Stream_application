@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
 import '../admin_surface.dart';
 import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
@@ -5,7 +6,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
-import '../../../../core/widgets/safe_image_provider.dart';
 import '../../models/tag_moderation_model.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../../core/widgets/ds/ca_surfaces.dart';
@@ -278,10 +278,11 @@ class _TagModerationViewState extends State<TagModerationView> {
                         itemBuilder: (context, index) {
                           final b = items[index];
                           return ListTile(
-                            leading: CircleAvatar(
-                              backgroundColor: Canopy.mint,
-                              backgroundImage:
-                                  buildSafeImageProvider(path: b.avatarUrl),
+                            leading: CaAvatar(
+                              name: b.nameEn,
+                              url: b.avatarUrl,
+                              org: b.isOrganization,
+                              ring: CaAvatarRing.brand,
                             ),
                             title: Text(b.nameEn,
                                 style: const TextStyle(

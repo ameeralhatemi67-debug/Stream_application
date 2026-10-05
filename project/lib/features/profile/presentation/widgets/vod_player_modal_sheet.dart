@@ -83,6 +83,8 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
                       name: broadcasterName,
                       url: streamer?.avatarUrl,
                       radius: 14,
+                      ring: CaAvatarRing.brand,
+                      org: streamer?.isOrganization ?? false,
                       verified: streamer?.isVerified ?? false),
                   const SizedBox(width: AppTheme.spaceSm),
                   Expanded(

@@ -1,9 +1,9 @@
+import 'ds/ca_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import '../theme/app_theme.dart';
 import 'safe_image_provider.dart';
-import 'streamer_avatar.dart';
 
 /// Shared identity layout; each screen supplies only its own details/actions.
 class StreamerIdentityCard extends StatelessWidget {
@@ -124,12 +124,20 @@ class StreamerIdentityCard extends StatelessWidget {
                           top: bannerHeight - avatarSize / 2,
                           child: Stack(
                             children: [
-                              StreamerAvatar(
-                                avatarUrl: avatarUrl,
-                                name: name,
-                                radius: avatarSize / 2 - 2,
-                                borderColor: AppTheme.surface,
-                                borderWidth: 2,
+                              // A white stroke, then the account's identity ring.
+                              DecoratedBox(
+                                decoration: const BoxDecoration(
+                                    color: AppTheme.surface,
+                                    shape: BoxShape.circle),
+                                child: Padding(
+                                  padding: const EdgeInsets.all(2),
+                                  child: CaAvatar(
+                                    name: name,
+                                    url: avatarUrl,
+                                    radius: avatarSize / 2 - 6,
+                                    ring: CaAvatarRing.brand,
+                                  ),
+                                ),
                               ),
                               if (isVerified)
                                 const PositionedDirectional(

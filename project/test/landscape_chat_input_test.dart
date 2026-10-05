@@ -85,7 +85,7 @@ void main() {
     ))));
     await tester.pumpAndSettle();
     expect(find.byIcon(Icons.back_hand_rounded), findsOneWidget);
-    expect(find.text('live.hand_raised_message'.tr()), findsOneWidget);
+    expect(find.textContaining('live.hand_raised_message'.tr()), findsOneWidget);
   });
 
   testWidgets('laptop action menu stays in the chat side and accepts taps',

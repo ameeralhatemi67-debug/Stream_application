@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
-import '../../../../core/widgets/safe_image_provider.dart';
 import '../../models/chat_message_model.dart';
 import '../../services/live_chat_controller.dart';
 import 'live_chat_layout.dart';
+import 'chat_sender_profile_sheet.dart';
 import 'floating_reactions_overlay.dart' show raisedHandGlyph, loweredHandGlyph;
-import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../../core/widgets/ds/ca_feedback.dart';
-import '../../../../core/widgets/ds/ca_icon.dart';
 
 class LiveChatWidget extends StatefulWidget {
   final List<ChatMessageModel> messages;
@@ -27,6 +25,9 @@ class LiveChatWidget extends StatefulWidget {
   /// show based on `message.isCurrentUser`, same shape as onSendTextMessage.
   final void Function(ChatMessageModel message)? onMessageLongPress;
 
+  /// Tap on a sender's avatar: opens their profile.
+  final void Function(ChatMessageModel message)? onSenderTap;
+
   const LiveChatWidget({
     super.key,
     required this.messages,
@@ -36,6 +37,7 @@ class LiveChatWidget extends StatefulWidget {
     this.cinema = false,
     this.onClose,
     this.onMessageLongPress,
+    this.onSenderTap,
   });
 
   @override
@@ -49,6 +51,22 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
 
   bool get _readOnly => isCompactLandscapeChat(context);
   bool _hasText = false;
+
+  /// Ids of messages that arrived while this chat was open: they rise in. The
+  /// ones already there when it opened, and ones scrolled to later, do not.
+  final Set<String> _arriving = {};
+  late Set<String> _knownIds = {for (final m in widget.messages) m.id};
+
+  @override
+  void didUpdateWidget(covariant LiveChatWidget old) {
+    super.didUpdateWidget(old);
+    final ids = {for (final m in widget.messages) m.id};
+    _arriving.retainAll(ids);
+    if (widget.messages.length > old.messages.length) {
+      _arriving.addAll(ids.difference(_knownIds));
+    }
+    _knownIds = ids;
+  }
 
   @override
   void initState() {
@@ -167,6 +185,10 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     widget.messages[widget.messages.length - 1 - index];
                 return _ChatTile(
                   message: message,
+                  arriving: _arriving.contains(message.id),
+                  onSenderTap: widget.onSenderTap == null
+                      ? null
+                      : () => widget.onSenderTap!(message),
                   onLongPress: widget.onMessageLongPress == null
                       ? null
                       : () => widget.onMessageLongPress!(message),
@@ -278,8 +300,10 @@ extension on _LiveChatWidgetState {
               ),
             ),
           Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
-                AppTheme.spaceSm, widget.onClose == null ? AppTheme.spaceLg : 0,
+            padding: EdgeInsetsDirectional.fromSTEB(
+                AppTheme.spaceLg,
+                AppTheme.spaceSm,
+                widget.onClose == null ? AppTheme.spaceLg : 0,
                 AppTheme.spaceSm),
             child: Row(
               children: [
@@ -315,7 +339,8 @@ extension on _LiveChatWidgetState {
                 if (widget.onClose != null)
                   IconButton(
                     onPressed: widget.onClose,
-                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                    tooltip:
+                        MaterialLocalizations.of(context).closeButtonTooltip,
                     icon: const Icon(Icons.close_rounded, color: Canopy.paper),
                   ),
               ],
@@ -371,6 +396,10 @@ extension on _LiveChatWidgetState {
                       return _ChatTile(
                         cinema: true,
                         message: message,
+                        arriving: _arriving.contains(message.id),
+                        onSenderTap: widget.onSenderTap == null
+                            ? null
+                            : () => widget.onSenderTap!(message),
                         onLongPress: widget.onMessageLongPress == null
                             ? null
                             : () => widget.onMessageLongPress!(message),
@@ -394,8 +423,11 @@ extension on _LiveChatWidgetState {
               child: SafeArea(
                 top: false,
                 child: Padding(
-                  padding: const EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
-                      AppTheme.spaceSm, AppTheme.spaceSm, AppTheme.spaceSm),
+                  padding: const EdgeInsetsDirectional.fromSTEB(
+                      AppTheme.spaceLg,
+                      AppTheme.spaceSm,
+                      AppTheme.spaceSm,
+                      AppTheme.spaceSm),
                   child: Row(
                     children: [
                       Expanded(
@@ -404,7 +436,8 @@ extension on _LiveChatWidgetState {
                           focusNode: _focusNode,
                           minLines: 1,
                           maxLines: 4,
-                          style: theme.bodyMedium?.copyWith(color: Canopy.paper),
+                          style:
+                              theme.bodyMedium?.copyWith(color: Canopy.paper),
                           cursorColor: Canopy.mist,
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => _handleSendText(),
@@ -462,226 +495,44 @@ extension on _LiveChatWidgetState {
 class _ChatTile extends StatelessWidget {
   final ChatMessageModel message;
   final VoidCallback? onLongPress;
+  final VoidCallback? onSenderTap;
   final bool cinema;
+  final bool arriving;
 
   const _ChatTile(
-      {required this.message, this.onLongPress, this.cinema = false});
+      {required this.message,
+      this.onLongPress,
+      this.onSenderTap,
+      this.cinema = false,
+      this.arriving = false});
 
   @override
-  Widget build(BuildContext context) {
-    if (cinema) {
-      return GestureDetector(
-          onLongPress: onLongPress,
-          child: Padding(
-              padding:
-                  const EdgeInsetsDirectional.only(bottom: AppTheme.spaceSm),
-              child: CaChatBubble(
-                name: message.senderName,
-                message: (message.body == raisedHandGlyph
-                        ? 'live.hand_raised_message'.tr()
-                        : message.body == loweredHandGlyph
-                            ? 'live.hand_lowered_message'.tr()
-                            : message.body) +
-                    (message.isEdited
-                        ? ' ${'live.message_edited_badge'.tr()}'
-                        : ''),
-                time: TimeOfDay.fromDateTime(message.createdAt.toLocal())
-                    .format(context),
-                avatarUrl: message.senderAvatarUrl,
-                isOwn: message.isCurrentUser,
-                isSpeaker: message.badges.contains(ChatSenderBadge.speaker),
-                dark: true,
-                roleBadges: [
-                  for (final badge in message.badges)
-                    (
-                      icon: switch (badge) {
-                        ChatSenderBadge.speaker => CaGlyph.mic,
-                        ChatSenderBadge.admin ||
-                        ChatSenderBadge.moderator =>
-                          CaGlyph.shield,
-                        ChatSenderBadge.verified => CaGlyph.check,
-                        ChatSenderBadge.organization => CaGlyph.home,
-                      },
-                      label: context.locale.languageCode == 'ar'
-                          ? badge.labelAr
-                          : badge.labelEn
-                    )
-                ],
-              )));
-    }
-    return GestureDetector(
+  Widget build(BuildContext context) => GestureDetector(
       onLongPress: onLongPress,
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: message.isCurrentUser
-              ? AppTheme.primary.withValues(alpha: 0.1)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: message.isCurrentUser
-              ? Border.all(
-                  color: AppTheme.primary.withValues(alpha: 0.3), width: 1)
-              : null,
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 14,
-              backgroundColor:
-                  message.isCurrentUser ? AppTheme.primary : AppTheme.surface,
-              backgroundImage:
-                  (message.senderAvatarUrl?.startsWith('assets/') ?? false)
-                      ? AssetImage(message.senderAvatarUrl!) as ImageProvider
-                      : (message.senderAvatarUrl != null
-                          ? downscaledImage(
-                              NetworkImage(message.senderAvatarUrl!),
-                              width: 96)
-                          : null),
-              child: message.senderAvatarUrl == null
-                  ? Text(
-                      message.senderName.isNotEmpty
-                          ? message.senderName[0].toUpperCase()
-                          : 'U',
-                      style: const TextStyle(
-                        color: AppTheme.onMedia,
-                        fontSize: AppTheme.captionFont,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    )
-                  : null,
-            ),
-            const SizedBox(width: AppTheme.spaceSm),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Wrap(
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 6,
-                    runSpacing: 2,
-                    children: [
-                      Text(
-                        message.senderName,
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          color: message.isCurrentUser
-                              ? AppTheme.primary
-                              : Canopy.ink,
-                        ),
-                      ),
-                      if (message.body == raisedHandGlyph)
-                        const Icon(Icons.back_hand_rounded,
-                            size: 15, color: AppTheme.warning),
-                      ...message.badges
-                          .map((badge) => _buildSenderBadge(context, badge)),
-                      if (message.isCurrentUser)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 5, vertical: 1),
-                          decoration: BoxDecoration(
-                            color: AppTheme.primary.withValues(alpha: 0.2),
-                            borderRadius:
-                                BorderRadius.circular(AppTheme.radiusXs),
-                            border:
-                                Border.all(color: AppTheme.primary, width: 0.8),
-                          ),
-                          child: Text(
-                            'live.you'.tr(),
-                            style: const TextStyle(
-                              color: AppTheme.primary,
-                              fontSize: AppTheme.captionFont,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      Text(
-                        TimeOfDay.fromDateTime(message.createdAt.toLocal())
-                            .format(context),
-                        style: const TextStyle(
-                          fontSize: AppTheme.captionFont,
-                          color: Canopy.haze,
-                        ),
-                      ),
-                      if (message.isPending)
-                        const SizedBox(
-                          width: 9,
-                          height: 9,
-                          child: HadayahLoadingIndicator(
-                            strokeWidth: 1.5,
-                            color: Canopy.haze,
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 2),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(
-                          text: message.body == raisedHandGlyph
-                              ? 'live.hand_raised_message'.tr()
-                              : message.body == loweredHandGlyph
-                                  ? 'live.hand_lowered_message'.tr()
-                                  : message.body,
-                        ),
-                        if (message.isEdited)
-                          TextSpan(
-                            text: ' ${'live.message_edited_badge'.tr()}',
-                            style: const TextStyle(color: Canopy.haze),
-                          ),
-                      ],
-                    ),
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Canopy.slate,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Chat governance badges (Tasks 13 & 15): Admin gets a gold pill, Moderator
-/// a cyan one, both bilingual ("ADMIN / المشرف العام", "MOD / مشرف
-/// البث"). Other badge kinds (speaker/org/verified) stay a plain emoji --
-/// only admin/mod need to visibly stand out in a busy live chat.
-Widget _buildSenderBadge(BuildContext context, ChatSenderBadge badge) {
-  final isAr = context.locale.languageCode == 'ar';
-  if (badge != ChatSenderBadge.admin && badge != ChatSenderBadge.moderator) {
-    return Icon(badge.icon,
-        size: 13,
-        color: AppTheme.primary,
-        semanticLabel: isAr ? badge.labelAr : badge.labelEn);
-  }
-
-  final isAdminBadge = badge == ChatSenderBadge.admin;
-  final accentColor = isAdminBadge ? AppTheme.warning : AppTheme.primary;
-
-  return Container(
-    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-    decoration: BoxDecoration(
-      color: accentColor.withValues(alpha: 0.15),
-      borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-      border: Border.all(color: accentColor, width: 0.8),
-    ),
-    child: Text(
-      isAr ? badge.labelAr : badge.labelEn,
-      style: TextStyle(
-        color: accentColor,
-        fontSize: AppTheme.captionFont,
-        fontWeight: FontWeight.bold,
-      ),
-    ),
-  );
+      child: Padding(
+          padding: const EdgeInsetsDirectional.only(bottom: AppTheme.spaceSm),
+          child: CaChatBubble(
+            key: ValueKey(message.id),
+            name: message.senderName,
+            message: (message.body == raisedHandGlyph
+                    ? 'live.hand_raised_message'.tr()
+                    : message.body == loweredHandGlyph
+                        ? 'live.hand_lowered_message'.tr()
+                        : message.body) +
+                (message.isEdited
+                    ? ' ${'live.message_edited_badge'.tr()}'
+                    : ''),
+            time: TimeOfDay.fromDateTime(message.createdAt.toLocal())
+                .format(context),
+            avatarUrl: message.senderAvatarUrl,
+            isOwn: message.isCurrentUser,
+            pending: message.isPending,
+            handRaised: message.body == raisedHandGlyph,
+            role: message.chatRole,
+            dark: cinema,
+            animateArrival: arriving,
+            onAvatarTap: onSenderTap,
+          )));
 }
 
 class _ConnectionStatusChip extends StatelessWidget {
@@ -692,10 +543,7 @@ class _ConnectionStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (state) {
-      ChatConnectionState.live => (
-          Canopy.leaf,
-          'live.chat_status_live'.tr()
-        ),
+      ChatConnectionState.live => (Canopy.leaf, 'live.chat_status_live'.tr()),
       ChatConnectionState.connecting => (
           AppTheme.warning,
           'live.chat_status_connecting'.tr()

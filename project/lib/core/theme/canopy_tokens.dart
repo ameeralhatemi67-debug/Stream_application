@@ -131,6 +131,28 @@ abstract final class CanopyGradients {
       Canopy.canopy800
     ],
   );
+
+  /// The same sweep as [ring], in the live crimson family: the ring that
+  /// spins around an account while it is broadcasting.
+  static const liveRing = SweepGradient(
+    colors: [
+      Color(0xFF8A1F33),
+      Color(0xFFC8344C),
+      Color(0xFFF2B5C0),
+      Color(0xFF8A1F33)
+    ],
+  );
+
+  /// Chat moderators: a violet sweep, clearly apart from the green ring that
+  /// admins and broadcasters wear.
+  static const moderatorRing = SweepGradient(
+    colors: [
+      Color(0xFF3F3485),
+      Color(0xFF7A6BC4),
+      Color(0xFFD6D0F0),
+      Color(0xFF3F3485)
+    ],
+  );
 }
 
 abstract final class CanopyRadius {
