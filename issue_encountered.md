@@ -3,6 +3,7 @@
 Updated: 2026-10-03. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
+- **Chat send refused by chat_session_send RLS** — unqualified `stream_id` in the policy subquery resolved to the session's own column; fixed by qualifying `chat_messages.stream_id`.
 
 - **Stuck on YouTube connections after Google consent** — the return link replaced the navigation history; the saved page stack is now rebuilt on return.
 - **Preview camera fails with "operation could not be confirmed" (RTMPS host)** — YouTube returns `a.rtmps.youtube.com`; three host checks accepted only `*.rtmp.youtube.com`. Server fix deployed 2026-10-05; new APK and phone retest pending.
@@ -612,3 +613,9 @@ Observed: Settings → YouTube connections → Connect YouTube → Google consen
 Cause: the Android return link (`…://channel-connected/channel-connected?status=…`) is handled as a `go`, which replaces the whole navigation history, so the page had nothing beneath it.
 Fix: when consent starts (studio or connections page), the current page stack (base location plus pushed pages, from GoRouter's match list) is saved for 30 minutes. `/channel-connected` rebuilds that stack, then reopens the studio or pushes `/channels?status=…`. The connections page also shows a close button (→ `/settings`) whenever it cannot pop.
 Verification: analyzer 0; full suite 984 passed, including the stack-memory test and a close-button check on the root connections page.
+
+## Chat send refused by chat_session_send RLS
+Status: HOSTED FIX APPLIED 2026-10-05 (`20261005080242`); owner chat retest pending.
+Observed: sending in a live room failed with `PostgrestException 42501: new row violates row-level security policy "chat_session_send"`.
+Cause: the restrictive insert policy from `20261001114055` checked `exists(select 1 from broadcast_sessions s where s.id::text=stream_id …)`. Inside the subquery, `stream_id` resolved to `broadcast_sessions.stream_id` (the YouTube video id), so it compared each session with itself and never matched. Every insert was refused. No chat row has been written since session-based chat started (the latest row is from 2026-10-02).
+Fix: recreate the policy comparing `s.id::text = chat_messages.stream_id`. The viewer and phone rooms both send the live session id, matching `broadcast_chat_read`. No other migration uses this unqualified pattern.
