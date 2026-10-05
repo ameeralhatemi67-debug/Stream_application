@@ -51,6 +51,7 @@ Widget createTestWidget({
         return ChangeNotifierProvider<AppProvider>.value(
           value: provider,
           child: MaterialApp(
+            builder: (context, child) => MediaQuery(data: MediaQuery.of(context).copyWith(disableAnimations: true), child: child!),
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,
             locale: context.locale,
@@ -174,10 +175,12 @@ void main() {
       // Tap on Dr. Sarah Al-Dosari channel card (@dalilk4english)
       final sarahCard = find.text('@dalilk4english');
       expect(sarahCard, findsOneWidget);
+      await tester.ensureVisible(sarahCard);
+      await tester.pumpAndSettle();
       await tester.tap(sarahCard);
       await tester.pumpAndSettle();
 
-      await tester.drag(find.byType(NestedScrollView), const Offset(0, -450));
+      await tester.ensureVisible(find.textContaining('IELTS Speaking Part 2 & 3'));
       await tester.pumpAndSettle();
 
       // Verify filtered VOD grid contains Sarah's lecture

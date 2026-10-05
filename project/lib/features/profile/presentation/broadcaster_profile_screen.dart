@@ -1,14 +1,23 @@
+import '../../../core/widgets/ds/canopy_content_motion.dart';
+import '../../../core/widgets/ds/ca_feedback.dart';
+import '../../live_stream/models/broadcast_session.dart';
+import '../../../core/widgets/ds/ca_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/providers/app_provider.dart';
-import '../../../core/layout/content_width.dart';
+import '../../../core/layout/window_class.dart';
+import '../../../core/widgets/ds/ca_layout.dart';
+import '../../../core/widgets/ds/ca_cards.dart';
+import '../../../core/widgets/ds/ca_fixed_lines.dart';
+import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/ds/ca_fields.dart';
+import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../core/widgets/ds/canopy_lattice_background.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/language_switcher.dart';
-import '../../../core/widgets/streamer_avatar.dart';
-import '../../../core/widgets/streamer_identity_card.dart';
 import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
 import '../models/streamer_models.dart';
 import '../models/vod_models.dart';
@@ -23,8 +32,8 @@ class BroadcasterProfileScreen extends StatefulWidget {
   final String streamerId;
   final int initialTab;
 
-  const BroadcasterProfileScreen({super.key, required this.streamerId,
-      this.initialTab = 0});
+  const BroadcasterProfileScreen(
+      {super.key, required this.streamerId, this.initialTab = 0});
 
   @override
   State<BroadcasterProfileScreen> createState() =>
@@ -36,6 +45,16 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
   TabController? _tabController;
   String? _selectedSpeakerId;
   bool _detailsExpanded = false;
+
+  /// The banner on the profile card, and the avatar that straddles its edge:
+  /// the avatar plus its white stroke on each side.
+  static const _bannerHeight = 132.0;
+  static const _avatarStroke = 4.0;
+  static const _avatarBox =
+      CanopySize.profileAvatar * 2 + AppTheme.spaceXs + _avatarStroke * 2;
+  bool get _dockPrimary =>
+      context.usesPillNav &&
+      (MediaQuery.textScalerOf(context).scale(1) >= 1.3 || context.isShort);
 
   @override
   void initState() {
@@ -60,8 +79,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     const expectedTabs = 3;
     if (_tabController == null || _tabController!.length != expectedTabs) {
       _tabController?.dispose();
-      _tabController = TabController(length: expectedTabs, vsync: this,
-          initialIndex: widget.initialTab);
+      _tabController = TabController(
+          length: expectedTabs, vsync: this, initialIndex: widget.initialTab);
     }
   }
 
@@ -73,26 +92,44 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = Provider.of<AppProvider>(context);
+    final appProvider = context.read<AppProvider>();
+    context
+        .select<AppProvider, (bool, bool, bool, bool, bool, String?)>((p) => (
+              p.isOnline,
+              p.isUsingCachedCatalog,
+              p.isLoggedInStreamer,
+              p.isApprovedStreamer,
+              p.isStreamerModeEnabled,
+              p.currentUserStreamerId
+            ));
+    context.select<AppProvider, List<BroadcastSession>>(
+        (p) => p.broadcastSessions);
     final lang = context.locale.languageCode;
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded;
 
     // Missing channels have an explicit unavailable state.
-    final streamer = appProvider.getStreamerById(widget.streamerId);
+    final streamer = context.select<AppProvider, StreamerModel?>(
+        (p) => p.getStreamerById(widget.streamerId));
     if (streamer == null) {
       return Scaffold(
-        appBar: AppBar(),
+        appBar: CaAppBar(),
         body: Center(child: Text('profile.channel_unavailable'.tr())),
       );
     }
 
-    final isFollowing = appProvider.isFollowing(streamer.streamerId);
-    final hasReminder = appProvider.hasReminder(streamer.streamerId);
+    final isFollowing = context
+        .select<AppProvider, bool>((p) => p.isFollowing(streamer.streamerId));
+    final watchLive = !appProvider.isUsingCachedCatalog &&
+        appProvider.isOnline &&
+        streamer.isCurrentlyLive &&
+        streamer.activeStreamId != null;
+    final hasReminder = context
+        .select<AppProvider, bool>((p) => p.hasReminder(streamer.streamerId));
 
     // Only recordings loaded for this channel are shown.
-    final allVods = appProvider.getVodsForStreamer(streamer.streamerId);
-    final activePlaylists =
-        appProvider.getPlaylistsForStreamer(streamer.streamerId);
+    final allVods = context.select<AppProvider, List<VodModel>>(
+        (p) => p.getVodsForStreamer(streamer.streamerId));
+    final activePlaylists = context.select<AppProvider, List<PlaylistModel>>(
+        (p) => p.getPlaylistsForStreamer(streamer.streamerId));
 
     // Apply speaker filtering if an individual instructor is selected
     final displayedVods =
@@ -109,426 +146,366 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 .toList()
             : activePlaylists;
 
+    final header = _buildHeaderCard(context, streamer, isFollowing, hasReminder,
+        lang, appProvider, allVods, activePlaylists);
+    Widget tabs() => AnimatedBuilder(
+        animation: _tabController!,
+        builder: (context, _) => Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceSm),
+            child: CaSegmentedTabs(
+                labels: [
+                  'profile.upcoming_tab'.tr(),
+                  'profile.playlists'.tr(),
+                  'profile.archive_tab'.tr()
+                ],
+                index: 2 - _tabController!.index,
+                onChanged: (visual) => _tabController!.animateTo(2 - visual))));
+    Widget body() => TabBarView(controller: _tabController, children: [
+          _buildVodArchiveGrid(displayedVods, streamer),
+          _buildPlaylistsGrid(displayedPlaylists, streamer, lang),
+          UpcomingScheduleTab(streamer: streamer),
+        ]);
+    Widget panel(Widget child) => DecoratedBox(
+        decoration: const BoxDecoration(gradient: AppGradients.panel),
+        child: child);
+    final single = NestedScrollView(
+        headerSliverBuilder: (context, scrolled) => [
+              SliverToBoxAdapter(child: header),
+              SliverPersistentHeader(
+                  pinned: true,
+                  delegate: _SliverTabBarDelegate(
+                      tabs(),
+                      CaSegmentedTabs.heightFor(
+                              context,
+                              [
+                                'profile.upcoming_tab'.tr(),
+                                'profile.playlists'.tr(),
+                                'profile.archive_tab'.tr()
+                              ],
+                              MediaQuery.sizeOf(context).width -
+                                  AppTheme.spaceLg) +
+                          AppTheme.spaceSm +
+                          AppTheme.spaceLg)),
+            ],
+        body: panel(body()));
     return Scaffold(
-      backgroundColor: AppTheme.bg,
-      appBar: wide
-          ? null
-          : AppBar(
-              title: Text(streamer.getLocalizedName(lang)),
-              actions: [
-                // Broadcaster Studio Access -- single unified entry point (v0.9)
-                // for going live with an encoder or the phone camera. Strictly
-                // the broadcaster's own profile page, zero admin override --
-                // issue_log.md: "an admin account does not give ability to see
-                // and use others accounts cell tower", "no one other than the
-                // streamer himself should have the ability to see their cell
-                // tower."
-                if (appProvider.isLoggedInStreamer &&
-                    appProvider.isApprovedStreamer &&
-                    appProvider.isStreamerModeEnabled &&
-                    appProvider.isOwnStreamerProfile(streamer.streamerId))
-                  IconButton(
-                    icon: Icon(
-                      Icons.cell_tower_rounded,
-                      color: appProvider.isPitchDirectorModeEnabled
-                          ? AppTheme.danger
-                          : AppTheme.textSecondary,
-                    ),
-                    tooltip: 'live.rtmp_ip_tooltip'.tr(),
-                    onPressed: () => LiveBroadcasterStudioSheet.show(context),
-                  ),
-                const LanguageSwitcher(),
-                const SizedBox(width: AppTheme.spaceXs),
-                // Shares the channel's real YouTube URL. The button is absent when
-                // the channel has no handle yet -- there is nothing truthful to
-                // share, and a share sheet holding a made-up link is worse than no
-                // button (05 D-03).
-                if (streamer.youtubeHandle.trim().isNotEmpty)
-                  IconButton(
-                    icon: const Icon(Icons.share_outlined),
-                    tooltip: 'profile.share_btn'.tr(),
-                    onPressed: () => _shareChannel(streamer, lang),
-                  ),
-                const SizedBox(width: AppTheme.spaceSm),
-              ],
-            ),
-      body: NestedScrollView(
-        headerSliverBuilder: (context, innerBoxIsScrolled) {
-          return [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.all(AppTheme.spaceLg),
-                child: _buildHeaderCard(
-                  context,
-                  streamer,
-                  isFollowing,
-                  hasReminder,
-                  lang,
-                  appProvider,
-                  allVods,
-                  activePlaylists,
-                ),
-              ),
-            ),
-            SliverPersistentHeader(
-              pinned: true,
-              delegate: _SliverTabBarDelegate(
-                TabBar(
-                  controller: _tabController,
-                  isScrollable: true,
-                  tabAlignment: TabAlignment.start,
-                  indicatorColor: AppTheme.primary,
-                  labelColor: AppTheme.primary,
-                  unselectedLabelColor: AppTheme.textSecondary,
-                  labelStyle: const TextStyle(
-                      fontWeight: FontWeight.bold, fontSize: 13),
-                  tabs: [
-                    Tab(
-                      icon:
-                          const Icon(Icons.video_collection_outlined, size: 18),
-                      text: 'profile.archived_lectures'.tr(),
-                    ),
-                    Tab(
-                      icon: const Icon(Icons.playlist_play_rounded, size: 18),
-                      text: 'profile.playlists'.tr(),
-                    ),
-                    Tab(
-                      icon: const Icon(Icons.calendar_month_outlined, size: 18),
-                      text: 'profile.upcoming_lectures'.tr(),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ];
-        },
-        body: TabBarView(
-          controller: _tabController,
-          children: [
-            // Tab 1: VOD Archive Grid (Filtered by speaker if set)
-            _buildVodArchiveGrid(displayedVods, streamer),
-
-            // Tab 2: Playlists View (Filtered by speaker if set)
-            _buildPlaylistsGrid(displayedPlaylists, streamer, lang),
-
-            // Tab 3: Upcoming Schedule View
-            UpcomingScheduleTab(streamer: streamer),
-          ],
-        ),
-      ),
-    );
+        backgroundColor: Canopy.dawn,
+        bottomNavigationBar: _dockPrimary
+            ? SafeArea(
+                top: false,
+                child: Padding(
+                    padding: const EdgeInsetsDirectional.fromSTEB(
+                        AppTheme.spaceLg,
+                        AppTheme.spaceSm,
+                        AppTheme.spaceLg,
+                        AppTheme.spaceSm),
+                    child: CaButton(
+                        icon: isFollowing && !watchLive ? CaGlyph.check : null,
+                        confirm: isFollowing && !watchLive,
+                        label: (!appProvider.isUsingCachedCatalog &&
+                                    appProvider.isOnline &&
+                                    streamer.isCurrentlyLive &&
+                                    streamer.activeStreamId != null
+                                ? (streamer.isAudioLive
+                                    ? 'live.listen_live'
+                                    : 'feed.watch_live')
+                                : (isFollowing
+                                    ? 'profile.following_btn'
+                                    : 'profile.follow_btn'))
+                            .tr(),
+                        onPressed: () => !appProvider.isUsingCachedCatalog &&
+                                appProvider.isOnline &&
+                                streamer.isCurrentlyLive &&
+                                streamer.activeStreamId != null
+                            ? context.push('/live/${streamer.activeStreamId}')
+                            : appProvider.toggleFollow(streamer.streamerId))))
+            : null,
+        body: SafeArea(
+            bottom: false,
+            child: CaPane(
+                single: single,
+                secondaryAtStart: true,
+                secondaryWidth: CanopySize.profilePane,
+                largeSecondaryWidth: CanopySize.profilePaneLarge,
+                secondary: SingleChildScrollView(child: header),
+                primary: panel(Column(children: [tabs(), Expanded(child: body())])))));
   }
 
   Widget _buildHeaderCard(
-    BuildContext context,
-    StreamerModel streamer,
-    bool isFollowing,
-    bool hasReminder,
-    String lang,
-    AppProvider appProvider,
-    List<VodModel> allVods,
-    List<PlaylistModel> allPlaylists,
-  ) {
-    final uncertain = !appProvider.isOnline || appProvider.isUsingCachedCatalog;
-    final wide = MediaQuery.sizeOf(context).width >= AppBreakpoints.expanded;
-    return Column(
-      children: [
-        LayoutBuilder(builder: (context, constraints) {
-          final bioStyle = DefaultTextStyle.of(context).style.merge(
-              const TextStyle(color: AppTheme.textSecondary, fontSize: 13));
-          final measure = TextPainter(
-            text:
-                TextSpan(text: streamer.getLocalizedBio(lang), style: bioStyle),
-            textDirection: Directionality.of(context),
-            textScaler: MediaQuery.textScalerOf(context),
-            maxLines: 2,
-          )..layout(
-              maxWidth: (wide
-                      ? constraints.maxWidth
-                      : constraints.maxWidth.clamp(0.0, 420.0)) -
-                  64);
-          final hasBranches =
-              streamer.isOrganization && streamer.venues.isNotEmpty;
-          final canJoin = !streamer.isOrganization &&
-              appProvider.isLoggedInStreamer &&
-              appProvider.isOwnStreamerProfile(streamer.streamerId);
-          final hasMore = measure.didExceedMaxLines || hasBranches || canJoin;
-          measure.dispose();
-          final card = StreamerIdentityCard(
-            maxWidth: wide ? double.infinity : 420,
-            statusTop: wide ? 64 : AppTheme.spaceSm,
-            headerAction: !wide && hasMore
-                ? IconButton(
-                    tooltip: (_detailsExpanded
-                            ? 'profile.show_less'
-                            : 'profile.show_more')
-                        .tr(),
-                    onPressed: () =>
-                        setState(() => _detailsExpanded = !_detailsExpanded),
-                    icon: Icon(_detailsExpanded
-                        ? Icons.keyboard_arrow_up_rounded
-                        : Icons.keyboard_arrow_down_rounded),
-                    style: IconButton.styleFrom(
-                        backgroundColor: AppTheme.surface.withValues(alpha: .8),
-                        minimumSize: const Size(48, 48)),
-                  )
-                : null,
-            name: streamer.getLocalizedName(lang),
-            title: streamer.getLocalizedTitle(lang),
-            avatarUrl: streamer.avatarUrl,
-            bannerUrl: streamer.bannerUrl,
-            isVerified: streamer.isVerified,
-            status: StreamerCardStatus(
-              isLive: !uncertain && streamer.isCurrentlyLive,
-              isAudio: streamer.isAudioLive,
-              label: uncertain
-                  ? 'offline_experience.status_unavailable'.tr()
-                  : null,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceMd),
-                  decoration: BoxDecoration(
-                      color: AppTheme.surfaceAlt,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm)),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(children: [
-                        Expanded(
-                            child: Text(streamer.getLocalizedOrganization(lang),
-                                style: const TextStyle(
-                                    color: AppTheme.primary,
-                                    fontWeight: FontWeight.w600))),
-                        if (wide && hasMore)
-                          IconButton(
-                            tooltip: (_detailsExpanded
-                                    ? 'profile.show_less'
-                                    : 'profile.show_more')
-                                .tr(),
-                            onPressed: () => setState(
-                                () => _detailsExpanded = !_detailsExpanded),
-                            icon: Icon(_detailsExpanded
-                                ? Icons.keyboard_arrow_up_rounded
-                                : Icons.keyboard_arrow_down_rounded),
-                          ),
-                      ]),
-                      const SizedBox(height: AppTheme.spaceSm),
-                      Text(
-                        streamer.getLocalizedBio(lang),
-                        maxLines: _detailsExpanded ? null : 2,
-                        overflow:
-                            _detailsExpanded ? null : TextOverflow.ellipsis,
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 13),
-                      ),
-                      if (_detailsExpanded)
-                        Wrap(
-                          spacing: AppTheme.spaceSm,
-                          runSpacing: AppTheme.spaceSm,
+      BuildContext context,
+      StreamerModel streamer,
+      bool following,
+      bool reminder,
+      String lang,
+      AppProvider provider,
+      List<VodModel> vods,
+      List<PlaylistModel> playlists) {
+    final uncertain = !provider.isOnline || provider.isUsingCachedCatalog;
+    final live = !uncertain &&
+        streamer.isCurrentlyLive &&
+        streamer.activeStreamId != null;
+    final own = provider.isLoggedInStreamer &&
+        provider.isApprovedStreamer &&
+        provider.isStreamerModeEnabled &&
+        provider.isOwnStreamerProfile(streamer.streamerId);
+    final canJoin = !streamer.isOrganization &&
+        provider.isLoggedInStreamer &&
+        provider.isOwnStreamerProfile(streamer.streamerId);
+    final watchAction = CaButton(
+        label: (streamer.isAudioLive ? 'live.listen_live' : 'feed.watch_live')
+            .tr(),
+        icon: streamer.isAudioLive ? CaGlyph.mic : CaGlyph.play,
+        onPressed: () => context.push('/live/${streamer.activeStreamId}'));
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      SizedBox(
+          height: CanopySize.profileHeader,
+          child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                  bottom: Radius.circular(CanopyRadius.hero)),
+              child: CanopyLatticeBackground(
+                  child: ColoredBox(
+                      color: CanopyGradients.entryTextScrim,
+                      child: Padding(
+                          padding: const EdgeInsets.all(AppTheme.spaceSm),
+                          child: Align(
+                              alignment: Alignment.topCenter,
+                              child: Row(children: [
+                                CaIconButton(
+                                    bare: true,
+                                    icon: CaGlyph.back,
+                                    label: MaterialLocalizations.of(context)
+                                        .backButtonTooltip,
+                                    glass: true,
+                                    onPressed: () => context.canPop()
+                                        ? context.pop()
+                                        : context.go('/feed')),
+                                const Spacer(),
+                                const CaLanguageChip(
+                                    glass: true, compact: true, bare: true),
+                                if (own)
+                                  CaIconButton(
+                                      bare: true,
+                                      icon: CaGlyph.video,
+                                      label: 'live.rtmp_ip_tooltip'.tr(),
+                                      glass: true,
+                                      onPressed: () =>
+                                          LiveBroadcasterStudioSheet.show(
+                                              context)),
+                                if (streamer.youtubeHandle.trim().isNotEmpty)
+                                  CaIconButton(
+                                      bare: true,
+                                      icon: CaGlyph.share,
+                                      label: 'profile.share_btn'.tr(),
+                                      glass: true,
+                                      onPressed: () =>
+                                          _shareChannel(streamer, lang)),
+                              ]))))))),
+      Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
+              AppTheme.spaceLg, AppTheme.spaceLg, AppTheme.spaceLg),
+          child: CaCard(
+              padding: EdgeInsets.zero,
+              child: Stack(clipBehavior: Clip.none, children: [
+                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  SizedBox(
+                      height: _bannerHeight,
+                      width: double.infinity,
+                      child: Stack(fit: StackFit.expand, children: [
+                        CaCardImage(url: streamer.bannerUrl),
+                        PositionedDirectional(
+                            top: AppTheme.spaceSm,
+                            end: AppTheme.spaceSm,
+                            child: CaStatusChip(
+                                key: const ValueKey('profile-header-status'),
+                                kind: live
+                                    ? (streamer.isAudioLive
+                                        ? CaStatusKind.audio
+                                        : CaStatusKind.live)
+                                    : CaStatusKind.offline,
+                                label: uncertain
+                                    ? 'offline_experience.status_unavailable'
+                                        .tr()
+                                    : null)),
+                      ])),
+                  Padding(
+                      padding: const EdgeInsets.all(AppTheme.spaceLg),
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            if (streamer.isOrganization &&
-                                streamer.venues.isNotEmpty)
-                              TextButton(
-                                onPressed: () => OrgBranchesModalSheet.show(
-                                    context,
-                                    orgName: streamer.getLocalizedName(lang),
-                                    venues: streamer.venues),
-                                child: Text(
-                                    '${streamer.venues.length} ${'profile.campus_branches_btn'.tr()}'),
-                              ),
-                            if (canJoin)
-                              TextButton(
-                                  onPressed: () =>
-                                      JoinOrgModalSheet.show(context),
-                                  child: Text(
-                                      'design_ui.join_an_organization'.tr())),
-                          ],
-                        ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceMd),
-                Align(
-                    alignment: wide ? Alignment.centerLeft : Alignment.center,
-                    child: ConstrainedBox(
-                        constraints: BoxConstraints(
-                            maxWidth: wide ? 360 : double.infinity),
-                        child: Row(
-                          textDirection: wide ? TextDirection.ltr : null,
-                          children: [
-                            Expanded(
-                              child: ElevatedButton.icon(
-                                onPressed: () => appProvider
-                                    .toggleFollow(streamer.streamerId),
-                                icon: Icon(
-                                    isFollowing
-                                        ? Icons.check_rounded
-                                        : Icons.person_add_rounded,
-                                    size: 18),
-                                label: Text((isFollowing
-                                        ? 'profile.following_btn'
-                                        : 'profile.follow_btn')
-                                    .tr()),
-                                style: ElevatedButton.styleFrom(
-                                  minimumSize: const Size(48, 48),
-                                  backgroundColor: isFollowing
-                                      ? AppTheme.surfaceAlt
-                                      : AppTheme.primary,
-                                  foregroundColor: isFollowing
-                                      ? AppTheme.primary
-                                      : AppTheme.onMedia,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spaceSm),
-                            IconButton.outlined(
-                              isSelected: hasReminder,
-                              tooltip: (hasReminder
-                                      ? 'profile.reminder_on'
-                                      : 'profile.reminder_btn')
-                                  .tr(),
-                              onPressed: () => _toggleChannelReminder(
-                                  context, streamer.streamerId),
-                              icon:
-                                  const Icon(Icons.notifications_none_rounded),
-                              selectedIcon: const Icon(
-                                  Icons.notifications_active_rounded),
-                              style: IconButton.styleFrom(
-                                  minimumSize: const Size(48, 48),
-                                  backgroundColor: hasReminder
-                                      ? AppTheme.surfaceAlt : AppTheme.surface,
-                                  side: BorderSide(color: hasReminder
-                                      ? AppTheme.primary : AppTheme.border),
-                                  foregroundColor: AppTheme.primary),
-                            ),
-                          ],
-                        ))),
-                ...appProvider.broadcastSessions.where((s)=>!s.hidden &&
-                  (s.organizationId??s.presenterId)==streamer.streamerId && (s.live || s.replayStatus=='available')).map((s)=>
-                    ListTile(title:Text(s.title(lang)),subtitle:Text('organization_v1.state_${s.state}'.tr()),
-                      trailing:const Icon(Icons.play_circle_outline),onTap:()=>context.push('/live/${s.id}'))),
-                // Live Stream Banner Trigger (If live)
-                if (!uncertain &&
-                    streamer.isCurrentlyLive &&
-                    streamer.activeStreamId != null) ...[
-                  const SizedBox(height: AppTheme.spaceMd),
-                  Material(
-                    color: AppTheme.danger.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: InkWell(
-                      onTap: () {
-                        context.push('/live/${streamer.activeStreamId!}');
-                      },
-                      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      child: Container(
-                        padding: const EdgeInsets.all(AppTheme.spaceMd),
-                        decoration: BoxDecoration(
-                          border:
-                              Border.all(color: AppTheme.danger, width: 1.2),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 10,
-                              height: 10,
-                              decoration: const BoxDecoration(
-                                color: AppTheme.danger,
-                                shape: BoxShape.circle,
-                              ),
-                            ),
-                            const SizedBox(width: AppTheme.spaceSm),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${'map.live_badge'.tr()} • ${appProvider.platformViewerCount(streamer.activeStreamId ?? '') ?? '—'} ${'feed.watching'.tr()}',
-                                    style: const TextStyle(
-                                      color: AppTheme.danger,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 12,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    'profile.tap_to_join_live'.tr(),
-                                    style: const TextStyle(
-                                      color: AppTheme.danger,
-                                      fontSize: 13,
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const Icon(
-                              Icons.play_circle_fill_rounded,
-                              color: AppTheme.danger,
-                              size: 28,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-
-                const SizedBox(height: AppTheme.spaceMd),
-              ],
-            ),
-          );
-          if (!wide) return card;
-          return Directionality(
-            textDirection: TextDirection.ltr,
-            child: Stack(children: [
-              card,
-              Positioned(
-                left: AppTheme.spaceSm,
-                top: AppTheme.spaceSm,
-                child: _overlayButton(
-                  Icons.arrow_back_rounded,
-                  MaterialLocalizations.of(context).backButtonTooltip,
-                  () => context.canPop() ? context.pop() : context.go('/feed'),
-                ),
-              ),
-              Positioned(
-                right: AppTheme.spaceSm,
-                top: AppTheme.spaceSm,
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  if (appProvider.isLoggedInStreamer &&
-                      appProvider.isApprovedStreamer &&
-                      appProvider.isStreamerModeEnabled &&
-                      appProvider
-                          .isOwnStreamerProfile(streamer.streamerId)) ...[
-                    _overlayButton(
-                        Icons.cell_tower_rounded,
-                        'live.rtmp_ip_tooltip'.tr(),
-                        () => LiveBroadcasterStudioSheet.show(context)),
-                    const SizedBox(width: AppTheme.spaceSm),
-                  ],
-                  const LanguageSwitcher(showLabel: false, overlay: true),
-                  if (streamer.youtubeHandle.trim().isNotEmpty) ...[
-                    const SizedBox(width: AppTheme.spaceSm),
-                    _overlayButton(
-                        Icons.share_outlined,
-                        'profile.share_btn'.tr(),
-                        () => _shareChannel(streamer, lang)),
-                  ],
+                            // The avatar straddles the banner's lower edge; the
+                            // name sits beside its lower half.
+                            ConstrainedBox(
+                                constraints: const BoxConstraints(
+                                    minHeight: _avatarBox / 2),
+                                child: Padding(
+                                    padding: const EdgeInsetsDirectional.only(
+                                        start: _avatarBox + AppTheme.spaceMd),
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(streamer.getLocalizedName(lang),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .titleLarge),
+                                          Text(streamer.getLocalizedTitle(lang),
+                                              style: Theme.of(context)
+                                                  .textTheme
+                                                  .bodySmall),
+                                        ]))),
+                            const SizedBox(height: AppTheme.spaceMd),
+                            Text(streamer.getLocalizedOrganization(lang),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(color: Canopy.brandGreen)),
+                            LayoutBuilder(builder: (context, constraints) {
+                              final bioStyle =
+                                  Theme.of(context).textTheme.bodyMedium;
+                              final measure = TextPainter(
+                                text: TextSpan(
+                                    text: streamer.getLocalizedBio(lang),
+                                    style: bioStyle),
+                                textDirection: Directionality.of(context),
+                                textScaler: MediaQuery.textScalerOf(context),
+                                maxLines: 2,
+                              )..layout(maxWidth: constraints.maxWidth);
+                              final hasMore = measure.didExceedMaxLines ||
+                                  (streamer.isOrganization &&
+                                      streamer.venues.isNotEmpty) ||
+                                  canJoin;
+                              measure.dispose();
+                              return Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(streamer.getLocalizedBio(lang),
+                                        maxLines: _detailsExpanded ? null : 2,
+                                        overflow: _detailsExpanded
+                                            ? null
+                                            : TextOverflow.ellipsis,
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium),
+                                    if (hasMore)
+                                      IconButton(
+                                          key: const ValueKey(
+                                              'profile-details-toggle'),
+                                          tooltip: (_detailsExpanded
+                                                  ? 'profile.show_less'
+                                                  : 'profile.show_more')
+                                              .tr(),
+                                          color: Canopy.brandGreen,
+                                          icon: Icon(_detailsExpanded
+                                              ? Icons.keyboard_arrow_up_rounded
+                                              : Icons
+                                                  .keyboard_arrow_down_rounded),
+                                          onPressed: () => setState(() =>
+                                              _detailsExpanded =
+                                                  !_detailsExpanded)),
+                                  ]);
+                            }),
+                            if (_detailsExpanded)
+                              Wrap(spacing: AppTheme.spaceSm, children: [
+                                if (streamer.isOrganization &&
+                                    streamer.venues.isNotEmpty)
+                                  CaButton(
+                                      label:
+                                          '${streamer.venues.length} ${'profile.campus_branches_btn'.tr()}',
+                                      variant: CaButtonVariant.text,
+                                      onPressed: () =>
+                                          OrgBranchesModalSheet.show(context,
+                                              orgName: streamer
+                                                  .getLocalizedName(lang),
+                                              venues: streamer.venues)),
+                                if (canJoin)
+                                  CaButton(
+                                      label:
+                                          'design_ui.join_an_organization'.tr(),
+                                      variant: CaButtonVariant.text,
+                                      onPressed: () =>
+                                          JoinOrgModalSheet.show(context)),
+                              ]),
+                            if (live && !_dockPrimary) ...[
+                              if (context.windowClass == WindowClass.compact)
+                                LayoutBuilder(
+                                    builder: (context, constraints) => SizedBox(
+                                        width: constraints.maxWidth -
+                                            CanopySize.target -
+                                            AppTheme.spaceSm,
+                                        child: watchAction))
+                              else
+                                watchAction,
+                              const SizedBox(height: AppTheme.spaceSm)
+                            ],
+                            Row(children: [
+                              if (!_dockPrimary || live)
+                                Expanded(
+                                    child: CanopyConfirmMotion(
+                                        active: following,
+                                        child: CaButton(
+                                            icon: following
+                                                ? CaGlyph.check
+                                                : null,
+                                            confirm: following,
+                                            label: (following
+                                                    ? 'profile.following_btn'
+                                                    : 'profile.follow_btn')
+                                                .tr(),
+                                            variant: live || following
+                                                ? CaButtonVariant.secondary
+                                                : CaButtonVariant.primary,
+                                            onPressed: () =>
+                                                provider.toggleFollow(
+                                                    streamer.streamerId)))),
+                              const SizedBox(width: AppTheme.spaceSm),
+                              CanopyConfirmMotion(
+                                  active: reminder,
+                                  wiggle: true,
+                                  child: CaIconButton(
+                                      bare: true,
+                                      icon: CaGlyph.bell,
+                                      label: (reminder
+                                              ? 'profile.reminder_on'
+                                              : 'profile.reminder_btn')
+                                          .tr(),
+                                      onPressed: () => _toggleChannelReminder(
+                                          context, streamer.streamerId)))
+                            ]),
+                            ...provider.broadcastSessions
+                                .where((s) =>
+                                    !s.hidden &&
+                                    (s.organizationId ?? s.presenterId) ==
+                                        streamer.streamerId &&
+                                    (s.live || s.replayStatus == 'available'))
+                                .map((s) => ListTile(
+                                    title: Text(s.title(lang)),
+                                    subtitle: Text(
+                                        'organization_v1.state_${s.state}'
+                                            .tr()),
+                                    trailing: const CaIcon(CaGlyph.play),
+                                    onTap: () =>
+                                        context.push('/live/${s.id}'))),
+                          ])),
                 ]),
-              ),
-            ]),
-          );
-        }),
-        if (streamer.isOrganization && streamer.affiliatedSpeakers.isNotEmpty)
-          _buildFeaturedChannelsSection(
-              context, streamer, allVods, allPlaylists, lang),
-      ],
-    );
+                PositionedDirectional(
+                    top: _bannerHeight - _avatarBox / 2,
+                    start: AppTheme.spaceLg,
+                    child: _AvatarStroke(
+                        org: streamer.isOrganization,
+                        child: CaAvatar(
+                            name: streamer.getLocalizedName(lang),
+                            url: streamer.avatarUrl,
+                            live: live,
+                            verified: streamer.isVerified,
+                            org: streamer.isOrganization,
+                            radius: CanopySize.profileAvatar))),
+              ]))),
+      if (streamer.isOrganization && streamer.affiliatedSpeakers.isNotEmpty)
+        Padding(
+            padding: const EdgeInsets.all(AppTheme.spaceLg),
+            child: _buildFeaturedChannelsSection(
+                context, streamer, vods, playlists, lang)),
+    ]);
   }
 
   void _shareChannel(StreamerModel streamer, String lang) => Share.share(
@@ -539,19 +516,22 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
   Future<void> _toggleChannelReminder(BuildContext context, String id) async {
     final provider = context.read<AppProvider>();
     if (!provider.isLoggedInStreamer) {
-      final signIn = await showDialog<bool>(
-        context: context,
-        builder: (dialogContext) => AlertDialog(
-          title: Text('upcoming.sign_in_title'.tr()),
-          content: Text('upcoming.sign_in_body'.tr()),
+      final signIn = await showCaSheet<bool>(context,
+          title: 'upcoming.sign_in_title'.tr(),
+          job: CaSheetJob.confirmation,
+          bareChrome: true,
+          body: Text('upcoming.sign_in_body'.tr()),
           actions: [
-            TextButton(onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text('upcoming.cancel'.tr())),
-            TextButton(onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text('upcoming.sign_in'.tr())),
-          ],
-        ),
-      );
+            Builder(
+                builder: (ctx) => CaButton(
+                    label: 'upcoming.cancel'.tr(),
+                    variant: CaButtonVariant.text,
+                    onPressed: () => Navigator.pop(ctx, false))),
+            Builder(
+                builder: (ctx) => CaButton(
+                    label: 'upcoming.sign_in'.tr(),
+                    onPressed: () => Navigator.pop(ctx, true))),
+          ]);
       if (signIn == true && context.mounted) {
         context.push('/welcome');
       }
@@ -559,33 +539,23 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     }
     try {
       await provider.toggleReminder(id, language: context.locale.languageCode);
-      if (context.mounted && provider.hasReminder(id) &&
+      if (context.mounted &&
+          provider.hasReminder(id) &&
           provider.reminderPushStatus != ReminderPushStatus.granted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(
-          (provider.reminderPushStatus == ReminderPushStatus.notGranted
-              ? 'upcoming.permission_denied'
-              : 'upcoming.permission_unavailable').tr())));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text(
+                (provider.reminderPushStatus == ReminderPushStatus.notGranted
+                        ? 'upcoming.permission_denied'
+                        : 'upcoming.permission_unavailable')
+                    .tr())));
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('upcoming.save_failed'.tr())));
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text('upcoming.save_failed'.tr())));
       }
     }
   }
-
-  Widget _overlayButton(
-          IconData icon, String tooltip, VoidCallback onPressed) =>
-      IconButton(
-        icon: Icon(icon),
-        tooltip: tooltip,
-        onPressed: onPressed,
-        style: IconButton.styleFrom(
-          backgroundColor: AppTheme.surface.withValues(alpha: .6),
-          foregroundColor: AppTheme.textPrimary,
-          minimumSize: const Size(48, 48),
-        ),
-      );
 
   Widget _buildFeaturedChannelsSection(
     BuildContext context,
@@ -597,305 +567,103 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     final speakers = streamer.affiliatedSpeakers;
     if (speakers.isEmpty) return const SizedBox.shrink();
 
-    return Container(
-      margin: const EdgeInsets.only(top: AppTheme.spaceLg),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.subscriptions_rounded,
-                size: 16,
-                color: AppTheme.danger,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'profile.featured_channels'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.onMedia,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
-                decoration: BoxDecoration(
-                  color: AppTheme.surfaceAlt,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Text(
-                  '${speakers.length}',
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 11,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 4),
-          Text(
-            'profile.featured_channels_hint'.tr(),
-            style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 12,
-            ),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 190,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: speakers.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (ctx, idx) {
-                final speaker = speakers[idx];
-                final isSelected = _selectedSpeakerId == speaker.speakerId;
-                final speakerVods = allVods
-                    .where((v) => v.speakerIds.contains(speaker.speakerId))
-                    .toList();
-                final speakerPlaylists = allPlaylists
-                    .where((p) => p.speakerIds.contains(speaker.speakerId))
-                    .toList();
-                final handle = speaker.youtubeHandle ?? streamer.youtubeHandle;
-
-                return InkWell(
-                  onTap: () {
-                    setState(() {
-                      if (_selectedSpeakerId == speaker.speakerId) {
-                        _selectedSpeakerId = null;
-                      } else {
-                        _selectedSpeakerId = speaker.speakerId;
-                        _tabController?.animateTo(0);
-                      }
-                    });
-                  },
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 310,
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isSelected
-                          ? AppTheme.warning.withValues(alpha: 0.12)
-                          : AppTheme.bg,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(
-                        color: isSelected ? AppTheme.warning : AppTheme.border,
-                        width: isSelected ? 1.8 : 1.0,
-                      ),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            StreamerAvatar(
-                              avatarUrl: speaker.avatarUrl,
-                              name: speaker.getLocalizedName(lang),
-                              radius: 22,
-                              borderWidth: 2,
-                              borderColor: isSelected
-                                  ? AppTheme.warning
-                                  : (speaker.isPermanentStaff
-                                      ? AppTheme.primary
-                                      : AppTheme.textSecondary),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    speaker.getLocalizedName(lang),
-                                    style: const TextStyle(
-                                      color: AppTheme.onMedia,
-                                      fontSize: 13.5,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 1.5),
-                                    decoration: BoxDecoration(
-                                      color: AppTheme.danger
-                                          .withValues(alpha: 0.15),
-                                      borderRadius: BorderRadius.circular(4),
-                                      border: Border.all(
-                                        color: AppTheme.danger
-                                            .withValues(alpha: 0.4),
-                                        width: 0.8,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const Icon(
-                                          Icons.play_arrow_rounded,
-                                          size: 11,
-                                          color: AppTheme.danger,
-                                        ),
-                                        const SizedBox(width: 2),
-                                        Flexible(
-                                          child: Text(
-                                            '@$handle',
-                                            style: const TextStyle(
-                                              color: AppTheme.onMedia,
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w600,
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            if (isSelected)
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppTheme.warning,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: const Icon(
-                                  Icons.check_rounded,
-                                  size: 12,
-                                  color: AppTheme.media,
-                                ),
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          speaker.getLocalizedRole(lang),
-                          style: const TextStyle(
-                            color: AppTheme.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 3),
-                        Expanded(
-                          child: Text(
-                            speaker.getLocalizedBio(lang),
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 11,
-                              height: 1.3,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Flexible(
-                              child: Text(
-                                '${speakerVods.length} ${'profile.lectures_count'.tr()} • ${speakerPlaylists.length} ${'profile.playlists'.tr()}',
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondary,
-                                  fontSize: 10.5,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Text(
-                              isSelected
-                                  ? 'profile.filter_active_badge'.tr()
-                                  : 'profile.view_channel_content'.tr(),
-                              style: TextStyle(
-                                color: isSelected
-                                    ? AppTheme.warning
-                                    : AppTheme.primary,
-                                fontSize: 10.5,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ],
-      ),
-    );
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      Text('profile.featured_channels'.tr(),
+          style: Theme.of(context).textTheme.titleMedium),
+      Text('profile.featured_channels_hint'.tr(),
+          style: Theme.of(context).textTheme.bodySmall),
+      const SizedBox(height: AppTheme.spaceMd),
+      SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            for (final speaker in speakers)
+              Padding(
+                  padding:
+                      const EdgeInsetsDirectional.only(end: AppTheme.spaceMd),
+                  child: SizedBox(
+                      width: CanopySize.profilePane,
+                      child: CaCard(
+                          onTap: () => setState(() {
+                                if (_selectedSpeakerId == speaker.speakerId) {
+                                  _selectedSpeakerId = null;
+                                } else {
+                                  _selectedSpeakerId = speaker.speakerId;
+                                  _tabController?.animateTo(0);
+                                }
+                              }),
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                CaAvatar(
+                                    name: speaker.getLocalizedName(lang),
+                                    url: speaker.avatarUrl),
+                                Text(speaker.getLocalizedName(lang),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(color: Canopy.ink)),
+                                Text(
+                                    '@${speaker.youtubeHandle ?? streamer.youtubeHandle}',
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(color: Canopy.ink)),
+                                Text(speaker.getLocalizedRole(lang),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall),
+                                Text(speaker.getLocalizedBio(lang),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall,
+                                    maxLines: 2,
+                                    overflow: TextOverflow.ellipsis),
+                                Text(
+                                    '${allVods.where((v) => v.speakerIds.contains(speaker.speakerId)).length} ${'profile.lectures_count'.tr()} • ${allPlaylists.where((p) => p.speakerIds.contains(speaker.speakerId)).length} ${'profile.playlists'.tr()}',
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall),
+                                Text(
+                                    (_selectedSpeakerId == speaker.speakerId
+                                            ? 'profile.filter_active_badge'
+                                            : 'profile.view_channel_content')
+                                        .tr(),
+                                    style:
+                                        Theme.of(context).textTheme.labelSmall),
+                              ])))),
+          ])),
+    ]);
   }
 
   Widget _buildVodArchiveGrid(List<VodModel> vodList, StreamerModel streamer) {
     if (vodList.isEmpty) {
       return SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceXl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.video_library_outlined,
-                color: AppTheme.textSecondary,
-                size: 48,
-              ),
-              const SizedBox(height: AppTheme.spaceMd),
-              Text(
-                'profile.no_instructor_vods'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-              ),
-            ],
-          ),
-        ),
-      );
+          child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
+              child: CaCard(
+                  child: CaEmptyState(
+                      title: 'profile.no_instructor_vods'.tr(), body: ''))));
     }
 
-    final screenWidth = MediaQuery.sizeOf(context).width;
-    final isDesktop = screenWidth >= 900;
-    final isTablet = screenWidth >= 600 && screenWidth < 900;
-    final crossAxisCount = isDesktop ? 4 : (isTablet ? 3 : 2);
-    final childAspectRatio = isDesktop ? 1.22 : (isTablet ? 1.2 : 1.00);
-
-    return GridView.builder(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: crossAxisCount,
-        childAspectRatio: childAspectRatio,
-        crossAxisSpacing: AppTheme.spaceMd,
-        mainAxisSpacing: AppTheme.spaceMd,
-      ),
-      itemCount: vodList.length,
-      itemBuilder: (context, index) {
-        final vod = vodList[index];
-        return VodGridTile(
-          vod: vod,
-          streamer: streamer,
-        );
-      },
-    );
+    return LayoutBuilder(builder: (context, constraints) {
+      final requested = context.windowClass == WindowClass.compact ? 2 : 3;
+      final columns = ((constraints.maxWidth - AppTheme.spaceLg) /
+              (CanopyWindow.scholarCardMinWidth + AppTheme.spaceMd))
+          .floor()
+          .clamp(1, requested);
+      final width = (constraints.maxWidth -
+              AppTheme.spaceLg * 2 -
+              AppTheme.spaceMd * (columns - 1)) /
+          columns;
+      return SingleChildScrollView(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
+          child: Wrap(
+              spacing: AppTheme.spaceMd,
+              runSpacing: AppTheme.spaceMd,
+              children: [
+                for (final vod in vodList)
+                  SizedBox(
+                      width: width,
+                      child: VodGridTile(vod: vod, streamer: streamer)),
+              ]));
+    });
   }
 
   Widget _buildPlaylistsGrid(
@@ -905,101 +673,77 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
   ) {
     if (playlists.isEmpty) {
       return SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceXl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(
-                Icons.playlist_play_rounded,
-                color: AppTheme.textSecondary,
-                size: 48,
-              ),
-              const SizedBox(height: AppTheme.spaceMd),
-              Text(
-                'profile.no_videos_playlist'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 14,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+          child: Padding(
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
+              child: CaCard(
+                  child: CaEmptyState(
+                      title: 'profile.no_videos_playlist'.tr(), body: ''))));
     }
 
-    return ListView.separated(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      itemCount: playlists.length,
-      separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spaceMd),
-      itemBuilder: (context, index) {
-        final playlist = playlists[index];
-        return Material(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          child: InkWell(
-            onTap: () {
-              _showPlaylistModal(context, playlist, streamer, lang);
-            },
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            child: Container(
-              padding: const EdgeInsets.all(AppTheme.spaceMd),
-              decoration: BoxDecoration(
-                border: Border.all(color: AppTheme.border),
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              ),
+    return Builder(builder: (context) {
+      final titleStyle =
+          Theme.of(context).textTheme.labelLarge?.copyWith(color: Canopy.ink);
+      final countStyle = Theme.of(context)
+          .textTheme
+          .bodySmall
+          ?.copyWith(color: Canopy.brandGreen, fontWeight: FontWeight.w600);
+      // One shared row height (a 2-line title and the count line), so every
+      // playlist is the same size whatever its title.
+      final rowHeight = [
+        CanopySize.lectureImageHeight,
+        CaFixedLines.heightOf(context, titleStyle, 2) +
+            AppTheme.spaceXs +
+            CaFixedLines.heightOf(context, countStyle, 1),
+      ].reduce((a, b) => a > b ? a : b);
+      return ListView.separated(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        itemCount: playlists.length,
+        separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spaceMd),
+        itemBuilder: (context, index) {
+          final playlist = playlists[index];
+          return CaCard(
+            padding: const EdgeInsets.all(AppTheme.spaceMd),
+            onTap: () => _showPlaylistModal(context, playlist, streamer, lang),
+            child: SizedBox(
+              height: rowHeight,
               child: Row(
                 children: [
                   ClipRRect(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: Image(
-                      image: playlist.thumbnailUrl.startsWith('assets/')
-                          ? AssetImage(playlist.thumbnailUrl) as ImageProvider
-                          : NetworkImage(playlist.thumbnailUrl),
-                      width: 80,
-                      height: 60,
-                      fit: BoxFit.cover,
+                    borderRadius: BorderRadius.circular(CanopyRadius.input),
+                    child: SizedBox(
+                      width: CanopySize.lectureImageWidth,
+                      height: CanopySize.lectureImageHeight,
+                      child: CaCardImage(url: playlist.thumbnailUrl),
                     ),
                   ),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          playlist.getLocalizedTitle(lang),
-                          style: const TextStyle(
-                            color: AppTheme.onMedia,
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${playlist.videoCount} ${'profile.lectures_count'.tr()}',
-                          style: const TextStyle(
-                            color: AppTheme.primary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
+                        CaFixedLines(playlist.getLocalizedTitle(lang),
+                            lines: 2, style: titleStyle),
+                        const SizedBox(height: AppTheme.spaceXs),
+                        CaFixedLines(
+                            '${playlist.videoCount} ${'profile.lectures_count'.tr()}',
+                            lines: 1,
+                            style: countStyle),
                       ],
                     ),
                   ),
-                  const Icon(
-                    Icons.chevron_right_rounded,
-                    color: AppTheme.textSecondary,
-                  ),
+                  Icon(
+                      Directionality.of(context) == TextDirection.rtl
+                          ? Icons.chevron_left_rounded
+                          : Icons.chevron_right_rounded,
+                      color: Canopy.slate),
                 ],
               ),
             ),
-          ),
-        );
-      },
-    );
+          );
+        },
+      );
+    });
   }
 
   void _showPlaylistModal(
@@ -1018,20 +762,21 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
 }
 
 class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
-  final TabBar _tabBar;
+  final Widget _tabBar;
+  final double height;
 
-  _SliverTabBarDelegate(this._tabBar);
+  _SliverTabBarDelegate(this._tabBar, this.height);
 
   @override
-  double get minExtent => _tabBar.preferredSize.height;
+  double get minExtent => height;
   @override
-  double get maxExtent => _tabBar.preferredSize.height;
+  double get maxExtent => height;
 
   @override
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: AppTheme.bg,
+      color: Canopy.dawn,
       child: _tabBar,
     );
   }
@@ -1040,4 +785,25 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   bool shouldRebuild(_SliverTabBarDelegate oldDelegate) {
     return oldDelegate._tabBar != _tabBar;
   }
+}
+
+/// A white ring around the profile picture, so it reads as a stroke against
+/// the banner behind it.
+class _AvatarStroke extends StatelessWidget {
+  const _AvatarStroke({required this.child, required this.org});
+  final Widget child;
+  final bool org;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+      decoration: BoxDecoration(
+          color: Canopy.paper,
+          shape: org ? BoxShape.rectangle : BoxShape.circle,
+          borderRadius: org
+              ? BorderRadius.circular(CanopyRadius.orgAvatar +
+                  _BroadcasterProfileScreenState._avatarStroke)
+              : null),
+      child: Padding(
+          padding: const EdgeInsets.all(
+              _BroadcasterProfileScreenState._avatarStroke),
+          child: child));
 }

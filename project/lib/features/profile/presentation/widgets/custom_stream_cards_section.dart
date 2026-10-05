@@ -1,3 +1,5 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:image_picker/image_picker.dart';
@@ -32,27 +34,10 @@ class CustomStreamCardsSection extends StatefulWidget {
 
   /// Opens the section as a standalone bottom sheet.
   static Future<void> show(BuildContext context) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-      ),
-      builder: (sheetContext) => const SafeArea(
-        child: Padding(
-          padding: EdgeInsets.all(AppTheme.spaceLg),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [CustomStreamCardsSection()],
-            ),
-          ),
-        ),
-      ),
-    );
+    return showCaSheet<void>(context,
+        title: 'settings.custom_cards_section'.tr(),
+        bareChrome: true,
+        body: const CustomStreamCardsSection(showHeader: false));
   }
 
   @override
@@ -118,7 +103,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppTheme.danger : AppTheme.primary,
+        backgroundColor: isError ? Canopy.liveCrimson : AppTheme.primary,
       ),
     );
   }
@@ -133,7 +118,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
           Text(
             'settings.custom_cards_section'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
@@ -143,7 +128,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
         Text(
           'settings.custom_cards_desc'.tr(),
           style: const TextStyle(
-              color: AppTheme.textSecondary, fontSize: 11.5, height: 1.4),
+              color: Canopy.slate, fontSize: 11.5, height: 1.4),
         ),
         const SizedBox(height: 10),
         ...StreamPlaceholderType.values.map(_buildCustomCardSlot),
@@ -160,118 +145,69 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
     final Color statusColor;
     switch (existing?.status) {
       case StreamPlaceholderStatus.approved:
-        statusColor = AppTheme.success;
+        statusColor = Canopy.leaf;
         break;
       case StreamPlaceholderStatus.rejected:
-        statusColor = AppTheme.danger;
+        statusColor = Canopy.liveCrimson;
         break;
       case StreamPlaceholderStatus.pending:
         statusColor = AppTheme.warning;
         break;
       case null:
-        statusColor = AppTheme.textMuted;
+        statusColor = Canopy.haze;
         break;
     }
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-            child: SizedBox(
-              width: 72,
-              height: 44,
-              child: existing != null
-                  ? Image.network(
-                      existing.imageUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
-                        color: AppTheme.surface,
-                        child: Icon(Icons.broken_image_outlined,
-                            size: 18, color: AppTheme.textMuted),
-                      ),
-                    )
-                  : const ColoredBox(
-                      color: AppTheme.surface,
-                      child: Icon(Icons.image_outlined,
-                          size: 18, color: AppTheme.textMuted),
-                    ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
+    return Padding(
+        padding: const EdgeInsetsDirectional.only(bottom: AppTheme.spaceMd),
+        child: CaCard(
+            variant: CaCardVariant.flat,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  type.editorLabelKey.tr(),
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  existing == null
-                      ? 'settings.custom_card_upload'.tr()
-                      : existing.status.labelKey.tr(),
-                  style: TextStyle(
-                      color: statusColor,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600),
-                ),
-                // An admin's rejection note is the whole point of rejecting
-                // rather than deleting -- show it inline so the streamer can
-                // fix and resubmit without hunting through notifications.
-                if (existing?.rejectionReason != null &&
-                    existing!.rejectionReason!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  ClipRRect(
+                      borderRadius: BorderRadius.circular(CanopyRadius.input),
+                      child: AspectRatio(
+                          aspectRatio: 16 / 9,
+                          child: existing != null
+                              ? Image.network(existing.imageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (_, __, ___) =>
+                                      const ColoredBox(
+                                          color: Canopy.mist,
+                                          child: Icon(
+                                              Icons.broken_image_outlined,
+                                              color: Canopy.slate)))
+                              : const ColoredBox(
+                                  color: Canopy.mist,
+                                  child: Icon(Icons.image_outlined,
+                                      color: Canopy.slate)))),
+                  const SizedBox(height: AppTheme.spaceMd),
+                  Text(type.editorLabelKey.tr(),
+                      style: Theme.of(context).textTheme.titleSmall),
                   Text(
-                    existing.rejectionReason!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                        color: AppTheme.textMuted, fontSize: 10.5),
-                  ),
-                ],
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          isUploading
-              ? const SizedBox(
-                  width: 18,
-                  height: 18,
-                  child: HadayahLoadingIndicator(
-                      strokeWidth: 2, color: AppTheme.primary),
-                )
-              : OutlinedButton.icon(
-                  onPressed: () => _pickAndUploadCard(type),
-                  icon: const Icon(Icons.upload_rounded, size: 15),
-                  label: Text(
-                    existing == null
-                        ? 'settings.custom_card_upload'.tr()
-                        : 'settings.custom_card_replace'.tr(),
-                    style: const TextStyle(fontSize: 11),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primary,
-                    side: const BorderSide(color: AppTheme.primary),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  ),
-                ),
-        ],
-      ),
-    );
+                      existing == null
+                          ? 'settings.custom_card_upload'.tr()
+                          : existing.status.labelKey.tr(),
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: statusColor)),
+                  if (existing?.rejectionReason != null &&
+                      existing!.rejectionReason!.isNotEmpty)
+                    Text(existing.rejectionReason!,
+                        style: Theme.of(context).textTheme.bodySmall),
+                  const SizedBox(height: AppTheme.spaceSm),
+                  isUploading
+                      ? const Center(
+                          child: HadayahLoadingIndicator(
+                              strokeWidth: 2, color: AppTheme.primary))
+                      : OutlinedButton.icon(
+                          onPressed: () => _pickAndUploadCard(type),
+                          icon: const Icon(Icons.upload_rounded),
+                          label: Text(existing == null
+                              ? 'settings.custom_card_upload'.tr()
+                              : 'settings.custom_card_replace'.tr())),
+                ])));
   }
 }

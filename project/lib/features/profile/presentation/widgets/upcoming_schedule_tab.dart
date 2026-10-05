@@ -1,6 +1,8 @@
+import '../../../../core/widgets/ds/canopy_content_motion.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import 'dart:async';
 
-import 'package:easy_localization/easy_localization.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -12,6 +14,10 @@ import '../../../../core/theme/app_theme.dart';
 import '../../models/streamer_models.dart';
 import '../../models/upcoming_schedule.dart';
 import 'upcoming_schedule_editor_sheet.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
+import '../../../../core/widgets/ds/ca_cards.dart';
+import '../../../../core/widgets/ds/ca_feedback.dart';
+import '../../../../core/widgets/ds/ca_icon.dart';
 
 class UpcomingScheduleTab extends StatefulWidget {
   const UpcomingScheduleTab({super.key, required this.streamer});
@@ -69,29 +75,29 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
   }
 
   Future<void> _edit([UpcomingSchedule? schedule]) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      showDragHandle: true,
-      builder: (_) => UpcomingScheduleEditorSheet(
-          streamerId: widget.streamer.streamerId, existing: schedule),
-    );
+    await showCaSheet<void>(context,
+        title: 'upcoming.edit'.tr(),
+        framed: false,
+        bareChrome: true,
+        body: UpcomingScheduleEditorSheet(
+            streamerId: widget.streamer.streamerId, existing: schedule));
   }
 
   Future<void> _delete(UpcomingSchedule schedule) async {
-    final confirmed = await showDialog<bool>(
+    final confirmed = await showCaDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CaAlertDialog(
         title: Text('upcoming.delete_title'.tr()),
         content: Text('upcoming.delete_message'.tr()),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext, false),
-              child: Text('upcoming.cancel'.tr())),
-          TextButton(
-              onPressed: () => Navigator.pop(dialogContext, true),
-              child: Text('upcoming.delete'.tr())),
+          CaButton(
+              label: 'upcoming.cancel'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => Navigator.pop(dialogContext, false)),
+          CaButton(
+              label: 'upcoming.delete'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => Navigator.pop(dialogContext, true)),
         ],
       ),
     );
@@ -110,18 +116,20 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
   Future<void> _remind(UpcomingSchedule schedule) async {
     final provider = context.read<AppProvider>();
     if (!provider.isLoggedInStreamer) {
-      final signIn = await showDialog<bool>(
+      final signIn = await showCaDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => CaAlertDialog(
           title: Text('upcoming.sign_in_title'.tr()),
           content: Text('upcoming.sign_in_body'.tr()),
           actions: [
-            TextButton(
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text('upcoming.cancel'.tr())),
-            TextButton(
-                onPressed: () => Navigator.pop(dialogContext, true),
-                child: Text('upcoming.sign_in'.tr())),
+            CaButton(
+                label: 'upcoming.cancel'.tr(),
+                variant: CaButtonVariant.text,
+                onPressed: () => Navigator.pop(dialogContext, false)),
+            CaButton(
+                label: 'upcoming.sign_in'.tr(),
+                variant: CaButtonVariant.text,
+                onPressed: () => Navigator.pop(dialogContext, true)),
           ],
         ),
       );
@@ -201,38 +209,45 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
           width: available,
           child:
               Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            // The tab sits on the green panel, so the heading is white and the
+            // schedule entries are white cards like the archive tiles.
             Row(children: [
               Expanded(
                   child: Text('upcoming.title'.tr(),
-                      style: Theme.of(context).textTheme.titleLarge)),
+                      style: Theme.of(context)
+                          .textTheme
+                          .titleLarge
+                          ?.copyWith(color: Canopy.paper))),
               if (own)
-                IconButton.filled(
-                  tooltip: 'upcoming.add'.tr(),
-                  onPressed: () => _edit(),
-                  icon: const Icon(Icons.add_rounded),
-                ),
+                CaButton(
+                    label: 'upcoming.add'.tr(),
+                    icon: CaGlyph.plus,
+                    variant: CaButtonVariant.secondary,
+                    onPressed: () => _edit()),
             ]),
             const SizedBox(height: AppTheme.spaceMd),
-            if (error != null) ...[
-              Text('upcoming.load_failed'.tr(),
-                  style: const TextStyle(color: AppTheme.danger)),
-              TextButton.icon(
-                  onPressed: () => provider.loadUpcomingSchedules(id),
-                  icon: const Icon(Icons.refresh_rounded),
-                  label: Text('upcoming.retry'.tr())),
-            ] else if (rows == null)
-              const Center(child: CircularProgressIndicator())
+            if (error != null)
+              CaCard(
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text('upcoming.load_failed'.tr(),
+                        style: const TextStyle(color: Canopy.liveCrimson)),
+                    const SizedBox(height: AppTheme.spaceSm),
+                    CaButton(
+                        label: 'upcoming.retry'.tr(),
+                        icon: CaGlyph.refresh,
+                        variant: CaButtonVariant.text,
+                        onPressed: () => provider.loadUpcomingSchedules(id)),
+                  ]))
+            else if (rows == null)
+              const CaCard(child: CaPageSkeleton())
             else if (upcoming.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceXl),
-                child: Column(children: [
-                  const Icon(Icons.event_busy_rounded,
-                      color: AppTheme.textSecondary, size: 48),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  Text('profile.no_upcoming_schedule'.tr(),
-                      textAlign: TextAlign.center),
-                ]),
-              )
+              CaCard(
+                  child: CaEmptyState(
+                      icon: CaGlyph.cal,
+                      title: 'profile.no_upcoming_schedule'.tr(),
+                      body: ''))
             else
               Wrap(
                 spacing: AppTheme.spaceMd,
@@ -284,11 +299,12 @@ class _ScheduleCardState extends State<_ScheduleCard> {
   final GlobalKey<PopupMenuButtonState<String>> _menuKey = GlobalKey();
   bool _expanded = false;
 
+  /// The colour the presenter picked for this entry.
   Color get _color => switch (widget.schedule.colorKey) {
         'gold' => AppTheme.warning,
-        'berry' => AppTheme.danger,
+        'berry' => Canopy.liveCrimson,
         'slate' => AppTheme.media,
-        _ => AppTheme.primary,
+        _ => Canopy.brandGreen,
       };
 
   @override
@@ -299,52 +315,57 @@ class _ScheduleCardState extends State<_ScheduleCard> {
     final saudi = next.add(const Duration(hours: 3));
     final localizations = MaterialLocalizations.of(context);
     final description = widget.schedule.description(language);
+    final textTheme = Theme.of(context).textTheme;
+    final time = localizations
+        .formatTimeOfDay(TimeOfDay(hour: saudi.hour, minute: saudi.minute));
     return Semantics(
       label: '${widget.schedule.title(language)}, ${'upcoming.planned'.tr()}',
       child: GestureDetector(
         onLongPress: () => _menuKey.currentState?.showButtonMenu(),
-        child: Container(
-          padding: const EdgeInsets.all(AppTheme.spaceMd),
-          decoration: BoxDecoration(
-            color: widget.schedule.isSpecial
-                ? _color.withValues(alpha: 0.07)
-                : AppTheme.surface,
-            border: Border.all(color: _color.withValues(alpha: 0.55)),
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            boxShadow: widget.schedule.isSpecial
-                ? [
-                    BoxShadow(
-                      color: _color.withValues(alpha: 0.14),
-                      blurRadius: 15,
-                    )
-                  ]
-                : null,
-          ),
+        child: CaCard(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
           child:
-              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Row(children: [
-              Icon(Icons.calendar_today_rounded, color: _color, size: 20),
-              const SizedBox(width: AppTheme.spaceSm),
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              _DateBadge(
+                  color: _color,
+                  month: DateFormat.MMM(language).format(saudi),
+                  day: localizations.formatDecimal(saudi.day)),
+              const SizedBox(width: AppTheme.spaceMd),
               Expanded(
-                  child: Text('upcoming.planned'.tr(),
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w700))),
-              if (widget.schedule.isSpecial)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                      color: _color.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(99)),
-                  child: Text('upcoming.special'.tr(),
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.w700)),
-                ),
+                  child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                    Text(
+                        (widget.schedule.isSpecial
+                                ? 'upcoming.special'
+                                : 'upcoming.planned')
+                            .tr(),
+                        style: textTheme.labelSmall?.copyWith(
+                            color: _color, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: AppTheme.spaceXs),
+                    Text(widget.schedule.title(language),
+                        style: textTheme.titleSmall,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis),
+                    const SizedBox(height: AppTheme.spaceXs),
+                    Row(children: [
+                      const CaIcon(CaGlyph.clock, size: CanopySize.inlineIcon),
+                      const SizedBox(width: AppTheme.spaceXs),
+                      Flexible(
+                          child: Text(
+                              '${localizations.formatMediumDate(saudi)} · $time',
+                              style: textTheme.bodySmall?.copyWith(
+                                  color: Canopy.ink,
+                                  fontWeight: FontWeight.w600))),
+                    ]),
+                    Text('upcoming.saudi_time'.tr(),
+                        style: textTheme.bodySmall),
+                  ])),
               PopupMenuButton<String>(
                 key: _menuKey,
                 tooltip: 'upcoming.actions'.tr(),
+                icon: const CaIcon(CaGlyph.dots),
                 onSelected: (value) => switch (value) {
                   'share' => widget.onShare(),
                   'remind' => widget.onReminder(),
@@ -369,53 +390,109 @@ class _ScheduleCardState extends State<_ScheduleCard> {
                 ],
               ),
             ]),
-            const SizedBox(height: AppTheme.spaceSm),
-            Text(widget.schedule.title(language),
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: AppTheme.spaceSm),
-            Text(
-                '${localizations.formatMediumDate(saudi)} · '
-                '${localizations.formatTimeOfDay(TimeOfDay(hour: saudi.hour, minute: saudi.minute))}',
-                style: const TextStyle(fontWeight: FontWeight.w700)),
-            Text('upcoming.saudi_time'.tr(),
-                style: const TextStyle(color: AppTheme.textSecondary)),
-            if (!widget.schedule.isSpecial)
-              Padding(
-                padding: const EdgeInsets.only(top: AppTheme.spaceSm),
-                child: Text(widget.days.join(' · ')),
-              ),
-            if (widget.schedule.tags.isNotEmpty)
-              Padding(
-                padding: const EdgeInsets.only(top: AppTheme.spaceSm),
-                child: Wrap(
-                  spacing: 6,
-                  runSpacing: 6,
+            if (!widget.schedule.isSpecial && widget.days.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spaceMd),
+              Wrap(
+                  spacing: AppTheme.spaceXs,
+                  runSpacing: AppTheme.spaceXs,
+                  children: [
+                    for (final day in widget.days)
+                      _Pill(label: day, color: _color),
+                  ]),
+            ],
+            if (widget.schedule.tags.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              Wrap(
+                  spacing: AppTheme.spaceXs,
+                  runSpacing: AppTheme.spaceXs,
                   children: [
                     for (final tag in widget.schedule.tags)
-                      Chip(
-                          label: Text(tag),
-                          visualDensity: VisualDensity.compact)
-                  ],
-                ),
-              ),
+                      Directionality(
+                          textDirection: TextDirection.ltr,
+                          child: _Pill(label: tag, color: Canopy.brandGreen)),
+                  ]),
+            ],
             if (description.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              Text(description,
+                  maxLines: _expanded ? null : 2,
+                  overflow: _expanded ? null : TextOverflow.ellipsis,
+                  style: textTheme.bodyMedium),
               Align(
-                alignment: AlignmentDirectional.centerEnd,
+                alignment: AlignmentDirectional.centerStart,
                 child: IconButton(
                   tooltip:
                       (_expanded ? 'upcoming.show_less' : 'upcoming.show_more')
                           .tr(),
+                  color: Canopy.brandGreen,
                   onPressed: () => setState(() => _expanded = !_expanded),
                   icon: Icon(_expanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded),
                 ),
               ),
-              if (_expanded) Text(description),
             ],
+            const SizedBox(height: AppTheme.spaceMd),
+            CaButton(
+                label: (widget.reminderOn
+                        ? 'upcoming.remove_reminder'
+                        : 'upcoming.reminder')
+                    .tr(),
+                icon: widget.reminderOn ? CaGlyph.check : CaGlyph.bell,
+                confirm: widget.reminderOn,
+                variant: widget.reminderOn
+                    ? CaButtonVariant.secondary
+                    : CaButtonVariant.primary,
+                onPressed: widget.onReminder),
           ]),
         ),
       ),
     );
   }
+}
+
+/// The date of the next start, in the colour the presenter chose.
+class _DateBadge extends StatelessWidget {
+  const _DateBadge(
+      {required this.color, required this.month, required this.day});
+  final Color color;
+  final String month, day;
+  @override
+  Widget build(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    return ExcludeSemantics(
+        child: Container(
+            width: 60,
+            padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceSm),
+            decoration: BoxDecoration(
+                color: color,
+                borderRadius: BorderRadius.circular(CanopyRadius.input)),
+            child: Column(mainAxisSize: MainAxisSize.min, children: [
+              Text(month,
+                  style: textTheme.labelSmall?.copyWith(
+                      color: Canopy.paper, fontWeight: FontWeight.w600)),
+              Text(day,
+                  style: textTheme.titleLarge?.copyWith(
+                      color: Canopy.paper, fontWeight: FontWeight.w700)),
+            ])));
+  }
+}
+
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label, required this.color});
+  final String label;
+  final Color color;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
+      decoration: BoxDecoration(
+          color: Canopy.mint,
+          borderRadius: BorderRadius.circular(CanopyRadius.pill)),
+      child: Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: AppTheme.spaceSm, vertical: AppTheme.spaceXs),
+          child: Text(label,
+              style: Theme.of(context)
+                  .textTheme
+                  .labelSmall
+                  ?.copyWith(color: Canopy.ink))));
 }

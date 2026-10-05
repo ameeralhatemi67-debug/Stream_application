@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../map/presentation/venue_directions_launcher.dart';
@@ -19,15 +20,10 @@ class OrgBranchesModalSheet extends StatelessWidget {
     required String orgName,
     required List<OrgVenueBranchModel> venues,
   }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => OrgBranchesModalSheet(
-        orgName: orgName,
-        venues: venues,
-      ),
-    );
+    showCaSheet<void>(context,
+        title: orgName,
+        body: OrgBranchesModalSheet(orgName: orgName, venues: venues),
+        framed: false);
   }
 
   @override
@@ -39,10 +35,10 @@ class OrgBranchesModalSheet extends StatelessWidget {
         maxHeight: MediaQuery.sizeOf(context).height * 0.8,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.bg,
+        color: Canopy.dawn,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
         border: Border(
-          top: BorderSide(color: AppTheme.border, width: 1.5),
+          top: BorderSide(color: Canopy.hairline, width: 1.5),
         ),
       ),
       child: Column(
@@ -54,7 +50,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: AppTheme.textSecondary.withValues(alpha: 0.3),
+              color: Canopy.slate.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -70,7 +66,8 @@ class OrgBranchesModalSheet extends StatelessWidget {
                     color: AppTheme.primary.withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.domain_rounded, color: AppTheme.primary, size: 22),
+                  child: const Icon(Icons.domain_rounded,
+                      color: AppTheme.primary, size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -80,7 +77,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
                       Text(
                         'profile.campus_branches'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.onMedia,
+                          color: Canopy.ink,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -88,7 +85,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
                       Text(
                         orgName,
                         style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                          color: Canopy.slate,
                           fontSize: 13,
                         ),
                         maxLines: 1,
@@ -97,15 +94,19 @@ class OrgBranchesModalSheet extends StatelessWidget {
                     ],
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
-                  onPressed: () => Navigator.pop(context),
+                Semantics(
+                  label: MaterialLocalizations.of(context).closeButtonTooltip,
+                  child: IconButton(
+                    icon: const Icon(Icons.close_rounded,
+                        color: Canopy.slate),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
               ],
             ),
           ),
 
-          const Divider(color: AppTheme.border, height: 1),
+          const Divider(color: Canopy.hairline, height: 1),
 
           // List of Venue Branches
           Flexible(
@@ -138,7 +139,7 @@ class OrgBranchesModalSheet extends StatelessWidget {
         border: Border.all(
           color: venue.isMainHeadquarters
               ? AppTheme.primary.withValues(alpha: 0.5)
-              : AppTheme.border,
+              : Canopy.hairline,
         ),
       ),
       child: Column(
@@ -151,32 +152,34 @@ class OrgBranchesModalSheet extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
+                    Wrap(
+                      spacing: AppTheme.spaceSm,
+                      runSpacing: AppTheme.spaceXs,
                       children: [
-                        Flexible(
-                          child: Text(
-                            venue.getLocalizedName(lang),
-                            style: const TextStyle(
-                              color: AppTheme.onMedia,
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        Text(
+                          venue.getLocalizedName(lang),
+                          style: const TextStyle(
+                            color: Canopy.ink,
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         if (venue.isMainHeadquarters) ...[
-                          const SizedBox(width: 8),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: AppTheme.primary.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppTheme.primary.withValues(alpha: 0.6)),
+                              border: Border.all(
+                                  color:
+                                      AppTheme.primary.withValues(alpha: 0.6)),
                             ),
                             child: Text(
                               'profile.main_hq'.tr(),
                               style: const TextStyle(
                                 color: AppTheme.primary,
-                                fontSize: 10,
+                                fontSize: AppTheme.captionFont,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
@@ -187,13 +190,14 @@ class OrgBranchesModalSheet extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        const Icon(Icons.location_on_outlined, size: 14, color: AppTheme.textSecondary),
+                        const Icon(Icons.location_on_outlined,
+                            size: 14, color: Canopy.slate),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             '${venue.getLocalizedCity(lang)} • ${venue.getLocalizedAddress(lang)}',
                             style: const TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: Canopy.slate,
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -209,20 +213,21 @@ class OrgBranchesModalSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceAlt,
+                  color: Canopy.mint,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: AppTheme.border),
+                  border: Border.all(color: Canopy.hairline),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.event_seat_rounded, size: 12, color: AppTheme.primary),
+                    const Icon(Icons.event_seat_rounded,
+                        size: 12, color: AppTheme.primary),
                     const SizedBox(width: 4),
                     Text(
                       '${venue.seatingCapacity} ${'profile.seating_capacity'.tr()}',
                       style: const TextStyle(
-                        color: AppTheme.onMedia,
-                        fontSize: 11,
+                        color: Canopy.ink,
+                        fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -240,17 +245,18 @@ class OrgBranchesModalSheet extends StatelessWidget {
               runSpacing: 6,
               children: venue.availableFacilities.map((facility) {
                 return Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                   decoration: BoxDecoration(
-                    color: AppTheme.bg,
+                    color: Canopy.dawn,
                     borderRadius: BorderRadius.circular(6),
-                    border: Border.all(color: AppTheme.border),
+                    border: Border.all(color: Canopy.hairline),
                   ),
                   child: Text(
                     facility,
                     style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 11,
+                      color: Canopy.slate,
+                      fontSize: AppTheme.captionFont,
                     ),
                   ),
                 );
@@ -262,26 +268,27 @@ class OrgBranchesModalSheet extends StatelessWidget {
 
           // Action: only a real pinned venue can offer directions.
           if (isUsableVenuePoint(venue.latitude, venue.longitude))
-          SizedBox(
-            width: double.infinity,
-            child: OutlinedButton.icon(
-              icon: const Icon(Icons.directions_rounded, size: 16),
-              label: Text('profile.get_directions'.tr()),
-              style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: BorderSide(color: AppTheme.primary.withValues(alpha: 0.5)),
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                icon: const Icon(Icons.directions_rounded, size: 16),
+                label: Text('profile.get_directions'.tr()),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.primary,
+                  side: BorderSide(
+                      color: AppTheme.primary.withValues(alpha: 0.5)),
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  ),
+                ),
+                onPressed: () => openVenueDirections(
+                  context,
+                  venue.latitude,
+                  venue.longitude,
                 ),
               ),
-              onPressed: () => openVenueDirections(
-                context,
-                venue.latitude,
-                venue.longitude,
-              ),
             ),
-          ),
         ],
       ),
     );

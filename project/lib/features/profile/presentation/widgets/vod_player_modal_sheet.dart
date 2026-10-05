@@ -1,16 +1,23 @@
-import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
+import '../../../../core/widgets/ds/ca_cards.dart';
+import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../live_stream/presentation/abstract_video_player.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
 
 /// Modal sheet for inline playback of archived YouTube VOD lectures.
-class VodPlayerModalSheet extends StatelessWidget {
+///
+/// On a phone the sheet is as wide as the screen and sits flush with its
+/// bottom edge; on wider screens it opens as the usual centred panel.
+class VodPlayerModalSheet extends StatefulWidget {
   final VodModel vod;
   final StreamerModel? streamer;
 
@@ -25,16 +32,22 @@ class VodPlayerModalSheet extends StatelessWidget {
     required VodModel vod,
     StreamerModel? streamer,
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (modalContext) => VodPlayerModalSheet(
-        vod: vod,
-        streamer: streamer,
-      ),
-    );
+    return showCaSheet<void>(context,
+        title: vod.getLocalizedTitle(context.locale.languageCode),
+        body: VodPlayerModalSheet(vod: vod, streamer: streamer),
+        framed: false,
+        fullWidthOnPhone: true,
+        flushOnPhone: true);
   }
+
+  @override
+  State<VodPlayerModalSheet> createState() => _VodPlayerModalSheetState();
+}
+
+class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
+  bool _descriptionOpen = false;
+
+  VodModel get vod => widget.vod;
 
   @override
   Widget build(BuildContext context) {
@@ -42,19 +55,186 @@ class VodPlayerModalSheet extends StatelessWidget {
     final title = vod.getLocalizedTitle(lang);
     final isSaved =
         context.select<AppProvider, bool>((p) => p.isBookmarked(vod.vodId));
-    final description = vod.getLocalizedDescription(lang);
+    final description = vod.getLocalizedDescription(lang).trim();
+    final streamer = widget.streamer;
     final broadcasterName =
-        streamer != null ? streamer!.getLocalizedName(lang) : vod.streamerId;
+        streamer != null ? streamer.getLocalizedName(lang) : vod.streamerId;
     final organization = streamer?.getLocalizedOrganization(lang) ?? '';
+    final textTheme = Theme.of(context).textTheme;
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.sizeOf(context).height * 0.9,
+    // Who is speaking, the title, and a plain close icon.
+    final header = Padding(
+      padding: const EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
+          AppTheme.spaceXs, AppTheme.spaceSm, AppTheme.spaceSm),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title,
+                    style: textTheme.titleMedium,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis),
+                const SizedBox(height: AppTheme.spaceSm),
+                Row(children: [
+                  CaAvatar(
+                      name: broadcasterName,
+                      url: streamer?.avatarUrl,
+                      radius: 14,
+                      verified: streamer?.isVerified ?? false),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  Expanded(
+                    child: Text(
+                      organization.isEmpty
+                          ? broadcasterName
+                          : '$broadcasterName • $organization',
+                      style: textTheme.bodySmall
+                          ?.copyWith(color: Canopy.brandGreen),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ]),
+              ],
+            ),
+          ),
+          CaIconButton(
+            bare: true,
+            icon: CaGlyph.close,
+            label: MaterialLocalizations.of(context).closeButtonTooltip,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+    );
+
+    // The player spans the whole sheet width. Capped at 40% of the
+    // viewport: at 16:9 on a landscape tablet it alone wanted most of
+    // the height and pushed the details off the sheet. Measured against
+    // the viewport, not the incoming constraints, because this Column
+    // lays its children out with an unbounded height.
+    final player = ConstrainedBox(
+      constraints:
+          BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.4),
+      child: ColoredBox(
+        color: Canopy.forestDeep,
+        child: AbstractVideoPlayer.fromSource(
+          sourceType: StreamSourceType.youtubeEmbed,
+          streamUrl: vod.youtubeVideoId,
+          autoPlay: true,
+          aspectRatio: 16 / 9,
+        ),
+      ),
+    );
+
+    final details = SingleChildScrollView(
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Duration, recorded date and view count. They wrap onto a
+          // second line instead of overrunning a 320 px sheet.
+          Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            children: [
+              if (vod.durationSeconds > 0)
+                _StatPill(glyph: CaGlyph.clock, label: vod.formattedDuration),
+              _StatPill(glyph: CaGlyph.cal, label: vod.recordedDate),
+              _StatPill(
+                  glyph: CaGlyph.eye,
+                  label: '${vod.viewCount} ${'profile.views'.tr()}'),
+            ],
+          ),
+          if (description.isNotEmpty) ...[
+            const SizedBox(height: AppTheme.spaceLg),
+            Text(
+              description,
+              maxLines: _descriptionOpen ? null : 3,
+              overflow: _descriptionOpen ? null : TextOverflow.ellipsis,
+              style: textTheme.bodyMedium
+                  ?.copyWith(color: Canopy.slate, height: 1.5),
+            ),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: IconButton(
+                tooltip: (_descriptionOpen
+                        ? 'profile.show_less'
+                        : 'profile.show_more')
+                    .tr(),
+                color: Canopy.brandGreen,
+                icon: Icon(_descriptionOpen
+                    ? Icons.keyboard_arrow_up_rounded
+                    : Icons.keyboard_arrow_down_rounded),
+                onPressed: () =>
+                    setState(() => _descriptionOpen = !_descriptionOpen),
+              ),
+            ),
+          ],
+          const SizedBox(height: AppTheme.spaceMd),
+          // Side by side when there is room, stacked on a narrow
+          // phone so neither label has to wrap.
+          LayoutBuilder(builder: (context, constraints) {
+            final save = CaButton(
+              // Real bookmark (05 D-07): persisted per account for
+              // signed-in viewers, local for guests.
+              icon: CaGlyph.bookmark,
+              variant: CaButtonVariant.secondary,
+              label: isSaved
+                  ? 'profile.saved_lecture'.tr()
+                  : 'profile.save_lecture'.tr(),
+              onPressed: () => context
+                  .read<AppProvider>()
+                  .toggleBookmark(vod.vodId, streamerId: vod.streamerId),
+            );
+            final share = CaButton(
+              // Shares the recording's real watch URL.
+              icon: CaGlyph.share,
+              label: 'profile.share_vod'.tr(),
+              onPressed: () => Share.share(
+                'https://www.youtube.com/watch?v=${vod.youtubeVideoId}',
+                subject: title,
+              ),
+            );
+            return constraints.maxWidth >= 440
+                ? Row(children: [
+                    Expanded(child: save),
+                    const SizedBox(width: AppTheme.spaceMd),
+                    Expanded(child: share),
+                  ])
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                        share,
+                        const SizedBox(height: AppTheme.spaceSm),
+                        save,
+                      ]);
+          }),
+          const SizedBox(height: AppTheme.spaceSm),
+          // The escape hatch for a VOD the in-app WebView cannot play
+          // (embedding disabled, age-gated, outdated system WebView).
+          // Always offered, not only after a visible failure: by the
+          // time a viewer decides the embed is broken they have
+          // usually already given up on this sheet.
+          CaButton(
+            icon: CaGlyph.external,
+            variant: CaButtonVariant.text,
+            label: 'live.open_in_youtube'.tr(),
+            onPressed: () => _openInYouTube(vod.youtubeVideoId),
+          ),
+        ],
+      ),
+    );
+
+    // A short window (a phone on its side, big text) cannot hold the fixed
+    // header and player above a scrolling body, so everything scrolls.
+    final compact = MediaQuery.sizeOf(context).height < 560;
+
+    return ConstrainedBox(
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.sizeOf(context).height * 0.92,
       ),
       child: SafeArea(
         top: false,
@@ -62,221 +242,32 @@ class VodPlayerModalSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top Drag Handle Indicator bar
             Center(
               child: Container(
                 margin: const EdgeInsets.only(
                     top: AppTheme.spaceSm, bottom: AppTheme.spaceXs),
-                width: 36,
-                height: 4,
+                width: CanopySize.handleWidth,
+                height: CanopySize.handleHeight,
                 decoration: BoxDecoration(
-                  color: AppTheme.borderStrong,
-                  borderRadius: BorderRadius.circular(2),
+                  color: Canopy.hairlineStrong,
+                  borderRadius: BorderRadius.circular(CanopyRadius.pill),
                 ),
               ),
             ),
-
-            // Modal Header Title & Close Button
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spaceLg,
-                vertical: AppTheme.spaceSm,
-              ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          '$broadcasterName ${organization.isNotEmpty ? "• $organization" : ""}',
-                          style: const TextStyle(
-                            color: AppTheme.primary,
-                            fontSize: 12,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
+            if (compact)
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [header, player, details],
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        color: AppTheme.textSecondary),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
-              ),
-            ),
-
-            // Embedded YouTube Video Player Adapter, built through the
-            // polymorphic factory like every other player in the app, rather
-            // than naming the adapter directly.
-            //
-            // Capped at half the viewport: at 16:9 on a 1280 px landscape
-            // tablet the player alone wanted 720 of the 800 available pixels
-            // and pushed the title and actions off the sheet.
-            ConstrainedBox(
-              // Measured against the viewport, not the incoming constraints:
-              // this sits in a `mainAxisSize: min` Column, whose children are
-              // laid out with an unbounded height, so a LayoutBuilder here
-              // would cap the player at infinity.
-              constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.4),
-              child: ClipRRect(
-                child: AbstractVideoPlayer.fromSource(
-                  sourceType: StreamSourceType.youtubeEmbed,
-                  streamUrl: vod.youtubeVideoId,
-                  autoPlay: true,
-                  aspectRatio: 16 / 9,
                 ),
-              ),
-            ),
-
-            // VOD Metadata & Localized Description Scrollable Content
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(AppTheme.spaceLg),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Stats pills: duration, recorded date and view count.
-                    // Three chips in a fixed Row overran a 320 px sheet, so
-                    // they wrap onto a second line instead.
-                    Wrap(
-                      spacing: AppTheme.spaceSm,
-                      runSpacing: AppTheme.spaceXs,
-                      children: [
-                        if (vod.durationSeconds > 0)
-                          _buildStatChip(
-                            icon: Icons.timer_outlined,
-                            label: vod.formattedDuration,
-                            color: AppTheme.accent,
-                          ),
-                        _buildStatChip(
-                          icon: Icons.calendar_today_outlined,
-                          label: vod.recordedDate,
-                          color: AppTheme.textSecondary,
-                        ),
-                        _buildStatChip(
-                          icon: Icons.visibility_outlined,
-                          label: '${vod.viewCount} ${'profile.views'.tr()}',
-                          color: AppTheme.success,
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: AppTheme.spaceLg),
-                    const Divider(color: AppTheme.border, height: 1),
-                    const SizedBox(height: AppTheme.spaceLg),
-
-                    // Full Title & Description
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                            color: AppTheme.textPrimary,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                    ),
-                    const SizedBox(height: AppTheme.spaceSm),
-                    Text(
-                      description,
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 14,
-                        height: 1.4,
-                      ),
-                    ),
-
-                    const SizedBox(height: AppTheme.spaceLg),
-
-                    // Cluster 1 Task 5 -- the escape hatch for a VOD the
-                    // in-app WebView cannot play (embedding disabled by the
-                    // uploader, age-gated, or an outdated system WebView).
-                    // Always offered, not only after a visible failure: by
-                    // the time a viewer decides the embed is broken they
-                    // have usually already given up on this sheet.
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton.icon(
-                        onPressed: () => _openInYouTube(vod.youtubeVideoId),
-                        icon: const Icon(Icons.open_in_new_rounded, size: 18),
-                        label: Text('live.open_in_youtube'.tr()),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.danger,
-                          side: const BorderSide(color: AppTheme.danger),
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: AppTheme.spaceMd),
-
-                    // Interactive Action Buttons Bar
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            // Real bookmark (05 D-07): persisted per account
-                            // for signed-in viewers, local for guests.
-                            onPressed: () => context
-                                .read<AppProvider>()
-                                .toggleBookmark(vod.vodId,
-                                    streamerId: vod.streamerId),
-                            icon: Icon(
-                                isSaved
-                                    ? Icons.bookmark_rounded
-                                    : Icons.bookmark_add_outlined,
-                                size: 18),
-                            label: Text(isSaved
-                                ? 'profile.saved_lecture'.tr()
-                                : 'profile.save_lecture'.tr()),
-                            style: OutlinedButton.styleFrom(
-                              // An outlined button has no fill, so its label
-                              // sits on the white sheet: `onMedia` white made
-                              // it invisible.
-                              foregroundColor: AppTheme.primary,
-                              side: const BorderSide(
-                                  color: AppTheme.borderStrong),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: AppTheme.spaceMd),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            // Shares the recording's real watch URL.
-                            onPressed: () => Share.share(
-                              'https://www.youtube.com/watch?v=${vod.youtubeVideoId}',
-                              subject: title,
-                            ),
-                            icon: const Icon(Icons.share_outlined, size: 18),
-                            label: Text('profile.share_vod'.tr()),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.primary,
-                              foregroundColor: AppTheme.bg,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
+              )
+            else ...[
+              header,
+              player,
+              Flexible(child: details),
+            ],
           ],
         ),
       ),
@@ -310,34 +301,27 @@ class VodPlayerModalSheet extends StatelessWidget {
       debugPrint('[VodPlayerModalSheet] openInYouTube failed: $e');
     }
   }
+}
 
-  Widget _buildStatChip({
-    required IconData icon,
-    required String label,
-    required Color color,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+class _StatPill extends StatelessWidget {
+  const _StatPill({required this.glyph, required this.label});
+  final CaGlyph glyph;
+  final String label;
+  @override
+  Widget build(BuildContext context) => DecoratedBox(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusXs),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+          color: Canopy.mint,
+          borderRadius: BorderRadius.circular(CanopyRadius.pill)),
+      child: Padding(
+          padding: const EdgeInsetsDirectional.symmetric(
+              horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
+          child: Row(mainAxisSize: MainAxisSize.min, children: [
+            CaIcon(glyph, size: CanopySize.inlineIcon),
+            const SizedBox(width: AppTheme.spaceSm),
+            Text(label,
+                style: Theme.of(context)
+                    .textTheme
+                    .labelMedium
+                    ?.copyWith(color: Canopy.ink)),
+          ])));
 }

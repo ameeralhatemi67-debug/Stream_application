@@ -127,7 +127,8 @@ void main() {
           } else {
             expect(last.dy, closeTo(first.dy, 1));
           }
-          expect(find.text('Lecture details'), findsNothing);
+          // The card previews the description (two lines) behind an arrow.
+          expect(find.text('Lecture details'), findsOneWidget);
           await tester.tap(find
               .byTooltip(language == 'ar' ? 'عرض الوصف' : 'Show description')
               .first);

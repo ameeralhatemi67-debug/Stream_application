@@ -486,3 +486,11 @@ class _CardImage extends StatelessWidget {
             errorBuilder: (_, __, ___) => fallback));
   }
 }
+
+/// A card or banner picture that falls back to the canopy gradient.
+class CaCardImage extends StatelessWidget {
+  const CaCardImage({super.key, this.url});
+  final String? url;
+  @override
+  Widget build(BuildContext context) => _CardImage(url: url);
+}

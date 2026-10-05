@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -27,17 +28,14 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
     required List<VodModel> speakerVods,
     VoidCallback? onFilterSelected,
   }) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => OrgSpeakerInspectionSheet(
-        speaker: speaker,
-        orgName: orgName,
-        speakerVods: speakerVods,
-        onFilterSelected: onFilterSelected,
-      ),
-    );
+    showCaSheet(context,
+        title: 'profile.speaker_profile_title'.tr(),
+        framed: false,
+        body: OrgSpeakerInspectionSheet(
+            speaker: speaker,
+            orgName: orgName,
+            speakerVods: speakerVods,
+            onFilterSelected: onFilterSelected));
   }
 
   /// A recording thumbnail, or a neutral tile when the entry has none: an
@@ -46,10 +44,10 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
     Widget fallback() => Container(
           width: 60,
           height: 40,
-          color: AppTheme.surfaceAlt,
+          color: Canopy.mint,
           alignment: Alignment.center,
           child: const Icon(Icons.video_library_rounded,
-              size: 16, color: AppTheme.textMuted),
+              size: 16, color: Canopy.haze),
         );
     final provider = resolveImageProviderOrNull(url);
     return ClipRRect(
@@ -75,10 +73,10 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.bg,
+        color: Canopy.dawn,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
         border: Border(
-          top: BorderSide(color: AppTheme.border, width: 1.5),
+          top: BorderSide(color: Canopy.hairline, width: 1.5),
         ),
       ),
       child: Column(
@@ -90,7 +88,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
             height: 4,
             margin: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
-              color: AppTheme.textSecondary.withValues(alpha: 0.3),
+              color: Canopy.slate.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -107,21 +105,25 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                 ),
-                IconButton(
-                  icon: const Icon(Icons.close_rounded, color: AppTheme.textSecondary),
-                  onPressed: () => Navigator.pop(context),
+                Semantics(
+                  label: MaterialLocalizations.of(context).closeButtonTooltip,
+                  child: IconButton(
+                    icon: const Icon(Icons.close_rounded,
+                        color: Canopy.slate),
+                    onPressed: () => Navigator.pop(context),
+                  ),
                 ),
               ],
             ),
           ),
 
-          const Divider(color: AppTheme.border, height: 1),
+          const Divider(color: Canopy.hairline, height: 1),
 
           Flexible(
             child: SingleChildScrollView(
@@ -147,7 +149,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                             Text(
                               speaker.getLocalizedName(lang),
                               style: const TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: Canopy.ink,
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -163,16 +165,17 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                             ),
                             const SizedBox(height: 6),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
                                 color: speaker.isPermanentStaff
                                     ? AppTheme.primary.withValues(alpha: 0.15)
-                                    : AppTheme.surfaceAlt,
+                                    : Canopy.mint,
                                 borderRadius: BorderRadius.circular(6),
                                 border: Border.all(
                                   color: speaker.isPermanentStaff
                                       ? AppTheme.primary.withValues(alpha: 0.5)
-                                      : AppTheme.border,
+                                      : Canopy.hairline,
                                 ),
                               ),
                               child: Text(
@@ -182,8 +185,8 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                                 style: TextStyle(
                                   color: speaker.isPermanentStaff
                                       ? AppTheme.primary
-                                      : AppTheme.textSecondary,
-                                  fontSize: 11,
+                                      : Canopy.slate,
+                                  fontSize: AppTheme.captionFont,
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
@@ -201,7 +204,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                     Text(
                       'profile.about'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: Canopy.ink,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -210,7 +213,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                     Text(
                       speaker.getLocalizedBio(lang),
                       style: const TextStyle(
-                        color: AppTheme.textSecondary,
+                        color: Canopy.slate,
                         fontSize: 13,
                         height: 1.45,
                       ),
@@ -224,13 +227,15 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                       width: double.infinity,
                       child: ElevatedButton.icon(
                         icon: const Icon(Icons.filter_list_rounded, size: 18),
-                        label: Text('profile.filter_lectures_by_this_speaker'.tr()),
+                        label: Text(
+                            'profile.filter_lectures_by_this_speaker'.tr()),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: AppTheme.primary,
                           foregroundColor: AppTheme.onMedia,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
                           ),
                         ),
                         onPressed: () {
@@ -246,7 +251,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                   Text(
                     '${'profile.archived_lectures'.tr()} (${speakerVods.length})',
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontSize: 15,
                       fontWeight: FontWeight.bold,
                     ),
@@ -260,7 +265,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                         child: Text(
                           'profile.no_instructor_vods'.tr(),
                           style: const TextStyle(
-                            color: AppTheme.textSecondary,
+                            color: Canopy.slate,
                             fontSize: 13,
                           ),
                         ),
@@ -278,8 +283,9 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: AppTheme.surface,
-                            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                            border: Border.all(color: AppTheme.border),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                            border: Border.all(color: Canopy.hairline),
                           ),
                           child: Row(
                             children: [
@@ -292,7 +298,7 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                                     Text(
                                       vod.getLocalizedTitle(lang),
                                       style: const TextStyle(
-                                        color: AppTheme.textPrimary,
+                                        color: Canopy.ink,
                                         fontSize: 13,
                                         fontWeight: FontWeight.w600,
                                       ),
@@ -303,8 +309,8 @@ class OrgSpeakerInspectionSheet extends StatelessWidget {
                                     Text(
                                       '${vod.formattedDuration} • ${vod.recordedDate}',
                                       style: const TextStyle(
-                                        color: AppTheme.textSecondary,
-                                        fontSize: 11,
+                                        color: Canopy.slate,
+                                        fontSize: AppTheme.captionFont,
                                       ),
                                     ),
                                   ],

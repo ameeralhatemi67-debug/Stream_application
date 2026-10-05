@@ -30,7 +30,7 @@ class OrgSpeakerCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: AppTheme.border),
+          border: Border.all(color: Canopy.hairline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -75,7 +75,7 @@ class OrgSpeakerCard extends StatelessWidget {
                         speaker.getLocalizedRole(lang),
                         style: const TextStyle(
                           color: AppTheme.primary,
-                          fontSize: 11,
+                          fontSize: AppTheme.captionFont,
                           fontWeight: FontWeight.w600,
                         ),
                         maxLines: 1,
@@ -83,11 +83,12 @@ class OrgSpeakerCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: speaker.isPermanentStaff
                               ? AppTheme.primary.withValues(alpha: 0.12)
-                              : AppTheme.surfaceAlt,
+                              : Canopy.mint,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -97,8 +98,8 @@ class OrgSpeakerCard extends StatelessWidget {
                           style: TextStyle(
                             color: speaker.isPermanentStaff
                                 ? AppTheme.primary
-                                : AppTheme.textSecondary,
-                            fontSize: 9.5,
+                                : Canopy.slate,
+                            fontSize: AppTheme.captionFont,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -113,8 +114,8 @@ class OrgSpeakerCard extends StatelessWidget {
               Text(
                 speaker.getLocalizedBio(lang),
                 style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 11.5,
+                  color: Canopy.slate,
+                  fontSize: AppTheme.captionFont,
                   height: 1.35,
                 ),
                 maxLines: 2,
@@ -128,8 +129,8 @@ class OrgSpeakerCard extends StatelessWidget {
                 Text(
                   '${speakerVods.length} ${'profile.lectures_count'.tr()}',
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 11,
+                    color: Canopy.slate,
+                    fontSize: AppTheme.captionFont,
                     fontWeight: FontWeight.w500,
                   ),
                 ),

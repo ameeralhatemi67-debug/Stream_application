@@ -147,9 +147,13 @@ class CaDialog extends StatelessWidget {
       required this.body,
       this.titleWidget,
       this.actions = const [],
-      this.onClose});
+      this.onClose,
+      this.bareClose = false});
   final String title;
   final Widget? titleWidget;
+
+  /// The close button is drawn without a circle behind it.
+  final bool bareClose;
   final Widget body;
   final List<Widget> actions;
   final VoidCallback? onClose;
@@ -190,6 +194,7 @@ class CaDialog extends StatelessWidget {
                                       Theme.of(context).textTheme.titleLarge)),
                       if (onClose != null)
                         CaIconButton(
+                            bare: bareClose,
                             icon: CaGlyph.close,
                             label: MaterialLocalizations.of(context)
                                 .closeButtonTooltip,
@@ -253,6 +258,7 @@ Future<T?> showCaSheet<T>(BuildContext context,
     BoxConstraints? constraints,
     bool fullWidthOnPhone = false,
     bool flushOnPhone = false,
+    bool bareChrome = false,
     Color edgeColor = Canopy.paper}) {
   final presentation =
       caSheetPresentation(MediaQuery.sizeOf(context).width, job);
@@ -268,6 +274,7 @@ Future<T?> showCaSheet<T>(BuildContext context,
           scrimColor: barrierColor,
           fullWidthOnPhone: fullWidthOnPhone,
           flushOnPhone: flushOnPhone,
+          bareChrome: bareChrome,
           edgeColor: edgeColor,
           themes: InheritedTheme.capture(
               from: context,
@@ -293,6 +300,7 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
       this.scrimColor,
       this.fullWidthOnPhone = false,
       this.flushOnPhone = false,
+      this.bareChrome = false,
       this.edgeColor = Canopy.paper,
       required this.barrierDismissible,
       required this.barrierLabel})
@@ -317,6 +325,9 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
   /// With [fullWidthOnPhone], also drops the side inset: the body spans the
   /// whole width and supplies its own padding (a [CaSheet] header band does).
   final bool flushOnPhone;
+
+  /// Icon-only header controls on framed sheets and dialogs.
+  final bool bareChrome;
   final Color edgeColor;
   @override
   final bool barrierDismissible;
@@ -346,7 +357,8 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
             body: body,
             actions: actions,
             onClose: close,
-            handle: handle)
+            handle: handle,
+            bareChrome: bareChrome)
         : Builder(
             builder: (placed) => MediaQuery.removeViewInsets(
                 context: placed,
@@ -413,7 +425,12 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
                                                   surface(edge: true)))))))))));
     } else if (job == CaSheetJob.confirmation) {
       child = framed
-          ? CaDialog(title: title, body: body, actions: actions, onClose: close)
+          ? CaDialog(
+              title: title,
+              body: body,
+              actions: actions,
+              onClose: close,
+              bareClose: bareChrome)
           : body;
     } else {
       final size = MediaQuery.sizeOf(context);

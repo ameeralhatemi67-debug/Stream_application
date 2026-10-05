@@ -1,3 +1,6 @@
+import '../../../../core/widgets/ds/ca_fields.dart';
+import '../../../../core/layout/window_class.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -10,12 +13,10 @@ class JoinOrgModalSheet extends StatefulWidget {
   const JoinOrgModalSheet({super.key});
 
   static void show(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => const JoinOrgModalSheet(),
-    );
+    showCaSheet<void>(context,
+        title: 'design_ui.join_an_organization'.tr(),
+        body: const JoinOrgModalSheet(),
+        framed: false);
   }
 
   @override
@@ -29,6 +30,16 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
   bool _isSubmitting = false;
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (context.isPhoneLandscape) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) FocusScope.of(context).unfocus();
+      });
+    }
+  }
+
+  @override
   void dispose() {
     _roleController.dispose();
     _noteController.dispose();
@@ -40,7 +51,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.error_select_org'.tr()),
-          backgroundColor: AppTheme.danger,
+          backgroundColor: Canopy.liveCrimson,
         ),
       );
       return;
@@ -50,7 +61,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.error_note_empty'.tr()),
-          backgroundColor: AppTheme.danger,
+          backgroundColor: Canopy.liveCrimson,
         ),
       );
       return;
@@ -76,7 +87,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.submitted_toast'.tr()),
-          backgroundColor: AppTheme.success,
+          backgroundColor: Canopy.leaf,
         ),
       );
     } catch (e) {
@@ -84,7 +95,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
-          backgroundColor: AppTheme.danger,
+          backgroundColor: Canopy.liveCrimson,
         ),
       );
     } finally {
@@ -119,7 +130,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppTheme.border,
+                  color: Canopy.hairline,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -129,13 +140,14 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             // Header Title
             Row(
               children: [
-                const Icon(Icons.business_rounded, color: AppTheme.danger, size: 22),
+                const Icon(Icons.business_rounded,
+                    color: Canopy.liveCrimson, size: 22),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     'affiliation_modal.title'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -147,7 +159,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             Text(
               'affiliation_modal.subtitle'.tr(),
               style: const TextStyle(
-                color: AppTheme.textSecondary,
+                color: Canopy.slate,
                 fontSize: 12,
                 height: 1.35,
               ),
@@ -158,7 +170,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             Text(
               'affiliation_modal.select_org'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -174,13 +186,11 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? AppTheme.danger.withValues(alpha: 0.12)
-                        : AppTheme.surfaceAlt,
+                        ? Canopy.liveCrimson.withValues(alpha: 0.12)
+                        : Canopy.mint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(
-                      color: isSelected
-                          ? AppTheme.danger
-                          : AppTheme.border,
+                      color: isSelected ? Canopy.liveCrimson : Canopy.hairline,
                       width: isSelected ? 1.5 : 1.0,
                     ),
                   ),
@@ -196,9 +206,11 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              context.locale.languageCode == 'ar' ? org.fullNameAr : org.fullNameEn,
+                              context.locale.languageCode == 'ar'
+                                  ? org.fullNameAr
+                                  : org.fullNameEn,
                               style: const TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -206,8 +218,8 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                             Text(
                               '${org.venues.length} Campus Locations • ${org.affiliatedSpeakers.length} Affiliated Speakers',
                               style: const TextStyle(
-                                color: AppTheme.textMuted,
-                                fontSize: 11,
+                                color: Canopy.haze,
+                                fontSize: AppTheme.captionFont,
                               ),
                             ),
                           ],
@@ -215,7 +227,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                       ),
                       if (isSelected)
                         const Icon(Icons.check_circle_rounded,
-                            color: AppTheme.danger, size: 20),
+                            color: Canopy.liveCrimson, size: 20),
                     ],
                   ),
                 ),
@@ -225,50 +237,21 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             const SizedBox(height: 12),
 
             // Proposed Title / Role
-            TextField(
+            CaInput(
+              readOnly: context.isPhoneLandscape,
               controller: _roleController,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'affiliation_modal.proposed_role'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                hintText: 'affiliation_modal.proposed_role_hint'.tr(),
-                hintStyle: const TextStyle(color: AppTheme.textMuted),
-                filled: true,
-                fillColor: AppTheme.surfaceAlt,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.danger),
-                ),
-              ),
+              label: 'affiliation_modal.proposed_role'.tr(),
+              hint: 'affiliation_modal.proposed_role_hint'.tr(),
             ),
             const SizedBox(height: 12),
 
             // Message / Note
-            TextField(
+            CaInput(
+              readOnly: context.isPhoneLandscape,
               controller: _noteController,
               maxLines: 3,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'affiliation_modal.intro_note'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                hintText: 'affiliation_modal.intro_note_hint'.tr(),
-                hintStyle: const TextStyle(color: AppTheme.textMuted),
-                alignLabelWithHint: true,
-                filled: true,
-                fillColor: AppTheme.surfaceAlt,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.danger),
-                ),
-              ),
+              label: 'affiliation_modal.intro_note'.tr(),
+              hint: 'affiliation_modal.intro_note_hint'.tr(),
             ),
             const SizedBox(height: 20),
 
@@ -277,7 +260,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger,
+                  backgroundColor: Canopy.liveCrimson,
                   foregroundColor: AppTheme.onMedia,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(

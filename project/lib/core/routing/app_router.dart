@@ -8,6 +8,7 @@ import '../widgets/app_logo.dart';
 import '../widgets/ds/ca_focus_ring.dart';
 import '../widgets/ds/ca_icon.dart';
 import '../widgets/ds/ca_navigation.dart';
+import '../widgets/ds/canopy_motion.dart';
 import '../widgets/floating_stream_mini_player.dart';
 import '../../features/auth/presentation/welcome_screen.dart';
 import '../../features/auth/presentation/viewer_setup_screen.dart';
@@ -35,6 +36,26 @@ import '../../features/auth/presentation/screens/account_banned_screen.dart';
 import '../widgets/hadayah_loading_indicator.dart';
 
 class AppRouter {
+  /// Opens a page from the card that was tapped (its rectangle arrives as
+  /// [GoRouterState.extra]); without one it is the regular page push.
+  static Page<void> _canopyPage(
+      BuildContext context, GoRouterState state, Widget child) {
+    final origin = state.extra is Rect ? state.extra as Rect : null;
+    return CustomTransitionPage<void>(
+        key: state.pageKey,
+        child: child,
+        transitionDuration: CanopyMotion.reduced(context)
+            ? CanopyMotion.none
+            : origin == null
+                ? CanopyMotion.pagePush
+                : CanopyMotion.cardToPage,
+        reverseTransitionDuration: CanopyMotion.reduced(context)
+            ? CanopyMotion.none
+            : CanopyMotion.sheetOut,
+        transitionsBuilder: (context, animation, secondary, child) =>
+            canopyPageTransition(context, animation, child, origin: origin));
+  }
+
   static final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
   static final GlobalKey<NavigatorState> _feedNavigatorKey =
@@ -265,10 +286,16 @@ class AppRouter {
             // profile (P1.6).
             redirect: (context, state) =>
                 (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final id = state.pathParameters['id'] ?? '';
-              return BroadcasterProfileScreen(streamerId: id,
-                initialTab: state.uri.queryParameters['tab'] == 'upcoming' ? 2 : 0);
+              return _canopyPage(
+                  context,
+                  state,
+                  BroadcasterProfileScreen(
+                      streamerId: id,
+                      initialTab: state.uri.queryParameters['tab'] == 'upcoming'
+                          ? 2
+                          : 0));
             },
           ),
           GoRoute(
@@ -277,9 +304,10 @@ class AppRouter {
             name: 'live',
             redirect: (context, state) =>
                 (state.pathParameters['id'] ?? '').isEmpty ? '/feed' : null,
-            builder: (context, state) {
+            pageBuilder: (context, state) {
               final id = state.pathParameters['id'] ?? '';
-              return LiveBroadcastScreen(streamId: id);
+              return _canopyPage(
+                  context, state, LiveBroadcastScreen(streamId: id));
             },
           ),
           GoRoute(

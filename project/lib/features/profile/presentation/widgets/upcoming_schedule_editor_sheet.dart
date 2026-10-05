@@ -1,4 +1,11 @@
-import 'package:easy_localization/easy_localization.dart';
+import '../../../../core/widgets/phone_input_guard.dart';
+import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/ds/ca_cards.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
+import '../../../../core/widgets/ds/ca_fields.dart';
+import '../../../../core/layout/window_class.dart';
+import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -31,6 +38,16 @@ class _UpcomingScheduleEditorSheetState
   late String _color;
   bool _saving = false;
   String? _error;
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (context.isPhoneLandscape) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) FocusScope.of(context).unfocus();
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -71,7 +88,12 @@ class _UpcomingScheduleEditorSheetState
     final saudi = DateTime.now().toUtc().add(const Duration(hours: 3));
     final first = DateTime(saudi.year, saudi.month, saudi.day);
     final chosen = await showDatePicker(
+        builder: (context, child) =>
+            PhoneInputGuard(showHint: false, builder: (_, blocked) => child!),
         context: context,
+        initialEntryMode: context.isPhoneLandscape
+            ? DatePickerEntryMode.calendarOnly
+            : DatePickerEntryMode.calendar,
         firstDate: first,
         lastDate: DateTime(2100),
         initialDate: _date.isBefore(first) ? first : _date);
@@ -79,7 +101,14 @@ class _UpcomingScheduleEditorSheetState
   }
 
   Future<void> _pickTime() async {
-    final chosen = await showTimePicker(context: context, initialTime: _time);
+    final chosen = await showTimePicker(
+        builder: (context, child) =>
+            PhoneInputGuard(showHint: false, builder: (_, blocked) => child!),
+        context: context,
+        initialTime: _time,
+        initialEntryMode: context.isPhoneLandscape
+            ? TimePickerEntryMode.dialOnly
+            : TimePickerEntryMode.dial);
     if (chosen != null) setState(() => _time = chosen);
   }
 
@@ -162,139 +191,132 @@ class _UpcomingScheduleEditorSheetState
   @override
   Widget build(BuildContext context) {
     final localizations = MaterialLocalizations.of(context);
+    Widget pair(Widget en, Widget ar) => LayoutBuilder(
+        builder: (context, constraints) => constraints.maxWidth >=
+                CanopyWindow.medium
+            ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Expanded(child: en),
+                const SizedBox(width: AppTheme.spaceLg),
+                Expanded(child: ar)
+              ])
+            : Column(
+                children: [en, const SizedBox(height: AppTheme.spaceMd), ar]));
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(context).bottom),
-      child: Center(
-          child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 720),
-        child: SizedBox(
-          height: MediaQuery.sizeOf(context).height * 0.84,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppTheme.spaceLg),
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Text(
-                      (widget.existing == null
-                              ? 'upcoming.add'
-                              : 'upcoming.edit')
-                          .tr(),
-                      style: Theme.of(context).textTheme.titleLarge),
-                  const SizedBox(height: AppTheme.spaceSm),
-                  Text('upcoming.saudi_time_note'.tr(),
-                      style: const TextStyle(color: AppTheme.textSecondary)),
-                  const SizedBox(height: AppTheme.spaceLg),
-                  SegmentedButton<bool>(
-                      segments: [
-                        ButtonSegment(
-                            value: false, label: Text('upcoming.weekly'.tr())),
-                        ButtonSegment(
-                            value: true, label: Text('upcoming.special'.tr())),
-                      ],
-                      selected: {
-                        _special
-                      },
-                      onSelectionChanged: (values) =>
-                          setState(() => _special = values.first)),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  if (_special)
-                    OutlinedButton.icon(
-                      onPressed: _pickDate,
-                      icon: const Icon(Icons.calendar_month_rounded),
-                      label: Text(localizations.formatMediumDate(_date)),
-                    )
-                  else
-                    Wrap(
-                      spacing: AppTheme.spaceSm,
-                      runSpacing: AppTheme.spaceSm,
-                      children: [
-                        for (var day = 1; day <= 7; day++)
-                          FilterChip(
-                              label: Text('upcoming.day_$day'.tr()),
-                              selected: _weekdays.contains(day),
-                              onSelected: (selected) {
-                                setState(() {
-                                  if (selected) {
-                                    _weekdays.add(day);
-                                  } else {
-                                    _weekdays.remove(day);
-                                  }
-                                });
-                              }),
-                      ],
-                    ),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  OutlinedButton.icon(
-                      onPressed: _pickTime,
-                      icon: const Icon(Icons.schedule_rounded),
-                      label: Text('${localizations.formatTimeOfDay(_time)} '
-                          '${'upcoming.saudi_time'.tr()}')),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  TextField(
+      padding: EdgeInsetsDirectional.only(
+          bottom: context.isPhoneLandscape
+              ? 0
+              : MediaQuery.viewInsetsOf(context).bottom),
+      child: SizedBox(
+        height:
+            MediaQuery.sizeOf(context).height * CanopySize.sheetHeightFraction,
+        child: CaSheet(
+          bareChrome: true,
+          title:
+              (widget.existing == null ? 'upcoming.add' : 'upcoming.edit').tr(),
+          onClose: () => Navigator.pop(context),
+          actions: [
+            CaButton(
+                label: 'upcoming.save'.tr(),
+                loading: _saving,
+                onPressed: _saving ? null : _save)
+          ],
+          body:
+              Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            Text('upcoming.saudi_time_note'.tr(),
+                style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: AppTheme.spaceLg),
+            CaSegmentedTabs(
+                labels: ['upcoming.weekly'.tr(), 'upcoming.special'.tr()],
+                index: _special ? 1 : 0,
+                onChanged: (i) => setState(() => _special = i == 1)),
+            const SizedBox(height: AppTheme.spaceMd),
+            if (_special)
+              CaButton(
+                  label: localizations.formatMediumDate(_date),
+                  icon: CaGlyph.cal,
+                  variant: CaButtonVariant.secondary,
+                  onPressed: _pickDate)
+            else
+              Wrap(
+                  spacing: AppTheme.spaceSm,
+                  runSpacing: AppTheme.spaceSm,
+                  children: [
+                    for (var day = 1; day <= 7; day++)
+                      CaChip(
+                          label: 'upcoming.day_$day'.tr(),
+                          selected: _weekdays.contains(day),
+                          onSelected: (selected) {
+                            setState(() {
+                              if (selected) {
+                                _weekdays.add(day);
+                              } else {
+                                _weekdays.remove(day);
+                              }
+                            });
+                          }),
+                  ]),
+            const SizedBox(height: AppTheme.spaceMd),
+            CaButton(
+                label:
+                    '${localizations.formatTimeOfDay(_time)} ${'upcoming.saudi_time'.tr()}',
+                icon: CaGlyph.clock,
+                variant: CaButtonVariant.secondary,
+                onPressed: _pickTime),
+            const SizedBox(height: AppTheme.spaceLg),
+            CaCard(
+                child: Column(children: [
+              pair(
+                  CaInput(
+                      label: 'upcoming.title_en'.tr(),
                       controller: _titleEn,
                       maxLength: 120,
-                      decoration:
-                          InputDecoration(labelText: 'upcoming.title_en'.tr())),
-                  TextField(
+                      textDirection: TextDirection.ltr),
+                  CaInput(
+                      label: 'upcoming.title_ar'.tr(),
                       controller: _titleAr,
                       maxLength: 120,
-                      decoration:
-                          InputDecoration(labelText: 'upcoming.title_ar'.tr())),
-                  TextField(
+                      textDirection: TextDirection.rtl)),
+              const SizedBox(height: AppTheme.spaceMd),
+              pair(
+                  CaInput(
+                      label: 'upcoming.description_en'.tr(),
                       controller: _descriptionEn,
                       maxLength: 1000,
                       maxLines: 3,
-                      decoration: InputDecoration(
-                          labelText: 'upcoming.description_en'.tr())),
-                  TextField(
+                      textDirection: TextDirection.ltr),
+                  CaInput(
+                      label: 'upcoming.description_ar'.tr(),
                       controller: _descriptionAr,
                       maxLength: 1000,
                       maxLines: 3,
-                      decoration: InputDecoration(
-                          labelText: 'upcoming.description_ar'.tr())),
-                  TextField(
-                      controller: _tags,
-                      decoration: InputDecoration(
-                          labelText: 'upcoming.tags'.tr(),
-                          helperText: 'upcoming.tags_help'.tr())),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  Text('upcoming.color'.tr()),
-                  Wrap(spacing: AppTheme.spaceSm, children: [
-                    for (final color in const [
-                      'green',
-                      'gold',
-                      'berry',
-                      'slate'
-                    ])
-                      ChoiceChip(
-                          avatar: CircleAvatar(
-                            backgroundColor: switch (color) {
-                              'gold' => AppTheme.warning,
-                              'berry' => AppTheme.danger,
-                              'slate' => AppTheme.media,
-                              _ => AppTheme.primary,
-                            },
-                            radius: 8,
-                          ),
-                          label: Text('upcoming.color_$color'.tr()),
-                          selected: _color == color,
-                          onSelected: (_) => setState(() => _color = color)),
-                  ]),
-                  if (_error != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: AppTheme.spaceMd),
-                      child: Text(_error!,
-                          style: const TextStyle(color: AppTheme.danger)),
-                    ),
-                  const SizedBox(height: AppTheme.spaceLg),
-                  FilledButton(
-                      onPressed: _saving ? null : _save,
-                      child: Text('upcoming.save'.tr())),
-                  const SizedBox(height: AppTheme.spaceLg),
+                      textDirection: TextDirection.rtl)),
+            ])),
+            const SizedBox(height: AppTheme.spaceLg),
+            CaInput(
+                label: 'upcoming.tags'.tr(),
+                helper: 'upcoming.tags_help'.tr(),
+                controller: _tags),
+            const SizedBox(height: AppTheme.spaceMd),
+            Text('upcoming.color'.tr()),
+            Wrap(
+                spacing: AppTheme.spaceSm,
+                runSpacing: AppTheme.spaceSm,
+                children: [
+                  for (final color in const ['green', 'gold', 'berry', 'slate'])
+                    CaChip(
+                        label: 'upcoming.color_$color'.tr(),
+                        selected: _color == color,
+                        onSelected: (_) => setState(() => _color = color)),
                 ]),
-          ),
+            if (_error != null)
+              Padding(
+                  padding:
+                      const EdgeInsetsDirectional.only(top: AppTheme.spaceMd),
+                  child: Text(_error!,
+                      style: const TextStyle(color: Canopy.liveCrimson))),
+          ]),
         ),
-      )),
+      ),
     );
   }
 }

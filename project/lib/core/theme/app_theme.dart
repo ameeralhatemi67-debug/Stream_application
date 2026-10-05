@@ -158,6 +158,7 @@ abstract final class AppTheme {
 /// Allowed on primary buttons, welcome hero, logo tiles and small accents only.
 abstract final class AppGradients {
   static const ring = CanopyGradients.ring;
+  static const panel = CanopyGradients.panel;
   static const pill = CanopyGradients.pill;
   static const liveSignal = CanopyGradients.liveSignal;
   static const canopy = CanopyGradients.canopy;

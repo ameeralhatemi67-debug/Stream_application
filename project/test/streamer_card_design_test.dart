@@ -1,3 +1,4 @@
+import 'package:streamer_app/core/widgets/ds/ca_button.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -11,8 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
-import 'package:streamer_app/core/widgets/language_switcher.dart';
 import 'package:streamer_app/core/widgets/ds/ca_cards.dart';
+import 'package:streamer_app/core/widgets/ds/ca_icon.dart';
 import 'package:streamer_app/core/widgets/streamer_identity_card.dart';
 import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
 import 'package:streamer_app/features/discovery/presentation/widgets/streamer_grid_card.dart';
@@ -42,8 +43,9 @@ Widget app(AppProvider provider, Widget home, String lang, double scale,
         value: provider,
         child: Builder(builder: (context) {
           Widget sized(BuildContext context, Widget? child) => MediaQuery(
-              data: MediaQuery.of(context)
-                  .copyWith(textScaler: TextScaler.linear(scale)),
+              data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(scale),
+                  disableAnimations: true),
               child: child!);
           return router == null
               ? MaterialApp(
@@ -114,8 +116,7 @@ void main() {
   for (final lang in ['en', 'ar']) {
     for (final width in [320.0, 1280.0]) {
       for (final scale in [1.0, 2.0]) {
-        // Settings now uses the redesigned account card (settings_screen_test).
-        for (final location in ['map', 'discovery', 'profile']) {
+        for (final location in ['map', 'discovery', 'profile', 'settings']) {
           testWidgets('$location card $lang ${width}px ${scale}x text',
               (tester) async {
             SharedPreferences.setMockInitialValues({});
@@ -159,16 +160,25 @@ void main() {
             };
             await tester.pumpWidget(app(provider, home, lang, scale));
             await tester.pumpAndSettle();
-            final cards = location == 'discovery'
-                ? find.byType(CaScholarCard)
-                : find.byType(StreamerIdentityCard);
-            expect(cards, findsWidgets);
+            final cards = switch (location) {
+              'discovery' => find.byType(CaScholarCard),
+              'settings' =>
+                find.byKey(const ValueKey('settings-account-panel')),
+              'profile' => find.ancestor(
+                  of: find.text(streamer.getLocalizedName(lang)),
+                  matching: find.byType(CaCard)),
+              _ => find.byType(StreamerIdentityCard),
+            };
+            expect(cards, location == 'settings' ? findsOneWidget : findsWidgets);
             final surface = find
                 .descendant(of: cards.first, matching: find.byType(Material))
                 .first;
             final cardWidth = tester.getSize(surface).width;
             if (width >= 900 && location == 'profile') {
-              expect(cardWidth, greaterThan(900));
+              expect(
+                  cardWidth,
+                  closeTo(
+                      CanopySize.profilePaneLarge - 2 * AppTheme.spaceLg, 1));
             } else if (width >= 900 && location == 'settings') {
               expect(cardWidth, greaterThan(420));
             } else {
@@ -178,10 +188,14 @@ void main() {
             if (location == 'profile') {
               if (width >= 900) {
                 expect(find.byType(AppBar), findsNothing);
-                final back = find.byIcon(Icons.arrow_back_rounded);
+                final back = find.byWidgetPredicate(
+                    (w) => w is CaIconButton && w.icon == CaGlyph.back);
                 expect(back, findsOneWidget);
-                expect(tester.getTopLeft(back).dx,
-                    lessThan(tester.getCenter(surface).dx));
+                expect(
+                    lang == 'en'
+                        ? tester.getCenter(back).dx
+                        : width - tester.getCenter(back).dx,
+                    lessThan(tester.getSize(surface).width));
               }
               await tester
                   .ensureVisible(find.byTooltip('profile.show_more'.tr()));
@@ -195,16 +209,20 @@ void main() {
               await tester.pumpAndSettle();
               await tester.tap(find.byTooltip('profile.show_less'.tr()));
               await tester.pumpAndSettle();
-              final follow =
-                  find.text('profile.follow_btn'.tr(), skipOffstage: false);
-              await tester.ensureVisible(follow);
+              final follow = find.byWidgetPredicate(
+                  (w) => w is CaButton && w.label == 'profile.follow_btn'.tr(),
+                  skipOffstage: false);
+              await Scrollable.ensureVisible(tester.element(follow),
+                  alignment: .5);
               await tester.pumpAndSettle();
               await tester.tap(follow);
               await tester.pumpAndSettle();
               expect(provider.isFollowing(streamer.streamerId), isTrue);
               final reminder = find.byTooltip('profile.reminder_btn'.tr(),
                   skipOffstage: false);
-              await tester.ensureVisible(reminder);
+              await Scrollable.ensureVisible(tester.element(reminder),
+                  alignment: .5);
+              await tester.pumpAndSettle();
               await tester.tap(reminder);
               await tester.pumpAndSettle();
               expect(provider.hasReminder(streamer.streamerId), isFalse);
@@ -214,7 +232,7 @@ void main() {
               expect(
                   find.descendant(
                       of: cards, matching: find.byIcon(Icons.edit_outlined)),
-                  findsNothing);
+                  findsOneWidget);
               expect(find.text('settings.edit_profile'.tr()), findsOneWidget);
             }
             if (location == 'discovery') {
@@ -247,7 +265,7 @@ void main() {
   }
 
   for (final lang in ['en', 'ar']) {
-    testWidgets('desktop profile controls keep physical corners in $lang',
+    testWidgets('desktop profile controls mirror within identity pane in $lang',
         (tester) async {
       tester.view.physicalSize = const Size(1280, 900);
       tester.view.devicePixelRatio = 1;
@@ -260,18 +278,24 @@ void main() {
       await tester.pumpWidget(app(provider,
           BroadcasterProfileScreen(streamerId: streamer.streamerId), lang, 1));
       await tester.pumpAndSettle();
-      expect(tester.getCenter(find.byIcon(Icons.arrow_back_rounded)).dx,
-          lessThan(100));
-      expect(tester.getCenter(find.byType(LanguageSwitcher)).dx,
-          greaterThan(1100));
-      expect(tester.getCenter(find.byIcon(Icons.share_outlined)).dx,
-          greaterThan(1100));
-      expect(tester.getCenter(find.byIcon(Icons.person_add_rounded)).dx,
-          lessThan(400));
+      final back = find.byWidgetPredicate(
+          (w) => w is CaIconButton && w.icon == CaGlyph.back);
+      final share = find.byWidgetPredicate(
+          (w) => w is CaIconButton && w.icon == CaGlyph.share);
+      final chip = find.byType(CaLanguageChip);
+      final status = find.byType(CaStatusChip).first;
+      final paneEdge = lang == 'en' ? 0.0 : 1280.0;
+      expect((tester.getCenter(back).dx - paneEdge).abs(), lessThan(100));
+      expect((tester.getCenter(share).dx - paneEdge).abs(),
+          lessThan(CanopySize.profilePaneLarge));
+      expect((tester.getCenter(chip).dx - paneEdge).abs(),
+          lessThan(CanopySize.profilePaneLarge));
       expect(
-          tester.getRect(find.byType(StreamerCardStatus)).top,
-          greaterThan(
-              tester.getRect(find.byIcon(Icons.share_outlined)).bottom));
+          (tester.getCenter(find.text('profile.follow_btn'.tr())).dx - paneEdge)
+              .abs(),
+          lessThan(CanopySize.profilePaneLarge));
+      expect(tester.getRect(status).top,
+          greaterThan(tester.getRect(share).bottom));
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       provider.dispose();
@@ -346,7 +370,8 @@ void main() {
         avatarUrl: '',
         bannerUrl: '',
         isCurrentlyLive: true,
-        liveSessionId: 'room-session', activeStreamId: 'abcdefghijk');
+        liveSessionId: 'room-session',
+        activeStreamId: 'abcdefghijk');
     final provider = AppProvider(AdminDatabaseService(null));
     final calls = <MethodCall>[];
     const channel = MethodChannel('plugins.flutter.io/url_launcher');

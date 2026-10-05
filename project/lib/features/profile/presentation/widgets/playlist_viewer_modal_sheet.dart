@@ -1,3 +1,7 @@
+import '../../../../core/widgets/ds/ca_cards.dart';
+import '../../../../core/widgets/ds/ca_fixed_lines.dart';
+import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -30,16 +34,11 @@ class PlaylistViewerModalSheet extends StatefulWidget {
     required StreamerModel streamer,
     required String langCode,
   }) {
-    return showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => PlaylistViewerModalSheet(
-        playlist: playlist,
-        streamer: streamer,
-        langCode: langCode,
-      ),
-    );
+    return showCaSheet<void>(context,
+        title: playlist.getLocalizedTitle(langCode),
+        body: PlaylistViewerModalSheet(
+            playlist: playlist, streamer: streamer, langCode: langCode),
+        framed: false);
   }
 
   @override
@@ -113,10 +112,10 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
     Widget fallback() => Container(
           width: width,
           height: height,
-          color: AppTheme.surfaceAlt,
+          color: Canopy.mint,
           alignment: Alignment.center,
           child: const Icon(Icons.video_library_rounded,
-              size: 18, color: AppTheme.textMuted),
+              size: 18, color: Canopy.haze),
         );
     final provider = resolveImageProviderOrNull(url);
     return ClipRRect(
@@ -143,10 +142,10 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,
       ),
       decoration: const BoxDecoration(
-        color: AppTheme.bg,
+        color: Canopy.dawn,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
         border: Border(
-          top: BorderSide(color: AppTheme.border, width: 1.5),
+          top: BorderSide(color: Canopy.hairline, width: 1.5),
         ),
       ),
       child: SafeArea(
@@ -160,7 +159,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: AppTheme.textSecondary.withValues(alpha: 0.4),
+                  color: Canopy.slate.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -182,7 +181,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         Text(
                           playlistTitle,
                           style: const TextStyle(
-                            color: AppTheme.textPrimary,
+                            color: Canopy.ink,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -201,10 +200,13 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                       ],
                     ),
                   ),
-                  IconButton(
-                    icon: const Icon(Icons.close_rounded,
-                        color: AppTheme.textSecondary),
-                    onPressed: () => Navigator.pop(context),
+                  Semantics(
+                    label: MaterialLocalizations.of(context).closeButtonTooltip,
+                    child: IconButton(
+                      icon:
+                          const Icon(Icons.close_rounded, color: Canopy.slate),
+                      onPressed: () => Navigator.pop(context),
+                    ),
                   ),
                 ],
               ),
@@ -240,7 +242,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
             ),
 
             const SizedBox(height: 8),
-            const Divider(color: AppTheme.border, height: 1),
+            const Divider(color: Canopy.hairline, height: 1),
 
             // Video List or Loading State
             Expanded(
@@ -261,7 +263,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                           Text(
                             'design_copy.loading_playlist_lectures'.tr(),
                             style: const TextStyle(
-                              color: AppTheme.textMuted,
+                              color: Canopy.haze,
                               fontSize: 12,
                             ),
                           ),
@@ -276,13 +278,13 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 const Icon(Icons.playlist_play_rounded,
-                                    color: AppTheme.textMuted, size: 40),
+                                    color: Canopy.haze, size: 40),
                                 const SizedBox(height: 10),
                                 Text(
                                   'design_copy.no_lectures_available_in_this_playlist_currently'
                                       .tr(),
                                   style: const TextStyle(
-                                    color: AppTheme.textSecondary,
+                                    color: Canopy.slate,
                                     fontSize: 13,
                                   ),
                                   textAlign: TextAlign.center,
@@ -291,82 +293,120 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                             ),
                           ),
                         )
-                      : ListView.separated(
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _videos.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(height: 10),
-                          itemBuilder: (context, index) {
-                            final video = _videos[index];
-                            return ListTile(
-                              tileColor: AppTheme.surface,
-                              contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.circular(AppTheme.radiusMd),
-                                side: const BorderSide(color: AppTheme.border),
-                              ),
-                              leading: Stack(
-                                alignment: AlignmentDirectional.bottomEnd,
-                                children: [
-                                  _thumbnail(video.thumbnailUrl,
-                                      width: 68, height: 44, radius: 6),
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 4, vertical: 1),
-                                    margin: const EdgeInsets.all(2),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          AppTheme.media.withValues(alpha: 0.8),
-                                      borderRadius: BorderRadius.circular(3),
-                                    ),
-                                    child: Text(
-                                      video.formattedDuration,
-                                      style: const TextStyle(
-                                        color: AppTheme.onMedia,
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
+                      : Builder(builder: (context) {
+                          final titleStyle = Theme.of(context)
+                              .textTheme
+                              .labelLarge
+                              ?.copyWith(color: Canopy.ink);
+                          final viewsStyle = Theme.of(context)
+                              .textTheme
+                              .bodySmall
+                              ?.copyWith(color: Canopy.haze);
+                          // Every lecture row has the same height: a thumbnail
+                          // or a 2-line title and the views line, whichever is
+                          // taller.
+                          final rowHeight = [
+                            CanopySize.lectureImageHeight,
+                            CaFixedLines.heightOf(context, titleStyle, 2) +
+                                AppTheme.spaceXs +
+                                CaFixedLines.heightOf(context, viewsStyle, 1),
+                          ].reduce((a, b) => a > b ? a : b);
+                          return ListView.separated(
+                            padding: const EdgeInsets.all(AppTheme.spaceLg),
+                            itemCount: _videos.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: AppTheme.spaceMd),
+                            itemBuilder: (context, index) {
+                              final video = _videos[index];
+                              return CaCard(
+                                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  VodPlayerModalSheet.show(
+                                    context,
+                                    vod: video,
+                                    streamer: widget.streamer,
+                                  );
+                                },
+                                child: SizedBox(
+                                  height: rowHeight,
+                                  child: Row(children: [
+                                    ClipRRect(
+                                      borderRadius: BorderRadius.circular(
+                                          CanopyRadius.input),
+                                      child: SizedBox(
+                                        width: CanopySize.lectureImageWidth,
+                                        height: CanopySize.lectureImageHeight,
+                                        child: Stack(
+                                            fit: StackFit.expand,
+                                            children: [
+                                              _thumbnail(video.thumbnailUrl,
+                                                  width: CanopySize
+                                                      .lectureImageWidth,
+                                                  height: CanopySize
+                                                      .lectureImageHeight,
+                                                  radius: 0),
+                                              if (video.durationSeconds > 0)
+                                                PositionedDirectional(
+                                                  bottom: AppTheme.spaceXs,
+                                                  end: AppTheme.spaceXs,
+                                                  child: DecoratedBox(
+                                                    decoration: BoxDecoration(
+                                                      color: Canopy.forestDeep,
+                                                      borderRadius:
+                                                          BorderRadius.circular(
+                                                              CanopyRadius
+                                                                  .pill),
+                                                    ),
+                                                    child: Padding(
+                                                      padding: const EdgeInsets
+                                                          .symmetric(
+                                                          horizontal: 6,
+                                                          vertical: 2),
+                                                      child: Text(
+                                                        video.formattedDuration,
+                                                        style: Theme.of(context)
+                                                            .textTheme
+                                                            .labelSmall
+                                                            ?.copyWith(
+                                                                color: Canopy
+                                                                    .paper),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                            ]),
                                       ),
                                     ),
-                                  ),
-                                ],
-                              ),
-                              title: Text(
-                                video.getLocalizedTitle(widget.langCode),
-                                style: const TextStyle(
-                                  color: AppTheme.textPrimary,
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w600,
+                                    const SizedBox(width: AppTheme.spaceMd),
+                                    Expanded(
+                                      child: Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          CaFixedLines(
+                                              video.getLocalizedTitle(
+                                                  widget.langCode),
+                                              lines: 2,
+                                              style: titleStyle),
+                                          const SizedBox(
+                                              height: AppTheme.spaceXs),
+                                          CaFixedLines(
+                                              '${video.viewCount} ${'profile.views'.tr()}',
+                                              lines: 1,
+                                              style: viewsStyle),
+                                        ],
+                                      ),
+                                    ),
+                                    const CaIcon(CaGlyph.play),
+                                  ]),
                                 ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                              subtitle: Text(
-                                '${video.viewCount} ${'profile.views'.tr()}',
-                                style: const TextStyle(
-                                  color: AppTheme.textMuted,
-                                  fontSize: 11,
-                                ),
-                              ),
-                              trailing: const Icon(
-                                Icons.play_circle_fill_rounded,
-                                color: AppTheme.primary,
-                                size: 24,
-                              ),
-                              onTap: () {
-                                Navigator.pop(context);
-                                VodPlayerModalSheet.show(
-                                  context,
-                                  vod: video,
-                                  streamer: widget.streamer,
-                                );
-                              },
-                            );
-                          },
-                        ),
+                              );
+                            },
+                          );
+                        }),
             ),
           ],
         ),

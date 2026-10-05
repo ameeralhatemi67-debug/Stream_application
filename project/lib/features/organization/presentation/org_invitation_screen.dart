@@ -1,3 +1,8 @@
+import 'organization_surface.dart';
+import '../../../core/widgets/ds/ca_cards.dart';
+import '../../../core/widgets/ds/ca_rows.dart';
+import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/ds/ca_icon.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -27,63 +32,166 @@ class _OrgInvitationScreenState extends State<OrgInvitationScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final provider = context.read<AppProvider>();
       if (!provider.isLoggedInStreamer) return;
-      try { await provider.refreshOrganizationInvitations(); } catch (_) {/* The answer reports failures. */}
+      try {
+        await provider.refreshOrganizationInvitations();
+      } catch (_) {/* The answer reports failures. */}
     });
   }
 
   static String _errorKey(Object error) => switch (error) {
-        PostgrestException(code: '42501') => 'organization_v1.invite_wrong_account',
+        PostgrestException(code: '42501') =>
+          'organization_v1.invite_wrong_account',
         PostgrestException(code: '55000') => 'organization_v1.invite_expired',
         _ => 'organization_v1.failure',
       };
 
   Future<void> _answer(bool accept) async {
-    setState(() { _busy = true; _error = null; });
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
     final provider = context.read<AppProvider>();
     try {
-      await provider.answerOrganizationInvite(widget.id, accept, token: widget.token);
+      await provider.answerOrganizationInvite(widget.id, accept,
+          token: widget.token);
       await provider.rememberOrganizationInvitation(null);
-      try { await provider.refreshOrganizationInvitations(); } catch (_) {}
+      try {
+        await provider.refreshOrganizationInvitations();
+      } catch (_) {}
       if (mounted) context.go('/organizations');
     } catch (error) {
       if (mounted) setState(() => _error = _errorKey(error));
-    } finally { if (mounted) setState(() => _busy = false); }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final signedIn = context.select<AppProvider, bool>((p) => p.isLoggedInStreamer);
-    final invitation = context.select<AppProvider, OrgInvitation?>((p) =>
-        p.myOrganizationInvitations.where((i) => i.id == widget.id).firstOrNull);
+    final signedIn =
+        context.select<AppProvider, bool>((p) => p.isLoggedInStreamer);
+    final invitation = context.select<AppProvider, OrgInvitation?>((p) => p
+        .myOrganizationInvitations
+        .where((i) => i.id == widget.id)
+        .firstOrNull);
     final language = context.locale.languageCode;
-    return Scaffold(appBar: AppBar(title: Text('organization_v1.invitation'.tr()),
-      leading: IconButton(icon: const Icon(Icons.close), tooltip: 'organization_v1.close'.tr(), onPressed: () async {
-        await context.read<AppProvider>().rememberOrganizationInvitation(null);
-        if (context.mounted) context.go('/feed');
-      })), body: Center(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 480),
-        child: SingleChildScrollView(padding: const EdgeInsets.all(AppTheme.spaceLg), child: Column(
-          mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            if (invitation != null) ...[
-              Text(invitation.organizationName(language), style: Theme.of(context).textTheme.titleLarge),
-              const SizedBox(height: AppTheme.spaceSm),
-              Text('organization_v1.invited_as'.tr(namedArgs: {'role': 'organization_v1.${invitation.role}'.tr()})),
-              const SizedBox(height: AppTheme.spaceSm),
-            ],
-            Text('organization_v1.invite_hint'.tr()),
-            if (_error != null) Padding(padding: const EdgeInsets.only(top: AppTheme.spaceSm),
-              child: Text(_error!.tr(), style: const TextStyle(color: AppTheme.danger))),
-            const SizedBox(height: AppTheme.spaceLg),
-            if (signedIn) Wrap(spacing: AppTheme.spaceMd, runSpacing: AppTheme.spaceSm, children: [
-              FilledButton(onPressed: _busy ? null : () => _answer(true), child: Text('organization_v1.accept'.tr())),
-              OutlinedButton(onPressed: _busy ? null : () => _answer(false), child: Text('organization_v1.decline'.tr())),
-            ]) else FilledButton(onPressed: _busy ? null : () async {
-              final p = context.read<AppProvider>();
-              final destination = Uri(path: '/org-invite/${widget.id}',
-                queryParameters: widget.token == null ? null : {'token': widget.token!}).toString();
-              await p.rememberOrganizationInvitation(destination);
-              try { await p.loginWithGoogle(); }
-              catch (_) { if (mounted) setState(() => _error = 'organization_v1.failure'); }
-            }, child: Text('auth_welcome.btn_google_login'.tr())),
-          ])))));
+    return Scaffold(
+        appBar: OrganizationAppBar(
+            title: Text('organization_v1.invitation'.tr()),
+            leading: IconButton(
+                icon: const CaIcon(CaGlyph.close),
+                tooltip: 'organization_v1.close'.tr(),
+                onPressed: () async {
+                  await context
+                      .read<AppProvider>()
+                      .rememberOrganizationInvitation(null);
+                  if (context.mounted) context.go('/feed');
+                })),
+        body: OrganizationBody(
+            child: Align(
+                alignment: Alignment.topCenter,
+                child: ConstrainedBox(
+                    constraints:
+                        const BoxConstraints(maxWidth: CanopySize.drawerMax),
+                    child: SingleChildScrollView(
+                        padding: const EdgeInsets.all(AppTheme.spaceLg),
+                        child: CaCard(
+                            child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                              if (invitation != null) ...[
+                                OrganizationTitle(
+                                    name:
+                                        invitation.organizationName(language)),
+                                const SizedBox(height: AppTheme.spaceSm),
+                                Text('organization_v1.invited_as'
+                                    .tr(namedArgs: {
+                                  'role':
+                                      'organization_v1.${invitation.role}'.tr()
+                                })),
+                                const SizedBox(height: AppTheme.spaceSm),
+                                Wrap(
+                                    spacing: AppTheme.spaceXs,
+                                    runSpacing: AppTheme.spaceXs,
+                                    children: [
+                                      if (invitation.video)
+                                        OrganizationChip(
+                                            label: 'organization_v1.video'.tr(),
+                                            icon: CaGlyph.video),
+                                      if (invitation.audio)
+                                        OrganizationChip(
+                                            label: 'organization_v1.audio'.tr(),
+                                            icon: CaGlyph.mic),
+                                    ]),
+                                Text(
+                                    'organization_v1.expires'.tr(namedArgs: {
+                                      'date': DateFormat.yMMMd(language).format(
+                                          invitation.expiresAt.toLocal())
+                                    }),
+                                    style:
+                                        Theme.of(context).textTheme.bodySmall),
+                                const SizedBox(height: AppTheme.spaceSm),
+                              ],
+                              Text('organization_v1.invite_hint'.tr()),
+                              if (_error != null)
+                                Padding(
+                                    padding: const EdgeInsets.only(
+                                        top: AppTheme.spaceSm),
+                                    child: CaBanner(
+                                        message: _error!.tr(),
+                                        kind: CaBannerKind.error)),
+                              const SizedBox(height: AppTheme.spaceLg),
+                              if (signedIn)
+                                Wrap(
+                                    spacing: AppTheme.spaceMd,
+                                    runSpacing: AppTheme.spaceSm,
+                                    children: [
+                                      CaButton(
+                                          onPressed: _busy
+                                              ? null
+                                              : () => _answer(true),
+                                          label: 'organization_v1.accept'.tr()),
+                                      CaButton(
+                                          onPressed: _busy
+                                              ? null
+                                              : () => _answer(false),
+                                          variant: CaButtonVariant.text,
+                                          label:
+                                              'organization_v1.decline'.tr()),
+                                    ])
+                              else
+                                CaButton(
+                                    onPressed: _busy
+                                        ? null
+                                        : () async {
+                                            final p =
+                                                context.read<AppProvider>();
+                                            final destination = Uri(
+                                                    path:
+                                                        '/org-invite/${widget.id}',
+                                                    queryParameters:
+                                                        widget.token == null
+                                                            ? null
+                                                            : {
+                                                                'token': widget
+                                                                    .token!
+                                                              })
+                                                .toString();
+                                            await p
+                                                .rememberOrganizationInvitation(
+                                                    destination);
+                                            try {
+                                              await p.loginWithGoogle();
+                                            } catch (_) {
+                                              if (mounted) {
+                                                setState(() => _error =
+                                                    'organization_v1.failure');
+                                              }
+                                            }
+                                          },
+                                    label:
+                                        'auth_welcome.btn_google_login'.tr()),
+                            ])))))));
   }
 }

@@ -93,6 +93,10 @@ _Backdrop _backdropOf(Element element) {
       indeterminate = true;
       return null; // Image/scrim siblings paint a spatial backdrop.
     }
+    if (w is ClipRect && w.clipper != null) {
+      indeterminate = true;
+      return null; // A sliding gradient pill paints behind these labels.
+    }
     if (w is ColoredBox) return w.color;
     if (w is Material) return w.color;
     if (w is DecoratedBox) {

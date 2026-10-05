@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -21,8 +22,7 @@ class LegalDocumentReaderScreen extends StatefulWidget {
       _LegalDocumentReaderScreenState();
 }
 
-class _LegalDocumentReaderScreenState
-    extends State<LegalDocumentReaderScreen> {
+class _LegalDocumentReaderScreenState extends State<LegalDocumentReaderScreen> {
   late int _currentIndex = widget.initialDocumentIndex.clamp(0, 2);
 
   void _goTo(int index) => setState(() => _currentIndex = (index + 3) % 3);
@@ -47,21 +47,19 @@ class _LegalDocumentReaderScreenState
     final doc = docs[_currentIndex];
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
-      appBar: AppBar(
+      backgroundColor: Canopy.dawn,
+      appBar: CaAppBar(
+        compactLanguage: true,
+        languageBare: true,
         title: Text(doc.title),
-        backgroundColor: AppTheme.bg,
+        backgroundColor: Canopy.dawn,
         elevation: 0,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         child: SelectableText(
           doc.content,
-          style: const TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 13,
-            height: 1.6,
-          ),
+          style: Theme.of(context).textTheme.bodyLarge,
         ),
       ),
       bottomNavigationBar: SafeArea(
@@ -72,7 +70,7 @@ class _LegalDocumentReaderScreenState
           ),
           decoration: const BoxDecoration(
             border: Border(
-              top: BorderSide(color: AppTheme.border),
+              top: BorderSide(color: Canopy.hairline),
             ),
           ),
           child: Row(
@@ -87,7 +85,7 @@ class _LegalDocumentReaderScreenState
               Text(
                 '${_currentIndex + 1} / 3',
                 style: const TextStyle(
-                    color: AppTheme.textMuted, fontSize: 11),
+                    color: Canopy.haze, fontSize: AppTheme.captionFont),
               ),
               Expanded(
                 child: TextButton.icon(

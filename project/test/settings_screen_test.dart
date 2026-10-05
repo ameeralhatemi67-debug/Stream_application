@@ -1,3 +1,4 @@
+import 'package:streamer_app/core/widgets/ds/ca_navigation.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
@@ -293,7 +294,7 @@ void main() {
       expect(find.byType(LegalDocumentReaderScreen), findsOneWidget);
       expect(
         find.widgetWithText(
-            AppBar, 'Broadcaster Code of Conduct & Guidelines'),
+            CaAppBar, 'Broadcaster Code of Conduct & Guidelines'),
         findsOneWidget,
       );
     });
@@ -314,33 +315,33 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.widgetWithText(AppBar, 'Terms of Service'), findsOneWidget);
+      expect(find.widgetWithText(CaAppBar, 'Terms of Service'), findsOneWidget);
 
       await tester.tap(find.text('Next Document'));
       await tester.pumpAndSettle();
       expect(
         find.widgetWithText(
-            AppBar, 'Broadcaster Code of Conduct & Guidelines'),
+            CaAppBar, 'Broadcaster Code of Conduct & Guidelines'),
         findsOneWidget,
       );
 
       await tester.tap(find.text('Next Document'));
       await tester.pumpAndSettle();
       expect(
-        find.widgetWithText(AppBar, 'Privacy Policy (Saudi PDPL Compliant)'),
+        find.widgetWithText(CaAppBar, 'Privacy Policy (Saudi PDPL Compliant)'),
         findsOneWidget,
       );
 
       // Wraps back to the first document.
       await tester.tap(find.text('Next Document'));
       await tester.pumpAndSettle();
-      expect(find.widgetWithText(AppBar, 'Terms of Service'), findsOneWidget);
+      expect(find.widgetWithText(CaAppBar, 'Terms of Service'), findsOneWidget);
 
       // Previous from the first document wraps to the last.
       await tester.tap(find.text('Previous Document'));
       await tester.pumpAndSettle();
       expect(
-        find.widgetWithText(AppBar, 'Privacy Policy (Saudi PDPL Compliant)'),
+        find.widgetWithText(CaAppBar, 'Privacy Policy (Saudi PDPL Compliant)'),
         findsOneWidget,
       );
     });
