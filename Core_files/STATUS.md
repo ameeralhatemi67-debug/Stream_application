@@ -8,6 +8,22 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## YouTube web Archive/playlist repair, 2026-10-05
+
+The current deployed web build was confirmed to lack a YouTube API key, and
+Vercel has no corresponding environment variable. Web public Data API reads
+now use a validated, cached same-origin server function; the browser bundle
+contains no YouTube key. Native transport is preserved. Analyzer zero, full
+Flutter 1,059 passed, seven Node checks passed, release web build and sentinel
+key exclusion verified. Real local server reads returned 25 archive items and
+10 playlists. The exposed key was removed from the test fixture and two audit
+documents, but remains in Git history and should be replaced.
+
+Production key transfer needs explicit approval following automatic review
+rejection; hosted content verification is pending. Setup:
+`doc/YouTube_web_configuration.md`. The older Phase 3 deployment note below is
+historical; the observed deployed build is `d658054` from 2026-10-05.
+
 ## Streaming regression repair, 2026-10-04
 
 Connect YouTube's pre-consent 401 was reproduced with the real Supabase JS SDK: lowercase forwarded authorization collided with the SDK's default header. The channel and broadcast handlers now verify the explicit user token. Hosted channel-authorization, broadcast-control and reconcile-broadcasts are ACTIVE on the owner-designated streamer_app backend. The owner-approved recovery job is installed; a newly exposed recovery RPC alias collision was repaired by a new migration, and scheduled responses are 200.

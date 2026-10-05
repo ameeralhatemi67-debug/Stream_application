@@ -83,6 +83,20 @@ Owner decision 2026-10-01: membership rows authorize organization actions; roste
 - *Availability.* Membership rows expose `v1_enabled` (global flag or pilot) and pending transfer state, so the UI never offers an action the server would refuse. New organization applications follow their own server switch, `organization_applications_open` (default off, trigger-enforced), separate from the V1 rollout flag. Rollout switches count as **off** when unread; safety switches keep counting as on.
 - *Web links* use Flutter's hash routes (`/#/org-invite/…`, `/#/channel-connected`); path-style deep links are not used.
 
+## ADR-011: Server-side YouTube public reads on web
+
+Owner requested a secure repair of empty web Archives/playlists on 2026-10-05.
+The deployed browser bundle had no key and the Vercel environment had no YouTube
+setting. Web uses the same-origin `/api/youtube` function with its server-side
+`YOUTUBE_API_KEY`; native retains its build-time key. No YouTube key is compiled
+into web JavaScript. The function accepts only bounded public GET queries for
+the existing channel, archive, playlist, statistics and live reads, caches
+successful responses, and returns sanitized errors. It uses no OAuth credentials
+or service-role database key. Production builds require the server setting.
+Guest reads remain public; browser origin checks are not authentication.
+Provider quota controls and distributed Firewall rate limits remain separate
+operational controls. Setup and verification: `doc/YouTube_web_configuration.md`.
+
 ## ADR-008: Bundled Three-City Vector Map Pack, One Viewport Policy
 * **Status:** `PROPOSED` (branch `codex/tricity-map-upgrade`, 2026-09-26; awaiting independent audit and owner approval)
 * **Context:** The Spatial Map drew Esri/OSM raster tiles only while the backend was reachable, fell back to three unsourced city polygons offline, allowed a Saudi-wide camera (zoom 5, centre-only constraint) and showed missing-data tiles at deep zoom. The venue picker used its own online OSM layer and guessed neighbourhood addresses from latitude thresholds. Research and plan: `brief/research/p5-tricity-map-upgrade/`.

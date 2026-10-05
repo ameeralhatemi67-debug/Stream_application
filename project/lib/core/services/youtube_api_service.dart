@@ -40,11 +40,11 @@ class YouTubeLookupUnavailable implements Exception {
 
 /// Service for communicating with YouTube Data API v3 REST endpoints.
 class YouTubeApiService {
-  /// Injected at build/run time via `--dart-define=YOUTUBE_API_KEY=...`
-  /// (or --dart-define-from-file for local dev). Never hardcode a real key
+  /// Native-only build setting. Web uses the same-origin server endpoint,
+  /// whose key is never compiled into the browser bundle. Never hardcode a key
   /// here -- see doc/Audit/01_Security_Data_Protection_Audit.md VULN-DATA-01.
   static const String _defaultApiKey =
-      String.fromEnvironment('YOUTUBE_API_KEY');
+      kIsWeb ? '' : String.fromEnvironment('YOUTUBE_API_KEY');
   static const String _baseUrl = 'https://www.googleapis.com/youtube/v3';
 
   /// Studio lookups wait at most this long; after that the studio treats
@@ -54,6 +54,8 @@ class YouTubeApiService {
 
   final String apiKey;
   final http.Client _client;
+  final bool _useWebProxy;
+  bool get _canRead => _useWebProxy || apiKey.isNotEmpty;
 
   // In-memory caching to optimize API quota usage
   final Map<String, List<VodModel>> _cachedVods = {};
@@ -68,13 +70,26 @@ class YouTubeApiService {
   YouTubeApiService({
     String? apiKey,
     http.Client? client,
+    bool? useWebProxy,
     this.lookupTimeout = defaultLookupTimeout,
   })  : apiKey = apiKey ?? _defaultApiKey,
+        _useWebProxy = useWebProxy ?? (kIsWeb && apiKey == null),
         _client = client ?? http.Client();
+
+  Future<http.Response> _get(Uri url) {
+    if (_useWebProxy) {
+      final parameters = Map<String, String>.of(url.queryParameters)
+        ..remove('key')
+        ..['resource'] = url.pathSegments.last;
+      url =
+          Uri.base.resolve('/api/youtube').replace(queryParameters: parameters);
+    }
+    return _client.get(url).timeout(lookupTimeout);
+  }
 
   /// Resolves channel handle or URL (e.g. '@ahmedamercaller'or 'https://www.youtube.com/@dalilk4english_podcast/videos') to channel ID and uploads playlist ID
   Future<Map<String, String>> fetchChannelDetails(String handleOrUrl) async {
-    if (handleOrUrl.trim().isEmpty || apiKey.isEmpty) return {};
+    if (handleOrUrl.trim().isEmpty || !_canRead) return {};
     final channel = YouTubeChannelReference.parse(handleOrUrl);
     if (channel == null || channel.parameter == 'custom') return {};
     final cacheKey = '${channel.parameter}:${channel.value.toLowerCase()}';
@@ -87,7 +102,7 @@ class YouTubeApiService {
     });
 
     try {
-      final response = await _client.get(url).timeout(lookupTimeout);
+      final response = await _get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -137,7 +152,7 @@ class YouTubeApiService {
         '$_baseUrl/playlistItems?part=snippet,contentDetails&playlistId=$uploadsPlaylistId&maxResults=$maxResults&key=$apiKey',
       );
 
-      final response = await _client.get(url);
+      final response = await _get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -209,7 +224,8 @@ class YouTubeApiService {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching channel videos for $streamerId ($handle): $e');
+      debugPrint(
+          'Error fetching channel videos for $streamerId ($handle): ${e.runtimeType}');
     }
 
     return [];
@@ -226,7 +242,7 @@ class YouTubeApiService {
         '$_baseUrl/playlistItems?part=snippet,contentDetails&playlistId=$playlistId&maxResults=$maxResults&key=$apiKey',
       );
 
-      final response = await _client.get(url);
+      final response = await _get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -286,7 +302,8 @@ class YouTubeApiService {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching playlist items for $playlistId: $e');
+      debugPrint(
+          'Error fetching playlist items for $playlistId: ${e.runtimeType}');
     }
 
     return [];
@@ -301,13 +318,13 @@ class YouTubeApiService {
   /// Throws [YouTubeLookupUnavailable] when YouTube could not be asked, so a
   /// quota or network failure is never reported as "no live broadcast".
   Future<String?> fetchLiveVideoId(String channelId) async {
-    if (apiKey.isEmpty) throw const YouTubeLookupUnavailable();
+    if (!_canRead) throw const YouTubeLookupUnavailable();
     final url = Uri.parse(
       '$_baseUrl/search?part=snippet&channelId=$channelId&eventType=live&type=video&key=$apiKey',
     );
 
     try {
-      final response = await _client.get(url).timeout(lookupTimeout);
+      final response = await _get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -343,14 +360,14 @@ class YouTubeApiService {
     if (!RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(videoId)) {
       return const YouTubeWatchStatus(YouTubeWatchState.notFound);
     }
-    if (apiKey.isEmpty) {
+    if (!_canRead) {
       return const YouTubeWatchStatus(YouTubeWatchState.unavailable);
     }
     final url = Uri.parse(
       '$_baseUrl/videos?part=snippet,liveStreamingDetails&id=$videoId&key=$apiKey',
     );
     try {
-      final response = await _client.get(url).timeout(lookupTimeout);
+      final response = await _get(url);
       if (response.statusCode != 200) {
         debugPrint('YouTube watch check failed: HTTP ${response.statusCode}');
         return const YouTubeWatchStatus(YouTubeWatchState.unavailable);
@@ -395,7 +412,7 @@ class YouTubeApiService {
     );
 
     try {
-      final response = await _client.get(url);
+      final response = await _get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -441,7 +458,7 @@ class YouTubeApiService {
       );
 
       try {
-        final response = await _client.get(url);
+        final response = await _get(url);
         if (response.statusCode == 200) {
           final data = json.decode(response.body) as Map<String, dynamic>;
           final items = data['items'] as List<dynamic>?;
@@ -463,7 +480,8 @@ class YouTubeApiService {
           );
         }
       } catch (e) {
-        debugPrint('Error fetching view counts for batch starting at $i: $e');
+        debugPrint(
+            'Error fetching view counts for batch starting at $i: ${e.runtimeType}');
       }
     }
 
@@ -476,7 +494,7 @@ class YouTubeApiService {
     String channelId = '',
     int maxResults = 10,
   }) async {
-    if (channelId.isEmpty || apiKey.isEmpty) return [];
+    if (channelId.isEmpty || !_canRead) return [];
     final cacheKey = '$streamerId:$channelId';
     if (_cachedPlaylists.containsKey(cacheKey)) {
       return _cachedPlaylists[cacheKey]!;
@@ -487,7 +505,7 @@ class YouTubeApiService {
         '$_baseUrl/playlists?part=snippet,contentDetails&channelId=$channelId&maxResults=$maxResults&key=$apiKey',
       );
 
-      final response = await _client.get(url);
+      final response = await _get(url);
       if (response.statusCode == 200) {
         final data = json.decode(response.body) as Map<String, dynamic>;
         final items = data['items'] as List<dynamic>?;
@@ -537,7 +555,8 @@ class YouTubeApiService {
         }
       }
     } catch (e) {
-      debugPrint('Error fetching playlists for channel $channelId: $e');
+      debugPrint(
+          'Error fetching playlists for channel $channelId: ${e.runtimeType}');
     }
 
     return [];

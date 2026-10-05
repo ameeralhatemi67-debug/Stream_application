@@ -6,6 +6,19 @@ updated: 2026-09-27
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
 
+## 2026-10-05: secure web YouTube content repair
+
+- Reproduced the missing-key web Archive/playlist failure. Added server-only
+  public YouTube reads, bounded query validation, caching, sanitized errors,
+  upstream timeouts and a production missing-setting build guard.
+- Verified analyzer zero, full Flutter 1,059 passed, seven Node checks, release
+  web build and browser-key exclusion. Real local reads returned 25 videos and
+  10 playlists. Redacted the exposed key in two audit documents and replaced
+  the test fixture; focused YouTube tests passed afterward.
+- Production credential transfer awaits explicit approval after automatic
+  review rejection. Existing key exposure in Git history needs rotation or a
+  separate server key. Hosted content verification remains pending.
+
 ## Local master integration, 2026-09-27 10:55 +03:00
 
 Owner requested one master checkout for testing. Local merge `c9e441f` now contains Opus map `74157ba`, Astra streaming `818cc12` and combined integration `8e28801`. Owner documentation was saved first in `571bcdd`; four documentation conflicts were reconciled without application/SQL changes. Project, supabase and build-script content exactly matches reviewed source `34d074a`. Fresh offline worker/page checks pass. Earlier 847 Flutter tests, zero analyzer issues, 462 SQL assertions and three concurrency checks remain inherited exact-source evidence, not rerun results.

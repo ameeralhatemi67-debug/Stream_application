@@ -7,7 +7,7 @@ import 'package:streamer_app/core/providers/app_provider.dart';
 
 void main() {
   group('YouTube Data API v3 Unit & Integration Tests', () {
-    const testApiKey = 'AIzaSyADRzIa7p3RlPlik-8C1r0bZjUipQTpOis';
+    const testApiKey = 'test-youtube-api-key';
 
     test('TC-YT-01: YouTubeApiService Handle Resolution to Channel ID',
         () async {

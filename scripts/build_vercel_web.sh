@@ -3,6 +3,12 @@ set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 flutter_version="3.41.2"
+# The web reads public YouTube data through api/youtube.mjs. The key belongs
+# to that server function, never to Flutter's downloadable JavaScript.
+if [[ "${VERCEL_ENV:-}" == "production" && -z "${YOUTUBE_API_KEY:-}" ]]; then
+  echo "Refusing to build production without server-side YOUTUBE_API_KEY." >&2
+  exit 1
+fi
 flutter_bin="$(command -v flutter || true)"
 
 if [[ -z "$flutter_bin" ]]; then
