@@ -169,8 +169,6 @@ class VenueNavigationSheet extends StatelessWidget {
                       url: streamer.avatarUrl,
                       radius: 20,
                       org: streamer.isOrganization,
-                      live: streamer.isCurrentlyLive,
-                      ring: CaAvatarRing.brand,
                     ),
                     const SizedBox(width: AppTheme.spaceMd),
                     Expanded(

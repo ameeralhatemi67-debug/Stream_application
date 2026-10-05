@@ -183,8 +183,6 @@ class StreamerSlidingDrawer extends StatelessWidget {
                   url: streamer.avatarUrl,
                   radius: 22,
                   org: streamer.isOrganization,
-                  live: streamer.isCurrentlyLive,
-                  ring: CaAvatarRing.brand,
                 ),
                 PositionedDirectional(
                   bottom: 0,

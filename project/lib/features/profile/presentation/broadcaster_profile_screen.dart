@@ -49,6 +49,9 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
   /// The banner on the profile card, and the avatar that straddles its edge:
   /// the avatar plus its white stroke on each side.
   static const _bannerHeight = 132.0;
+
+  /// How far the card rises over the green panel: about 18% of the card.
+  static const _headerOverlap = 56.0;
   static const _avatarStroke = 4.0;
   static const _avatarBox =
       CanopySize.profileAvatar * 2 + AppTheme.spaceXs + _avatarStroke * 2;
@@ -257,250 +260,293 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         icon: streamer.isAudioLive ? CaGlyph.mic : CaGlyph.play,
         onPressed: () => context.push('/live/${streamer.activeStreamId}'));
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      SizedBox(
-          height: CanopySize.profileHeader,
-          child: ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                  bottom: Radius.circular(CanopyRadius.hero)),
-              child: CanopyLatticeBackground(
-                  child: ColoredBox(
-                      color: CanopyGradients.entryTextScrim,
-                      child: Padding(
-                          padding: const EdgeInsets.all(AppTheme.spaceSm),
-                          child: Align(
-                              alignment: Alignment.topCenter,
-                              child: Row(children: [
-                                CaIconButton(
-                                    bare: true,
-                                    icon: CaGlyph.back,
-                                    label: MaterialLocalizations.of(context)
-                                        .backButtonTooltip,
-                                    glass: true,
-                                    onPressed: () => context.canPop()
-                                        ? context.pop()
-                                        : context.go('/feed')),
-                                const Spacer(),
-                                const CaLanguageChip(
-                                    glass: true, compact: true, bare: true),
-                                if (own)
-                                  CaIconButton(
-                                      bare: true,
-                                      icon: CaGlyph.video,
-                                      label: 'live.rtmp_ip_tooltip'.tr(),
-                                      glass: true,
-                                      onPressed: () =>
-                                          LiveBroadcasterStudioSheet.show(
-                                              context)),
-                                if (streamer.youtubeHandle.trim().isNotEmpty)
-                                  CaIconButton(
-                                      bare: true,
-                                      icon: CaGlyph.share,
-                                      label: 'profile.share_btn'.tr(),
-                                      glass: true,
-                                      onPressed: () =>
-                                          _shareChannel(streamer, lang)),
-                              ]))))))),
-      Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
-              AppTheme.spaceLg, AppTheme.spaceLg, AppTheme.spaceLg),
-          child: CaCard(
-              padding: EdgeInsets.zero,
-              child: Stack(clipBehavior: Clip.none, children: [
-                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  SizedBox(
-                      height: _bannerHeight,
-                      width: double.infinity,
-                      child: Stack(fit: StackFit.expand, children: [
-                        CaCardImage(url: streamer.bannerUrl),
-                        PositionedDirectional(
-                            top: AppTheme.spaceSm,
-                            end: AppTheme.spaceSm,
-                            child: CaStatusChip(
-                                key: const ValueKey('profile-header-status'),
-                                kind: live
-                                    ? (streamer.isAudioLive
-                                        ? CaStatusKind.audio
-                                        : CaStatusKind.live)
-                                    : CaStatusKind.offline,
-                                label: uncertain
-                                    ? 'offline_experience.status_unavailable'
-                                        .tr()
-                                    : null)),
-                      ])),
-                  Padding(
-                      padding: const EdgeInsets.all(AppTheme.spaceLg),
-                      child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            // The avatar straddles the banner's lower edge; the
-                            // name sits beside its lower half.
-                            ConstrainedBox(
-                                constraints: const BoxConstraints(
-                                    minHeight: _avatarBox / 2),
-                                child: Padding(
-                                    padding: const EdgeInsetsDirectional.only(
-                                        start: _avatarBox + AppTheme.spaceMd),
-                                    child: Column(
+      Stack(fit: StackFit.passthrough, children: [
+        SizedBox(
+            height: CanopySize.profileHeader,
+            child: ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                    bottom: Radius.circular(CanopyRadius.hero)),
+                child: CanopyLatticeBackground(
+                    child: SizedBox.expand(
+                        child: ColoredBox(
+                            color: CanopyGradients.entryTextScrim,
+                            child: Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(
+                                    AppTheme.spaceSm,
+                                    AppTheme.spaceXs,
+                                    AppTheme.spaceSm,
+                                    0),
+                                child: Align(
+                                    alignment: Alignment.topCenter,
+                                    // A fixed 48 px row: the compact language control is a Center that
+                                    // would otherwise stretch to the whole panel and carry the icons to
+                                    // its middle.
+                                    child: SizedBox(
+                                        height: CanopySize.target,
+                                        child: Row(children: [
+                                          CaIconButton(
+                                              bare: true,
+                                              icon: CaGlyph.back,
+                                              label: MaterialLocalizations.of(
+                                                      context)
+                                                  .backButtonTooltip,
+                                              glass: true,
+                                              onPressed: () => context.canPop()
+                                                  ? context.pop()
+                                                  : context.go('/feed')),
+                                          const Spacer(),
+                                          const CaLanguageChip(
+                                              glass: true,
+                                              compact: true,
+                                              bare: true),
+                                          if (own)
+                                            CaIconButton(
+                                                bare: true,
+                                                icon: CaGlyph.video,
+                                                label:
+                                                    'live.rtmp_ip_tooltip'.tr(),
+                                                glass: true,
+                                                onPressed: () =>
+                                                    LiveBroadcasterStudioSheet
+                                                        .show(context)),
+                                          if (streamer.youtubeHandle
+                                              .trim()
+                                              .isNotEmpty)
+                                            CaIconButton(
+                                                bare: true,
+                                                icon: CaGlyph.share,
+                                                label: 'profile.share_btn'.tr(),
+                                                glass: true,
+                                                onPressed: () => _shareChannel(
+                                                    streamer, lang)),
+                                        ]))))))))),
+        // The card rises over the green panel, so the panel keeps its height and
+        // everything below the card moves up with it.
+        Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(
+                AppTheme.spaceLg,
+                CanopySize.profileHeader - _headerOverlap,
+                AppTheme.spaceLg,
+                AppTheme.spaceLg),
+            child: CaCard(
+                padding: EdgeInsets.zero,
+                child: Stack(clipBehavior: Clip.none, children: [
+                  Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(
+                            height: _bannerHeight,
+                            width: double.infinity,
+                            child: Stack(fit: StackFit.expand, children: [
+                              CaCardImage(url: streamer.bannerUrl),
+                              PositionedDirectional(
+                                  top: AppTheme.spaceSm,
+                                  end: AppTheme.spaceSm,
+                                  child: CaStatusChip(
+                                      key: const ValueKey(
+                                          'profile-header-status'),
+                                      kind: live
+                                          ? (streamer.isAudioLive
+                                              ? CaStatusKind.audio
+                                              : CaStatusKind.live)
+                                          : CaStatusKind.offline,
+                                      label: uncertain
+                                          ? 'offline_experience.status_unavailable'
+                                              .tr()
+                                          : null)),
+                            ])),
+                        Padding(
+                            padding: const EdgeInsets.all(AppTheme.spaceLg),
+                            child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  // The avatar straddles the banner's lower edge; the
+                                  // name sits beside its lower half.
+                                  ConstrainedBox(
+                                      constraints: const BoxConstraints(
+                                          minHeight: _avatarBox / 2),
+                                      child: Padding(
+                                          padding:
+                                              const EdgeInsetsDirectional.only(
+                                                  start: _avatarBox +
+                                                      AppTheme.spaceMd),
+                                          child: Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Text(
+                                                    streamer
+                                                        .getLocalizedName(lang),
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .titleLarge),
+                                                Text(
+                                                    streamer.getLocalizedTitle(
+                                                        lang),
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .bodySmall),
+                                              ]))),
+                                  const SizedBox(height: AppTheme.spaceMd),
+                                  Text(streamer.getLocalizedOrganization(lang),
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .bodyMedium
+                                          ?.copyWith(color: Canopy.brandGreen)),
+                                  LayoutBuilder(
+                                      builder: (context, constraints) {
+                                    final bioStyle =
+                                        Theme.of(context).textTheme.bodyMedium;
+                                    final measure = TextPainter(
+                                      text: TextSpan(
+                                          text: streamer.getLocalizedBio(lang),
+                                          style: bioStyle),
+                                      textDirection: Directionality.of(context),
+                                      textScaler:
+                                          MediaQuery.textScalerOf(context),
+                                      maxLines: 2,
+                                    )..layout(maxWidth: constraints.maxWidth);
+                                    final hasMore = measure.didExceedMaxLines ||
+                                        (streamer.isOrganization &&
+                                            streamer.venues.isNotEmpty) ||
+                                        canJoin;
+                                    measure.dispose();
+                                    return Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          Text(streamer.getLocalizedName(lang),
+                                          Text(streamer.getLocalizedBio(lang),
+                                              maxLines:
+                                                  _detailsExpanded ? null : 2,
+                                              overflow: _detailsExpanded
+                                                  ? null
+                                                  : TextOverflow.ellipsis,
                                               style: Theme.of(context)
                                                   .textTheme
-                                                  .titleLarge),
-                                          Text(streamer.getLocalizedTitle(lang),
-                                              style: Theme.of(context)
-                                                  .textTheme
-                                                  .bodySmall),
-                                        ]))),
-                            const SizedBox(height: AppTheme.spaceMd),
-                            Text(streamer.getLocalizedOrganization(lang),
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodyMedium
-                                    ?.copyWith(color: Canopy.brandGreen)),
-                            LayoutBuilder(builder: (context, constraints) {
-                              final bioStyle =
-                                  Theme.of(context).textTheme.bodyMedium;
-                              final measure = TextPainter(
-                                text: TextSpan(
-                                    text: streamer.getLocalizedBio(lang),
-                                    style: bioStyle),
-                                textDirection: Directionality.of(context),
-                                textScaler: MediaQuery.textScalerOf(context),
-                                maxLines: 2,
-                              )..layout(maxWidth: constraints.maxWidth);
-                              final hasMore = measure.didExceedMaxLines ||
-                                  (streamer.isOrganization &&
-                                      streamer.venues.isNotEmpty) ||
-                                  canJoin;
-                              measure.dispose();
-                              return Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(streamer.getLocalizedBio(lang),
-                                        maxLines: _detailsExpanded ? null : 2,
-                                        overflow: _detailsExpanded
-                                            ? null
-                                            : TextOverflow.ellipsis,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .bodyMedium),
-                                    if (hasMore)
-                                      IconButton(
-                                          key: const ValueKey(
-                                              'profile-details-toggle'),
-                                          tooltip: (_detailsExpanded
-                                                  ? 'profile.show_less'
-                                                  : 'profile.show_more')
-                                              .tr(),
-                                          color: Canopy.brandGreen,
-                                          icon: Icon(_detailsExpanded
-                                              ? Icons.keyboard_arrow_up_rounded
-                                              : Icons
-                                                  .keyboard_arrow_down_rounded),
-                                          onPressed: () => setState(() =>
-                                              _detailsExpanded =
-                                                  !_detailsExpanded)),
-                                  ]);
-                            }),
-                            if (_detailsExpanded)
-                              Wrap(spacing: AppTheme.spaceSm, children: [
-                                if (streamer.isOrganization &&
-                                    streamer.venues.isNotEmpty)
-                                  CaButton(
-                                      label:
-                                          '${streamer.venues.length} ${'profile.campus_branches_btn'.tr()}',
-                                      variant: CaButtonVariant.text,
-                                      onPressed: () =>
-                                          OrgBranchesModalSheet.show(context,
-                                              orgName: streamer
-                                                  .getLocalizedName(lang),
-                                              venues: streamer.venues)),
-                                if (canJoin)
-                                  CaButton(
-                                      label:
-                                          'design_ui.join_an_organization'.tr(),
-                                      variant: CaButtonVariant.text,
-                                      onPressed: () =>
-                                          JoinOrgModalSheet.show(context)),
-                              ]),
-                            if (live && !_dockPrimary) ...[
-                              if (context.windowClass == WindowClass.compact)
-                                LayoutBuilder(
-                                    builder: (context, constraints) => SizedBox(
-                                        width: constraints.maxWidth -
-                                            CanopySize.target -
-                                            AppTheme.spaceSm,
-                                        child: watchAction))
-                              else
-                                watchAction,
-                              const SizedBox(height: AppTheme.spaceSm)
-                            ],
-                            Row(children: [
-                              if (!_dockPrimary || live)
-                                Expanded(
-                                    child: CanopyConfirmMotion(
-                                        active: following,
-                                        child: CaButton(
-                                            icon: following
-                                                ? CaGlyph.check
-                                                : null,
-                                            confirm: following,
-                                            label: (following
-                                                    ? 'profile.following_btn'
-                                                    : 'profile.follow_btn')
-                                                .tr(),
-                                            variant: live || following
-                                                ? CaButtonVariant.secondary
-                                                : CaButtonVariant.primary,
+                                                  .bodyMedium),
+                                          if (hasMore)
+                                            IconButton(
+                                                key: const ValueKey(
+                                                    'profile-details-toggle'),
+                                                tooltip: (_detailsExpanded
+                                                        ? 'profile.show_less'
+                                                        : 'profile.show_more')
+                                                    .tr(),
+                                                color: Canopy.brandGreen,
+                                                icon: Icon(_detailsExpanded
+                                                    ? Icons
+                                                        .keyboard_arrow_up_rounded
+                                                    : Icons
+                                                        .keyboard_arrow_down_rounded),
+                                                onPressed: () => setState(() =>
+                                                    _detailsExpanded =
+                                                        !_detailsExpanded)),
+                                        ]);
+                                  }),
+                                  if (_detailsExpanded)
+                                    Wrap(spacing: AppTheme.spaceSm, children: [
+                                      if (streamer.isOrganization &&
+                                          streamer.venues.isNotEmpty)
+                                        CaButton(
+                                            label:
+                                                '${streamer.venues.length} ${'profile.campus_branches_btn'.tr()}',
+                                            variant: CaButtonVariant.text,
                                             onPressed: () =>
-                                                provider.toggleFollow(
-                                                    streamer.streamerId)))),
-                              const SizedBox(width: AppTheme.spaceSm),
-                              CanopyConfirmMotion(
-                                  active: reminder,
-                                  wiggle: true,
-                                  child: CaIconButton(
-                                      bare: true,
-                                      icon: CaGlyph.bell,
-                                      label: (reminder
-                                              ? 'profile.reminder_on'
-                                              : 'profile.reminder_btn')
-                                          .tr(),
-                                      onPressed: () => _toggleChannelReminder(
-                                          context, streamer.streamerId)))
-                            ]),
-                            ...provider.broadcastSessions
-                                .where((s) =>
-                                    !s.hidden &&
-                                    (s.organizationId ?? s.presenterId) ==
-                                        streamer.streamerId &&
-                                    (s.live || s.replayStatus == 'available'))
-                                .map((s) => ListTile(
-                                    title: Text(s.title(lang)),
-                                    subtitle: Text(
-                                        'organization_v1.state_${s.state}'
-                                            .tr()),
-                                    trailing: const CaIcon(CaGlyph.play),
-                                    onTap: () =>
-                                        context.push('/live/${s.id}'))),
-                          ])),
-                ]),
-                PositionedDirectional(
-                    top: _bannerHeight - _avatarBox / 2,
-                    start: AppTheme.spaceLg,
-                    child: _AvatarStroke(
-                        org: streamer.isOrganization,
-                        child: CaAvatar(
-                            name: streamer.getLocalizedName(lang),
-                            url: streamer.avatarUrl,
-                            live: live,
-                            ring: CaAvatarRing.brand,
-                            verified: streamer.isVerified,
-                            org: streamer.isOrganization,
-                            radius: CanopySize.profileAvatar))),
-              ]))),
+                                                OrgBranchesModalSheet.show(
+                                                    context,
+                                                    orgName: streamer
+                                                        .getLocalizedName(lang),
+                                                    venues: streamer.venues)),
+                                      if (canJoin)
+                                        CaButton(
+                                            label:
+                                                'design_ui.join_an_organization'
+                                                    .tr(),
+                                            variant: CaButtonVariant.text,
+                                            onPressed: () =>
+                                                JoinOrgModalSheet.show(
+                                                    context)),
+                                    ]),
+                                  if (live && !_dockPrimary) ...[
+                                    if (context.windowClass ==
+                                        WindowClass.compact)
+                                      LayoutBuilder(
+                                          builder: (context, constraints) =>
+                                              SizedBox(
+                                                  width: constraints.maxWidth -
+                                                      CanopySize.target -
+                                                      AppTheme.spaceSm,
+                                                  child: watchAction))
+                                    else
+                                      watchAction,
+                                    const SizedBox(height: AppTheme.spaceSm)
+                                  ],
+                                  Row(children: [
+                                    if (!_dockPrimary || live)
+                                      Expanded(
+                                          child: CanopyConfirmMotion(
+                                              active: following,
+                                              child: CaButton(
+                                                  icon: following
+                                                      ? CaGlyph.check
+                                                      : null,
+                                                  confirm: following,
+                                                  label: (following
+                                                          ? 'profile.following_btn'
+                                                          : 'profile.follow_btn')
+                                                      .tr(),
+                                                  variant: live || following
+                                                      ? CaButtonVariant
+                                                          .secondary
+                                                      : CaButtonVariant.primary,
+                                                  onPressed: () => provider
+                                                      .toggleFollow(streamer
+                                                          .streamerId)))),
+                                    const SizedBox(width: AppTheme.spaceSm),
+                                    CanopyConfirmMotion(
+                                        active: reminder,
+                                        wiggle: true,
+                                        child: CaIconButton(
+                                            bare: true,
+                                            icon: CaGlyph.bell,
+                                            label: (reminder
+                                                    ? 'profile.reminder_on'
+                                                    : 'profile.reminder_btn')
+                                                .tr(),
+                                            onPressed: () =>
+                                                _toggleChannelReminder(context,
+                                                    streamer.streamerId)))
+                                  ]),
+                                  ...provider.broadcastSessions
+                                      .where((s) =>
+                                          !s.hidden &&
+                                          (s.organizationId ?? s.presenterId) ==
+                                              streamer.streamerId &&
+                                          (s.live ||
+                                              s.replayStatus == 'available'))
+                                      .map((s) => ListTile(
+                                          title: Text(s.title(lang)),
+                                          subtitle: Text(
+                                              'organization_v1.state_${s.state}'
+                                                  .tr()),
+                                          trailing: const CaIcon(CaGlyph.play),
+                                          onTap: () =>
+                                              context.push('/live/${s.id}'))),
+                                ])),
+                      ]),
+                  PositionedDirectional(
+                      top: _bannerHeight - _avatarBox / 2,
+                      start: AppTheme.spaceLg,
+                      child: _AvatarStroke(
+                          org: streamer.isOrganization,
+                          child: CaAvatar(
+                              name: streamer.getLocalizedName(lang),
+                              url: streamer.avatarUrl,
+                              verified: streamer.isVerified,
+                              org: streamer.isOrganization,
+                              radius: CanopySize.profileAvatar))),
+                ]))),
+      ]),
       if (streamer.isOrganization && streamer.affiliatedSpeakers.isNotEmpty)
         Padding(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
@@ -597,8 +643,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               children: [
                                 CaAvatar(
                                     name: speaker.getLocalizedName(lang),
-                                    url: speaker.avatarUrl,
-                                    ring: CaAvatarRing.brand),
+                                    url: speaker.avatarUrl),
                                 Text(speaker.getLocalizedName(lang),
                                     style: Theme.of(context)
                                         .textTheme

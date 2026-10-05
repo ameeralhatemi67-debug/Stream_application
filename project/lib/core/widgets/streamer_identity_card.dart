@@ -135,7 +135,6 @@ class StreamerIdentityCard extends StatelessWidget {
                                     name: name,
                                     url: avatarUrl,
                                     radius: avatarSize / 2 - 6,
-                                    ring: CaAvatarRing.brand,
                                   ),
                                 ),
                               ),

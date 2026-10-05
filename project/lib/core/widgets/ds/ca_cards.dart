@@ -388,8 +388,6 @@ class CaScholarCard extends StatelessWidget {
                                   child: CaAvatar(
                                       name: name,
                                       url: avatarUrl,
-                                      live: live,
-                                      ring: CaAvatarRing.brand,
                                       verified: verified,
                                       org: org)),
                               const SizedBox(width: AppTheme.spaceSm),
@@ -441,8 +439,6 @@ extension on CaScholarCard {
                   name: name,
                   url: avatarUrl,
                   radius: radius,
-                  live: live,
-                  ring: CaAvatarRing.brand,
                   verified: verified,
                   org: org)),
         ]));
