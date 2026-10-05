@@ -243,7 +243,9 @@ Future<T?> showCaSheet<T>(BuildContext context,
     bool useRootNavigator = true,
     bool framed = true,
     Color? barrierColor,
-    BoxConstraints? constraints}) {
+    BoxConstraints? constraints,
+    bool fullWidthOnPhone = false,
+    Color edgeColor = Canopy.paper}) {
   final presentation =
       caSheetPresentation(MediaQuery.sizeOf(context).width, job);
   return Navigator.of(context, rootNavigator: useRootNavigator).push<T>(
@@ -256,6 +258,8 @@ Future<T?> showCaSheet<T>(BuildContext context,
           framed: framed,
           surfaceConstraints: constraints,
           scrimColor: barrierColor,
+          fullWidthOnPhone: fullWidthOnPhone,
+          edgeColor: edgeColor,
           themes: InheritedTheme.capture(
               from: context,
               to: Navigator.of(context, rootNavigator: useRootNavigator)
@@ -278,6 +282,8 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
       required this.framed,
       this.surfaceConstraints,
       this.scrimColor,
+      this.fullWidthOnPhone = false,
+      this.edgeColor = Canopy.paper,
       required this.barrierDismissible,
       required this.barrierLabel})
       : super(
@@ -292,6 +298,12 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
   final bool reduced, framed;
   final BoxConstraints? surfaceConstraints;
   final Color? scrimColor;
+
+  /// On a phone-width bottom sheet, the surface (painted in [edgeColor]) runs
+  /// edge to edge and down behind the system navigation bar. The content keeps
+  /// the inset width it would have had, so controls do not stretch.
+  final bool fullWidthOnPhone;
+  final Color edgeColor;
   @override
   final bool barrierDismissible;
   @override
@@ -311,21 +323,77 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
   Widget buildPage(BuildContext context, Animation<double> animation,
       Animation<double> secondaryAnimation) {
     void close() => Navigator.of(context).pop();
-    Widget surface({bool handle = true}) => framed
+    // Unframed bodies read insets from where they are placed (inside the
+    // SafeArea/padding below), not from the route: reading the route's own
+    // MediaQuery added the status bar and navigation bar heights again.
+    Widget surface({bool handle = true, bool edge = false}) => framed
         ? CaSheet(
             title: title,
             body: body,
             actions: actions,
             onClose: close,
             handle: handle)
-        : MediaQuery.removeViewInsets(
-            context: context,
-            removeBottom: true,
-            child: ClipRRect(
-                borderRadius: BorderRadius.circular(CanopyRadius.sheetTop),
-                child: Material(color: Canopy.paper, child: body)));
+        : Builder(
+            builder: (placed) => MediaQuery.removeViewInsets(
+                context: placed,
+                removeBottom: true,
+                child: edge
+                    ? Material(color: edgeColor, child: body)
+                    : ClipRRect(
+                        borderRadius:
+                            BorderRadius.circular(CanopyRadius.sheetTop),
+                        child: Material(color: Canopy.paper, child: body))));
     Widget child;
-    if (job == CaSheetJob.confirmation) {
+    if (fullWidthOnPhone &&
+        job != CaSheetJob.confirmation &&
+        presentation == CaSheetPresentation.sheet) {
+      final media = MediaQuery.of(context);
+      final insets = media.padding;
+      child = AnimatedPadding(
+          duration: reduced ? CanopyMotion.none : CanopyMotion.sheetIn,
+          curve: CanopyMotion.drawer,
+          padding: EdgeInsets.only(
+              top: insets.top + AppTheme.spaceMd,
+              bottom: context.isPhoneLandscape ? 0 : media.viewInsets.bottom),
+          child: Align(
+              alignment: Alignment.bottomCenter,
+              child: ConstrainedBox(
+                  constraints: BoxConstraints(
+                      maxHeight: media.size.height * CanopySize.sheetHeightFraction),
+                  child: BottomSheet(
+                      animationController: controller,
+                      backgroundColor: Canopy.transparent,
+                      elevation: 0,
+                      onClosing: close,
+                      builder: (_) => ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(CanopyRadius.sheetTop)),
+                          child: ColoredBox(
+                              color: edgeColor,
+                              child: Padding(
+                                  padding: const EdgeInsetsDirectional.only(
+                                      start: AppTheme.screenPadding,
+                                      end: AppTheme.screenPadding),
+                                  // The body keeps the bottom inset, so its own
+                                  // SafeArea clears the navigation bar while
+                                  // this surface paints behind it.
+                                  child: Center(
+                                      heightFactor: 1,
+                                      child: ConstrainedBox(
+                                          constraints: BoxConstraints(
+                                              maxWidth: surfaceConstraints
+                                                      ?.maxWidth ??
+                                                  (job == CaSheetJob.studio
+                                                      ? CanopySize.studioMax
+                                                      : CanopySize.sheetMax)),
+                                          // The sheet sits below the status
+                                          // bar; only the bottom inset stays.
+                                          child: MediaQuery.removePadding(
+                                              context: context,
+                                              removeTop: true,
+                                              child:
+                                                  surface(edge: true)))))))))));
+    } else if (job == CaSheetJob.confirmation) {
       child = framed
           ? CaDialog(title: title, body: body, actions: actions, onClose: close)
           : body;

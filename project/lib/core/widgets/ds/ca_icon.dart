@@ -142,8 +142,12 @@ class CaIconButton extends StatelessWidget {
 
 /// Reuses locale/push synchronization in LanguageSwitcher.
 class CaLanguageChip extends StatelessWidget {
-  const CaLanguageChip({super.key, this.glass = false, this.compact = false});
+  const CaLanguageChip(
+      {super.key, this.glass = false, this.compact = false, this.bare = false});
   final bool glass, compact;
+
+  /// Glyph only, without the glass circle behind it.
+  final bool bare;
   @override
   Widget build(BuildContext context) => compact
       ? Center(
@@ -152,11 +156,13 @@ class CaLanguageChip extends StatelessWidget {
               child: LanguageSwitcher(
                   canopy: true,
                   overlay: glass,
+                  bare: bare,
                   showLabel: false,
                   padding: const EdgeInsets.all(AppTheme.spaceSm))))
       : LanguageSwitcher(
           canopy: true,
           overlay: glass,
+          bare: bare,
           showLabel: MediaQuery.sizeOf(context).width >= 360 &&
               MediaQuery.textScalerOf(context).scale(1) < 1.3,
         );

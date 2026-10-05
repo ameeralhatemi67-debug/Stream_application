@@ -441,6 +441,7 @@
     "broadcaster_reconnecting": "The broadcaster's connection dropped. Waiting for it to come back; the video may freeze meanwhile.",
     "mini_player_broadcast_ended": "The broadcast you left has ended, so its shortcut was removed.",
     "end_broadcast": "End broadcast",
+    "ctrl_end_sub": "Stops the stream for every viewer",
     "leave_screen": "Leave",
     "end_confirm_title": "End this broadcast?",
     "end_confirm_body": "This phone stops sending camera and microphone, and the app stops listing you as live. If YouTube Studio still shows the broadcast, end it there too.",

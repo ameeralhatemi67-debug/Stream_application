@@ -1,11 +1,13 @@
 import '../../../../core/widgets/phone_input_guard.dart';
 import '../../../../core/widgets/ds/ca_navigation.dart';
 import '../../../../core/widgets/ds/ca_button.dart';
+import '../../../../core/widgets/language_switcher.dart';
 import '../../../../core/widgets/ds/ca_rows.dart';
 import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../../core/widgets/ds/canopy_motion.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/layout/window_class.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -29,7 +31,6 @@ import '../widgets/live_chat_widget.dart';
 import '../widgets/live_chat_layout.dart';
 import '../widgets/permission_rationale_dialog.dart';
 import '../widgets/phone_camera_preview.dart';
-import '../widgets/rtmp_ip_dialog.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Full-featured Stream Page for Phone Broadcasters:
@@ -709,19 +710,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                     ?.copyWith(color: Canopy.mist)),
                         ])),
                     IconButton(
-                        tooltip: 'live.tooltip_studio'.tr(),
-                        icon:
-                            const Icon(Icons.tune_rounded, color: Canopy.paper),
-                        onPressed: () => LiveBroadcasterStudioSheet.show(
-                            context,
-                            onEndBroadcast: _handleEndOrLeave,
-                            openedFromVideo: true)),
-                    IconButton(
                         tooltip: 'live.tooltip_controls'.tr(),
                         icon: const Icon(Icons.more_vert_rounded,
                             color: Canopy.paper),
                         onPressed: () => _showStreamerControlsSheet(streamer)),
-                    const CaLanguageChip(glass: true, compact: true),
                   ])))),
               if (!_showingPreview)
               PositionedDirectional(
@@ -744,11 +736,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               onPressed: () => showCaSheet<void>(context,
                                   title: 'live.tab_chat'.tr(),
                                   framed: false,
-                                  body: SizedBox(
-                                      height: MediaQuery.sizeOf(context)
-                                              .height *
-                                          CanopySize.broadcastChatSheetFraction,
-                                      child: _buildLiveChatTab()))),
+                                  fullWidthOnPhone: true,
+                                  edgeColor: Canopy.forestDeep,
+                                  body: Builder(
+                                      builder: (sheetContext) => SizedBox(
+                                          height: MediaQuery.sizeOf(context)
+                                                  .height *
+                                              CanopySize
+                                                  .broadcastChatSheetFraction,
+                                          child: _buildLiveChatTab(
+                                              onClose: () =>
+                                                  Navigator.pop(sheetContext)))))),
                           Expanded(child: _endControl()),
                         ])),
                       ]))),
@@ -888,27 +886,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             ),
           ],
         ),
-        actions: [
-          Container(
-            margin: const EdgeInsets.symmetric(
-                horizontal: AppTheme.spaceSm, vertical: 8),
-            decoration: BoxDecoration(
-              color: Canopy.liveCrimson.withValues(alpha: 0.15),
-              shape: BoxShape.circle,
-              border: Border.all(
-                color: Canopy.liveCrimson.withValues(alpha: 0.5),
-                width: 1.2,
-              ),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.cell_tower_rounded,
-                  color: Canopy.liveCrimson, size: 20),
-              tooltip: 'live.tooltip_studio'.tr(),
-              onPressed: () => LiveBroadcasterStudioSheet.show(context,
-                  onEndBroadcast: _handleEndOrLeave, openedFromVideo: true),
-            ),
-          ),
-        ],
       ),
       body: SafeArea(
         child: _showingPreview
@@ -1216,6 +1193,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       context,
       title: 'live.tooltip_controls'.tr(),
       framed: false,
+      fullWidthOnPhone: true,
+      edgeColor: AppTheme.surface,
       body: Builder(builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
@@ -1459,36 +1438,68 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           const SizedBox(height: 8),
                         ],
 
-                        // 5.  Studio & End Stream Shortcut
+                        // 5.  Language (moved here from the live HUD)
+                        ListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                          ),
+                          tileColor: Canopy.mint,
+                          leading: SvgPicture.asset('assets/Language.svg',
+                              width: 22,
+                              height: 22,
+                              colorFilter: const ColorFilter.mode(
+                                  AppTheme.primary, BlendMode.srcIn)),
+                          title: Text(
+                            'language.switch_lang'.tr(),
+                            style: const TextStyle(
+                                color: Canopy.ink,
+                                fontWeight: FontWeight.w600,
+                                fontSize: 13.5),
+                          ),
+                          subtitle: Text(
+                            (context.locale.languageCode == 'ar'
+                                    ? 'language.en'
+                                    : 'language.ar')
+                                .tr(),
+                            style: const TextStyle(
+                                color: Canopy.slate,
+                                fontSize: AppTheme.captionFont),
+                          ),
+                          trailing: const Icon(Icons.swap_horiz_rounded,
+                              color: Canopy.slate),
+                          onTap: () async {
+                            await LanguageSwitcher.toggle(context);
+                            if (context.mounted) setModalState(() {});
+                          },
+                        ),
+                        const SizedBox(height: 8),
+
+                        // 6.  End the broadcast (the studio is not needed live)
                         ListTile(
                           shape: RoundedRectangleBorder(
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd),
                           ),
                           tileColor: Canopy.liveCrimson.withValues(alpha: 0.1),
-                          leading: const Icon(Icons.cell_tower_rounded,
+                          leading: const Icon(Icons.stop_circle_outlined,
                               color: Canopy.liveCrimson),
                           title: Text(
-                            'design_ui.broadcaster_studio_end_stream'.tr(),
+                            'live.end_broadcast'.tr(),
                             style: const TextStyle(
                                 color: Canopy.liveCrimson,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13.5),
                           ),
                           subtitle: Text(
-                            'design_ui.adjust_stream_settings_or_end_broadcast_session'
-                                .tr(),
+                            'live.ctrl_end_sub'.tr(),
                             style: const TextStyle(
                                 color: Canopy.slate,
                                 fontSize: AppTheme.captionFont),
                           ),
-                          trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                              color: Canopy.liveCrimson, size: 14),
                           onTap: () {
                             Navigator.of(sheetContext).pop();
-                            LiveBroadcasterStudioSheet.show(context,
-                                onEndBroadcast: _handleEndOrLeave,
-                                openedFromVideo: true);
+                            _handleEndOrLeave();
                           },
                         ),
                       ],
@@ -1889,7 +1900,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
-  Widget _buildLiveChatTab() {
+  Widget _buildLiveChatTab({VoidCallback? onClose}) {
     return ListenableBuilder(
       listenable: _chatController,
       builder: (context, _) {
@@ -1898,6 +1909,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
         return LiveChatWidget(
           cinema: context.isPhone,
+          onClose: onClose,
           textController: _chatTextController,
           messages: messages,
           connectionState: _chatController.connectionState,
@@ -2097,7 +2109,6 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           setState(() => _isSideChatOpen = !_isSideChatOpen),
                       icon: const Icon(Icons.chat_bubble_outline_rounded),
                     ),
-                    const CaLanguageChip(glass: true, compact: true),
                   ])),
                 ),
               ]),

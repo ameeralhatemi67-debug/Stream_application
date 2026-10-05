@@ -688,9 +688,11 @@ void main() {
                   (phone ? 'live.hold_to_end' : 'live.end_broadcast').tr()),
               findsOneWidget);
           final chip = find.byType(CaLanguageChip);
+          // Live on a phone: language lives in Quick Controls and the studio
+          // is not offered, so neither crowds the camera HUD.
+          expect(find.byTooltip('live.tooltip_studio'.tr()), findsNothing);
           if (phone) {
-            expect(tester.getSize(chip).height, CanopySize.target);
-            expect(tester.getSize(chip).width, CanopySize.target);
+            expect(chip, findsNothing);
             expect(
                 find.byTooltip('live.tooltip_controls'.tr()), findsOneWidget);
           } else {
@@ -965,14 +967,13 @@ void main() {
         await tester.pumpAndSettle();
         expect(find.byType(SingleChildScrollView), findsWidgets);
         expect(tester.takeException(), isNull);
-        await tester.ensureVisible(
-            find.text('design_ui.broadcaster_studio_end_stream'.tr()));
-        await tester
-            .tap(find.text('design_ui.broadcaster_studio_end_stream'.tr()));
+        expect(find.text('language.switch_lang'.tr()), findsOneWidget);
+        final endRow = find.widgetWithText(ListTile, 'live.end_broadcast'.tr());
+        await tester.ensureVisible(endRow);
+        await tester.tap(endRow);
         await tester.pumpAndSettle();
-        expect(find.byType(TextField), findsNothing);
-        expect(
-            find.text('live.landscape_settings_portrait'.tr()), findsOneWidget);
+        // Ending from Quick Controls always asks first; it never ends silently.
+        expect(find.byKey(const Key('phone-end-confirm')), findsOneWidget);
         expect(tester.takeException(), isNull);
         await close(tester, p, db);
       });
@@ -1026,7 +1027,7 @@ void main() {
     await close(tester, p, db);
   });
 
-  testWidgets('live: the studio End goes through this screen and stops it',
+  testWidgets('live: Quick Controls End goes through this screen and stops it',
       (tester) async {
     final db = _Db();
     final p = await tester.runAsync(() => broadcaster(db));
@@ -1035,11 +1036,12 @@ void main() {
     expect(p.isBroadcastingLive, isTrue);
     InteractiveToastOverlay.dismiss();
     await tester.pump();
-    await tester.tap(find.byTooltip('live.tooltip_studio'.tr()));
+    await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
     await tester.pumpAndSettle();
-    await tester.ensureVisible(find.text('organization_v1.end'.tr()));
+    final endRow = find.widgetWithText(ListTile, 'live.end_broadcast'.tr());
+    await tester.ensureVisible(endRow);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('organization_v1.end'.tr()));
+    await tester.tap(endRow);
     await tester.pumpAndSettle();
     expect(find.byKey(const Key('phone-end-confirm')), findsOneWidget);
     await tester.tap(find.byKey(const Key('phone-end-confirm-end')));
@@ -1183,13 +1185,16 @@ void main() {
     await close(tester, p, db);
   });
 
-  testWidgets('the studio opened here cannot open a second camera screen',
+  testWidgets('the live screen offers no studio, so no second camera screen',
       (tester) async {
     final db = _Db();
     final p = await tester.runAsync(() => broadcaster(db));
     await open(tester, p!);
-    await tester.tap(find.byTooltip('live.tooltip_studio'.tr()));
+    expect(find.byTooltip('live.tooltip_studio'.tr()), findsNothing);
+    await tester.tap(find.byTooltip('live.tooltip_controls'.tr()));
     await tester.pumpAndSettle();
+    expect(find.text('design_ui.broadcaster_studio_end_stream'.tr()),
+        findsNothing);
     expect(find.text('organization_v1.prepare'.tr()), findsNothing);
     expect(calls.where((c) => c == 'startStream').length, 1);
     expect(find.byType(PhoneBroadcastScreen), findsOneWidget);

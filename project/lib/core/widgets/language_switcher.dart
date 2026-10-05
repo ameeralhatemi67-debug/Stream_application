@@ -12,6 +12,9 @@ class LanguageSwitcher extends StatelessWidget {
   final bool showLabel;
   final bool overlay;
   final bool canopy;
+
+  /// Icon only: no pill, circle or border behind the language glyph.
+  final bool bare;
   final EdgeInsetsGeometry? padding;
 
   const LanguageSwitcher({
@@ -19,8 +22,20 @@ class LanguageSwitcher extends StatelessWidget {
     this.showLabel = true,
     this.overlay = false,
     this.canopy = false,
+    this.bare = false,
     this.padding,
   });
+
+  /// Switches between English and Arabic and keeps push reminders in the new
+  /// language. Shared by every language control.
+  static Future<void> toggle(BuildContext context) async {
+    final language = context.locale.languageCode == 'ar' ? 'en' : 'ar';
+    await context.setLocale(Locale(language));
+    if (context.mounted) {
+      unawaited(context.read<AppProvider>().syncReminderPush(
+          requestPermission: false, language: language));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -32,14 +47,7 @@ class LanguageSwitcher extends StatelessWidget {
         child: Tooltip(
           message: 'language.switch_lang'.tr(),
           child: InkWell(
-            onTap: () async {
-              final language = isArabic ? 'en' : 'ar';
-              await context.setLocale(Locale(language));
-              if (context.mounted) {
-                unawaited(context.read<AppProvider>().syncReminderPush(
-                    requestPermission: false, language: language));
-              }
-            },
+            onTap: () => toggle(context),
             borderRadius: BorderRadius.circular(
                 overlay || canopy ? AppTheme.radiusFull : AppTheme.radiusSm),
             child: Container(
@@ -54,7 +62,9 @@ class LanguageSwitcher extends StatelessWidget {
                           horizontal: AppTheme.spaceMd,
                           vertical: AppTheme.spaceSm,
                         )),
-              decoration: BoxDecoration(
+              decoration: bare
+                  ? null
+                  : BoxDecoration(
                 color: overlay
                     ? AppTheme.surface
                         .withValues(alpha: canopy ? CanopySize.glassAlpha : .6)

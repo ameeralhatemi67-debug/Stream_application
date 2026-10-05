@@ -17,6 +17,9 @@ class LiveChatWidget extends StatefulWidget {
   final TextEditingController? textController;
   final bool cinema;
 
+  /// Shown as a sheet: adds a drag handle and a close button to the header.
+  final VoidCallback? onClose;
+
   /// Long-press on any message tile, own or someone else's (Cluster 4 Task
   /// 13 widened this from the Checkpoint 3 Phase 1 original, which only
   /// fired for someone else's message). This widget stays a "dumb"one that
@@ -31,6 +34,7 @@ class LiveChatWidget extends StatefulWidget {
     required this.onSendTextMessage,
     this.textController,
     this.cinema = false,
+    this.onClose,
     this.onMessageLongPress,
   });
 
@@ -44,6 +48,19 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
   final FocusNode _focusNode = FocusNode();
 
   bool get _readOnly => isCompactLandscapeChat(context);
+  bool _hasText = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _hasText = _textController.text.trim().isNotEmpty;
+    _textController.addListener(_onTextChanged);
+  }
+
+  void _onTextChanged() {
+    final hasText = _textController.text.trim().isNotEmpty;
+    if (hasText != _hasText && mounted) setState(() => _hasText = hasText);
+  }
 
   @override
   void didChangeDependencies() {
@@ -53,6 +70,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
 
   @override
   void dispose() {
+    _textController.removeListener(_onTextChanged);
     if (widget.textController == null) _textController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -69,8 +87,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
 
   @override
   Widget build(BuildContext context) {
+    if (widget.cinema) return _buildCinema(context);
     return Container(
-      color: widget.cinema ? Canopy.forestDeep : Canopy.dawn,
+      color: Canopy.dawn,
       child: Column(
         children: [
           // Live Chat Header Bar
@@ -79,9 +98,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
               horizontal: AppTheme.spaceLg,
               vertical: AppTheme.spaceSm,
             ),
-            decoration: BoxDecoration(
-              color: widget.cinema ? Canopy.forestDeep : AppTheme.surface,
-              border: const Border(
+            decoration: const BoxDecoration(
+              color: AppTheme.surface,
+              border: Border(
                 bottom: BorderSide(color: Canopy.hairline, width: 1),
               ),
             ),
@@ -101,8 +120,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color:
-                            widget.cinema ? Canopy.paper : Canopy.ink,
+                        color: Canopy.ink,
                       ),
                 )),
                 const SizedBox(width: AppTheme.spaceSm),
@@ -148,7 +166,6 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                 final message =
                     widget.messages[widget.messages.length - 1 - index];
                 return _ChatTile(
-                  cinema: widget.cinema,
                   message: message,
                   onLongPress: widget.onMessageLongPress == null
                       ? null
@@ -162,9 +179,10 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
             Padding(
               padding: const EdgeInsets.all(AppTheme.spaceSm),
               child: Text('live.landscape_chat_read_only'.tr(),
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color:
-                          widget.cinema ? Canopy.mist : Canopy.slate),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodySmall
+                      ?.copyWith(color: Canopy.slate),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis),
             )
@@ -231,6 +249,208 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     ),
                   ),
                 ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+extension on _LiveChatWidgetState {
+  Widget _buildCinema(BuildContext context) {
+    final theme = Theme.of(context).textTheme;
+    final divider = Canopy.paper.withValues(alpha: .12);
+    return ColoredBox(
+      color: Canopy.forestDeep,
+      child: Column(
+        children: [
+          if (widget.onClose != null)
+            Padding(
+              padding: const EdgeInsets.only(top: AppTheme.spaceSm),
+              child: Container(
+                width: CanopySize.handleWidth,
+                height: CanopySize.handleHeight,
+                decoration: BoxDecoration(
+                  color: Canopy.paper.withValues(alpha: .35),
+                  borderRadius: BorderRadius.circular(CanopyRadius.pill),
+                ),
+              ),
+            ),
+          Padding(
+            padding: EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
+                AppTheme.spaceSm, widget.onClose == null ? AppTheme.spaceLg : 0,
+                AppTheme.spaceSm),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'live.ghost_audience'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.titleMedium?.copyWith(
+                            color: Canopy.paper, fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 2),
+                      Row(children: [
+                        Flexible(
+                            child: _ConnectionStatusChip(
+                                state: widget.connectionState)),
+                        const SizedBox(width: AppTheme.spaceSm),
+                        const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 12, color: Canopy.mist),
+                        const SizedBox(width: 4),
+                        Text('${widget.messages.length}',
+                            style: theme.labelSmall?.copyWith(
+                                color: Canopy.mist,
+                                fontWeight: FontWeight.w700)),
+                      ]),
+                    ],
+                  ),
+                ),
+                if (widget.onClose != null)
+                  IconButton(
+                    onPressed: widget.onClose,
+                    tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+                    icon: const Icon(Icons.close_rounded, color: Canopy.paper),
+                  ),
+              ],
+            ),
+          ),
+          Divider(height: 1, thickness: 1, color: divider),
+          Expanded(
+            child: widget.messages.isEmpty
+                ? Center(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(AppTheme.spaceXl),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 56,
+                            height: 56,
+                            decoration: BoxDecoration(
+                              color: Canopy.paper.withValues(alpha: .08),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.forum_outlined,
+                                color: Canopy.mist, size: 26),
+                          ),
+                          const SizedBox(height: AppTheme.spaceMd),
+                          Text('live.chat_empty_title'.tr(),
+                              textAlign: TextAlign.center,
+                              style: theme.titleSmall?.copyWith(
+                                  color: Canopy.paper,
+                                  fontWeight: FontWeight.w700)),
+                          const SizedBox(height: AppTheme.spaceXs),
+                          Text('live.chat_empty_subtitle'.tr(),
+                              textAlign: TextAlign.center,
+                              style: theme.bodySmall
+                                  ?.copyWith(color: Canopy.mist)),
+                        ],
+                      ),
+                    ),
+                  )
+                : ListView.builder(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    reverse: true,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppTheme.spaceLg,
+                      vertical: AppTheme.spaceMd,
+                    ),
+                    itemCount: widget.messages.length,
+                    itemBuilder: (context, index) {
+                      final message =
+                          widget.messages[widget.messages.length - 1 - index];
+                      return _ChatTile(
+                        cinema: true,
+                        message: message,
+                        onLongPress: widget.onMessageLongPress == null
+                            ? null
+                            : () => widget.onMessageLongPress!(message),
+                      );
+                    },
+                  ),
+          ),
+          if (_readOnly)
+            Padding(
+              padding: const EdgeInsets.all(AppTheme.spaceSm),
+              child: Text('live.landscape_chat_read_only'.tr(),
+                  style: theme.bodySmall?.copyWith(color: Canopy.mist),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis),
+            )
+          else
+            DecoratedBox(
+              decoration: BoxDecoration(
+                border: Border(top: BorderSide(color: divider)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
+                      AppTheme.spaceSm, AppTheme.spaceSm, AppTheme.spaceSm),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _textController,
+                          focusNode: _focusNode,
+                          minLines: 1,
+                          maxLines: 4,
+                          style: theme.bodyMedium?.copyWith(color: Canopy.paper),
+                          cursorColor: Canopy.mist,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => _handleSendText(),
+                          decoration: InputDecoration(
+                            hintText: 'live.chat_placeholder'.tr(),
+                            hintStyle: theme.bodyMedium?.copyWith(
+                                color: Canopy.paper.withValues(alpha: .55)),
+                            isDense: true,
+                            contentPadding: const EdgeInsets.symmetric(
+                              horizontal: AppTheme.spaceLg,
+                              vertical: AppTheme.spaceMd,
+                            ),
+                            filled: true,
+                            fillColor: Canopy.paper.withValues(alpha: .08),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(CanopyRadius.pill),
+                              borderSide: BorderSide.none,
+                            ),
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(CanopyRadius.pill),
+                              borderSide: const BorderSide(color: Canopy.mist),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: AppTheme.spaceSm),
+                      IconButton.filled(
+                        onPressed: _hasText ? _handleSendText : null,
+                        tooltip: 'live.chat_placeholder'.tr(),
+                        icon: const Icon(Icons.send_rounded, size: 20),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Canopy.leaf,
+                          foregroundColor: Canopy.paper,
+                          disabledBackgroundColor:
+                              Canopy.paper.withValues(alpha: .12),
+                          disabledForegroundColor:
+                              Canopy.paper.withValues(alpha: .4),
+                          minimumSize: const Size.square(CanopySize.target),
+                          shape: const CircleBorder(),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
         ],

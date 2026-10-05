@@ -46,6 +46,8 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
           title: 'organization_v1.studio'.tr(),
           job: CaSheetJob.studio,
           framed: false,
+          fullWidthOnPhone: true,
+          edgeColor: Canopy.forestDeep,
           body: ChangeNotifierProvider<AppProvider>.value(
               value: context.read<AppProvider>(),
               child: LiveBroadcasterStudioSheet(
@@ -260,6 +262,9 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
         _studio.ingestKey.isNotEmpty &&
         _studio.sender == 'obs_laptop' &&
         !live;
+    // While typing the title, the keyboard needs the room; Preview/Prepare
+    // returns as soon as it closes.
+    final keyboardOpen = View.of(context).viewInsets.bottom > 0;
     return Material(
         color: Canopy.forestDeep,
         child: Theme(
@@ -288,8 +293,12 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                           ColoredBox(
                               color: Canopy.forestDeep,
                               child: Padding(
-                                  padding:
-                                      const EdgeInsets.all(AppTheme.spaceMd),
+                                  // Title lines up with the content below it.
+                                  padding: const EdgeInsetsDirectional.fromSTEB(
+                                      AppTheme.spaceLg,
+                                      AppTheme.spaceMd,
+                                      AppTheme.spaceXs,
+                                      AppTheme.spaceXs),
                                   child: DefaultTextStyle.merge(
                                       style:
                                           const TextStyle(color: Canopy.paper),
@@ -303,12 +312,16 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                         .tr(),
                                                     style: Theme.of(context)
                                                         .textTheme
-                                                        .titleMedium
+                                                        .titleLarge
                                                         ?.copyWith(
-                                                            color:
-                                                                Canopy.paper))),
+                                                            color: Canopy.paper,
+                                                            fontWeight:
+                                                                FontWeight
+                                                                    .w700))),
                                             const CaLanguageChip(
-                                                glass: true, compact: true),
+                                                glass: true,
+                                                compact: true,
+                                                bare: true),
                                             IconButton(
                                                 onPressed: () =>
                                                     Navigator.pop(context),
@@ -613,7 +626,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                 'organization_v1.refresh'
                                                     .tr())),
                                       ]))),
-                          if (canPrepare || canStart)
+                          if ((canPrepare || canStart) && !keyboardOpen)
                             Padding(
                                 padding: const EdgeInsets.all(AppTheme.spaceLg),
                                 child: Column(
