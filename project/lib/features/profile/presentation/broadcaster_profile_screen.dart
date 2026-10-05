@@ -779,11 +779,9 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                       ],
                     ),
                   ),
-                  Icon(
-                      Directionality.of(context) == TextDirection.rtl
-                          ? Icons.chevron_left_rounded
-                          : Icons.chevron_right_rounded,
-                      color: Canopy.slate),
+                  // The chevron glyph mirrors itself in right-to-left, so it always
+                  // points forward.
+                  const Icon(Icons.chevron_right_rounded, color: Canopy.slate),
                 ],
               ),
             ),
