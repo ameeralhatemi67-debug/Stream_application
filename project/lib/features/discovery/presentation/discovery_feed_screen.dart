@@ -1,5 +1,6 @@
 import '../../../core/widgets/ds/canopy_content_motion.dart';
 import '../../../core/widgets/ds/ca_navigation.dart';
+import '../../../core/widgets/ds/ca_pull_to_refresh.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -274,8 +275,12 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
             audio: live.first.isAudioLive,
             height: heroHeight,
             showAction: !dock,
-            viewerLabel:
-                '${context.select<AppProvider, int?>((p) => p.platformViewerCount(live.first.activeStreamId ?? '')) ?? '—'} ${(live.first.isAudioLive ? 'live.listening_count' : 'feed.watching').tr()}',
+            viewerCount: context.select<AppProvider, int?>(
+                (p) => p.platformViewerCount(live.first.activeStreamId ?? '')),
+            viewerSuffix: (live.first.isAudioLive
+                    ? 'live.listening_count'
+                    : 'feed.watching')
+                .tr(),
             action: (live.first.isAudioLive
                     ? 'live.listen_live'
                     : 'feed.watch_live')
@@ -363,13 +368,13 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                             : () => context
                                 .push('/live/${live.first.activeStreamId}'))))
             : null,
-        body: ListView(
-            padding: EdgeInsetsDirectional.fromSTEB(
-                context.windowInset,
-                AppTheme.spaceSm,
-                context.windowInset,
-                AppTheme.space2Xl),
-            children: [
+        body: CaPullToRefresh(
+            // Pulling the top of the feed re-reads the public catalog now.
+            onRefresh: () => context
+                .read<AppProvider>()
+                .refreshCatalogIfOlderThan(Duration.zero),
+            child:
+                ListView(padding: EdgeInsetsDirectional.fromSTEB(context.windowInset, AppTheme.spaceSm, context.windowInset, AppTheme.space2Xl), children: [
               const ConnectivityBanner(),
               if (!inlineSearch) ...[
                 search(),
@@ -449,10 +454,10 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                   // a phone, up to four on a laptop (never a forced pair).
                   final columns =
                       (constraints.maxWidth / 300).floor().clamp(1, 4);
-                  final width =
-                      ((constraints.maxWidth - AppTheme.spaceMd * (columns - 1)) /
-                              columns)
-                          .clamp(0.0, 420.0);
+                  final width = ((constraints.maxWidth -
+                              AppTheme.spaceMd * (columns - 1)) /
+                          columns)
+                      .clamp(0.0, 420.0);
                   final signature = Object.hash(
                       constraints.maxWidth,
                       lang,
@@ -490,6 +495,6 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                                               i + 1))))),
                       ]);
                 }),
-            ]));
+            ])));
   }
 }

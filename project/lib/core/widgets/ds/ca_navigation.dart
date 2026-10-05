@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'dart:ui' show ImageFilter;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -63,24 +64,116 @@ class CaNavBar extends StatelessWidget {
                       padding: const EdgeInsets.all(AppTheme.spaceSm),
                       color: Canopy.paper
                           .withValues(alpha: CanopySize.navPaperAlpha),
-                      child: Row(children: [
-                        for (var i = 0; i < 2; i++) ...[
-                          if (i > 0) const SizedBox(width: AppTheme.spaceSm),
-                          if (i == index)
-                            Expanded(
-                                child: _Destination(
-                                    index: i,
-                                    selected: true,
-                                    onTap: () => onChanged(i)))
-                          else
-                            SizedBox(
-                                width: CanopySize.target,
-                                child: _Destination(
-                                    index: i,
-                                    selected: false,
-                                    onTap: () => onChanged(i))),
-                        ]
-                      ]))))));
+                      child: LayoutBuilder(builder: (context, bounds) {
+                        // The active item takes whatever the other folds away:
+                        // widths trade places over the pill's own duration.
+                        const gap = AppTheme.spaceSm;
+                        const folded = CanopySize.target;
+                        final open = bounds.maxWidth - folded - gap;
+                        return TweenAnimationBuilder<double>(
+                            tween: Tween(end: index.toDouble()),
+                            duration: CanopyMotion.reduced(context)
+                                ? CanopyMotion.none
+                                : CanopyMotion.navPill,
+                            curve: CanopyMotion.easeOut,
+                            builder: (context, t, _) => Row(children: [
+                                  _PillDestination(
+                                      index: 0,
+                                      width: ui.lerpDouble(open, folded, t)!,
+                                      selectedness: 1 - t,
+                                      onTap: () => onChanged(0)),
+                                  const SizedBox(width: gap),
+                                  _PillDestination(
+                                      index: 1,
+                                      width: ui.lerpDouble(folded, open, t)!,
+                                      selectedness: t,
+                                      onTap: () => onChanged(1)),
+                                ]));
+                      }))))));
+}
+
+/// One item of the bottom pill. [selectedness] runs 0 to 1 as the item
+/// becomes the active one: its gradient fades in, its icon turns white and its
+/// label appears, all while [width] grows.
+class _PillDestination extends StatelessWidget {
+  const _PillDestination(
+      {required this.index,
+      required this.width,
+      required this.selectedness,
+      required this.onTap});
+  final int index;
+  final double width, selectedness;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
+    final color =
+        Color.lerp(Canopy.brandGreen, Canopy.paper, selectedness.clamp(0, 1))!;
+    return Semantics(
+        button: true,
+        selected: selectedness > .5,
+        label: label,
+        child: CaFocusRing(
+            onDark: selectedness > .5,
+            child: Tooltip(
+                message: label,
+                excludeFromSemantics: true,
+                child: Material(
+                    type: MaterialType.transparency,
+                    child: InkWell(
+                        onTap: onTap,
+                        borderRadius: BorderRadius.circular(CanopyRadius.pill),
+                        child: ExcludeSemantics(
+                            child: SizedBox(
+                                width: width,
+                                height: CanopySize.target,
+                                child: Stack(children: [
+                                  Positioned.fill(
+                                      child: Opacity(
+                                          opacity: selectedness.clamp(0, 1),
+                                          child: const DecoratedBox(
+                                              decoration: BoxDecoration(
+                                                  gradient: AppGradients.pill,
+                                                  borderRadius:
+                                                      BorderRadius.all(
+                                                          Radius.circular(
+                                                              CanopyRadius
+                                                                  .pill)))))),
+                                  ClipRect(
+                                      child: OverflowBox(
+                                          maxWidth: double.infinity,
+                                          child: Center(
+                                              child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                CaIcon(
+                                                    index == 0
+                                                        ? CaGlyph.list
+                                                        : CaGlyph.map,
+                                                    color: color),
+                                                if (selectedness > 0) ...[
+                                                  const SizedBox(
+                                                      width: AppTheme.spaceSm),
+                                                  Opacity(
+                                                      opacity: selectedness
+                                                          .clamp(0, 1),
+                                                      child: Text(label,
+                                                          maxLines: 1,
+                                                          softWrap: false,
+                                                          style: Theme.of(
+                                                                  context)
+                                                              .textTheme
+                                                              .labelSmall
+                                                              ?.copyWith(
+                                                                  color: color,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .w600))),
+                                                ],
+                                              ])))),
+                                ]))))))));
+  }
 }
 
 class _Destination extends StatelessWidget {

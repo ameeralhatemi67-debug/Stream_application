@@ -237,47 +237,141 @@ class _CanopyConfirmMotionState extends State<CanopyConfirmMotion>
           });
 }
 
-/// The label is spoken once; outgoing counter glyphs are decorative.
-class CaRollingCount extends StatelessWidget {
+/// A count whose digits roll like a counter. When the number changes, each
+/// digit that changed turns over on its own for 420 ms (tabular figures keep
+/// the width steady); the rest of the time it is plain text. The label is
+/// spoken once; the rolling glyphs are decorative.
+class CaRollingCount extends StatefulWidget {
   const CaRollingCount(
       {super.key, required this.value, required this.suffix, this.style});
   final int? value;
   final String suffix;
   final TextStyle? style;
   @override
-  Widget build(BuildContext context) {
-    final number = value?.toString() ?? '—';
-    final reduced = CanopyMotion.reduced(context);
-    final type = value == null
-        ? style
-        : style?.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
-    final label = '$number $suffix';
+  State<CaRollingCount> createState() => _CaRollingCountState();
+}
+
+class _CaRollingCountState extends State<CaRollingCount>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _roll;
+
+  @override
+  void initState() {
+    super.initState();
+    _roll = AnimationController(vsync: this, duration: CanopyMotion.count)
+      ..addStatusListener((_) {
+        if (mounted) setState(() {});
+      });
+  }
+
+  int? _from;
+
+  @override
+  void didUpdateWidget(CaRollingCount old) {
+    super.didUpdateWidget(old);
     // Unknown counts appear immediately. Only known-to-known updates roll.
-    if (reduced || value == null) return Text(label, style: style);
+    if (old.value != null &&
+        widget.value != null &&
+        old.value != widget.value &&
+        !CanopyMotion.reduced(context)) {
+      _from = old.value;
+      _roll.forward(from: 0);
+    }
+  }
+
+  @override
+  void dispose() {
+    _roll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final value = widget.value;
+    final number = value?.toString() ?? '—';
+    final label = '$number ${widget.suffix}';
+    if (value == null || _from == null || !_roll.isAnimating) {
+      return Text(label, style: widget.style);
+    }
+    // Merged with the inherited style, so the digits are measured and drawn in
+    // the same font the plain label uses.
+    final type = DefaultTextStyle.of(context)
+        .style
+        .merge(widget.style)
+        .copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
+    final to = number.split('');
+    final from = _from.toString().split('');
+    // Digits line up from the right, so ones stay over ones.
+    final width = math.max(to.length, from.length);
+    int? digitAt(List<String> digits, int column) {
+      final i = column - (width - digits.length);
+      return i < 0 ? null : int.parse(digits[i]);
+    }
+
     return Semantics(
         label: label,
         child: ExcludeSemantics(
-            child: ClipRect(
-                child: AnimatedSwitcher(
-                    duration: reduced ? CanopyMotion.none : CanopyMotion.count,
-                    reverseDuration:
-                        reduced ? CanopyMotion.none : CanopyMotion.chipOut,
-                    switchInCurve: CanopyMotion.easeOut,
-                    switchOutCurve: CanopyMotion.easeOut,
-                    transitionBuilder: (child, animation) => reduced
-                        ? child
-                        : FadeTransition(
-                            opacity: animation,
-                            child: SlideTransition(
-                                position: animation.drive(Tween(
-                                    begin: const Offset(0, 1),
-                                    end: Offset.zero)),
-                                child: child)),
-                    child: Text(label,
-                        key: ValueKey(label),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: type)))));
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+          Directionality(
+              textDirection: TextDirection.ltr,
+              child: AnimatedBuilder(
+                  animation: _roll,
+                  builder: (context, _) {
+                    final t = CanopyMotion.easeOut.transform(_roll.value);
+                    return Row(mainAxisSize: MainAxisSize.min, children: [
+                      for (var c = 0; c < width; c++)
+                        if (digitAt(to, c) != null)
+                          _RollingDigit(
+                              from: (digitAt(from, c) ?? digitAt(to, c)!)
+                                  .toDouble(),
+                              to: digitAt(to, c)!.toDouble(),
+                              t: t,
+                              style: type),
+                    ]);
+                  })),
+          const SizedBox(width: AppTheme.spaceXs),
+          Flexible(
+              child: Text(widget.suffix,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: widget.style)),
+        ])));
+  }
+}
+
+class _RollingDigit extends StatelessWidget {
+  const _RollingDigit(
+      {required this.from,
+      required this.to,
+      required this.t,
+      required this.style});
+  final double from, to, t;
+  final TextStyle style;
+  @override
+  Widget build(BuildContext context) {
+    final painter = TextPainter(
+        text: TextSpan(text: '0', style: style),
+        textDirection: TextDirection.ltr,
+        textScaler: MediaQuery.textScalerOf(context))
+      ..layout();
+    final width = painter.width, height = painter.height;
+    painter.dispose();
+    final position = from + (to - from) * t;
+    return SizedBox(
+        width: width,
+        height: height,
+        child: ClipRect(
+            child: OverflowBox(
+                alignment: Alignment.topCenter,
+                minHeight: 0,
+                maxHeight: height * 10,
+                child: Transform.translate(
+                    offset: Offset(0, -position * height),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      for (var d = 0; d < 10; d++)
+                        SizedBox(
+                            height: height, child: Text('$d', style: style)),
+                    ])))));
   }
 }
 

@@ -5,6 +5,7 @@ import 'canopy_lattice_background.dart';
 import '../safe_image_provider.dart';
 import 'ca_cards.dart';
 import 'ca_button.dart';
+import 'canopy_content_motion.dart';
 import 'ca_icon.dart';
 
 /// One live feature, with intrinsic text height above the class minimum.
@@ -19,9 +20,16 @@ class CaHeroCard extends StatefulWidget {
       this.onTap,
       this.audio = false,
       this.showAction = true,
-      this.viewerLabel});
+      this.viewerLabel,
+      this.viewerCount,
+      this.viewerSuffix});
   final String title, presenter, action;
   final String? imageUrl, viewerLabel;
+
+  /// When [viewerSuffix] is set the viewer pill shows a rolling count of
+  /// [viewerCount] ('\u2014' while unknown) instead of the plain [viewerLabel].
+  final int? viewerCount;
+  final String? viewerSuffix;
   final double height;
   final bool audio, showAction;
   final VoidCallback? onTap;
@@ -99,23 +107,32 @@ class _CaHeroCardState extends State<CaHeroCard> {
                                       kind: widget.audio
                                           ? CaStatusKind.audio
                                           : CaStatusKind.live),
-                                  if (widget.viewerLabel != null)
+                                  if (widget.viewerLabel != null || widget.viewerSuffix != null)
                                     DecoratedBox(
                                         decoration: BoxDecoration(
                                             color: Canopy.forestDeep,
                                             borderRadius: BorderRadius.circular(
                                                 CanopyRadius.pill)),
                                         child: Padding(
-                                            padding: const EdgeInsetsDirectional
-                                                .symmetric(
+                                            padding: const EdgeInsetsDirectional.symmetric(
                                                 horizontal: AppTheme.spaceSm,
                                                 vertical: AppTheme.spaceXs),
-                                            child: Text(widget.viewerLabel!,
-                                                style: Theme.of(context)
-                                                    .textTheme
-                                                    .labelSmall
-                                                    ?.copyWith(
-                                                        color: Canopy.paper)))),
+                                            child: widget.viewerSuffix != null
+                                                ? CaRollingCount(
+                                                    value: widget.viewerCount,
+                                                    suffix:
+                                                        widget.viewerSuffix!,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(
+                                                            color:
+                                                                Canopy.paper))
+                                                : Text(widget.viewerLabel!,
+                                                    style: Theme.of(context)
+                                                        .textTheme
+                                                        .labelSmall
+                                                        ?.copyWith(color: Canopy.paper)))),
                                 ]),
                             const SizedBox(height: AppTheme.spaceXl),
                             Text(widget.title,
