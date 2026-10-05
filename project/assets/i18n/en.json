@@ -182,7 +182,8 @@
     "live_badge": "LIVE",
     "audio_live_badge": "AUDIO",
     "offline_badge": "Offline",
-    "your_channel_badge": "Your Channel"
+    "your_channel_badge": "Your Channel",
+    "clear_search": "Clear search"
   },
   "profile": {
     "current_location": "Your current location",
@@ -250,7 +251,9 @@
     "review_confirm_message": "Are you sure you want to proceed? Your approved details remain visible until an admin reviews these changes.",
     "review_fields_title": "Which changes need approval?",
     "review_fields_list": "Email and phone number; city, venue and map location; YouTube channel URL and handle.",
-    "review_confirm_yes": "Yes, request approval"
+    "review_confirm_yes": "Yes, request approval",
+    "archive_tab": "Archive",
+    "upcoming_tab": "Upcoming"
   },
   "live": {
     "recovery_exhausted": "Connection could not be restored. Retry or leave.",
@@ -487,7 +490,10 @@
     "tooltip_pause": "Pause",
     "tooltip_mute": "Mute",
     "tooltip_unmute": "Unmute",
-    "player_not_ready": "The player is not ready yet. Try again in a moment."
+    "player_not_ready": "The player is not ready yet. Try again in a moment.",
+    "audio_level_unavailable": "Microphone level unavailable",
+    "hold_to_end": "Hold to end",
+    "sources_empty": "No sources have been shared for this lecture."
   },
   "language": {
     "en": "English",
@@ -680,7 +686,12 @@
     "unblock": "Unblock",
     "unblocked_toast": "Unblocked. You'll see their messages again.",
     "opening_google_sign_in": "Opening Google sign-in. You will return here when it finishes.",
-    "youtube_url_locked_while_live": "Locked while you are live. End the broadcast to use another link."
+    "youtube_url_locked_while_live": "Locked while you are live. End the broadcast to use another link.",
+    "desktop_account": "Account",
+    "desktop_privacy": "Privacy & data",
+    "desktop_legal": "Terms & policies",
+    "desktop_about": "About",
+    "avatar_optional_hint": "Leave empty to use your initial."
   },
   "onboarding": {
     "subtitle": "AlSharqia Educational Knowledge Hub",
@@ -976,7 +987,12 @@
     "revoke_broadcaster_title": "Revoke broadcaster approval?",
     "revoke_broadcaster_body": "This removes broadcasting rights and ends any live session in the app. The account, its organizations and its data are not deleted. To delete an account, use User Directory. Your reason is saved in the audit log.",
     "revoke_broadcaster_done": "Broadcaster approval revoked. The account was not deleted.",
-    "revoke_broadcaster_failed": "Broadcaster approval was not revoked. The server refused or could not be reached."
+    "revoke_broadcaster_failed": "Broadcaster approval was not revoked. The server refused or could not be reached.",
+    "short_title": "Admin",
+    "nav_review": "Review",
+    "nav_moderate": "Moderate",
+    "nav_directory": "Directory",
+    "nav_configure": "Configure"
   },
   "common": {
     "cancel": "Cancel",
@@ -1035,7 +1051,10 @@
     "name_label": "Your Display Name (Required)",
     "name_hint": "e.g. Faisal Al-Ghamdi",
     "btn_enter": "Enter Discovery Feed",
-    "error_name_empty": "Please enter your display name to continue."
+    "error_name_empty": "Please enter your display name to continue.",
+    "avatar_option": "Avatar {}",
+    "custom_avatar": "Choose a photo",
+    "rotate_to_edit": "Rotate upright to edit your name."
   },
   "role_select": {
     "welcome_user": "Welcome, {}!",
@@ -1339,7 +1358,9 @@
     "current_local_session": "Current Local Session",
     "continue_as_viewer": "Continue as Viewer",
     "transfer_broadcaster_to_this_device": "Transfer Broadcaster to This Device",
-    "no_speakers_added_hint": "Use Add Streamer to invite or associate speakers with this organization."
+    "no_speakers_added_hint": "Use Add Streamer to invite or associate speakers with this organization.",
+    "unread_count": "{count} unread",
+    "discovery": "Discovery"
   },
   "design_copy": {
     "academic_broadcasts_spatial_discovery": "Academic Broadcasts & Spatial Discovery",
@@ -1841,5 +1862,39 @@
     "transfer_incoming": "You were proposed as the new owner. The offer expires {date}.",
     "transfer_pending": "Ownership transfer pending until {date}.",
     "withdraw_transfer": "Withdraw transfer"
+  },
+  "ds": {
+    "filter_title": "Filters",
+    "rotate_to_edit": "Rotate upright to edit.",
+    "apply_identity": "Identity",
+    "apply_media": "Media",
+    "apply_professional": "Professional",
+    "apply_venue": "Venue",
+    "apply_review": "Review",
+    "hold_hint": "Press and hold for 1.2 seconds to confirm",
+    "cancel_hold": "Cancel confirmation",
+    "status_live": "LIVE",
+    "status_audio": "AUDIO",
+    "status_offline": "Offline",
+    "status_pending": "Pending",
+    "status_verified": "Verified",
+    "speaker": "Speaker",
+    "dismiss": "Dismiss",
+    "loading": "Loading",
+    "step_of": "Step {} of {} · {}",
+    "not_measured": "Not measured",
+    "audio_level": "Audio level",
+    "gallery": "Canopy components",
+    "gallery_action": "Demo action",
+    "gallery_demo": "Component preview",
+    "account_actions": "Account actions",
+    "studio_profile": "Studio profile",
+    "entry_headline": "Learn live. Close to home.",
+    "entry_live": "Live lectures with chat and Q&A",
+    "entry_map": "A map of venues near you",
+    "entry_saved": "Saved recordings and playlists",
+    "role_viewer": "Viewer",
+    "role_streamer": "Broadcaster",
+    "apply_title": "Apply"
   }
 }

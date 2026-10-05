@@ -1,3 +1,5 @@
+import '../admin_surface.dart';
+import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -10,6 +12,7 @@ import '../../../organization/models/org_broadcaster_permissions.dart';
 import '../../../organization/models/org_affiliation_request_model.dart';
 import '../../../profile/models/streamer_models.dart';
 import '../../../../core/utils/id_generator.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 
 class OrgManagementView extends StatefulWidget {
   final String orgId;
@@ -32,7 +35,8 @@ class OrgManagementView extends StatefulWidget {
 }
 
 class _OrgManagementViewState extends State<OrgManagementView> {
-  int _activeSubSection = 0; // 0: Branches, 1: Speakers, 2: Affiliations, 3: Audit Trail
+  int _activeSubSection =
+      0; // 0: Branches, 1: Speakers, 2: Affiliations, 3: Audit Trail
   String _auditSearchQuery = '';
 
   @override
@@ -71,8 +75,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
 
     if (org == null) {
       return Center(
-        child: Text('design_ui.organization_not_found'.tr(),
-          style: const TextStyle(color: AppTheme.textMuted),
+        child: Text(
+          'design_ui.organization_not_found'.tr(),
+          style: const TextStyle(color: Canopy.haze),
         ),
       );
     }
@@ -87,18 +92,31 @@ class _OrgManagementViewState extends State<OrgManagementView> {
           const SizedBox(height: AppTheme.spaceLg),
 
           // Sub-Navigation Tabs
-          _buildSubNavTabs(branches.length, speakers.length, affiliations.length, auditLogs.length),
+          _buildSubNavTabs(branches.length, speakers.length,
+              affiliations.length, auditLogs.length),
           const SizedBox(height: AppTheme.spaceLg),
 
           // Active Sub-Section
           if (_activeSubSection == 0)
-            _buildBranchesSection(context, provider, branches, langCode)
+            KeyedSubtree(
+                key: const ValueKey('org-admin-content-0'),
+                child: _buildBranchesSection(
+                    context, provider, branches, langCode))
           else if (_activeSubSection == 1)
-            _buildSpeakersSection(context, provider, speakers, langCode)
+            KeyedSubtree(
+                key: const ValueKey('org-admin-content-1'),
+                child: _buildSpeakersSection(
+                    context, provider, speakers, langCode))
           else if (_activeSubSection == 2)
-            _buildAffiliationsSection(context, provider, affiliations, langCode)
+            KeyedSubtree(
+                key: const ValueKey('org-admin-content-2'),
+                child: _buildAffiliationsSection(
+                    context, provider, affiliations, langCode))
           else if (widget.showAuditTrail)
-            _buildAuditTrailSection(context, provider, auditLogs, langCode),
+            KeyedSubtree(
+                key: const ValueKey('org-admin-content-3'),
+                child: _buildAuditTrailSection(
+                    context, provider, auditLogs, langCode)),
         ],
       ),
     );
@@ -110,14 +128,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     int branchCount,
     int speakerCount,
   ) {
-    return Container(
+    return AdminCard(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.3)),
-      ),
-      child: Row(
+      child: AdminFlow(
         children: [
           Container(
             width: 64,
@@ -132,16 +145,18 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     org.avatarUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.surfaceAlt,
-                      child: const Icon(Icons.apartment_rounded, color: AppTheme.warning),
+                      color: Canopy.mint,
+                      child: const Icon(Icons.apartment_rounded,
+                          color: AppTheme.warning),
                     ),
                   )
                 : Image.network(
                     org.avatarUrl,
                     fit: BoxFit.cover,
                     errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.surfaceAlt,
-                      child: const Icon(Icons.apartment_rounded, color: AppTheme.warning),
+                      color: Canopy.mint,
+                      child: const Icon(Icons.apartment_rounded,
+                          color: AppTheme.warning),
                     ),
                   ),
           ),
@@ -150,13 +165,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                AdminFlow(
                   children: [
                     Flexible(
                       child: Text(
                         org.getLocalizedName(langCode),
                         style: const TextStyle(
-                          color: AppTheme.textPrimary,
+                          color: Canopy.ink,
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
                         ),
@@ -166,7 +181,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     ),
                     const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 2),
                       decoration: BoxDecoration(
                         color: AppTheme.warning.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -176,7 +192,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                         'profile.org_badge'.tr(),
                         style: const TextStyle(
                           color: AppTheme.warning,
-                          fontSize: 11,
+                          fontSize: 12,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
@@ -185,7 +201,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  org.youtubeHandle.isNotEmpty ? '@${org.youtubeHandle}' : '@dalilk4ielts',
+                  org.youtubeHandle.isNotEmpty
+                      ? '@${org.youtubeHandle}'
+                      : '@dalilk4ielts',
                   style: const TextStyle(
                     color: AppTheme.primary,
                     fontSize: 13,
@@ -196,7 +214,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 Text(
                   org.getLocalizedBio(langCode),
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: Canopy.slate,
                     fontSize: 12,
                   ),
                   maxLines: 2,
@@ -210,7 +228,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     );
   }
 
-  Widget _buildSubNavTabs(int branchCount, int speakerCount, int affCount, int auditCount) {
+  Widget _buildSubNavTabs(
+      int branchCount, int speakerCount, int affCount, int auditCount) {
     return Wrap(
       spacing: AppTheme.spaceSm,
       runSpacing: AppTheme.spaceSm,
@@ -252,17 +271,16 @@ class _OrgManagementViewState extends State<OrgManagementView> {
   }) {
     final isSelected = _activeSubSection == index;
     return InkWell(
+      key: ValueKey('org-admin-section-$index'),
       onTap: () => setState(() => _activeSubSection = index),
       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected
-              ? AppTheme.warning.withValues(alpha: 0.15)
-              : AppTheme.surface,
+          color: isSelected ? Canopy.mint : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: Border.all(
-            color: isSelected ? AppTheme.warning : AppTheme.border,
+            color: isSelected ? Canopy.brandGreen : Canopy.hairline,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
@@ -272,31 +290,32 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? AppTheme.warning : AppTheme.textSecondary,
+              color: isSelected ? Canopy.brandGreen : Canopy.slate,
             ),
             const SizedBox(width: 8),
-            Text(
+            Flexible(
+                child: Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppTheme.onMedia : AppTheme.textSecondary,
+                color: isSelected ? AppTheme.primary : Canopy.slate,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 fontSize: 12.5,
               ),
-            ),
+            )),
             const SizedBox(width: 6),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
               decoration: BoxDecoration(
                 color: isSelected
                     ? AppTheme.warning.withValues(alpha: 0.3)
-                    : AppTheme.surfaceAlt,
+                    : Canopy.mint,
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
                 '$count',
                 style: TextStyle(
-                  color: isSelected ? AppTheme.warning : AppTheme.textMuted,
-                  fontSize: 10.5,
+                  color: isSelected ? AppTheme.warning : Canopy.haze,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -317,22 +336,23 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        AdminFlow(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'admin.org_branches_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.warning,
-                foregroundColor: AppTheme.media,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                backgroundColor: Canopy.brandGreen,
+                foregroundColor: Canopy.paper,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
@@ -340,7 +360,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               icon: const Icon(Icons.add_location_alt_rounded, size: 16),
               label: Text(
                 'admin.add_branch'.tr(),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               onPressed: () => _showAddEditBranchDialog(context, provider),
             ),
@@ -375,10 +396,10 @@ class _OrgManagementViewState extends State<OrgManagementView> {
         border: Border.all(
           color: branch.isMainHeadquarters
               ? AppTheme.warning.withValues(alpha: 0.5)
-              : AppTheme.border,
+              : Canopy.hairline,
         ),
       ),
-      child: Row(
+      child: AdminFlow(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
@@ -386,12 +407,16 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             decoration: BoxDecoration(
               color: branch.isMainHeadquarters
                   ? AppTheme.warning.withValues(alpha: 0.15)
-                  : AppTheme.surfaceAlt,
+                  : Canopy.mint,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
-              branch.isMainHeadquarters ? Icons.stars_rounded : Icons.location_on_rounded,
-              color: branch.isMainHeadquarters ? AppTheme.warning : AppTheme.danger,
+              branch.isMainHeadquarters
+                  ? Icons.stars_rounded
+                  : Icons.location_on_rounded,
+              color: branch.isMainHeadquarters
+                  ? AppTheme.warning
+                  : Canopy.liveCrimson,
               size: 24,
             ),
           ),
@@ -400,12 +425,12 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                AdminFlow(
                   children: [
                     Text(
                       branch.getLocalizedName(langCode),
                       style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: Canopy.ink,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                       ),
@@ -413,7 +438,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     if (branch.isMainHeadquarters) ...[
                       const SizedBox(width: 8),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 1),
                         decoration: BoxDecoration(
                           color: AppTheme.warning.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
@@ -422,7 +448,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                           'admin.is_main_hq'.tr(),
                           style: const TextStyle(
                             color: AppTheme.warning,
-                            fontSize: 10,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -434,7 +460,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 Text(
                   '${branch.getLocalizedCity(langCode)} • ${branch.seatingCapacity} seats • GPS: ${branch.latitude.toStringAsFixed(4)}, ${branch.longitude.toStringAsFixed(4)}',
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: Canopy.slate,
                     fontSize: 12,
                   ),
                 ),
@@ -445,16 +471,17 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     runSpacing: 4,
                     children: branch.availableFacilities.map((fac) {
                       return Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppTheme.surfaceAlt,
+                          color: Canopy.mint,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
                           fac,
                           style: const TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 10.5,
+                            color: Canopy.haze,
+                            fontSize: 12,
                           ),
                         ),
                       );
@@ -465,14 +492,18 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
+            icon: const Icon(Icons.edit_outlined,
+                size: 18, color: AppTheme.primary),
             tooltip: 'admin.edit_branch'.tr(),
-            onPressed: () => _showAddEditBranchDialog(context, provider, branch: branch),
+            onPressed: () =>
+                _showAddEditBranchDialog(context, provider, branch: branch),
           ),
           IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.danger),
+            icon: const Icon(Icons.delete_outline,
+                size: 18, color: Canopy.liveCrimson),
             tooltip: 'admin.delete_branch'.tr(),
-            onPressed: () => provider.deleteOrganizationBranch(widget.orgId, branch.venueId),
+            onPressed: () =>
+                provider.deleteOrganizationBranch(widget.orgId, branch.venueId),
           ),
         ],
       ),
@@ -489,22 +520,23 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        AdminFlow(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'admin.org_speakers_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.warning,
-                foregroundColor: AppTheme.media,
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                backgroundColor: Canopy.brandGreen,
+                foregroundColor: Canopy.paper,
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
@@ -512,7 +544,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               icon: const Icon(Icons.person_add_alt_1_rounded, size: 16),
               label: Text(
                 'admin.add_speaker'.tr(),
-                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
               ),
               onPressed: () => _showAddEditSpeakerDialog(context, provider),
             ),
@@ -539,125 +572,132 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     OrgSpeakerModel speaker,
     String langCode,
   ) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceMd),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
+    return AdminCard(
+        padding: const EdgeInsets.all(AppTheme.spaceMd),
+        child: AdminFlow(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 44,
+              height: 44,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: speaker.avatarUrl.startsWith('assets/')
+                  ? Image.asset(
+                      speaker.avatarUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: Canopy.mint,
+                        child: const Icon(Icons.person,
+                            color: AppTheme.warning, size: 20),
+                      ),
+                    )
+                  : Image.network(
+                      speaker.avatarUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => Container(
+                        color: Canopy.mint,
+                        child: const Icon(Icons.person,
+                            color: AppTheme.warning, size: 20),
+                      ),
+                    ),
             ),
-            clipBehavior: Clip.antiAlias,
-            child: speaker.avatarUrl.startsWith('assets/')
-                ? Image.asset(
-                    speaker.avatarUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.surfaceAlt,
-                      child: const Icon(Icons.person, color: AppTheme.warning, size: 20),
-                    ),
-                  )
-                : Image.network(
-                    speaker.avatarUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Container(
-                      color: AppTheme.surfaceAlt,
-                      child: const Icon(Icons.person, color: AppTheme.warning, size: 20),
-                    ),
-                  ),
-          ),
-          const SizedBox(width: AppTheme.spaceMd),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      speaker.getLocalizedName(langCode),
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
-                      decoration: BoxDecoration(
-                        color: speaker.isPermanentStaff
-                            ? AppTheme.warning.withValues(alpha: 0.2)
-                            : AppTheme.primary.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        speaker.isPermanentStaff
-                            ? 'profile.permanent_staff'.tr()
-                            : 'profile.guest_speaker'.tr(),
-                        style: TextStyle(
-                          color: speaker.isPermanentStaff
-                              ? AppTheme.warning
-                              : AppTheme.primary,
-                          fontSize: 10,
+            const SizedBox(width: AppTheme.spaceMd),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AdminFlow(
+                    children: [
+                      Text(
+                        speaker.getLocalizedName(langCode),
+                        style: const TextStyle(
+                          color: Canopy.ink,
+                          fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  speaker.getLocalizedRole(langCode),
-                  style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 12,
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: speaker.isPermanentStaff
+                              ? AppTheme.warning.withValues(alpha: 0.2)
+                              : AppTheme.primary.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          speaker.isPermanentStaff
+                              ? 'profile.permanent_staff'.tr()
+                              : 'profile.guest_speaker'.tr(),
+                          style: TextStyle(
+                            color: speaker.isPermanentStaff
+                                ? AppTheme.warning
+                                : AppTheme.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 6),
-                // Permissions mini tags
-                Wrap(
-                  spacing: 4,
-                  runSpacing: 4,
-                  children: [
-                    if (speaker.permissions.canGoLiveVideo)
-                      _buildPermTag('Video Live', Icons.videocam, AppTheme.success),
-                    if (speaker.permissions.canGoAudioOnly)
-                      _buildPermTag('Audio Live', Icons.mic, AppTheme.primary),
-                    if (speaker.permissions.canChangeLocation)
-                      _buildPermTag('Select Venue', Icons.location_on, AppTheme.warning),
-                    if (speaker.permissions.canEditDescription)
-                      _buildPermTag('Edit Title', Icons.edit_note, AppTheme.accent),
-                  ],
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    speaker.getLocalizedRole(langCode),
+                    style: const TextStyle(
+                      color: Canopy.slate,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  // Permissions mini tags
+                  Wrap(
+                    spacing: 4,
+                    runSpacing: 4,
+                    children: [
+                      if (speaker.permissions.canGoLiveVideo)
+                        _buildPermTag(
+                            'Video Live', Icons.videocam, Canopy.leaf),
+                      if (speaker.permissions.canGoAudioOnly)
+                        _buildPermTag(
+                            'Audio Live', Icons.mic, AppTheme.primary),
+                      if (speaker.permissions.canChangeLocation)
+                        _buildPermTag('Select Venue', Icons.location_on,
+                            AppTheme.warning),
+                      if (speaker.permissions.canEditDescription)
+                        _buildPermTag(
+                            'Edit Title', Icons.edit_note, AppTheme.accent),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.security_rounded, size: 18, color: AppTheme.warning),
-            tooltip: 'admin.edit_permissions'.tr(),
-            onPressed: () => _showPermissionsDialog(context, provider, speaker),
-          ),
-          IconButton(
-            icon: const Icon(Icons.edit_outlined, size: 18, color: AppTheme.primary),
-            tooltip: 'admin.edit_speaker'.tr(),
-            onPressed: () => _showAddEditSpeakerDialog(context, provider, speaker: speaker),
-          ),
-          IconButton(
-            icon: const Icon(Icons.delete_outline, size: 18, color: AppTheme.danger),
-            tooltip: 'admin.delete_speaker'.tr(),
-            onPressed: () => provider.deleteOrganizationSpeaker(widget.orgId, speaker.speakerId),
-          ),
-        ],
-      ),
-    );
+            IconButton(
+              icon: const Icon(Icons.security_rounded,
+                  size: 18, color: AppTheme.warning),
+              tooltip: 'admin.edit_permissions'.tr(),
+              onPressed: () =>
+                  _showPermissionsDialog(context, provider, speaker),
+            ),
+            IconButton(
+              icon: const Icon(Icons.edit_outlined,
+                  size: 18, color: AppTheme.primary),
+              tooltip: 'admin.edit_speaker'.tr(),
+              onPressed: () => _showAddEditSpeakerDialog(context, provider,
+                  speaker: speaker),
+            ),
+            IconButton(
+              icon: const Icon(Icons.delete_outline,
+                  size: 18, color: Canopy.liveCrimson),
+              tooltip: 'admin.delete_speaker'.tr(),
+              onPressed: () => provider.deleteOrganizationSpeaker(
+                  widget.orgId, speaker.speakerId),
+            ),
+          ],
+        ));
   }
 
   Widget _buildPermTag(String text, IconData icon, Color color) {
@@ -675,7 +715,8 @@ class _OrgManagementViewState extends State<OrgManagementView> {
           const SizedBox(width: 3),
           Text(
             text,
-            style: TextStyle(color: color, fontSize: 9.5, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: color, fontSize: 12, fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -700,36 +741,44 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        AdminFlow(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
               'admin.org_audit_trail_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
             ),
             SizedBox(
               width: 240,
-              height: 36,
-              child: TextField(
-                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12),
-                decoration: InputDecoration(
-                  hintText: 'Search audit trail...',
-                  hintStyle: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                  prefixIcon: const Icon(Icons.search, size: 16, color: AppTheme.textMuted),
-                  contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 8),
-                  filled: true,
-                  fillColor: AppTheme.surface,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    borderSide: const BorderSide(color: AppTheme.border),
-                  ),
-                ),
-                onChanged: (val) => setState(() => _auditSearchQuery = val),
-              ),
+              height: CanopySize.target,
+              child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                        readOnly: blocked,
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 12),
+                        decoration: InputDecoration(
+                          hintText: 'Search audit trail...',
+                          hintStyle: const TextStyle(
+                              color: Canopy.haze, fontSize: 12),
+                          prefixIcon: const Icon(Icons.search,
+                              size: 16, color: Canopy.haze),
+                          contentPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 8),
+                          filled: true,
+                          fillColor: AppTheme.surface,
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusSm),
+                            borderSide:
+                                const BorderSide(color: Canopy.hairline),
+                          ),
+                        ),
+                        onChanged: (val) =>
+                            setState(() => _auditSearchQuery = val),
+                      )),
             ),
           ],
         ),
@@ -742,8 +791,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
-            child: Text('design_ui.no_audit_logs_found_for_this_organization'.tr(),
-              style: const TextStyle(color: AppTheme.textMuted, fontSize: 13),
+            child: Text(
+              'design_ui.no_audit_logs_found_for_this_organization'.tr(),
+              style: const TextStyle(color: Canopy.haze, fontSize: 13),
             ),
           )
         else
@@ -751,70 +801,66 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             itemCount: filteredLogs.length,
-            separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spaceSm),
+            separatorBuilder: (_, __) =>
+                const SizedBox(height: AppTheme.spaceSm),
             itemBuilder: (context, idx) {
               final log = filteredLogs[idx];
-              return Container(
-                padding: const EdgeInsets.all(AppTheme.spaceMd),
-                decoration: BoxDecoration(
-                  color: AppTheme.surface,
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(color: AppTheme.border),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: AppTheme.warning.withValues(alpha: 0.15),
-                        shape: BoxShape.circle,
+              return AdminCard(
+                  padding: const EdgeInsets.all(AppTheme.spaceMd),
+                  child: AdminFlow(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.warning.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.history_edu_rounded,
+                          color: AppTheme.warning,
+                          size: 16,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.history_edu_rounded,
-                        color: AppTheme.warning,
-                        size: 16,
-                      ),
-                    ),
-                    const SizedBox(width: AppTheme.spaceMd),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                log.actorEmail,
-                                style: const TextStyle(
-                                  color: AppTheme.primary,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
+                      const SizedBox(width: AppTheme.spaceMd),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            AdminFlow(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  log.actorEmail,
+                                  style: const TextStyle(
+                                    color: AppTheme.primary,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                DateFormat('yyyy-MM-dd HH:mm').format(log.timestamp),
-                                style: const TextStyle(
-                                  color: AppTheme.textMuted,
-                                  fontSize: 11,
+                                Text(
+                                  DateFormat('yyyy-MM-dd HH:mm')
+                                      .format(log.timestamp),
+                                  style: const TextStyle(
+                                    color: Canopy.haze,
+                                    fontSize: 12,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            log.getLocalizedDescription(langCode),
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontSize: 12.5,
+                              ],
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 4),
+                            Text(
+                              log.getLocalizedDescription(langCode),
+                              style: const TextStyle(
+                                color: Canopy.ink,
+                                fontSize: 12.5,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-              );
+                    ],
+                  ));
             },
           ),
       ],
@@ -830,97 +876,129 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     final isEdit = branch != null;
     final nameEnCtrl = TextEditingController(text: branch?.nameEn ?? '');
     final nameArCtrl = TextEditingController(text: branch?.nameAr ?? '');
-    final cityEnCtrl = TextEditingController(text: branch?.cityEn ?? 'Al Khobar');
+    final cityEnCtrl =
+        TextEditingController(text: branch?.cityEn ?? 'Al Khobar');
     final cityArCtrl = TextEditingController(text: branch?.cityAr ?? 'الخبر');
-    final seatsCtrl = TextEditingController(text: (branch?.seatingCapacity ?? 100).toString());
-    final latCtrl = TextEditingController(text: (branch?.latitude ?? 26.2886).toString());
-    final lngCtrl = TextEditingController(text: (branch?.longitude ?? 50.2083).toString());
-    final facCtrl = TextEditingController(text: branch?.availableFacilities.join(', ') ?? 'Smart Board, High-Speed Wi-Fi');
+    final seatsCtrl = TextEditingController(
+        text: (branch?.seatingCapacity ?? 100).toString());
+    final latCtrl =
+        TextEditingController(text: (branch?.latitude ?? 26.2886).toString());
+    final lngCtrl =
+        TextEditingController(text: (branch?.longitude ?? 50.2083).toString());
+    final facCtrl = TextEditingController(
+        text: branch?.availableFacilities.join(', ') ??
+            'Smart Board, High-Speed Wi-Fi');
     bool isMainHq = branch?.isMainHeadquarters ?? false;
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogCtx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
-            return AlertDialog(
+            return CaAlertDialog(
               backgroundColor: AppTheme.surface,
               title: Text(
                 isEdit ? 'admin.edit_branch'.tr() : 'admin.add_branch'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
               ),
               content: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: nameEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.branch_name_en'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: nameEnCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.branch_name_en'.tr()),
+                            )),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: nameArCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.branch_name_ar'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: nameArCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.branch_name_ar'.tr()),
+                            )),
                     const SizedBox(height: 8),
-                    Row(
+                    AdminFlow(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: cityEnCtrl,
-                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                            decoration: InputDecoration(labelText: 'admin.branch_city_en'.tr()),
-                          ),
+                          child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                                    readOnly: blocked,
+                                    controller: cityEnCtrl,
+                                    style: const TextStyle(
+                                        color: Canopy.ink,
+                                        fontSize: 13),
+                                    decoration: InputDecoration(
+                                        labelText: 'admin.branch_city_en'.tr()),
+                                  )),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: TextField(
-                            controller: seatsCtrl,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                            decoration: InputDecoration(labelText: 'admin.seating_capacity'.tr()),
-                          ),
+                          child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                                    readOnly: blocked,
+                                    controller: seatsCtrl,
+                                    keyboardType: TextInputType.number,
+                                    style: const TextStyle(
+                                        color: Canopy.ink,
+                                        fontSize: 13),
+                                    decoration: InputDecoration(
+                                        labelText:
+                                            'admin.seating_capacity'.tr()),
+                                  )),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    Row(
+                    AdminFlow(
                       children: [
                         Expanded(
-                          child: TextField(
-                            controller: latCtrl,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                            decoration: InputDecoration(labelText: 'admin.latitude'.tr()),
-                          ),
+                          child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                                    readOnly: blocked,
+                                    controller: latCtrl,
+                                    keyboardType: TextInputType.number,
+                                    style: const TextStyle(
+                                        color: Canopy.ink,
+                                        fontSize: 13),
+                                    decoration: InputDecoration(
+                                        labelText: 'admin.latitude'.tr()),
+                                  )),
                         ),
                         const SizedBox(width: 8),
                         Expanded(
-                          child: TextField(
-                            controller: lngCtrl,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                            decoration: InputDecoration(labelText: 'admin.longitude'.tr()),
-                          ),
+                          child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                                    readOnly: blocked,
+                                    controller: lngCtrl,
+                                    keyboardType: TextInputType.number,
+                                    style: const TextStyle(
+                                        color: Canopy.ink,
+                                        fontSize: 13),
+                                    decoration: InputDecoration(
+                                        labelText: 'admin.longitude'.tr()),
+                                  )),
                         ),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: facCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.facilities'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: facCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.facilities'.tr()),
+                            )),
                     const SizedBox(height: 12),
                     SwitchListTile(
                       title: Text(
                         'admin.is_main_hq'.tr(),
-                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13),
                       ),
                       value: isMainHq,
-                      activeThumbColor: AppTheme.warning,
+                      activeThumbColor: Canopy.brandGreen,
                       onChanged: (val) => setDialogState(() => isMainHq = val),
                     ),
                   ],
@@ -929,10 +1007,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMuted)),
+                  child: Text('common.cancel'.tr(),
+                      style: const TextStyle(color: Canopy.haze)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning, foregroundColor: AppTheme.media),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Canopy.brandGreen,
+                      foregroundColor: Canopy.paper),
                   onPressed: () {
                     final newBranch = OrgVenueBranchModel(
                       venueId: branch?.venueId ?? newId(),
@@ -941,19 +1022,27 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       cityEn: cityEnCtrl.text.trim(),
                       cityAr: cityArCtrl.text.trim(),
                       latitude: double.tryParse(latCtrl.text.trim()) ?? 26.2886,
-                      longitude: double.tryParse(lngCtrl.text.trim()) ?? 50.2083,
-                      seatingCapacity: int.tryParse(seatsCtrl.text.trim()) ?? 100,
+                      longitude:
+                          double.tryParse(lngCtrl.text.trim()) ?? 50.2083,
+                      seatingCapacity:
+                          int.tryParse(seatsCtrl.text.trim()) ?? 100,
                       isMainHeadquarters: isMainHq,
-                      availableFacilities: facCtrl.text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList(),
+                      availableFacilities: facCtrl.text
+                          .split(',')
+                          .map((s) => s.trim())
+                          .where((s) => s.isNotEmpty)
+                          .toList(),
                     );
                     if (isEdit) {
-                      provider.updateOrganizationBranch(widget.orgId, newBranch);
+                      provider.updateOrganizationBranch(
+                          widget.orgId, newBranch);
                     } else {
                       provider.addOrganizationBranch(widget.orgId, newBranch);
                     }
                     Navigator.pop(dialogCtx);
                   },
-                  child: Text('common.save'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text('common.save'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             );
@@ -971,64 +1060,81 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     final isEdit = speaker != null;
     final nameEnCtrl = TextEditingController(text: speaker?.nameEn ?? '');
     final nameArCtrl = TextEditingController(text: speaker?.nameAr ?? '');
-    final roleEnCtrl = TextEditingController(text: speaker?.roleOrTitleEn ?? '');
-    final roleArCtrl = TextEditingController(text: speaker?.roleOrTitleAr ?? '');
+    final roleEnCtrl =
+        TextEditingController(text: speaker?.roleOrTitleEn ?? '');
+    final roleArCtrl =
+        TextEditingController(text: speaker?.roleOrTitleAr ?? '');
     final bioEnCtrl = TextEditingController(text: speaker?.bioEn ?? '');
     final bioArCtrl = TextEditingController(text: speaker?.bioAr ?? '');
     bool isPerm = speaker?.isPermanentStaff ?? true;
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogCtx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
-            return AlertDialog(
+            return CaAlertDialog(
               backgroundColor: AppTheme.surface,
               title: Text(
                 isEdit ? 'admin.edit_speaker'.tr() : 'admin.add_speaker'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
               ),
               content: SingleChildScrollView(
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    TextField(
-                      controller: nameEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.instructor_name_en'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: nameEnCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.instructor_name_en'.tr()),
+                            )),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: nameArCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.instructor_name_ar'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: nameArCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.instructor_name_ar'.tr()),
+                            )),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: roleEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.instructor_role_en'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: roleEnCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.instructor_role_en'.tr()),
+                            )),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: roleArCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.instructor_role_ar'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: roleArCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.instructor_role_ar'.tr()),
+                            )),
                     const SizedBox(height: 8),
-                    TextField(
-                      controller: bioEnCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                      decoration: InputDecoration(labelText: 'admin.instructor_bio_en'.tr()),
-                    ),
+                    PhoneInputGuard(builder: (context, blocked) => TextField(
+                              readOnly: blocked,
+                              controller: bioEnCtrl,
+                              style: const TextStyle(
+                                  color: Canopy.ink, fontSize: 13),
+                              decoration: InputDecoration(
+                                  labelText: 'admin.instructor_bio_en'.tr()),
+                            )),
                     const SizedBox(height: 12),
                     SwitchListTile(
                       title: Text(
                         'admin.is_permanent_staff'.tr(),
-                        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13),
                       ),
                       value: isPerm,
-                      activeThumbColor: AppTheme.warning,
+                      activeThumbColor: Canopy.brandGreen,
                       onChanged: (val) => setDialogState(() => isPerm = val),
                     ),
                   ],
@@ -1037,10 +1143,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMuted)),
+                  child: Text('common.cancel'.tr(),
+                      style: const TextStyle(color: Canopy.haze)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning, foregroundColor: AppTheme.media),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Canopy.brandGreen,
+                      foregroundColor: Canopy.paper),
                   onPressed: () {
                     final newSpeaker = OrgSpeakerModel(
                       speakerId: speaker?.speakerId ?? newId(),
@@ -1048,20 +1157,24 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       nameAr: nameArCtrl.text.trim(),
                       roleOrTitleEn: roleEnCtrl.text.trim(),
                       roleOrTitleAr: roleArCtrl.text.trim(),
-                      avatarUrl: speaker?.avatarUrl ?? 'assets/images/Dalilak/profile1.jpg',
+                      avatarUrl: speaker?.avatarUrl ??
+                          'assets/images/Dalilak/profile1.jpg',
                       bioEn: bioEnCtrl.text.trim(),
                       bioAr: bioArCtrl.text.trim(),
                       isPermanentStaff: isPerm,
-                      permissions: speaker?.permissions ?? const OrgBroadcasterPermissions(),
+                      permissions: speaker?.permissions ??
+                          const OrgBroadcasterPermissions(),
                     );
                     if (isEdit) {
-                      provider.updateOrganizationSpeaker(widget.orgId, newSpeaker);
+                      provider.updateOrganizationSpeaker(
+                          widget.orgId, newSpeaker);
                     } else {
                       provider.addOrganizationSpeaker(widget.orgId, newSpeaker);
                     }
                     Navigator.pop(dialogCtx);
                   },
-                  child: Text('common.save'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text('common.save'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             );
@@ -1083,52 +1196,65 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     bool canTime = speaker.permissions.canEditStreamTime;
     bool canLinks = speaker.permissions.canAddExternalLinks;
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogCtx) {
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
-            return AlertDialog(
+            return CaAlertDialog(
               backgroundColor: AppTheme.surface,
               title: Text(
                 '${'admin.edit_permissions'.tr()}: ${speaker.nameEn}',
-                style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16),
+                style:
+                    const TextStyle(color: Canopy.ink, fontSize: 16),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SwitchListTile(
-                    title: Text('admin.perm_can_video'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                    title: Text('admin.perm_can_video'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13)),
                     value: canVideo,
-                    activeThumbColor: AppTheme.success,
+                    activeThumbColor: Canopy.leaf,
                     onChanged: (val) => setDialogState(() => canVideo = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_audio'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                    title: Text('admin.perm_can_audio'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13)),
                     value: canAudio,
                     activeThumbColor: AppTheme.primary,
                     onChanged: (val) => setDialogState(() => canAudio = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_location'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                    title: Text('admin.perm_can_location'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13)),
                     value: canLocation,
-                    activeThumbColor: AppTheme.warning,
+                    activeThumbColor: Canopy.brandGreen,
                     onChanged: (val) => setDialogState(() => canLocation = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_description'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                    title: Text('admin.perm_can_description'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13)),
                     value: canDesc,
                     activeThumbColor: AppTheme.accent,
                     onChanged: (val) => setDialogState(() => canDesc = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_time'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                    title: Text('admin.perm_can_time'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13)),
                     value: canTime,
-                    activeThumbColor: AppTheme.warning,
+                    activeThumbColor: Canopy.brandGreen,
                     onChanged: (val) => setDialogState(() => canTime = val),
                   ),
                   SwitchListTile(
-                    title: Text('admin.perm_can_links'.tr(), style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13)),
+                    title: Text('admin.perm_can_links'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13)),
                     value: canLinks,
                     activeThumbColor: AppTheme.primary,
                     onChanged: (val) => setDialogState(() => canLinks = val),
@@ -1138,10 +1264,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(dialogCtx),
-                  child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textMuted)),
+                  child: Text('common.cancel'.tr(),
+                      style: const TextStyle(color: Canopy.haze)),
                 ),
                 ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: AppTheme.warning, foregroundColor: AppTheme.media),
+                  style: ElevatedButton.styleFrom(
+                      backgroundColor: Canopy.brandGreen,
+                      foregroundColor: Canopy.paper),
                   onPressed: () {
                     final newPerms = OrgBroadcasterPermissions(
                       canGoLiveVideo: canVideo,
@@ -1151,10 +1280,12 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                       canEditStreamTime: canTime,
                       canAddExternalLinks: canLinks,
                     );
-                    provider.updateSpeakerPermissions(widget.orgId, speaker.speakerId, newPerms);
+                    provider.updateSpeakerPermissions(
+                        widget.orgId, speaker.speakerId, newPerms);
                     Navigator.pop(dialogCtx);
                   },
-                  child: Text('common.save'.tr(), style: const TextStyle(fontWeight: FontWeight.bold)),
+                  child: Text('common.save'.tr(),
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                 ),
               ],
             );
@@ -1174,12 +1305,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
+        AdminFlow(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text('design_ui.incoming_affiliation_requests_invites'.tr(),
+            Text(
+              'design_ui.incoming_affiliation_requests_invites'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -1194,7 +1326,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 '${affiliations.where((r) => r.isPending).length} Pending',
                 style: const TextStyle(
                   color: AppTheme.accent,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -1202,7 +1334,6 @@ class _OrgManagementViewState extends State<OrgManagementView> {
           ],
         ),
         const SizedBox(height: 12),
-
         if (affiliations.isEmpty)
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceXl),
@@ -1210,16 +1341,18 @@ class _OrgManagementViewState extends State<OrgManagementView> {
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.border),
+              border: Border.all(color: Canopy.hairline),
             ),
             child: Column(
               children: [
                 const Icon(Icons.inbox_outlined,
-                    size: 36, color: AppTheme.textMuted),
+                    size: 36, color: Canopy.haze),
                 const SizedBox(height: 8),
-                Text('design_ui.no_affiliation_requests_found_for_this_organization'.tr(),
+                Text(
+                  'design_ui.no_affiliation_requests_found_for_this_organization'
+                      .tr(),
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: Canopy.slate,
                     fontSize: 13,
                   ),
                 ),
@@ -1237,13 +1370,13 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                 border: Border.all(
                   color: req.isPending
                       ? AppTheme.accent.withValues(alpha: 0.4)
-                      : AppTheme.border,
+                      : Canopy.hairline,
                 ),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
+                  AdminFlow(
                     children: [
                       CircleAvatar(
                         radius: 20,
@@ -1257,7 +1390,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                             Text(
                               req.getLocalizedStreamerName(langCode),
                               style: const TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -1266,7 +1399,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                               req.getLocalizedProposedRole(langCode),
                               style: const TextStyle(
                                 color: AppTheme.primary,
-                                fontSize: 11,
+                                fontSize: 12,
                               ),
                             ),
                           ],
@@ -1277,9 +1410,9 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: req.isAccepted
-                              ? AppTheme.success.withValues(alpha: 0.15)
+                              ? Canopy.leaf.withValues(alpha: 0.15)
                               : (req.isDeclined
-                                  ? AppTheme.danger.withValues(alpha: 0.15)
+                                  ? Canopy.liveCrimson.withValues(alpha: 0.15)
                                   : AppTheme.warning.withValues(alpha: 0.15)),
                           borderRadius: BorderRadius.circular(4),
                         ),
@@ -1287,11 +1420,11 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                           req.status.name.toUpperCase(),
                           style: TextStyle(
                             color: req.isAccepted
-                                ? AppTheme.success
+                                ? Canopy.leaf
                                 : (req.isDeclined
-                                    ? AppTheme.danger
+                                    ? Canopy.liveCrimson
                                     : AppTheme.warning),
-                            fontSize: 9.5,
+                            fontSize: 12,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1303,21 +1436,21 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                     Text(
                       '"${req.note}"',
                       style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11.5,
+                        color: Canopy.slate,
+                        fontSize: 12,
                         fontStyle: FontStyle.italic,
                       ),
                     ),
                   ],
                   if (req.isPending) ...[
                     const SizedBox(height: 12),
-                    Row(
+                    AdminFlow(
                       mainAxisAlignment: MainAxisAlignment.end,
                       children: [
                         OutlinedButton.icon(
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.danger,
-                            side: const BorderSide(color: AppTheme.danger),
+                            foregroundColor: Canopy.liveCrimson,
+                            side: const BorderSide(color: Canopy.liveCrimson),
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 6),
                           ),
@@ -1325,12 +1458,12 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                               provider.declineOrgAffiliationRequest(req.id),
                           icon: const Icon(Icons.close_rounded, size: 14),
                           label: Text('design_ui.decline'.tr(),
-                              style: const TextStyle(fontSize: 11)),
+                              style: const TextStyle(fontSize: 12)),
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.success,
+                            backgroundColor: Canopy.leaf,
                             foregroundColor: AppTheme.onMedia,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 14, vertical: 6),
@@ -1340,7 +1473,7 @@ class _OrgManagementViewState extends State<OrgManagementView> {
                           icon: const Icon(Icons.check_rounded, size: 14),
                           label: Text('design_ui.accept_to_roster'.tr(),
                               style: const TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.bold)),
+                                  fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),

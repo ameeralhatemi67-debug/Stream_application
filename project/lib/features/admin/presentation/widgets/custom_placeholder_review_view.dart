@@ -1,3 +1,4 @@
+import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/streamer_custom_placeholder_model.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 
 /// Streamer Custom Stream-Card Review Queue (Cluster 1 Task 4b).
 ///
@@ -42,7 +44,7 @@ class _CustomPlaceholderReviewViewState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppTheme.danger : AppTheme.success,
+        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
       ),
     );
   }
@@ -81,29 +83,30 @@ class _CustomPlaceholderReviewViewState
     final controller = TextEditingController();
     String? errorText;
 
-    final reason = await showDialog<String>(
+    final reason = await showCaDialog<String>(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
-          backgroundColor: AppTheme.surfaceAlt,
+        builder: (dialogContext, setDialogState) => CaAlertDialog(
+          backgroundColor: Canopy.mint,
           title: Text(
             'admin.custom_card_reject_title'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 15,
                 fontWeight: FontWeight.bold),
           ),
-          content: TextField(
+          content: PhoneInputGuard(builder: (context, blocked) => TextField(readOnly: blocked,
+
             controller: controller,
-            autofocus: true,
+            autofocus: (true) && !blocked,
             maxLines: 3,
             style: const TextStyle(
-                color: AppTheme.textPrimary, fontSize: 13),
+                color: Canopy.ink, fontSize: 13),
             decoration: InputDecoration(
               hintText: 'admin.custom_card_reject_hint'.tr(),
               errorText: errorText,
             ),
-          ),
+          )),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
@@ -111,7 +114,7 @@ class _CustomPlaceholderReviewViewState
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
+                backgroundColor: Canopy.liveCrimson,
                 foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () {
@@ -152,7 +155,7 @@ class _CustomPlaceholderReviewViewState
     return RefreshIndicator(
       onRefresh: provider.refreshCustomPlaceholders,
       color: AppTheme.primary,
-      backgroundColor: AppTheme.surfaceAlt,
+      backgroundColor: Canopy.mint,
       child: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         physics: const AlwaysScrollableScrollPhysics(),
@@ -160,7 +163,7 @@ class _CustomPlaceholderReviewViewState
           Text(
             'admin.custom_cards_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
@@ -169,7 +172,7 @@ class _CustomPlaceholderReviewViewState
           Text(
             'admin.custom_cards_desc'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12, height: 1.4),
+                color: Canopy.slate, fontSize: 12, height: 1.4),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           if (queue.isEmpty)
@@ -178,18 +181,18 @@ class _CustomPlaceholderReviewViewState
               decoration: BoxDecoration(
                 color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.border),
+                border: Border.all(color: Canopy.hairline),
               ),
               child: Row(
                 children: [
                   const Icon(Icons.inbox_rounded,
-                      color: AppTheme.textMuted, size: 22),
+                      color: Canopy.haze, size: 22),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Text(
                       'admin.custom_cards_empty'.tr(),
                       style: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 12.5),
+                          color: Canopy.slate, fontSize: 12.5),
                     ),
                   ),
                 ],
@@ -218,12 +221,12 @@ class _CustomPlaceholderReviewViewState
         Row(
           children: [
             const Icon(Icons.verified_rounded,
-                color: AppTheme.success, size: 18),
+                color: Canopy.leaf, size: 18),
             const SizedBox(width: AppTheme.spaceSm),
             Text(
               'admin.custom_cards_approved_title'.tr(),
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -235,7 +238,7 @@ class _CustomPlaceholderReviewViewState
           Text(
             'admin.custom_cards_approved_empty'.tr(),
             style: const TextStyle(
-                color: AppTheme.textSecondary, fontSize: 12),
+                color: Canopy.slate, fontSize: 12),
           )
         else
           GridView.builder(
@@ -261,7 +264,7 @@ class _CustomPlaceholderReviewViewState
                       errorBuilder: (_, __, ___) => const ColoredBox(
                         color: AppTheme.surface,
                         child: Icon(Icons.broken_image_outlined,
-                            color: AppTheme.textMuted, size: 20),
+                            color: Canopy.haze, size: 20),
                       ),
                     ),
                     PositionedDirectional(
@@ -298,7 +301,7 @@ class _CustomPlaceholderReviewViewState
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
+        border: Border.all(color: Canopy.hairline),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -316,7 +319,7 @@ class _CustomPlaceholderReviewViewState
                   color: AppTheme.surface,
                   child: Center(
                     child: Icon(Icons.broken_image_outlined,
-                        color: AppTheme.textMuted, size: 28),
+                        color: Canopy.haze, size: 28),
                   ),
                 ),
               ),
@@ -352,7 +355,7 @@ class _CustomPlaceholderReviewViewState
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
-                          color: AppTheme.textPrimary,
+                          color: Canopy.ink,
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -371,8 +374,8 @@ class _CustomPlaceholderReviewViewState
                         icon: const Icon(Icons.block_rounded, size: 16),
                         label: Text('admin.btn_reject'.tr()),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: AppTheme.danger,
-                          side: const BorderSide(color: AppTheme.danger),
+                          foregroundColor: Canopy.liveCrimson,
+                          side: const BorderSide(color: Canopy.liveCrimson),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),
@@ -392,8 +395,8 @@ class _CustomPlaceholderReviewViewState
                             : const Icon(Icons.check_circle_rounded, size: 16),
                         label: Text('admin.btn_approve'.tr()),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppTheme.success,
-                          foregroundColor: AppTheme.bg,
+                          backgroundColor: Canopy.leaf,
+                          foregroundColor: Canopy.dawn,
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),

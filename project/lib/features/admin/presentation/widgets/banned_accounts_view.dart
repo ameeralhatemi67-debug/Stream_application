@@ -1,3 +1,5 @@
+import '../admin_surface.dart';
+import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../models/banned_user_model.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 
 /// Admin "Banned Accounts"manager (Cluster 4 Task 16): ban a platform
 /// account by email (reason + duration) and manage existing bans. A banned
@@ -38,7 +41,7 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppTheme.danger : AppTheme.success,
+        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
       ),
     );
   }
@@ -61,67 +64,78 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
     final reasonController = TextEditingController();
     double? durationHours = 0; // 0 == permanent sentinel for this dialog
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
-        builder: (dialogContext, setDialogState) => AlertDialog(
+        builder: (dialogContext, setDialogState) => CaAlertDialog(
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            side: const BorderSide(color: AppTheme.border),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text('admin.ban_user_dialog_title'.tr(),
               style: const TextStyle(
-                  color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+                  color: Canopy.ink, fontWeight: FontWeight.bold)),
           content: SingleChildScrollView(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                TextField(
-                  controller: emailController,
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                  decoration: InputDecoration(
-                    labelText: 'Account email...',
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                    filled: true,
-                    fillColor: AppTheme.surfaceAlt,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                  ),
-                ),
+                PhoneInputGuard(builder: (context, blocked) => TextField(
+                          readOnly: blocked,
+                          controller: emailController,
+                          style: const TextStyle(color: Canopy.ink),
+                          decoration: InputDecoration(
+                            labelText: 'Account email...',
+                            labelStyle:
+                                const TextStyle(color: Canopy.slate),
+                            filled: true,
+                            fillColor: Canopy.mint,
+                            border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd)),
+                          ),
+                        )),
                 const SizedBox(height: AppTheme.spaceMd),
-                TextField(
-                  controller: reasonController,
-                  maxLines: 2,
-                  style: const TextStyle(color: AppTheme.textPrimary),
-                  decoration: InputDecoration(
-                    labelText: 'admin.ban_reason_label'.tr(),
-                    labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                    filled: true,
-                    fillColor: AppTheme.surfaceAlt,
-                    border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                  ),
-                ),
+                PhoneInputGuard(builder: (context, blocked) => TextField(
+                          readOnly: blocked,
+                          controller: reasonController,
+                          maxLines: 2,
+                          style: const TextStyle(color: Canopy.ink),
+                          decoration: InputDecoration(
+                            labelText: 'admin.ban_reason_label'.tr(),
+                            labelStyle:
+                                const TextStyle(color: Canopy.slate),
+                            filled: true,
+                            fillColor: Canopy.mint,
+                            border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd)),
+                          ),
+                        )),
                 const SizedBox(height: AppTheme.spaceMd),
                 Text('admin.ban_duration_label'.tr(),
                     style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12)),
+                        color: Canopy.slate, fontSize: 12)),
                 DropdownButton<double?>(
                   value: durationHours,
                   isExpanded: true,
-                  dropdownColor: AppTheme.surfaceAlt,
-                  style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+                  dropdownColor: Canopy.mint,
+                  style: const TextStyle(
+                      color: Canopy.ink, fontSize: 13),
                   items: [
                     DropdownMenuItem(
-                        value: 0.0, child: Text('admin.ban_duration_permanent'.tr())),
+                        value: 0.0,
+                        child: Text('admin.ban_duration_permanent'.tr())),
                     DropdownMenuItem(
-                        value: 24.0, child: Text('admin.ban_duration_24h'.tr())),
+                        value: 24.0,
+                        child: Text('admin.ban_duration_24h'.tr())),
                     DropdownMenuItem(
-                        value: 24.0 * 7, child: Text('admin.ban_duration_7d'.tr())),
+                        value: 24.0 * 7,
+                        child: Text('admin.ban_duration_7d'.tr())),
                     DropdownMenuItem(
-                        value: 24.0 * 30, child: Text('admin.ban_duration_30d'.tr())),
+                        value: 24.0 * 30,
+                        child: Text('admin.ban_duration_30d'.tr())),
                   ],
                   onChanged: (v) => setDialogState(() => durationHours = v),
                 ),
@@ -132,11 +146,12 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text('common.cancel'.tr(),
-                  style: const TextStyle(color: AppTheme.textMuted)),
+                  style: const TextStyle(color: Canopy.haze)),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
+                  backgroundColor: Canopy.liveCrimson,
+                  foregroundColor: AppTheme.onMedia),
               onPressed: () {
                 final email = emailController.text.trim();
                 final reason = reasonController.text.trim();
@@ -162,26 +177,27 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
   }
 
   void _confirmUnban(AppProvider provider, BannedUserModel user) {
-    showDialog(
+    showCaDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CaAlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: const BorderSide(color: AppTheme.border),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text('admin.unban_confirm_title'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+                color: Canopy.ink, fontWeight: FontWeight.bold)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('common.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
+                style: const TextStyle(color: Canopy.haze)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.success, foregroundColor: AppTheme.onMedia),
+                backgroundColor: Canopy.leaf,
+                foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
               _run(
@@ -200,8 +216,8 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
   @override
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
-    final bannedUsers =
-        context.select<AppProvider, List<BannedUserModel>>((p) => p.bannedUsers);
+    final bannedUsers = context
+        .select<AppProvider, List<BannedUserModel>>((p) => p.bannedUsers);
 
     final query = _searchController.text.trim().toLowerCase();
     final filtered = query.isEmpty
@@ -217,15 +233,15 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
+          AdminFlow(
             children: [
               const Icon(Icons.person_off_rounded,
-                  color: AppTheme.danger, size: 20),
+                  color: Canopy.liveCrimson, size: 20),
               const SizedBox(width: 8),
               Text(
                 'admin.banned_accounts_title'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -233,7 +249,8 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
               const Spacer(),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
+                    backgroundColor: Canopy.liveCrimson,
+                    foregroundColor: AppTheme.onMedia),
                 icon: const Icon(Icons.block_rounded, size: 16),
                 label: Text('admin.ban_user_btn'.tr()),
                 onPressed: () => _showBanDialog(provider),
@@ -243,33 +260,36 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
           const SizedBox(height: AppTheme.spaceSm),
           Text('admin.banned_accounts_desc'.tr(),
               style:
-                  const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                  const TextStyle(color: Canopy.slate, fontSize: 12)),
           const SizedBox(height: AppTheme.spaceLg),
-          TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-            decoration: InputDecoration(
-              hintText: 'admin.search_banned_accounts'.tr(),
-              hintStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-              prefixIcon: const Icon(Icons.search_rounded,
-                  color: AppTheme.textSecondary, size: 18),
-              filled: true,
-              fillColor: AppTheme.surface,
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: const BorderSide(color: AppTheme.border),
-              ),
-            ),
-          ),
+          PhoneInputGuard(builder: (context, blocked) => TextField(
+                    readOnly: blocked,
+                    controller: _searchController,
+                    onChanged: (_) => setState(() {}),
+                    style: const TextStyle(
+                        color: Canopy.ink, fontSize: 13),
+                    decoration: InputDecoration(
+                      hintText: 'admin.search_banned_accounts'.tr(),
+                      hintStyle: const TextStyle(
+                          color: Canopy.slate, fontSize: 12),
+                      prefixIcon: const Icon(Icons.search_rounded,
+                          color: Canopy.slate, size: 18),
+                      filled: true,
+                      fillColor: AppTheme.surface,
+                      contentPadding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 10),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                        borderSide: const BorderSide(color: Canopy.hairline),
+                      ),
+                    ),
+                  )),
           const SizedBox(height: AppTheme.spaceLg),
           Expanded(
             child: filtered.isEmpty
                 ? Center(
                     child: Text('admin.no_banned_accounts'.tr(),
-                        style: const TextStyle(color: AppTheme.textSecondary)))
+                        style: const TextStyle(color: Canopy.slate)))
                 : ListView.separated(
                     itemCount: filtered.length,
                     separatorBuilder: (_, __) =>
@@ -281,11 +301,12 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
                         padding: const EdgeInsets.all(AppTheme.spaceMd),
                         decoration: BoxDecoration(
                           color: AppTheme.surface,
-                          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
                           border: Border.all(
-                              color: AppTheme.danger.withValues(alpha: 0.3)),
+                              color: Canopy.liveCrimson.withValues(alpha: 0.3)),
                         ),
-                        child: Row(
+                        child: AdminFlow(
                           children: [
                             Expanded(
                               child: Column(
@@ -296,7 +317,7 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                        color: AppTheme.textPrimary,
+                                        color: Canopy.ink,
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13),
                                   ),
@@ -305,7 +326,8 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                        color: AppTheme.textMuted, fontSize: 10.5),
+                                        color: Canopy.haze,
+                                        fontSize: 12),
                                   ),
                                   const SizedBox(height: 4),
                                   Text(
@@ -313,7 +335,7 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
                                     style: const TextStyle(
-                                        color: AppTheme.warning, fontSize: 11.5),
+                                        color: AppTheme.warning, fontSize: 12),
                                   ),
                                   Text(
                                     user.isPermanent
@@ -321,7 +343,8 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
                                         : DateFormat('yyyy-MM-dd HH:mm')
                                             .format(user.expiresAt!),
                                     style: const TextStyle(
-                                        color: AppTheme.textMuted, fontSize: 10.5),
+                                        color: Canopy.haze,
+                                        fontSize: 12),
                                   ),
                                 ],
                               ),
@@ -336,8 +359,9 @@ class _BannedAccountsViewState extends State<BannedAccountsView> {
                             else
                               OutlinedButton(
                                 style: OutlinedButton.styleFrom(
-                                  foregroundColor: AppTheme.success,
-                                  side: const BorderSide(color: AppTheme.success),
+                                  foregroundColor: Canopy.leaf,
+                                  side:
+                                      const BorderSide(color: Canopy.leaf),
                                 ),
                                 onPressed: () => _confirmUnban(provider, user),
                                 child: Text('admin.unban_btn'.tr()),

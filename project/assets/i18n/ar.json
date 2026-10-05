@@ -182,7 +182,8 @@
     "live_badge": "مباشر",
     "audio_live_badge": "صوتي",
     "offline_badge": "غير متصل",
-    "your_channel_badge": "قناتك"
+    "your_channel_badge": "قناتك",
+    "clear_search": "مسح البحث"
   },
   "profile": {
     "current_location": "موقعك الحالي",
@@ -250,7 +251,9 @@
     "review_confirm_message": "هل تريد المتابعة؟ ستبقى بياناتك المعتمدة ظاهرة حتى يراجع المشرف هذه التغييرات.",
     "review_fields_title": "ما التغييرات التي تحتاج إلى موافقة؟",
     "review_fields_list": "البريد الإلكتروني ورقم الهاتف؛ المدينة والقاعة والموقع على الخريطة؛ رابط قناة يوتيوب ومعرّفها.",
-    "review_confirm_yes": "نعم، اطلب الموافقة"
+    "review_confirm_yes": "نعم، اطلب الموافقة",
+    "archive_tab": "الأرشيف",
+    "upcoming_tab": "القادمة"
   },
   "live": {
     "recovery_exhausted": "تعذر استعادة الاتصال. أعد المحاولة أو غادر.",
@@ -487,7 +490,10 @@
     "tooltip_pause": "إيقاف مؤقت",
     "tooltip_mute": "كتم الصوت",
     "tooltip_unmute": "إلغاء كتم الصوت",
-    "player_not_ready": "المشغّل غير جاهز بعد. حاول مجدداً بعد لحظة."
+    "player_not_ready": "المشغّل غير جاهز بعد. حاول مجدداً بعد لحظة.",
+    "audio_level_unavailable": "مستوى الميكروفون غير متاح",
+    "hold_to_end": "اضغط مطولاً للإنهاء",
+    "sources_empty": "لم تتم مشاركة مصادر لهذه المحاضرة."
   },
   "language": {
     "en": "English",
@@ -680,7 +686,12 @@
     "unblock": "إلغاء الحظر",
     "unblocked_toast": "تم إلغاء الحظر. سترى رسائله مجدداً.",
     "opening_google_sign_in": "جارٍ فتح تسجيل الدخول عبر Google. ستعود إلى هنا عند الانتهاء.",
-    "youtube_url_locked_while_live": "مقفل أثناء البث المباشر. أنهِ البث لاستخدام رابط آخر."
+    "youtube_url_locked_while_live": "مقفل أثناء البث المباشر. أنهِ البث لاستخدام رابط آخر.",
+    "desktop_account": "الحساب",
+    "desktop_privacy": "الخصوصية والبيانات",
+    "desktop_legal": "الشروط والسياسات",
+    "desktop_about": "عن التطبيق",
+    "avatar_optional_hint": "اتركه فارغاً لاستخدام الحرف الأول من اسمك."
   },
   "onboarding": {
     "subtitle": "منصة المعرفة والبث الأكاديمي بالمنطقة الشرقية",
@@ -976,7 +987,12 @@
     "revoke_broadcaster_title": "سحب اعتماد المذيع؟",
     "revoke_broadcaster_body": "يزيل هذا صلاحيات البث وينهي أي جلسة بث مباشر في التطبيق. لا يُحذف الحساب ولا مؤسساته ولا بياناته. لحذف حساب استخدم دليل المستخدمين. يُحفظ سببك في سجل التدقيق.",
     "revoke_broadcaster_done": "تم سحب اعتماد المذيع. لم يُحذف الحساب.",
-    "revoke_broadcaster_failed": "لم يُسحب اعتماد المذيع. رفض الخادم الطلب أو تعذر الوصول إليه."
+    "revoke_broadcaster_failed": "لم يُسحب اعتماد المذيع. رفض الخادم الطلب أو تعذر الوصول إليه.",
+    "short_title": "الإدارة",
+    "nav_review": "المراجعة",
+    "nav_moderate": "الإشراف",
+    "nav_directory": "الدليل",
+    "nav_configure": "الإعدادات"
   },
   "common": {
     "cancel": "إلغاء",
@@ -1035,7 +1051,10 @@
     "name_label": "اسم العرض في المنصة (إلزامي)",
     "name_hint": "مثال: فيصل الغامدي",
     "btn_enter": "الدخول إلى دليل البث المباشر",
-    "error_name_empty": "يرجى إدخال اسم العرض للمتابعة."
+    "error_name_empty": "يرجى إدخال اسم العرض للمتابعة.",
+    "avatar_option": "الصورة الرمزية {}",
+    "custom_avatar": "اختر صورة",
+    "rotate_to_edit": "أدر الهاتف عموديًا لتعديل اسمك."
   },
   "role_select": {
     "welcome_user": "أهلاً بك، {}!",
@@ -1339,7 +1358,9 @@
     "current_local_session": "جلسة الجهاز الحالي",
     "continue_as_viewer": "المتابعة كمشاهد",
     "transfer_broadcaster_to_this_device": "نقل البث إلى هذا الجهاز",
-    "no_speakers_added_hint": "استخدم \"إضافة مُقدّم\" لدعوة متحدثين أو ربطهم بهذه المنظمة."
+    "no_speakers_added_hint": "استخدم \"إضافة مُقدّم\" لدعوة متحدثين أو ربطهم بهذه المنظمة.",
+    "unread_count": "{count} غير مقروءة",
+    "discovery": "الاستكشاف"
   },
   "design_copy": {
     "academic_broadcasts_spatial_discovery": "البثوث الأكاديمية والمحاضرات التفاعلية",
@@ -1841,5 +1862,39 @@
     "transfer_incoming": "اقتُرحت مالكاً جديداً. ينتهي العرض في {date}.",
     "transfer_pending": "نقل الملكية معلّق حتى {date}.",
     "withdraw_transfer": "سحب نقل الملكية"
+  },
+  "ds": {
+    "filter_title": "التصفية",
+    "rotate_to_edit": "أدر الهاتف عموديًا للكتابة.",
+    "apply_identity": "الهوية",
+    "apply_media": "الوسائط",
+    "apply_professional": "المعلومات المهنية",
+    "apply_venue": "الموقع",
+    "apply_review": "المراجعة",
+    "hold_hint": "اضغط مطولاً لمدة 1.2 ثانية للتأكيد",
+    "cancel_hold": "إلغاء التأكيد",
+    "status_live": "مباشر",
+    "status_audio": "صوتي",
+    "status_offline": "غير متصل",
+    "status_pending": "قيد المراجعة",
+    "status_verified": "موثّق",
+    "speaker": "المحاضر",
+    "dismiss": "إغلاق",
+    "loading": "جارٍ التحميل",
+    "step_of": "الخطوة {} من {} · {}",
+    "not_measured": "غير مقاس",
+    "audio_level": "مستوى الصوت",
+    "gallery": "مكونات كانوبي",
+    "gallery_action": "إجراء تجريبي",
+    "gallery_demo": "معاينة المكونات",
+    "account_actions": "إجراءات الحساب",
+    "studio_profile": "صفحة المحاضر",
+    "entry_headline": "تعلّم مباشرة. وأنت قريب من بيتك.",
+    "entry_live": "محاضرات مباشرة مع دردشة وأسئلة",
+    "entry_map": "خريطة للقاعات القريبة منك",
+    "entry_saved": "تسجيلات محفوظة وقوائم",
+    "role_viewer": "مستمع",
+    "role_streamer": "محاضر",
+    "apply_title": "طلب البث"
   }
 }

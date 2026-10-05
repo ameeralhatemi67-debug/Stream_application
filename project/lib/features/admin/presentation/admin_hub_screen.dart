@@ -1,3 +1,8 @@
+import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/ds/ca_rows.dart';
+import 'admin_surface.dart';
+import '../../../core/widgets/phone_input_guard.dart';
+import '../../../core/widgets/ds/ca_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -10,7 +15,6 @@ import '../../profile/presentation/widgets/streamer_editor_sheet.dart';
 import 'widgets/org_management_view.dart';
 import '../models/broadcaster_application_model.dart';
 import '../models/terms_and_conditions_model.dart';
-import '../../../../core/widgets/language_switcher.dart';
 import '../../../../core/layout/content_width.dart';
 import '../models/chat_report_model.dart';
 import '../models/tag_moderation_model.dart';
@@ -24,6 +28,45 @@ import 'widgets/banned_accounts_view.dart';
 import 'widgets/admin_user_directory_view.dart';
 import 'widgets/admin_safety_view.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
+import '../../../core/widgets/ds/ca_surfaces.dart';
+
+const _adminGroups = <({String title, List<String> labels})>[
+  (
+    title: 'admin.nav_review',
+    labels: [
+      'admin.tab_verification',
+      'admin.tab_custom_cards',
+      'admin.tab_tags'
+    ]
+  ),
+  (
+    title: 'admin.nav_moderate',
+    labels: [
+      'admin.tab_chat_moderation',
+      'admin.tab_banned_accounts',
+      'safety.tab'
+    ]
+  ),
+  (
+    title: 'admin.nav_directory',
+    labels: [
+      'admin.tab_streamers',
+      'admin.tab_organizations',
+      'directory.title',
+      'admin.tab_roles'
+    ]
+  ),
+  (
+    title: 'admin.nav_configure',
+    labels: [
+      'admin.tab_overview',
+      'admin.tab_viewers',
+      'admin.tab_categories',
+      'admin.tab_terms',
+      'admin.tab_testing'
+    ]
+  ),
+];
 
 /// Desktop Admin Moderation & Platform Governance Hub Screen
 class AdminHubScreen extends StatefulWidget {
@@ -128,11 +171,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppTheme.success,
+            color: Canopy.leaf,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: AppTheme.shadow,
+                color: Color(0x33123E26),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -169,11 +212,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppTheme.danger,
+            color: Canopy.liveCrimson,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: AppTheme.shadow,
+                color: Color(0x33123E26),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -263,12 +306,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     // Access Guard
     if (!provider.isAdminUser) {
       return Scaffold(
-        backgroundColor: AppTheme.bg,
-        appBar: AppBar(
+        backgroundColor: Canopy.dawn,
+        appBar: CaAppBar(
           backgroundColor: AppTheme.surface,
+          languageBare: true,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded,
-                color: AppTheme.textPrimary),
+                color: Canopy.ink),
             onPressed: () => context.go('/feed'),
           ),
           title: Text('design_ui.access_denied'.tr()),
@@ -282,18 +326,18 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: AppTheme.danger.withValues(alpha: 0.5)),
+              border: Border.all(color: Canopy.liveCrimson.withValues(alpha: 0.5)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 const Icon(Icons.gpp_bad_rounded,
-                    color: AppTheme.danger, size: 54),
+                    color: Canopy.liveCrimson, size: 54),
                 const SizedBox(height: AppTheme.spaceMd),
                 Text(
                   'design_ui.admin_access_required'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                    color: Canopy.ink,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -304,7 +348,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       .tr(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: Canopy.slate,
                     fontSize: 12,
                   ),
                 ),
@@ -346,21 +390,16 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       ],
     );
     return Scaffold(
-      backgroundColor: AppTheme.bg,
-      appBar: AppBar(
+      backgroundColor: Canopy.dawn,
+      appBar: CaAppBar(
+        languageBare: true,
         leading: isDesktop
             ? IconButton(
                 icon: const Icon(Icons.arrow_back_rounded),
                 tooltip: 'common.back'.tr(),
                 onPressed: () => context.go('/feed'))
             : null,
-        title: Text('admin.title'.tr(),
-            maxLines: 1, overflow: TextOverflow.ellipsis),
-        actions: const [
-          Padding(
-              padding: EdgeInsetsDirectional.only(end: AppTheme.spaceMd),
-              child: Center(child: LanguageSwitcher()))
-        ],
+        title: Text('admin.short_title'.tr()),
       ),
       drawer: isDesktop
           ? null
@@ -369,7 +408,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   child: _buildNavigation(provider, closeDrawer: true))),
       body: Row(children: [
         if (isDesktop) ...[
-          SizedBox(width: 260, child: _buildNavigation(provider)),
+          SizedBox(
+              width: CanopySize.adminRail, child: _buildNavigation(provider)),
           const VerticalDivider(width: 1),
         ],
         Expanded(child: views),
@@ -378,54 +418,54 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   }
 
   Widget _buildNavigation(AppProvider provider, {bool closeDrawer = false}) {
-    final entries = <({String label, IconData icon, int count})>[
-      (label: 'admin.tab_overview', icon: Icons.dashboard_outlined, count: 0),
+    final entries = <({String label, CaGlyph icon, int count})>[
+      (label: 'admin.tab_overview', icon: CaGlyph.bars, count: 0),
       (
         label: 'admin.tab_verification',
-        icon: Icons.how_to_reg_outlined,
+        icon: CaGlyph.shield,
         count: provider.pendingApplications.length
       ),
-      (label: 'admin.tab_streamers', icon: Icons.groups_outlined, count: 0),
+      (label: 'admin.tab_streamers', icon: CaGlyph.users, count: 0),
       (
         label: 'admin.tab_organizations',
-        icon: Icons.apartment_outlined,
+        icon: CaGlyph.home,
         count: 0
       ),
-      (label: 'admin.tab_viewers', icon: Icons.analytics_outlined, count: 0),
-      (label: 'admin.tab_terms', icon: Icons.gavel_outlined, count: 0),
+      (label: 'admin.tab_viewers', icon: CaGlyph.eye, count: 0),
+      (label: 'admin.tab_terms', icon: CaGlyph.scale, count: 0),
       (
         label: 'admin.tab_chat_moderation',
-        icon: Icons.report_outlined,
+        icon: CaGlyph.chat,
         count: provider.chatReports.length
       ),
       (
         label: 'admin.tab_custom_cards',
-        icon: Icons.image_outlined,
+        icon: CaGlyph.copy,
         count: provider.pendingCustomPlaceholders.length
       ),
-      (label: 'admin.tab_categories', icon: Icons.school_outlined, count: 0),
+      (label: 'admin.tab_categories', icon: CaGlyph.list, count: 0),
       (
         label: 'admin.tab_tags',
-        icon: Icons.label_outline,
+        icon: CaGlyph.bookmark,
         count: provider.allTagsForModeration
             .where((t) => t.status == TagStatus.pending)
             .length
       ),
       (
         label: 'admin.tab_banned_accounts',
-        icon: Icons.person_off_outlined,
+        icon: CaGlyph.lock,
         count: provider.bannedUsers.length
       ),
       if (kDebugMode)
-        (label: 'admin.tab_testing', icon: Icons.science_outlined, count: 0),
+        (label: 'admin.tab_testing', icon: CaGlyph.sliders, count: 0),
       if (_isMasterAdminForTabs)
         (
           label: 'admin.tab_roles',
-          icon: Icons.admin_panel_settings_outlined,
+          icon: CaGlyph.key,
           count: 0
         ),
-      (label: 'directory.title', icon: Icons.people_outline, count: 0),
-      (label: 'safety.tab', icon: Icons.shield_outlined, count: 0),
+      (label: 'directory.title', icon: CaGlyph.user, count: 0),
+      (label: 'safety.tab', icon: CaGlyph.alert, count: 0),
     ];
     return AnimatedBuilder(
       animation: _tabController,
@@ -435,30 +475,50 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         children: [
           if (closeDrawer)
             ListTile(
-                leading: const Icon(Icons.arrow_back_rounded),
+                leading: const CaIcon(CaGlyph.back, color: Canopy.slate),
                 title: Text('common.back'.tr()),
                 onTap: () => context.go('/feed')),
-          for (var i = 0; i < entries.length; i++)
+          for (final group in _adminGroups) ...[
             Padding(
-              padding: const EdgeInsets.only(bottom: AppTheme.spaceXs),
-              child: ListTile(
-                key: ValueKey(entries[i].label),
-                selected: _tabController.index == i,
-                selectedColor: AppTheme.primary,
-                selectedTileColor: AppTheme.surfaceAlt,
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                leading: Icon(entries[i].icon),
-                title: Text(entries[i].label.tr()),
-                trailing: entries[i].count > 0
-                    ? Text(entries[i].count.toString())
-                    : null,
-                onTap: () {
-                  _tabController.animateTo(i);
-                  if (closeDrawer) Navigator.of(context).pop();
-                },
+                padding: const EdgeInsetsDirectional.fromSTEB(AppTheme.spaceLg,
+                    AppTheme.spaceLg, AppTheme.spaceLg, AppTheme.spaceSm),
+                child: Text(group.title.tr(),
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                        color: Canopy.haze, fontWeight: FontWeight.w600))),
+            for (final i in [
+              for (var i = 0; i < entries.length; i++)
+                if (group.labels.contains(entries[i].label)) i
+            ])
+              Padding(
+                padding: const EdgeInsets.only(bottom: AppTheme.spaceXs),
+                child: ListTile(
+                  key: ValueKey(entries[i].label),
+                  selected: _tabController.index == i,
+                  selectedColor: AppTheme.primary,
+                  selectedTileColor: Canopy.mint,
+                  minVerticalPadding: AppTheme.spaceMd,
+                  titleTextStyle: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(fontSize: 13),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+                  leading: CaIcon(entries[i].icon,
+                      color: _tabController.index == i
+                          ? Canopy.brandGreen
+                          : Canopy.slate),
+                  title: Text(entries[i].label.tr()),
+                  trailing: entries[i].count > 0
+                      ? AdminCount(
+                          count: entries[i].count, label: entries[i].label.tr())
+                      : null,
+                  onTap: () {
+                    _tabController.animateTo(i);
+                    if (closeDrawer) Navigator.of(context).pop();
+                  },
+                ),
               ),
-            ),
+          ],
         ],
       ),
     );
@@ -482,12 +542,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           Row(
             children: [
               const Icon(Icons.science_rounded,
-                  color: AppTheme.danger, size: 20),
+                  color: Canopy.liveCrimson, size: 20),
               const SizedBox(width: 8),
               Text(
                 'admin.tab_testing'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -501,7 +561,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               border: Border.all(
-                color: isPitchActive ? AppTheme.danger : AppTheme.border,
+                color: isPitchActive ? Canopy.liveCrimson : Canopy.hairline,
                 width: isPitchActive ? 1.5 : 1.0,
               ),
             ),
@@ -514,14 +574,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     Text(
                       'settings.pitch_mode'.tr(),
                       style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: Canopy.ink,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
                     Switch(
                       value: isPitchActive,
-                      activeThumbColor: AppTheme.danger,
+                      activeThumbColor: Canopy.liveCrimson,
                       onChanged: (val) => provider.setPitchDirectorMode(val),
                     ),
                   ],
@@ -530,7 +590,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 Text(
                   'settings.pitch_mode_desc'.tr(),
                   style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 11),
+                      color: Canopy.slate, fontSize: 12),
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
                 SizedBox(
@@ -540,8 +600,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         size: 18),
                     label: Text('settings.trigger_notification'.tr()),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.danger,
-                      side: const BorderSide(color: AppTheme.danger),
+                      foregroundColor: Canopy.liveCrimson,
+                      side: const BorderSide(color: Canopy.liveCrimson),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                           borderRadius:
@@ -580,13 +640,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           // Section Title
           Row(
             children: [
-              const Icon(Icons.insights_rounded,
-                  color: AppTheme.primary, size: 20),
+              const CaIcon(CaGlyph.bars, size: 20),
               const SizedBox(width: 8),
               Expanded(
                 child: Text('admin.tab_overview'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     )),
@@ -598,55 +657,64 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           Text('admin.overview_data_note'.tr()),
           const SizedBox(height: AppTheme.spaceMd),
           // KPI Grid
-          Wrap(
-            spacing: AppTheme.spaceMd,
-            runSpacing: AppTheme.spaceMd,
-            children: [
-              _buildKpiCard(
-                title: 'admin.loaded_broadcasters'.tr(),
-                value: '$totalBroadcasters',
-                icon: Icons.cell_tower_rounded,
-                color: AppTheme.danger,
-              ),
-              _buildKpiCard(
-                title: 'admin.kpi_verified_scholars'.tr(),
-                value: '$verifiedScholars',
-                icon: Icons.school_rounded,
-                color: AppTheme.primary,
-              ),
-              _buildKpiCard(
-                title: 'admin.loaded_organizations'.tr(),
-                value: '$orgVenues',
-                icon: Icons.apartment_rounded,
-                color: AppTheme.accent,
-              ),
-              _buildKpiCard(
-                title: 'admin.kpi_pending_apps'.tr(),
-                value: '$pendingApps',
-                icon: Icons.pending_actions_rounded,
-                color: AppTheme.warning,
-              ),
-              _buildKpiCard(
-                title: 'admin.kpi_active_viewers'.tr(),
-                value: 'admin.unavailable'.tr(),
-                icon: Icons.group_rounded,
-                color: AppTheme.success,
-              ),
-              _buildKpiCard(
-                title: 'admin.kpi_auditorium_seats'.tr(),
-                value: 'admin.unavailable'.tr(),
-                icon: Icons.event_seat_rounded,
-                color: AppTheme.primary,
-              ),
-            ],
-          ),
+          LayoutBuilder(builder: (context, box) {
+            final columns = (box.maxWidth /
+                    (CanopySize.adminKpiMin *
+                        MediaQuery.textScalerOf(context).scale(1)))
+                .floor()
+                .clamp(1, 3);
+            final width =
+                (box.maxWidth - AppTheme.spaceMd * (columns - 1)) / columns;
+            return Wrap(
+              spacing: AppTheme.spaceMd,
+              runSpacing: AppTheme.spaceMd,
+              children: [
+                _buildKpiCard(
+                  title: 'admin.loaded_broadcasters'.tr(),
+                  value: '$totalBroadcasters',
+                  icon: Icons.cell_tower_rounded,
+                  color: Canopy.liveCrimson,
+                ),
+                _buildKpiCard(
+                  title: 'admin.kpi_verified_scholars'.tr(),
+                  value: '$verifiedScholars',
+                  icon: Icons.school_rounded,
+                  color: AppTheme.primary,
+                ),
+                _buildKpiCard(
+                  title: 'admin.loaded_organizations'.tr(),
+                  value: '$orgVenues',
+                  icon: Icons.apartment_rounded,
+                  color: AppTheme.accent,
+                ),
+                _buildKpiCard(
+                  title: 'admin.kpi_pending_apps'.tr(),
+                  value: '$pendingApps',
+                  icon: Icons.pending_actions_rounded,
+                  color: AppTheme.warning,
+                ),
+                _buildKpiCard(
+                  title: 'admin.kpi_active_viewers'.tr(),
+                  value: null,
+                  icon: Icons.group_rounded,
+                  color: Canopy.leaf,
+                ),
+                _buildKpiCard(
+                  title: 'admin.kpi_auditorium_seats'.tr(),
+                  value: null,
+                  icon: Icons.event_seat_rounded,
+                  color: AppTheme.primary,
+                ),
+              ].map((tile) => SizedBox(width: width, child: tile)).toList(),
+            );
+          }),
           const SizedBox(height: AppTheme.spaceXl),
 
           // Quick Action Shortcuts
           Text(
             'design_ui.quick_actions_governance_shortcuts'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -660,8 +728,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 child: _buildActionShortcutCard(
                   title: 'admin.review_queue'.tr(),
                   subtitle: 'admin.pending_review'.tr(args: ['$pendingApps']),
-                  icon: Icons.rate_review_rounded,
-                  color: AppTheme.warning,
+                  icon: CaGlyph.shield,
                   onTap: () => _tabController.animateTo(1),
                 ),
               ),
@@ -671,8 +738,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 child: _buildActionShortcutCard(
                   title: 'admin.inspect_map'.tr(),
                   subtitle: 'admin.inspect_map_hint'.tr(),
-                  icon: Icons.map_rounded,
-                  color: AppTheme.primary,
+                  icon: CaGlyph.map,
                   onTap: () => context.go('/map'),
                 ),
               ),
@@ -682,8 +748,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 child: _buildActionShortcutCard(
                   title: 'admin.edit_terms'.tr(),
                   subtitle: 'admin.edit_terms_hint'.tr(),
-                  icon: Icons.edit_document,
-                  color: AppTheme.accent,
+                  icon: CaGlyph.scale,
                   onTap: () => _tabController.animateTo(5),
                 ),
               ),
@@ -696,61 +761,16 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   Widget _buildKpiCard({
     required String title,
-    required String value,
+    required String? value,
     required IconData icon,
     required Color color,
-  }) {
-    return Container(
-      width: 220,
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(title,
-                    style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                    )),
-              ),
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                ),
-                child: Icon(icon, color: color, size: 16),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-          Text(
-            value,
-            style: TextStyle(
-              color: color,
-              fontSize: 26,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  }) =>
+      CaKpiTile(label: title, value: value);
 
   Widget _buildActionShortcutCard({
     required String title,
     required String subtitle,
-    required IconData icon,
-    required Color color,
+    required CaGlyph icon,
     required VoidCallback onTap,
   }) {
     return InkWell(
@@ -761,17 +781,17 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
+          border: Border.all(color: Canopy.hairline),
         ),
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(AppTheme.spaceSm),
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.15),
+                color: Canopy.mint,
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
-              child: Icon(icon, color: color, size: 22),
+              child: CaIcon(icon),
             ),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
@@ -781,7 +801,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   Text(
                     title,
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -790,15 +810,17 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   Text(
                     subtitle,
                     style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 11,
+                      color: Canopy.slate,
+                      fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.chevron_right_rounded,
-                color: AppTheme.textSecondary),
+            const SizedBox(width: AppTheme.spaceSm),
+            const RotatedBox(
+                quarterTurns: 2,
+                child: CaIcon(CaGlyph.back, color: Canopy.slate)),
           ],
         ),
       ),
@@ -837,7 +859,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         visiblePendingIds.every(_selectedApplicationIds.contains);
 
     return Padding(
-      padding: const EdgeInsets.all(AppTheme.spaceXl),
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -891,27 +913,30 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   ),
                 SizedBox(
                   width: double.infinity,
-                  child: TextField(
-                    controller: _appSearchController,
-                    onChanged: (_) => setState(() {}),
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
-                    decoration: InputDecoration(
-                      hintText: 'admin.search_applications'.tr(),
-                      hintStyle: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 12),
-                      prefixIcon: const Icon(Icons.search_rounded,
-                          color: AppTheme.textSecondary, size: 18),
-                      filled: true,
-                      fillColor: AppTheme.surface,
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 10),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                        borderSide: const BorderSide(color: AppTheme.border),
-                      ),
-                    ),
-                  ),
+                  child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                            readOnly: blocked,
+                            controller: _appSearchController,
+                            onChanged: (_) => setState(() {}),
+                            style: const TextStyle(
+                                color: Canopy.ink, fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'admin.search_applications'.tr(),
+                              hintStyle: const TextStyle(
+                                  color: Canopy.slate, fontSize: 12),
+                              prefixIcon: const Icon(Icons.search_rounded,
+                                  color: Canopy.slate, size: 18),
+                              filled: true,
+                              fillColor: AppTheme.surface,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd),
+                                borderSide:
+                                    const BorderSide(color: Canopy.hairline),
+                              ),
+                            ),
+                          )),
                 ),
                 const SizedBox(width: AppTheme.spaceMd),
 
@@ -943,13 +968,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const Icon(Icons.inbox_rounded,
-                              size: 48, color: AppTheme.textSecondary),
+                              size: 48, color: Canopy.slate),
                           const SizedBox(height: 12),
                           Text(
                             'design_ui.no_applications_match_the_selected_filter'
                                 .tr(),
                             style:
-                                const TextStyle(color: AppTheme.textSecondary),
+                                const TextStyle(color: Canopy.slate),
                           ),
                         ],
                       ),
@@ -1018,12 +1043,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       Text('admin.log_$action'.tr()),
                     ]),
                 Text('${event['actor_name'] ?? 'Admin'} • $when',
-                    style: const TextStyle(color: AppTheme.textSecondary)),
+                    style: const TextStyle(color: Canopy.slate)),
                 if ((event['reason'] as String? ?? '').isNotEmpty)
                   Text(event['reason'] as String),
                 if (localOnly)
                   Text('admin.local_log_notice'.tr(),
-                      style: const TextStyle(color: AppTheme.textSecondary)),
+                      style: const TextStyle(color: Canopy.slate)),
                 Wrap(spacing: AppTheme.spaceSm, children: [
                   TextButton.icon(
                     onPressed: () =>
@@ -1073,9 +1098,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         }
       }
     }
-    showDialog<void>(
+    showCaDialog<void>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => CaAlertDialog(
               title: Text('admin.review_log_tab'.tr()),
               content: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 520),
@@ -1128,17 +1153,18 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   Future<void> _reverseReviewEvent(BuildContext context, AppProvider provider,
       Map<String, dynamic> event) async {
     final reasonController = TextEditingController();
-    final reason = await showDialog<String>(
+    final reason = await showCaDialog<String>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => CaAlertDialog(
               title: Text('admin.reverse_title'.tr()),
-              content: TextField(
-                controller: reasonController,
-                maxLength: 500,
-                maxLines: 3,
-                decoration: InputDecoration(
-                    labelText: 'admin.reject_reason_label'.tr()),
-              ),
+              content: PhoneInputGuard(builder: (context, blocked) => TextField(
+                        readOnly: blocked,
+                        controller: reasonController,
+                        maxLength: 500,
+                        maxLines: 3,
+                        decoration: InputDecoration(
+                            labelText: 'admin.reject_reason_label'.tr()),
+                      )),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(dialogContext),
@@ -1190,7 +1216,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             child: Text(
               'admin.selected_count'.tr(namedArgs: {'count': '$count'}),
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
               ),
@@ -1199,14 +1225,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           TextButton(
             onPressed: () => setState(() => _selectedApplicationIds.clear()),
             child: Text('design_ui.clear'.tr(),
-                style: const TextStyle(color: AppTheme.textSecondary)
+                style: const TextStyle(color: Canopy.slate)
                     .copyWith(fontSize: 12)),
           ),
           const SizedBox(width: 4),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: AppTheme.danger,
-              side: const BorderSide(color: AppTheme.danger),
+              foregroundColor: Canopy.liveCrimson,
+              side: const BorderSide(color: Canopy.liveCrimson),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             icon: const Icon(Icons.cancel_outlined, size: 15),
@@ -1216,7 +1242,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           const SizedBox(width: 8),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.success,
+              backgroundColor: Canopy.leaf,
               foregroundColor: AppTheme.onMedia,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
@@ -1231,37 +1257,37 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   void _showBulkApproveDialog(BuildContext context, AppProvider provider) {
     final ids = _selectedApplicationIds.toList();
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return CaAlertDialog(
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            side: const BorderSide(color: AppTheme.border),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text(
             'design_ui.approve_selected_applications'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 16),
           ),
           content: Text(
             'This will approve ${ids.length} pending application${ids.length == 1 ? '' : 's'}, creating a live broadcaster profile for each.',
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.success,
+                backgroundColor: Canopy.leaf,
                 foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
@@ -1288,20 +1314,20 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     final ids = _selectedApplicationIds.toList();
     final reasonController = TextEditingController();
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return CaAlertDialog(
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            side: const BorderSide(color: AppTheme.border),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text(
             'admin.batch_reject_title'
                 .tr(namedArgs: {'count': '${ids.length}'}),
             style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 16),
           ),
@@ -1313,26 +1339,29 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 'design_ui.this_feedback_note_is_sent_to_every_selected_applicant'
                     .tr(),
                 style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 12),
+                    color: Canopy.slate, fontSize: 12),
               ),
               const SizedBox(height: AppTheme.spaceMd),
-              TextField(
-                controller: reasonController,
-                maxLines: 3,
-                style:
-                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'admin.reject_dialog_hint'.tr(),
-                  hintStyle:
-                      const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                  filled: true,
-                  fillColor: AppTheme.surfaceAlt,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: const BorderSide(color: AppTheme.border),
-                  ),
-                ),
-              ),
+              PhoneInputGuard(builder: (context, blocked) => TextField(
+                        readOnly: blocked,
+                        controller: reasonController,
+                        maxLines: 3,
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'admin.reject_dialog_hint'.tr(),
+                          hintStyle: const TextStyle(
+                              color: Canopy.haze, fontSize: 12),
+                          filled: true,
+                          fillColor: Canopy.mint,
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                            borderSide:
+                                const BorderSide(color: Canopy.hairline),
+                          ),
+                        ),
+                      )),
             ],
           ),
           actions: [
@@ -1340,12 +1369,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
+                backgroundColor: Canopy.liveCrimson,
                 foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
@@ -1383,12 +1412,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       selectedColor: AppTheme.primary.withValues(alpha: 0.2),
       backgroundColor: AppTheme.surface,
       labelStyle: TextStyle(
-        color: isSelected ? AppTheme.primary : AppTheme.textSecondary,
-        fontSize: 11.5,
+        color: isSelected ? AppTheme.primary : Canopy.slate,
+        fontSize: 12,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? AppTheme.primary : AppTheme.border,
+        color: isSelected ? AppTheme.primary : Canopy.hairline,
       ),
       onSelected: (_) => setState(() => _applicationFilter = status),
     );
@@ -1401,15 +1430,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
     switch (app.status) {
       case ApplicationStatus.approved:
-        statusColor = AppTheme.success;
+        statusColor = Canopy.leaf;
         statusText = 'admin.filter_approved'.tr();
         break;
       case ApplicationStatus.rejected:
-        statusColor = AppTheme.danger;
+        statusColor = Canopy.liveCrimson;
         statusText = 'admin.filter_rejected'.tr();
         break;
       case ApplicationStatus.suspended:
-        statusColor = AppTheme.danger;
+        statusColor = Canopy.liveCrimson;
         statusText = 'admin.suspended'.tr();
         break;
       case ApplicationStatus.pending:
@@ -1418,238 +1447,232 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         break;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: AppTheme.spaceSm,
-            runSpacing: AppTheme.spaceSm,
-            children: [
-              if (app.status == ApplicationStatus.pending)
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(end: 4, top: 4),
-                  child: Checkbox(
-                    value: _selectedApplicationIds.contains(app.id),
-                    activeColor: AppTheme.primary,
-                    onChanged: (checked) => setState(() {
-                      if (checked == true) {
-                        _selectedApplicationIds.add(app.id);
-                      } else {
-                        _selectedApplicationIds.remove(app.id);
-                      }
-                    }),
+    return AdminCard(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Wrap(
+              spacing: AppTheme.spaceSm,
+              runSpacing: AppTheme.spaceSm,
+              children: [
+                if (app.status == ApplicationStatus.pending)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 4, top: 4),
+                    child: Checkbox(
+                      value: _selectedApplicationIds.contains(app.id),
+                      activeColor: AppTheme.primary,
+                      onChanged: (checked) => setState(() {
+                        if (checked == true) {
+                          _selectedApplicationIds.add(app.id);
+                        } else {
+                          _selectedApplicationIds.remove(app.id);
+                        }
+                      }),
+                    ),
+                  ),
+                CircleAvatar(
+                  radius: 24,
+                  backgroundColor: Canopy.mint,
+                  backgroundImage: resolveImageProviderOrNull(app.avatarUrl),
+                  child: app.avatarUrl.isEmpty
+                      ? Icon(
+                          app.isOrganization
+                              ? Icons.apartment_rounded
+                              : Icons.person_rounded,
+                          color: Canopy.slate)
+                      : null,
+                ),
+                const SizedBox(width: AppTheme.spaceMd),
+                SizedBox(
+                  width: MediaQuery.sizeOf(context).width < 900
+                      ? double.infinity
+                      : 480,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Wrap(
+                        spacing: AppTheme.spaceSm,
+                        runSpacing: AppTheme.spaceSm,
+                        children: [
+                          Text(
+                            isAr ? app.applicantNameAr : app.applicantNameEn,
+                            style: const TextStyle(
+                              color: Canopy.ink,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 14,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: app.isOrganization
+                                  ? AppTheme.accent.withValues(alpha: 0.15)
+                                  : AppTheme.primary.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: app.isOrganization
+                                    ? AppTheme.accent.withValues(alpha: 0.6)
+                                    : AppTheme.primary.withValues(alpha: 0.6),
+                              ),
+                            ),
+                            child: Text(
+                              app.isOrganization
+                                  ? 'admin.application_org'.tr()
+                                  : 'admin.application_scholar'.tr(),
+                              style: TextStyle(
+                                color: app.isOrganization
+                                    ? AppTheme.accent
+                                    : AppTheme.primary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          if (app.revisionOf != null)
+                            Chip(
+                                label:
+                                    Text('admin.edit_after_verification'.tr())),
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: statusColor.withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              statusText,
+                              style: TextStyle(
+                                color: statusColor,
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${app.email} • ${app.phone}',
+                        style: const TextStyle(
+                          color: Canopy.haze,
+                          fontSize: 12,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        app.isOrganization
+                            ? '${'admin.venue'.tr()}: ${isAr ? app.venueNameAr : app.venueNameEn} • ${'admin.field_capacity'.tr()}: ${app.seatingCapacity} ${'admin.field_seats'.tr()} • ${'admin.location'.tr()}: (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})'
+                            : '${'admin.field_title'.tr()}: ${isAr ? (app.academicTitleAr ?? '') : (app.academicTitleEn ?? '')} • ${'admin.field_institution'.tr()}: ${isAr ? (app.institutionAr ?? '') : (app.institutionEn ?? '')}',
+                        style: const TextStyle(
+                          color: Canopy.slate,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              CircleAvatar(
-                radius: 24,
-                backgroundColor: AppTheme.surfaceAlt,
-                backgroundImage: resolveImageProviderOrNull(app.avatarUrl),
-                child: app.avatarUrl.isEmpty
-                    ? Icon(
-                        app.isOrganization
-                            ? Icons.apartment_rounded
-                            : Icons.person_rounded,
-                        color: AppTheme.textSecondary)
-                    : null,
-              ),
-              const SizedBox(width: AppTheme.spaceMd),
-              SizedBox(
-                width: MediaQuery.sizeOf(context).width < 900
-                    ? double.infinity
-                    : 480,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+
+                // Action Buttons
+                Wrap(
+                  spacing: AppTheme.spaceSm,
+                  runSpacing: AppTheme.spaceSm,
                   children: [
-                    Wrap(
-                      spacing: AppTheme.spaceSm,
-                      runSpacing: AppTheme.spaceSm,
-                      children: [
-                        Text(
-                          isAr ? app.applicantNameAr : app.applicantNameEn,
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: app.isOrganization
-                                ? AppTheme.accent.withValues(alpha: 0.15)
-                                : AppTheme.primary.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                            border: Border.all(
-                              color: app.isOrganization
-                                  ? AppTheme.accent.withValues(alpha: 0.6)
-                                  : AppTheme.primary.withValues(alpha: 0.6),
-                            ),
-                          ),
-                          child: Text(
-                            app.isOrganization
-                                ? 'admin.application_org'.tr()
-                                : 'admin.application_scholar'.tr(),
-                            style: TextStyle(
-                              color: app.isOrganization
-                                  ? AppTheme.accent
-                                  : AppTheme.primary,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        if (app.revisionOf != null)
-                          Chip(
-                              label:
-                                  Text('admin.edit_after_verification'.tr())),
-                        const SizedBox(width: 6),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: statusColor.withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            statusText,
-                            style: TextStyle(
-                              color: statusColor,
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${app.email} • ${app.phone}',
-                      style: const TextStyle(
-                        color: AppTheme.textMuted,
-                        fontSize: 11,
+                    if (app.status == ApplicationStatus.pending) ...[
+                      OutlinedButton.icon(
+                        onPressed: () =>
+                            _showApplicationDetailsDialog(context, app, isAr),
+                        icon: const Icon(Icons.visibility_outlined, size: 16),
+                        label: Text('admin.btn_inspect'.tr()),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      app.isOrganization
-                          ? '${'admin.venue'.tr()}: ${isAr ? app.venueNameAr : app.venueNameEn} • ${'admin.field_capacity'.tr()}: ${app.seatingCapacity} ${'admin.field_seats'.tr()} • ${'admin.location'.tr()}: (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})'
-                          : '${'admin.field_title'.tr()}: ${isAr ? (app.academicTitleAr ?? '') : (app.academicTitleEn ?? '')} • ${'admin.field_institution'.tr()}: ${isAr ? (app.institutionAr ?? '') : (app.institutionEn ?? '')}',
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11.5,
+                      ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Canopy.leaf,
+                          foregroundColor: AppTheme.onMedia,
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                        icon: const Icon(Icons.check_circle_rounded, size: 16),
+                        label: Text(app.revisionOf == null
+                            ? 'admin.btn_approve'.tr()
+                            : 'admin.approve_edit'.tr()),
+                        onPressed: () =>
+                            _handleApproveApplication(context, provider, app),
+                      ),
+                      const SizedBox(width: 8),
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Canopy.liveCrimson,
+                          side: const BorderSide(color: Canopy.liveCrimson),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 8),
+                        ),
+                        icon: const Icon(Icons.cancel_outlined, size: 16),
+                        label: Text(app.revisionOf == null
+                            ? 'admin.btn_reject'.tr()
+                            : 'admin.reject_edit'.tr()),
+                        onPressed: () =>
+                            _showRejectDialog(context, provider, app),
+                      ),
+                    ] else ...[
+                      OutlinedButton.icon(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: AppTheme.primary,
+                          side: const BorderSide(color: Canopy.hairline),
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 6),
+                        ),
+                        icon: const Icon(Icons.visibility_outlined, size: 14),
+                        label: Text('admin.btn_inspect'.tr()),
+                        onPressed: () =>
+                            _showApplicationDetailsDialog(context, app, isAr),
+                      ),
+                      const SizedBox(width: 6),
+                      IconButton(
+                        icon: const Icon(Icons.delete_outline_rounded,
+                            size: 18, color: Canopy.liveCrimson),
+                        tooltip: 'admin.btn_delete'.tr(),
+                        onPressed: () =>
+                            _removeApplicationFromQueue(context, provider, app),
+                      ),
+                    ],
+                  ],
+                ),
+              ],
+            ),
+            if (app.adminReviewNotes != null &&
+                app.adminReviewNotes!.isNotEmpty) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppTheme.spaceSm),
+                decoration: BoxDecoration(
+                  color: Canopy.mint,
+                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                  border:
+                      Border.all(color: Canopy.liveCrimson.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.rate_review_outlined,
+                        size: 14, color: Canopy.liveCrimson),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        '${'admin.review_notes'.tr()}: ${app.adminReviewNotes}',
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       ),
                     ),
                   ],
                 ),
-              ),
-
-              // Action Buttons
-              Wrap(
-                spacing: AppTheme.spaceSm,
-                runSpacing: AppTheme.spaceSm,
-                children: [
-                  if (app.status == ApplicationStatus.pending) ...[
-                    OutlinedButton.icon(
-                      onPressed: () =>
-                          _showApplicationDetailsDialog(context, app, isAr),
-                      icon: const Icon(Icons.visibility_outlined, size: 16),
-                      label: Text('admin.btn_inspect'.tr()),
-                    ),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.success,
-                        foregroundColor: AppTheme.onMedia,
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                      ),
-                      icon: const Icon(Icons.check_circle_rounded, size: 16),
-                      label: Text(app.revisionOf == null
-                          ? 'admin.btn_approve'.tr()
-                          : 'admin.approve_edit'.tr()),
-                      onPressed: () =>
-                          _handleApproveApplication(context, provider, app),
-                    ),
-                    const SizedBox(width: 8),
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.danger,
-                        side: const BorderSide(color: AppTheme.danger),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                      ),
-                      icon: const Icon(Icons.cancel_outlined, size: 16),
-                      label: Text(app.revisionOf == null
-                          ? 'admin.btn_reject'.tr()
-                          : 'admin.reject_edit'.tr()),
-                      onPressed: () =>
-                          _showRejectDialog(context, provider, app),
-                    ),
-                  ] else ...[
-                    OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: AppTheme.primary,
-                        side: const BorderSide(color: AppTheme.border),
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 6),
-                      ),
-                      icon: const Icon(Icons.visibility_outlined, size: 14),
-                      label: Text('admin.btn_inspect'.tr()),
-                      onPressed: () =>
-                          _showApplicationDetailsDialog(context, app, isAr),
-                    ),
-                    const SizedBox(width: 6),
-                    IconButton(
-                      icon: const Icon(Icons.delete_outline_rounded,
-                          size: 18, color: AppTheme.danger),
-                      tooltip: 'admin.btn_delete'.tr(),
-                      onPressed: () =>
-                          _removeApplicationFromQueue(context, provider, app),
-                    ),
-                  ],
-                ],
               ),
             ],
-          ),
-          if (app.adminReviewNotes != null &&
-              app.adminReviewNotes!.isNotEmpty) ...[
-            const SizedBox(height: AppTheme.spaceSm),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(AppTheme.spaceSm),
-              decoration: BoxDecoration(
-                color: AppTheme.surfaceAlt,
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                border:
-                    Border.all(color: AppTheme.danger.withValues(alpha: 0.3)),
-              ),
-              child: Row(
-                children: [
-                  const Icon(Icons.rate_review_outlined,
-                      size: 14, color: AppTheme.danger),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      '${'admin.review_notes'.tr()}: ${app.adminReviewNotes}',
-                      style: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 11),
-                    ),
-                  ),
-                ],
-              ),
-            ),
           ],
-        ],
-      ),
-    );
+        ));
   }
 
   void _handleApproveApplication(BuildContext context, AppProvider provider,
@@ -1658,28 +1681,28 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     String stageDescription = 'Starting verification pipeline...';
     StateSetter? dialogSetState;
 
-    showDialog(
+    showCaDialog(
       context: context,
       barrierDismissible: false,
       builder: (dialogCtx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
           dialogSetState = setDialogState;
           final double progress = currentStage / 5.0;
-          return AlertDialog(
+          return CaAlertDialog(
             backgroundColor: AppTheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              side: const BorderSide(color: AppTheme.border),
+              side: const BorderSide(color: Canopy.hairline),
             ),
             title: Row(
               children: [
                 const Icon(Icons.verified_user_rounded,
-                    color: AppTheme.success, size: 22),
+                    color: Canopy.leaf, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   'design_ui.approving_broadcaster'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                    color: Canopy.ink,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -1693,7 +1716,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 Text(
                   'Stage $currentStage of 5: $stageDescription',
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
+                    color: Canopy.slate,
                     fontSize: 12.5,
                     height: 1.4,
                   ),
@@ -1703,9 +1726,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: AppTheme.surfaceAlt,
+                    backgroundColor: Canopy.mint,
                     valueColor:
-                        const AlwaysStoppedAnimation<Color>(AppTheme.success),
+                        const AlwaysStoppedAnimation<Color>(Canopy.leaf),
                     minHeight: 8,
                   ),
                 ),
@@ -1748,19 +1771,19 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       BroadcasterApplicationModel app) {
     final reasonController = TextEditingController();
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) {
-        return AlertDialog(
+        return CaAlertDialog(
           backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            side: const BorderSide(color: AppTheme.border),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text(
             'admin.reject_dialog_title'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 16),
           ),
@@ -1777,26 +1800,29 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       .getLocalizedApplicantName(context.locale.languageCode),
                 }),
                 style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 12),
+                    color: Canopy.slate, fontSize: 12),
               ),
               const SizedBox(height: AppTheme.spaceMd),
-              TextField(
-                controller: reasonController,
-                maxLines: 3,
-                style:
-                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                decoration: InputDecoration(
-                  hintText: 'admin.reject_dialog_hint'.tr(),
-                  hintStyle:
-                      const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                  filled: true,
-                  fillColor: AppTheme.surfaceAlt,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    borderSide: const BorderSide(color: AppTheme.border),
-                  ),
-                ),
-              ),
+              PhoneInputGuard(builder: (context, blocked) => TextField(
+                        readOnly: blocked,
+                        controller: reasonController,
+                        maxLines: 3,
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: 'admin.reject_dialog_hint'.tr(),
+                          hintStyle: const TextStyle(
+                              color: Canopy.haze, fontSize: 12),
+                          filled: true,
+                          fillColor: Canopy.mint,
+                          border: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusMd),
+                            borderSide:
+                                const BorderSide(color: Canopy.hairline),
+                          ),
+                        ),
+                      )),
             ],
           ),
           actions: [
@@ -1804,12 +1830,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
+                backgroundColor: Canopy.liveCrimson,
                 foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
@@ -1863,293 +1889,292 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       compare('YouTube', base.youtubeChannelUrl, app.youtubeChannelUrl);
       compare('YouTube @', base.youtubeHandle, app.youtubeHandle);
     }
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) {
-        return Dialog(
-          backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: AppTheme.border),
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 620, maxHeight: 720),
-            child: Column(
-              children: [
-                // Top Header Banner with Floating Avatar
-                Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    Container(
-                      height: 120,
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.vertical(
-                            top: Radius.circular(AppTheme.radiusLg)),
-                        image: bannerImage == null
-                            ? null
-                            : DecorationImage(
-                                image: bannerImage,
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    ),
-                    Container(
-                      height: 120,
-                      decoration: const BoxDecoration(
-                        borderRadius: BorderRadius.vertical(
-                            top: Radius.circular(AppTheme.radiusLg)),
-                        color: AppTheme.media,
-                      ),
-                    ),
-                    PositionedDirectional(
-                      top: 10,
-                      end: 10,
-                      child: IconButton(
-                        icon: const Icon(Icons.close_rounded,
-                            color: AppTheme.onMedia, size: 22),
-                        onPressed: () => Navigator.pop(dialogContext),
-                      ),
-                    ),
-                    PositionedDirectional(
-                      bottom: -32,
-                      start: 20,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.surface, width: 3),
-                        ),
-                        child: CircleAvatar(
-                          radius: 34,
-                          backgroundImage:
-                              resolveImageProviderOrNull(app.avatarUrl),
-                          child: app.avatarUrl.isEmpty
-                              ? const Icon(Icons.person_outline_rounded)
-                              : null,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 38),
-
-                // Title and Metadata
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-                  child: Row(
+        return CaDialog(
+            title: '',
+            body: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 620, maxHeight: 720),
+              child: Column(
+                children: [
+                  // Top Header Banner with Floating Avatar
+                  Stack(
+                    clipBehavior: Clip.none,
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Wrap(
-                              children: [
-                                Text(
-                                  isAr
-                                      ? app.applicantNameAr
-                                      : app.applicantNameEn,
-                                  style: const TextStyle(
-                                    color: AppTheme.textPrimary,
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
+                      Container(
+                        height: 120,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(AppTheme.radiusLg)),
+                          image: bannerImage == null
+                              ? null
+                              : DecorationImage(
+                                  image: bannerImage,
+                                  fit: BoxFit.cover,
                                 ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                    app.isApproved
-                                        ? Icons.verified_rounded
-                                        : Icons.pending_outlined,
-                                    color: AppTheme.primary,
-                                    size: 18),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              app.isOrganization
-                                  ? (app.organizationType ??
-                                      'Educational Academy')
-                                  : (isAr
-                                      ? (app.academicTitleAr ?? 'محاضر وباحث')
-                                      : (app.academicTitleEn ??
-                                          'Academic Scholar')),
-                              style: const TextStyle(
-                                color: AppTheme.accent,
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surfaceAlt,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(color: AppTheme.border),
+                        height: 120,
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.vertical(
+                              top: Radius.circular(AppTheme.radiusLg)),
+                          color: AppTheme.media,
                         ),
-                        child: Text(
-                          app.isOrganization ? 'ORGANIZATION' : 'INDIVIDUAL',
-                          style: const TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                      ),
+                      PositionedDirectional(
+                        top: 10,
+                        end: 10,
+                        child: IconButton(
+                          icon: const Icon(Icons.close_rounded,
+                              color: AppTheme.onMedia, size: 22),
+                          onPressed: () => Navigator.pop(dialogContext),
+                        ),
+                      ),
+                      PositionedDirectional(
+                        bottom: -32,
+                        start: 20,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border:
+                                Border.all(color: AppTheme.surface, width: 3),
+                          ),
+                          child: CircleAvatar(
+                            radius: 34,
+                            backgroundImage:
+                                resolveImageProviderOrNull(app.avatarUrl),
+                            child: app.avatarUrl.isEmpty
+                                ? const Icon(Icons.person_outline_rounded)
+                                : null,
                           ),
                         ),
                       ),
                     ],
                   ),
-                ),
-                const SizedBox(height: AppTheme.spaceMd),
+                  const SizedBox(height: 38),
 
-                // Content Scrollable Details
-                Expanded(
-                  child: SingleChildScrollView(
+                  // Title and Metadata
+                  Padding(
                     padding: const EdgeInsets.symmetric(
                         horizontal: AppTheme.spaceLg),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
                       children: [
-                        if (app.revisionOf != null) ...[
-                          Text('admin.edit_after_verification'.tr(),
-                              style:
-                                  const TextStyle(fontWeight: FontWeight.bold)),
-                          if (changes.isEmpty)
-                            Text('admin.no_reviewed_changes'.tr()),
-                          for (final change in changes)
-                            _buildDetailRow(change.label,
-                                '${change.before} → ${change.after}'),
-                          const Divider(),
-                        ],
-                        _buildDetailRow('admin.field_email'.tr(), app.email),
-                        _buildDetailRow('admin.field_phone'.tr(), app.phone),
-                        _buildDetailRow('admin.field_youtube'.tr(),
-                            '@${app.youtubeHandle}'),
-                        _buildDetailRow(
-                            'admin.field_youtube'.tr(), app.youtubeChannelUrl),
-                        _buildDetailRow('admin.field_category'.tr(),
-                            app.categoryId.replaceAll('_', ' ').toUpperCase()),
-                        if (app.tags.isNotEmpty)
-                          _buildDetailRow(
-                              'admin.field_tags'.tr(), app.tags.join(' ')),
-                        _buildDetailRow(
-                          'admin.location'.tr(),
-                          '${isAr ? app.venueNameAr : app.venueNameEn} (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})',
-                        ),
-                        const SizedBox(height: AppTheme.spaceSm),
-                        const Divider(color: AppTheme.border),
-                        const SizedBox(height: AppTheme.spaceSm),
-                        Text(
-                          'design_ui.research_biography_english'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                children: [
+                                  Text(
+                                    isAr
+                                        ? app.applicantNameAr
+                                        : app.applicantNameEn,
+                                    style: const TextStyle(
+                                      color: Canopy.ink,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                      app.isApproved
+                                          ? Icons.verified_rounded
+                                          : Icons.pending_outlined,
+                                      color: AppTheme.primary,
+                                      size: 18),
+                                ],
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                app.isOrganization
+                                    ? (app.organizationType ??
+                                        'Educational Academy')
+                                    : (isAr
+                                        ? (app.academicTitleAr ?? 'محاضر وباحث')
+                                        : (app.academicTitleEn ??
+                                            'Academic Scholar')),
+                                style: const TextStyle(
+                                  color: AppTheme.accent,
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          app.bioEn.isNotEmpty ? app.bioEn : 'N/A',
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 12),
-                        ),
-                        const SizedBox(height: AppTheme.spaceMd),
-                        const Text(
-                          'نبذة السيرة الذاتية (عربي)',
-                          style: TextStyle(
-                            color: AppTheme.textMuted,
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.bold,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: Canopy.mint,
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusSm),
+                            border: Border.all(color: Canopy.hairline),
                           ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          app.bioAr.isNotEmpty ? app.bioAr : 'لا يوجد',
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 12),
+                          child: Text(
+                            app.isOrganization ? 'ORGANIZATION' : 'INDIVIDUAL',
+                            style: const TextStyle(
+                              color: Canopy.haze,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ],
                     ),
                   ),
-                ),
+                  const SizedBox(height: AppTheme.spaceMd),
 
-                // Bottom Action Footer
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceMd),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surfaceAlt,
-                    borderRadius: BorderRadius.vertical(
-                        bottom: Radius.circular(AppTheme.radiusLg)),
-                    border: Border(top: BorderSide(color: AppTheme.border)),
-                  ),
-                  child: Wrap(
-                    alignment: WrapAlignment.end,
-                    spacing: AppTheme.spaceXs,
-                    runSpacing: AppTheme.spaceXs,
-                    children: [
-                      if (app.status == ApplicationStatus.pending) ...[
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.success,
-                            foregroundColor: AppTheme.onMedia,
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 16, vertical: 10),
+                  // Content Scrollable Details
+                  Expanded(
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: AppTheme.spaceLg),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (app.revisionOf != null) ...[
+                            Text('admin.edit_after_verification'.tr(),
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold)),
+                            if (changes.isEmpty)
+                              Text('admin.no_reviewed_changes'.tr()),
+                            for (final change in changes)
+                              _buildDetailRow(change.label,
+                                  '${change.before} → ${change.after}'),
+                            const Divider(),
+                          ],
+                          _buildDetailRow('admin.field_email'.tr(), app.email),
+                          _buildDetailRow('admin.field_phone'.tr(), app.phone),
+                          _buildDetailRow('admin.field_youtube'.tr(),
+                              '@${app.youtubeHandle}'),
+                          _buildDetailRow('admin.field_youtube'.tr(),
+                              app.youtubeChannelUrl),
+                          _buildDetailRow(
+                              'admin.field_category'.tr(),
+                              app.categoryId
+                                  .replaceAll('_', ' ')
+                                  .toUpperCase()),
+                          if (app.tags.isNotEmpty)
+                            _buildDetailRow(
+                                'admin.field_tags'.tr(), app.tags.join(' ')),
+                          _buildDetailRow(
+                            'admin.location'.tr(),
+                            '${isAr ? app.venueNameAr : app.venueNameEn} (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})',
                           ),
-                          icon:
-                              const Icon(Icons.check_circle_rounded, size: 16),
-                          label: Text(app.revisionOf == null
-                              ? 'design_ui.approve_broadcaster'.tr()
-                              : 'admin.approve_edit'.tr()),
-                          onPressed: () {
+                          const SizedBox(height: AppTheme.spaceSm),
+                          const Divider(color: Canopy.hairline),
+                          const SizedBox(height: AppTheme.spaceSm),
+                          Text(
+                            'design_ui.research_biography_english'.tr(),
+                            style: const TextStyle(
+                              color: Canopy.haze,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            app.bioEn.isNotEmpty ? app.bioEn : 'N/A',
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
+                          ),
+                          const SizedBox(height: AppTheme.spaceMd),
+                          const Text(
+                            'نبذة السيرة الذاتية (عربي)',
+                            style: TextStyle(
+                              color: Canopy.haze,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            app.bioAr.isNotEmpty ? app.bioAr : 'لا يوجد',
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Bottom Action Footer
+                  Container(
+                    padding: const EdgeInsets.all(AppTheme.spaceMd),
+                    decoration: const BoxDecoration(
+                      color: Canopy.mint,
+                      borderRadius: BorderRadius.vertical(
+                          bottom: Radius.circular(AppTheme.radiusLg)),
+                      border: Border(top: BorderSide(color: Canopy.hairline)),
+                    ),
+                    child: Wrap(
+                      alignment: WrapAlignment.end,
+                      spacing: AppTheme.spaceXs,
+                      runSpacing: AppTheme.spaceXs,
+                      children: [
+                        if (app.status == ApplicationStatus.pending) ...[
+                          ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Canopy.leaf,
+                              foregroundColor: AppTheme.onMedia,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 10),
+                            ),
+                            icon: const Icon(Icons.check_circle_rounded,
+                                size: 16),
+                            label: Text(app.revisionOf == null
+                                ? 'design_ui.approve_broadcaster'.tr()
+                                : 'admin.approve_edit'.tr()),
+                            onPressed: () {
+                              Navigator.pop(dialogContext);
+                              _handleApproveApplication(context, provider, app);
+                            },
+                          ),
+                          const SizedBox(width: 8),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Canopy.liveCrimson,
+                              side: const BorderSide(color: Canopy.liveCrimson),
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 14, vertical: 10),
+                            ),
+                            icon: const Icon(Icons.cancel_outlined, size: 16),
+                            label: Text(app.revisionOf == null
+                                ? 'design_ui.reject'.tr()
+                                : 'admin.reject_edit'.tr()),
+                            onPressed: () {
+                              Navigator.pop(dialogContext);
+                              _showRejectDialog(context, provider, app);
+                            },
+                          ),
+                        ],
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: Canopy.liveCrimson, size: 20),
+                          tooltip: 'Delete Application',
+                          onPressed: () async {
                             Navigator.pop(dialogContext);
-                            _handleApproveApplication(context, provider, app);
+                            await _removeApplicationFromQueue(
+                                context, provider, app);
                           },
                         ),
-                        const SizedBox(width: 8),
-                        OutlinedButton.icon(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.danger,
-                            side: const BorderSide(color: AppTheme.danger),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 14, vertical: 10),
-                          ),
-                          icon: const Icon(Icons.cancel_outlined, size: 16),
-                          label: Text(app.revisionOf == null
-                              ? 'design_ui.reject'.tr()
-                              : 'admin.reject_edit'.tr()),
-                          onPressed: () {
-                            Navigator.pop(dialogContext);
-                            _showRejectDialog(context, provider, app);
-                          },
+                        const SizedBox(width: 6),
+                        TextButton(
+                          onPressed: () => Navigator.pop(dialogContext),
+                          child: Text('design_ui.close'.tr(),
+                              style:
+                                  const TextStyle(color: Canopy.ink)),
                         ),
                       ],
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded,
-                            color: AppTheme.danger, size: 20),
-                        tooltip: 'Delete Application',
-                        onPressed: () async {
-                          Navigator.pop(dialogContext);
-                          await _removeApplicationFromQueue(
-                              context, provider, app);
-                        },
-                      ),
-                      const SizedBox(width: 6),
-                      TextButton(
-                        onPressed: () => Navigator.pop(dialogContext),
-                        child: Text('design_ui.close'.tr(),
-                            style:
-                                const TextStyle(color: AppTheme.textPrimary)),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              ],
-            ),
-          ),
-        );
+                ],
+              ),
+            ));
       },
     );
   }
@@ -2157,11 +2182,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
   Widget _buildDetailRow(String label, String value) {
     final title = Text(label,
         style: const TextStyle(
-            color: AppTheme.textMuted,
-            fontSize: 11.5,
+            color: Canopy.haze,
+            fontSize: 12,
             fontWeight: FontWeight.w600));
     final detail = Text(value,
-        style: const TextStyle(color: AppTheme.textPrimary, fontSize: 12));
+        style: const TextStyle(color: Canopy.ink, fontSize: 12));
     return LayoutBuilder(
         builder: (context, constraints) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -2180,9 +2205,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   Future<void> _removeApplicationFromQueue(BuildContext context,
       AppProvider provider, BroadcasterApplicationModel app) async {
-    final remove = await showDialog<bool>(
+    final remove = await showCaDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => CaAlertDialog(
               title: Text('admin.remove_queue_title'.tr()),
               content: Text('admin.remove_queue_body'.tr()),
               actions: [
@@ -2241,27 +2266,30 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             children: [
               SizedBox(
                 width: double.infinity,
-                child: TextField(
-                  controller: _streamerSearchController,
-                  onChanged: (_) => setState(() {}),
-                  style: const TextStyle(
-                      color: AppTheme.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'admin.search_streamers'.tr(),
-                    hintStyle: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12),
-                    prefixIcon: const Icon(Icons.search_rounded,
-                        color: AppTheme.textSecondary, size: 18),
-                    filled: true,
-                    fillColor: AppTheme.surface,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      borderSide: const BorderSide(color: AppTheme.border),
-                    ),
-                  ),
-                ),
+                child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                          readOnly: blocked,
+                          controller: _streamerSearchController,
+                          onChanged: (_) => setState(() {}),
+                          style: const TextStyle(
+                              color: Canopy.ink, fontSize: 13),
+                          decoration: InputDecoration(
+                            hintText: 'admin.search_streamers'.tr(),
+                            hintStyle: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
+                            prefixIcon: const Icon(Icons.search_rounded,
+                                color: Canopy.slate, size: 18),
+                            filled: true,
+                            fillColor: AppTheme.surface,
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 10),
+                            border: OutlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusMd),
+                              borderSide:
+                                  const BorderSide(color: Canopy.hairline),
+                            ),
+                          ),
+                        )),
               ),
               const SizedBox(width: AppTheme.spaceMd),
               _buildStreamerFilterChip('admin.filter_all'.tr(), 'all'),
@@ -2283,207 +2311,203 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 final s = streamers[index];
                 final isProtected = provider.isProtectedStreamer(s.streamerId);
 
-                return Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceMd),
-                  decoration: BoxDecoration(
-                    color: AppTheme.surface,
-                    borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    border: Border.all(color: AppTheme.border),
-                  ),
-                  child: Wrap(
-                    spacing: AppTheme.spaceSm,
-                    runSpacing: AppTheme.spaceSm,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      CircleAvatar(
-                        radius: 20,
-                        backgroundColor: AppTheme.surfaceAlt,
-                        backgroundImage: buildSafeImageProvider(
-                          path: s.avatarUrl,
-                          defaultAsset:
-                              'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+                return AdminCard(
+                    padding: const EdgeInsets.all(AppTheme.spaceMd),
+                    child: Wrap(
+                      spacing: AppTheme.spaceSm,
+                      runSpacing: AppTheme.spaceSm,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        CircleAvatar(
+                          radius: 20,
+                          backgroundColor: Canopy.mint,
+                          backgroundImage: buildSafeImageProvider(
+                            path: s.avatarUrl,
+                            defaultAsset:
+                                'assets/images/Amir_Alhatemi/amir_person_pic.jpg',
+                          ),
                         ),
-                      ),
-                      const SizedBox(width: AppTheme.spaceMd),
-                      SizedBox(
-                        width: MediaQuery.sizeOf(context).width < 600
-                            ? MediaQuery.sizeOf(context).width - 160
-                            : 320,
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Wrap(
-                              crossAxisAlignment: WrapCrossAlignment.center,
-                              children: [
-                                Text(
-                                  isAr ? s.fullNameAr : s.fullNameEn,
-                                  style: const TextStyle(
-                                    color: AppTheme.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                if (s.isVerified)
-                                  const Icon(Icons.verified_rounded,
-                                      size: 14, color: AppTheme.primary),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 5, vertical: 1.5),
-                                  decoration: BoxDecoration(
-                                    color: s.isOrganization
-                                        ? AppTheme.accent
-                                            .withValues(alpha: 0.15)
-                                        : AppTheme.primary
-                                            .withValues(alpha: 0.15),
-                                    borderRadius: BorderRadius.circular(4),
-                                  ),
-                                  child: Text(
-                                    s.isOrganization ? 'ORG VENUE' : 'SCHOLAR',
-                                    style: TextStyle(
-                                      color: s.isOrganization
-                                          ? AppTheme.accent
-                                          : AppTheme.primary,
-                                      fontSize: 8.5,
+                        const SizedBox(width: AppTheme.spaceMd),
+                        SizedBox(
+                          width: MediaQuery.sizeOf(context).width < 600
+                              ? MediaQuery.sizeOf(context).width - 160
+                              : 320,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Wrap(
+                                crossAxisAlignment: WrapCrossAlignment.center,
+                                children: [
+                                  Text(
+                                    isAr ? s.fullNameAr : s.fullNameEn,
+                                    style: const TextStyle(
+                                      color: Canopy.ink,
                                       fontWeight: FontWeight.bold,
+                                      fontSize: 13,
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              '${isAr ? s.titleAr : s.titleEn} • ${isAr ? s.organizationAr : s.organizationEn}',
-                              style: const TextStyle(
-                                color: AppTheme.textSecondary,
-                                fontSize: 11,
+                                  const SizedBox(width: 6),
+                                  if (s.isVerified)
+                                    const Icon(Icons.verified_rounded,
+                                        size: 14, color: AppTheme.primary),
+                                  const SizedBox(width: 6),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 1.5),
+                                    decoration: BoxDecoration(
+                                      color: s.isOrganization
+                                          ? AppTheme.accent
+                                              .withValues(alpha: 0.15)
+                                          : AppTheme.primary
+                                              .withValues(alpha: 0.15),
+                                      borderRadius: BorderRadius.circular(4),
+                                    ),
+                                    child: Text(
+                                      s.isOrganization
+                                          ? 'ORG VENUE'
+                                          : 'SCHOLAR',
+                                      style: TextStyle(
+                                        color: s.isOrganization
+                                            ? AppTheme.accent
+                                            : AppTheme.primary,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                               ),
+                              const SizedBox(height: 2),
+                              Text(
+                                '${isAr ? s.titleAr : s.titleEn} • ${isAr ? s.organizationAr : s.organizationEn}',
+                                style: const TextStyle(
+                                  color: Canopy.slate,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        // Live Status Badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 3),
+                          decoration: BoxDecoration(
+                            color: s.isCurrentlyLive
+                                ? Canopy.liveCrimson.withValues(alpha: 0.15)
+                                : Canopy.mint,
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusSm),
+                            border: Border.all(
+                              color: s.isCurrentlyLive
+                                  ? Canopy.liveCrimson
+                                  : Canopy.hairline,
                             ),
-                          ],
-                        ),
-                      ),
-
-                      // Live Status Badge
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: s.isCurrentlyLive
-                              ? AppTheme.danger.withValues(alpha: 0.15)
-                              : AppTheme.surfaceAlt,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(
-                            color: s.isCurrentlyLive
-                                ? AppTheme.danger
-                                : AppTheme.border,
+                          ),
+                          child: Text(
+                            s.isCurrentlyLive ? 'LIVE' : 'OFFLINE',
+                            style: TextStyle(
+                              color: s.isCurrentlyLive
+                                  ? Canopy.liveCrimson
+                                  : Canopy.haze,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
-                        child: Text(
-                          s.isCurrentlyLive ? 'LIVE' : 'OFFLINE',
-                          style: TextStyle(
-                            color: s.isCurrentlyLive
-                                ? AppTheme.danger
-                                : AppTheme.textMuted,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                        const SizedBox(width: AppTheme.spaceMd),
+
+                        // Manage Org Button (If Organization)
+                        if (s.isOrganization)
+                          IconButton(
+                            icon: const Icon(Icons.apartment_rounded,
+                                size: 16, color: AppTheme.warning),
+                            tooltip: 'admin.tab_organizations'.tr(),
+                            onPressed: () {
+                              _tabController.animateTo(3);
+                            },
+                          ),
+
+                        // Hide from Map Toggle (Cluster 4 Task 18) -- a
+                        // moderation action short of a full ban; the profile
+                        // stays reachable by direct link.
+                        Tooltip(
+                          message: 'admin.hide_from_map_toggle'.tr(),
+                          child: Switch(
+                            value: s.isTemporarilyHiddenFromMap,
+                            activeThumbColor: AppTheme.warning,
+                            onChanged: (hidden) async {
+                              // The server records who changed map visibility
+                              // and why; it refuses a blank reason.
+                              final reason = await askSafetyReason(
+                                context,
+                                title: (hidden
+                                        ? 'admin.hide_from_map_confirm_title'
+                                        : 'admin.show_on_map_title')
+                                    .tr(),
+                                body: (hidden
+                                        ? 'admin.hide_from_map_confirm_body'
+                                        : 'admin.show_on_map_body')
+                                    .tr(),
+                              );
+                              if (reason == null || !context.mounted) return;
+                              final success =
+                                  await provider.setStreamerHiddenFromMap(
+                                      streamerId: s.streamerId,
+                                      hidden: hidden,
+                                      reason: reason);
+                              if (!success) {
+                                _showErrorNotification(
+                                    'admin.map_visibility_failed'.tr());
+                                return;
+                              }
+                              _showSuccessNotification(hidden
+                                  ? 'admin.streamer_hidden_from_map_toast'.tr()
+                                  : 'admin.streamer_shown_on_map_toast'.tr());
+                            },
                           ),
                         ),
-                      ),
-                      const SizedBox(width: AppTheme.spaceMd),
 
-                      // Manage Org Button (If Organization)
-                      if (s.isOrganization)
+                        // Edit Button
                         IconButton(
-                          icon: const Icon(Icons.apartment_rounded,
-                              size: 16, color: AppTheme.warning),
-                          tooltip: 'admin.tab_organizations'.tr(),
-                          onPressed: () {
-                            _tabController.animateTo(3);
-                          },
+                          icon: const Icon(Icons.edit_rounded,
+                              size: 16, color: AppTheme.primary),
+                          tooltip: 'Edit Broadcaster',
+                          onPressed: () =>
+                              StreamerEditorSheet.show(context, streamer: s),
                         ),
 
-                      // Hide from Map Toggle (Cluster 4 Task 18) -- a
-                      // moderation action short of a full ban; the profile
-                      // stays reachable by direct link.
-                      Tooltip(
-                        message: 'admin.hide_from_map_toggle'.tr(),
-                        child: Switch(
-                          value: s.isTemporarilyHiddenFromMap,
-                          activeThumbColor: AppTheme.warning,
-                          onChanged: (hidden) async {
-                            // The server records who changed map visibility
-                            // and why; it refuses a blank reason.
-                            final reason = await askSafetyReason(
-                              context,
-                              title: (hidden
-                                      ? 'admin.hide_from_map_confirm_title'
-                                      : 'admin.show_on_map_title')
-                                  .tr(),
-                              body: (hidden
-                                      ? 'admin.hide_from_map_confirm_body'
-                                      : 'admin.show_on_map_body')
-                                  .tr(),
-                            );
-                            if (reason == null || !context.mounted) return;
-                            final success =
-                                await provider.setStreamerHiddenFromMap(
-                                    streamerId: s.streamerId,
-                                    hidden: hidden,
-                                    reason: reason);
-                            if (!success) {
-                              _showErrorNotification(
-                                  'admin.map_visibility_failed'.tr());
-                              return;
-                            }
-                            _showSuccessNotification(hidden
-                                ? 'admin.streamer_hidden_from_map_toast'.tr()
-                                : 'admin.streamer_shown_on_map_toast'.tr());
-                          },
-                        ),
-                      ),
-
-                      // Edit Button
-                      IconButton(
-                        icon: const Icon(Icons.edit_rounded,
-                            size: 16, color: AppTheme.primary),
-                        tooltip: 'Edit Broadcaster',
-                        onPressed: () =>
-                            StreamerEditorSheet.show(context, streamer: s),
-                      ),
-
-                      // Revoke broadcaster approval (Non-Protected). This
-                      // withdraws broadcasting rights through the audited
-                      // server action; it does not delete the account --
-                      // account deletion lives in User Directory (P6-R09).
-                      if (!isProtected)
-                        IconButton(
-                          icon: const Icon(Icons.person_off_rounded,
-                              size: 16, color: AppTheme.danger),
-                          tooltip: 'admin.revoke_broadcaster_tooltip'.tr(),
-                          onPressed: () async {
-                            final reason = await askSafetyReason(
-                              context,
-                              title: 'admin.revoke_broadcaster_title'.tr(),
-                              body: 'admin.revoke_broadcaster_body'.tr(),
-                            );
-                            if (reason == null || !context.mounted) return;
-                            final success = await provider
-                                .revokeBroadcasterApproval(s.streamerId,
-                                    reason: reason);
-                            if (success) {
-                              _showSuccessNotification(
-                                  'admin.revoke_broadcaster_done'.tr());
-                            } else {
-                              _showErrorNotification(
-                                  'admin.revoke_broadcaster_failed'.tr());
-                            }
-                          },
-                        ),
-                    ],
-                  ),
-                );
+                        // Revoke broadcaster approval (Non-Protected). This
+                        // withdraws broadcasting rights through the audited
+                        // server action; it does not delete the account --
+                        // account deletion lives in User Directory (P6-R09).
+                        if (!isProtected)
+                          IconButton(
+                            icon: const Icon(Icons.person_off_rounded,
+                                size: 16, color: Canopy.liveCrimson),
+                            tooltip: 'admin.revoke_broadcaster_tooltip'.tr(),
+                            onPressed: () async {
+                              final reason = await askSafetyReason(
+                                context,
+                                title: 'admin.revoke_broadcaster_title'.tr(),
+                                body: 'admin.revoke_broadcaster_body'.tr(),
+                              );
+                              if (reason == null || !context.mounted) return;
+                              final success = await provider
+                                  .revokeBroadcasterApproval(s.streamerId,
+                                      reason: reason);
+                              if (success) {
+                                _showSuccessNotification(
+                                    'admin.revoke_broadcaster_done'.tr());
+                              } else {
+                                _showErrorNotification(
+                                    'admin.revoke_broadcaster_failed'.tr());
+                              }
+                            },
+                          ),
+                      ],
+                    ));
               },
             ),
           ),
@@ -2500,12 +2524,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       selectedColor: AppTheme.accent.withValues(alpha: 0.2),
       backgroundColor: AppTheme.surface,
       labelStyle: TextStyle(
-        color: isSelected ? AppTheme.accent : AppTheme.textSecondary,
-        fontSize: 11.5,
+        color: isSelected ? AppTheme.accent : Canopy.slate,
+        fontSize: 12,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? AppTheme.accent : AppTheme.border,
+        color: isSelected ? AppTheme.accent : Canopy.hairline,
       ),
       onSelected: (_) => setState(() => _streamerTypeFilter = value),
     );
@@ -2553,7 +2577,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   Text(
                     'admin.tab_terms'.tr(),
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -2620,96 +2644,94 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     required TextEditingController controllerEn,
     required TextEditingController controllerAr,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            title,
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 14,
+    return AdminCard(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              title,
+              style: const TextStyle(
+                color: Canopy.ink,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-          Wrap(
-            spacing: AppTheme.spaceMd,
-            runSpacing: AppTheme.spaceMd,
-            children: [
-              SizedBox(
-                width: MediaQuery.sizeOf(context).width < 900
-                    ? double.infinity
-                    : 320,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'admin.english_content'.tr(),
-                      style: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 11),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: controllerEn,
-                      maxLines: 5,
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary, fontSize: 12),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: AppTheme.surfaceAlt,
-                        border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          borderSide: const BorderSide(color: AppTheme.border),
-                        ),
+            const SizedBox(height: AppTheme.spaceMd),
+            Wrap(
+              spacing: AppTheme.spaceMd,
+              runSpacing: AppTheme.spaceMd,
+              children: [
+                SizedBox(
+                  width: MediaQuery.sizeOf(context).width < 900
+                      ? double.infinity
+                      : 320,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'admin.english_content'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      PhoneInputGuard(builder: (context, blocked) => TextField(
+                                readOnly: blocked,
+                                controller: controllerEn,
+                                maxLines: 5,
+                                style: const TextStyle(
+                                    color: Canopy.ink, fontSize: 12),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Canopy.mint,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusSm),
+                                    borderSide: const BorderSide(
+                                        color: Canopy.hairline),
+                                  ),
+                                ),
+                              )),
+                    ],
+                  ),
                 ),
-              ),
-              const SizedBox(width: AppTheme.spaceMd),
-              SizedBox(
-                width: MediaQuery.sizeOf(context).width < 900
-                    ? double.infinity
-                    : 320,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'admin.arabic_content'.tr(),
-                      style: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 11),
-                    ),
-                    const SizedBox(height: 4),
-                    TextField(
-                      controller: controllerAr,
-                      maxLines: 5,
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary, fontSize: 12),
-                      decoration: InputDecoration(
-                        filled: true,
-                        fillColor: AppTheme.surfaceAlt,
-                        border: OutlineInputBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          borderSide: const BorderSide(color: AppTheme.border),
-                        ),
+                const SizedBox(width: AppTheme.spaceMd),
+                SizedBox(
+                  width: MediaQuery.sizeOf(context).width < 900
+                      ? double.infinity
+                      : 320,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'admin.arabic_content'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 4),
+                      PhoneInputGuard(builder: (context, blocked) => TextField(
+                                readOnly: blocked,
+                                controller: controllerAr,
+                                maxLines: 5,
+                                style: const TextStyle(
+                                    color: Canopy.ink, fontSize: 12),
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: Canopy.mint,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(
+                                        AppTheme.radiusSm),
+                                    borderSide: const BorderSide(
+                                        color: Canopy.hairline),
+                                  ),
+                                ),
+                              )),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+              ],
+            ),
+          ],
+        ));
   }
 }

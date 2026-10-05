@@ -1,3 +1,5 @@
+import '../../organization/presentation/organization_surface.dart';
+import '../../../core/widgets/ds/ca_rows.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -33,17 +35,16 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final orgIds = context.select<AppProvider, List<String>>(
-        (p) => p.permittedAdminOrgIds);
+    final orgIds = context
+        .select<AppProvider, List<String>>((p) => p.permittedAdminOrgIds);
 
     if (orgIds.isEmpty) {
       return Scaffold(
-        backgroundColor: AppTheme.bg,
-        appBar: AppBar(
-          backgroundColor: AppTheme.surface,
+        backgroundColor: Canopy.dawn,
+        appBar: OrganizationAppBar(
           leading: IconButton(
             icon: const Icon(Icons.arrow_back_rounded,
-                color: AppTheme.textPrimary),
+                color: Canopy.ink),
             onPressed: () => context.go('/feed'),
           ),
           title: Text('design_ui.organization_admin'.tr()),
@@ -51,65 +52,82 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
         body: Center(
           child: Padding(
             padding: const EdgeInsets.all(AppTheme.spaceXl),
-            child: Text('design_ui.you_are_not_an_owner_or_co_owner_of_any_organization'.tr(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 13),
-            ),
+            child: CaBanner(
+                message:
+                    'design_ui.you_are_not_an_owner_or_co_owner_of_any_organization'
+                        .tr()),
           ),
         ),
       );
     }
 
+    final names = context
+        .select<AppProvider, List<OrgMembership>>((p) => p.orgMemberships);
     _selectedOrgId ??= orgIds.first;
     final activeOrgId =
         orgIds.contains(_selectedOrgId) ? _selectedOrgId! : orgIds.first;
-    final membership = context.select<AppProvider, OrgMembership?>((p) => p.orgMemberships
-      .where((m) => m.organizationId == activeOrgId && m.active).firstOrNull);
+    final membership = context.select<AppProvider, OrgMembership?>((p) => p
+        .orgMemberships
+        .where((m) => m.organizationId == activeOrgId && m.active)
+        .firstOrNull);
     final profileAccess = membership == null ||
-      {OrgRole.owner, OrgRole.coOwner}.contains(membership.role);
+        {OrgRole.owner, OrgRole.coOwner}.contains(membership.role);
 
     return Scaffold(
-      backgroundColor: AppTheme.bg,
-      appBar: AppBar(
-        backgroundColor: AppTheme.surface,
+      backgroundColor: Canopy.dawn,
+      appBar: OrganizationAppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_rounded,
-              color: AppTheme.textPrimary),
-          tooltip: 'Back to Discovery Feed',
+          icon:
+              const Icon(Icons.arrow_back_rounded, color: Canopy.ink),
+          tooltip: 'design_ui.discovery'.tr(),
           onPressed: () => context.go('/feed'),
         ),
         title: Text('design_ui.organization_admin'.tr()),
-        actions: [
-          if (orgIds.length > 1)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd),
-              child: Center(
-                child: DropdownButton<String>(
-                  value: activeOrgId,
-                  dropdownColor: AppTheme.surfaceAlt,
-                  underline: const SizedBox.shrink(),
-                  style: const TextStyle(
-                      color: AppTheme.textPrimary, fontSize: 13),
-                  items: orgIds
-                      .map((id) => DropdownMenuItem(
-                            value: id,
-                            child: Text(id),
-                          ))
-                      .toList(),
-                  onChanged: (id) => setState(() => _selectedOrgId = id),
-                ),
-              ),
-            ),
-        ],
       ),
       // showAuditTrail: false -- audit_logs is admin-tier-only at the RLS
       // layer (20260821203100), so a Permitted Admin would just see an
       // always-empty tab there. See OrgManagementView's doc comment.
-      body: ListView(children: [
-        OrgMembershipPanel(key: ValueKey('members_$activeOrgId'), orgId: activeOrgId),
-        if (profileAccess) OrgManagementView(
-          key: ValueKey(activeOrgId), orgId: activeOrgId, showAuditTrail: false),
-      ]),
+      body: OrganizationBody(
+          child: ListView(children: [
+        if (orgIds.length > 1)
+          Padding(
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
+              child: OrganizationSwitcher(
+                  child: DropdownButton<String>(
+                value: activeOrgId,
+                isExpanded: true,
+                dropdownColor: Canopy.mint,
+                underline: const SizedBox.shrink(),
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge
+                    ?.copyWith(color: Canopy.ink),
+                items: orgIds
+                    .map((id) => DropdownMenuItem(
+                          value: id,
+                          child: Text(
+                              names
+                                      .where((m) => m.organizationId == id)
+                                      .map((m) => context.locale.languageCode ==
+                                                  'ar' &&
+                                              m.organizationNameAr.isNotEmpty
+                                          ? m.organizationNameAr
+                                          : m.organizationNameEn)
+                                      .firstOrNull ??
+                                  id,
+                              overflow: TextOverflow.ellipsis),
+                        ))
+                    .toList(),
+                onChanged: (id) => setState(() => _selectedOrgId = id),
+              ))),
+        OrgMembershipPanel(
+            key: ValueKey('members_$activeOrgId'), orgId: activeOrgId),
+        if (profileAccess)
+          OrgManagementView(
+              key: ValueKey(activeOrgId),
+              orgId: activeOrgId,
+              showAuditTrail: false),
+      ])),
     );
   }
 }

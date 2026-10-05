@@ -1,9 +1,12 @@
+import '../../../../core/widgets/ds/canopy_content_motion.dart';
+import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../../core/providers/app_provider.dart';
 import '../../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 
 class AdminUserDirectoryView extends StatefulWidget {
   const AdminUserDirectoryView({super.key});
@@ -69,27 +72,28 @@ class _AdminUserDirectoryViewState extends State<AdminUserDirectoryView> {
     return Padding(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       child: Column(children: [
-        TextField(
-            controller: _search,
-            maxLength: 200,
-            decoration: InputDecoration(
-                labelText: 'directory.search'.tr(),
-                suffixIcon: IconButton(
-                    tooltip: 'directory.search'.tr(),
-                    icon: const Icon(Icons.search),
-                    onPressed: () {
-                      _query = _search.text.trim();
-                      _offset = 0;
-                      _load();
-                    })),
-            onSubmitted: (_) {
-              _query = _search.text.trim();
-              _offset = 0;
-              _load();
-            }),
+        PhoneInputGuard(builder: (context, blocked) => TextField(
+                readOnly: blocked,
+                controller: _search,
+                maxLength: 200,
+                decoration: InputDecoration(
+                    labelText: 'directory.search'.tr(),
+                    suffixIcon: IconButton(
+                        tooltip: 'directory.search'.tr(),
+                        icon: const Icon(Icons.search),
+                        onPressed: () {
+                          _query = _search.text.trim();
+                          _offset = 0;
+                          _load();
+                        })),
+                onSubmitted: (_) {
+                  _query = _search.text.trim();
+                  _offset = 0;
+                  _load();
+                })),
         Expanded(
             child: _loading
-                ? const Center(child: HadayahLoadingIndicator())
+                ? const CaPageSkeleton()
                 : _failed
                     ? Center(
                         child:
@@ -113,15 +117,18 @@ class _AdminUserDirectoryViewState extends State<AdminUserDirectoryView> {
                                   ].whereType<String>().join('\n')),
                                   trailing: const Icon(Icons.chevron_right),
                                   onTap: () async {
-                                    await showModalBottomSheet<void>(
-                                        context: context,
-                                        isScrollControlled: true,
-                                        builder: (_) =>
-                                            ChangeNotifierProvider.value(
-                                                value:
-                                                    context.read<AppProvider>(),
-                                                child: _AccountDetail(
-                                                    id: row['id'] as String)));
+                                    await showCaSheet<void>(context,
+                                        title: '',
+                                        framed: false,
+                                        useRootNavigator: false,
+                                        body: Builder(
+                                            builder: (_) =>
+                                                ChangeNotifierProvider.value(
+                                                    value: context
+                                                        .read<AppProvider>(),
+                                                    child: _AccountDetail(
+                                                        id: row['id']
+                                                            as String))));
                                     if (mounted) _load();
                                   });
                             })),
@@ -170,19 +177,23 @@ class _AccountDetailState extends State<_AccountDetail> {
 
   Future<void> _act(String action) async {
     final reason = TextEditingController();
-    final accepted = await showDialog<bool>(
+    final accepted = await showCaDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => CaAlertDialog(
                 title: Text('directory.$action'.tr()),
                 content: Column(mainAxisSize: MainAxisSize.min, children: [
-                  if (action == 'delete_account' || action == 'revoke_sessions' || action == 'force_end' || action == 'remove_from_feed')
+                  if (action == 'delete_account' ||
+                      action == 'revoke_sessions' ||
+                      action == 'force_end' ||
+                      action == 'remove_from_feed')
                     Text('directory.${action}_warning'.tr()),
-                  TextField(
-                    controller: reason,
-                    maxLength: 500,
-                    maxLines: 3,
-                    decoration:
-                        InputDecoration(labelText: 'directory.reason'.tr())),
+                  PhoneInputGuard(builder: (context, blocked) => TextField(
+                          readOnly: blocked,
+                          controller: reason,
+                          maxLength: 500,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                              labelText: 'directory.reason'.tr()))),
                 ]),
                 actions: [
                   TextButton(
@@ -298,10 +309,10 @@ class _AccountDetailState extends State<_AccountDetail> {
                                       'revoke_streamer',
                                     if (row['is_verified'] == true)
                                       'revoke_verified',
-                                      'revoke_sessions',
-                                      'delete_account',
-                                      'force_end',
-                                      'remove_from_feed'
+                                    'revoke_sessions',
+                                    'delete_account',
+                                    'force_end',
+                                    'remove_from_feed'
                                   ])
                                     OutlinedButton(
                                         onPressed:

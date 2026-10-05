@@ -1,3 +1,5 @@
+import '../admin_surface.dart';
+import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -5,6 +7,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../discovery/models/academic_category_model.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../map/presentation/widgets/topic_selector_dropdown.dart'
     show iconForCategoryIconName;
 
@@ -111,7 +114,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppTheme.danger : AppTheme.success,
+        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
       ),
     );
   }
@@ -141,78 +144,78 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
 
   void _showIconPickerModal(
       BuildContext context, void Function(String) onSelect) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-      ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(AppTheme.spaceLg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'design_ui.select_category_icon'.tr(),
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
-                fontWeight: FontWeight.bold,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: AppTheme.spaceMd),
-            Flexible(
-              child: GridView.builder(
-                shrinkWrap: true,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 4,
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                  childAspectRatio: 1.1,
-                ),
-                itemCount: kAvailableCategoryIcons.length,
-                itemBuilder: (ctx, i) {
-                  final item = kAvailableCategoryIcons[i];
-                  return InkWell(
-                    onTap: () {
-                      onSelect(item['name'] as String);
-                      Navigator.pop(ctx);
-                    },
-                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: AppTheme.surfaceAlt,
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        border: Border.all(color: AppTheme.border),
+    showCaSheet(context,
+        title: '',
+        framed: false,
+        useRootNavigator: false,
+        body: Builder(
+            builder: (ctx) => Padding(
+                  padding: const EdgeInsets.all(AppTheme.spaceLg),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'design_ui.select_category_icon'.tr(),
+                        style: const TextStyle(
+                          color: Canopy.ink,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                       ),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(item['icon'] as IconData,
-                              color: AppTheme.primary, size: 24),
-                          const SizedBox(height: 4),
-                          Text(
-                            item['name'] as String,
-                            style: const TextStyle(
-                              color: AppTheme.textSecondary,
-                              fontSize: 10,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                      const SizedBox(height: AppTheme.spaceMd),
+                      Flexible(
+                        child: GridView.builder(
+                          shrinkWrap: true,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 1.1,
                           ),
-                        ],
+                          itemCount: kAvailableCategoryIcons.length,
+                          itemBuilder: (ctx, i) {
+                            final item = kAvailableCategoryIcons[i];
+                            return InkWell(
+                              onTap: () {
+                                onSelect(item['name'] as String);
+                                Navigator.pop(ctx);
+                              },
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusSm),
+                              child: Container(
+                                decoration: BoxDecoration(
+                                  color: Canopy.mint,
+                                  borderRadius:
+                                      BorderRadius.circular(AppTheme.radiusSm),
+                                  border: Border.all(color: Canopy.hairline),
+                                ),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(item['icon'] as IconData,
+                                        color: AppTheme.primary, size: 24),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      item['name'] as String,
+                                      style: const TextStyle(
+                                        color: Canopy.slate,
+                                        fontSize: 12,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
                       ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+                    ],
+                  ),
+                )));
   }
 
   void _showEditDialog(AppProvider provider,
@@ -229,25 +232,25 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     final arabicRegex = RegExp(r'[\u0600-\u06FF]');
     final latinRegex = RegExp(r'[a-zA-Z]');
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) {
           final enHasArabic = arabicRegex.hasMatch(nameEnController.text);
           final arHasEnglish = latinRegex.hasMatch(nameArController.text);
 
-          return AlertDialog(
+          return CaAlertDialog(
             backgroundColor: AppTheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              side: const BorderSide(color: AppTheme.border),
+              side: const BorderSide(color: Canopy.hairline),
             ),
             title: Text(
               existing == null
                   ? 'admin.category_add'.tr()
                   : 'admin.category_edit'.tr(),
               style: const TextStyle(
-                  color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+                  color: Canopy.ink, fontWeight: FontWeight.bold),
             ),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 580),
@@ -295,14 +298,14 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                               const EdgeInsets.only(bottom: AppTheme.spaceSm),
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: AppTheme.surfaceAlt,
+                              backgroundColor: Canopy.mint,
                               foregroundColor: AppTheme.primary,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusMd),
-                                side: const BorderSide(color: AppTheme.border),
+                                side: const BorderSide(color: Canopy.hairline),
                               ),
                             ),
                             icon: Icon(
@@ -325,13 +328,13 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                       children: [
                         Checkbox(
                           value: isActive,
-                          activeColor: AppTheme.success,
+                          activeColor: Canopy.leaf,
                           onChanged: (v) =>
                               setDialogState(() => isActive = v ?? true),
                         ),
                         Text('admin.category_active'.tr(),
                             style: const TextStyle(
-                                color: AppTheme.textSecondary, fontSize: 12)),
+                                color: Canopy.slate, fontSize: 12)),
                       ],
                     ),
                   ],
@@ -342,7 +345,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
                 child: Text('common.cancel'.tr(),
-                    style: const TextStyle(color: AppTheme.textMuted)),
+                    style: const TextStyle(color: Canopy.haze)),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -393,23 +396,26 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          TextField(
-            controller: controller,
-            onChanged: (_) => onChanged?.call(),
-            style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-            decoration: InputDecoration(
-              labelText: label,
-              hintText: hint,
-              labelStyle: const TextStyle(color: AppTheme.textSecondary),
-              hintStyle:
-                  const TextStyle(color: AppTheme.textMuted, fontSize: 11),
-              filled: true,
-              fillColor: AppTheme.surfaceAlt,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              ),
-            ),
-          ),
+          PhoneInputGuard(builder: (context, blocked) => TextField(
+                    readOnly: blocked,
+                    controller: controller,
+                    onChanged: (_) => onChanged?.call(),
+                    style: const TextStyle(
+                        color: Canopy.ink, fontSize: 13),
+                    decoration: InputDecoration(
+                      labelText: label,
+                      hintText: hint,
+                      labelStyle:
+                          const TextStyle(color: Canopy.slate),
+                      hintStyle: const TextStyle(
+                          color: Canopy.haze, fontSize: 12),
+                      filled: true,
+                      fillColor: Canopy.mint,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                      ),
+                    ),
+                  )),
           if (errorText != null)
             Padding(
               padding: const EdgeInsetsDirectional.only(top: 4, start: 4),
@@ -417,7 +423,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                 errorText,
                 style: const TextStyle(
                   color: AppTheme.warning,
-                  fontSize: 11,
+                  fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -428,29 +434,29 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
   }
 
   void _confirmDelete(AppProvider provider, AcademicCategoryModel category) {
-    showDialog(
+    showCaDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CaAlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: const BorderSide(color: AppTheme.border),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text('admin.category_delete_confirm_title'.tr(),
             style: const TextStyle(
-                color: AppTheme.textPrimary, fontWeight: FontWeight.bold)),
+                color: Canopy.ink, fontWeight: FontWeight.bold)),
         content: Text('admin.category_delete_confirm_body'.tr(),
             style:
-                const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                const TextStyle(color: Canopy.slate, fontSize: 12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('common.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
+                style: const TextStyle(color: Canopy.haze)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
+                backgroundColor: Canopy.liveCrimson,
                 foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
@@ -492,7 +498,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               Text(
                 'admin.tab_categories'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -512,7 +518,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
             child: sorted.isEmpty
                 ? Center(
                     child: Text('admin.no_categories'.tr(),
-                        style: const TextStyle(color: AppTheme.textSecondary)))
+                        style: const TextStyle(color: Canopy.slate)))
                 : ListView.separated(
                     itemCount: sorted.length,
                     separatorBuilder: (_, __) =>
@@ -520,89 +526,82 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                     itemBuilder: (context, index) {
                       final category = sorted[index];
                       final isActing = _actingOnIds.contains(category.id);
-                      return Container(
-                        padding: const EdgeInsets.all(AppTheme.spaceMd),
-                        decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
-                          border: Border.all(color: AppTheme.border),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(iconForCategoryIconName(category.iconName),
-                                color: category.isActive
-                                    ? AppTheme.primary
-                                    : AppTheme.textMuted,
-                                size: 20),
-                            const SizedBox(width: AppTheme.spaceMd),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    category.getLocalizedName(langCode),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: category.isActive
-                                          ? AppTheme.textPrimary
-                                          : AppTheme.textMuted,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
+                      return AdminCard(
+                          padding: const EdgeInsets.all(AppTheme.spaceMd),
+                          child: Row(
+                            children: [
+                              Icon(iconForCategoryIconName(category.iconName),
+                                  color: category.isActive
+                                      ? AppTheme.primary
+                                      : Canopy.haze,
+                                  size: 20),
+                              const SizedBox(width: AppTheme.spaceMd),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      category.getLocalizedName(langCode),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: category.isActive
+                                            ? Canopy.ink
+                                            : Canopy.haze,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 13,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    category.id,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                        color: AppTheme.textMuted,
-                                        fontSize: 10.5),
-                                  ),
-                                ],
+                                    Text(
+                                      category.id,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(
+                                          color: Canopy.haze,
+                                          fontSize: 12),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                            if (isActing)
-                              const SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: HadayahLoadingIndicator(
-                                    strokeWidth: 2, color: AppTheme.primary),
-                              )
-                            else ...[
-                              IconButton(
-                                icon: const Icon(Icons.arrow_upward_rounded,
-                                    size: 16, color: AppTheme.textSecondary),
-                                onPressed: index == 0
-                                    ? null
-                                    : () =>
-                                        _reorder(provider, sorted, index, -1),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.arrow_downward_rounded,
-                                    size: 16, color: AppTheme.textSecondary),
-                                onPressed: index == sorted.length - 1
-                                    ? null
-                                    : () =>
-                                        _reorder(provider, sorted, index, 1),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.edit_rounded,
-                                    size: 16, color: AppTheme.primary),
-                                onPressed: () => _showEditDialog(provider,
-                                    existing: category),
-                              ),
-                              IconButton(
-                                icon: const Icon(Icons.delete_outline_rounded,
-                                    size: 16, color: AppTheme.danger),
-                                onPressed: () =>
-                                    _confirmDelete(provider, category),
-                              ),
+                              if (isActing)
+                                const SizedBox(
+                                  width: 16,
+                                  height: 16,
+                                  child: HadayahLoadingIndicator(
+                                      strokeWidth: 2, color: AppTheme.primary),
+                                )
+                              else ...[
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_upward_rounded,
+                                      size: 16, color: Canopy.slate),
+                                  onPressed: index == 0
+                                      ? null
+                                      : () =>
+                                          _reorder(provider, sorted, index, -1),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.arrow_downward_rounded,
+                                      size: 16, color: Canopy.slate),
+                                  onPressed: index == sorted.length - 1
+                                      ? null
+                                      : () =>
+                                          _reorder(provider, sorted, index, 1),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.edit_rounded,
+                                      size: 16, color: AppTheme.primary),
+                                  onPressed: () => _showEditDialog(provider,
+                                      existing: category),
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete_outline_rounded,
+                                      size: 16, color: Canopy.liveCrimson),
+                                  onPressed: () =>
+                                      _confirmDelete(provider, category),
+                                ),
+                              ],
                             ],
-                          ],
-                        ),
-                      );
+                          ));
                     },
                   ),
           ),

@@ -55,7 +55,7 @@ void main() {
           await tester.pumpAndSettle();
         }
         final viewers=find.byKey(const ValueKey('admin.tab_viewers'));
-        await tester.ensureVisible(viewers); await tester.tap(viewers); await tester.pumpAndSettle();
+        await tester.scrollUntilVisible(viewers, 200, scrollable: find.descendant(of: find.byKey(const ValueKey('admin-navigation')), matching: find.byType(Scrollable)).first); await tester.pumpAndSettle(); await tester.tap(viewers); await tester.pumpAndSettle();
         expect(tester.widget<TabBarView>(find.byType(TabBarView).first).controller!.index,4);
         expect(find.textContaining('45%'),findsNothing);
         await tester.tap(find.text(language=='en'?'عربي':'EN')); await tester.pumpAndSettle();

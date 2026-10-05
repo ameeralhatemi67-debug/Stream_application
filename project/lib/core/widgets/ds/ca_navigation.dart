@@ -23,12 +23,15 @@ class CaAppBar extends AppBar {
       super.toolbarHeight,
       super.centerTitle,
       bool compactLanguage = false,
+      // Icon-only language control, without the circle behind it.
+      bool languageBare = false,
       List<Widget>? actions})
       : super(actions: [
           if (!(actions ?? []).any(_hasLanguage))
             CaLanguageChip(
                 glass: backgroundColor == AppTheme.media,
-                compact: compactLanguage),
+                compact: compactLanguage,
+                bare: languageBare),
           ...?actions,
         ]);
   static bool _hasLanguage(Widget w) =>

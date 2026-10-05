@@ -1,3 +1,5 @@
+import '../admin_surface.dart';
+import '../../../../core/widgets/phone_input_guard.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
@@ -40,7 +42,7 @@ class _RolePermissionManagementViewState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? AppTheme.danger : AppTheme.success,
+        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
       ),
     );
   }
@@ -123,7 +125,7 @@ class _RolePermissionManagementViewState
   Color _roleColor(String role) {
     switch (role) {
       case 'master_admin':
-        return AppTheme.danger;
+        return Canopy.liveCrimson;
       case 'admin':
         return AppTheme.primary;
       default:
@@ -160,7 +162,7 @@ class _RolePermissionManagementViewState
               Text(
                 'design_ui.roles_permissions'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -171,7 +173,7 @@ class _RolePermissionManagementViewState
           Text(
             'design_ui.master_admin_can_grant_revoke_admin_or_master_admin_and_toggle_ex'
                 .tr(),
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           _buildGrantRoleCard(provider),
@@ -220,83 +222,79 @@ class _RolePermissionManagementViewState
         const SizedBox(height: AppTheme.spaceSm),
         Text(
           'admin.moderator_delegation_desc'.tr(),
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+          style: const TextStyle(color: Canopy.slate, fontSize: 12),
         ),
         const SizedBox(height: AppTheme.spaceMd),
         if (moderators.isEmpty)
           _buildEmptyRow('admin.no_moderators'.tr())
         else
-          Container(
-            decoration: BoxDecoration(
-              color: AppTheme.surface,
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.border),
-            ),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                headingRowColor: WidgetStateProperty.all(AppTheme.surfaceAlt),
-                columns: [
-                  DataColumn(
-                      label: Text('admin.moderator_col_user'.tr(),
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 11))),
-                  DataColumn(
-                      label: Text('admin.moderator_col_assigned_by'.tr(),
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 11))),
-                  DataColumn(
-                      label: Text('admin.moderator_col_scope'.tr(),
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 11))),
-                  DataColumn(
-                      label: Text('admin.moderator_col_date'.tr(),
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 11))),
-                  DataColumn(
-                      label: Text('admin.moderator_col_revoke'.tr(),
-                          style: const TextStyle(
-                              color: AppTheme.textSecondary, fontSize: 11))),
-                ],
-                rows: moderators.map((m) {
-                  return DataRow(cells: [
-                    DataCell(Text(
-                      m.moderatorEmail ?? m.moderatorDisplayName,
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary, fontSize: 12),
-                    )),
-                    DataCell(Text(
-                      m.assignedByDisplayName,
-                      style: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 12),
-                    )),
-                    DataCell(Text(
-                      'roles.${m.scope.name}'.tr(),
-                      style: const TextStyle(
-                          color: AppTheme.textSecondary, fontSize: 12),
-                    )),
-                    DataCell(Text(
-                      DateFormat('yyyy-MM-dd').format(m.grantedAt),
-                      style: const TextStyle(
-                          color: AppTheme.textMuted, fontSize: 11),
-                    )),
-                    DataCell(IconButton(
-                      icon: const Icon(Icons.remove_circle_outline_rounded,
-                          size: 18, color: AppTheme.danger),
-                      tooltip: 'admin.moderator_col_revoke'.tr(),
-                      onPressed: () async {
-                        try {
-                          await provider.revokeStreamModeratorById(m.id);
-                        } catch (e) {
-                          _showToast('roles.revoke_failed'.tr(), isError: true);
-                        }
-                      },
-                    )),
-                  ]);
-                }).toList(),
-              ),
-            ),
-          ),
+          AdminCard(
+              padding: EdgeInsets.zero,
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  headingRowColor: WidgetStateProperty.all(Canopy.mint),
+                  columns: [
+                    DataColumn(
+                        label: Text('admin.moderator_col_user'.tr(),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
+                    DataColumn(
+                        label: Text('admin.moderator_col_assigned_by'.tr(),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
+                    DataColumn(
+                        label: Text('admin.moderator_col_scope'.tr(),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
+                    DataColumn(
+                        label: Text('admin.moderator_col_date'.tr(),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
+                    DataColumn(
+                        label: Text('admin.moderator_col_revoke'.tr(),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
+                  ],
+                  rows: moderators.map((m) {
+                    return DataRow(cells: [
+                      DataCell(Text(
+                        m.moderatorEmail ?? m.moderatorDisplayName,
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 12),
+                      )),
+                      DataCell(Text(
+                        m.assignedByDisplayName,
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
+                      )),
+                      DataCell(Text(
+                        'roles.${m.scope.name}'.tr(),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
+                      )),
+                      DataCell(Text(
+                        DateFormat('yyyy-MM-dd').format(m.grantedAt),
+                        style: const TextStyle(
+                            color: Canopy.haze, fontSize: 12),
+                      )),
+                      DataCell(IconButton(
+                        icon: const Icon(Icons.remove_circle_outline_rounded,
+                            size: 18, color: Canopy.liveCrimson),
+                        tooltip: 'admin.moderator_col_revoke'.tr(),
+                        onPressed: () async {
+                          try {
+                            await provider.revokeStreamModeratorById(m.id);
+                          } catch (e) {
+                            _showToast('roles.revoke_failed'.tr(),
+                                isError: true);
+                          }
+                        },
+                      )),
+                    ]);
+                  }).toList(),
+                ),
+              )),
       ],
     );
   }
@@ -309,7 +307,7 @@ class _RolePermissionManagementViewState
         Text(
           title,
           style: const TextStyle(
-            color: AppTheme.textPrimary,
+            color: Canopy.ink,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -318,14 +316,14 @@ class _RolePermissionManagementViewState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceAlt,
+            color: Canopy.mint,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             '$count',
             style: const TextStyle(
-              color: AppTheme.textSecondary,
-              fontSize: 11,
+              color: Canopy.slate,
+              fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -335,106 +333,98 @@ class _RolePermissionManagementViewState
   }
 
   Widget _buildEmptyRow(String message) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceMd),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Text(message,
-          style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-    );
+    return AdminCard(
+        padding: const EdgeInsets.all(AppTheme.spaceMd),
+        child: Text(message,
+            style:
+                const TextStyle(color: Canopy.slate, fontSize: 12)));
   }
 
   Widget _buildGrantRoleCard(AppProvider provider) {
-    return Container(
-      padding: const EdgeInsets.all(AppTheme.spaceLg),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'design_ui.grant_a_platform_role'.tr(),
-            style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 13,
+    return AdminCard(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'design_ui.grant_a_platform_role'.tr(),
+              style: const TextStyle(
+                color: Canopy.ink,
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
             ),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              SizedBox(
-                child: TextField(
-                  controller: _grantEmailController,
+            const SizedBox(height: AppTheme.spaceMd),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                            readOnly: blocked,
+                            controller: _grantEmailController,
+                            style: const TextStyle(
+                                color: Canopy.ink, fontSize: 13),
+                            decoration: InputDecoration(
+                              hintText: 'roles.email'.tr(),
+                              hintStyle: const TextStyle(
+                                  color: Canopy.slate, fontSize: 12),
+                              prefixIcon: const Icon(Icons.email_outlined,
+                                  color: Canopy.slate, size: 18),
+                              filled: true,
+                              fillColor: Canopy.mint,
+                              contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12, vertical: 10),
+                              border: OutlineInputBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd),
+                                borderSide:
+                                    const BorderSide(color: Canopy.hairline),
+                              ),
+                            ),
+                          )),
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+                DropdownButton<String>(
+                  isExpanded: true,
+                  value: _grantRole,
+                  dropdownColor: Canopy.mint,
                   style: const TextStyle(
-                      color: AppTheme.textPrimary, fontSize: 13),
-                  decoration: InputDecoration(
-                    hintText: 'roles.email'.tr(),
-                    hintStyle: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12),
-                    prefixIcon: const Icon(Icons.email_outlined,
-                        color: AppTheme.textSecondary, size: 18),
-                    filled: true,
-                    fillColor: AppTheme.surfaceAlt,
-                    contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, vertical: 10),
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      borderSide: const BorderSide(color: AppTheme.border),
-                    ),
+                      color: Canopy.ink, fontSize: 13),
+                  items: [
+                    DropdownMenuItem(
+                        value: 'admin', child: Text('design_ui.admin'.tr())),
+                    DropdownMenuItem(
+                        value: 'master_admin',
+                        child: Text('design_ui.master_admin'.tr())),
+                  ],
+                  onChanged: (value) {
+                    if (value != null) setState(() => _grantRole = value);
+                  },
+                ),
+                const SizedBox(height: AppTheme.spaceMd),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.onMedia,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 12),
                   ),
+                  icon: _isGranting
+                      ? const SizedBox(
+                          width: 14,
+                          height: 14,
+                          child: HadayahLoadingIndicator(
+                              strokeWidth: 2, color: AppTheme.onMedia),
+                        )
+                      : const Icon(Icons.person_add_alt_1_rounded, size: 16),
+                  label: Text('design_ui.grant'.tr()),
+                  onPressed:
+                      _isGranting ? null : () => _handleGrantRole(provider),
                 ),
-              ),
-              const SizedBox(height: AppTheme.spaceMd),
-              DropdownButton<String>(
-                isExpanded: true,
-                value: _grantRole,
-                dropdownColor: AppTheme.surfaceAlt,
-                style:
-                    const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-                items: [
-                  DropdownMenuItem(
-                      value: 'admin', child: Text('design_ui.admin'.tr())),
-                  DropdownMenuItem(
-                      value: 'master_admin',
-                      child: Text('design_ui.master_admin'.tr())),
-                ],
-                onChanged: (value) {
-                  if (value != null) setState(() => _grantRole = value);
-                },
-              ),
-              const SizedBox(height: AppTheme.spaceMd),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: AppTheme.onMedia,
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                ),
-                icon: _isGranting
-                    ? const SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: HadayahLoadingIndicator(
-                            strokeWidth: 2, color: AppTheme.onMedia),
-                      )
-                    : const Icon(Icons.person_add_alt_1_rounded, size: 16),
-                label: Text('design_ui.grant'.tr()),
-                onPressed:
-                    _isGranting ? null : () => _handleGrantRole(provider),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+              ],
+            ),
+          ],
+        ));
   }
 
   Widget _buildAssignmentCard(
@@ -445,117 +435,115 @@ class _RolePermissionManagementViewState
     final grantedPermissions =
         provider.permissionsForProfile(assignment.profileId);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
-      padding: const EdgeInsets.all(AppTheme.spaceMd),
-      decoration: BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Wrap(
-            spacing: AppTheme.spaceSm,
-            runSpacing: AppTheme.spaceSm,
-            crossAxisAlignment: WrapCrossAlignment.center,
-            children: [
-              CircleAvatar(
-                radius: 18,
-                backgroundColor: tierColor.withValues(alpha: 0.15),
-                backgroundImage: (assignment.avatarUrl != null &&
-                        assignment.avatarUrl!.isNotEmpty)
-                    ? NetworkImage(assignment.avatarUrl!)
-                    : null,
-                child: (assignment.avatarUrl == null ||
-                        assignment.avatarUrl!.isEmpty)
-                    ? Icon(Icons.person_rounded, color: tierColor, size: 18)
-                    : null,
-              ),
-              const SizedBox(width: AppTheme.spaceMd),
-              SizedBox(
-                width: 180,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      assignment.displayName,
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 13,
-                      ),
-                    ),
-                    if (assignment.email != null)
-                      Text(
-                        assignment.email!,
-                        style: const TextStyle(
-                            color: AppTheme.textMuted, fontSize: 11),
-                      ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: tierColor.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(color: tierColor.withValues(alpha: 0.6)),
-                ),
-                child: Text(
-                  _roleLabel(assignment.role),
-                  style: TextStyle(
-                    color: tierColor,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconButton(
-                icon: const Icon(Icons.remove_circle_outline_rounded,
-                    size: 18, color: AppTheme.danger),
-                tooltip: 'roles.revoke'.tr(),
-                onPressed: () => _handleRevokeRole(provider, assignment),
-              ),
-            ],
-          ),
-          if (canTogglePermissions) ...[
-            const SizedBox(height: AppTheme.spaceSm),
-            const Divider(color: AppTheme.border, height: 1),
-            const SizedBox(height: AppTheme.spaceSm),
+    return AdminCard(
+        margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
+        padding: const EdgeInsets.all(AppTheme.spaceMd),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Wrap(
-              spacing: AppTheme.spaceMd,
-              runSpacing: 4,
-              children: kKnownAdminCapabilities.map((capability) {
-                final granted = grantedPermissions.contains(capability);
-                return InkWell(
-                  onTap: () => _handleTogglePermission(
-                      provider, assignment, capability, !granted),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
+              spacing: AppTheme.spaceSm,
+              runSpacing: AppTheme.spaceSm,
+              crossAxisAlignment: WrapCrossAlignment.center,
+              children: [
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: tierColor.withValues(alpha: 0.15),
+                  backgroundImage: (assignment.avatarUrl != null &&
+                          assignment.avatarUrl!.isNotEmpty)
+                      ? NetworkImage(assignment.avatarUrl!)
+                      : null,
+                  child: (assignment.avatarUrl == null ||
+                          assignment.avatarUrl!.isEmpty)
+                      ? Icon(Icons.person_rounded, color: tierColor, size: 18)
+                      : null,
+                ),
+                const SizedBox(width: AppTheme.spaceMd),
+                SizedBox(
+                  width: 180,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Checkbox(
-                        value: granted,
-                        activeColor: AppTheme.success,
-                        onChanged: (checked) => _handleTogglePermission(
-                            provider, assignment, capability, checked == true),
-                      ),
-                      Flexible(
-                          child: Text(
-                        'roles.$capability'.tr(),
+                      Text(
+                        assignment.displayName,
                         style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 11.5),
-                      )),
+                          color: Canopy.ink,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13,
+                        ),
+                      ),
+                      if (assignment.email != null)
+                        Text(
+                          assignment.email!,
+                          style: const TextStyle(
+                              color: Canopy.haze, fontSize: 12),
+                        ),
                     ],
                   ),
-                );
-              }).toList(),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: tierColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(AppTheme.radiusSm),
+                    border: Border.all(color: tierColor.withValues(alpha: 0.6)),
+                  ),
+                  child: Text(
+                    _roleLabel(assignment.role),
+                    style: TextStyle(
+                      color: tierColor,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  icon: const Icon(Icons.remove_circle_outline_rounded,
+                      size: 18, color: Canopy.liveCrimson),
+                  tooltip: 'roles.revoke'.tr(),
+                  onPressed: () => _handleRevokeRole(provider, assignment),
+                ),
+              ],
             ),
+            if (canTogglePermissions) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              const Divider(color: Canopy.hairline, height: 1),
+              const SizedBox(height: AppTheme.spaceSm),
+              Wrap(
+                spacing: AppTheme.spaceMd,
+                runSpacing: 4,
+                children: kKnownAdminCapabilities.map((capability) {
+                  final granted = grantedPermissions.contains(capability);
+                  return InkWell(
+                    onTap: () => _handleTogglePermission(
+                        provider, assignment, capability, !granted),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Checkbox(
+                          value: granted,
+                          activeColor: Canopy.leaf,
+                          onChanged: (checked) => _handleTogglePermission(
+                              provider,
+                              assignment,
+                              capability,
+                              checked == true),
+                        ),
+                        Flexible(
+                            child: Text(
+                          'roles.$capability'.tr(),
+                          style: const TextStyle(
+                              color: Canopy.slate, fontSize: 12),
+                        )),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ],
           ],
-        ],
-      ),
-    );
+        ));
   }
 }
