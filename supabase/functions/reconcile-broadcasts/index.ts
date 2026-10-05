@@ -17,6 +17,7 @@ Deno.serve(async request=>{
     try {await runBroadcast(claim.id,claim.token,rpc,{clientId:env('YOUTUBE_OAUTH_CLIENT_ID'),clientSecret:env('YOUTUBE_OAUTH_CLIENT_SECRET')});complete++;}
     catch(error) {
       pending++;
+      console.error(JSON.stringify({session:claim.id,reason:error instanceof ProviderError?error.reason:'reconciliation_failed'}));
       await rpc('broadcast_provider_step',{p_id:claim.id,p_token:claim.token,p_step:'observe',
         p_error:error instanceof ProviderError?error.reason:'reconciliation_failed',
         p_ambiguous:error instanceof ProviderError?error.ambiguous:true}).catch(()=>{});

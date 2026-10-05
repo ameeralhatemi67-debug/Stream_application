@@ -24,7 +24,14 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
   async function write(step:string,resource:string,query:Record<string,string>,method:string,body:unknown,project:(data:any)=>unknown) {
     c=await context(); // Fresh permission and destination fence before every privileged write.
     await rpc('broadcast_provider_step',{...params,p_step:step});
-    try {const response=await call(resource,query,method,body);await result(step,project(response));}
+    try {
+      const response=await call(resource,query,method,body);
+      let projected:unknown;
+      // The provider write already succeeded: a rejected result must be reconciled, not repeated.
+      try {projected=project(response);}
+      catch(error) {throw error instanceof ProviderError?new ProviderError(error.status,error.reason,true):error;}
+      await result(step,projected);
+    }
     catch(error) {
       // A failed persistence after a successful provider write is also ambiguous.
       await rpc('broadcast_provider_step',{...params,p_step:step,

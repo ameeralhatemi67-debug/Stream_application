@@ -454,6 +454,8 @@ void main() {
         final provider = signedIn(ScriptedBroadcasts());
         await pumpApp(tester, provider, ChannelConnectionsScreen(returnStatus: status));
         expect(find.text('organization_v1.consent_$status'.tr()), findsOneWidget);
+        // Google's return replaces the history; the page must still offer a way out.
+        expect(find.byTooltip('organization_v1.close'.tr()), findsOneWidget);
         await tester.pumpWidget(const SizedBox.shrink());
         provider.dispose();
       });

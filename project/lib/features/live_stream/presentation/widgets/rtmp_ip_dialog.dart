@@ -4,7 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show FunctionException;
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/services/organization_broadcast_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../../core/widgets/language_switcher.dart';
@@ -12,19 +15,22 @@ import '../../services/broadcast_publishing_controller.dart';
 import '../../services/rtmp_publish_engine.dart';
 import '../../../organization/models/channel_connection.dart';
 import '../../../organization/models/org_membership.dart';
+import '../../../organization/presentation/channel_consent_return_screen.dart';
 import '../screens/phone_broadcast_screen.dart';
 import 'live_chat_layout.dart';
 
 enum StudioMode { obs, phone, local }
 
 class LiveBroadcasterStudioSheet extends StatefulWidget {
-  const LiveBroadcasterStudioSheet({super.key,this.initialMode=StudioMode.phone,this.onEndBroadcast,this.openedFromVideo=false});
+  const LiveBroadcasterStudioSheet({super.key,this.initialMode=StudioMode.phone,this.onEndBroadcast,this.openedFromVideo=false,this.consentStatus});
   final StudioMode initialMode;
   final Future<void> Function()? onEndBroadcast;
   final bool openedFromVideo;
-  static Future<void> show(BuildContext context,{Future<void> Function()? onEndBroadcast,bool openedFromVideo=false}) =>
+  /// `connected` or `failed` when the studio reopens after Google consent.
+  final String? consentStatus;
+  static Future<void> show(BuildContext context,{Future<void> Function()? onEndBroadcast,bool openedFromVideo=false,String? consentStatus}) =>
     showModalBottomSheet<void>(context:context,isScrollControlled:true,
-      builder:(_)=>LiveBroadcasterStudioSheet(onEndBroadcast:onEndBroadcast,openedFromVideo:openedFromVideo));
+      builder:(_)=>LiveBroadcasterStudioSheet(onEndBroadcast:onEndBroadcast,openedFromVideo:openedFromVideo,consentStatus:consentStatus));
   @override
   State<LiveBroadcasterStudioSheet> createState()=>_StudioState();
 }
@@ -32,8 +38,8 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
 class _StudioState extends State<LiveBroadcasterStudioSheet> {
   late final BroadcastPublishingController _studio;
   final _title=TextEditingController();
-  bool _audio=false,_showKey=false;
-  String? _loadError;
+  bool _audio=false,_showKey=false,_connecting=false;
+  String? _loadError,_connectError;
   bool get _android=>!kIsWeb&&defaultTargetPlatform==TargetPlatform.android;
   @override
   void initState(){
@@ -49,13 +55,42 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
   }
   @override
   void dispose(){_studio.removeListener(_changed);_studio.dispose();_title.removeListener(_changed);_title.dispose();super.dispose();}
-  Future<void> _connections() async {
-    await context.push('/channels');
-    if(mounted) await _load();
+  /// Starts Google consent straight from the studio. The return link reopens
+  /// the studio where this started (see `/channel-connected` in AppRouter).
+  Future<void> _connectYouTube() async {
+    if(_connecting) return;
+    final provider=context.read<AppProvider>();
+    final ar=context.locale.languageCode=='ar';
+    final targets=<(String?,String)>[
+      if(provider.personalBroadcastApproved) (null,'organization_v1.personal_destination'.tr()),
+      ...provider.orgMemberships.where((m)=>m.canManageChannel)
+        .map((m)=>(m.organizationId,ar?m.organizationNameAr:m.organizationNameEn)),
+    ];
+    if(targets.isEmpty) { setState(()=>_connectError='organization_v1.channel_permission_required'); return; }
+    final target=targets.length==1?(targets.single.$1,):await showDialog<(String?,)>(context:context,
+      builder:(dialog)=>SimpleDialog(title:Text('organization_v1.destination'.tr()),children:[
+        for(final t in targets) SimpleDialogOption(onPressed:()=>Navigator.pop(dialog,(t.$1,)),child:Text(t.$2))]));
+    if(target==null||!mounted) return;
+    final stack=ChannelConsentReturnScreen.currentStack(context);
+    setState((){_connecting=true;_connectError=null;});
+    try {
+      final url=await provider.connectYouTubeChannel(organizationId:target.$1);
+      if(stack!=null) await provider.rememberChannelConsentReturn(stack,studio:true);
+      if(!await launchUrl(url,mode:LaunchMode.externalApplication,webOnlyWindowName:'_self')) {
+        throw const FunctionException(status:503,details:{'error':'channel_browser_failed'});
+      }
+    } catch(error) {
+      if(mounted) setState(()=>_connectError=OrganizationBroadcastService.channelErrorKey(error));
+    } finally {
+      if(mounted) setState(()=>_connecting=false);
+    }
   }
   Future<void> _prepare() async {
     if(widget.onEndBroadcast!=null && _studio.sender=='phone_direct') return;
-    if(!await _studio.prepare(_title.text.trim(),_audio?'liveAudio':'liveVideo')||!mounted)return;
+    final typed=_title.text.trim();
+    // The title is optional: an empty one becomes "<channel> – Live".
+    final title=typed.isNotEmpty?typed:'organization_v1.default_title'.tr(namedArgs:{'channel':_studio.destination?.title??''});
+    if(!await _studio.prepare(title,_audio?'liveAudio':'liveVideo')||!mounted)return;
     if(_studio.sender=='phone_direct') {
       final navigator=Navigator.of(context);
       navigator.pop();
@@ -99,10 +134,14 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
           IconButton(onPressed:()=>Navigator.pop(context),tooltip:'organization_v1.close'.tr(),icon:const Icon(Icons.close))]),
         Text('organization_v1.publish_hint'.tr()),
         if(_loadError!=null) Text(_loadError!.tr(),style:const TextStyle(color:AppTheme.danger)),
+        if(widget.consentStatus=='connected'||widget.consentStatus=='failed')
+          Text('organization_v1.consent_${widget.consentStatus}'.tr(),
+            style:TextStyle(color:widget.consentStatus=='failed'?AppTheme.danger:AppTheme.success)),
         if(destinations.isEmpty) ...[
           Text('organization_v1.connect_before_live'.tr()),
-          FilledButton(onPressed:_connections,child:Text('organization_v1.connect'.tr())),
-        ] else TextButton(onPressed:_connections,child:Text('organization_v1.channels'.tr())),
+          FilledButton(onPressed:_connecting?null:_connectYouTube,child:Text('organization_v1.connect'.tr())),
+        ] else TextButton(onPressed:_connecting||frozen?null:_connectYouTube,child:Text('organization_v1.reconnect'.tr())),
+        if(_connectError!=null) Text(_connectError!.tr(),style:const TextStyle(color:AppTheme.danger)),
         if(_studio.simplePersonalDestination)
           Text('organization_v1.going_live_on'.tr(namedArgs:{'channel':_studio.destination!.title}))
         else if(destinations.isNotEmpty) DropdownButtonFormField<String>(key:ValueKey(_studio.destination?.id),initialValue:_studio.destination?.id,
@@ -117,7 +156,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
             onChanged:frozen||operationBusy?null:(id)=>setState(()=>_studio.session=choices.where((s)=>s.id==id).firstOrNull)),
           TextButton(onPressed:()=>context.push('/shows'),child:Text('organization_v1.shows'.tr())),
         ] else if(!frozen) ...[
-          TextField(controller:_title,enabled:!operationBusy,maxLength:100,decoration:InputDecoration(labelText:'organization_v1.title'.tr())),
+          TextField(controller:_title,enabled:!operationBusy,maxLength:100,decoration:InputDecoration(labelText:'organization_v1.title_optional'.tr())),
           SwitchListTile(title:Text('organization_v1.audio'.tr()),value:_audio,onChanged:(v)=>setState(()=>_audio=v)),
         ],
         if(!frozen) ...[
@@ -128,7 +167,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
         if(_studio.session?.state!='ending' && widget.onEndBroadcast==null) ...[
           if(!_studio.simplePersonalDestination && destinations.isNotEmpty) CheckboxListTile(value:_studio.confirmed,onChanged:operationBusy?null:(v)=>setState(()=>_studio.confirmed=v??false),
             title:Text('organization_v1.confirm_destination'.tr(namedArgs:{'channel':_studio.destination?.title??''}))),
-          if(destinations.isNotEmpty) FilledButton(onPressed:operationBusy||!_studio.confirmed||(_studio.session==null&&_title.text.trim().isEmpty)?null:_prepare,child:_studio.busy?
+          if(destinations.isNotEmpty) FilledButton(onPressed:operationBusy||!_studio.confirmed?null:_prepare,child:_studio.busy?
             const SizedBox(width:20,height:20,child:HadayahLoadingIndicator()):Text((_studio.sender=='phone_direct'?'organization_v1.preview':'organization_v1.prepare').tr())),
         ],
         if(frozen&&_studio.ingestKey.isNotEmpty&&_studio.sender=='obs_laptop') ...[

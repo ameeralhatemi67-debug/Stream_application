@@ -836,6 +836,37 @@ class AppProvider extends ChangeNotifier {
   }
   Future<Uri> connectYouTubeChannel({String? organizationId}) =>
       _organizationBroadcastService.connectChannel(organizationId:organizationId);
+
+  /// The page stack where Google consent started, so the return link can
+  /// rebuild it (Google's return replaces the navigation history). Stored,
+  /// because on web the consent redirect reloads the page. [studio] reopens the
+  /// broadcast studio on top; otherwise the connections page is reopened.
+  static const _channelConsentReturnKey = 'channel_consent_return';
+  Future<void> rememberChannelConsentReturn(List<String> stack, {required bool studio}) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_channelConsentReturnKey, jsonEncode({
+        'at': DateTime.now().toUtc().toIso8601String(), 'stack': stack, 'studio': studio}));
+    } catch (_) {}
+  }
+  Future<({List<String> stack, bool studio})?> takeChannelConsentReturn() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final stored = prefs.getString(_channelConsentReturnKey);
+      await prefs.remove(_channelConsentReturnKey);
+      if (stored == null) return null;
+      final data = jsonDecode(stored) as Map<String, dynamic>;
+      final at = DateTime.tryParse(data['at'] as String? ?? '');
+      final stack = (data['stack'] as List?)?.whereType<String>().toList() ?? const <String>[];
+      // Only in-app paths; never another origin or a stale attempt.
+      if (at == null || stack.isEmpty || stack.length > 10 ||
+          stack.any((l) => !l.startsWith('/') || l.startsWith('//')) ||
+          DateTime.now().toUtc().difference(at) > const Duration(minutes: 30)) { return null; }
+      return (stack: stack, studio: data['studio'] == true);
+    } catch (_) {
+      return null;
+    }
+  }
   Future<void> disconnectYouTubeChannel(String id) async {
     await _organizationBroadcastService.disconnectChannel(id);
     await refreshChannelConnections();
@@ -4117,7 +4148,7 @@ class AppProvider extends ChangeNotifier {
     try {
       await prepareBroadcast(session.id,'phone_direct',destination);
       final uri=Uri.tryParse(phoneBroadcastFullUrl);
-      return uri?.scheme=='rtmps' && RegExp(r'^(?:[a-z0-9-]+\.)*rtmp\.youtube\.com$').hasMatch(uri?.host??'') && _phoneBroadcastStreamKey.isNotEmpty;
+      return uri?.scheme=='rtmps' && RegExp(r'^(?:[a-z0-9-]+\.)*rtmps?\.youtube\.com$').hasMatch(uri?.host??'') && _phoneBroadcastStreamKey.isNotEmpty;
     } catch(error) {
       _broadcastSessionError=OrganizationBroadcastService.errorKey(error);notifyListeners();return false;
     }

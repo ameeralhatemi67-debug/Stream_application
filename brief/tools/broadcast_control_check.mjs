@@ -36,8 +36,10 @@ function harness(fault) {
   if(resource==='liveStreams'&&method==='POST'){
    counts.stream++;assert.equal(body.contentDetails.isReusable,false);
    if(fault!=='unresolved')stream={id:'feed',snippet:{...body.snippet,channelId:channel},contentDetails:body.contentDetails,
-     cdn:{ingestionInfo:{rtmpsIngestionAddress:'rtmps://a.rtmp.youtube.com/live2',streamName:'fake-ingest'}}};
+     cdn:{ingestionInfo:{rtmpsIngestionAddress:'rtmps://a.rtmps.youtube.com/live2',streamName:'fake-ingest'}}};
    if(['stream','unresolved'].includes(fault)){fault=null;throw new ProviderError(503,'timeout',true);}
+   // YouTube created the feed but its write response is refused by our validation.
+   if(fault==='rejected'){fault=null;return {...stream,cdn:{ingestionInfo:{rtmpsIngestionAddress:'rtmps://ingest.invalid/live2',streamName:'fake-ingest'}}};}
    return stream;
   }
   if(resource==='liveBroadcasts'&&method==='POST'){
@@ -77,4 +79,8 @@ for(const fault of [null,'stream','broadcast']){
 }
 const unresolved=harness('unresolved');await assert.rejects(unresolved.run(),/timeout/);
 await assert.rejects(unresolved.run(),/feed_creation_unresolved/);assert.equal(unresolved.counts.stream,1);
+// A refused result after a successful write is ambiguous: the retry adopts the existing feed, never creates another.
+const rejected=harness('rejected');await assert.rejects(rejected.run(),/secure_ingestion_unavailable/);
+assert.equal(rejected.c.resource.needs_reconciliation,true);
+const adopted=await rejected.run();assert.equal(adopted.ingest_url,'rtmps://a.rtmps.youtube.com/live2');assert.equal(rejected.counts.stream,1);
 console.log('Provider preparation, ambiguous writes, confirmation, independent completion and replay checks passed');

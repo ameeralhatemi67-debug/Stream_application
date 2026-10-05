@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -9,6 +10,7 @@ import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/hadayah_loading_indicator.dart';
 import '../models/channel_connection.dart';
 import '../models/org_membership.dart';
+import 'channel_consent_return_screen.dart';
 
 class ChannelConnectionsScreen extends StatefulWidget {
   const ChannelConnectionsScreen({super.key, this.returnStatus});
@@ -40,7 +42,11 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen> wit
   }
   Future<void> _refresh() => _run((p) => p.refreshChannelConnections());
   Future<void> _connect(String? orgId) => _run((p) async {
+    // Google's return replaces the history: remember the pages under this one.
+    final under = (ChannelConsentReturnScreen.currentStack(context) ?? const <String>[])
+        .where((l) => !l.startsWith('/channels') && !l.startsWith('/channel-connected')).toList();
     final url = await p.connectYouTubeChannel(organizationId:orgId);
+    await p.rememberChannelConsentReturn(under.isEmpty ? const ['/settings'] : under, studio:false);
     if (!await launchUrl(url,mode:LaunchMode.externalApplication,webOnlyWindowName:'_self')) {
       throw const FunctionException(status:503,details:{'error':'channel_browser_failed'});
     }
@@ -50,7 +56,11 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen> wit
     final (channels,memberships,personal) = context.select<AppProvider, (List<ChannelConnection>, List<OrgMembership>, bool)>(
       (p) => (p.channelConnections,p.orgMemberships,p.personalBroadcastApproved));
     final owners = memberships.where((m) => m.canManageChannel).toList();
-    return Scaffold(appBar:AppBar(title:Text('organization_v1.channels'.tr()),actions:[
+    return Scaffold(appBar:AppBar(title:Text('organization_v1.channels'.tr()),
+      // Opened from a return link with nothing underneath: still offer a way out.
+      leading:Navigator.canPop(context)?null:IconButton(onPressed:()=>context.go('/settings'),
+        icon:const Icon(Icons.close),tooltip:'organization_v1.close'.tr()),
+      actions:[
       IconButton(onPressed:_busy?null:_refresh,icon:const Icon(Icons.refresh),tooltip:'organization_v1.refresh'.tr())]),
       body:ListView(padding:const EdgeInsets.all(AppTheme.spaceLg),children:[
         Text('organization_v1.channel_consent_hint'.tr()),

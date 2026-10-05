@@ -1,9 +1,11 @@
 # Issues encountered during release hardening
 
-Updated: 2026-10-01. This is a local troubleshooting record, not proof that the database tests passed.
+Updated: 2026-10-03. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
 
+- **Stuck on YouTube connections after Google consent** — the return link replaced the navigation history; the saved page stack is now rebuilt on return.
+- **Preview camera fails with "operation could not be confirmed" (RTMPS host)** — YouTube returns `a.rtmps.youtube.com`; three host checks accepted only `*.rtmp.youtube.com`. Server fix deployed 2026-10-05; new APK and phone retest pending.
 - **Connect YouTube fails before Google consent** — forwarded Authorization header collision reproduced and repaired; hosted functions deployed, real phone consent retest pending.
 - **Broadcast recovery job returns 500** — recovery RPC variable/alias collision repaired; scheduled responses now 200.
 
@@ -63,7 +65,8 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Native emulator ANR and sparse output** — unresolved; not a native UX pass.
 - **Channel URL contradicts stale handle** — shared parser/save guard; ownership proof remains a release blocker.
 
-- **Docker Inference manager `dockerInference` socket bind collision** — currently operational; earlier root cause unresolved.
+- **Docker Inference manager `dockerInference` socket bind collision** — current startup recovered after removing the top-level C-to-D runtime junction; historical failure cause unconfirmed.
+- **Docker WSL is unresponsive after virtual-memory exhaustion** — recovered by restarting the stale WSL service process; engine verification passes.
 - **Supabase CLI telemetry temp-file `EPERM`** — workaround: `DO_NOT_TRACK=1`.
 - **Weekly-only budget window mislabeled five-hour** — FIXED with owner-authorized weekly mode and focused tests.
 - **Claude Opus budget `no_snapshot` stopped P6** — workflow override recorded; Opus continuation not yet verified.
@@ -170,7 +173,7 @@ Evidence: `brief/evidence/2026-09-24/p5-5-map-presentation.md`.
 
 ## Docker Inference manager `dockerInference` socket bind collision
 
-Status: **UNRESOLVED ROOT CAUSE; CURRENTLY OPERATIONAL**.
+Status: **CURRENT STARTUP RECOVERED; HISTORICAL ROOT CAUSE UNCONFIRMED**.
 
 Docker is installed at `C:\Users\User\AppData\Local\Programs\DockerDesktop\resources\bin\docker.exe`, but that directory is not on the shell PATH. Use the full path to invoke the installed CLI. The first sandboxed invocation failed with `Access is denied`; an approved unsandboxed read was able to run the CLI.
 
@@ -187,6 +190,18 @@ Docker Desktop displayed this error:
 The earlier local-only command `npx --no-install supabase test db --local supabase/tests/admin_user_directory.test.sql supabase/tests/broadcast_sessions.test.sql supabase/tests/application_and_ban_guards.test.sql supabase/tests/rls_catalog.test.sql` failed before any assertion with `ECONNREFUSED 127.0.0.1:54322`. No migration reset or local test run occurred in that session. The required database run succeeded in the follow-up below. Do not use `--linked` or production credentials to work around a local failure.
 
 2026-09-23 follow-up: the user reported Docker Desktop running. The installed CLI returned both client and server version `29.6.2`. A fresh disposable Supabase project (`P64_item1_disposable`) started and completed its migration chain, and the local SQL suite passed. The earlier socket collision did not recur. This confirms usable tooling now; it does not identify which external action repaired Docker Desktop.
+
+2026-10-03 follow-up: after WSL recovery, Docker Desktop 4.93.0 failed at `run/sailor-ingest.sock` with an AF_UNIX bind collision and a missing-file listener error. `%LOCALAPPDATA%\Docker` was a junction to `D:\app\Docker`. An independent .NET socket probe failed through that C: junction but bound successfully through the direct D: path. With Docker fully stopped, the original junction was renamed to `%LOCALAPPDATA%\Docker.redirect-backup-20261003-1043` for rollback. A real C: Docker directory and real `run` directory replaced it; only `wsl`, `log`, and the legacy `DockerDesktopWSL` subdirectories remain junctions to their existing D: directories. `CustomWslDistroDir` remains `D:\app\Docker\wsl`. No VHDX, image, container, or volume was deleted or copied. A newly created probe socket could not be unlinked by Windows, so its directory was retained as `run.socket-test-20261003-1044` and Docker received a clean runtime directory.
+
+Verification: `docker desktop status` returns `running`; client and server report engine 29.8.1. Docker can enumerate 26 existing containers, 22 images, and 20 named volumes; existing database containers report healthy. The D: data disk remains in place. `supabase_vector_P6_accept_disposable` separately restarts because its Docker-log source reports `Network unreachable`; that logging-sidecar issue remains unresolved. An additional orderly Docker restart or Windows reboot has not been tested. This probe establishes the junction cause for the current Ingest failure, not retroactive proof of the older Inference failure.
+
+## Docker WSL is unresponsive after virtual-memory exhaustion
+
+Status: **RECOVERED; ENGINE VERIFIED** (2026-10-03).
+
+Docker startup timed out running `wsl.exe -l -v --all` with `DockerDesktop/Wsl/CommandTimedOut`. The previous 04:04 shutdown followed Windows System Event 2004 at 04:03:59, which recorded low virtual memory with `llama-server.exe` consuming approximately 13.55 GiB and WSL approximately 6.72 GiB. Docker logged insufficient system resources and a too-small paging file immediately afterward. The owner-authorized `SecondMe_Distill_10PM` and `SecondMe_Distill_4AM` scheduled tasks were disabled separately and remain disabled.
+
+Recovery: stop the failed Docker session first. The bounded `wsl --shutdown` attempt timed out. An administrator-approved service stop left `WslService` reported stopped while the old `wslservice` process remained alive and a new start stalled. Terminating only that stale service process and starting `WslService` restored its control path. `wsl --shutdown` and `wsl --list --verbose` then returned exit code 0, listing the registered Ubuntu and Docker distributions without unregistering or deleting either. The subsequent separate runtime-socket failure was repaired as described above, and the engine now reports running. No factory reset or database test was performed.
 
 ## Supabase CLI telemetry permission
 
@@ -581,3 +596,19 @@ The native consent return now uses a fixed Android app route; OAuth state remain
 
 ## Broadcast recovery job returns 500
 Status: HOSTED REPAIR VERIFIED on 2026-10-04. Installing the owner-approved recovery scheduler exposed PostgreSQL 42702 in `broadcast_reconcile_claim()`: local record `s` collided with UPDATE table alias `s`. A new migration renames the record and qualifies the revision increment. The service-only RPC now executes in a rollback test; anon/authenticated cannot invoke it or read the cron schema. Scheduled Edge responses return 200 with zero pending/complete work. The recovery job is release infrastructure and should remain enabled; temporary test diagnostics are not scheduled. Actual provider cleanup after an interrupted real show remains a phone/YouTube acceptance check.
+
+## Preview camera fails with "operation could not be confirmed" (RTMPS host)
+Status: SERVER FIX DEPLOYED 2026-10-05 (migration + `broadcast-control` v4 + `reconcile-broadcasts` v4). Client host check needs a new APK; physical phone → YouTube retest UNVERIFIED.
+Observed: After a successful real Google consent, every Preview camera returned `broadcast-control` 409 and the studio showed "The operation could not be confirmed". Sessions `c261a66e`, `06e6be58` and `1b5a3471` never stored a provider stream, and Postgres logged no error.
+Cause: YouTube's `cdn.ingestionInfo.rtmpsIngestionAddress` is `rtmps://a.rtmps.youtube.com/live2` (OBS's built-in YouTube RTMPS server uses the same host). `ingestionAddress()`, the SQL `broadcast_provider_step` and the client `checkBroadcastPermission` all required `*.rtmp.youtube.com`. Every fixture used an invented `a.rtmp.youtube.com` value. Secondary problems: (a) a result rejected after a successful write was marked non-ambiguous, so each retry created another orphaned YouTube stream key; (b) the recovery job re-claimed completed shows with no feed every minute; (c) the reason codes were never logged.
+Fix: accept `rtmps?.youtube.com`, still RTMPS only, port 443, no URL credentials. Treat a rejected post-write result as ambiguous so the retry adopts the existing feed. Migration `20261005054018_youtube_rtmps_host_and_reconcile_scope.sql` corrects the SQL check and the reconcile scope. Edge functions now log structured reason codes, never secrets. Fixtures use the real host.
+Verification: `youtube_broadcast_check.mjs` and `broadcast_control_check.mjs` pass. The new rejected-result regression fails without the fix and passes with it. `flutter analyze` 0; 78 streaming tests pass. The SQL suite was not run (no local stack). Not verified: deployment and a real phone broadcast.
+Deployment 2026-10-05: the CLI path was blocked (`LegacyPlatformAuthRequiredError`), so the Supabase MCP connector applied the migration (hosted version `20261005054018`; the local file was renamed to match) and deployed both functions. Hosted checks: both function definitions contain the new host/claim logic; anon/authenticated still cannot execute either; `broadcast-control` boots (OPTIONS 200, unauthenticated POST 401); the five finished feedless shows stopped being re-claimed (last `checked_at` 05:40 UTC, unchanged three minutes later). An APK built before this fix still rejects the host in `checkBroadcastPermission` when Go live is pressed, so the phone path needs the new build; the OBS path does not depend on that check.
+Evidence: `brief/handoff/STREAMING_CORE_PLAN.md`, `brief/evidence/2026-10-04/rtmps-host-deploy/README.md`.
+
+## Stuck on YouTube connections after Google consent
+Status: FIXED in source 2026-10-05; phone retest pending.
+Observed: Settings → YouTube connections → Connect YouTube → Google consent returned to a connections page with no back button (owner, Galaxy M30s, 10:05).
+Cause: the Android return link (`…://channel-connected/channel-connected?status=…`) is handled as a `go`, which replaces the whole navigation history, so the page had nothing beneath it.
+Fix: when consent starts (studio or connections page), the current page stack (base location plus pushed pages, from GoRouter's match list) is saved for 30 minutes. `/channel-connected` rebuilds that stack, then reopens the studio or pushes `/channels?status=…`. The connections page also shows a close button (→ `/settings`) whenever it cannot pop.
+Verification: analyzer 0; full suite 984 passed, including the stack-memory test and a close-button check on the root connections page.

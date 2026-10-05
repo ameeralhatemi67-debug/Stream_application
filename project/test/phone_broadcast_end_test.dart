@@ -141,7 +141,7 @@ class _CanonicalBroadcasts extends EmptyBroadcasts {
     db.deviceId=deviceId;
     if(action=='prepare') {
       if(!db.permitted)throw const FunctionException(status:403);
-      return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmp.youtube.com/live2','ingest_key':'test-key'};
+      return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmps.youtube.com/live2','ingest_key':'test-key'};
     }
     if(action=='start') {db.starts++;row['state']='live';}
     if(action=='end') {if(db.failStop)throw StateError('offline');db.stops++;row['state']='completed';}

@@ -244,7 +244,7 @@ class _CanonicalBroadcasts extends EmptyBroadcasts {
     'sender_mode':'phone_direct','stream_id':'LIVEvideo01','accepted_at':'2026-10-01'};
   @override Future<BroadcastSession?> session(String id) async=>BroadcastSession.fromRow(row);
   @override Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
-    if(action=='prepare') {row['state']='preparing';return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmp.youtube.com/live2','ingest_key':'test-key'};}
+    if(action=='prepare') {row['state']='preparing';return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmps.youtube.com/live2','ingest_key':'test-key'};}
     if(action=='start') {db.liveWrites.add(true);if(db.startGate!=null)await db.startGate!.future;row['state']='live';}
     if(action=='end') {db.endedSessions.add(sessionId);row['state']='completed';}
     return {'session':Map<String,dynamic>.of(row)};

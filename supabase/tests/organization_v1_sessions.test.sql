@@ -71,7 +71,7 @@ set local role authenticated;
 update fixtures set value=public.broadcast_reserve_confirmed(id,'device-2','obs_laptop','prepare','99900000-0000-4000-8000-000000000001',1) where name='session';
 set local role service_role;
 select throws_ok($$select public.broadcast_provider_step((select id from fixtures where name='session'),(select (value->>'token')::uuid from fixtures where name='session'),'stream_create')$$,'55000',null,'Ambiguous resource creation cannot retry blindly');
-select public.broadcast_provider_step((select id from fixtures where name='session'),(select (value->>'token')::uuid from fixtures where name='session'),'stream_create','{"id":"provider-feed","url":"rtmps://a.rtmp.youtube.com/live2","key":"fake-ingest"}');
+select public.broadcast_provider_step((select id from fixtures where name='session'),(select (value->>'token')::uuid from fixtures where name='session'),'stream_create','{"id":"provider-feed","url":"rtmps://a.rtmps.youtube.com/live2","key":"fake-ingest"}');
 select public.broadcast_provider_step((select id from fixtures where name='session'),(select (value->>'token')::uuid from fixtures where name='session'),'broadcast_create','{"id":"abcdefghijk"}');
 select public.broadcast_provider_step((select id from fixtures where name='session'),(select (value->>'token')::uuid from fixtures where name='session'),'bind','{}');
 select public.broadcast_provider_step((select id from fixtures where name='session'),(select (value->>'token')::uuid from fixtures where name='session'),'observe','{"status":"liveStarting"}');

@@ -56,8 +56,9 @@ export function ingestionAddress(value: unknown): string {
   if (typeof value !== 'string') throw new ProviderError(409,'secure_ingestion_unavailable');
   const url = new URL(value);
   // Preserve the provider hostname for TLS/SNI; never fall back to unencrypted RTMP.
+  // YouTube returns rtmps://a.rtmps.youtube.com/live2 for secure ingestion.
   if (url.protocol !== 'rtmps:' || url.username || url.password ||
-    !/^(?:[a-z0-9-]+\.)*rtmp\.youtube\.com$/.test(url.hostname) ||
+    !/^(?:[a-z0-9-]+\.)*rtmps?\.youtube\.com$/.test(url.hostname) ||
     (url.port && url.port !== '443')) throw new ProviderError(409,'secure_ingestion_unavailable');
   return value;
 }

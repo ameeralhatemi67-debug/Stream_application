@@ -2,7 +2,21 @@
 begin;
 create extension if not exists supabase_vault with schema vault;
 revoke all on all tables in schema vault from public,anon,authenticated,service_role;
-revoke all on all functions in schema vault from public,anon,authenticated,service_role;
+-- Hosted Supabase owns Vault's internal functions (supabase_admin), so a blanket
+-- revoke fails for the project role. Revoke each function the project role may
+-- change and skip platform-owned ones; anon/authenticated have no vault access.
+do $$
+declare f regprocedure;
+begin
+  for f in select p.oid::regprocedure from pg_proc p
+           join pg_namespace n on n.oid=p.pronamespace where n.nspname='vault' loop
+    begin
+      execute format('revoke all on function %s from public,anon,authenticated,service_role', f);
+    exception when insufficient_privilege then
+      raise notice 'vault: % is platform-owned; revoke skipped', f;
+    end;
+  end loop;
+end $$;
 create table public.channel_connections (
   id uuid primary key default gen_random_uuid(),
   owner_profile_id uuid not null references public.profiles(id) on delete cascade,

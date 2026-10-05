@@ -23,6 +23,7 @@ import '../../features/admin/presentation/org_admin_screen.dart'
     deferred as org_admin;
 import '../../features/organization/presentation/org_invitation_screen.dart';
 import '../../features/organization/presentation/channel_connections_screen.dart';
+import '../../features/organization/presentation/channel_consent_return_screen.dart';
 import '../../features/organization/presentation/organization_shows_screen.dart';
 import '../../features/organization/presentation/organization_hub_screen.dart';
 import '../../features/splash/presentation/app_splash_screen.dart';
@@ -311,9 +312,10 @@ class AppRouter {
               token: state.uri.queryParameters['token']),
           ),
           GoRoute(path:'/channels',parentNavigatorKey:_rootNavigatorKey,
-            builder:(context,state)=>const ChannelConnectionsScreen()),
-          GoRoute(path:'/channel-connected',parentNavigatorKey:_rootNavigatorKey,
             builder:(context,state)=>ChannelConnectionsScreen(returnStatus:state.uri.queryParameters['status'])),
+          GoRoute(path:'/channel-connected',parentNavigatorKey:_rootNavigatorKey,
+            builder:(context,state)=>ChannelConsentReturnScreen(returnStatus:state.uri.queryParameters['status'],
+              navigatorKey:_rootNavigatorKey)),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/account-banned',

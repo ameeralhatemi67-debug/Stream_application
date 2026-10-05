@@ -66,10 +66,11 @@ class BroadcastPublishingController extends ChangeNotifier {
 
   Future<bool> prepare(String title, String type) async {
     if (operating || !confirmed || destination == null) return false;
-    if (session == null && _createdId == null &&
-        (destination!.organizationId != null || title.trim().isEmpty)) {
+    if (session == null && _createdId == null && destination!.organizationId != null) {
       errorKey = 'organization_v1.assignment_required'; notifyListeners(); return false;
     }
+    // The title is optional; YouTube still needs one, so fall back to the channel name.
+    if (title.trim().isEmpty) title = destination!.title;
     busy = true; errorKey = null; notifyListeners();
     final generation = _generation;
     try {

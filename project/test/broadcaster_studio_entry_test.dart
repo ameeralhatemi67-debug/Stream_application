@@ -162,6 +162,7 @@ class _Broadcasts extends OrganizationBroadcastService {
   static const destination=ChannelConnection(id:'connection',ownerId:'c',organizationId:null,
     channelId:'UC_test',title:'Confirmed channel',status:'connected',revision:2);
   int creates=0,prepares=0;
+  String? createdTitle;
   bool failPrepare=false,failEnd=false;
   Completer<void>? startGate;
   Object? startError;
@@ -173,13 +174,13 @@ class _Broadcasts extends OrganizationBroadcastService {
   @override Future<List<OrgMembership>> memberships({String? organizationId}) async=>[];
   @override Future<List<BroadcastSession>> sessions({String? organizationId,bool mine=false}) async=>creates==0?[]:[BroadcastSession.fromRow(row)];
   @override Future<BroadcastSession?> session(String id) async=>BroadcastSession.fromRow(row);
-  @override Future<String> createPersonal(String title,String type) async {creates++;return 'session';}
+  @override Future<String> createPersonal(String title,String type) async {creates++;createdTitle=title;return 'session';}
   @override Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
     actions.add(action);
     if(action=='prepare') {
       prepares++;row['channel_connection_id']='connection';row['sender_mode']=sender;row['state']='preparing';
       if(failPrepare)throw const FunctionException(status:409,details:{'error':'feed_creation_unresolved'});
-      return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmp.youtube.com/live2','ingest_key':'test-only-key'};
+      return {'session':Map<String,dynamic>.of(row),'ingest_url':'rtmps://a.rtmps.youtube.com/live2','ingest_key':'test-only-key'};
     }
     if(action=='start') {await startGate?.future;if(startError!=null)throw startError!;row['state']='live';}
     if(action=='end') {row['state']=failEnd?'ending':'completed';row['termination_pending']=failEnd;if(failEnd)throw StateError('Provider unavailable');}
@@ -225,6 +226,34 @@ void main() {
     restored.dispose();p.dispose();await db.devices.close();
   });
 
+  test('an empty title falls back to the channel name and still prepares',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='obs_laptop'..confirmed=true;
+    expect(await studio.prepare('  ','liveVideo'),isTrue);
+    expect(broadcasts.createdTitle,'Confirmed channel');expect(studio.errorKey,isNull);
+    studio.dispose();p.dispose();await db.devices.close();
+  });
+
+  test('consent return keeps the page stack once, briefly, and only for app paths',()async {
+    final p=AppProvider.withServices(organizationBroadcastService:_Broadcasts());
+    expect(await p.takeChannelConsentReturn(),isNull);
+    await p.rememberChannelConsentReturn(['/feed','/settings'],studio:false);
+    final saved=await p.takeChannelConsentReturn();
+    expect(saved?.stack,['/feed','/settings']);expect(saved?.studio,isFalse);
+    expect(await p.takeChannelConsentReturn(),isNull,reason:'Consumed by the first return');
+    await p.rememberChannelConsentReturn(['/broadcaster/abc'],studio:true);
+    expect((await p.takeChannelConsentReturn())?.studio,isTrue);
+    for(final bad in [['https://evil.invalid/'],['/feed','//evil.invalid'],<String>[]]) {
+      await p.rememberChannelConsentReturn(bad,studio:true);
+      expect(await p.takeChannelConsentReturn(),isNull,reason:'$bad');
+    }
+    SharedPreferences.setMockInitialValues({'channel_consent_return':
+      '{"at":"${DateTime.now().toUtc().subtract(const Duration(hours:1)).toIso8601String()}","stack":["/feed"],"studio":true}'});
+    expect(await p.takeChannelConsentReturn(),isNull,reason:'A stale consent attempt does not reopen anything');
+    p.dispose();
+  });
+
   test('authorization errors surface once and pending termination retains exact session',()async {
     final db=_StudioDb(), broadcasts=_Broadcasts();
     final p=await _broadcaster(db,broadcasts:broadcasts);
@@ -263,7 +292,10 @@ void main() {
       expect(find.byType(DropdownButtonFormField<String>),findsNothing);
       expect(find.textContaining('Confirmed channel'),findsOneWidget);
       expect(find.byType(TextField),findsOneWidget);
-      expect(tester.widget<FilledButton>(find.byType(FilledButton).first).onPressed,isNull);
+      // The title is optional: Preview is available before anything is typed.
+      expect(tester.widget<FilledButton>(find.byType(FilledButton).first).onPressed,isNotNull);
+      expect(find.text('organization_v1.reconnect'.tr()),findsOneWidget);
+      expect(find.text('organization_v1.channels'.tr()),findsNothing);
       await tester.enterText(find.byType(TextField),'My lesson');await tester.pump();
       expect(tester.widget<FilledButton>(find.byType(FilledButton).first).onPressed,isNotNull);
       expect(find.textContaining('rtmp://'),findsNothing);expect(tester.takeException(),isNull);

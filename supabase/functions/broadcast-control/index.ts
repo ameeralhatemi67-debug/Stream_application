@@ -10,7 +10,10 @@ const headers={'access-control-allow-origin':origin,'access-control-allow-header
   'access-control-allow-methods':'POST,OPTIONS','cache-control':'no-store'};
 async function rpc(db:ReturnType<typeof createClient>,name:string,params:Record<string,unknown>) {
   const {data,error}=await db.rpc(name,params);
-  if(error) throw new ProviderError(error.code==='42501'?403:409,'session_operation_unavailable');
+  if(error) {
+    console.error(JSON.stringify({rpc:name,code:error.code,message:error.message}));
+    throw new ProviderError(error.code==='42501'?403:409,'session_operation_unavailable');
+  }
   return data;
 }
 Deno.serve(async request=>{
@@ -39,6 +42,10 @@ Deno.serve(async request=>{
     reservation=claim.token;
     return Response.json(await runBroadcast(id!,reservation!,serverRpc,credentials),{headers});
   } catch(error) {
+    // Reason codes only; tokens, keys and request bodies are never logged.
+    console.error(JSON.stringify({session:id??null,reason:error instanceof ProviderError?error.reason:'operation_failed',
+      status:error instanceof ProviderError?error.status:null,ambiguous:error instanceof ProviderError?error.ambiguous:null,
+      detail:error instanceof ProviderError?null:error instanceof Error?error.name:typeof error}));
     if(id&&reservation) await serverRpc('broadcast_provider_step',{p_id:id,p_token:reservation,p_step:'observe',
       p_error:error instanceof ProviderError?error.reason:'operation_failed',p_ambiguous:error instanceof ProviderError?error.ambiguous:true}).catch(()=>{});
     return Response.json({error:error instanceof ProviderError?error.reason:'operation_failed'},
