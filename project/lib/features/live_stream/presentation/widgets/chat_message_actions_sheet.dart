@@ -183,7 +183,11 @@ Future<void> _runModerationAction(
   } catch (e) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$e'), backgroundColor: Canopy.liveCrimson),
+      SnackBar(
+          content: Text(e is ModeratorRevokeDenied
+              ? 'live.moderator_revoke_denied'.tr()
+              : '$e'),
+          backgroundColor: Canopy.liveCrimson),
     );
   }
 }

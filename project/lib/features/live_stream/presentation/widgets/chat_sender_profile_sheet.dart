@@ -1,10 +1,14 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
 import '../../../../core/widgets/ds/ca_cards.dart';
 import '../../../../core/widgets/ds/ca_feedback.dart';
+import '../../../../core/widgets/ds/ca_fields.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../models/chat_message_model.dart';
@@ -45,6 +49,14 @@ Future<void> showChatSenderProfile(
                     child: ChatSenderProfileSheet(
                         message: message, controller: controller)))));
 
+/// Time left on a mute: "4:20", or "1:02:20" past an hour.
+String chatMuteRemaining(Duration left) {
+  final total = left.inSeconds < 0 ? 0 : left.inSeconds;
+  final h = total ~/ 3600, m = (total % 3600) ~/ 60, sec = total % 60;
+  String two(int n) => n.toString().padLeft(2, '0');
+  return h > 0 ? '$h:${two(m)}:${two(sec)}' : '$m:${two(sec)}';
+}
+
 class ChatSenderProfileSheet extends StatefulWidget {
   const ChatSenderProfileSheet(
       {super.key, required this.message, required this.controller});
@@ -59,12 +71,245 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
   /// the server does not return.
   DateTime? _moderatorSince;
 
-  CaChatRole get _role => widget.message.chatRole;
+  /// Set once this window appoints or removes the sender as a moderator, so the
+  /// tag and ring follow at once.
+  bool? _moderatorNow;
+
+  /// Mute state, once read: whether the sender is muted and until when (null =
+  /// the rest of this stream). [_muteKnown] stays false while loading.
+  bool _muteKnown = false, _muted = false;
+  DateTime? _muteEnds;
+  Timer? _tick;
+
+  /// An action is running, or the last one failed (shown inline).
+  bool _busy = false;
+  String? _error;
+
+  CaChatRole get _role {
+    final base = widget.message.chatRole;
+    final now = _moderatorNow;
+    if (now == null ||
+        (base != CaChatRole.viewer && base != CaChatRole.moderator)) {
+      return base;
+    }
+    return now ? CaChatRole.moderator : CaChatRole.viewer;
+  }
+
+  /// Moderating tools are for people who can moderate this room, on ordinary
+  /// viewers and other moderators, never on yourself, the broadcaster or an
+  /// admin.
+  bool get _canActOnSender =>
+      widget.controller.canModerate &&
+      !widget.message.isCurrentUser &&
+      (_role == CaChatRole.viewer || _role == CaChatRole.moderator);
 
   @override
   void initState() {
     super.initState();
     if (_role == CaChatRole.moderator) _loadModeratorSince();
+    if (_canActOnSender) _loadMuteStatus();
+  }
+
+  @override
+  void dispose() {
+    _tick?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _loadMuteStatus() async {
+    try {
+      final status =
+          await widget.controller.muteStatus(widget.message.senderId);
+      if (!mounted) return;
+      _applyMute(status.muted, status.expiresAt);
+    } catch (_) {
+      // The list could not be read; the mute buttons still work.
+      if (mounted) setState(() => _muteKnown = true);
+    }
+  }
+
+  void _applyMute(bool muted, DateTime? ends) {
+    _tick?.cancel();
+    setState(() {
+      _muteKnown = true;
+      _muted = muted;
+      _muteEnds = ends;
+    });
+    if (muted && ends != null) {
+      // Counts down while the window is open, and flips back by itself when
+      // the mute runs out.
+      _tick = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        if (!ends.isAfter(DateTime.now())) {
+          _tick?.cancel();
+          setState(() {
+            _muted = false;
+            _muteEnds = null;
+          });
+        } else {
+          setState(() {});
+        }
+      });
+    }
+  }
+
+  /// Runs one moderation action, showing a busy state and any failure inline.
+  Future<void> _run(Future<void> Function() action) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await action();
+    } on ModeratorRevokeDenied {
+      if (mounted) setState(() => _error = 'live.moderator_revoke_denied'.tr());
+    } catch (_) {
+      if (mounted) setState(() => _error = 'live.sender_action_failed'.tr());
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  Future<void> _mute(Duration? duration) => _run(() async {
+        await widget.controller
+            .muteUser(widget.message.senderId, duration: duration);
+        if (!mounted) return;
+        _applyMute(
+            true, duration == null ? null : DateTime.now().add(duration));
+      });
+
+  Future<void> _unmute() => _run(() async {
+        await widget.controller.unmuteUser(widget.message.senderId);
+        if (mounted) _applyMute(false, null);
+      });
+
+  Future<void> _toggleModerator() => _run(() async {
+        final make = _role != CaChatRole.moderator;
+        if (make) {
+          await widget.controller
+              .appointStreamModerator(widget.message.senderId);
+        } else {
+          await widget.controller
+              .revokeStreamModerator(widget.message.senderId);
+        }
+        if (!mounted) return;
+        setState(() {
+          _moderatorNow = make;
+          _moderatorSince = make ? DateTime.now() : null;
+        });
+      });
+
+  Future<void> _deleteAll() async {
+    final count = widget.controller.messages
+        .where((m) => m.senderId == widget.message.senderId)
+        .length;
+    final confirmed = await showCaSheet<bool>(context,
+        title: 'live.sender_delete_all_title'
+            .tr(namedArgs: {'name': widget.message.senderName}),
+        job: CaSheetJob.confirmation,
+        bareChrome: true,
+        body: Text(
+            'live.sender_delete_all_body'.tr(namedArgs: {'count': '$count'})),
+        actions: [
+          Builder(
+              builder: (ctx) => CaButton(
+                  label: 'common.cancel'.tr(),
+                  variant: CaButtonVariant.text,
+                  onPressed: () => Navigator.pop(ctx, false))),
+          Builder(
+              builder: (ctx) => CaButton(
+                  label: 'common.delete'.tr(),
+                  variant: CaButtonVariant.destructive,
+                  onPressed: () => Navigator.pop(ctx, true))),
+        ]);
+    if (confirmed != true || !mounted) return;
+    await _run(() async {
+      await widget.controller.deleteMessagesFrom(widget.message.senderId);
+      if (mounted) setState(() {});
+    });
+  }
+
+  Widget _moderationSection(BuildContext context) {
+    final textTheme = Theme.of(context).textTheme;
+    final ends = _muteEnds;
+    final isModerator = _role == CaChatRole.moderator;
+    final count = widget.controller.messages
+        .where((m) => m.senderId == widget.message.senderId)
+        .length;
+    return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+      const SizedBox(height: AppTheme.spaceXl),
+      Text('live.sender_moderation_title'.tr(), style: textTheme.titleSmall),
+      const SizedBox(height: AppTheme.spaceSm),
+      if (_muteKnown && _muted) ...[
+        DecoratedBox(
+            decoration: BoxDecoration(
+                color: Canopy.warningTint,
+                borderRadius: BorderRadius.circular(CanopyRadius.input)),
+            child: Padding(
+                padding: const EdgeInsets.all(AppTheme.spaceMd),
+                child: Row(children: [
+                  const CaIcon(CaGlyph.micoff, color: Canopy.warning),
+                  const SizedBox(width: AppTheme.spaceSm),
+                  Expanded(
+                      child: Text(
+                          ends == null
+                              ? 'live.sender_muted_rest'.tr()
+                              : 'live.sender_muted_for'.tr(namedArgs: {
+                                  'time':
+                                      chatMuteRemaining(ends.difference(DateTime.now()))
+                                }),
+                          style: textTheme.bodyMedium
+                              ?.copyWith(color: Canopy.warning))),
+                ]))),
+        const SizedBox(height: AppTheme.spaceSm),
+        CaButton(
+            label: 'live.sender_unmute'.tr(),
+            icon: CaGlyph.volume,
+            variant: CaButtonVariant.secondary,
+            loading: _busy,
+            onPressed: _busy ? null : _unmute),
+      ] else ...[
+        Text('live.sender_mute_for'.tr(), style: textTheme.bodySmall),
+        const SizedBox(height: AppTheme.spaceSm),
+        Wrap(
+            spacing: AppTheme.spaceSm,
+            runSpacing: AppTheme.spaceSm,
+            children: [
+              for (final (label, duration) in <(String, Duration?)>[
+                ('live.sender_mute_5m'.tr(), const Duration(minutes: 5)),
+                ('live.sender_mute_10m'.tr(), const Duration(minutes: 10)),
+                ('live.sender_mute_1h'.tr(), const Duration(hours: 1)),
+                ('live.sender_mute_rest'.tr(), null),
+              ])
+                CaChip(
+                    label: label,
+                    onSelected: _busy ? null : (_) => _mute(duration)),
+            ]),
+      ],
+      const SizedBox(height: AppTheme.spaceMd),
+      CaButton(
+          label: (isModerator
+                  ? 'live.sender_remove_moderator'
+                  : 'live.sender_make_moderator')
+              .tr(),
+          icon: CaGlyph.shield,
+          variant: CaButtonVariant.secondary,
+          onPressed: _busy ? null : _toggleModerator),
+      if (count > 0) ...[
+        const SizedBox(height: AppTheme.spaceSm),
+        CaButton(
+            label: 'live.sender_delete_all'.tr(namedArgs: {'count': '$count'}),
+            icon: CaGlyph.trash,
+            variant: CaButtonVariant.destructive,
+            onPressed: _busy ? null : _deleteAll),
+      ],
+      if (_error != null) ...[
+        const SizedBox(height: AppTheme.spaceSm),
+        Text(_error!,
+            style: textTheme.bodySmall?.copyWith(color: Canopy.liveCrimson)),
+      ],
+    ]);
   }
 
   Future<void> _loadModeratorSince() async {
@@ -176,12 +421,13 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
           _InfoRow(
               glyph: CaGlyph.cal,
               text: 'live.sender_moderator_since'.tr(namedArgs: {
-                'date': MaterialLocalizations.of(context).formatMediumDate(since)
+                'date':
+                    MaterialLocalizations.of(context).formatMediumDate(since)
               })),
         ],
+        if (_canActOnSender) _moderationSection(context),
         const SizedBox(height: AppTheme.spaceXl),
-        Text(
-            '${'live.sender_history_title'.tr()} (${history.length})',
+        Text('${'live.sender_history_title'.tr()} (${history.length})',
             style: textTheme.titleSmall),
         const SizedBox(height: AppTheme.spaceSm),
         if (history.isEmpty)

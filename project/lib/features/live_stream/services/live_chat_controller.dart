@@ -92,6 +92,14 @@ enum ChatComposerState {
   ready,
 }
 
+/// The server refused to remove a stream moderator: they were appointed by
+/// someone else, or for more than this stream.
+class ModeratorRevokeDenied implements Exception {
+  const ModeratorRevokeDenied();
+  @override
+  String toString() => 'ModeratorRevokeDenied';
+}
+
 /// Owns a single stream's live chat: loads recent history, subscribes to new
 /// messages over Supabase Realtime, and sends new ones. One instance per
 /// LiveBroadcastScreen (created in initState, disposed with the screen) --
@@ -553,25 +561,96 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
     }
   }
 
-  Future<void> muteUser(String senderId) async {
+  /// Mutes [senderId] in this room for [duration], or until someone unmutes
+  /// them when [duration] is null (a mute only ever applies to this stream, so
+  /// "permanent" means "for the rest of this stream"). Muting someone who is
+  /// already muted replaces the earlier mute: chat_muted_users holds one row
+  /// per sender per stream and has no update policy, so the old row is
+  /// removed and a new one written.
+  Future<void> muteUser(String senderId, {Duration? duration}) async {
     final mutedBy = _currentUserId;
     if (mutedBy == null) throw Exception('Sign in to moderate chat.');
+    await _client
+        .from('chat_muted_users')
+        .delete()
+        .eq('stream_id', streamId)
+        .eq('muted_profile_id', senderId);
+    final expiresAt = duration == null
+        ? null
+        : DateTime.now().toUtc().add(duration).toIso8601String();
     await _client.from('chat_muted_users').insert({
       'stream_id': streamId,
       'muted_profile_id': senderId,
       'muted_by': mutedBy,
+      'expires_at': expiresAt,
     });
     await _recordModerationAudit(
       action: 'chatSenderMuted',
-      descriptionEn: 'Muted a chat sender from inside the live room.',
-      descriptionAr: 'تم كتم مُرسل من داخل غرفة البث المباشر.',
-      metadata: {'stream_id': streamId, 'muted_profile_id': senderId},
+      descriptionEn: duration == null
+          ? 'Muted a chat sender for the rest of the stream.'
+          : 'Muted a chat sender for ${duration.inMinutes} minutes.',
+      descriptionAr: duration == null
+          ? 'تم كتم مُرسل حتى نهاية البث.'
+          : 'تم كتم مُرسل لمدة ${duration.inMinutes} دقيقة.',
+      metadata: {
+        'stream_id': streamId,
+        'muted_profile_id': senderId,
+        'duration_seconds': duration?.inSeconds,
+        'expires_at': expiresAt,
+      },
     );
+  }
+
+  /// Whether [senderId] is muted in this room right now, and until when
+  /// ([expiresAt] is null for a mute that lasts the rest of the stream). Only
+  /// the stream's owner, its moderators and admins can read the mute list, so
+  /// anyone else always sees "not muted".
+  Future<({bool muted, DateTime? expiresAt})> muteStatus(
+      String senderId) async {
+    final row = await _client
+        .from('chat_muted_users')
+        .select('expires_at')
+        .eq('stream_id', streamId)
+        .eq('muted_profile_id', senderId)
+        .maybeSingle();
+    if (row == null) return (muted: false, expiresAt: null);
+    final raw = row['expires_at'];
+    final expires = raw is String ? DateTime.tryParse(raw)?.toLocal() : null;
+    if (expires != null && !expires.isAfter(DateTime.now())) {
+      return (muted: false, expiresAt: null);
+    }
+    return (muted: true, expiresAt: expires);
+  }
+
+  /// Deletes every message [senderId] has written in this room and returns how
+  /// many the server removed. Server-enforced by the same delete policy as a
+  /// single message (the room's owner, its moderators, admins).
+  Future<int> deleteMessagesFrom(String senderId) async {
+    final removed = await _client
+        .from('chat_messages')
+        .delete()
+        .eq('stream_id', streamId)
+        .eq('sender_id', senderId)
+        .select('id');
+    final ids = {for (final row in removed) row['id'] as String};
+    _messages.removeWhere((m) => ids.contains(m.id) || m.senderId == senderId);
+    notifyListeners();
+    await _recordModerationAudit(
+      action: 'chatMessageDeleted',
+      descriptionEn: 'Deleted all of a chat sender\'s messages in the room.',
+      descriptionAr: 'تم حذف جميع رسائل مُرسل في غرفة الدردشة.',
+      metadata: {
+        'stream_id': streamId,
+        'sender_id': senderId,
+        'deleted_count': ids.length,
+      },
+    );
+    return ids.length;
   }
 
   /// When [senderId] was made a moderator for this room, or null when it is
   /// not known: no such appointment, or the chat_moderator_since function
-  /// (supabase/migrations/20261006090000) is not deployed yet.
+  /// (supabase/migrations/20261005144121) is not deployed yet.
   Future<DateTime?> moderatorSince(String senderId) async {
     try {
       final result = await _client.rpc('chat_moderator_since',
@@ -667,17 +746,41 @@ class LiveChatController extends ChangeNotifier with WidgetsBindingObserver {
         rethrow; // 23505 = unique_violation, already a moderator
       }
     }
-    _profileCache.remove(profileId); // force badge re-resolution on next fetch
+    _setModeratorBadge(profileId, true);
   }
 
+  /// Removes [profileId] as this stream's moderator. Only the person who
+  /// appointed them, or an admin, may (stream_moderators' delete policy), and a
+  /// moderator appointed for a whole organization or the platform is not a
+  /// stream-scope row at all; in both cases the server removes nothing, which
+  /// is reported as a [ModeratorRevokeDenied] rather than a success.
   Future<void> revokeStreamModerator(String profileId) async {
-    await _client
+    final removed = await _client
         .from('stream_moderators')
         .delete()
         .eq('stream_id', streamId)
         .eq('profile_id', profileId)
-        .eq('scope', 'stream');
+        .eq('scope', 'stream')
+        .select('id');
+    if (removed.isEmpty) throw const ModeratorRevokeDenied();
+    _setModeratorBadge(profileId, false);
+  }
+
+  /// Puts the moderator badge on, or takes it off, every message [profileId]
+  /// has in the list, so the avatar ring changes at once instead of at the
+  /// next sender lookup.
+  void _setModeratorBadge(String profileId, bool moderator) {
     _profileCache.remove(profileId);
+    for (var i = 0; i < _messages.length; i++) {
+      final m = _messages[i];
+      if (m.senderId != profileId) continue;
+      final badges = {...m.badges};
+      moderator
+          ? badges.add(ChatSenderBadge.moderator)
+          : badges.remove(ChatSenderBadge.moderator);
+      _messages[i] = m.copyWith(badges: badges);
+    }
+    notifyListeners();
   }
 
   /// Oldest first, the order live inserts are appended in.

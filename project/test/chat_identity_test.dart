@@ -51,6 +51,72 @@ Widget host(Widget home, {String lang = 'en'}) => EasyLocalization(
                   home: Scaffold(body: home)))),
     );
 
+/// A controller whose server calls are recorded instead of sent.
+class FakeChat extends LiveChatController {
+  FakeChat() : super(streamId: 'room') {
+    debugSetStateForTests(currentUserId: 'self', canModerate: true);
+  }
+  final calls = <String>[];
+  bool muted = false;
+  Object? revokeError;
+
+  @override
+  Future<({bool muted, DateTime? expiresAt})> muteStatus(String id) async =>
+      (muted: muted, expiresAt: null);
+  @override
+  Future<void> muteUser(String senderId, {Duration? duration}) async {
+    calls.add('mute:$senderId:${duration?.inSeconds}');
+  }
+
+  @override
+  Future<void> unmuteUser(String senderId) async =>
+      calls.add('unmute:$senderId');
+  @override
+  Future<int> deleteMessagesFrom(String senderId) async {
+    calls.add('deleteAll:$senderId');
+    return 2;
+  }
+
+  @override
+  Future<void> appointStreamModerator(String profileId) async =>
+      calls.add('appoint:$profileId');
+  @override
+  Future<void> revokeStreamModerator(String profileId) async {
+    if (revokeError != null) throw revokeError!;
+    calls.add('revoke:$profileId');
+  }
+
+  @override
+  Future<DateTime?> moderatorSince(String senderId) async => null;
+}
+
+Future<void> openSender(
+    WidgetTester tester, FakeChat chat, ChatMessageModel message) async {
+  tester.view.physicalSize = const Size(390, 1000);
+  tester.view.devicePixelRatio = 1;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(host(Builder(
+      builder: (context) => TextButton(
+          onPressed: () => showChatSenderProfile(context,
+              message: message, controller: chat),
+          child: const Text('open')))));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text('open'));
+  for (var i = 0; i < 4; i++) {
+    await tester.runAsync(
+        () => Future<void>.delayed(const Duration(milliseconds: 100)));
+    await tester.pump(const Duration(milliseconds: 300));
+  }
+}
+
+Future<void> settle(WidgetTester tester) async {
+  for (var i = 0; i < 3; i++) {
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 50)));
+    await tester.pump(const Duration(milliseconds: 200));
+  }
+}
+
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUpAll(() async {
@@ -169,5 +235,126 @@ void main() {
     expect(find.text('Slides are pinned'), findsOneWidget);
     expect(find.text('Stay on topic please'), findsOneWidget);
     expect(find.text('Not by Saud'), findsNothing);
+  });
+  test('the mute countdown reads minutes and seconds, then hours', () {
+    expect(chatMuteRemaining(const Duration(seconds: 260)), '4:20');
+    expect(chatMuteRemaining(const Duration(seconds: 9)), '0:09');
+    expect(chatMuteRemaining(const Duration(seconds: 3740)), '1:02:20');
+    expect(chatMuteRemaining(const Duration(seconds: -5)), '0:00');
+  });
+
+  group('moderation in the sender window', () {
+    testWidgets('only people who can moderate see it', (tester) async {
+      final chat = FakeChat()..debugSetStateForTests(canModerate: false);
+      await openSender(tester, chat, msg('1', 'v1', 'Reem', 'hello'));
+      expect(find.text('Moderation'), findsNothing);
+      expect(find.text('Messages in this stream (0)'), findsOneWidget);
+    });
+
+    testWidgets('not on the broadcaster, an admin or yourself', (tester) async {
+      for (final message in [
+        msg('1', 'st', 'Layla', 'hi', badges: {ChatSenderBadge.speaker}),
+        msg('2', 'ad', 'Sara', 'hi', badges: {ChatSenderBadge.admin}),
+        ChatMessageModel(
+            id: '3',
+            streamId: 'room',
+            senderId: 'self',
+            senderName: 'Me',
+            body: 'hi',
+            createdAt: DateTime(2026),
+            isCurrentUser: true),
+      ]) {
+        final chat = FakeChat();
+        await openSender(tester, chat, message);
+        expect(find.text('Moderation'), findsNothing,
+            reason: message.senderName);
+        await tester.pumpWidget(const SizedBox());
+      }
+    });
+
+    testWidgets('mutes for 10 minutes, shows it, and unmutes', (tester) async {
+      final chat = FakeChat();
+      await openSender(tester, chat, msg('1', 'v1', 'Reem', 'hello'));
+      for (final label in ['5 min', '10 min', '1 hour', 'Rest of stream']) {
+        expect(find.text(label), findsOneWidget);
+      }
+      await tester.tap(find.text('10 min'));
+      await settle(tester);
+      expect(chat.calls, ['mute:v1:600']);
+      expect(find.textContaining('Muted'), findsOneWidget);
+      expect(find.text('Unmute'), findsOneWidget);
+      expect(find.text('10 min'), findsNothing);
+      await tester.tap(find.text('Unmute'));
+      await settle(tester);
+      expect(chat.calls.last, 'unmute:v1');
+      expect(find.text('10 min'), findsOneWidget);
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('a mute for the rest of the stream says so', (tester) async {
+      final chat = FakeChat();
+      await openSender(tester, chat, msg('1', 'v1', 'Reem', 'hello'));
+      await tester.tap(find.text('Rest of stream'));
+      await settle(tester);
+      expect(chat.calls, ['mute:v1:null']);
+      expect(find.text('Muted for the rest of this stream'), findsOneWidget);
+    });
+
+    testWidgets('an existing mute is shown when the window opens',
+        (tester) async {
+      final chat = FakeChat()..muted = true;
+      await openSender(tester, chat, msg('1', 'v1', 'Reem', 'hello'));
+      expect(find.text('Muted for the rest of this stream'), findsOneWidget);
+      expect(find.text('Unmute'), findsOneWidget);
+    });
+
+    testWidgets('makes a viewer a moderator and the tag follows',
+        (tester) async {
+      final chat = FakeChat();
+      await openSender(tester, chat, msg('1', 'v1', 'Reem', 'hello'));
+      expect(find.text('Viewer'), findsOneWidget);
+      await tester.tap(find.text('Make moderator'));
+      await settle(tester);
+      expect(chat.calls, ['appoint:v1']);
+      expect(find.text('Moderator'), findsOneWidget);
+      expect(find.text('Remove as moderator'), findsOneWidget);
+      await tester.tap(find.text('Remove as moderator'));
+      await settle(tester);
+      expect(chat.calls.last, 'revoke:v1');
+      expect(find.text('Viewer'), findsOneWidget);
+    });
+
+    testWidgets('a refused removal explains why instead of succeeding',
+        (tester) async {
+      final chat = FakeChat()..revokeError = const ModeratorRevokeDenied();
+      await openSender(tester, chat,
+          msg('1', 'mo', 'Saud', 'hey', badges: {ChatSenderBadge.moderator}));
+      await tester.tap(find.text('Remove as moderator'));
+      await settle(tester);
+      expect(
+          find.textContaining('cannot remove this moderator'), findsOneWidget);
+      // Still a moderator: nothing was removed.
+      expect(find.text('Moderator'), findsOneWidget);
+    });
+
+    testWidgets('delete all asks first, then deletes', (tester) async {
+      final chat = FakeChat();
+      final first = msg('1', 'v1', 'Reem', 'one');
+      chat.debugAddMessageForTests(first);
+      chat.debugAddMessageForTests(msg('2', 'v1', 'Reem', 'two'));
+      await openSender(tester, chat, first);
+      await tester.tap(find.text('Delete all messages (2)'));
+      await settle(tester);
+      expect(chat.calls, isEmpty);
+      expect(find.text('Delete all messages from Reem?'), findsOneWidget);
+      await tester.tap(find.text('Cancel'));
+      await settle(tester);
+      expect(chat.calls, isEmpty);
+      await tester.tap(find.text('Delete all messages (2)'));
+      await settle(tester);
+      await tester.tap(find.text('Delete'));
+      await settle(tester);
+      expect(chat.calls, ['deleteAll:v1']);
+    });
   });
 }
