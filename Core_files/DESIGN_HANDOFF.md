@@ -37,9 +37,9 @@ Written 2026-10-05 at the end of the design-migration session. Read this first, 
 | 7f8f3f1 | Discovery feed ported (card grid, filter sheet, notifications and bookmarks sheets, laptop side nav, phone bottom nav) |
 | 1a5ef2c, 13c1c40, 63c6d54, d7b6cc0, 569d534 | Earlier ports: onboarding/apply wizard, admin, settings, streaming screens (earlier sessions) |
 
-### Uncommitted-but-intended change in the working tree
+### Working tree
 
-`project/lib/features/profile/presentation/broadcaster_profile_screen.dart`: the playlist-row chevron fix (see section 6, finding "Arabic chevron"). It was made after the last push. Check `git status`, run `flutter analyze` and the profile tests, then commit it. Leave the owner's unrelated files alone (section 2).
+The profile chevron fix (section 6.2, RTL residue) was committed together with this file. The remaining modified and untracked files (`skill-observations/log.md`, `store/assets/icon_512.png`, `Core_files/LOGIC_RISK_REVIEW.md`, `Core_files/ORGANIZATION_FEATURE_*.md`, `brief/**`, `doc/Design_1/`) belong to the owner; do not commit them.
 
 ### What is migrated and what is not (user-visible)
 
@@ -438,7 +438,7 @@ The owner said web may have designs that phones do not. Each idea is tagged **[w
 
 Take small independent tasks, one commit each, running the gates in section 9 every time. Do **not** start by flipping the global theme.
 
-**Step 0 (housekeeping).** Check `git status`; commit the profile chevron fix (`fix(profile): do not flip chevrons twice in Arabic`). Confirm Vercel deployments for `afa67fa` and `7b26eb1` reached READY (never confirmed). Agree with the owner what to keep from the design branch (section 4.1) and archive those docs, after which the owner can delete the worktree.
+**Step 0 (housekeeping).** Check `git status`. Vercel deployments for `afa67fa` and `7b26eb1` were confirmed READY after this was written; check the one for the commit that added this file. Agree with the owner what to keep from the design branch (section 4.1) and archive those docs, after which the owner can delete the worktree.
 
 **Step 1 (high reach, low risk, from the audit).**
 1. Remove or raise the 1.3 text clamp (`main.dart:133`) and adjust the 18 `>= 1.3` call sites; expect clipped widgets at 2.0 and fix them.
