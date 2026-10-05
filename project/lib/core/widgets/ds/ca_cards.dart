@@ -268,9 +268,19 @@ class CaScholarCard extends StatelessWidget {
       this.statusLabel,
       this.bannerHeight = CanopySize.cardBanner,
       this.footer,
-      this.statusKind});
+      this.statusKind,
+      this.largeAvatar = false,
+      this.bannerOverlay});
   final double bannerHeight;
   final Widget? footer;
+
+  /// A bigger avatar that sits half over the banner's lower edge.
+  final bool largeAvatar;
+
+  /// Pinned to the banner's top end corner (top left in Arabic). When set, the
+  /// status chip is not repeated in the card body; the overlay carries it.
+  final Widget? bannerOverlay;
+  static const _largeAvatarRadius = 34.0;
   final CaStatusKind? statusKind;
   final String name, subtitle;
   final String? avatarUrl, bannerUrl, statusLabel;
@@ -291,7 +301,14 @@ class CaScholarCard extends StatelessWidget {
             SizedBox(
                 height: bannerHeight,
                 width: double.infinity,
-                child: _CardImage(url: bannerUrl)),
+                child: Stack(fit: StackFit.expand, children: [
+                  _CardImage(url: bannerUrl),
+                  if (bannerOverlay != null)
+                    PositionedDirectional(
+                        top: AppTheme.spaceSm,
+                        end: AppTheme.spaceSm,
+                        child: bannerOverlay!),
+                ])),
             Padding(
                 padding: const EdgeInsetsDirectional.fromSTEB(
                     AppTheme.spaceLg, 0, AppTheme.spaceLg, AppTheme.spaceLg),
@@ -299,41 +316,75 @@ class CaScholarCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Transform.translate(
-                                offset:
-                                    const Offset(0, -CanopySize.avatarOverlap),
-                                child: CaAvatar(
-                                    name: name,
-                                    url: avatarUrl,
-                                    live: live,
-                                    verified: verified,
-                                    org: org)),
-                            const SizedBox(width: AppTheme.spaceSm),
-                            Expanded(
-                                child: Padding(
-                                    padding: const EdgeInsets.only(
-                                        top: AppTheme.spaceSm),
-                                    child: Text(name,
-                                        style: Theme.of(context)
-                                            .textTheme
-                                            .titleSmall))),
-                          ]),
+                      if (largeAvatar)
+                        _largeAvatarRow(context)
+                      else
+                        Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Transform.translate(
+                                  offset: const Offset(
+                                      0, -CanopySize.avatarOverlap),
+                                  child: CaAvatar(
+                                      name: name,
+                                      url: avatarUrl,
+                                      live: live,
+                                      verified: verified,
+                                      org: org)),
+                              const SizedBox(width: AppTheme.spaceSm),
+                              Expanded(
+                                  child: Padding(
+                                      padding: const EdgeInsets.only(
+                                          top: AppTheme.spaceSm),
+                                      child: Text(name,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .titleSmall))),
+                            ]),
                       Text(subtitle,
                           style: Theme.of(context).textTheme.bodySmall),
-                      const SizedBox(height: AppTheme.spaceSm),
-                      CaStatusChip(
-                          kind: statusKind ??
-                              (live ? CaStatusKind.live : CaStatusKind.offline),
-                          label: statusLabel),
+                      if (bannerOverlay == null) ...[
+                        const SizedBox(height: AppTheme.spaceSm),
+                        CaStatusChip(
+                            kind: statusKind ??
+                                (live
+                                    ? CaStatusKind.live
+                                    : CaStatusKind.offline),
+                            label: statusLabel),
+                      ],
                       if (footer != null) ...[
                         const SizedBox(height: AppTheme.spaceSm),
                         footer!
                       ],
                     ])),
           ]));
+}
+
+extension on CaScholarCard {
+  /// The avatar straddles the banner edge by half its height; the name sits
+  /// beside its lower half, so the card does not grow by the overlap.
+  Widget _largeAvatarRow(BuildContext context) {
+    const radius = CaScholarCard._largeAvatarRadius;
+    const box = radius * 2 + AppTheme.spaceXs;
+    return ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: box - radius),
+        child: Stack(clipBehavior: Clip.none, children: [
+          Padding(
+              padding: const EdgeInsetsDirectional.only(
+                  start: box + AppTheme.spaceMd, top: AppTheme.spaceSm),
+              child: Text(name, style: Theme.of(context).textTheme.titleSmall)),
+          PositionedDirectional(
+              start: 0,
+              top: -radius,
+              child: CaAvatar(
+                  name: name,
+                  url: avatarUrl,
+                  radius: radius,
+                  live: live,
+                  verified: verified,
+                  org: org)),
+        ]));
+  }
 }
 
 class CaLectureTile extends StatelessWidget {

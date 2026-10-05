@@ -16,6 +16,8 @@ class StreamerGridCard extends StatelessWidget {
   const StreamerGridCard(
       {super.key, required this.streamer, required this.langCode});
 
+  static const _bannerHeight = 128.0;
+
   @override
   Widget build(BuildContext context) {
     final (networkStatus, cached, isOwnCard) =
@@ -27,10 +29,17 @@ class StreamerGridCard extends StatelessWidget {
             ));
     final uncertain = cached || networkStatus != NetworkStatus.online;
     final isLive = !uncertain && streamer.isCurrentlyLive;
-    void openChannel() => context.push(isLive
-        ? '/live/${streamer.liveSessionId ?? streamer.streamerId}'
-        : '/profile/${streamer.channelProfileId}', extra: canopyOrigin(context));
+    void openChannel() => context.push(
+        isLive
+            ? '/live/${streamer.liveSessionId ?? streamer.streamerId}'
+            : '/profile/${streamer.channelProfileId}',
+        extra: canopyOrigin(context));
 
+    final tags = streamer.tags
+        .where((t) => t.trim().isNotEmpty)
+        .toSet()
+        .take(2)
+        .toList();
     return CanopyPress(
         child: CaScholarCard(
             name: streamer.getLocalizedName(langCode),
@@ -40,7 +49,10 @@ class StreamerGridCard extends StatelessWidget {
             verified: streamer.isVerified,
             org: streamer.isOrganization,
             live: isLive,
-            bannerHeight: CanopySize.scholarBanner,
+            // Owner choices: a taller banner, a larger avatar, and the status
+            // badges on the banner's top end corner instead of in the body.
+            bannerHeight: _bannerHeight,
+            largeAvatar: true,
             statusKind: isLive
                 ? (streamer.isAudioLive
                     ? CaStatusKind.audio
@@ -52,33 +64,63 @@ class StreamerGridCard extends StatelessWidget {
                         : 'offline_experience.status_unavailable')
                     .tr()
                 : null,
-            onTap: openChannel,
-            footer: Wrap(
+            bannerOverlay: Wrap(
                 spacing: AppTheme.spaceXs,
                 runSpacing: AppTheme.spaceXs,
+                alignment: WrapAlignment.end,
                 children: [
+                  CaStatusChip(
+                      kind: isLive
+                          ? (streamer.isAudioLive
+                              ? CaStatusKind.audio
+                              : CaStatusKind.live)
+                          : CaStatusKind.offline,
+                      label: uncertain
+                          ? (cached
+                                  ? 'offline_experience.cached_card'
+                                  : 'offline_experience.status_unavailable')
+                              .tr()
+                          : null),
                   if (isOwnCard)
-                    Text('feed.your_channel_badge'.tr(),
-                        style: Theme.of(context).textTheme.labelSmall),
-                  for (final tag in streamer.tags
-                      .where((t) => t.trim().isNotEmpty)
-                      .toSet()
-                      .take(2))
                     DecoratedBox(
                         decoration: BoxDecoration(
-                            color: Canopy.mint,
+                            color: Canopy.paper,
                             borderRadius:
                                 BorderRadius.circular(CanopyRadius.pill)),
                         child: Padding(
                             padding: const EdgeInsetsDirectional.symmetric(
                                 horizontal: AppTheme.spaceSm,
                                 vertical: AppTheme.spaceXs),
-                            child: Directionality(
-                                textDirection: TextDirection.ltr,
-                                child: Text(tag,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .labelSmall)))),
-                ])));
+                            child: Text('feed.your_channel_badge'.tr(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(color: Canopy.brandGreen)))),
+                ]),
+            onTap: openChannel,
+            footer: tags.isEmpty
+                ? null
+                : Wrap(
+                    spacing: AppTheme.spaceXs,
+                    runSpacing: AppTheme.spaceXs,
+                    children: [
+                        for (final tag in tags)
+                          DecoratedBox(
+                              decoration: BoxDecoration(
+                                  color: Canopy.mint,
+                                  borderRadius:
+                                      BorderRadius.circular(CanopyRadius.pill)),
+                              child: Padding(
+                                  padding:
+                                      const EdgeInsetsDirectional.symmetric(
+                                          horizontal: AppTheme.spaceSm,
+                                          vertical: AppTheme.spaceXs),
+                                  child: Directionality(
+                                      textDirection: TextDirection.ltr,
+                                      child: Text(tag,
+                                          style: Theme.of(context)
+                                              .textTheme
+                                              .labelSmall)))),
+                      ])));
   }
 }
