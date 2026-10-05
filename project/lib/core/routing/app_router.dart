@@ -550,11 +550,12 @@ class _DesktopNavItem extends StatelessWidget {
         label: label,
         child: CaFocusRing(
           onDark: isSelected,
+          radius: CanopyRadius.input,
           child: Material(
             type: MaterialType.transparency,
             child: InkWell(
               onTap: onTap,
-              borderRadius: BorderRadius.circular(CanopyRadius.pill),
+              borderRadius: BorderRadius.circular(CanopyRadius.input),
               child: ExcludeSemantics(
                 child: Container(
                   constraints:
@@ -563,7 +564,7 @@ class _DesktopNavItem extends StatelessWidget {
                       horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
                   decoration: BoxDecoration(
                     gradient: isSelected ? AppGradients.pill : null,
-                    borderRadius: BorderRadius.circular(CanopyRadius.pill),
+                    borderRadius: BorderRadius.circular(CanopyRadius.input),
                   ),
                   child: Row(
                     children: [
