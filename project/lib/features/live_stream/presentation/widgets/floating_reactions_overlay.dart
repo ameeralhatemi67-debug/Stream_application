@@ -1,26 +1,10 @@
+import '../../../../core/widgets/ds/canopy_motion.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'dart:math';
 import 'package:flutter/material.dart';
 
-class FloatingParticleData {
-  final String id;
-  final String emoji;
-  final double startX;
-  final AnimationController controller;
-  final Animation<double> yAnimation;
-  final Animation<double> opacityAnimation;
-  final Animation<double> scaleAnimation;
-
-  FloatingParticleData({
-    required this.id,
-    required this.emoji,
-    required this.startX,
-    required this.controller,
-    required this.yAnimation,
-    required this.opacityAnimation,
-    required this.scaleAnimation,
-  });
-}
+const raisedHandGlyph = '✋';
+const loweredHandGlyph = '$raisedHandGlyph↓';
 
 /// Keyframe floating emoji animation overlay drifting upward over the video viewport.
 class FloatingReactionsOverlay extends StatefulWidget {
@@ -29,7 +13,8 @@ class FloatingReactionsOverlay extends StatefulWidget {
   const FloatingReactionsOverlay({super.key, this.controller});
 
   @override
-  State<FloatingReactionsOverlay> createState() => FloatingReactionsOverlayState();
+  State<FloatingReactionsOverlay> createState() =>
+      FloatingReactionsOverlayState();
 }
 
 class FloatingReactionsOverlayController {
@@ -48,11 +33,10 @@ class FloatingReactionsOverlayController {
   }
 }
 
-class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
-    with TickerProviderStateMixin {
-  final List<FloatingParticleData> _particles = [];
+class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay> {
+  final List<({String id, String glyph, double start})> _particles = [];
   final Random _random = Random();
-
+  static const int maxConcurrentParticles = 20;
   @override
   void initState() {
     super.initState();
@@ -71,129 +55,62 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay>
   @override
   void dispose() {
     widget.controller?.detach();
-    for (var particle in _particles) {
-      particle.controller.dispose();
-    }
-    _particles.clear();
     super.dispose();
   }
 
-  /// Reactions arrive over Realtime from the whole audience; an unbounded
-  /// burst meant hundreds of animated layers above the video platform view
-  /// (audit LIVE-02). Beyond this many on screen, further ones are dropped.
-  static const int maxConcurrentParticles = 20;
-
   void spawnReaction(String reactionType) {
     if (_particles.length >= maxConcurrentParticles) return;
-    final emoji = switch (reactionType) {
-      'clap' => '👏',
-      'raise_hand' => '✋',
-      'idea' => '💡',
-      'fire' => '🔥',
-      'scholar' => '🎓',
-      _ => '❤️', // 'heart' and any unrecognized type
+    final glyph = switch (reactionType) {
+      'clap' => liveReactionGlyphs['clap']!,
+      'raise_hand' => raisedHandGlyph,
+      'idea' => liveReactionGlyphs['idea']!,
+      'fire' => liveReactionGlyphs['fire']!,
+      'scholar' => liveReactionGlyphs['scholar']!,
+      _ => liveReactionGlyphs['heart']!,
     };
-
-    final id = 'particle_${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1000)}';
-    final startX = 0.65 + _random.nextDouble() * 0.25; // 65% to 90% of screen width
-
-    final controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2400),
+    final particle = (
+      id: 'particle_${DateTime.now().microsecondsSinceEpoch}_${_random.nextInt(1000)}',
+      glyph: glyph,
+      start: .65 + _random.nextDouble() * .25
     );
-
-    final yAnimation = Tween<double>(begin: 0.85, end: 0.15).animate(
-      CurvedAnimation(parent: controller, curve: Curves.easeOutCubic),
-    );
-
-    final opacityAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.0), weight: 20),
-      TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 1.0), weight: 50),
-      TweenSequenceItem(tween: Tween<double>(begin: 1.0, end: 0.0), weight: 30),
-    ]).animate(controller);
-
-    final scaleAnimation = Tween<double>(begin: 0.6, end: 1.2).animate(
-      CurvedAnimation(parent: controller, curve: Curves.elasticOut),
-    );
-
-    final particle = FloatingParticleData(
-      id: id,
-      emoji: emoji,
-      startX: startX,
-      controller: controller,
-      yAnimation: yAnimation,
-      opacityAnimation: opacityAnimation,
-      scaleAnimation: scaleAnimation,
-    );
-
-    setState(() {
-      _particles.add(particle);
-    });
-
-    controller.forward().then((_) {
-      if (mounted) {
-        setState(() {
-          _particles.removeWhere((p) => p.id == id);
-        });
-        controller.dispose();
-      }
-    });
+    setState(() => _particles.add(particle));
   }
 
   @override
-  Widget build(BuildContext context) {
-    return IgnorePointer(
+  Widget build(BuildContext context) => IgnorePointer(
       child: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final height = constraints.maxHeight;
-
-          return Stack(
-            children: _particles.map((particle) {
-              return AnimatedBuilder(
-                animation: particle.controller,
-                builder: (context, child) {
-                  final x = width * particle.startX + sin(particle.controller.value * 6) * 12;
-                  final y = height * particle.yAnimation.value;
-
-                  return PositionedDirectional(
-                    start: x,
-                    top: y,
-                    // Each particle gets its own repaint boundary and no blurred
-                    // shadow (a blur per particle over a platform view is
-                    // expensive on mobile GPUs).
+          builder: (context, constraints) => Stack(children: [
+                for (final particle in _particles)
+                  PositionedDirectional(
+                    start: constraints.maxWidth * particle.start,
+                    bottom: AppTheme.spaceLg,
                     child: RepaintBoundary(
-                      child: Opacity(
-                        opacity:
-                            particle.opacityAnimation.value.clamp(0.0, 1.0),
-                        child: Transform.scale(
-                          scale: particle.scaleAnimation.value,
-                          child: Container(
-                            padding: const EdgeInsets.all(6),
-                            decoration: BoxDecoration(
-                              color: AppTheme.media.withValues(alpha: 0.4),
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: AppTheme.onMedia.withValues(alpha: 0.2),
-                              ),
-                            ),
-                            child: Text(
-                              particle.emoji,
-                              style: const TextStyle(fontSize: 24),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              );
-            }).toList(),
-          );
-        },
-      ),
-    );
-  }
+                        child: CaFloatingReaction(
+                            key: ValueKey(particle.id),
+                            onComplete: () {
+                              if (mounted) {
+                                setState(() => _particles
+                                    .removeWhere((p) => p.id == particle.id));
+                              }
+                            },
+                            child: Container(
+                                padding: const EdgeInsets.all(AppTheme.spaceSm),
+                                decoration: BoxDecoration(
+                                    color: Canopy.canopy900,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(color: Canopy.mist)),
+                                child: Text(particle.glyph,
+                                    style: const TextStyle(
+                                        fontSize: CanopySize.reactionIcon))))),
+                  ),
+              ])));
 }
 
-const liveReactionGlyphs = <String, String>{'heart': '❤️', 'clap': '👏', 'hand': '✋', 'fire': '🔥', 'idea': '💡', 'scholar': '🎓'};
+const liveReactionGlyphs = <String, String>{
+  'heart': '❤️',
+  'clap': '👏',
+  'hand': '✋',
+  'fire': '🔥',
+  'idea': '💡',
+  'scholar': '🎓'
+};

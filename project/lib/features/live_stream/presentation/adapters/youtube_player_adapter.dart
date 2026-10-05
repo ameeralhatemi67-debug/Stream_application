@@ -455,7 +455,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: AppTheme.danger,
+                        color: Canopy.liveCrimson,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -464,7 +464,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
                       'design_ui.youtube_player'.tr(),
                       style: const TextStyle(
                         color: AppTheme.onMedia,
-                        fontSize: 11,
+                        fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

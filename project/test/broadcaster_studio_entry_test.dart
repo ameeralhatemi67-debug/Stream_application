@@ -14,6 +14,7 @@ import 'package:streamer_app/core/services/supabase_auth_service.dart';
 import 'package:streamer_app/core/services/youtube_api_service.dart';
 import 'package:streamer_app/features/admin/models/broadcaster_application_model.dart';
 import 'package:streamer_app/core/widgets/interactive_toast_overlay.dart';
+import 'package:streamer_app/core/widgets/ds/ca_button.dart';
 import 'package:streamer_app/features/live_stream/presentation/screens/phone_broadcast_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/rtmp_ip_dialog.dart';
 
@@ -293,11 +294,12 @@ void main() {
       expect(find.textContaining('Confirmed channel'),findsOneWidget);
       expect(find.byType(TextField),findsOneWidget);
       // The title is optional: Preview is available before anything is typed.
-      expect(tester.widget<FilledButton>(find.byType(FilledButton).first).onPressed,isNotNull);
+      final preview=find.widgetWithText(CaButton,'organization_v1.preview'.tr());
+      expect(tester.widget<CaButton>(preview).onPressed,isNotNull);
       expect(find.text('organization_v1.reconnect'.tr()),findsOneWidget);
       expect(find.text('organization_v1.channels'.tr()),findsNothing);
       await tester.enterText(find.byType(TextField),'My lesson');await tester.pump();
-      expect(tester.widget<FilledButton>(find.byType(FilledButton).first).onPressed,isNotNull);
+      expect(tester.widget<CaButton>(preview).onPressed,isNotNull);
       expect(find.textContaining('rtmp://'),findsNothing);expect(tester.takeException(),isNull);
       await close(tester,p!,db);
     });

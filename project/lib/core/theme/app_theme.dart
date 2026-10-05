@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'canopy_tokens.dart';
+// Canopy tokens back the redesigned streaming screens; the app-wide values
+// below are unchanged.
+export 'canopy_tokens.dart';
 
 /// Scheme A. Source: brief/assets/design_options/tokens_A.json.
 abstract final class AppTheme {
+  static const captionFont = 12.0;
+  static const disabledText = Canopy.slate;
   static const bg = Color(0xFFFFFFFF);
   static const surface = Color(0xFFFFFFFF);
   static const surfaceAlt = Color(0xFFECF6EF);
@@ -151,6 +157,10 @@ abstract final class AppTheme {
 
 /// Allowed on primary buttons, welcome hero, logo tiles and small accents only.
 abstract final class AppGradients {
+  static const ring = CanopyGradients.ring;
+  static const pill = CanopyGradients.pill;
+  static const liveSignal = CanopyGradients.liveSignal;
+  static const canopy = CanopyGradients.canopy;
   static const brand = LinearGradient(begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd, colors: [Color(0xFF17643F), Color(0xFF327044)]);
   static const soft = LinearGradient(begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd, colors: [Color(0xFFD7EDDC), Color(0xFFB8DBB9)]);
 

@@ -109,7 +109,7 @@ class FloatingEmojiOverlayState extends State<FloatingEmojiOverlay>
                                   fontSize: 28,
                                   shadows: [
                                     Shadow(
-                                      color: AppTheme.textMuted,
+                                      color: Canopy.haze,
                                       blurRadius: 6,
                                     ),
                                   ],

@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/canopy_content_motion.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
@@ -201,6 +202,9 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                       setState(() => _showControls = !_showControls);
                     }
                   },
+                  style: IconButton.styleFrom(
+                      backgroundColor: Canopy.canopy900,
+                      shape: const CircleBorder()),
                   icon: Icon(
                       _showControls
                           ? Icons.visibility_off_outlined
@@ -228,14 +232,15 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: AppTheme.danger,
-                                borderRadius: BorderRadius.circular(4),
+                                gradient: AppGradients.liveSignal,
+                                borderRadius:
+                                    BorderRadius.circular(CanopyRadius.pill),
                               ),
                               child: Text(
                                 'live.live_indicator'.tr(),
                                 style: const TextStyle(
                                   color: AppTheme.onMedia,
-                                  fontSize: 10,
+                                  fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.8,
                                 ),
@@ -255,7 +260,8 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
                               color: AppTheme.media.withValues(alpha: 0.78),
-                              borderRadius: BorderRadius.circular(4),
+                              borderRadius:
+                                  BorderRadius.circular(CanopyRadius.pill),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -264,13 +270,12 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                                     size: 12, color: AppTheme.onMedia),
                                 const SizedBox(width: 5),
                                 Flexible(
-                                  child: Text(
-                                    '${widget.viewerCount ?? '—'} ${'feed.watching'.tr()}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
+                                  child: CaRollingCount(
+                                    value: widget.viewerCount,
+                                    suffix: 'feed.watching'.tr(),
                                     style: const TextStyle(
                                       color: AppTheme.onMedia,
-                                      fontSize: 11,
+                                      fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
                                   ),
@@ -392,12 +397,12 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         FocusScope.of(context).unfocus();
         widget.onSelectQuality(quality);
       },
-      color: AppTheme.surfaceAlt,
+      color: Canopy.mint,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
           color: AppTheme.media.withValues(alpha: 0.65),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(CanopyRadius.pill),
           border: Border.all(
               color: AppTheme.primary.withValues(alpha: 0.6), width: 0.8),
         ),
@@ -410,7 +415,7 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
               widget.selectedQuality.shortLabel,
               style: const TextStyle(
                 color: AppTheme.onMedia,
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -427,7 +432,7 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
             children: [
               Icon(
                 isSelected ? Icons.check_rounded : Icons.hd_outlined,
-                color: isSelected ? AppTheme.primary : AppTheme.textMuted,
+                color: isSelected ? AppTheme.primary : Canopy.haze,
                 size: 16,
               ),
               const SizedBox(width: 8),
@@ -466,7 +471,7 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
               '${'live.mic_muted_badge'.tr()} · ${'live.mic_silent_badge'.tr()}',
               style: const TextStyle(
                 color: AppTheme.warning,
-                fontSize: 10.5,
+                fontSize: AppTheme.captionFont,
                 fontWeight: FontWeight.bold,
               ),
             ),

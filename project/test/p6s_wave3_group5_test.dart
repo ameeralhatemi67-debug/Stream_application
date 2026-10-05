@@ -178,6 +178,9 @@ Widget _app(AppProvider provider, Widget home, {String lang = 'en'}) =>
         value: provider,
         child: Builder(
           builder: (context) => MaterialApp(
+            builder: (context, child) => MediaQuery(
+                data: MediaQuery.of(context).copyWith(disableAnimations: true),
+                child: child!),
             locale: context.locale,
             supportedLocales: context.supportedLocales,
             localizationsDelegates: context.localizationDelegates,
@@ -243,7 +246,9 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final catalog = roomCatalog = _Catalog();
-      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
+      final provider = AppProvider.withServices(
+          organizationBroadcastService: EmptyBroadcasts(),
+          adminDbService: catalog);
       provider.addStreamer(live);
       await tester.pumpWidget(
           _app(provider, LiveBroadcastScreen(streamId: live.streamerId)));
@@ -373,7 +378,9 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final catalog = _Catalog();
-      final provider = AppProvider.withServices(organizationBroadcastService:EmptyBroadcasts(),adminDbService: catalog);
+      final provider = AppProvider.withServices(
+          organizationBroadcastService: EmptyBroadcasts(),
+          adminDbService: catalog);
       provider.addStreamer(live);
       await tester.pumpWidget(_app(
           provider, LiveBroadcastScreen(streamId: live.streamerId),
@@ -638,7 +645,10 @@ void main() {
             expect(
                 find.ancestor(
                     of: find.byKey(const Key('studio-guide-image-1')),
-                    matching: find.byType(ClipRRect)),
+                    matching: find.byWidgetPredicate((widget) =>
+                        widget is ClipRRect &&
+                        widget.borderRadius ==
+                            BorderRadius.circular(AppTheme.radiusMd))),
                 findsOneWidget);
           }
           expect(find.byKey(const Key('studio-guide-link-vs-key')),

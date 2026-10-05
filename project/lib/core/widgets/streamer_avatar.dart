@@ -26,6 +26,8 @@ class StreamerAvatar extends StatelessWidget {
   /// Ring drawn around the avatar, used by the feed card's live/offline state.
   final Color? borderColor;
   final double borderWidth;
+  final Widget? placeholder;
+  final double? cornerRadius;
 
   const StreamerAvatar({
     super.key,
@@ -35,15 +37,17 @@ class StreamerAvatar extends StatelessWidget {
     this.square = false,
     this.borderColor,
     this.borderWidth = 1.2,
+    this.placeholder,
+    this.cornerRadius,
   });
 
   @override
   Widget build(BuildContext context) {
     final provider = resolveImageProviderOrNull(avatarUrl);
     final size = radius * 2;
-    final placeholder = _Placeholder(name: name, radius: radius);
+    final fallback = placeholder ?? _Placeholder(name: name, radius: radius);
     final content = provider == null
-        ? placeholder
+        ? fallback
         : Image(
             // Decode at the pixel size actually drawn, not the source size.
             image: downscaledImage(
@@ -55,11 +59,11 @@ class StreamerAvatar extends StatelessWidget {
             fit: BoxFit.cover,
             // A URL that resolves but then fails must not leave an empty
             // shape or take the surrounding screen down with it.
-            errorBuilder: (_, __, ___) => placeholder,
+            errorBuilder: (_, __, ___) => fallback,
           );
     final shaped = square
         ? ClipRRect(
-            borderRadius: BorderRadius.circular(radius * 0.42),
+            borderRadius: BorderRadius.circular(cornerRadius ?? radius * 0.42),
             child: SizedBox.square(dimension: size, child: content),
           )
         : ClipOval(child: SizedBox.square(dimension: size, child: content));
@@ -69,7 +73,7 @@ class StreamerAvatar extends StatelessWidget {
       decoration: BoxDecoration(
         shape: square ? BoxShape.rectangle : BoxShape.circle,
         borderRadius:
-            square ? BorderRadius.circular(radius * 0.42 + borderWidth) : null,
+            square ? BorderRadius.circular((cornerRadius ?? radius * 0.42) + borderWidth) : null,
         border: Border.all(color: border, width: borderWidth),
       ),
       child: shaped,

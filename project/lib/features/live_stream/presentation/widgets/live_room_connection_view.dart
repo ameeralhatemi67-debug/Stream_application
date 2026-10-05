@@ -54,7 +54,7 @@ class _LiveRoomConnectionViewState extends State<LiveRoomConnectionView> {
                           : 'offline_experience.room_title')
                       .tr(),
                   style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: AppTheme.spaceSm),
@@ -68,7 +68,7 @@ class _LiveRoomConnectionViewState extends State<LiveRoomConnectionView> {
                               : 'offline_experience.room_body')
                       .tr(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppTheme.textSecondary)),
+                  style: const TextStyle(color: Canopy.slate)),
               const SizedBox(height: AppTheme.spaceLg),
               Wrap(
                 alignment: WrapAlignment.center,

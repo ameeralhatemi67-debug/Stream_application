@@ -18,12 +18,21 @@ Future<void> initializeTestLocalization() async {
 }
 
 Widget localizedApp({required Widget home}) => EasyLocalization(
-  supportedLocales: const [Locale('en'), Locale('ar')],
-  startLocale: const Locale('en'), saveLocale: false, path: 'assets/i18n',
-  assetLoader: const DirectJsonAssetLoader(),
-  child: Builder(builder: (context) => MaterialApp(
-    theme: AppTheme.forLocale(context.locale), locale: context.locale,
-    supportedLocales: context.supportedLocales,
-    localizationsDelegates: context.localizationDelegates, home: home,
-  )),
-);
+      supportedLocales: const [Locale('en'), Locale('ar')],
+      startLocale: const Locale('en'),
+      saveLocale: false,
+      path: 'assets/i18n',
+      assetLoader: const DirectJsonAssetLoader(),
+      child: Builder(
+          builder: (context) => MaterialApp(
+                theme: AppTheme.forLocale(context.locale),
+                locale: context.locale,
+                supportedLocales: context.supportedLocales,
+                localizationsDelegates: context.localizationDelegates,
+                builder: (context, child) => MediaQuery(
+                    data: MediaQuery.of(context)
+                        .copyWith(disableAnimations: true),
+                    child: child!),
+                home: home,
+              )),
+    );

@@ -87,8 +87,9 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                       widget.streamUrl,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style:
-                          TextStyle(color: AppTheme.onMedia.withValues(alpha: 0.54), fontSize: 11),
+                      style: TextStyle(
+                          color: AppTheme.onMedia.withValues(alpha: 0.54),
+                          fontSize: AppTheme.captionFont),
                     ),
                   ],
                 ),
@@ -133,7 +134,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                       'live.ivs_latency_badge'.tr(),
                       style: const TextStyle(
                         color: AppTheme.onMedia,
-                        fontSize: 11,
+                        fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.bold,
                       ),
                     ),

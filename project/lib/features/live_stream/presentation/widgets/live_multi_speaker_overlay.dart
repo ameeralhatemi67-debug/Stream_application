@@ -109,7 +109,7 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: AppTheme.success, // Emerald Green Active Voice
+                    color: Canopy.leaf, // Emerald Green Active Voice
                     shape: BoxShape.circle,
                     border: Border.all(color: AppTheme.media, width: 1.5),
                   ),

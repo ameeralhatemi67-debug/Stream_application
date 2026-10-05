@@ -1,3 +1,11 @@
+import '../../../core/layout/window_class.dart';
+import '../../../core/widgets/ds/ca_layout.dart';
+import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/ds/ca_cards.dart';
+import '../../../core/widgets/ds/ca_fields.dart';
+import '../../../core/widgets/ds/ca_feedback.dart';
+import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/ds/ca_navigation.dart';
 import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -14,9 +22,7 @@ import '../services/live_chat_controller.dart';
 import '../services/viewer_presence_service.dart';
 import '../../../core/layout/content_width.dart';
 import '../../../core/theme/app_theme.dart';
-import '../../../core/widgets/streamer_avatar.dart';
 import '../../../core/providers/app_provider.dart';
-import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../map/presentation/widgets/venue_navigation_sheet.dart';
 import '../../map/presentation/venue_directions_launcher.dart';
@@ -33,7 +39,6 @@ import 'widgets/live_room_connection_view.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../admin/models/streamer_custom_placeholder_model.dart';
 import 'widgets/rtmp_ip_dialog.dart';
-import '../../../core/widgets/hadayah_loading_indicator.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
   final String streamId;
@@ -233,14 +238,20 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _roomProvider?.removeListener(_syncRoomConnection);
     _roomProvider = provider..addListener(_syncRoomConnection);
     _syncRoomConnection();
-    WidgetsBinding.instance.addPostFrameCallback((_) { if(mounted && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(widget.streamId)) _refreshRoom(); });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(widget.streamId)) {
+        _refreshRoom();
+      }
+    });
   }
 
   Future<void> _refreshRoom() async {
-    final p=_roomProvider;
-    if(p==null || !p.isOnline)return;
-    if(RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(widget.streamId)) {
-      try {await p.refreshBroadcastRoom(widget.streamId);} catch(_) {}
+    final p = _roomProvider;
+    if (p == null || !p.isOnline) return;
+    if (RegExp(r'^[0-9a-fA-F-]{36}$').hasMatch(widget.streamId)) {
+      try {
+        await p.refreshBroadcastRoom(widget.streamId);
+      } catch (_) {}
     }
     await p.loadVerifiedStreamersFromBackend();
   }
@@ -248,17 +259,22 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   void _syncRoomConnection() {
     final provider = _roomProvider;
     if (provider == null) return;
-    final session=provider.roomSession(widget.streamId);
-    if(session!=null && !session.live) {
-      if(session.replayStatus!='available') {
+    final session = provider.roomSession(widget.streamId);
+    if (session != null && !session.live) {
+      if (session.replayStatus != 'available') {
         _stopRoom();
-        _liveStateTimer?.cancel();_liveStateTimer=null;
+        _liveStateTimer?.cancel();
+        _liveStateTimer = null;
         _scheduleLookup();
         return;
       }
-      if(_openedLive || _roomEnded) {
-        _stopRoom();_roomEnded=false;_openedLive=false;
-        _openedWatchId=null;_openedSessionId=null;_requiredCatalogRevision=null;
+      if (_openedLive || _roomEnded) {
+        _stopRoom();
+        _roomEnded = false;
+        _openedLive = false;
+        _openedWatchId = null;
+        _openedSessionId = null;
+        _requiredCatalogRevision = null;
         _playerReloads++;
       }
     }
@@ -289,11 +305,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         _stopRoom();
         return;
       }
-      final confirmedLive = current?.isLiveForRoom == true || provider.streamers.any((s) =>
-          s.isLiveForRoom &&
-          (s.streamerId == widget.streamId ||
-              s.activeStreamId == widget.streamId ||
-              s.youtubeVideoId == widget.streamId));
+      final confirmedLive = current?.isLiveForRoom == true ||
+          provider.streamers.any((s) =>
+              s.isLiveForRoom &&
+              (s.streamerId == widget.streamId ||
+                  s.activeStreamId == widget.streamId ||
+                  s.youtubeVideoId == widget.streamId));
       if (!confirmedLive) {
         _stopRoom();
         return;
@@ -345,7 +362,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _roomEnded = true;
     _cancelViewerRecovery();
     _liveStateTimer?.cancel();
-    _liveStateTimer=null;
+    _liveStateTimer = null;
     _stopRoom();
     if (mounted) setState(() {});
   }
@@ -371,18 +388,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         unawaited(_refreshRoom());
       }
     });
-    final roomId=opened?.liveSessionId ?? widget.streamId;
+    final roomId = opened?.liveSessionId ?? widget.streamId;
     _chatController = LiveBroadcastScreen.debugChatFactory?.call(
-            roomId,
-            (type) => _reactionsController.spawnReaction(type)) ??
+            roomId, (type) => _reactionsController.spawnReaction(type)) ??
         LiveChatController(
           streamId: roomId,
           onReaction: (type) => _reactionsController.spawnReaction(type),
         );
+    _knownChatIds = _chatController.messages.map((m) => m.id).toSet();
+    _animatedChatIds.clear();
     _chatController.addListener(_handleChatConnectionChange);
-    _presenceService =
-        LiveBroadcastScreen.debugPresenceFactory?.call(roomId) ??
-            ViewerPresenceService(streamId: roomId);
+    _presenceService = LiveBroadcastScreen.debugPresenceFactory?.call(roomId) ??
+        ViewerPresenceService(streamId: roomId);
     _presenceService.addListener(_onPresenceChanged);
     final generation = _roomGeneration;
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -524,7 +541,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     // The composer already renders a reason and disables Send for every
     // blocked state (P6.2), so reaching here without canSend would be a bug --
     // guard anyway rather than posting into a refusal.
-    if (!_chatController.canSend || _roomProvider?.roomSession(widget.streamId)?.live==false) return;
+    if (!_chatController.canSend ||
+        _roomProvider?.roomSession(widget.streamId)?.live == false) {
+      return;
+    }
     _chatTextController.clear();
 
     _chatController.sendMessage(text).then((_) {
@@ -537,7 +557,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
+        SnackBar(content: Text('$e'), backgroundColor: Canopy.liveCrimson),
       );
     });
   }
@@ -556,7 +576,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     try {
       // A chat row gives the hand an authenticated sender and reaches people
       // who join after the transient reaction has passed.
-      await _chatController.sendMessage(raising ? '✋' : '✋↓');
+      await _chatController
+          .sendMessage(raising ? raisedHandGlyph : loweredHandGlyph);
       if (raising) {
         _reactionsController.spawnReaction('raise_hand');
         _chatController.sendReaction('raise_hand');
@@ -565,7 +586,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       if (!mounted) return;
       setState(() => _isHandRaised = !raising);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$error'), backgroundColor: AppTheme.danger),
+        SnackBar(content: Text('$error'), backgroundColor: Canopy.liveCrimson),
       );
     }
   }
@@ -786,22 +807,68 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   @override
   Widget build(BuildContext context) {
-    final appProvider = context.watch<AppProvider>();
+    context.select((AppProvider p) {
+      final channel = _findStreamer(p);
+      final placeholder = _brandablePlaceholderType;
+      return (
+        room: p.roomSession(widget.streamId),
+        choices: p.roomChoices(widget.streamId).map((s) => s.id).join(','),
+        revision: p.roomRevision(widget.streamId),
+        channel: channel,
+        reload: p.streamReloadCount,
+        broadcaster: p.isLoggedInStreamer,
+        studio: p.isStreamerModeEnabled,
+        muted: p.isStreamerMicMuted,
+        access: p.localViewerAccessState,
+        following: channel != null && p.isFollowing(channel.channelProfileId),
+        own: channel != null && p.isOwnStreamerProfile(channel.streamerId),
+        slides: p.customSlidesUrl,
+        attending: p.isAttendingInPerson(widget.streamId),
+        seats: p.getAvailableSeats(widget.streamId),
+        artwork: channel != null && placeholder != null
+            ? p.approvedPlaceholderImageUrl(channel.streamerId, placeholder)
+            : null,
+      );
+    });
+    final appProvider = context.read<AppProvider>();
     final networkStatus =
         context.select<AppProvider, NetworkStatus>((p) => p.networkStatus);
-    final choices=appProvider.roomChoices(widget.streamId);
-    if(choices.length>1) { return Scaffold(appBar:AppBar(title:Text('organization_v1.choose_show'.tr())),
-      body:ListView(children:choices.map((s)=>ListTile(title:Text(s.title(context.locale.languageCode)),
-        trailing:const Icon(Icons.play_arrow),onTap:()=>context.pushReplacement('/live/${s.id}'))).toList())); }
-    final session=appProvider.roomSession(widget.streamId);
-    if(session!=null && !session.live && session.replayStatus!='available') {
-      final key=['scheduled','preparing'].contains(session.state)?'scheduled_room':
-        session.replayStatus=='processing' || session.state=='processing_replay'?'replay_processing':'replay_missing';
-      return Scaffold(appBar:AppBar(title:Text(session.title(context.locale.languageCode))),body:Center(child:Padding(
-        padding:const EdgeInsets.all(AppTheme.spaceLg),child:Column(mainAxisSize:MainAxisSize.min,children:[
-        Text('organization_v1.$key'.tr()),TextButton(onPressed:_refreshRoom,child:Text('organization_v1.refresh'.tr()))]))));
+    final choices = appProvider.roomChoices(widget.streamId);
+    if (choices.length > 1) {
+      return Scaffold(
+          appBar: CaAppBar(title: Text('organization_v1.choose_show'.tr())),
+          body: ListView(
+              children: choices
+                  .map((s) => ListTile(
+                      title: Text(s.title(context.locale.languageCode)),
+                      trailing: const Icon(Icons.play_arrow),
+                      onTap: () => context.pushReplacement('/live/${s.id}')))
+                  .toList()));
     }
-    if (_roomEnded && session?.replayStatus!='available') {
+    final session = appProvider.roomSession(widget.streamId);
+    if (session != null &&
+        !session.live &&
+        session.replayStatus != 'available') {
+      final key = ['scheduled', 'preparing'].contains(session.state)
+          ? 'scheduled_room'
+          : session.replayStatus == 'processing' ||
+                  session.state == 'processing_replay'
+              ? 'replay_processing'
+              : 'replay_missing';
+      return Scaffold(
+          appBar:
+              CaAppBar(title: Text(session.title(context.locale.languageCode))),
+          body: Center(
+              child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spaceLg),
+                  child: Column(mainAxisSize: MainAxisSize.min, children: [
+                    Text('organization_v1.$key'.tr()),
+                    TextButton(
+                        onPressed: _refreshRoom,
+                        child: Text('organization_v1.refresh'.tr()))
+                  ]))));
+    }
+    if (_roomEnded && session?.replayStatus != 'available') {
       return const _RoomStatusScaffold(
         key: Key('live-room-ended'),
         icon: Icons.stop_circle_outlined,
@@ -833,20 +900,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
     if (!_roomActive) {
       return Scaffold(
-        backgroundColor: AppTheme.bg,
+        backgroundColor: Canopy.dawn,
         body: SafeArea(
             child: LiveRoomConnectionView(
           status: networkStatus,
           awaitingFreshCatalog: networkStatus == NetworkStatus.online,
           liveNotConfirmed: _requiredCatalogRevision != null &&
-              appProvider.roomRevision(widget.streamId) > _requiredCatalogRevision!,
+              appProvider.roomRevision(widget.streamId) >
+                  _requiredCatalogRevision!,
         )),
       );
     }
-    final mediaQuery = MediaQuery.of(context);
-    final isDesktop = isLaptopLiveLayout(context);
-    final isLandscape = mediaQuery.orientation == Orientation.landscape;
-    final isSideBySide = isDesktop || isLandscape;
+    final isSideBySide = context.usesTwoPanes;
     final langCode = context.locale.languageCode;
 
     final resolved = _findStreamer(appProvider);
@@ -866,96 +931,82 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     // labelled as YouTube's -- the two are never merged.
     final viewerCount = _presenceService.count;
 
+    Widget viewport(bool split) =>
+        _buildVideoViewport(appProvider, streamer, viewerCount, langCode,
+            isSideBySide: split);
+    final header = _buildBroadcasterHeader(appProvider, streamer, langCode);
+    final panel = _buildCinemaTabPanel(appProvider, streamer, langCode);
+    Widget boundedHeader(BoxConstraints constraints) => ConstrainedBox(
+        constraints: BoxConstraints(maxHeight: constraints.maxHeight * .35),
+        child: SingleChildScrollView(child: header));
+    final primary = LayoutBuilder(
+        builder: (context, constraints) => Column(children: [
+              Expanded(child: viewport(true)),
+              if (!_isFullscreen)
+                Flexible(flex: 0, child: boundedHeader(constraints)),
+            ]));
+    final single = LayoutBuilder(
+        builder: (context, constraints) => Column(children: [
+              ConstrainedBox(
+                  constraints:
+                      BoxConstraints(maxHeight: constraints.maxHeight * .45),
+                  child: AnimatedSize(
+                      duration: CanopyMotion.chipIn,
+                      curve: CanopyMotion.easeOut,
+                      alignment: Alignment.topCenter,
+                      child: viewport(false))),
+              if (!_isFullscreen) boundedHeader(constraints),
+              if (!_isFullscreen) Expanded(child: panel),
+            ]));
     return Scaffold(
-      backgroundColor: AppTheme.bg,
+      backgroundColor: Canopy.forestDeep,
       resizeToAvoidBottomInset: true,
       appBar: _isFullscreen
           ? null
-          : AppBar(
-              backgroundColor: AppTheme.bg,
-              title: Text(
-                streamer.getLocalizedTitle(langCode),
-                style:
-                    const TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+          : CaAppBar(
+              compactLanguage: true,
+              backgroundColor: AppTheme.media,
+              toolbarHeight: MediaQuery.textScalerOf(context).scale(1) >= 1.3
+                  ? CanopySize.appBarScaled
+                  : null,
+              title: Text(streamer.getLocalizedTitle(langCode),
+                  style: Theme.of(context)
+                      .textTheme
+                      .labelLarge
+                      ?.copyWith(color: Canopy.paper),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis),
               actions: [
-                // Leave with a "Return to broadcast" shortcut (playback stops)
-                IconButton(
-                  icon: const Icon(Icons.minimize_rounded, size: 20),
-                  tooltip: 'live.minimize_tooltip'.tr(),
-                  onPressed: () =>
-                      _minimizeToMiniPlayer(appProvider, streamer, langCode),
-                ),
-                // Broadcaster Studio Access -- single unified entry point
-                // (v0.9) for going live with an encoder or the phone camera.
-                if (appProvider.isLoggedInStreamer &&
-                    appProvider.isStreamerModeEnabled)
-                  IconButton(
-                    icon: const Icon(Icons.cell_tower_rounded, size: 20),
-                    tooltip: 'live.rtmp_ip_tooltip'.tr(),
-                    onPressed: () => LiveBroadcasterStudioSheet.show(context,
-                        openedFromVideo: true),
-                  ),
-                const LanguageSwitcher(),
-                const SizedBox(width: AppTheme.spaceSm),
-              ],
-            ),
+                  CaIconButton(
+                      icon: CaGlyph.arrow,
+                      glass: true,
+                      label: 'live.minimize_tooltip'.tr(),
+                      onPressed: () => _minimizeToMiniPlayer(
+                          appProvider, streamer, langCode)),
+                  if (appProvider.isLoggedInStreamer &&
+                      appProvider.isStreamerModeEnabled)
+                    CaIconButton(
+                        icon: CaGlyph.video,
+                        glass: true,
+                        label: 'live.rtmp_ip_tooltip'.tr(),
+                        onPressed: () => LiveBroadcasterStudioSheet.show(
+                            context,
+                            openedFromVideo: true)),
+                  const SizedBox(width: AppTheme.spaceSm),
+                ]),
       body: SafeArea(
-        child: isSideBySide
-            ? Row(
-                children: [
-                  // Left Side: Video Viewport & Broadcaster Metadata
-                  Expanded(
-                    flex: isDesktop ? 65 : 58,
-                    child: Column(
-                      children: [
-                        Expanded(
-                          child: _buildVideoViewport(
-                              appProvider, streamer, viewerCount, langCode,
-                              isSideBySide: true),
-                        ),
-                        if (!_isFullscreen)
-                          _buildBroadcasterHeader(
-                              appProvider, streamer, langCode),
-                      ],
-                    ),
-                  ),
-                  if (!_isFullscreen)
-                    const VerticalDivider(width: 1, color: AppTheme.border),
-
-                  // Right Side: Cinema Multi-Tab Container
-                  if (!_isFullscreen)
-                    Expanded(
-                      flex: isDesktop ? 35 : 42,
-                      child:
-                          _buildCinemaTabPanel(appProvider, streamer, langCode),
-                    ),
-                ],
-              )
-            : Column(
-                children: [
-                  // Mobile Portrait: Top 16:9 Video Player + Broadcaster Header
-                  AnimatedSize(
-                    duration: const Duration(milliseconds: 240),
-                    alignment: Alignment.topCenter,
-                    child: _buildVideoViewport(
-                        appProvider, streamer, viewerCount, langCode,
-                        isSideBySide: false),
-                  ),
-                  if (!_isFullscreen)
-                    _buildBroadcasterHeader(appProvider, streamer, langCode),
-
-                  // Mobile Portrait: Multi-Tab Panel
-                  if (!_isFullscreen)
-                    Expanded(
-                      child:
-                          _buildCinemaTabPanel(appProvider, streamer, langCode),
-                    ),
-                ],
-              ),
-      ),
+          child: LayoutBuilder(
+              builder: (context, constraints) => _isFullscreen
+                  ? viewport(isSideBySide)
+                  : CaPane(
+                      single: single,
+                      primary: primary,
+                      secondary: panel,
+                      secondaryWidth: context.isPhoneLandscape
+                          ? 280
+                          : CanopySize.paneMedium,
+                      largeSecondaryWidth: CanopySize.paneLarge,
+                    ))),
     );
   }
 
@@ -1095,8 +1146,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   child: LiveMultiSpeakerOverlay(
                     speakers: streamer.affiliatedSpeakers,
                     orgName: streamer.getLocalizedName(langCode),
-                    allVods:
-                        appProvider.getVodsForStreamer(streamer.channelProfileId),
+                    allVods: appProvider
+                        .getVodsForStreamer(streamer.channelProfileId),
                   ),
                 ),
 
@@ -1148,7 +1199,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       border: Border.all(color: AppTheme.warning, width: 1.5),
                       boxShadow: const [
                         BoxShadow(
-                            color: AppTheme.shadow,
+                            color: Color(0x33123E26),
                             blurRadius: 10,
                             offset: Offset(0, 2)),
                       ],
@@ -1162,7 +1213,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                           'live.hand_raised_badge'.tr(),
                           style: const TextStyle(
                             color: AppTheme.onMedia,
-                            fontSize: 10.5,
+                            fontSize: AppTheme.captionFont,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
@@ -1274,162 +1325,90 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   Widget _buildBroadcasterHeader(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
-    final isFollowing = appProvider.isFollowing(streamer.channelProfileId);
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-          horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(bottom: BorderSide(color: AppTheme.border, width: 1)),
-      ),
-      child: Row(
-        children: [
-          GestureDetector(
-            onTap: () => context.push('/profile/${streamer.channelProfileId}'),
-            child: StreamerAvatar(
-              radius: 18,
-              avatarUrl: streamer.avatarUrl,
-            ),
-          ),
-          const SizedBox(width: AppTheme.spaceSm),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final following = appProvider.isFollowing(streamer.channelProfileId);
+    final identity = Row(children: [
+      GestureDetector(
+          onTap: () => context.push('/profile/${streamer.channelProfileId}'),
+          child: CaAvatar(
+              name: streamer.getLocalizedName(langCode),
+              url: streamer.avatarUrl,
+              live: streamer.isLiveForRoom,
+              org: streamer.isOrganization,
+              radius: CanopySize.smallAvatar)),
+      const SizedBox(width: AppTheme.spaceSm),
+      Expanded(
+          child: Column(
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        streamer.getLocalizedName(langCode),
-                        style: const TextStyle(
-                          color: AppTheme.textPrimary,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(Icons.verified_rounded,
-                        color: AppTheme.primary, size: 14),
-                  ],
-                ),
-                Text(
-                  streamer.getLocalizedOrganization(langCode),
-                  style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 11),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor:
-                  isFollowing ? AppTheme.surfaceAlt : AppTheme.danger,
-              foregroundColor:
-                  isFollowing ? AppTheme.textSecondary : AppTheme.onMedia,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              minimumSize: const Size(60, 32),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                side: isFollowing
-                    ? const BorderSide(color: AppTheme.border)
-                    : BorderSide.none,
-              ),
-            ),
-            onPressed: () => appProvider.toggleFollow(streamer.channelProfileId),
-            child: Text(
-              isFollowing
-                  ? 'profile.following_btn'.tr()
-                  : 'profile.follow_btn'.tr(),
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
+            Text(streamer.getLocalizedName(langCode),
+                style: Theme.of(context)
+                    .textTheme
+                    .labelLarge
+                    ?.copyWith(color: Canopy.paper)),
+            Text(streamer.getLocalizedOrganization(langCode),
+                style: Theme.of(context)
+                    .textTheme
+                    .bodySmall
+                    ?.copyWith(color: Canopy.mist)),
+          ])),
+    ]);
+    final follow = CaButton(
+        label:
+            (following ? 'profile.following_btn' : 'profile.follow_btn').tr(),
+        variant: CaButtonVariant.secondary,
+        onPressed: () => appProvider.toggleFollow(streamer.channelProfileId));
+    return Padding(
+        padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
+        child: MediaQuery.textScalerOf(context).scale(1) >= 1.3
+            ? Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                    identity,
+                    const SizedBox(height: AppTheme.spaceSm),
+                    follow
+                  ])
+            : Row(children: [
+                Expanded(child: identity),
+                const SizedBox(width: AppTheme.spaceSm),
+                Flexible(child: follow)
+              ]));
   }
 
   Widget _buildCinemaTabPanel(
-      AppProvider appProvider, StreamerModel streamer, String langCode) {
-    return Container(
-      color: AppTheme.bg,
-      child: Column(
-        children: [
-          // Tab Views (Chat, Sources, Venue)
-          Expanded(
-            child: TabBarView(
-              controller: _tabController,
-              children: [
-                _buildChatTabView(),
-                _buildSourcesTabView(appProvider, streamer, langCode),
-                _buildVenueTabView(appProvider, streamer, langCode),
-              ],
-            ),
-          ),
-
-          //  Sleek Bottom Tab Bar Header (Chat, Sources, Venue at the BOTTOM with reduced height: 38px)
-          Container(
-            height: 45,
-            decoration: const BoxDecoration(
-              color: AppTheme.surface,
-              border:
-                  Border(top: BorderSide(color: AppTheme.border, width: 0.8)),
-            ),
-            child: TabBar(
-              controller: _tabController,
-              indicatorColor: AppTheme.danger,
-              labelColor: AppTheme.danger,
-              unselectedLabelColor: AppTheme.textMuted,
-              indicatorWeight: 2.0,
-              tabs: [
-                _buildCinemaTab(
-                    Icons.chat_bubble_outline_rounded, 'live.tab_chat'.tr()),
-                _buildCinemaTab(
-                    Icons.folder_open_rounded, 'live.tab_sources'.tr()),
-                _buildCinemaTab(
-                    Icons.location_on_outlined, 'live.tab_venue'.tr()),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  /// One tab of the chat/sources/venue bar.
-  ///
-  /// A third of a 320 px phone leaves about 88 px for icon plus label, which
-  /// the English "Sources" already overran before the label could ellipsize --
-  /// and every text scale above 1.0 made it worse. [Flexible] lets the label
-  /// give way instead of overflowing, so the tab degrades to an ellipsis and
-  /// keeps its icon.
-  Widget _buildCinemaTab(IconData icon, String label) {
-    return Tab(
-      height: 40,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14),
-          const SizedBox(width: 5),
-          Flexible(
-            child: Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+          AppProvider appProvider, StreamerModel streamer, String langCode) =>
+      ColoredBox(
+          color: Canopy.forestDeep,
+          child: LayoutBuilder(
+              builder: (context, constraints) => Column(children: [
+                    ConstrainedBox(
+                        constraints: BoxConstraints(
+                            maxHeight: constraints.maxHeight * .45),
+                        child: SingleChildScrollView(
+                            child: Padding(
+                                padding: const EdgeInsets.all(AppTheme.spaceSm),
+                                child: AnimatedBuilder(
+                                    animation: _tabController,
+                                    builder: (context, _) => CaSegmentedTabs(
+                                        dark: true,
+                                        labels: [
+                                          'live.tab_chat'.tr(),
+                                          'live.tab_sources'.tr(),
+                                          'live.tab_venue'.tr()
+                                        ],
+                                        index: _tabController.index,
+                                        onChanged:
+                                            _tabController.animateTo))))),
+                    Expanded(
+                        child:
+                            TabBarView(controller: _tabController, children: [
+                      _buildChatTabView(),
+                      _buildSourcesTabView(appProvider, streamer, langCode),
+                      _buildVenueTabView(appProvider, streamer, langCode),
+                    ])),
+                  ])));
 
   //  Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
   Widget _buildChatTabView() {
@@ -1446,7 +1425,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final state = _chatController.connectionState;
     final (color, label) = switch (state) {
       ChatConnectionState.live => (
-          AppTheme.success,
+          Canopy.leaf,
           'live.chat_status_live'.tr()
         ),
       ChatConnectionState.connecting => (
@@ -1454,7 +1433,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           'live.chat_status_connecting'.tr()
         ),
       ChatConnectionState.reconnecting => (
-          AppTheme.danger,
+          Canopy.liveCrimson,
           'live.chat_status_reconnecting'.tr()
         ),
     };
@@ -1463,7 +1442,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 4),
-      color: AppTheme.surface,
+      color: Canopy.forestDeep,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1475,8 +1454,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           const SizedBox(width: 5),
           Text(
             label,
-            style: TextStyle(
-                color: color, fontSize: 10, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Canopy.mist, fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -1548,7 +1527,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                                 horizontal: AppTheme.spaceMd, vertical: 4),
                             itemCount: messages.length,
                             itemBuilder: (context, index) =>
-                                _buildChatMessageTile(messages[index]),
+                                _buildChatMessageTile(messages[index],
+                                    showIdentity:
+                                        index + 1 >= messages.length ||
+                                            messages[index + 1].senderId !=
+                                                messages[index].senderId),
                           ),
                           if (_chatUnreadWhileScrolled > 0)
                             PositionedDirectional(
@@ -1591,11 +1574,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   border: Border.all(
-                      color: AppTheme.danger.withValues(alpha: 0.8),
+                      color: Canopy.liveCrimson.withValues(alpha: 0.8),
                       width: 1.2),
                   boxShadow: const [
                     BoxShadow(
-                        color: AppTheme.shadowStrong,
+                        color: Color(0x4D123E26),
                         blurRadius: 16,
                         offset: Offset(0, 4)),
                   ],
@@ -1631,7 +1614,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 6),
-      color: AppTheme.warning.withValues(alpha: 0.15),
+      color: Canopy.warningTint,
       child: Row(
         children: [
           const Icon(Icons.wifi_off_rounded, size: 14, color: AppTheme.warning),
@@ -1641,7 +1624,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               'live.chat_unavailable_banner'.tr(),
               style: const TextStyle(
                 color: AppTheme.warning,
-                fontSize: 11,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1660,11 +1643,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 8),
-      color: AppTheme.danger.withValues(alpha: 0.18),
+      color: Canopy.liveCrimson.withValues(alpha: 0.18),
       child: Row(
         children: [
           const Icon(Icons.warning_amber_rounded,
-              size: 16, color: AppTheme.danger),
+              size: 16, color: Canopy.liveCrimson),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -1673,8 +1656,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 'count': '${alert.count}',
               }),
               style: const TextStyle(
-                color: AppTheme.danger,
-                fontSize: 11,
+                color: Canopy.liveCrimson,
+                fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1683,19 +1666,19 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             onPressed: () => _chatController.quickMuteFromAlert(alert.senderId),
             style: TextButton.styleFrom(
               foregroundColor: AppTheme.onMedia,
-              backgroundColor: AppTheme.danger,
+              backgroundColor: Canopy.liveCrimson,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text('live.moderation_alert_quick_mute'.tr(),
-                style: const TextStyle(
-                    fontSize: 10.5, fontWeight: FontWeight.bold)),
+                style:
+                    const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
           ),
           const SizedBox(width: 6),
           IconButton(
             icon: const Icon(Icons.close_rounded,
-                size: 16, color: AppTheme.danger),
+                size: 16, color: Canopy.liveCrimson),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             onPressed: () =>
@@ -1713,6 +1696,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   /// never yanks the list out from under someone reading back.
   int _chatUnreadWhileScrolled = 0;
   int _lastSeenChatCount = 0;
+  Set<String> _knownChatIds = {};
+  final Set<String> _animatedChatIds = {};
 
   /// The list is `reverse: true`, so offset 0 IS the newest message.
   bool get _isChatScrolledToNewest {
@@ -1729,6 +1714,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   /// Counts arrivals the viewer has not scrolled down to yet. Called from the
   /// controller listener, before the rebuild.
   void _trackChatArrivals() {
+    final ids = _chatController.messages.map((m) => m.id).toSet();
+    _animatedChatIds.retainAll(ids);
+    if (_isChatScrolledToNewest) {
+      _animatedChatIds.addAll(ids.difference(_knownChatIds));
+    }
+    _knownChatIds = ids;
     final count = _chatController.messages.length;
     if (count > _lastSeenChatCount && !_isChatScrolledToNewest) {
       _chatUnreadWhileScrolled += count - _lastSeenChatCount;
@@ -1743,48 +1734,16 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     if (!_chatScrollController.hasClients) return;
     _chatScrollController.animateTo(
       0,
-      duration: const Duration(milliseconds: 300),
-      curve: Curves.easeOut,
+      duration: CanopyMotion.chatArrival,
+      curve: CanopyMotion.easeOut,
     );
   }
 
-  Widget _buildNewMessagesPill() {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-        onTap: _scrollChatToNewest,
-        child: Container(
-          padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spaceMd, vertical: 6),
-          decoration: BoxDecoration(
-            color: AppTheme.primary,
-            borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-            boxShadow: const [
-              BoxShadow(
-                  color: AppTheme.shadow, blurRadius: 8, offset: Offset(0, 2)),
-            ],
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.arrow_downward_rounded,
-                  size: 13, color: AppTheme.bg),
-              const SizedBox(width: 5),
-              Text(
-                '${'live.chat_new_messages_pill'.tr()} ($_chatUnreadWhileScrolled)',
-                style: const TextStyle(
-                  color: AppTheme.bg,
-                  fontSize: 11,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildNewMessagesPill() => CaButton(
+      label:
+          '${'live.chat_new_messages_pill'.tr()} ($_chatUnreadWhileScrolled)',
+      icon: CaGlyph.arrow,
+      onPressed: _scrollChatToNewest);
 
   /// An empty room stays empty (05 D-03) -- this explains the emptiness
   /// instead of filling it with invented conversation.
@@ -1796,12 +1755,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const Icon(Icons.forum_outlined, size: 34, color: AppTheme.textMuted),
+          const Icon(Icons.forum_outlined, size: 34, color: Canopy.mist),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             'live.chat_empty_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondary,
+              color: Canopy.paper,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
@@ -1812,7 +1771,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 ? 'live.chat_empty_subtitle_guest'.tr()
                 : 'live.chat_empty_subtitle'.tr(),
             textAlign: TextAlign.center,
-            style: const TextStyle(color: AppTheme.textMuted, fontSize: 11.5),
+            style: const TextStyle(color: Canopy.mist, fontSize: 12),
           ),
         ],
       ),
@@ -1827,7 +1786,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 4),
-      color: AppTheme.warning.withValues(alpha: 0.12),
+      color: Canopy.warningTint,
       child: Row(
         children: [
           const Icon(Icons.hourglass_bottom_rounded,
@@ -1839,7 +1798,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   .tr(args: ['${_chatController.slowModeSeconds}']),
               style: const TextStyle(
                   color: AppTheme.warning,
-                  fontSize: 10,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold),
             ),
           ),
@@ -1863,7 +1822,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
       decoration: const BoxDecoration(
         color: AppTheme.surface,
-        border: Border(top: BorderSide(color: AppTheme.border)),
+        border: Border(top: BorderSide(color: Canopy.hairline)),
       ),
       child: Row(
         children: [
@@ -1872,8 +1831,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           Expanded(
             child: Text(
               message,
-              style: const TextStyle(
-                  color: AppTheme.textSecondary, fontSize: 11.5),
+              style:
+                  const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
           ),
           if (action != null) ...[
@@ -1889,13 +1848,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     if (isCompactLandscapeChat(context)) {
       return _buildChatComposerNotice(
         icon: Icons.screen_rotation_rounded,
-        color: AppTheme.textSecondary,
+        color: Canopy.slate,
         message: 'live.landscape_chat_read_only'.tr(),
       );
     }
-    if(_roomProvider?.roomSession(widget.streamId)?.live==false) {
-      return _buildChatComposerNotice(icon:Icons.history,color:AppTheme.textMuted,
-        message:'organization_v1.replay_chat_read_only'.tr());
+    if (_roomProvider?.roomSession(widget.streamId)?.live == false) {
+      return _buildChatComposerNotice(
+          icon: Icons.history,
+          color: Canopy.haze,
+          message: 'organization_v1.replay_chat_read_only'.tr());
     }
     switch (_chatController.composerState) {
       case ChatComposerState.guest:
@@ -1909,7 +1870,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               'live.chat_composer_guest_action'.tr(),
               style: const TextStyle(
                   color: AppTheme.primary,
-                  fontSize: 11.5,
+                  fontSize: 12,
                   fontWeight: FontWeight.bold),
             ),
           ),
@@ -1917,7 +1878,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       case ChatComposerState.banned:
         return _buildChatComposerNotice(
           icon: Icons.block_rounded,
-          color: AppTheme.danger,
+          color: Canopy.liveCrimson,
           message: 'live.chat_composer_banned'.tr(),
         );
       case ChatComposerState.platformPaused:
@@ -1929,13 +1890,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       case ChatComposerState.muted:
         return _buildChatComposerNotice(
           icon: Icons.volume_off_rounded,
-          color: AppTheme.danger,
+          color: Canopy.liveCrimson,
           message: 'live.chat_composer_muted'.tr(),
         );
       case ChatComposerState.chatDisabled:
         return _buildChatComposerNotice(
           icon: Icons.speaker_notes_off_rounded,
-          color: AppTheme.textMuted,
+          color: Canopy.haze,
           message: 'live.chat_composer_chat_off'.tr(),
         );
       case ChatComposerState.offline:
@@ -1962,95 +1923,60 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       _ => 'live.chat_placeholder'.tr(),
     };
 
-    return Container(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppTheme.spaceSm, vertical: 4),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        border: Border(top: BorderSide(color: AppTheme.border)),
-      ),
-      child: Row(
-        children: [
-          // Raise Hand Toggle Button
+    return Padding(
+        padding: const EdgeInsetsDirectional.symmetric(
+            horizontal: AppTheme.spaceSm, vertical: AppTheme.spaceSm),
+        child: Row(children: [
           IconButton(
-            icon: Icon(
-              Icons.back_hand_rounded,
-              color: _isHandRaised ? AppTheme.warning : AppTheme.textMuted,
-              size: 19,
-            ),
-            tooltip: 'live.raise_hand_toggle'.tr(),
-            style: IconButton.styleFrom(
-              backgroundColor: _isHandRaised
-                  ? AppTheme.warning.withValues(alpha: 0.3)
-                  : Colors.transparent,
-            ),
-            onPressed: canSend ? _toggleRaiseHand : null,
-          ),
-
-          // Text Input Field
+              icon: Icon(Icons.back_hand_rounded,
+                  color: _isHandRaised ? Canopy.majlisGold : Canopy.mist),
+              tooltip: 'live.raise_hand_toggle'.tr(),
+              onPressed: canSend ? _toggleRaiseHand : null),
           Expanded(
-            child: TextField(
-              controller: _chatTextController,
-              focusNode: _chatFocus,
-              style:
-                  const TextStyle(color: AppTheme.textPrimary, fontSize: 12.5),
-              decoration: InputDecoration(
-                hintText: hint,
-                hintStyle: TextStyle(
-                  color: canSend
-                      ? AppTheme.textMuted
-                      : AppTheme.warning.withValues(alpha: 0.9),
-                  fontSize: 11,
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  borderSide: const BorderSide(color: AppTheme.border),
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                  borderSide: const BorderSide(color: AppTheme.border),
-                ),
-              ),
-              onSubmitted: canSend ? (_) => _handleSendLocalMessage() : null,
-            ),
-          ),
-          const SizedBox(width: 2),
-
-          // Reactions Menu FAB Button -- reactions are broadcast-only, never
-          // an insert, so they stay available while sending is held.
-          IconButton(
-            icon: Icon(
-              _isReactionMenuOpen
-                  ? Icons.close_rounded
-                  : Icons.emoji_emotions_outlined,
-              color: _isReactionMenuOpen ? AppTheme.danger : AppTheme.primary,
-              size: 20,
-            ),
-            tooltip: 'live.reaction_menu_tooltip'.tr(),
-            onPressed: () {
-              setState(() => _isReactionMenuOpen = !_isReactionMenuOpen);
-            },
-          ),
-
-          // Send Button
-          IconButton(
-            icon: Icon(
-              Icons.send_rounded,
-              color: canSend
-                  ? AppTheme.danger
-                  : AppTheme.textMuted.withValues(alpha: 0.5),
-              size: 19,
-            ),
-            onPressed: canSend ? _handleSendLocalMessage : null,
-          ),
-        ],
-      ),
-    );
+              child: TextField(
+                  controller: _chatTextController,
+                  focusNode: _chatFocus,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Canopy.ink),
+                  decoration: InputDecoration(
+                      hintText: hint,
+                      hintStyle: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: Canopy.slate),
+                      filled: true,
+                      fillColor: Canopy.mint,
+                      contentPadding: const EdgeInsetsDirectional.symmetric(
+                          horizontal: AppTheme.spaceMd,
+                          vertical: AppTheme.spaceMd),
+                      border: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(CanopyRadius.pill),
+                          borderSide: BorderSide.none),
+                      enabledBorder: OutlineInputBorder(
+                          borderRadius:
+                              BorderRadius.circular(CanopyRadius.pill),
+                          borderSide: BorderSide.none)),
+                  onSubmitted:
+                      canSend ? (_) => _handleSendLocalMessage() : null)),
+          CaIconButton(
+              icon: _isReactionMenuOpen ? CaGlyph.close : CaGlyph.heart,
+              glass: true,
+              label: 'live.reaction_menu_tooltip'.tr(),
+              onPressed: () =>
+                  setState(() => _isReactionMenuOpen = !_isReactionMenuOpen)),
+          CaIconButton(
+              icon: CaGlyph.send,
+              label: 'live.send'.tr(),
+              selected: true,
+              onPressed: canSend ? _handleSendLocalMessage : null),
+        ]));
   }
 
-  Widget _buildChatMessageTile(ChatMessageModel message) {
+  Widget _buildChatMessageTile(ChatMessageModel message,
+      {bool showIdentity = true}) {
     final tile = GestureDetector(
       // Cluster 4 Task 13: long-press now opens the actions sheet for every
       // message, own or not -- showChatMessageActionsSheet itself branches
@@ -2061,75 +1987,45 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         controller: _chatController,
       ),
       child: Padding(
-        padding: const EdgeInsets.only(bottom: 6),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            CircleAvatar(
-              radius: 12,
-              backgroundColor: AppTheme.surface,
-              child: Text(
-                message.senderName.isNotEmpty
-                    ? message.senderName[0].toUpperCase()
-                    : '?',
-                style: const TextStyle(
-                    color: AppTheme.primary,
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold),
-              ),
-            ),
-            const SizedBox(width: AppTheme.spaceSm),
-            Expanded(
-              child: RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: message.badges.isEmpty
-                          ? '${message.senderName}${message.body == '✋' ? ' ✋' : ''}: '
-                          : '${message.senderName} ${message.badges.map((b) => context.locale.languageCode == 'ar' ? b.labelAr : b.labelEn).join(', ')}${message.body == '✋' ? ' ✋' : ''}: ',
-                      style: TextStyle(
-                        color: message.isCurrentUser
-                            ? AppTheme.danger
-                            : AppTheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    TextSpan(
-                      text: message.body == '✋'
-                          ? 'live.hand_raised_message'.tr()
-                          : message.body == '✋↓'
-                              ? 'live.hand_lowered_message'.tr()
-                              : message.body,
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary, fontSize: 12),
-                    ),
-                    if (message.isEdited)
-                      TextSpan(
-                        text: ' ${'live.message_edited_badge'.tr()}',
-                        style: const TextStyle(
-                            color: AppTheme.textMuted, fontSize: 11),
-                      ),
-                  ],
-                ),
-              ),
-            ),
-            if (message.isPending)
-              const SizedBox(
-                width: 9,
-                height: 9,
-                child: HadayahLoadingIndicator(
-                    strokeWidth: 1.5, color: AppTheme.textMuted),
-              )
-            else
-              Text(
-                TimeOfDay.fromDateTime(message.createdAt.toLocal())
+          padding: const EdgeInsetsDirectional.only(bottom: AppTheme.spaceSm),
+          child: CaChatBubble(
+            name: message.senderName,
+            key: ValueKey(message.id),
+            showIdentity: showIdentity,
+            animateArrival: _animatedChatIds.contains(message.id),
+            message: (message.body == raisedHandGlyph
+                    ? 'live.hand_raised_message'.tr()
+                    : message.body == loweredHandGlyph
+                        ? 'live.hand_lowered_message'.tr()
+                        : message.body) +
+                (message.isEdited
+                    ? ' ${'live.message_edited_badge'.tr()}'
+                    : ''),
+            time: message.isPending
+                ? 'live.chat_status_connecting'.tr()
+                : TimeOfDay.fromDateTime(message.createdAt.toLocal())
                     .format(context),
-                style: const TextStyle(color: AppTheme.textMuted, fontSize: 10),
-              ),
-          ],
-        ),
-      ),
+            avatarUrl: message.senderAvatarUrl,
+            isOwn: message.isCurrentUser,
+            isSpeaker: message.badges.contains(ChatSenderBadge.speaker),
+            dark: true,
+            roleBadges: [
+              for (final badge in message.badges)
+                (
+                  icon: switch (badge) {
+                    ChatSenderBadge.speaker => CaGlyph.mic,
+                    ChatSenderBadge.admin ||
+                    ChatSenderBadge.moderator =>
+                      CaGlyph.shield,
+                    ChatSenderBadge.verified => CaGlyph.check,
+                    ChatSenderBadge.organization => CaGlyph.home,
+                  },
+                  label: context.locale.languageCode == 'ar'
+                      ? badge.labelAr
+                      : badge.labelEn
+                )
+            ],
+          )),
     );
 
     if (!message.isFailed) return tile;
@@ -2142,18 +2038,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Opacity(opacity: 0.6, child: tile),
-        Padding(
+        Container(
+          color: Canopy.errorTint,
           padding: const EdgeInsetsDirectional.only(start: 32, bottom: 6),
           child: Row(
             children: [
               const Icon(Icons.error_outline_rounded,
-                  size: 12, color: AppTheme.danger),
+                  size: 12, color: Canopy.liveCrimson),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   message.failureReason ?? '',
-                  style:
-                      const TextStyle(color: AppTheme.danger, fontSize: 10.5),
+                  style: const TextStyle(color: Canopy.liveCrimson, fontSize: 12),
                 ),
               ),
               if (_chatController.isRetryable(message.id))
@@ -2167,7 +2063,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     'live.chat_send_failed_retry'.tr(),
                     style: const TextStyle(
                         color: AppTheme.primary,
-                        fontSize: 10.5,
+                        fontSize: 12,
                         fontWeight: FontWeight.bold),
                   ),
                 ),
@@ -2180,8 +2076,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 ),
                 child: Text(
                   'live.chat_send_failed_discard'.tr(),
-                  style: const TextStyle(
-                      color: AppTheme.textMuted, fontSize: 10.5),
+                  style:
+                      const TextStyle(color: Canopy.haze, fontSize: 12),
                 ),
               ),
             ],
@@ -2195,7 +2091,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _chatController.retryFailedMessage(messageId).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
+        SnackBar(content: Text('$e'), backgroundColor: Canopy.liveCrimson),
       );
     });
   }
@@ -2207,9 +2103,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       child: Container(
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: AppTheme.surfaceAlt,
+          color: Canopy.mint,
           shape: BoxShape.circle,
-          border: Border.all(color: AppTheme.border),
+          border: Border.all(color: Canopy.hairline),
         ),
         child: Text(emoji, style: const TextStyle(fontSize: 16)),
       ),
@@ -2219,136 +2115,35 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   //  Tab 2: Sources & References (Renamed from Slides)
   Widget _buildSourcesTabView(
       AppProvider appProvider, StreamerModel streamer, String langCode) {
-    final slidesUrl = appProvider.customSlidesUrl;
-
+    // This local setting belongs to the broadcaster, not every viewed room.
+    final slidesUrl = appProvider.isOwnStreamerProfile(streamer.streamerId)
+        ? appProvider.customSlidesUrl.trim()
+        : '';
+    final uri = Uri.tryParse(slidesUrl);
+    if (uri == null ||
+        !uri.hasAuthority ||
+        (uri.scheme != 'https' && uri.scheme != 'http')) {
+      return Center(
+          child: Padding(
+        padding: const EdgeInsets.all(AppTheme.spaceLg),
+        child: Text('live.sources_empty'.tr(),
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(color: Canopy.paper)),
+      ));
+    }
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       children: [
-        Container(
-          padding: const EdgeInsets.all(AppTheme.spaceMd),
-          decoration: BoxDecoration(
-            color: AppTheme.surface,
-            borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.menu_book_rounded,
-                      color: AppTheme.danger, size: 24),
-                  const SizedBox(width: AppTheme.spaceMd),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'live.slides_pdf_title'.tr(),
-                          style: const TextStyle(
-                              color: AppTheme.textPrimary,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12.5),
-                        ),
-                        Text(
-                          slidesUrl,
-                          style: const TextStyle(
-                              color: AppTheme.textMuted, fontSize: 10.5),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
-                      foregroundColor: AppTheme.primary,
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 5),
-                    ),
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                            content:
-                                Text('live.downloading_slides_toast'.tr())),
-                      );
-                    },
-                    child: Text('live.download_btn'.tr(),
-                        style: const TextStyle(fontSize: 10.5)),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: AppTheme.spaceMd),
-        Text(
-          'live.lecture_agenda_title'.tr(),
-          style: const TextStyle(
-              color: AppTheme.textPrimary,
-              fontWeight: FontWeight.bold,
-              fontSize: 13),
-        ),
-        const SizedBox(height: AppTheme.spaceSm),
-        _buildChapterItem(
-            '00:00',
-            langCode == 'ar'
-                ? 'مقدمة في الأنظمة الذكية المستقلة'
-                : 'Introduction to Autonomous Agent Systems'),
-        _buildChapterItem(
-            '14:30',
-            langCode == 'ar'
-                ? 'أنماط المعمارية وضغط سياق النماذج اللغوية'
-                : 'Architecture Patterns & LLM Context Compression'),
-        _buildChapterItem(
-            '38:15',
-            langCode == 'ar'
-                ? 'عرض تطبيقي مباشر: خريطة نظم المعلومات الجغرافية'
-                : 'Live Demonstration: Real-Time Vector GIS Map'),
-        _buildChapterItem(
-            '52:00',
-            langCode == 'ar'
-                ? 'المصادر المفتوحة وأوراق البحث المرجعية'
-                : 'Open-Source Code & Research Papers'),
+        ListTile(
+          leading: const Icon(Icons.menu_book_rounded, color: AppTheme.primary),
+          title: Text('live.slides_pdf_title'.tr()),
+          subtitle: Text(slidesUrl),
+          trailing: const Icon(Icons.open_in_new_rounded),
+          onTap: () => launchUrl(uri, mode: LaunchMode.externalApplication),
+        )
       ],
-    );
-  }
-
-  Widget _buildChapterItem(String timestamp, String title) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 6),
-      padding: const EdgeInsets.all(AppTheme.spaceSm),
-      decoration: BoxDecoration(
-        color: AppTheme.surfaceAlt,
-        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: AppTheme.bg,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              timestamp,
-              style: const TextStyle(
-                  color: AppTheme.primary,
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.bold),
-            ),
-          ),
-          const SizedBox(width: AppTheme.spaceSm),
-          Expanded(
-            child: Text(
-              title,
-              style:
-                  const TextStyle(color: AppTheme.textPrimary, fontSize: 11.5),
-            ),
-          ),
-        ],
-      ),
     );
   }
 
@@ -2371,7 +2166,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           decoration: BoxDecoration(
             color: AppTheme.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.border),
+            border: Border.all(color: Canopy.hairline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2379,7 +2174,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               Row(
                 children: [
                   const Icon(Icons.location_on_rounded,
-                      color: AppTheme.danger, size: 22),
+                      color: Canopy.liveCrimson, size: 22),
                   const SizedBox(width: AppTheme.spaceSm),
                   Expanded(
                     child: Column(
@@ -2388,14 +2183,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         Text(
                           streamer.getLocalizedVenue(langCode),
                           style: const TextStyle(
-                              color: AppTheme.textPrimary,
+                              color: Canopy.ink,
                               fontWeight: FontWeight.bold,
                               fontSize: 13),
                         ),
                         Text(
                           '${streamer.getLocalizedCity(langCode)}, Eastern Province, KSA',
                           style: const TextStyle(
-                              color: AppTheme.textMuted, fontSize: 11),
+                              color: Canopy.haze,
+                              fontSize: AppTheme.captionFont),
                         ),
                       ],
                     ),
@@ -2407,7 +2203,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceAlt,
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: Row(
@@ -2420,9 +2216,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         style: TextStyle(
                           color: availableSeats > 0
                               ? AppTheme.primary
-                              : AppTheme.textMuted,
+                              : Canopy.haze,
                           fontWeight: FontWeight.bold,
-                          fontSize: 11.5,
+                          fontSize: AppTheme.captionFont,
                         ),
                       ),
                       Icon(
@@ -2431,7 +2227,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                             : Icons.block_rounded,
                         color: availableSeats > 0
                             ? AppTheme.primary
-                            : AppTheme.textMuted,
+                            : Canopy.haze,
                         size: 15,
                       ),
                     ],
@@ -2444,7 +2240,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isAttending ? AppTheme.surface : AppTheme.danger,
+                          isAttending ? AppTheme.surface : Canopy.liveCrimson,
                       foregroundColor:
                           isAttending ? AppTheme.primary : AppTheme.onMedia,
                       padding: const EdgeInsets.symmetric(vertical: 10),
@@ -2478,8 +2274,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             width: double.infinity,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.textPrimary,
-                side: const BorderSide(color: AppTheme.border),
+                foregroundColor: Canopy.ink,
+                side: const BorderSide(color: Canopy.hairline),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -2523,8 +2319,8 @@ class _RoomStatusScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
     return Scaffold(
-      backgroundColor: AppTheme.bg,
-      appBar: AppBar(backgroundColor: AppTheme.bg),
+      backgroundColor: Canopy.dawn,
+      appBar: CaAppBar(backgroundColor: Canopy.dawn),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -2532,18 +2328,18 @@ class _RoomStatusScaffold extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: AppTheme.textMuted, size: 42),
+                Icon(icon, color: Canopy.haze, size: 42),
                 const SizedBox(height: AppTheme.spaceMd),
                 Text(titleKey.tr(),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: Canopy.ink,
                         fontSize: 20,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: AppTheme.spaceSm),
                 Text(bodyKey.tr(),
                     textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppTheme.textSecondary)),
+                    style: const TextStyle(color: Canopy.slate)),
                 const SizedBox(height: AppTheme.spaceLg),
                 Wrap(
                   alignment: WrapAlignment.center,

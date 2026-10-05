@@ -95,6 +95,9 @@ flutter:
     - assets/images/quran/
     - assets/images/avatars/
     - assets/images/studio_help/
+    # Canopy design-system icons and lattice texture (streaming screens).
+    - assets/canopy/icons/
+    - assets/canopy/textures/
     - assets/images/hadayah_charity_parent.png
 
   fonts:

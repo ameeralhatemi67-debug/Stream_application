@@ -5,13 +5,17 @@ import '../../../../core/widgets/safe_image_provider.dart';
 import '../../models/chat_message_model.dart';
 import '../../services/live_chat_controller.dart';
 import 'live_chat_layout.dart';
+import 'floating_reactions_overlay.dart' show raisedHandGlyph, loweredHandGlyph;
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/widgets/ds/ca_feedback.dart';
+import '../../../../core/widgets/ds/ca_icon.dart';
 
 class LiveChatWidget extends StatefulWidget {
   final List<ChatMessageModel> messages;
   final ChatConnectionState connectionState;
   final Function(String messageText) onSendTextMessage;
   final TextEditingController? textController;
+  final bool cinema;
 
   /// Long-press on any message tile, own or someone else's (Cluster 4 Task
   /// 13 widened this from the Checkpoint 3 Phase 1 original, which only
@@ -26,6 +30,7 @@ class LiveChatWidget extends StatefulWidget {
     required this.connectionState,
     required this.onSendTextMessage,
     this.textController,
+    this.cinema = false,
     this.onMessageLongPress,
   });
 
@@ -65,7 +70,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.bg,
+      color: widget.cinema ? Canopy.forestDeep : Canopy.dawn,
       child: Column(
         children: [
           // Live Chat Header Bar
@@ -74,10 +79,10 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
               horizontal: AppTheme.spaceLg,
               vertical: AppTheme.spaceSm,
             ),
-            decoration: const BoxDecoration(
-              color: AppTheme.surface,
-              border: Border(
-                bottom: BorderSide(color: AppTheme.border, width: 1),
+            decoration: BoxDecoration(
+              color: widget.cinema ? Canopy.forestDeep : AppTheme.surface,
+              border: const Border(
+                bottom: BorderSide(color: Canopy.hairline, width: 1),
               ),
             ),
             child: Row(
@@ -96,7 +101,8 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.textPrimary,
+                        color:
+                            widget.cinema ? Canopy.paper : Canopy.ink,
                       ),
                 )),
                 const SizedBox(width: AppTheme.spaceSm),
@@ -108,14 +114,14 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceAlt,
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   ),
                   child: Text(
                     '${widget.messages.length}',
                     style: const TextStyle(
-                      color: AppTheme.textSecondary,
-                      fontSize: 11,
+                      color: Canopy.slate,
+                      fontSize: AppTheme.captionFont,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -142,6 +148,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                 final message =
                     widget.messages[widget.messages.length - 1 - index];
                 return _ChatTile(
+                  cinema: widget.cinema,
                   message: message,
                   onLongPress: widget.onMessageLongPress == null
                       ? null
@@ -155,7 +162,11 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
             Padding(
               padding: const EdgeInsets.all(AppTheme.spaceSm),
               child: Text('live.landscape_chat_read_only'.tr(),
-                  maxLines: 2, overflow: TextOverflow.ellipsis),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color:
+                          widget.cinema ? Canopy.mist : Canopy.slate),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis),
             )
           else
             Container(
@@ -163,7 +174,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
               decoration: const BoxDecoration(
                 color: AppTheme.surface,
                 border: Border(
-                  top: BorderSide(color: AppTheme.border, width: 1),
+                  top: BorderSide(color: Canopy.hairline, width: 1),
                 ),
               ),
               child: Row(
@@ -173,7 +184,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                       controller: _textController,
                       focusNode: _focusNode,
                       style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                        color: Canopy.ink,
                         fontSize: 13,
                       ),
                       textInputAction: TextInputAction.send,
@@ -181,7 +192,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                       decoration: InputDecoration(
                         hintText: 'live.chat_placeholder'.tr(),
                         hintStyle: const TextStyle(
-                          color: AppTheme.textMuted,
+                          color: Canopy.haze,
                           fontSize: 13,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -189,7 +200,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                           vertical: 10,
                         ),
                         filled: true,
-                        fillColor: AppTheme.surfaceAlt,
+                        fillColor: Canopy.mint,
                         border: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
@@ -212,7 +223,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     icon: const Icon(Icons.send_rounded, size: 18),
                     style: IconButton.styleFrom(
                       backgroundColor: AppTheme.primary,
-                      foregroundColor: AppTheme.bg,
+                      foregroundColor: Canopy.dawn,
                       padding: const EdgeInsets.all(12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -231,11 +242,53 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
 class _ChatTile extends StatelessWidget {
   final ChatMessageModel message;
   final VoidCallback? onLongPress;
+  final bool cinema;
 
-  const _ChatTile({required this.message, this.onLongPress});
+  const _ChatTile(
+      {required this.message, this.onLongPress, this.cinema = false});
 
   @override
   Widget build(BuildContext context) {
+    if (cinema) {
+      return GestureDetector(
+          onLongPress: onLongPress,
+          child: Padding(
+              padding:
+                  const EdgeInsetsDirectional.only(bottom: AppTheme.spaceSm),
+              child: CaChatBubble(
+                name: message.senderName,
+                message: (message.body == raisedHandGlyph
+                        ? 'live.hand_raised_message'.tr()
+                        : message.body == loweredHandGlyph
+                            ? 'live.hand_lowered_message'.tr()
+                            : message.body) +
+                    (message.isEdited
+                        ? ' ${'live.message_edited_badge'.tr()}'
+                        : ''),
+                time: TimeOfDay.fromDateTime(message.createdAt.toLocal())
+                    .format(context),
+                avatarUrl: message.senderAvatarUrl,
+                isOwn: message.isCurrentUser,
+                isSpeaker: message.badges.contains(ChatSenderBadge.speaker),
+                dark: true,
+                roleBadges: [
+                  for (final badge in message.badges)
+                    (
+                      icon: switch (badge) {
+                        ChatSenderBadge.speaker => CaGlyph.mic,
+                        ChatSenderBadge.admin ||
+                        ChatSenderBadge.moderator =>
+                          CaGlyph.shield,
+                        ChatSenderBadge.verified => CaGlyph.check,
+                        ChatSenderBadge.organization => CaGlyph.home,
+                      },
+                      label: context.locale.languageCode == 'ar'
+                          ? badge.labelAr
+                          : badge.labelEn
+                    )
+                ],
+              )));
+    }
     return GestureDetector(
       onLongPress: onLongPress,
       child: Container(
@@ -273,7 +326,7 @@ class _ChatTile extends StatelessWidget {
                           : 'U',
                       style: const TextStyle(
                         color: AppTheme.onMedia,
-                        fontSize: 10,
+                        fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.bold,
                       ),
                     )
@@ -296,10 +349,10 @@ class _ChatTile extends StatelessWidget {
                           fontWeight: FontWeight.bold,
                           color: message.isCurrentUser
                               ? AppTheme.primary
-                              : AppTheme.textPrimary,
+                              : Canopy.ink,
                         ),
                       ),
-                      if (message.body == '✋')
+                      if (message.body == raisedHandGlyph)
                         const Icon(Icons.back_hand_rounded,
                             size: 15, color: AppTheme.warning),
                       ...message.badges
@@ -319,7 +372,7 @@ class _ChatTile extends StatelessWidget {
                             'live.you'.tr(),
                             style: const TextStyle(
                               color: AppTheme.primary,
-                              fontSize: 9,
+                              fontSize: AppTheme.captionFont,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -328,8 +381,8 @@ class _ChatTile extends StatelessWidget {
                         TimeOfDay.fromDateTime(message.createdAt.toLocal())
                             .format(context),
                         style: const TextStyle(
-                          fontSize: 10,
-                          color: AppTheme.textMuted,
+                          fontSize: AppTheme.captionFont,
+                          color: Canopy.haze,
                         ),
                       ),
                       if (message.isPending)
@@ -338,7 +391,7 @@ class _ChatTile extends StatelessWidget {
                           height: 9,
                           child: HadayahLoadingIndicator(
                             strokeWidth: 1.5,
-                            color: AppTheme.textMuted,
+                            color: Canopy.haze,
                           ),
                         ),
                     ],
@@ -348,22 +401,22 @@ class _ChatTile extends StatelessWidget {
                     TextSpan(
                       children: [
                         TextSpan(
-                          text: message.body == '✋'
+                          text: message.body == raisedHandGlyph
                               ? 'live.hand_raised_message'.tr()
-                              : message.body == '✋↓'
+                              : message.body == loweredHandGlyph
                                   ? 'live.hand_lowered_message'.tr()
                                   : message.body,
                         ),
                         if (message.isEdited)
                           TextSpan(
                             text: ' ${'live.message_edited_badge'.tr()}',
-                            style: const TextStyle(color: AppTheme.textMuted),
+                            style: const TextStyle(color: Canopy.haze),
                           ),
                       ],
                     ),
                     style: const TextStyle(
                       fontSize: 12,
-                      color: AppTheme.textSecondary,
+                      color: Canopy.slate,
                       height: 1.3,
                     ),
                   ),
@@ -404,7 +457,7 @@ Widget _buildSenderBadge(BuildContext context, ChatSenderBadge badge) {
       isAr ? badge.labelAr : badge.labelEn,
       style: TextStyle(
         color: accentColor,
-        fontSize: 9.5,
+        fontSize: AppTheme.captionFont,
         fontWeight: FontWeight.bold,
       ),
     ),
@@ -420,7 +473,7 @@ class _ConnectionStatusChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final (color, label) = switch (state) {
       ChatConnectionState.live => (
-          AppTheme.success,
+          Canopy.leaf,
           'live.chat_status_live'.tr()
         ),
       ChatConnectionState.connecting => (
@@ -428,7 +481,7 @@ class _ConnectionStatusChip extends StatelessWidget {
           'live.chat_status_connecting'.tr()
         ),
       ChatConnectionState.reconnecting => (
-          AppTheme.danger,
+          Canopy.liveCrimson,
           'live.chat_status_reconnecting'.tr()
         ),
     };
@@ -448,7 +501,9 @@ class _ConnectionStatusChip extends StatelessWidget {
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: TextStyle(
-              color: color, fontSize: 10, fontWeight: FontWeight.bold),
+              color: color,
+              fontSize: AppTheme.captionFont,
+              fontWeight: FontWeight.bold),
         )),
       ],
     );

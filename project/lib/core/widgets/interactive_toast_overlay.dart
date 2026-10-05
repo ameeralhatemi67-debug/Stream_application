@@ -21,41 +21,39 @@ class InteractiveToastOverlay {
     VoidCallback? onActionPressed,
     int messageMaxLines = 2,
   }) {
-    // Dismiss any existing active banner immediately
+    showWidget(context,
+        builder: (ctx, dismissToast) => _InteractiveToastWidget(
+              title: title,
+              message: message,
+              icon: icon,
+              accentColor: accentColor,
+              duration: duration,
+              messageMaxLines: messageMaxLines,
+              onTap: () {
+                dismissToast();
+                onTap?.call();
+              },
+              actionLabel: actionLabel,
+              onActionPressed: () {
+                dismissToast();
+                onActionPressed?.call();
+              },
+              onDismissed: dismissToast,
+            ),
+        duration: duration);
+  }
+
+  /// Shared single-toast lifetime and replacement policy for branded renderers.
+  static void showWidget(
+    BuildContext context, {
+    required Widget Function(BuildContext, VoidCallback) builder,
+    Duration duration = CanopyMotion.toastLifetime,
+  }) {
     dismiss();
-
-    final overlayState = Overlay.of(context);
-    late OverlayEntry entry;
-
-    entry = OverlayEntry(
-      builder: (ctx) => _InteractiveToastWidget(
-        title: title,
-        message: message,
-        icon: icon,
-        accentColor: accentColor,
-        duration: duration,
-        messageMaxLines: messageMaxLines,
-        onTap: () {
-          dismiss();
-          onTap?.call();
-        },
-        actionLabel: actionLabel,
-        onActionPressed: () {
-          dismiss();
-          onActionPressed?.call();
-        },
-        onDismissed: () {
-          dismiss();
-        },
-      ),
-    );
-
+    final entry = OverlayEntry(builder: (ctx) => builder(ctx, dismiss));
     _currentEntry = entry;
-    overlayState.insert(entry);
-
-    _dismissTimer = Timer(duration, () {
-      dismiss();
-    });
+    Overlay.of(context).insert(entry);
+    _dismissTimer = Timer(duration, dismiss);
   }
 
   static void dismiss() {
@@ -251,7 +249,8 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                           child: Text(
                             widget.actionLabel!,
                             style: const TextStyle(
-                                fontSize: 11, fontWeight: FontWeight.bold),
+                                fontSize: 11,
+                                fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],

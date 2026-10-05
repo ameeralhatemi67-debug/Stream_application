@@ -94,14 +94,14 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
       case StreamState.ended:
         return const _PlaceholderSpec(
           icon: Icons.flag_rounded,
-          accent: AppTheme.success,
+          accent: Canopy.leaf,
           titleKey: 'live.state_ended_title',
           subtitleKey: 'live.state_ended_sub',
         );
       case StreamState.offline:
         return const _PlaceholderSpec(
           icon: Icons.satellite_alt_rounded,
-          accent: AppTheme.danger,
+          accent: Canopy.liveCrimson,
           titleKey: 'live.state_offline_title',
           subtitleKey: 'live.state_offline_sub',
         );
@@ -115,7 +115,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
       case StreamState.fallbackError:
         return const _PlaceholderSpec(
           icon: Icons.error_outline_rounded,
-          accent: AppTheme.danger,
+          accent: Canopy.liveCrimson,
           titleKey: 'live.state_error_title',
           subtitleKey: 'live.state_error_sub',
         );
@@ -237,7 +237,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                       icon: const Icon(Icons.open_in_new_rounded, size: 16),
                       label: Text('live.open_in_youtube'.tr()),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.danger,
+                        backgroundColor: Canopy.liveCrimson,
                         foregroundColor: AppTheme.onMedia,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 18, vertical: 10),

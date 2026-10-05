@@ -5,6 +5,8 @@ import '../../models/chat_message_model.dart';
 import '../../services/chat_block_list.dart';
 import '../../services/live_chat_controller.dart';
 import 'live_chat_layout.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
 
 /// Long-press action sheet for a chat message (Cluster 4 Task 13). Branches
 /// on `message.isCurrentUser`: the sender gets Edit/Delete on their own
@@ -82,36 +84,17 @@ Future<void> showChatMessageActionsSheet(
 }
 
 Future<T?> _showChatMenu<T>(BuildContext context, Widget menu) {
-  // A laptop's chat lives to the side of the embedded YouTube platform view.
-  // Keep the action surface in that column so iframe hit testing cannot take
-  // taps intended for the menu.
-  if (isLaptopLiveLayout(context)) {
-    return showDialog<T>(
-      context: context,
-      builder: (context) => Align(
-        alignment: AlignmentDirectional.centerEnd,
-        child: SizedBox(
-          width: 320,
-          child: Dialog(
-            insetPadding: EdgeInsets.zero,
-            backgroundColor: AppTheme.surface,
-            child: menu,
-          ),
-        ),
-      ),
-    );
-  }
-  return showModalBottomSheet<T>(
-    context: context,
-    isScrollControlled: true,
-    useSafeArea: true,
-    backgroundColor: AppTheme.surface,
-    shape: const RoundedRectangleBorder(
-      borderRadius:
-          BorderRadius.vertical(top: Radius.circular(AppTheme.radiusMd)),
-    ),
-    builder: (context) => menu,
-  );
+  // Laptop actions stay beside the iframe, on the same root navigator.
+  // Phone actions retain the native bottom-sheet local navigator default.
+  final laptop = isLaptopLiveLayout(context);
+  return showCaSheet<T>(context,
+      title: '',
+      body: menu,
+      framed: false,
+      job: laptop ? CaSheetJob.studio : CaSheetJob.standard,
+      constraints:
+          laptop ? const BoxConstraints(maxWidth: CanopySize.wizardRail) : null,
+      useRootNavigator: laptop);
 }
 
 Widget _placeChatDialog(BuildContext context, Widget dialog) {
@@ -128,20 +111,20 @@ Future<void> _handleEdit(
   required LiveChatController controller,
 }) async {
   final textController = TextEditingController(text: message.body);
-  final route = DialogRoute<String>(
+  final route = createCaDialogRoute<String>(
     context: context,
     builder: (dialogContext) => _placeChatDialog(
       dialogContext,
-      AlertDialog(
+      CaAlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.border),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text(
           'live.edit_message_title'.tr(),
           style: const TextStyle(
-              color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+              color: Canopy.ink, fontWeight: FontWeight.bold),
         ),
         scrollable: true,
         content: isCompactLandscapeChat(dialogContext)
@@ -151,28 +134,23 @@ Future<void> _handleEdit(
                 autofocus: true,
                 maxLength: 500,
                 maxLines: 3,
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
                 decoration: InputDecoration(
                   hintText: 'live.edit_message_hint'.tr(),
-                  hintStyle: const TextStyle(color: AppTheme.textMuted),
+                  hintStyle: const TextStyle(color: Canopy.haze),
                 ),
               ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text('common.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primary,
-              foregroundColor: AppTheme.onMedia,
-            ),
-            onPressed: isCompactLandscapeChat(dialogContext)
-                ? null
-                : () => Navigator.of(dialogContext).pop(textController.text),
-            child: Text('live.save_edit'.tr()),
-          ),
+          CaButton(
+              label: 'common.cancel'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => Navigator.of(dialogContext).pop()),
+          CaButton(
+              label: 'live.save_edit'.tr(),
+              variant: CaButtonVariant.primary,
+              onPressed: isCompactLandscapeChat(dialogContext)
+                  ? null
+                  : () => Navigator.of(dialogContext).pop(textController.text)),
         ],
       ),
     ),
@@ -205,41 +183,36 @@ Future<void> _runModerationAction(
   } catch (e) {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
+      SnackBar(content: Text('$e'), backgroundColor: Canopy.liveCrimson),
     );
   }
 }
 
 Future<bool?> _confirmDelete(BuildContext context, {required String title}) {
-  return showDialog<bool>(
+  return showCaDialog<bool>(
     context: context,
     builder: (context) => _placeChatDialog(
       context,
-      AlertDialog(
+      CaAlertDialog(
         backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: AppTheme.border),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text(
           title,
           style: const TextStyle(
-              color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+              color: Canopy.ink, fontWeight: FontWeight.bold),
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text('common.cancel'.tr(),
-                style: const TextStyle(color: AppTheme.textMuted)),
-          ),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.danger,
-              foregroundColor: AppTheme.onMedia,
-            ),
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text('common.delete'.tr()),
-          ),
+          CaButton(
+              label: 'common.cancel'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => Navigator.of(context).pop(false)),
+          CaButton(
+              label: 'common.delete'.tr(),
+              variant: CaButtonVariant.destructive,
+              onPressed: () => Navigator.of(context).pop(true)),
         ],
       ),
     ),
@@ -265,7 +238,7 @@ Future<void> _handleBlock(
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text((errorKey ?? 'live.user_blocked_toast').tr()),
-      backgroundColor: errorKey == null ? null : AppTheme.danger,
+      backgroundColor: errorKey == null ? null : Canopy.liveCrimson,
     ),
   );
 }
@@ -304,7 +277,7 @@ Future<void> _handleReport(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(key.tr()),
-        backgroundColor: isDuplicate ? null : AppTheme.danger,
+        backgroundColor: isDuplicate ? null : Canopy.liveCrimson,
       ),
     );
   }
@@ -333,45 +306,26 @@ class _ChatMessageActionsMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spaceLg,
-              AppTheme.spaceMd,
-              AppTheme.spaceLg,
-              AppTheme.spaceSm,
-            ),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                message.senderName,
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ),
+    return CaSheet(
+        title: message.senderName,
+        onClose: () => Navigator.of(context).pop(),
+        body: Column(mainAxisSize: MainAxisSize.min, children: [
           if (message.isCurrentUser) ...[
             ListTile(
               leading: const Icon(Icons.edit_outlined, color: AppTheme.primary),
               title: Text(
                 'live.edit_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.edit),
             ),
+            const Divider(color: Canopy.mist),
             ListTile(
               leading: const Icon(Icons.delete_outline_rounded,
-                  color: AppTheme.danger),
+                  color: Canopy.liveCrimson),
               title: Text(
                 'live.delete_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.liveCrimson),
               ),
               onTap: () =>
                   Navigator.of(context).pop(_ChatMessageAction.deleteOwn),
@@ -381,44 +335,45 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               leading: const Icon(Icons.flag_outlined, color: AppTheme.warning),
               title: Text(
                 'live.report_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.report),
             ),
             ListTile(
               leading: const Icon(Icons.visibility_off_outlined,
-                  color: AppTheme.textSecondary),
+                  color: Canopy.slate),
               title: Text(
                 'live.hide_message'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.hide),
             ),
+            const Divider(color: Canopy.mist),
             ListTile(
-              leading: const Icon(Icons.block_rounded, color: AppTheme.danger),
+              leading: const Icon(Icons.block_rounded, color: Canopy.liveCrimson),
               title: Text(
                 'live.block_user'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.liveCrimson),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.block),
             ),
             if (canModerate) ...[
-              const Divider(color: AppTheme.border, height: 1),
+              const Divider(color: Canopy.hairline, height: 1),
               ListTile(
                 leading:
                     const Icon(Icons.mic_off_rounded, color: AppTheme.warning),
                 title: Text(
                   'live.mute_user'.tr(),
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: Canopy.ink),
                 ),
                 onTap: () => Navigator.of(context).pop(_ChatMessageAction.mute),
               ),
               ListTile(
                 leading: const Icon(Icons.delete_outline_rounded,
-                    color: AppTheme.danger),
+                    color: Canopy.liveCrimson),
                 title: Text(
                   'live.delete_message'.tr(),
-                  style: const TextStyle(color: AppTheme.textPrimary),
+                  style: const TextStyle(color: Canopy.ink),
                 ),
                 onTap: () =>
                     Navigator.of(context).pop(_ChatMessageAction.delete),
@@ -426,10 +381,10 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               if (message.isStreamModerator)
                 ListTile(
                   leading: const Icon(Icons.remove_moderator_outlined,
-                      color: AppTheme.danger),
+                      color: Canopy.liveCrimson),
                   title: Text(
                     'live.revoke_moderator'.tr(),
-                    style: const TextStyle(color: AppTheme.textPrimary),
+                    style: const TextStyle(color: Canopy.ink),
                   ),
                   onTap: () => Navigator.of(context)
                       .pop(_ChatMessageAction.revokeModerator),
@@ -437,10 +392,10 @@ class _ChatMessageActionsMenu extends StatelessWidget {
               else
                 ListTile(
                   leading: const Icon(Icons.add_moderator_outlined,
-                      color: AppTheme.success),
+                      color: Canopy.leaf),
                   title: Text(
                     'live.appoint_moderator'.tr(),
-                    style: const TextStyle(color: AppTheme.textPrimary),
+                    style: const TextStyle(color: Canopy.ink),
                   ),
                   onTap: () => Navigator.of(context)
                       .pop(_ChatMessageAction.appointModerator),
@@ -448,9 +403,7 @@ class _ChatMessageActionsMenu extends StatelessWidget {
             ],
           ],
           const SizedBox(height: AppTheme.spaceSm),
-        ],
-      )),
-    );
+        ]));
   }
 }
 
@@ -469,41 +422,19 @@ class _ReportReasonMenu extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: SingleChildScrollView(
-          child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppTheme.spaceLg,
-              AppTheme.spaceMd,
-              AppTheme.spaceLg,
-              AppTheme.spaceSm,
-            ),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: Text(
-                'live.report_reason_prompt'.tr(),
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ),
+    return CaSheet(
+        title: 'live.report_reason_prompt'.tr(),
+        onClose: () => Navigator.of(context).pop(),
+        body: Column(mainAxisSize: MainAxisSize.min, children: [
           for (final (code, key) in _reasons)
             ListTile(
               title: Text(
                 'live.$key'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(code),
             ),
           const SizedBox(height: AppTheme.spaceSm),
-        ],
-      )),
-    );
+        ]));
   }
 }

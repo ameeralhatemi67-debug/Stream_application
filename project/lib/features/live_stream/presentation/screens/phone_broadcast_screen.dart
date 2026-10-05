@@ -1,3 +1,11 @@
+import '../../../../core/widgets/phone_input_guard.dart';
+import '../../../../core/widgets/ds/ca_navigation.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
+import '../../../../core/widgets/ds/ca_rows.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/ds/canopy_motion.dart';
+import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../../core/layout/window_class.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -19,8 +27,6 @@ import '../widgets/chat_message_actions_sheet.dart';
 import '../widgets/floating_reactions_overlay.dart';
 import '../widgets/live_chat_widget.dart';
 import '../widgets/live_chat_layout.dart';
-import '../widgets/live_audio_stage_multi_speaker.dart';
-import '../abstract_video_player.dart';
 import '../widgets/permission_rationale_dialog.dart';
 import '../widgets/phone_camera_preview.dart';
 import '../widgets/rtmp_ip_dialog.dart';
@@ -87,7 +93,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     super.didChangeDependencies();
     final landscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
-    if (landscape && !_wasLandscape) {
+    if (context.isPhoneLandscape && !_wasLandscape) {
       FocusManager.instance.primaryFocus?.unfocus();
       SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
     }
@@ -224,33 +230,30 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     if (status.isGranted) return true;
 
     if (status.isPermanentlyDenied && mounted) {
-      final openSettings = await showDialog<bool>(
+      final openSettings = await showCaDialog<bool>(
             context: context,
-            builder: (dialogContext) => AlertDialog(
+            builder: (dialogContext) => CaAlertDialog(
               backgroundColor: AppTheme.surface,
               title: Text(
                 'design_ui.permission_required'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary),
+                style: const TextStyle(color: Canopy.ink),
               ),
               content: Text(
                 (kind == BroadcastPermissionKind.camera
                         ? 'live.permission_required_body_camera'
                         : 'live.permission_required_body_microphone')
                     .tr(),
-                style: const TextStyle(color: AppTheme.textSecondary),
+                style: const TextStyle(color: Canopy.slate),
               ),
               actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(dialogContext, false),
-                  child: Text('design_ui.cancel'.tr()),
-                ),
-                ElevatedButton(
-                  onPressed: () => Navigator.pop(dialogContext, true),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                  ),
-                  child: Text('design_ui.open_settings'.tr()),
-                ),
+                CaButton(
+                    label: 'design_ui.cancel'.tr(),
+                    variant: CaButtonVariant.text,
+                    onPressed: () => Navigator.pop(dialogContext, false)),
+                CaButton(
+                    label: 'design_ui.open_settings'.tr(),
+                    variant: CaButtonVariant.primary,
+                    onPressed: () => Navigator.pop(dialogContext, true)),
               ],
             ),
           ) ??
@@ -383,41 +386,37 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   /// Asks before ending a broadcast. Only the dialog; nothing is stopped.
   Future<bool> _askEnd() async {
     _endDialogOpen = true;
-    final end = await showDialog<bool>(
+    final end = await showCaDialog<bool>(
           context: context,
-          builder: (dialogContext) => AlertDialog(
+          builder: (dialogContext) => CaAlertDialog(
             key: const Key('phone-end-confirm'),
             scrollable: true,
             backgroundColor: AppTheme.surface,
             title: Text('live.end_confirm_title'.tr(),
-                style: const TextStyle(color: AppTheme.textPrimary)),
+                style: const TextStyle(color: Canopy.ink)),
             content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('live.end_confirm_body'.tr(),
-                    style: const TextStyle(color: AppTheme.textSecondary)),
+                    style: const TextStyle(color: Canopy.slate)),
                 const SizedBox(height: AppTheme.spaceSm),
                 Text('live.end_confirm_background_note'.tr(),
                     style: const TextStyle(
-                        color: AppTheme.textMuted, fontSize: 12)),
+                        color: Canopy.haze, fontSize: 12)),
               ],
             ),
             actions: [
-              TextButton(
-                key: const Key('phone-end-stay'),
-                onPressed: () => Navigator.pop(dialogContext, false),
-                child: Text('live.end_confirm_stay'.tr()),
-              ),
-              ElevatedButton(
-                key: const Key('phone-end-confirm-end'),
-                onPressed: () => Navigator.pop(dialogContext, true),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger,
-                  foregroundColor: AppTheme.onPrimary,
-                ),
-                child: Text('live.end_confirm_end'.tr()),
-              ),
+              CaButton(
+                  label: 'live.end_confirm_stay'.tr(),
+                  variant: CaButtonVariant.text,
+                  key: const Key('phone-end-stay'),
+                  onPressed: () => Navigator.pop(dialogContext, false)),
+              CaButton(
+                  label: 'live.end_confirm_end'.tr(),
+                  variant: CaButtonVariant.destructive,
+                  key: const Key('phone-end-confirm-end'),
+                  onPressed: () => Navigator.pop(dialogContext, true)),
             ],
           ),
         ) ??
@@ -427,9 +426,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   /// The End control, the studio's End and the Back gesture all come here.
-  Future<void> _handleEndOrLeave() async {
+  Future<void> _handleEndOrLeave({bool holdConfirmed = false}) async {
     if (_closing || _endDialogOpen || _leavingAfterDisplacement) return;
-    if (_isSending) {
+    if (_isSending && !(context.isPhone && holdConfirmed)) {
       final end = await _askEnd();
       if (!end || !mounted || _closing || _leavingAfterDisplacement) return;
     }
@@ -443,7 +442,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       // The camera has stopped either way. A failed end call leaves the
       // listing in place (the provider restores it), so say so instead of
       // implying the listing is gone.
-      confirmed = !owned || (_appProvider.publishingSession == null && !_appProvider.isBroadcastingLive);
+      confirmed = !owned ||
+          (_appProvider.publishingSession == null &&
+              !_appProvider.isBroadcastingLive);
     } catch (e) {
       debugPrint('[PhoneBroadcastScreen] end failed: ${e.runtimeType}');
       confirmed = false;
@@ -620,7 +621,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     }).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: AppTheme.danger),
+        SnackBar(content: Text('$e'), backgroundColor: Canopy.liveCrimson),
       );
     });
   }
@@ -650,8 +651,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
     if (!_presetConfirmed) {
       return Scaffold(
-        backgroundColor: AppTheme.bg,
-        appBar: AppBar(
+        backgroundColor: Canopy.dawn,
+        appBar: CaAppBar(
           backgroundColor: AppTheme.surface,
           title: Text('live.broadcast_from_phone'.tr()),
         ),
@@ -667,27 +668,137 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       );
     }
 
+    if (context.isPhone &&
+        mediaQuery.viewInsets.bottom == 0 &&
+        _setupError == null) {
+      return Scaffold(
+          backgroundColor: Canopy.forestDeep,
+          body: Stack(fit: StackFit.expand, children: [
+            _buildVideoViewport(isSideBySide: true, streamer: streamer),
+            if (_controlsVisible || mediaQuery.accessibleNavigation) ...[
+              PositionedDirectional(
+                  top: 0,
+                  start: 0,
+                  end: 0,
+                  child: SafeArea(
+                      child: _glassHud(Row(children: [
+                    IconButton(
+                        onPressed: _handleEndOrLeave,
+                        tooltip:
+                            MaterialLocalizations.of(context).backButtonTooltip,
+                        icon: const Icon(Icons.arrow_back_rounded,
+                            color: Canopy.paper)),
+                    Expanded(
+                        child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                          Text(title,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelLarge
+                                  ?.copyWith(color: Canopy.paper)),
+                          if (!(_engine.state == RtmpPublishState.live &&
+                              _appProvider.isBroadcastingLive))
+                            Text('live.not_live'.tr(),
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .labelSmall
+                                    ?.copyWith(color: Canopy.mist)),
+                        ])),
+                    IconButton(
+                        tooltip: 'live.tooltip_studio'.tr(),
+                        icon:
+                            const Icon(Icons.tune_rounded, color: Canopy.paper),
+                        onPressed: () => LiveBroadcasterStudioSheet.show(
+                            context,
+                            onEndBroadcast: _handleEndOrLeave,
+                            openedFromVideo: true)),
+                    IconButton(
+                        tooltip: 'live.tooltip_controls'.tr(),
+                        icon: const Icon(Icons.more_vert_rounded,
+                            color: Canopy.paper),
+                        onPressed: () => _showStreamerControlsSheet(streamer)),
+                    const CaLanguageChip(glass: true, compact: true),
+                  ])))),
+              if (!_showingPreview)
+              PositionedDirectional(
+                  bottom: AppTheme.spaceMd,
+                  start: AppTheme.spaceMd,
+                  end: AppTheme.spaceMd,
+                  child: SafeArea(
+                      child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                        _broadcastChatPreview(),
+                        const SizedBox(height: AppTheme.spaceSm),
+                        _glassHud(Row(children: [
+                          IconButton(
+                              tooltip: 'live.tooltip_toggle_chat'.tr(),
+                              icon: const Icon(
+                                  Icons.chat_bubble_outline_rounded,
+                                  color: Canopy.paper),
+                              onPressed: () => showCaSheet<void>(context,
+                                  title: 'live.tab_chat'.tr(),
+                                  framed: false,
+                                  body: SizedBox(
+                                      height: MediaQuery.sizeOf(context)
+                                              .height *
+                                          CanopySize.broadcastChatSheetFraction,
+                                      child: _buildLiveChatTab()))),
+                          Expanded(child: _endControl()),
+                        ])),
+                      ]))),
+            ],
+            // The camera preview is private until the presenter goes live.
+            if (_showingPreview)
+              PositionedDirectional(
+                  bottom: AppTheme.spaceMd,
+                  start: AppTheme.spaceMd,
+                  end: AppTheme.spaceMd,
+                  child: SafeArea(
+                      child: _glassHud(Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                        Text('organization_v1.public_start_hint'.tr(),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context)
+                                .textTheme
+                                .labelMedium
+                                ?.copyWith(color: Canopy.paper)),
+                        const SizedBox(height: AppTheme.spaceSm),
+                        _startControl(),
+                      ])))),
+          ]));
+    }
+
     return Scaffold(
-      backgroundColor: AppTheme.bg,
+      backgroundColor: Canopy.dawn,
       resizeToAvoidBottomInset: true,
-      appBar: AppBar(
+      appBar: CaAppBar(
         backgroundColor: AppTheme.surface,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded,
-              color: AppTheme.textPrimary, size: 22),
+              color: Canopy.ink, size: 22),
           tooltip: MaterialLocalizations.of(context).backButtonTooltip,
           onPressed: _handleEndOrLeave,
         ),
         titleSpacing: 0,
         title: Row(
           children: [
-            CircleAvatar(
-              radius: 17,
-              backgroundColor: AppTheme.surface,
-              backgroundImage: resolveImageProviderOrNull(streamer.avatarUrl),
-            ),
-            const SizedBox(width: 10),
+            if (mediaQuery.size.width >= CanopyWindow.medium) ...[
+              CircleAvatar(
+                radius: 17,
+                backgroundColor: AppTheme.surface,
+                backgroundImage: resolveImageProviderOrNull(streamer.avatarUrl),
+              ),
+              const SizedBox(width: 10),
+            ],
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -702,7 +813,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppTheme.textPrimary,
+                            color: Canopy.ink,
                             fontSize: 13.5,
                             fontWeight: FontWeight.bold,
                           ),
@@ -723,10 +834,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5, vertical: 1),
                         decoration: BoxDecoration(
-                          color: AppTheme.danger.withValues(alpha: 0.2),
+                          color: Canopy.liveCrimson.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(4),
                           border: Border.all(
-                            color: AppTheme.danger.withValues(alpha: 0.6),
+                            color: Canopy.liveCrimson.withValues(alpha: 0.6),
                             width: 0.8,
                           ),
                         ),
@@ -737,7 +848,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               width: 5,
                               height: 5,
                               decoration: const BoxDecoration(
-                                color: AppTheme.danger,
+                                color: Canopy.liveCrimson,
                                 shape: BoxShape.circle,
                               ),
                             ),
@@ -749,8 +860,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                       : 'live.not_live')
                                   .tr(),
                               style: const TextStyle(
-                                color: AppTheme.danger,
-                                fontSize: 9,
+                                color: Canopy.liveCrimson,
+                                fontSize: AppTheme.captionFont,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 0.5,
                               ),
@@ -765,8 +876,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            color: AppTheme.textSecondary,
-                            fontSize: 10.5,
+                            color: Canopy.slate,
+                            fontSize: AppTheme.captionFont,
                           ),
                         ),
                       ),
@@ -782,16 +893,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             margin: const EdgeInsets.symmetric(
                 horizontal: AppTheme.spaceSm, vertical: 8),
             decoration: BoxDecoration(
-              color: AppTheme.danger.withValues(alpha: 0.15),
+              color: Canopy.liveCrimson.withValues(alpha: 0.15),
               shape: BoxShape.circle,
               border: Border.all(
-                color: AppTheme.danger.withValues(alpha: 0.5),
+                color: Canopy.liveCrimson.withValues(alpha: 0.5),
                 width: 1.2,
               ),
             ),
             child: IconButton(
               icon: const Icon(Icons.cell_tower_rounded,
-                  color: AppTheme.danger, size: 20),
+                  color: Canopy.liveCrimson, size: 20),
               tooltip: 'live.tooltip_studio'.tr(),
               onPressed: () => LiveBroadcasterStudioSheet.show(context,
                   onEndBroadcast: _handleEndOrLeave, openedFromVideo: true),
@@ -822,12 +933,16 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             streamer: streamer,
                           ),
                         ),
+                        Padding(
+                          padding: const EdgeInsets.all(AppTheme.spaceSm),
+                          child: _endControl(),
+                        ),
                         _buildTitleAndDescriptionStrip(
                             title, description, streamer, langCode),
                       ],
                     ),
                   ),
-                  const VerticalDivider(width: 1, color: AppTheme.border),
+                  const VerticalDivider(width: 1, color: Canopy.hairline),
                   Expanded(
                     flex: isDesktop ? 35 : 42,
                     child: _buildCinemaTabPanel(langCode),
@@ -841,6 +956,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     alignment: Alignment.topCenter,
                     child: _buildVideoViewport(
                         isSideBySide: false, streamer: streamer),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: AppTheme.spaceLg,
+                        vertical: AppTheme.spaceSm),
+                    child: _endControl(),
                   ),
                   if (mediaQuery.viewInsets.bottom == 0)
                     _buildTitleAndDescriptionStrip(
@@ -917,7 +1038,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             Text(
               _setupError!,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppTheme.danger),
+              style: const TextStyle(color: Canopy.liveCrimson),
             ),
             const SizedBox(height: AppTheme.spaceMd),
             _endControl(),
@@ -939,18 +1060,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           children: [
             // 1. Camera Platform View (or Camera Off Audio Poster)
             if (_engine.isCameraOff)
-              LiveAudioStageMultiSpeaker(
-                streamer: streamer,
-                langCode: context.locale.languageCode,
-                viewerCount: null,
-                isPlaying: !_engine.isMicSilent.value,
-                streamState: _engine.state == RtmpPublishState.live
-                    ? StreamState.live
-                    : StreamState.initializing,
-                onStageTap: () =>
-                    setState(() => _controlsVisible = !_controlsVisible),
-                onSpeakerTap: (_) {},
-              )
+              _audioBroadcastStage()
             else
               ClipRect(
                 child: SizedBox.expand(
@@ -963,7 +1073,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               const ColoredBox(
                 color: AppTheme.media,
                 child: Center(
-                  child: HadayahLoadingIndicator(color: AppTheme.danger),
+                  child: HadayahLoadingIndicator(color: Canopy.liveCrimson),
                 ),
               ),
 
@@ -979,14 +1089,24 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     if (_engine.state == RtmpPublishState.live &&
                         _appProvider.isBroadcastingLive)
                       PositionedDirectional(
-                        top: AppTheme.spaceSm,
+                        top: context.isPhone && !context.isLandscape
+                            ? MediaQuery.textScalerOf(context)
+                                    .scale(CanopySize.target) +
+                                AppTheme.spaceLg +
+                                MediaQuery.paddingOf(context).top
+                            : AppTheme.spaceSm,
                         start: AppTheme.spaceSm,
                         child: _LiveBadge(bitrateBps: _engine.lastBitrateBps),
                       ),
 
                     if (_engine.state == RtmpPublishState.connecting)
                       PositionedDirectional(
-                        top: AppTheme.spaceSm,
+                        top: context.isPhone && !context.isLandscape
+                            ? MediaQuery.textScalerOf(context)
+                                    .scale(CanopySize.target) +
+                                AppTheme.spaceLg +
+                                MediaQuery.paddingOf(context).top
+                            : AppTheme.spaceSm,
                         start: AppTheme.spaceSm,
                         child: _StatusPill(
                             label: 'live.chat_status_connecting'.tr(),
@@ -994,26 +1114,30 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                       ),
 
                     // Top Right: 3-Dots Streamer Controls Menu
-                    PositionedDirectional(
-                      top: AppTheme.spaceSm,
-                      end: AppTheme.spaceSm,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: AppTheme.media.withValues(alpha: 0.65),
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusSm),
-                          border: Border.all(
-                              color: AppTheme.onMedia.withValues(alpha: 0.24),
-                              width: 0.8),
-                        ),
-                        child: IconButton(
-                          icon: const Icon(Icons.more_vert_rounded,
-                              color: AppTheme.onMedia, size: 20),
-                          tooltip: 'live.tooltip_controls'.tr(),
-                          onPressed: () => _showStreamerControlsSheet(streamer),
+                    if (!(context.isPhone &&
+                        MediaQuery.viewInsetsOf(context).bottom == 0 &&
+                        _setupError == null))
+                      PositionedDirectional(
+                        top: AppTheme.spaceSm,
+                        end: AppTheme.spaceSm,
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: AppTheme.media.withValues(alpha: 0.65),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.radiusSm),
+                            border: Border.all(
+                                color: AppTheme.onMedia.withValues(alpha: 0.24),
+                                width: 0.8),
+                          ),
+                          child: IconButton(
+                            icon: const Icon(Icons.more_vert_rounded,
+                                color: AppTheme.onMedia, size: 20),
+                            tooltip: 'live.tooltip_controls'.tr(),
+                            onPressed: () =>
+                                _showStreamerControlsSheet(streamer),
+                          ),
                         ),
                       ),
-                    ),
 
                     // Bottom Right: Fullscreen Button
                     // Mic Muted Pill
@@ -1025,24 +1149,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         start: AppTheme.spaceSm,
                         child: _StatusPill(
                           label: 'live.mic_muted_badge'.tr(),
-                          color: AppTheme.danger,
+                          color: Canopy.liveCrimson,
                         ),
                       ),
                   ],
-                ),
-              ),
-            ),
-
-            PositionedDirectional(
-      bottom: AppTheme.spaceSm,
-              start: 0,
-              end: 0,
-              child: AnimatedOpacity(
-                opacity: _controlsVisible ? 1 : 0,
-                duration: const Duration(milliseconds: 240),
-                child: IgnorePointer(
-                  ignoring: !_controlsVisible,
-                  child: Center(child: _endControl()),
                 ),
               ),
             ),
@@ -1102,12 +1212,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   void _showStreamerControlsSheet(StreamerModel streamer) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      useSafeArea: true,
-      builder: (sheetContext) {
+    showCaSheet<void>(
+      context,
+      title: 'live.tooltip_controls'.tr(),
+      framed: false,
+      body: Builder(builder: (sheetContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
             final isMuted = _engine.isMuted;
@@ -1119,7 +1228,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 borderRadius: BorderRadius.vertical(
                     top: Radius.circular(AppTheme.radiusLg)),
                 border: Border(
-                  top: BorderSide(color: AppTheme.borderStrong, width: 1),
+                  top: BorderSide(color: Canopy.hairlineStrong, width: 1),
                 ),
               ),
               padding: const EdgeInsets.symmetric(
@@ -1135,7 +1244,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             width: 36,
                             height: 4,
                             decoration: BoxDecoration(
-                              color: AppTheme.borderStrong,
+                              color: Canopy.hairlineStrong,
                               borderRadius: BorderRadius.circular(2),
                             ),
                           ),
@@ -1144,13 +1253,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                         Row(
                           children: [
                             const Icon(Icons.tune_rounded,
-                                color: AppTheme.danger, size: 20),
+                                color: Canopy.liveCrimson, size: 20),
                             const SizedBox(width: 8),
                             Expanded(
                               child: Text(
                                 'design_ui.streamer_quick_controls'.tr(),
                                 style: const TextStyle(
-                                  color: AppTheme.textPrimary,
+                                  color: Canopy.ink,
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -1179,17 +1288,17 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                 BorderRadius.circular(AppTheme.radiusMd),
                           ),
                           tileColor: isMuted
-                              ? AppTheme.danger.withValues(alpha: 0.15)
-                              : AppTheme.surfaceAlt,
+                              ? Canopy.liveCrimson.withValues(alpha: 0.15)
+                              : Canopy.mint,
                           leading: Icon(
                             isMuted ? Icons.mic_off_rounded : Icons.mic_rounded,
-                            color: isMuted ? AppTheme.danger : AppTheme.success,
+                            color: isMuted ? Canopy.liveCrimson : Canopy.leaf,
                           ),
                           title: Text(
                             (isMuted ? 'live.ctrl_unmute' : 'live.ctrl_mute')
                                 .tr(),
                             style: const TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13.5),
                           ),
@@ -1199,11 +1308,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                     : 'live.ctrl_mic_active_sub')
                                 .tr(),
                             style: const TextStyle(
-                                color: AppTheme.textSecondary, fontSize: 11),
+                                color: Canopy.slate,
+                                fontSize: AppTheme.captionFont),
                           ),
                           trailing: Switch(
                             value: !isMuted,
-                            activeThumbColor: AppTheme.success,
+                            activeThumbColor: Canopy.leaf,
                             onChanged: (val) async {
                               await _engine.setMuted(!val);
                               if (context.mounted) setModalState(() {});
@@ -1224,33 +1334,35 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd),
                           ),
-                          tileColor: AppTheme.surfaceAlt,
+                          tileColor: Canopy.mint,
                           leading: const Icon(Icons.flip_camera_ios_rounded,
                               color: AppTheme.primary),
                           title: Text(
                             'live.front_camera_coming_soon'.tr(),
                             style: const TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13.5),
                           ),
                           subtitle: Text(
                             'live.ctrl_back_active_sub'.tr(),
                             style: const TextStyle(
-                                color: AppTheme.textSecondary, fontSize: 11),
+                                color: Canopy.slate,
+                                fontSize: AppTheme.captionFont),
                           ),
                           trailing: const Icon(Icons.info_outline_rounded,
-                              color: AppTheme.textSecondary, size: 18),
-                          onTap: () => showDialog<void>(
+                              color: Canopy.slate, size: 18),
+                          onTap: () => showCaDialog<void>(
                             context: sheetContext,
-                            builder: (context) => AlertDialog(
+                            builder: (context) => CaAlertDialog(
                               scrollable: true,
                               title: Text('live.front_camera_coming_soon'.tr()),
                               content: Text('live.ctrl_back_active_sub'.tr()),
                               actions: [
-                                TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text('common.ok'.tr()))
+                                CaButton(
+                                    label: 'common.close'.tr(),
+                                    variant: CaButtonVariant.text,
+                                    onPressed: () => Navigator.pop(context))
                               ],
                             ),
                           ),
@@ -1265,7 +1377,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           ),
                           tileColor: isCameraOff
                               ? AppTheme.warning.withValues(alpha: 0.15)
-                              : AppTheme.surfaceAlt,
+                              : Canopy.mint,
                           leading: Icon(
                             isCameraOff
                                 ? Icons.videocam_off_rounded
@@ -1280,7 +1392,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                     : 'live.ctrl_hide_video')
                                 .tr(),
                             style: const TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13.5),
                           ),
@@ -1290,7 +1402,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                     : 'live.ctrl_video_shown_sub')
                                 .tr(),
                             style: const TextStyle(
-                                color: AppTheme.textSecondary, fontSize: 11),
+                                color: Canopy.slate,
+                                fontSize: AppTheme.captionFont),
                           ),
                           trailing: Switch(
                             value: !isCameraOff,
@@ -1316,7 +1429,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
                             ),
-                            tileColor: AppTheme.surfaceAlt,
+                            tileColor: Canopy.mint,
                             leading: const Icon(Icons.people_alt_rounded,
                                 color: AppTheme.warning),
                             title: Text(
@@ -1324,7 +1437,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                 '${_appProvider.admittedAttendees.length}'
                               ]),
                               style: const TextStyle(
-                                  color: AppTheme.textPrimary,
+                                  color: Canopy.ink,
                                   fontWeight: FontWeight.w600,
                                   fontSize: 13.5),
                             ),
@@ -1333,10 +1446,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                 '${_appProvider.pendingKnockRequests.length}'
                               ]),
                               style: const TextStyle(
-                                  color: AppTheme.textSecondary, fontSize: 11),
+                                  color: Canopy.slate,
+                                  fontSize: AppTheme.captionFont),
                             ),
                             trailing: const Icon(Icons.chevron_right_rounded,
-                                color: AppTheme.textSecondary),
+                                color: Canopy.slate),
                             onTap: () {
                               Navigator.of(sheetContext).pop();
                               _showDirectorPanel(context, _appProvider);
@@ -1351,13 +1465,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd),
                           ),
-                          tileColor: AppTheme.danger.withValues(alpha: 0.1),
+                          tileColor: Canopy.liveCrimson.withValues(alpha: 0.1),
                           leading: const Icon(Icons.cell_tower_rounded,
-                              color: AppTheme.danger),
+                              color: Canopy.liveCrimson),
                           title: Text(
                             'design_ui.broadcaster_studio_end_stream'.tr(),
                             style: const TextStyle(
-                                color: AppTheme.danger,
+                                color: Canopy.liveCrimson,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13.5),
                           ),
@@ -1365,10 +1479,11 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             'design_ui.adjust_stream_settings_or_end_broadcast_session'
                                 .tr(),
                             style: const TextStyle(
-                                color: AppTheme.textSecondary, fontSize: 11),
+                                color: Canopy.slate,
+                                fontSize: AppTheme.captionFont),
                           ),
                           trailing: const Icon(Icons.arrow_forward_ios_rounded,
-                              color: AppTheme.danger, size: 14),
+                              color: Canopy.liveCrimson, size: 14),
                           onTap: () {
                             Navigator.of(sheetContext).pop();
                             LiveBroadcasterStudioSheet.show(context,
@@ -1382,21 +1497,38 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             );
           },
         );
-      },
+      }),
     );
   }
 
-  Widget _startControl() => FilledButton.icon(
-    key: const Key('phone-start-broadcast'),
-    onPressed: _canStartPreview ? _startBroadcast : null,
-    icon: const Icon(Icons.videocam),
-    label: Text('organization_v1.go_live'.tr()),
-  );
+  Widget _startControl() => CaButton(
+        key: const Key('phone-start-broadcast'),
+        label: 'organization_v1.go_live'.tr(),
+        icon: CaGlyph.video,
+        loading: _starting,
+        onPressed: _canStartPreview ? _startBroadcast : null,
+      );
 
   /// Revealed with the landscape controls; Back keeps the same confirmation.
   /// While nothing is sending it reads "Leave" and closes without asking.
   Widget _endControl() {
     final sending = _isSending;
+    if (context.isPhone) {
+      return CaButton(
+          key: const Key('phone-end-broadcast'),
+          label: (_closing
+                  ? 'live.ending'
+                  : sending
+                      ? 'live.hold_to_end'
+                      : 'live.leave_screen')
+              .tr(),
+          variant:
+              sending ? CaButtonVariant.destructive : CaButtonVariant.secondary,
+          holdToConfirm: sending,
+          loading: _closing,
+          onPressed:
+              _closing ? null : () => _handleEndOrLeave(holdConfirmed: true));
+    }
     return FilledButton.icon(
       key: const Key('phone-end-broadcast'),
       onPressed: _closing ? null : _handleEndOrLeave,
@@ -1418,15 +1550,92 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               .tr(),
           style: const TextStyle(fontWeight: FontWeight.bold)),
       style: FilledButton.styleFrom(
-        backgroundColor: sending ? AppTheme.danger : AppTheme.surfaceAlt,
-        foregroundColor: sending ? AppTheme.onPrimary : AppTheme.textPrimary,
+        backgroundColor: sending ? Canopy.liveCrimson : Canopy.mint,
+        foregroundColor: sending ? AppTheme.onPrimary : Canopy.ink,
         // "Ending..." keeps the danger colour and stays readable.
-        disabledBackgroundColor: AppTheme.danger.withValues(alpha: 0.75),
+        disabledBackgroundColor: Canopy.liveCrimson.withValues(alpha: 0.75),
         disabledForegroundColor: AppTheme.onPrimary,
         minimumSize: const Size(48, 48),
         padding: const EdgeInsets.symmetric(horizontal: 14),
       ),
     );
+  }
+
+  Widget _glassHud(Widget child) => Container(
+      decoration: BoxDecoration(
+          color: Canopy.broadcastGlass,
+          borderRadius: BorderRadius.circular(CanopyRadius.input),
+          border: Border.all(color: Canopy.cinemaBubble)),
+      padding: const EdgeInsets.all(AppTheme.spaceXs),
+      child: child);
+
+  Widget _broadcastChatPreview() {
+    final messages =
+        _chatController.messages.reversed.take(3).toList().reversed.toList();
+    if (messages.isEmpty) return const SizedBox.shrink();
+    return ConstrainedBox(
+        constraints: BoxConstraints(
+            maxHeight: MediaQuery.sizeOf(context).height *
+                CanopySize.broadcastChatPreviewFraction),
+        child: _glassHud(SingleChildScrollView(
+            reverse: true,
+            child: Column(
+                key: const Key('broadcast-last-three'),
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final message in messages)
+                    Padding(
+                        padding: const EdgeInsets.all(AppTheme.spaceSm),
+                        child: Text.rich(
+                            TextSpan(children: [
+                              TextSpan(
+                                  text: '\u2068${message.senderName}\u2069  ',
+                                  style: const TextStyle(
+                                      color: Canopy.mist,
+                                      fontWeight: FontWeight.bold)),
+                              TextSpan(text: message.body),
+                            ]),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: Canopy.paper))),
+                ]))));
+  }
+
+  Widget _audioBroadcastStage() {
+    final level = _engine.lastMicRms;
+    return ColoredBox(
+        color: Canopy.forestDeep,
+        child: Center(
+            child: SingleChildScrollView(
+                padding: const EdgeInsets.all(AppTheme.spaceXl),
+                child: Container(
+                    constraints: const BoxConstraints(
+                        maxWidth: CanopySize.dialogCompactMax),
+                    padding: const EdgeInsets.all(AppTheme.spaceLg),
+                    decoration: BoxDecoration(
+                        color: Canopy.paper,
+                        borderRadius: BorderRadius.circular(CanopyRadius.card)),
+                    child: Column(mainAxisSize: MainAxisSize.min, children: [
+                      const Icon(Icons.mic_rounded, color: Canopy.brandGreen),
+                      const SizedBox(height: AppTheme.spaceSm),
+                      Text('live_studio.audio_only_title'.tr(),
+                          style: Theme.of(context).textTheme.titleMedium),
+                      const SizedBox(height: AppTheme.spaceMd),
+                      CaLevelMeter(
+                          key: const Key('broadcast-audio-meter'),
+                          level: level ?? 0,
+                          label: level == null
+                              ? 'live.audio_level_unavailable'.tr()
+                              : 'ds.audio_level'.tr()),
+                      const SizedBox(height: AppTheme.spaceSm),
+                      Text(
+                          level == null
+                              ? 'live.audio_level_unavailable'.tr()
+                              : 'ds.audio_level'.tr(),
+                          style: Theme.of(context).textTheme.bodySmall),
+                    ])))));
   }
 
   String get _presetCompactLabel => '${_preset.height}p';
@@ -1454,7 +1663,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       decoration: const BoxDecoration(
         color: AppTheme.surface,
         border: Border(
-          bottom: BorderSide(color: AppTheme.border, width: 1),
+          bottom: BorderSide(color: Canopy.hairline, width: 1),
         ),
       ),
       child: Column(
@@ -1486,7 +1695,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   _isDescriptionExpanded
                       ? Icons.keyboard_arrow_up_rounded
                       : Icons.keyboard_arrow_down_rounded,
-                  color: AppTheme.textSecondary,
+                  color: Canopy.slate,
                   size: 22,
                 ),
               ],
@@ -1502,9 +1711,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                   decoration: BoxDecoration(
-                    color: AppTheme.surfaceAlt,
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: Border.all(color: AppTheme.border),
+                    border: Border.all(color: Canopy.hairline),
                   ),
                   child: Text(
                     categoryModel.getLocalizedName(langCode),
@@ -1512,7 +1721,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       color: AppTheme.primary,
-                      fontSize: 10.5,
+                      fontSize: AppTheme.captionFont,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -1522,30 +1731,30 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceAlt,
+                  color: Canopy.mint,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(color: AppTheme.border),
+                  border: Border.all(color: Canopy.hairline),
                 ),
                 child: Text(
                   _presetCompactLabel,
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 10.5,
+                    color: Canopy.slate,
+                    fontSize: AppTheme.captionFont,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ),
               const Spacer(),
               const Icon(Icons.remove_red_eye_rounded,
-                  size: 14, color: AppTheme.success),
+                  size: 14, color: Canopy.leaf),
               const SizedBox(width: 4),
               // YouTube's concurrent-viewer figure, labelled as YouTube's and
               // never merged with this platform's presence count (P3).
               Text(
                 '${_appProvider.youTubeConcurrentViewers(streamer.streamerId) ?? '—'} on YouTube',
                 style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 11,
+                  color: Canopy.slate,
+                  fontSize: AppTheme.captionFont,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -1555,12 +1764,12 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           // Row 3: Expanded Description & Organization (when expanded)
           if (_isDescriptionExpanded) ...[
             const SizedBox(height: 10),
-            const Divider(color: AppTheme.border, height: 1),
+            const Divider(color: Canopy.hairline, height: 1),
             const SizedBox(height: 8),
             Text(
               description.isNotEmpty ? description : 'No description provided.',
               style: const TextStyle(
-                color: AppTheme.textPrimary,
+                color: Canopy.ink,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -1569,13 +1778,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             Row(
               children: [
                 const Icon(Icons.account_balance_rounded,
-                    size: 13, color: AppTheme.textMuted),
+                    size: 13, color: Canopy.haze),
                 const SizedBox(width: 4),
                 Text(
                   streamer.getLocalizedOrganization(langCode),
                   style: const TextStyle(
-                    color: AppTheme.textSecondary,
-                    fontSize: 11,
+                    color: Canopy.slate,
+                    fontSize: AppTheme.captionFont,
                   ),
                 ),
               ],
@@ -1590,7 +1799,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     final streamer = _appProvider.currentBroadcasterStreamer;
 
     return Container(
-      color: AppTheme.bg,
+      color: Canopy.dawn,
       child: Column(
         children: [
           Expanded(
@@ -1611,14 +1820,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             decoration: const BoxDecoration(
               color: AppTheme.surface,
               border: Border(
-                top: BorderSide(color: AppTheme.border, width: 0.8),
+                top: BorderSide(color: Canopy.hairline, width: 0.8),
               ),
             ),
             child: TabBar(
               controller: _tabController,
-              indicatorColor: AppTheme.danger,
-              labelColor: AppTheme.danger,
-              unselectedLabelColor: AppTheme.textMuted,
+              indicatorColor: Canopy.liveCrimson,
+              labelColor: Canopy.liveCrimson,
+              unselectedLabelColor: Canopy.haze,
               indicatorWeight: 2.0,
               tabs: [
                 Tab(
@@ -1633,7 +1842,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.bold))),
+                                  fontSize: AppTheme.captionFont,
+                                  fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
@@ -1649,7 +1859,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.bold))),
+                                  fontSize: AppTheme.captionFont,
+                                  fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
@@ -1665,7 +1876,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                  fontSize: 11, fontWeight: FontWeight.bold))),
+                                  fontSize: AppTheme.captionFont,
+                                  fontWeight: FontWeight.bold))),
                     ],
                   ),
                 ),
@@ -1685,6 +1897,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         final messages = _chatController.messages;
 
         return LiveChatWidget(
+          cinema: context.isPhone,
           textController: _chatTextController,
           messages: messages,
           connectionState: _chatController.connectionState,
@@ -1703,7 +1916,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   Widget _buildSlidesTab(StreamerModel streamer, String langCode) {
     return Container(
-      color: AppTheme.bg,
+      color: Canopy.dawn,
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1711,7 +1924,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           Text(
             'live.slides_attached_title'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -1719,7 +1932,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             'live.slides_attached_subtitle'.tr(),
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           Expanded(
@@ -1728,7 +1941,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               decoration: BoxDecoration(
                 color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.border),
+                border: Border.all(color: Canopy.hairline),
               ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1740,7 +1953,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                     streamer.getLocalizedTitle(langCode),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                      color: Canopy.ink,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -1749,7 +1962,8 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                   Text(
                     'design_ui.presentation_deck_pdf_attached'.tr(),
                     style: const TextStyle(
-                        color: AppTheme.textMuted, fontSize: 11),
+                        color: Canopy.haze,
+                        fontSize: AppTheme.captionFont),
                   ),
                 ],
               ),
@@ -1776,7 +1990,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               Text(
                 'live.venue_details_title'.tr(),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontWeight: FontWeight.bold,
                   fontSize: 14,
                 ),
@@ -1789,7 +2003,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.border),
+              border: Border.all(color: Canopy.hairline),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1797,24 +2011,24 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                 Text(
                   venueInfo.getLocalizedAddress(langCode),
                   style: const TextStyle(
-                      color: AppTheme.textPrimary, fontSize: 12.5),
+                      color: Canopy.ink, fontSize: 12.5),
                 ),
-                const Divider(color: AppTheme.border, height: 16),
+                const Divider(color: Canopy.hairline, height: 16),
                 Text(
                   'Hall: ${venueInfo.getLocalizedAuditorium(langCode)}',
                   style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 12),
+                      color: Canopy.slate, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Gate: ${venueInfo.getLocalizedGate(langCode)}',
                   style: const TextStyle(
-                      color: AppTheme.textSecondary, fontSize: 12),
+                      color: Canopy.slate, fontSize: 12),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   'Capacity: ${venueInfo.seatingCapacity} Seats',
-                  style: const TextStyle(color: AppTheme.success, fontSize: 12),
+                  style: const TextStyle(color: Canopy.leaf, fontSize: 12),
                 ),
               ],
             ),
@@ -1831,6 +2045,10 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   Widget _buildFullscreenLandscapeLayout(
       String title, StreamerModel streamer, String langCode) {
+    final hudInset = MediaQuery.textScalerOf(context)
+            .scale(CanopySize.target)
+            .clamp(CanopySize.target, double.infinity) +
+        AppTheme.spaceLg;
     final visible =
         _controlsVisible || MediaQuery.of(context).accessibleNavigation;
     return Semantics(
@@ -1842,17 +2060,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
         onTap: _toggleLandscapeControls,
         child: Stack(fit: StackFit.expand, children: [
           if (_engine.isCameraOff)
-            LiveAudioStageMultiSpeaker(
-              streamer: streamer,
-              langCode: langCode,
-              viewerCount: null,
-              isPlaying: !_engine.isMicSilent.value,
-              streamState: _engine.state == RtmpPublishState.live
-                  ? StreamState.live
-                  : StreamState.initializing,
-              onStageTap: _toggleLandscapeControls,
-              onSpeakerTap: (_) {},
-            )
+            _audioBroadcastStage()
           else
             PhoneCameraPreview(key: _previewKey),
           FloatingReactionsOverlay(controller: _reactionsController),
@@ -1864,14 +2072,14 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               focusNode: _controlsFocus,
               canRequestFocus: false,
               child: Stack(children: [
-                Positioned(
+                PositionedDirectional(
                   top: AppTheme.spaceSm,
-                  left: AppTheme.spaceSm,
-                  right: AppTheme.spaceSm,
-                  child: Row(textDirection: TextDirection.ltr, children: [
+                  start: AppTheme.spaceSm,
+                  end: AppTheme.spaceSm,
+                  child: _glassHud(Row(children: [
                     Expanded(
                         child: Align(
-                            alignment: Alignment.centerLeft,
+                            alignment: AlignmentDirectional.centerStart,
                             child: _endControl())),
                     const SizedBox(width: AppTheme.spaceSm),
                     if (_canStartPreview) Tooltip(
@@ -1889,19 +2097,37 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           setState(() => _isSideChatOpen = !_isSideChatOpen),
                       icon: const Icon(Icons.chat_bubble_outline_rounded),
                     ),
-                  ]),
+                    const CaLanguageChip(glass: true, compact: true),
+                  ])),
                 ),
               ]),
             )),
+          if (visible && !_isSideChatOpen)
+            PositionedDirectional(
+                bottom: AppTheme.spaceSm,
+                start: AppTheme.spaceSm,
+                end: AppTheme.spaceSm,
+                child: SafeArea(child: _broadcastChatPreview())),
           if (visible && _isSideChatOpen)
-            Positioned(
-              top: 64,
+            PositionedDirectional(
+              top: hudInset,
               bottom: MediaQuery.paddingOf(context).bottom + AppTheme.spaceSm,
-              right: MediaQuery.paddingOf(context).right + AppTheme.spaceSm,
+              end: (Directionality.of(context) == TextDirection.rtl
+                      ? MediaQuery.paddingOf(context).left
+                      : MediaQuery.paddingOf(context).right) +
+                  AppTheme.spaceSm,
               width: MediaQuery.sizeOf(context).width * 0.42,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                child: _buildLiveChatTab(),
+                child: LayoutBuilder(
+                    builder: (context, constraints) => SingleChildScrollView(
+                        reverse: true,
+                        child: SizedBox(
+                            height: constraints.maxHeight.clamp(
+                                MediaQuery.textScalerOf(context).scale(
+                                    CanopySize.broadcastReadOnlyChatFloor),
+                                double.infinity),
+                            child: _buildLiveChatTab()))),
               ),
             ),
         ]),
@@ -1911,131 +2137,143 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
 
   void _showDirectorPanel(BuildContext context, AppProvider provider) {
     final handleController = TextEditingController();
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: AppTheme.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-      ),
-      builder: (sheetContext) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(AppTheme.spaceLg),
-          child: Consumer<AppProvider>(
-            builder: (context, provider, _) {
-              return Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'live.attendees_count'
-                        .tr(args: ['${provider.admittedAttendees.length}']),
-                    style: const TextStyle(
-                      color: AppTheme.onMedia,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceMd),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: handleController,
-                          style: const TextStyle(
-                              color: AppTheme.onMedia, fontSize: 13),
-                          decoration: InputDecoration(
-                            hintText: 'live.attendee_search_hint'.tr(),
-                            hintStyle: const TextStyle(
-                                color: AppTheme.textMuted, fontSize: 12),
-                            filled: true,
-                            fillColor: AppTheme.surfaceAlt,
-                            contentPadding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 10),
-                            border: OutlineInputBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusSm),
-                              borderSide:
-                                  const BorderSide(color: AppTheme.border),
+    showCaSheet<void>(context,
+        title: 'live.tab_chat'.tr(),
+        framed: false,
+        body: ChangeNotifierProvider<AppProvider>.value(
+            value: provider,
+            child: Builder(
+              builder: (sheetContext) => SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppTheme.spaceLg),
+                  child: Consumer<AppProvider>(
+                    builder: (context, provider, _) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'live.attendees_count'.tr(
+                                args: ['${provider.admittedAttendees.length}']),
+                            style: const TextStyle(
+                              color: AppTheme.onMedia,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
                             ),
                           ),
-                          onSubmitted: (value) {
-                            if (value.trim().isEmpty) return;
-                            provider.admitAttendeeByHandle(value.trim());
-                            handleController.clear();
-                          },
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton(
-                        icon: const Icon(Icons.person_add_alt_1_rounded,
-                            color: AppTheme.success),
-                        onPressed: () {
-                          final value = handleController.text.trim();
-                          if (value.isEmpty) return;
-                          provider.admitAttendeeByHandle(value);
-                          handleController.clear();
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: AppTheme.spaceSm),
-                  ConstrainedBox(
-                    constraints: const BoxConstraints(maxHeight: 280),
-                    child: provider.admittedAttendees.isEmpty
-                        ? Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: AppTheme.spaceMd),
-                            child: Text(
-                              'design_ui.no_attendees_admitted_yet'.tr(),
-                              style: const TextStyle(
-                                  color: AppTheme.textMuted, fontSize: 12),
-                            ),
-                          )
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            itemCount: provider.admittedAttendees.length,
-                            itemBuilder: (context, index) {
-                              final attendee =
-                                  provider.admittedAttendees[index];
-                              return ListTile(
-                                dense: true,
-                                leading: attendee.isVip
-                                    ? const Icon(
-                                        Icons.workspace_premium_rounded,
-                                        color: AppTheme.warning,
-                                        size: 20)
-                                    : const Icon(Icons.person_rounded,
-                                        color: AppTheme.textSecondary,
-                                        size: 20),
-                                title: Text(
-                                  attendee.displayName,
-                                  style: const TextStyle(
-                                      color: AppTheme.onMedia, fontSize: 13),
-                                ),
-                                trailing: TextButton.icon(
-                                  icon: const Icon(Icons.block_rounded,
-                                      color: AppTheme.danger, size: 16),
-                                  label: Text(
-                                    'design_ui.kick_out'.tr(),
-                                    style: const TextStyle(
-                                        color: AppTheme.danger, fontSize: 12),
+                          const SizedBox(height: AppTheme.spaceMd),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: PhoneInputGuard(builder: (context, blocked) => TextField(
+                                          readOnly: blocked,
+                                          controller: handleController,
+                                          style: const TextStyle(
+                                              color: AppTheme.onMedia,
+                                              fontSize: 13),
+                                          decoration: InputDecoration(
+                                            hintText:
+                                                'live.attendee_search_hint'
+                                                    .tr(),
+                                            hintStyle: const TextStyle(
+                                                color: Canopy.haze,
+                                                fontSize: 12),
+                                            filled: true,
+                                            fillColor: Canopy.mint,
+                                            contentPadding:
+                                                const EdgeInsets.symmetric(
+                                                    horizontal: 12,
+                                                    vertical: 10),
+                                            border: OutlineInputBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(
+                                                      AppTheme.radiusSm),
+                                              borderSide: const BorderSide(
+                                                  color: Canopy.hairline),
+                                            ),
+                                          ),
+                                          onSubmitted: (value) {
+                                            if (value.trim().isEmpty) return;
+                                            provider.admitAttendeeByHandle(
+                                                value.trim());
+                                            handleController.clear();
+                                          },
+                                        )),
+                              ),
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.person_add_alt_1_rounded,
+                                    color: Canopy.leaf),
+                                onPressed: () {
+                                  final value = handleController.text.trim();
+                                  if (value.isEmpty) return;
+                                  provider.admitAttendeeByHandle(value);
+                                  handleController.clear();
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: AppTheme.spaceSm),
+                          ConstrainedBox(
+                            constraints: const BoxConstraints(maxHeight: 280),
+                            child: provider.admittedAttendees.isEmpty
+                                ? Padding(
+                                    padding: const EdgeInsets.symmetric(
+                                        vertical: AppTheme.spaceMd),
+                                    child: Text(
+                                      'design_ui.no_attendees_admitted_yet'
+                                          .tr(),
+                                      style: const TextStyle(
+                                          color: Canopy.haze,
+                                          fontSize: 12),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    shrinkWrap: true,
+                                    itemCount:
+                                        provider.admittedAttendees.length,
+                                    itemBuilder: (context, index) {
+                                      final attendee =
+                                          provider.admittedAttendees[index];
+                                      return ListTile(
+                                        dense: true,
+                                        leading: attendee.isVip
+                                            ? const Icon(
+                                                Icons.workspace_premium_rounded,
+                                                color: AppTheme.warning,
+                                                size: 20)
+                                            : const Icon(Icons.person_rounded,
+                                                color: Canopy.slate,
+                                                size: 20),
+                                        title: Text(
+                                          attendee.displayName,
+                                          style: const TextStyle(
+                                              color: AppTheme.onMedia,
+                                              fontSize: 13),
+                                        ),
+                                        trailing: TextButton.icon(
+                                          icon: const Icon(Icons.block_rounded,
+                                              color: Canopy.liveCrimson, size: 16),
+                                          label: Text(
+                                            'design_ui.kick_out'.tr(),
+                                            style: const TextStyle(
+                                                color: Canopy.liveCrimson,
+                                                fontSize: 12),
+                                          ),
+                                          onPressed: () => provider
+                                              .kickAttendee(attendee.id),
+                                        ),
+                                      );
+                                    },
                                   ),
-                                  onPressed: () =>
-                                      provider.kickAttendee(attendee.id),
-                                ),
-                              );
-                            },
                           ),
+                        ],
+                      );
+                    },
                   ),
-                ],
-              );
-            },
-          ),
-        ),
-      ),
-    ).whenComplete(handleController.dispose);
+                ),
+              ),
+            ))).whenComplete(handleController.dispose);
   }
 
   Widget _buildPresetPicker() {
@@ -2048,7 +2286,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
             Text(
               'design_ui.choose_a_broadcast_quality'.tr(),
               style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold),
             ),
@@ -2057,88 +2295,26 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
               'design_copy.quality_help'.tr(),
               textAlign: TextAlign.center,
               style: const TextStyle(
-                  color: AppTheme.textSecondary, fontSize: 12.5),
+                  color: Canopy.slate, fontSize: 12.5),
             ),
             const SizedBox(height: AppTheme.spaceLg),
-            ...BroadcastQualityPreset.values.map(
-              (preset) => Padding(
-                padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
-                child: _PresetOption(
-                  preset: preset,
-                  selected: _preset == preset,
-                  onTap: () => setState(() => _preset = preset),
-                ),
-              ),
-            ),
+            CaQualityPresets<BroadcastQualityPreset>(
+                options: [
+                  for (final preset in BroadcastQualityPreset.values)
+                    (
+                      value: preset,
+                      label: '${preset.height}p',
+                      detail: '${preset.videoBitrateBps ~/ 1000} kbps'
+                    )
+                ],
+                value: _preset,
+                onChanged: (preset) => setState(() => _preset = preset)),
             const SizedBox(height: AppTheme.spaceMd),
             SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: _confirmPresetAndSetup,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger,
-                  foregroundColor: AppTheme.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                ),
-                child: Text('design_ui.continue'.tr(),
-                    style: const TextStyle(fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _PresetOption extends StatelessWidget {
-  final BroadcastQualityPreset preset;
-  final bool selected;
-  final VoidCallback onTap;
-
-  const _PresetOption({
-    required this.preset,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppTheme.danger.withValues(alpha: 0.15)
-              : AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-          border: Border.all(
-            color: selected ? AppTheme.danger : AppTheme.border,
-            width: selected ? 1.5 : 1,
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              selected
-                  ? Icons.radio_button_checked_rounded
-                  : Icons.radio_button_unchecked_rounded,
-              color: selected ? AppTheme.danger : AppTheme.textMuted,
-              size: 18,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Text(
-                preset.labelKey.tr(),
-                style: TextStyle(
-                  color: selected ? AppTheme.primary : AppTheme.textSecondary,
-                  fontSize: 12.5,
-                  fontWeight: selected ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
+              child: CaButton(
+                  label: 'design_ui.continue'.tr(),
+                  onPressed: _confirmPresetAndSetup),
             ),
           ],
         ),
@@ -2159,7 +2335,7 @@ class _LiveBadge extends StatelessWidget {
           ? 'live.live_indicator'.tr()
           : 'live.live_badge_bitrate'
               .tr(args: ['${(bitrateBps! / 1000).round()}']),
-      color: AppTheme.danger,
+      color: Canopy.liveCrimson,
     );
   }
 }
@@ -2216,7 +2392,7 @@ class _StreamErrorBanner extends StatelessWidget {
         horizontal: AppTheme.spaceMd,
         vertical: AppTheme.spaceSm,
       ),
-      color: AppTheme.danger,
+      color: Canopy.liveCrimson,
       child: Row(
         children: [
           const Icon(Icons.error_outline_rounded,
@@ -2282,20 +2458,20 @@ class _KnockingBanner extends StatelessWidget {
             TextButton(
               onPressed: onAdmitAll,
               child: Text('live.admit_all'.tr(args: ['$queueLength']),
-                  style:
-                      const TextStyle(color: AppTheme.success, fontSize: 11)),
+                  style: const TextStyle(
+                      color: Canopy.leaf, fontSize: AppTheme.captionFont)),
             ),
             const SizedBox(width: 4),
           ],
           IconButton(
             icon: const Icon(Icons.close_rounded,
-                color: AppTheme.danger, size: 20),
+                color: Canopy.liveCrimson, size: 20),
             tooltip: 'live.tooltip_deny'.tr(),
             onPressed: onDeny,
           ),
           IconButton(
             icon: const Icon(Icons.check_circle_rounded,
-                color: AppTheme.success, size: 20),
+                color: Canopy.leaf, size: 20),
             tooltip: 'live.tooltip_admit'.tr(),
             onPressed: onAdmit,
           ),
@@ -2324,7 +2500,9 @@ class _StatusPill extends StatelessWidget {
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(
-            color: AppTheme.onMedia, fontSize: 11, fontWeight: FontWeight.bold),
+            color: AppTheme.onMedia,
+            fontSize: AppTheme.captionFont,
+            fontWeight: FontWeight.bold),
       ),
     );
   }

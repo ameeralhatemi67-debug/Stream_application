@@ -1,14 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../../core/layout/window_class.dart';
 
-/// A rotated phone can exceed 900 logical pixels along its long edge.
-bool isLaptopLiveLayout(BuildContext context) {
-  final size = MediaQuery.sizeOf(context);
-  return size.width >= 900 && size.height >= 600;
-}
+/// Phones retain their fullscreen controls; wider windows use the pane rule.
+bool isLaptopLiveLayout(BuildContext context) =>
+    !context.isPhone && context.usesTwoPanes;
 
-/// Only compact, rotated layouts need read-only chat and fullscreen video.
-bool isCompactLandscapeChat(BuildContext context) {
-  final media = MediaQuery.of(context);
-  return !isLaptopLiveLayout(context) &&
-      media.orientation == Orientation.landscape;
-}
+/// Browser and tablet text input remains editable, including short windows.
+bool isCompactLandscapeChat(BuildContext context) => context.isPhoneLandscape;
