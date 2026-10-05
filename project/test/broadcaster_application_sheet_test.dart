@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter/material.dart';
+import 'package:streamer_app/core/widgets/ds/ca_button.dart';
 import 'package:provider/provider.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/services/admin_database_service.dart';
@@ -160,7 +161,8 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Dammam').last);
       await tester.pumpAndSettle();
-      final submit = find.byType(ElevatedButton);
+      final submit = find.byWidgetPredicate((w) =>
+          w is CaButton && w.label == 'Submit Application for Verification');
       await tester.ensureVisible(submit);
       await tester.pumpAndSettle();
       await tester.tap(submit);

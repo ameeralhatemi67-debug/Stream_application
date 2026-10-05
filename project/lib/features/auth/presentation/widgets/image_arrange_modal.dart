@@ -1,11 +1,13 @@
+import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'dart:typed_data';
-import 'dart:ui'as ui;
+import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
-import '../../../../core/widgets/hadayah_loading_indicator.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
 
 enum ImageArrangeType {
   avatarCircle,
@@ -34,17 +36,20 @@ class ImageArrangeModal extends StatefulWidget {
     required ImageArrangeType arrangeType,
     String? title,
   }) {
-    return showModalBottomSheet<Uint8List?>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: AppTheme.media,
-      builder: (ctx) => ImageArrangeModal(
-        imagePath: imagePath,
-        imageBytes: imageBytes,
-        arrangeType: arrangeType,
-        title: title ?? (arrangeType == ImageArrangeType.avatarCircle ? 'Crop Profile Photo' : 'Crop Header Banner'),
-      ),
-    );
+    return showCaSheet<Uint8List?>(context,
+        title: '',
+        framed: false,
+        useRootNavigator: false,
+        body: Builder(
+            builder: (ctx) => ImageArrangeModal(
+                  imagePath: imagePath,
+                  imageBytes: imageBytes,
+                  arrangeType: arrangeType,
+                  title: title ??
+                      (arrangeType == ImageArrangeType.avatarCircle
+                          ? 'Crop Profile Photo'
+                          : 'Crop Header Banner'),
+                )));
   }
 
   @override
@@ -53,7 +58,8 @@ class ImageArrangeModal extends StatefulWidget {
 
 class _ImageArrangeModalState extends State<ImageArrangeModal> {
   final GlobalKey _cropKey = GlobalKey();
-  final TransformationController _transformationController = TransformationController();
+  final TransformationController _transformationController =
+      TransformationController();
   double _currentScale = 1.0;
   bool _isProcessing = false;
   bool _hasDecodeError = false;
@@ -84,7 +90,8 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
   void _onSliderChanged(double newScale) {
     setState(() {
       _currentScale = newScale;
-      _transformationController.value = Matrix4.diagonal3Values(newScale, newScale, 1.0);
+      _transformationController.value =
+          Matrix4.diagonal3Values(newScale, newScale, 1.0);
     });
   }
 
@@ -96,7 +103,8 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
       await Future.delayed(const Duration(milliseconds: 60));
       if (!mounted) return;
 
-      final boundary = _cropKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
+      final boundary =
+          _cropKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;
       if (boundary == null) {
         if (mounted) Navigator.of(context).pop(widget.imageBytes);
         return;
@@ -108,7 +116,8 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
           widget.arrangeType == ImageArrangeType.avatarCircle ? 512.0 : 1280.0;
       final ratio = (targetWidth / boundary.size.width).clamp(0.5, 3.0);
       final ui.Image image = await boundary.toImage(pixelRatio: ratio);
-      final ByteData? byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+      final ByteData? byteData =
+          await image.toByteData(format: ui.ImageByteFormat.png);
 
       if (byteData != null) {
         final Uint8List croppedBytes = byteData.buffer.asUint8List();
@@ -139,21 +148,29 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.danger, width: 1.5),
+          border: Border.all(color: Canopy.liveCrimson, width: 1.5),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded, color: AppTheme.danger, size: 36),
+            const Icon(Icons.error_outline_rounded,
+                color: Canopy.liveCrimson, size: 36),
             const SizedBox(height: 10),
-            Text('design_ui.image_decode_error'.tr(),
-              style: const TextStyle(color: AppTheme.onMedia, fontWeight: FontWeight.bold, fontSize: 13),
+            Text(
+              'design_ui.image_decode_error'.tr(),
+              style: const TextStyle(
+                  color: AppTheme.onMedia,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13),
             ),
             const SizedBox(height: 4),
             Text(
-              _decodeErrorMessage ?? 'Unable to parse image data on this device.',
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+              _decodeErrorMessage ??
+                  'Unable to parse image data on this device.',
+              style: const TextStyle(
+                  color: Canopy.slate,
+                  fontSize: AppTheme.captionFont),
               textAlign: TextAlign.center,
             ),
           ],
@@ -196,7 +213,8 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
   Widget build(BuildContext context) {
     final size = MediaQuery.sizeOf(context);
     final isAvatar = widget.arrangeType == ImageArrangeType.avatarCircle;
-    final cutoutWidth = isAvatar ? 260.0 : (size.width - 40).clamp(280.0, 520.0);
+    final cutoutWidth =
+        isAvatar ? 260.0 : (size.width - 40).clamp(280.0, 520.0);
     final cutoutHeight = isAvatar ? 260.0 : (cutoutWidth * (9 / 16));
 
     return Container(
@@ -205,154 +223,173 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
       child: SafeArea(
         child: Column(
           children: [
-            //  Top Navigation Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(null),
-                    child: Text('design_ui.cancel'.tr(),
-                      style: const TextStyle(
-                        color: AppTheme.onMedia,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    widget.title,
-                    style: const TextStyle(
-                      color: AppTheme.onMedia,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.onMedia,
-                      foregroundColor: AppTheme.media,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                    ),
-                    onPressed: _isProcessing ? null : _applyCrop,
-                    child: _isProcessing
-                        ? const SizedBox(
-                            width: 16,
-                            height: 16,
-                            child: HadayahLoadingIndicator(strokeWidth: 2, color: AppTheme.media),
-                          )
-                        : Text('design_ui.apply'.tr(),
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-                          ),
-                  ),
-                ],
-              ),
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
+              child: Row(children: [
+                Expanded(
+                    child: Text(widget.title,
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleLarge
+                            ?.copyWith(color: Canopy.paper))),
+                CaIconButton(
+                    icon: CaGlyph.close,
+                    glass: true,
+                    bare: true,
+                    label: 'design_ui.cancel'.tr(),
+                    onPressed: () => Navigator.of(context).pop(null)),
+              ]),
             ),
-            const Divider(height: 1, color: AppTheme.border),
+            const Divider(height: 1, color: Canopy.hairline),
+            Expanded(child: LayoutBuilder(builder: (context, bounds) {
+              // Keep the original capture box dimensions even in a short viewport.
+              // Scrolling reveals it rather than squeezing the exported pixels.
+              final canvas = LayoutBuilder(
+                  builder: (context, area) => SingleChildScrollView(
+                      child: SizedBox(
+                          height: area.maxHeight < cutoutHeight
+                              ? cutoutHeight
+                              : area.maxHeight,
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              // Full Screen Dimmed Backdrop
+                              Positioned.fill(
+                                child: Container(
+                                  color: AppTheme.media,
+                                ),
+                              ),
 
-            //  Canvas Cropper Area with Anti-Black-Bar Boundary Clamping
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  // Full Screen Dimmed Backdrop
-                  Positioned.fill(
-                    child: Container(
-                      color: AppTheme.media,
-                    ),
-                  ),
+                              //  The Strict Anti-Black-Bar Viewport Box (RepaintBoundary)
+                              RepaintBoundary(
+                                key: _cropKey,
+                                child: ClipRRect(
+                                  borderRadius: isAvatar
+                                      ? BorderRadius.circular(cutoutWidth / 2)
+                                      : BorderRadius.circular(0),
+                                  child: Container(
+                                    width: cutoutWidth,
+                                    height: cutoutHeight,
+                                    color: AppTheme.media,
+                                    child: InteractiveViewer(
+                                      transformationController:
+                                          _transformationController,
+                                      minScale: 1.0,
+                                      maxScale: 3.5,
+                                      // BoundaryMargin = zero strictly prevents panning the image inside or revealing black borders
+                                      boundaryMargin: EdgeInsets.zero,
+                                      clipBehavior: Clip.hardEdge,
+                                      child: _buildRawImage(
+                                          cutoutWidth, cutoutHeight),
+                                    ),
+                                  ),
+                                ),
+                              ),
 
-                  //  The Strict Anti-Black-Bar Viewport Box (RepaintBoundary)
-                  RepaintBoundary(
-                    key: _cropKey,
-                    child: ClipRRect(
-                      borderRadius: isAvatar ? BorderRadius.circular(cutoutWidth / 2) : BorderRadius.circular(0),
-                      child: Container(
-                        width: cutoutWidth,
-                        height: cutoutHeight,
-                        color: AppTheme.media,
-                        child: InteractiveViewer(
-                          transformationController: _transformationController,
-                          minScale: 1.0,
-                          maxScale: 3.5,
-                          // BoundaryMargin = zero strictly prevents panning the image inside or revealing black borders
-                          boundaryMargin: EdgeInsets.zero,
-                          clipBehavior: Clip.hardEdge,
-                          child: _buildRawImage(cutoutWidth, cutoutHeight),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  //  Visual Cutout Border Overlay (Guiding Ring / Frame)
-                  if (!_hasDecodeError)
-                    IgnorePointer(
-                      child: Container(
-                        width: cutoutWidth,
-                        height: cutoutHeight,
-                        decoration: BoxDecoration(
-                          shape: isAvatar ? BoxShape.circle : BoxShape.rectangle,
-                          borderRadius: isAvatar ? null : BorderRadius.circular(4),
-                          border: Border.all(
-                            color: AppTheme.onMedia.withValues(alpha: 0.9),
-                            width: 2.0,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.media.withValues(alpha: 0.6),
-                              blurRadius: 20,
-                              spreadRadius: 4,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-
-            //  Bottom Zoom Slider Bar
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-              color: AppTheme.media,
-              child: Column(
-                children: [
-                  Row(
+                              //  Visual Cutout Border Overlay (Guiding Ring / Frame)
+                              if (!_hasDecodeError)
+                                IgnorePointer(
+                                  child: Container(
+                                    width: cutoutWidth,
+                                    height: cutoutHeight,
+                                    decoration: BoxDecoration(
+                                      shape: isAvatar
+                                          ? BoxShape.circle
+                                          : BoxShape.rectangle,
+                                      borderRadius: isAvatar
+                                          ? null
+                                          : BorderRadius.circular(4),
+                                      border: Border.all(
+                                        color: AppTheme.onMedia
+                                            .withValues(alpha: 0.9),
+                                        width: 2.0,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: AppTheme.media
+                                              .withValues(alpha: 0.6),
+                                          blurRadius: 20,
+                                          spreadRadius: 4,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                            ],
+                          ))));
+              final controls =
+                  Column(mainAxisSize: MainAxisSize.min, children: [
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                  color: AppTheme.media,
+                  child: Column(
                     children: [
-                      Icon(Icons.photo_size_select_small_rounded, color: AppTheme.onMedia.withValues(alpha: 0.7), size: 20),
-                      Expanded(
-                        child: SliderTheme(
-                          data: SliderTheme.of(context).copyWith(
-                            activeTrackColor: AppTheme.onMedia,
-                            inactiveTrackColor: AppTheme.border,
-                            thumbColor: AppTheme.onMedia,
-                            overlayColor: AppTheme.onMedia.withValues(alpha: 0.2),
-                            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
-                            trackHeight: 3,
+                      Row(
+                        children: [
+                          Icon(Icons.photo_size_select_small_rounded,
+                              color: AppTheme.onMedia.withValues(alpha: 0.7),
+                              size: 20),
+                          Expanded(
+                            child: SliderTheme(
+                              data: SliderTheme.of(context).copyWith(
+                                activeTrackColor: AppTheme.onMedia,
+                                inactiveTrackColor: Canopy.hairline,
+                                thumbColor: AppTheme.onMedia,
+                                overlayColor:
+                                    AppTheme.onMedia.withValues(alpha: 0.2),
+                                thumbShape: const RoundSliderThumbShape(
+                                    enabledThumbRadius: 7),
+                                trackHeight: 3,
+                              ),
+                              child: Slider(
+                                value: _currentScale,
+                                min: 1.0,
+                                max: 3.5,
+                                onChanged: _onSliderChanged,
+                              ),
+                            ),
                           ),
-                          child: Slider(
-                            value: _currentScale,
-                            min: 1.0,
-                            max: 3.5,
-                            onChanged: _onSliderChanged,
-                          ),
-                        ),
+                          const Icon(Icons.photo_size_select_actual_rounded,
+                              color: AppTheme.onMedia, size: 24),
+                        ],
                       ),
-                      const Icon(Icons.photo_size_select_actual_rounded, color: AppTheme.onMedia, size: 24),
+                      const SizedBox(height: 4),
+                      Text(
+                        'design_ui.pinch_to_zoom_and_drag_to_reposition'.tr(),
+                        style:
+                            const TextStyle(color: Canopy.mist, fontSize: 12),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 4),
-                  Text('design_ui.pinch_to_zoom_and_drag_to_reposition'.tr(),
-                    style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
-                  ),
-                ],
-              ),
-            ),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(AppTheme.spaceLg),
+                  child: Row(children: [
+                    Flexible(
+                        child: CaButton(
+                            label: 'design_ui.cancel'.tr(),
+                            variant: CaButtonVariant.secondary,
+                            onPressed: () => Navigator.of(context).pop(null))),
+                    const SizedBox(width: AppTheme.spaceMd),
+                    Expanded(
+                        child: CaButton(
+                            label: 'design_ui.apply'.tr(),
+                            loading: _isProcessing,
+                            onPressed: _isProcessing ? null : _applyCrop)),
+                  ]),
+                )
+              ]);
+              if (size.width > size.height && size.width >= 600) {
+                return Row(children: [
+                  Expanded(child: canvas),
+                  SizedBox(
+                      width: CanopySize.wizardRail,
+                      child: SingleChildScrollView(child: controls))
+                ]);
+              }
+              return Column(children: [Expanded(child: canvas), controls]);
+            })),
           ],
         ),
       ),

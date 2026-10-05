@@ -104,7 +104,9 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
       context: context,
       imagePath: path ?? '',
       imageBytes: bytes,
-      arrangeType: isAvatar ? ImageArrangeType.avatarCircle : ImageArrangeType.banner16x9,
+      arrangeType: isAvatar
+          ? ImageArrangeType.avatarCircle
+          : ImageArrangeType.banner16x9,
     );
 
     if (cropped != null) {
@@ -124,12 +126,13 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.danger, width: 1.5),
+          border: Border.all(color: Canopy.liveCrimson, width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppTheme.danger, size: 28),
+            const Icon(Icons.warning_amber_rounded,
+                color: Canopy.liveCrimson, size: 28),
             const SizedBox(height: 6),
             Text(
               _bannerError!,
@@ -150,18 +153,20 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.border, width: 1.5),
+          border: Border.all(color: Canopy.hairline, width: 1.5),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add_photo_alternate_outlined, size: 36, color: AppTheme.danger),
+            const Icon(Icons.add_photo_alternate_outlined,
+                size: 36, color: AppTheme.primary),
             const SizedBox(height: 8),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12),
               child: Text(
                 'wizard_steps.step2_banner_tap'.tr(),
-                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+                style: const TextStyle(
+                    color: Canopy.slate, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -187,9 +192,10 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
             height: 150,
             errorBuilder: (_, error, __) => Container(
               height: 150,
-              color: AppTheme.surfaceAlt,
+              color: Canopy.mint,
               alignment: Alignment.center,
-              child: Text('Image Error: $error', style: const TextStyle(color: AppTheme.danger, fontSize: 11)),
+              child: Text('Image Error: $error',
+                  style: const TextStyle(color: Canopy.liveCrimson, fontSize: 12)),
             ),
           ),
         ),
@@ -203,23 +209,29 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.media.withValues(alpha: 0.75),
                   foregroundColor: AppTheme.onMedia,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4)),
                 ),
                 icon: const Icon(Icons.crop_rotate_rounded, size: 14),
-                label: Text('common.arrange'.tr(), style: const TextStyle(fontSize: 11)),
+                label: Text('common.arrange'.tr(),
+                    style: const TextStyle(fontSize: 12)),
                 onPressed: () => _openArrangeModal(false),
               ),
               const SizedBox(width: 6),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger,
+                  backgroundColor: AppTheme.primary,
                   foregroundColor: AppTheme.onMedia,
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(4)),
                 ),
                 icon: const Icon(Icons.edit_rounded, size: 14),
-                label: Text('common.change'.tr(), style: const TextStyle(fontSize: 11)),
+                label: Text('common.change'.tr(),
+                    style: const TextStyle(fontSize: 12)),
                 onPressed: _pickBanner,
               ),
             ],
@@ -242,9 +254,9 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'wizard_steps.step2_title'.tr(),
+            'wizard_steps.step2_title'.tr().split(':').last.trim(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -253,7 +265,7 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
           Text(
             'wizard_steps.step2_desc'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondary,
+              color: Canopy.slate,
               fontSize: 12,
               height: 1.4,
             ),
@@ -264,14 +276,16 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
           Text(
             'wizard_steps.step2_banner_label'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 8),
           GestureDetector(
-            onTap: (widget.bannerPath == null && widget.bannerBytes == null) ? _pickBanner : null,
+            onTap: (widget.bannerPath == null && widget.bannerBytes == null)
+                ? _pickBanner
+                : null,
             child: _buildBannerPreview(),
           ),
           const SizedBox(height: 10),
@@ -282,7 +296,7 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
           Text(
             'wizard_steps.step2_avatar_label'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -298,11 +312,14 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
                     CircleAvatar(
                       radius: 46,
                       backgroundColor: AppTheme.surface,
-                      backgroundImage: (widget.avatarPath != null || widget.avatarBytes != null)
+                      backgroundImage: (widget.avatarPath != null ||
+                              widget.avatarBytes != null)
                           ? avatarProvider
                           : null,
-                      child: (widget.avatarPath == null && widget.avatarBytes == null)
-                          ? const Icon(Icons.person_add_alt_1_rounded, size: 36, color: AppTheme.danger)
+                      child: (widget.avatarPath == null &&
+                              widget.avatarBytes == null)
+                          ? const Icon(Icons.person_add_alt_1_rounded,
+                              size: 36, color: AppTheme.primary)
                           : null,
                     ),
                     PositionedDirectional(
@@ -310,11 +327,13 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
                       end: 0,
                       child: Container(
                         padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppTheme.danger,
-                          shape: BoxShape.circle,
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary,
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusSm),
                         ),
-                        child: const Icon(Icons.camera_alt_rounded, size: 16, color: AppTheme.onMedia),
+                        child: const Icon(Icons.camera_alt_rounded,
+                            size: 16, color: AppTheme.onMedia),
                       ),
                     ),
                   ],
@@ -328,15 +347,18 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
                     ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.surface,
-                        foregroundColor: AppTheme.textPrimary,
-                        side: const BorderSide(color: AppTheme.border),
-                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        foregroundColor: Canopy.ink,
+                        side: const BorderSide(color: Canopy.hairline),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 14, vertical: 8),
                       ),
                       icon: const Icon(Icons.upload_file_rounded, size: 16),
-                      label: Text('wizard_steps.step2_upload_btn'.tr(), style: const TextStyle(fontSize: 12)),
+                      label: Text('wizard_steps.step2_upload_btn'.tr(),
+                          style: const TextStyle(fontSize: 12)),
                       onPressed: _pickAvatar,
                     ),
-                    if (widget.avatarPath != null || widget.avatarBytes != null) ...[
+                    if (widget.avatarPath != null ||
+                        widget.avatarBytes != null) ...[
                       const SizedBox(height: 6),
                       TextButton.icon(
                         style: TextButton.styleFrom(
@@ -344,7 +366,8 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
                           padding: EdgeInsets.zero,
                         ),
                         icon: const Icon(Icons.crop_rotate_rounded, size: 15),
-                        label: Text('wizard_steps.step2_arrange_btn'.tr(), style: const TextStyle(fontSize: 12)),
+                        label: Text('wizard_steps.step2_arrange_btn'.tr(),
+                            style: const TextStyle(fontSize: 12)),
                         onPressed: () => _openArrangeModal(true),
                       ),
                     ],
@@ -352,7 +375,8 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
                       const SizedBox(height: 6),
                       Text(
                         _avatarError!,
-                        style: const TextStyle(color: AppTheme.danger, fontSize: 11),
+                        style: const TextStyle(
+                            color: Canopy.liveCrimson, fontSize: 12),
                       ),
                     ],
                   ],
@@ -361,7 +385,6 @@ class _ApplyStep2MediaState extends State<ApplyStep2Media> {
             ],
           ),
           const SizedBox(height: 12),
-
         ],
       ),
     );

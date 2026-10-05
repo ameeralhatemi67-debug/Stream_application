@@ -1,3 +1,7 @@
+import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/ds/ca_cards.dart';
+import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/ds/ca_navigation.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -8,195 +12,60 @@ class ApplicationPendingScreen extends StatelessWidget {
   const ApplicationPendingScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
-
-    return Scaffold(
-      backgroundColor: AppTheme.bg,
-      // Reachable from Settings and after submitting; always offer a way
-      // back instead of only "explore" (P6-R09 wizard trap report).
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const BackButtonIcon(),
-          tooltip: MaterialLocalizations.of(context).backButtonTooltip,
-          onPressed: () =>
-              context.canPop() ? context.pop() : context.go('/settings'),
-        ),
-      ),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppTheme.spaceLg,
-              vertical: AppTheme.spaceMd,
-            ),
-            child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: isDesktop ? 600 : 440),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
+  Widget build(BuildContext context) => Scaffold(
+        backgroundColor: Canopy.dawn,
+        appBar: CaAppBar(
+            languageBare: true,
+            leading: CaIconButton(
+                bare: true,
+                icon: CaGlyph.back,
+                label: MaterialLocalizations.of(context).backButtonTooltip,
+                onPressed: () => context.canPop()
+                    ? context.pop()
+                    : context.go('/settings'))),
+        body: SafeArea(
+            child: Center(
+                child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppTheme.spaceLg),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: CanopySize.wizardForm),
+            child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Verification Shield Icon
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      color: AppTheme.danger.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppTheme.danger, width: 2),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AppTheme.danger.withValues(alpha: 0.25),
-                          blurRadius: 24,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: const Icon(
-                      Icons.hourglass_top_rounded,
-                      size: 40,
-                      color: AppTheme.danger,
-                    ),
-                  ),
+                  CaCard(
+                      variant: CaCardVariant.feature,
+                      child: Column(children: [
+                        const CaIcon(CaGlyph.shield,
+                            size: CanopySize.emptyArtHeight),
+                        const SizedBox(height: AppTheme.spaceLg),
+                        Text('wizard_pending.title'.tr(),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.headlineSmall),
+                        const SizedBox(height: AppTheme.spaceSm),
+                        Text('wizard_pending.subtitle'.tr(),
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).textTheme.bodyMedium),
+                      ])),
                   const SizedBox(height: AppTheme.spaceLg),
-
-                  Text(
-                    'wizard_pending.title'.tr(),
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontSize: 22,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'wizard_pending.subtitle'.tr(),
-                    style: const TextStyle(
-                      color: AppTheme.primary,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppTheme.spaceLg),
-
-                  // Information Container
-                  Container(
-                    padding: const EdgeInsets.all(AppTheme.spaceLg),
-                    decoration: BoxDecoration(
-                      color: AppTheme.surface,
-                      borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppTheme.border),
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        _buildInfoBullet(
-                          icon: Icons.verified_user_outlined,
-                          title: 'wizard_pending.step1_title'.tr(),
-                          desc: 'wizard_pending.step1_desc'.tr(),
-                        ),
-                        const SizedBox(height: AppTheme.spaceMd),
-                        _buildInfoBullet(
-                          icon: Icons.notifications_active_outlined,
-                          title: 'wizard_pending.step2_title'.tr(),
-                          desc: 'wizard_pending.step2_desc'.tr(),
-                        ),
-                        const SizedBox(height: AppTheme.spaceMd),
-                        _buildInfoBullet(
-                          icon: Icons.explore_outlined,
-                          title: 'wizard_pending.step3_title'.tr(),
-                          desc: 'wizard_pending.step3_desc'.tr(),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: AppTheme.spaceXl),
-
-                  // Primary Button to Enter App
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.danger,
-                        foregroundColor: AppTheme.onMedia,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
-                        ),
-                        elevation: 2,
-                      ),
-                      onPressed: () => context.go('/feed'),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Flexible(
-                            child: Text(
-                              'wizard_pending.btn_explore'.tr(),
-                              style: const TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Transform.scale(
-                            scaleX: context.locale.languageCode == 'ar' ? -1.0 : 1.0,
-                            child: const Icon(Icons.arrow_forward_rounded, size: 18),
-                          ),
+                  CaCard(
+                      child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                        for (var i = 1; i <= 3; i++) ...[
+                          Text('wizard_pending.step${i}_title'.tr(),
+                              style: Theme.of(context).textTheme.titleMedium),
+                          const SizedBox(height: AppTheme.spaceSm),
+                          Text('wizard_pending.step${i}_desc'.tr(),
+                              style: Theme.of(context).textTheme.bodyMedium),
+                          if (i < 3) const SizedBox(height: AppTheme.spaceLg),
                         ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
+                      ])),
+                  const SizedBox(height: AppTheme.spaceXl),
+                  CaButton(
+                      label: 'wizard_pending.btn_explore'.tr(),
+                      onPressed: () => context.go('/feed')),
+                ]),
           ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildInfoBullet({
-    required IconData icon,
-    required String title,
-    required String desc,
-  }) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 20, color: AppTheme.danger),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
-                  fontSize: 13,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                desc,
-                style: const TextStyle(
-                  color: AppTheme.textSecondary,
-                  fontSize: 11,
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+        ))),
+      );
 }

@@ -1,3 +1,4 @@
+import '../../../../core/widgets/ds/ca_fields.dart';
 import 'dart:typed_data';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
@@ -5,6 +6,8 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
 
 class OrgApplicationSpeaker {
   String name;
@@ -60,7 +63,7 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
     Uint8List? uploadedAvatarBytes;
     bool wasAutofilled = false;
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (dialogCtx, setDialogState) {
@@ -84,12 +87,15 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
 
           void checkAndAutofill(String handle) {
             final query = handle.trim().toLowerCase();
-            final normalized = query.startsWith('@') ? query.substring(1) : query;
+            final normalized =
+                query.startsWith('@') ? query.substring(1) : query;
             if (normalized.isEmpty) return;
 
             final existing = provider.streamers.cast<dynamic>().firstWhere(
               (s) {
-                final sHandle = (s.youtubeHandle as String).replaceAll('@', '').toLowerCase();
+                final sHandle = (s.youtubeHandle as String)
+                    .replaceAll('@', '')
+                    .toLowerCase();
                 final sId = (s.id as String).toLowerCase();
                 return sHandle == normalized || sId == normalized;
               },
@@ -100,7 +106,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
               setDialogState(() {
                 nameCtrl.text = existing.nameEn ?? existing.nameAr ?? '';
                 bioCtrl.text = existing.bioEn ?? existing.bioAr ?? '';
-                youtubeCtrl.text = 'https://www.youtube.com/${existing.youtubeHandle}';
+                youtubeCtrl.text =
+                    'https://www.youtube.com/${existing.youtubeHandle}';
                 selectedAvatar = existing.avatarUrl ?? selectedAvatar;
                 uploadedAvatarBytes = null;
                 wasAutofilled = true;
@@ -108,20 +115,21 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
             }
           }
 
-          return AlertDialog(
+          return CaAlertDialog(
             backgroundColor: AppTheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              side: const BorderSide(color: AppTheme.border),
+              side: const BorderSide(color: Canopy.hairline),
             ),
             title: Row(
               children: [
-                const Icon(Icons.person_add_alt_1_rounded, color: AppTheme.danger, size: 24),
+                const Icon(Icons.person_add_alt_1_rounded,
+                    color: AppTheme.primary, size: 24),
                 const SizedBox(width: 10),
                 Text(
                   'wizard_steps.step3_5_dialog_title'.tr(),
                   style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                    color: Canopy.ink,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -145,23 +153,26 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                               children: [
                                 CircleAvatar(
                                   radius: 36,
-                                  backgroundColor: AppTheme.surfaceAlt,
+                                  backgroundColor: Canopy.mint,
                                   backgroundImage: uploadedAvatarBytes != null
                                       ? MemoryImage(uploadedAvatarBytes!)
                                       : (selectedAvatar.startsWith('assets/')
                                           ? AssetImage(selectedAvatar)
-                                          : NetworkImage(selectedAvatar) as ImageProvider),
+                                          : NetworkImage(selectedAvatar)
+                                              as ImageProvider),
                                 ),
                                 PositionedDirectional(
                                   bottom: 0,
                                   end: 0,
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
-                                    decoration: const BoxDecoration(
-                                      color: AppTheme.danger,
-                                      shape: BoxShape.circle,
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.primary,
+                                      borderRadius: BorderRadius.circular(
+                                          AppTheme.radiusSm),
                                     ),
-                                    child: const Icon(Icons.camera_alt_rounded, size: 14, color: AppTheme.onMedia),
+                                    child: const Icon(Icons.camera_alt_rounded,
+                                        size: 14, color: AppTheme.onMedia),
                                   ),
                                 ),
                               ],
@@ -173,8 +184,10 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                               foregroundColor: AppTheme.primary,
                               padding: EdgeInsets.zero,
                             ),
-                            icon: const Icon(Icons.upload_file_rounded, size: 14),
-                            label: Text('wizard_steps.step2_upload_btn'.tr(), style: const TextStyle(fontSize: 11)),
+                            icon:
+                                const Icon(Icons.upload_file_rounded, size: 14),
+                            label: Text('wizard_steps.step2_upload_btn'.tr(),
+                                style: const TextStyle(fontSize: 12)),
                             onPressed: pickCustomSpeakerAvatar,
                           ),
                           const SizedBox(height: 4),
@@ -182,7 +195,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                           Wrap(
                             spacing: 6,
                             children: _speakerAvatarPresets.map((preset) {
-                              final isSelected = selectedAvatar == preset && uploadedAvatarBytes == null;
+                              final isSelected = selectedAvatar == preset &&
+                                  uploadedAvatarBytes == null;
                               return GestureDetector(
                                 onTap: () {
                                   setDialogState(() {
@@ -195,7 +209,9 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: isSelected ? AppTheme.danger : Colors.transparent,
+                                      color: isSelected
+                                          ? AppTheme.primary
+                                          : Colors.transparent,
                                       width: 2,
                                     ),
                                   ),
@@ -213,113 +229,81 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                     const SizedBox(height: AppTheme.spaceMd),
 
                     // Handle Field
-                    TextField(
+                    CaInput(
                       controller: handleCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'wizard_steps.step1_handle_label'.tr(),
-                        hintText: '@amir_alhatemi or @handle',
-                        prefixIcon: const Icon(Icons.alternate_email_rounded, color: AppTheme.danger, size: 18),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.search_rounded, color: AppTheme.primary),
-                          tooltip: 'Auto-fill from system',
-                          onPressed: () => checkAndAutofill(handleCtrl.text),
-                        ),
-                        filled: true,
-                        fillColor: AppTheme.surfaceAlt,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                      ),
                       onChanged: (val) => checkAndAutofill(val),
+                      label: 'wizard_steps.step1_handle_label'.tr(),
+                      hint: '@amir_alhatemi or @handle',
+                      trailing: IconButton(
+                        icon: const Icon(Icons.search_rounded,
+                            color: AppTheme.primary),
+                        tooltip: 'Auto-fill from system',
+                        onPressed: () => checkAndAutofill(handleCtrl.text),
+                      ),
                     ),
                     if (wasAutofilled) ...[
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.check_circle_rounded, color: AppTheme.success, size: 14),
+                          const Icon(Icons.check_circle_rounded,
+                              color: Canopy.leaf, size: 14),
                           const SizedBox(width: 4),
-                          Text('design_ui.auto_filled_from_registered_streamer_profile'.tr(),
-                              style: const TextStyle(color: AppTheme.success, fontSize: 11, fontWeight: FontWeight.w600)),
+                          Text(
+                              'design_ui.auto_filled_from_registered_streamer_profile'
+                                  .tr(),
+                              style: const TextStyle(
+                                  color: Canopy.leaf,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600)),
                         ],
                       ),
                     ],
                     const SizedBox(height: AppTheme.spaceSm),
 
                     // Full Name
-                    TextField(
+                    CaInput(
                       controller: nameCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'wizard_steps.step1_name_label'.tr(),
-                        prefixIcon: const Icon(Icons.person_outline_rounded, color: AppTheme.danger, size: 18),
-                        filled: true,
-                        fillColor: AppTheme.surfaceAlt,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                      ),
+                      label: 'wizard_steps.step1_name_label'.tr(),
                     ),
                     const SizedBox(height: AppTheme.spaceSm),
 
                     // Role Title
-                    TextField(
+                    CaInput(
                       controller: roleCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'affiliation_modal.proposed_role'.tr(),
-                        hintText: 'e.g. Lead IELTS Instructor',
-                        prefixIcon: const Icon(Icons.badge_outlined, color: AppTheme.danger, size: 18),
-                        filled: true,
-                        fillColor: AppTheme.surfaceAlt,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                      ),
+                      label: 'affiliation_modal.proposed_role'.tr(),
+                      hint: 'e.g. Lead IELTS Instructor',
                     ),
                     const SizedBox(height: AppTheme.spaceSm),
 
                     // YouTube
-                    TextField(
+                    CaInput(
                       controller: youtubeCtrl,
-                      style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'wizard_steps.step3_youtube_label'.tr(),
-                        hintText: 'https://www.youtube.com/@handle',
-                        prefixIcon: const Icon(Icons.video_collection_outlined, color: AppTheme.danger, size: 18),
-                        filled: true,
-                        fillColor: AppTheme.surfaceAlt,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                      ),
+                      label: 'wizard_steps.step3_youtube_label'.tr(),
+                      hint: 'https://www.youtube.com/@handle',
                     ),
                     const SizedBox(height: AppTheme.spaceSm),
 
                     // Bio
-                    TextField(
+                    CaInput(
                       controller: bioCtrl,
                       maxLines: 2,
-                      style: const TextStyle(color: AppTheme.textPrimary),
-                      decoration: InputDecoration(
-                        labelText: 'wizard_steps.step1_bio_label'.tr(),
-                        hintText: 'Short academic summary...',
-                        prefixIcon: const Icon(Icons.description_outlined, color: AppTheme.danger, size: 18),
-                        filled: true,
-                        fillColor: AppTheme.surfaceAlt,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                      ),
+                      label: 'wizard_steps.step1_bio_label'.tr(),
+                      hint: 'Short academic summary...',
                     ),
                   ],
                 ),
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.of(ctx).pop(),
-                child: Text('common.cancel'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
-              ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger,
-                  foregroundColor: AppTheme.onMedia,
-                ),
-                onPressed: () {
-                  if (nameCtrl.text.trim().isEmpty || handleCtrl.text.trim().isEmpty) {
+              CaButton(label: 'common.cancel'.tr(), variant: CaButtonVariant.text, onPressed: () => Navigator.of(ctx).pop()),
+              CaButton(label: 'wizard_steps.step3_5_dialog_add'.tr(), variant: CaButtonVariant.primary, onPressed: () {
+                  if (nameCtrl.text.trim().isEmpty ||
+                      handleCtrl.text.trim().isEmpty) {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('design_ui.please_enter_at_least_a_name_and_handle'.tr())),
+                      SnackBar(
+                          content: Text(
+                              'design_ui.please_enter_at_least_a_name_and_handle'
+                                  .tr())),
                     );
                     return;
                   }
@@ -330,15 +314,15 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                       handle: handleCtrl.text.trim(),
                       bio: bioCtrl.text.trim(),
                       youtube: youtubeCtrl.text.trim(),
-                      role: roleCtrl.text.trim().isEmpty ? 'Instructor' : roleCtrl.text.trim(),
+                      role: roleCtrl.text.trim().isEmpty
+                          ? 'Instructor'
+                          : roleCtrl.text.trim(),
                       avatarUrl: selectedAvatar,
                       avatarBytes: uploadedAvatarBytes,
                     ),
                   );
                   Navigator.of(ctx).pop();
-                },
-                child: Text('wizard_steps.step3_5_dialog_add'.tr()),
-              ),
+                }),
             ],
           );
         },
@@ -353,9 +337,9 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'wizard_steps.step3_5_title'.tr(),
+            'wizard_steps.step3_5_title'.tr().split(':').last.trim(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -364,7 +348,7 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
           Text(
             'wizard_steps.step3_5_desc'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondary,
+              color: Canopy.slate,
               fontSize: 12,
               height: 1.4,
             ),
@@ -377,24 +361,28 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
             runSpacing: AppTheme.spaceSm,
             children: [
               Text(
-                'wizard_steps.step3_5_roster_count'.tr(args: ['${speakers.length}']),
+                'wizard_steps.step3_5_roster_count'
+                    .tr(args: ['${speakers.length}']),
                 style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                  color: Canopy.ink,
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.danger,
+                  backgroundColor: AppTheme.primary,
                   foregroundColor: AppTheme.onMedia,
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                 ),
                 icon: const Icon(Icons.add_rounded, size: 18),
-                label: Text('wizard_steps.step3_5_add_btn'.tr(), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                label: Text('wizard_steps.step3_5_add_btn'.tr(),
+                    style: const TextStyle(
+                        fontSize: 12, fontWeight: FontWeight.bold)),
                 onPressed: () => _showAddSpeakerDialog(context),
               ),
             ],
@@ -403,32 +391,39 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
 
           if (speakers.isEmpty)
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 36, horizontal: AppTheme.spaceLg),
+              padding: const EdgeInsets.symmetric(
+                  vertical: 36, horizontal: AppTheme.spaceLg),
               decoration: BoxDecoration(
                 color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.border, style: BorderStyle.solid),
+                border: Border.all(
+                    color: Canopy.hairline, style: BorderStyle.solid),
               ),
               alignment: Alignment.center,
               child: Column(
                 children: [
-                  const Icon(Icons.groups_outlined, color: AppTheme.textMuted, size: 48),
+                  const Icon(Icons.groups_outlined,
+                      color: Canopy.haze, size: 48),
                   const SizedBox(height: 10),
-                  Text('design_ui.no_speakers_added_yet'.tr(),
-                    style: const TextStyle(color: AppTheme.textPrimary, fontWeight: FontWeight.bold, fontSize: 14),
+                  Text(
+                    'design_ui.no_speakers_added_yet'.tr(),
+                    style: const TextStyle(
+                        color: Canopy.ink,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'design_ui.no_speakers_added_hint'.tr(),
                     style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12),
+                        color: Canopy.slate, fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 14),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.danger,
-                      side: const BorderSide(color: AppTheme.danger),
+                      foregroundColor: AppTheme.primary,
+                      side: const BorderSide(color: AppTheme.primary),
                     ),
                     icon: const Icon(Icons.add, size: 16),
                     label: Text('design_ui.add_first_streamer'.tr()),
@@ -450,13 +445,13 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    border: Border.all(color: AppTheme.border),
+                    border: Border.all(color: Canopy.hairline),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: AppTheme.surfaceAlt,
+                        backgroundColor: Canopy.mint,
                         backgroundImage: spk.avatarBytes != null
                             ? MemoryImage(spk.avatarBytes!)
                             : (spk.avatarUrl.startsWith('assets/')
@@ -471,7 +466,7 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                             Text(
                               spk.name,
                               style: const TextStyle(
-                                color: AppTheme.textPrimary,
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -481,14 +476,15 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                               '${spk.role} • ${spk.handle}',
                               style: const TextStyle(
                                 color: AppTheme.primary,
-                                fontSize: 11,
+                                fontSize: 12,
                               ),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.danger, size: 18),
+                        icon: const Icon(Icons.delete_outline_rounded,
+                            color: AppTheme.primary, size: 18),
                         tooltip: 'Remove speaker',
                         onPressed: () => onRemoveSpeaker(idx),
                       ),

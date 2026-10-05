@@ -1,3 +1,4 @@
+import 'package:streamer_app/core/widgets/ds/ca_button.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -68,7 +69,7 @@ MapPackController _unavailablePack() =>
     MapPackController(bundle: _NoPackBundle(), useWebStore: false);
 
 Widget _app(Widget home, AppProvider provider,
-        {String lang = 'en', double textScale = 1}) =>
+        {String lang = 'en', double textScale = 1, bool reduced = true}) =>
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ar')],
       path: 'assets/i18n',
@@ -84,8 +85,9 @@ Widget _app(Widget home, AppProvider provider,
             localizationsDelegates: context.localizationDelegates,
             theme: AppTheme.forLocale(context.locale),
             builder: (context, child) => MediaQuery(
-              data: MediaQuery.of(context)
-                  .copyWith(textScaler: TextScaler.linear(textScale)),
+              data: MediaQuery.of(context).copyWith(
+                  textScaler: TextScaler.linear(textScale),
+                  disableAnimations: reduced),
               child: child!,
             ),
             home: home,
@@ -191,15 +193,16 @@ void main() {
             child: SpatialMapScreen(packController: pack),
           ),
         ),
-        provider));
+        provider,
+        reduced: false));
     await tester.pumpAndSettle();
     // Select from the drawer while two profiles occupy the same coordinate.
-    tester.state<ScaffoldState>(find.byType(Scaffold).first).openEndDrawer();
+    await tester.tap(find.byTooltip('map.broadcasters_list'.tr()));
     await tester.pumpAndSettle();
     tester
         .widget<StreamerSlidingDrawer>(find.byType(StreamerSlidingDrawer))
         .onStreamerSelected(venue);
-    tester.state<ScaffoldState>(find.byType(Scaffold).first).closeEndDrawer();
+
     await tester.pump(const Duration(milliseconds: 900));
     await tester.pump();
     expect(find.byType(MarkerSummaryCard), findsOneWidget);
@@ -259,7 +262,7 @@ void main() {
         matching: find.byTooltip('common.close'.tr())));
     await tester.pump(const Duration(milliseconds: 500));
     expect(find.byType(MarkerSummaryCard), findsNothing);
-    tester.state<ScaffoldState>(find.byType(Scaffold).first).openEndDrawer();
+    await tester.tap(find.byTooltip('map.broadcasters_list'.tr()));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 500));
     final drawerProfile = find.descendant(
@@ -472,10 +475,21 @@ void main() {
       await tester.tap(find.byTooltip('Map details and credits'));
       await tester.pumpAndSettle();
       expect(find.text('Map'), findsWidgets);
-      expect(find.text('Venues'), findsOneWidget);
-      expect(find.text('Credits'), findsOneWidget);
-      expect(find.textContaining('Open Database License'), findsOneWidget);
       expect(find.text('Try again'), findsWidgets);
+      final detailsScroll = find
+          .descendant(
+              of: find.byType(DraggableScrollableSheet),
+              matching: find.byType(Scrollable))
+          .last;
+      for (final label in ['Venues', 'Credits']) {
+        await tester.scrollUntilVisible(find.text(label), 120,
+            scrollable: detailsScroll);
+        expect(find.text(label), findsOneWidget);
+      }
+      await tester.scrollUntilVisible(
+          find.textContaining('Open Database License'), 120,
+          scrollable: detailsScroll);
+      expect(find.textContaining('Open Database License'), findsOneWidget);
     });
 
     testWidgets('Arabic layout mirrors and keeps every control reachable',
@@ -573,8 +587,8 @@ void main() {
       return result;
     }
 
-    Finder useButton() =>
-        find.widgetWithText(ElevatedButton, 'Use This Location');
+    Finder useButton() => find.byWidgetPredicate(
+        (w) => w is CaButton && w.label == 'Use This Location');
 
     testWidgets(
         'a legacy point outside the map is shown and kept, never '
@@ -585,7 +599,7 @@ void main() {
       await openPicker(tester, const LatLng(24.7136, 46.6753));
       expect(find.textContaining('24.71360, 46.67530'), findsOneWidget);
       expect(find.textContaining('outside this map'), findsOneWidget);
-      expect(tester.widget<ElevatedButton>(useButton()).onPressed, isNull);
+      expect(tester.widget<CaButton>(useButton()).onPressed, isNull);
       // No invented neighbourhood or address text anywhere.
       expect(find.textContaining('KFUPM'), findsNothing);
       expect(find.textContaining('Al-Faisaliyah'), findsNothing);
@@ -600,7 +614,7 @@ void main() {
       await tester.tapAt(_mapPoint(tester));
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
       expect(find.text('No point chosen yet.'), findsOneWidget);
-      expect(tester.widget<ElevatedButton>(useButton()).onPressed, isNull);
+      expect(tester.widget<CaButton>(useButton()).onPressed, isNull);
       expect(
           find.text('The map must be showing to place a pin'), findsOneWidget);
     });
@@ -614,7 +628,7 @@ void main() {
       await tester.tap(find.text('Pin the centre mark'));
       await tester.pumpAndSettle(const Duration(milliseconds: 400));
       expect(find.textContaining('Latitude'), findsOneWidget);
-      expect(tester.widget<ElevatedButton>(useButton()).onPressed, isNotNull);
+      expect(tester.widget<CaButton>(useButton()).onPressed, isNotNull);
       final shown = tester.widget<Text>(find.textContaining('Latitude')).data!;
       final numbers = RegExp(r'\d+\.\d+')
           .allMatches(shown)
@@ -743,12 +757,13 @@ void main() {
             .tap(find.widgetWithText(ElevatedButton, 'Add Branch').first);
         await tester.pumpAndSettle();
         final fields = find.descendant(
-            of: find.byType(AlertDialog), matching: find.byType(TextField));
+            of: find.byWidgetPredicate((w) => w is AlertDialog),
+            matching: find.byType(TextField));
         await tester.enterText(fields.at(0), 'North campus');
         await tester.enterText(fields.at(1), 'Typed address');
         if (pin) {
           await tester.tap(find.descendant(
-              of: find.byType(AlertDialog),
+              of: find.byWidgetPredicate((w) => w is AlertDialog),
               matching: find.byIcon(Icons.pin_drop_rounded)));
           await tester.pumpAndSettle();
           await tester.tapAt(_mapPoint(tester));
@@ -757,13 +772,13 @@ void main() {
           await tester.pumpAndSettle();
           expect(
               find.descendant(
-                  of: find.byType(AlertDialog),
+                  of: find.byWidgetPredicate((w) => w is AlertDialog),
                   matching: find.textContaining('Pinned point:')),
               findsOneWidget);
         }
         await tester.tap(find.descendant(
-            of: find.byType(AlertDialog),
-            matching: find.widgetWithText(ElevatedButton, 'Add Branch')));
+            of: find.byWidgetPredicate((w) => w is AlertDialog),
+            matching: find.widgetWithText(CaButton, 'Add Branch')));
         await tester.pumpAndSettle();
       }
 

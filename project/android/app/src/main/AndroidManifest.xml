@@ -33,6 +33,9 @@
          is silently invisible on API 33+, which defeats the point of having
          one. Requested at runtime, best-effort, in PhoneBroadcastScreen. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <!-- Foreground only: asked when the user picks a location ("use my location"). -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application
         android:label="${appLabel}"
         android:name="${applicationName}"

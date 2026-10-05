@@ -95,11 +95,15 @@ class CaIconButton extends StatelessWidget {
       required this.label,
       this.onPressed,
       this.glass = false,
-      this.selected = false});
+      this.selected = false,
+      this.bare = false});
   final CaGlyph icon;
   final String label;
   final VoidCallback? onPressed;
   final bool glass, selected;
+
+  /// Icon only: no circle fill or border behind the glyph.
+  final bool bare;
   @override
   Widget build(BuildContext context) {
     final color = glass ? Canopy.paper : Canopy.brandGreen;
@@ -115,17 +119,22 @@ class CaIconButton extends StatelessWidget {
                 child: SizedBox.square(
                   dimension: CanopySize.target,
                   child: Material(
-                    color: glass
-                        ? Canopy.paper.withValues(alpha: CanopySize.glassAlpha)
-                        : selected
-                            ? Canopy.mint
-                            : Canopy.paper,
+                    color: bare
+                        ? Canopy.transparent
+                        : glass
+                            ? Canopy.paper
+                                .withValues(alpha: CanopySize.glassAlpha)
+                            : selected
+                                ? Canopy.mint
+                                : Canopy.paper,
                     shape: CircleBorder(
-                        side: BorderSide(
-                            color: glass
-                                ? Canopy.paper.withValues(
-                                    alpha: CanopySize.glassBorderAlpha)
-                                : Canopy.hairline)),
+                        side: bare
+                            ? BorderSide.none
+                            : BorderSide(
+                                color: glass
+                                    ? Canopy.paper.withValues(
+                                        alpha: CanopySize.glassBorderAlpha)
+                                    : Canopy.hairline)),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                         onTap: onPressed,

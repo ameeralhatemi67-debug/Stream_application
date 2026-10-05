@@ -1,8 +1,11 @@
+import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:provider/provider.dart';
 
@@ -13,6 +16,8 @@ import '../../../map/presentation/map_viewport_policy.dart';
 import '../../../map/presentation/widgets/map_status_details.dart';
 import '../../../map/presentation/widgets/tricity_basemap_layer.dart';
 import '../../../map/services/map_pack_controller.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// The exact point the user placed. Nothing else is inferred: no
 /// neighbourhood, address or city is guessed from coordinates. The venue
@@ -53,15 +58,10 @@ class LocationPickerModal extends StatefulWidget {
     LatLng? initialLocation,
     String? initialCity,
   }) {
-    return showModalBottomSheet<LocationPickerResult>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (ctx) => LocationPickerModal(
+    return showCaSheet<LocationPickerResult>(context, title: '', framed: false, useRootNavigator: false, body: Builder(builder: (ctx) => LocationPickerModal(
         initialLocation: initialLocation,
         initialCityId: initialCity,
-      ),
-    );
+      )));
   }
 
   @override
@@ -85,6 +85,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
   LatLng? _savedOutside;
   Size _canvas = Size.zero;
   bool _ready = false;
+  bool _locating = false;
 
   @override
   void initState() {
@@ -138,6 +139,61 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
     _onTap(_mapController.camera.center);
   }
 
+  void _notice(String key, {SnackBarAction? action}) =>
+      ScaffoldMessenger.maybeOf(context)?.showSnackBar(SnackBar(
+        behavior: SnackBarBehavior.floating,
+        content: Text(key.tr()),
+        action: action,
+      ));
+
+  /// Uses the device location only while choosing a point, and only after
+  /// the user asks for it: permission is requested here, never at start-up.
+  Future<void> _useMyLocation() async {
+    if (_locating) return;
+    setState(() => _locating = true);
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        _notice('map.location_service_off');
+        return;
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.deniedForever) {
+        _notice('map.location_permission_denied',
+            action: SnackBarAction(
+                label: 'map.open_settings'.tr(),
+                onPressed: () => Geolocator.openAppSettings()));
+        return;
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.unableToDetermine) {
+        _notice('map.location_permission_denied');
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 15)));
+      if (!mounted) return;
+      final point = LatLng(position.latitude, position.longitude);
+      if (!isInTricityMapDomain(point.latitude, point.longitude)) {
+        _notice('map.location_outside');
+        return;
+      }
+      setState(() => _picked = point);
+      if (_ready) {
+        final target = _policy.focusTarget(point, 16, _canvas, _padding);
+        if (target != null) _mapController.move(target.center, target.zoom);
+      }
+    } catch (_) {
+      if (mounted) _notice('map.location_unavailable');
+    } finally {
+      if (mounted) setState(() => _locating = false);
+    }
+  }
+
   void _onTap(LatLng point) {
     // Without the map there is nothing to aim at: no blind points.
     if (!_pack.isReady) return;
@@ -159,7 +215,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
     return Container(
       height: size.height * 0.85,
       decoration: const BoxDecoration(
-        color: AppTheme.bg,
+        color: Canopy.dawn,
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
@@ -188,7 +244,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                       Text(
                         'design_ui.pinpoint_broadcast_location'.tr(),
                         style: const TextStyle(
-                          color: AppTheme.textPrimary,
+                          color: Canopy.ink,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -197,7 +253,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                       Text(
                         'map.picker_hint'.tr(),
                         style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 12),
+                            color: Canopy.slate, fontSize: 12),
                       ),
                     ],
                   ),
@@ -205,13 +261,13 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                 IconButton(
                   tooltip: 'design_ui.cancel'.tr(),
                   icon: const Icon(Icons.close_rounded,
-                      color: AppTheme.textSecondary),
+                      color: Canopy.slate),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: AppTheme.border),
+          const Divider(height: 1, color: Canopy.hairline),
 
           // Interactive Map Area
           Expanded(
@@ -222,7 +278,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
               final initial = _initialTarget(canvas);
               return Stack(
                 children: [
-                  Positioned.fill(child: Container(color: AppTheme.surfaceAlt)),
+                  Positioned.fill(child: Container(color: Canopy.mint)),
                   Center(
                     child: SizedBox(
                       width: canvas.width,
@@ -234,7 +290,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                           initialZoom: initial.zoom,
                           minZoom: _policy.minZoom(canvas, _padding),
                           maxZoom: kMapMaxZoom,
-                          backgroundColor: AppTheme.bg,
+                          backgroundColor: Canopy.dawn,
                           cameraConstraint: CameraConstraint.contain(
                             bounds: kTricityNavigationExtent.bounds,
                           ),
@@ -263,7 +319,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                                     child: const Icon(
                                       Icons.location_pin,
                                       size: 48,
-                                      color: AppTheme.danger,
+                                      color: AppTheme.primary,
                                     ),
                                   ),
                                 ),
@@ -279,7 +335,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     child: Center(
                       child: Icon(Icons.gps_not_fixed_rounded,
                           size: 32,
-                          color: AppTheme.textPrimary.withValues(alpha: 0.7)),
+                          color: Canopy.ink.withValues(alpha: 0.7)),
                     ),
                   ),
                   ListenableBuilder(
@@ -342,7 +398,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
             padding: const EdgeInsets.all(AppTheme.spaceLg),
             decoration: const BoxDecoration(
               color: AppTheme.surface,
-              border: Border(top: BorderSide(color: AppTheme.border)),
+              border: Border(top: BorderSide(color: Canopy.hairline)),
             ),
             child: SafeArea(
               top: false,
@@ -362,7 +418,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                               'coords': formatPickerCoordinates(_savedOutside!)
                             }),
                             style: const TextStyle(
-                                color: AppTheme.textPrimary, fontSize: 13),
+                                color: Canopy.ink, fontSize: 13),
                           ),
                         ),
                       ],
@@ -386,7 +442,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                                     'lng': picked.longitude.toStringAsFixed(5),
                                   }),
                             style: const TextStyle(
-                              color: AppTheme.textPrimary,
+                              color: Canopy.ink,
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -399,45 +455,49 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                   Text(
                     'map.picker_address_note'.tr(),
                     style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12),
+                        color: Canopy.slate, fontSize: 12),
                   ),
                   const SizedBox(height: AppTheme.spaceSm),
                   ListenableBuilder(
                     listenable: _pack,
-                    builder: (context, _) => Align(
-                      alignment: AlignmentDirectional.centerStart,
-                      child: TextButton.icon(
-                        icon: const Icon(Icons.gps_not_fixed_rounded, size: 18),
-                        label: Text(_pack.isReady
-                            ? 'map.picker_use_centre'.tr()
-                            : 'map.picker_map_needed'.tr()),
-                        style: TextButton.styleFrom(
-                            minimumSize: const Size(48, 48)),
-                        onPressed: _pack.isReady ? _pinCentre : null,
-                      ),
+                    builder: (context, _) => Wrap(
+                      spacing: AppTheme.spaceSm,
+                      children: [
+                        TextButton.icon(
+                          key: const Key('picker-use-my-location'),
+                          icon: _locating
+                              ? const SizedBox.square(
+                                  dimension: 18,
+                                  child: HadayahLoadingIndicator(
+                                      strokeWidth: 2))
+                              : const Icon(Icons.my_location_rounded,
+                                  size: 18),
+                          label: Text('map.picker_use_my_location'.tr()),
+                          style: TextButton.styleFrom(
+                              minimumSize: const Size(48, 48)),
+                          onPressed: _locating ? null : _useMyLocation,
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.gps_not_fixed_rounded,
+                              size: 18),
+                          label: Text(_pack.isReady
+                              ? 'map.picker_use_centre'.tr()
+                              : 'map.picker_map_needed'.tr()),
+                          style: TextButton.styleFrom(
+                              minimumSize: const Size(48, 48)),
+                          onPressed: _pack.isReady ? _pinCentre : null,
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: AppTheme.spaceSm),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primary,
-                      foregroundColor: AppTheme.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      ),
-                    ),
-                    icon: const Icon(Icons.check_circle_rounded, size: 18),
-                    label: Text(
-                      'design_ui.use_this_location'.tr(),
-                      style: const TextStyle(
-                          fontSize: 14, fontWeight: FontWeight.bold),
-                    ),
-                    onPressed: picked == null
-                        ? null
-                        : () => Navigator.of(context)
-                            .pop(LocationPickerResult(coordinates: picked)),
-                  ),
+                  CaButton(
+                      label: 'design_ui.use_this_location'.tr(),
+                      icon: CaGlyph.check,
+                      onPressed: picked == null
+                          ? null
+                          : () => Navigator.of(context)
+                              .pop(LocationPickerResult(coordinates: picked))),
                 ],
               ),
             ),
@@ -450,10 +510,12 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
   Widget _zoomButton(IconData icon, String tooltip, VoidCallback onTap) {
     return Material(
       color: AppTheme.surface,
-      shape: const CircleBorder(side: BorderSide(color: AppTheme.border)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+          side: const BorderSide(color: Canopy.hairline)),
       child: IconButton(
         tooltip: tooltip,
-        icon: Icon(icon, color: AppTheme.textPrimary),
+        icon: Icon(icon, color: Canopy.ink),
         constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
         onPressed: onTap,
       ),

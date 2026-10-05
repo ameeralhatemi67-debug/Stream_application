@@ -1,9 +1,12 @@
+import '../../../../core/widgets/ds/ca_fields.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../admin/models/broadcaster_application_model.dart';
 import '../widgets/location_picker_modal.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
 
 class OrgBranchVenue {
   String branchName;
@@ -89,7 +92,8 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
     // Check for invalid letters / characters
     final hasInvalidChars = RegExp(r'[^0-9+]').hasMatch(cleaned);
     if (hasInvalidChars) {
-      setState(() => _phoneValidationError = 'Invalid characters. Numbers only.');
+      setState(
+          () => _phoneValidationError = 'Invalid characters. Numbers only.');
       return;
     }
 
@@ -105,13 +109,17 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
       setState(() => _phoneValidationError = null);
     } else {
       if (cleaned.startsWith('05') && cleaned.length < 10) {
-        setState(() => _phoneValidationError = 'Too short: 05X XXX XXXX (10 digits required)');
+        setState(() => _phoneValidationError =
+            'Too short: 05X XXX XXXX (10 digits required)');
       } else if (cleaned.startsWith('+9665') && cleaned.length < 13) {
-        setState(() => _phoneValidationError = 'Too short: +966 5X XXX XXXX (13 chars required)');
+        setState(() => _phoneValidationError =
+            'Too short: +966 5X XXX XXXX (13 chars required)');
       } else if (cleaned.startsWith('9665') && cleaned.length < 12) {
-        setState(() => _phoneValidationError = 'Too short: 966 5X XXX XXXX (12 digits required)');
+        setState(() => _phoneValidationError =
+            'Too short: 966 5X XXX XXXX (12 digits required)');
       } else {
-        setState(() => _phoneValidationError = 'Must be a valid Saudi number (e.g. 05X XXX XXXX or +966 5X XXX XXXX)');
+        setState(() => _phoneValidationError =
+            'Must be a valid Saudi number (e.g. 05X XXX XXXX or +966 5X XXX XXXX)');
       }
     }
   }
@@ -135,16 +143,21 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
       padding: const EdgeInsets.only(top: 6),
       child: Row(
         children: [
-          Icon(point == null ? Icons.location_off_outlined : Icons.pin_drop_outlined,
-              color: AppTheme.primary, size: 14),
+          Icon(
+              point == null
+                  ? Icons.location_off_outlined
+                  : Icons.pin_drop_outlined,
+              color: AppTheme.primary,
+              size: 14),
           const SizedBox(width: 4),
           Expanded(
             child: Text(
               point == null
                   ? 'map.picker_no_point'.tr()
-                  : 'map.picker_pinned_point'
-                      .tr(namedArgs: {'coords': formatPickerCoordinates(point)}),
-              style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                  : 'map.picker_pinned_point'.tr(
+                      namedArgs: {'coords': formatPickerCoordinates(point)}),
+              style:
+                  const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
           ),
         ],
@@ -158,14 +171,16 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
     String branchCity = widget.selectedCity;
     LatLng? branchCoord;
 
-    showDialog(
+    showCaDialog(
       context: context,
       builder: (ctx) => StatefulBuilder(
-        builder: (dialogCtx, setDialogState) => AlertDialog(
+        builder: (dialogCtx, setDialogState) => CaAlertDialog(
           backgroundColor: AppTheme.surface,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
           title: Text('design_ui.add_additional_campus_branch'.tr(),
-              style: const TextStyle(color: AppTheme.textPrimary, fontSize: 16)),
+              style:
+                  const TextStyle(color: Canopy.ink, fontSize: 16)),
           content: SizedBox(
             width: 440,
             child: SingleChildScrollView(
@@ -173,38 +188,27 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  TextField(
+                  CaInput(
                     controller: branchNameCtrl,
-                    style: const TextStyle(color: AppTheme.textPrimary),
-                    decoration: InputDecoration(
-                      labelText: 'Branch / Campus Name *',
-                      hintText: 'e.g. Dammam North Campus',
-                      filled: true,
-                      fillColor: AppTheme.surfaceAlt,
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                    ),
+                    label: 'Branch / Campus Name *',
+                    hint: 'e.g. Dammam North Campus',
                   ),
                   const SizedBox(height: AppTheme.spaceSm),
                   Row(
                     children: [
                       Expanded(
-                        child: TextField(
+                        child: CaInput(
                           controller: addressCtrl,
-                          style: const TextStyle(color: AppTheme.textPrimary),
-                          decoration: InputDecoration(
-                            labelText: 'Branch Address / Description *',
-                            hintText: 'e.g. King Fahd Road, Dammam',
-                            filled: true,
-                            fillColor: AppTheme.surfaceAlt,
-                            border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-                          ),
+                          label: 'Branch Address / Description *',
+                          hint: 'e.g. King Fahd Road, Dammam',
                         ),
                       ),
                       const SizedBox(width: 8),
                       IconButton(
                         style: IconButton.styleFrom(
-                          backgroundColor: AppTheme.danger.withValues(alpha: 0.15),
-                          foregroundColor: AppTheme.danger,
+                          backgroundColor:
+                              AppTheme.primary.withValues(alpha: 0.15),
+                          foregroundColor: AppTheme.primary,
                         ),
                         icon: const Icon(Icons.pin_drop_rounded),
                         tooltip: 'Pinpoint Branch on Map',
@@ -229,16 +233,15 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
             ),
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: Text('design_ui.cancel'.tr(), style: const TextStyle(color: AppTheme.textSecondary)),
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: AppTheme.danger, foregroundColor: AppTheme.onMedia),
-              onPressed: () {
-                if (branchNameCtrl.text.trim().isEmpty || addressCtrl.text.trim().isEmpty) {
+            CaButton(label: 'design_ui.cancel'.tr(), variant: CaButtonVariant.text, onPressed: () => Navigator.of(ctx).pop()),
+            CaButton(label: 'design_ui.add_branch'.tr(), variant: CaButtonVariant.primary, onPressed: () {
+                if (branchNameCtrl.text.trim().isEmpty ||
+                    addressCtrl.text.trim().isEmpty) {
                   ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('design_ui.please_enter_a_branch_name_and_address'.tr())),
+                    SnackBar(
+                        content: Text(
+                            'design_ui.please_enter_a_branch_name_and_address'
+                                .tr())),
                   );
                   return;
                 }
@@ -251,9 +254,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                   ),
                 );
                 Navigator.of(ctx).pop();
-              },
-              child: Text('design_ui.add_branch'.tr()),
-            ),
+              }),
           ],
         ),
       ),
@@ -261,7 +262,8 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
   }
 
   Widget _buildMainCampusSection() {
-    final cityName = ApplyStep4Location.cityOptions[widget.selectedCity] ?? widget.selectedCity;
+    final cityName = ApplyStep4Location.cityOptions[widget.selectedCity] ??
+        widget.selectedCity;
     final addressText = widget.venueController.text.trim();
 
     if (widget.isOrganization) {
@@ -271,7 +273,8 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
         decoration: BoxDecoration(
           color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: AppTheme.danger.withValues(alpha: 0.4), width: 1.2),
+          border: Border.all(
+              color: AppTheme.primary.withValues(alpha: 0.4), width: 1.2),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -283,21 +286,23 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                 Wrap(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppTheme.danger.withValues(alpha: 0.15),
+                        color: AppTheme.primary.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Wrap(
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                          const Icon(Icons.star_rounded, size: 13, color: AppTheme.danger),
+                          const Icon(Icons.star_rounded,
+                              size: 13, color: AppTheme.primary),
                           const SizedBox(width: 4),
                           Text(
                             'wizard_steps.step4_hq_badge'.tr(),
                             style: const TextStyle(
-                              color: AppTheme.danger,
-                              fontSize: 11,
+                              color: AppTheme.primary,
+                              fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -312,36 +317,32 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                     padding: EdgeInsets.zero,
                   ),
                   icon: const Icon(Icons.pin_drop_rounded, size: 15),
-                  label: Text('wizard_steps.step4_pinpoint_btn'.tr(), style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
+                  label: Text('wizard_steps.step4_pinpoint_btn'.tr(),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold)),
                   onPressed: () => _openMapPinpoint(),
                 ),
               ],
             ),
             const SizedBox(height: 10),
-            TextField(
+            CaInput(
               controller: widget.venueController,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'wizard_steps.step4_venue_org_label'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                hintText: 'e.g. Al-Rakah HQ Campus, Innovation Auditorium',
-                prefixIcon: const Icon(Icons.apartment_rounded, color: AppTheme.danger),
-                filled: true,
-                fillColor: AppTheme.surfaceAlt,
-                border: OutlineInputBorder(borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
-              ),
+              label: 'wizard_steps.step4_venue_org_label'.tr(),
+              hint: 'e.g. Al-Rakah HQ Campus, Innovation Auditorium',
             ),
             _pinnedPointLine(widget.selectedCoordinates),
             if (addressText.isNotEmpty) ...[
               const SizedBox(height: 6),
               Row(
                 children: [
-                  const Icon(Icons.location_on_outlined, color: AppTheme.primary, size: 14),
+                  const Icon(Icons.location_on_outlined,
+                      color: AppTheme.primary, size: 14),
                   const SizedBox(width: 4),
                   Expanded(
                     child: Text(
                       '$cityName • $addressText',
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                      style: const TextStyle(
+                          color: Canopy.slate, fontSize: 12),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -357,48 +358,33 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: TextField(
-              controller: widget.venueController,
-              style: const TextStyle(color: AppTheme.textPrimary),
-              decoration: InputDecoration(
-                labelText: 'wizard_steps.step4_venue_ind_label'.tr(),
-                labelStyle: const TextStyle(color: AppTheme.textSecondary),
-                hintText: 'e.g. Al-Rakah HQ Campus, Innovation Auditorium',
-                hintStyle: const TextStyle(color: AppTheme.textMuted),
-                prefixIcon: const Icon(Icons.location_on_outlined, color: AppTheme.danger),
-                filled: true,
-                fillColor: AppTheme.surface,
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.border),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  borderSide: const BorderSide(color: AppTheme.danger, width: 1.5),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: CaInput(
+                  controller: widget.venueController,
+                  label: 'wizard_steps.step4_venue_ind_label'.tr(),
+                  hint: 'e.g. Al-Rakah HQ Campus, Innovation Auditorium',
                 ),
               ),
-            ),
+              const SizedBox(width: 8),
+              Container(
+                height: 56,
+                decoration: BoxDecoration(
+                  color: AppTheme.primary.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
+                  border: Border.all(color: AppTheme.primary, width: 1.2),
+                ),
+                child: IconButton(
+                  icon: const Icon(Icons.pin_drop_rounded,
+                      color: AppTheme.primary),
+                  tooltip: 'wizard_steps.step4_pinpoint_btn'.tr(),
+                  onPressed: () => _openMapPinpoint(),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(width: 8),
-          Container(
-            height: 56,
-            decoration: BoxDecoration(
-              color: AppTheme.danger.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.danger, width: 1.2),
-            ),
-            child: IconButton(
-              icon: const Icon(Icons.pin_drop_rounded, color: AppTheme.danger),
-              tooltip: 'wizard_steps.step4_pinpoint_btn'.tr(),
-              onPressed: () => _openMapPinpoint(),
-            ),
-          ),
-        ],
-      ),
           _pinnedPointLine(widget.selectedCoordinates),
         ],
       );
@@ -412,9 +398,11 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            widget.isOrganization ? 'wizard_steps.step4_title_org'.tr() : 'wizard_steps.step4_title_ind'.tr(),
+            (widget.isOrganization
+                ? 'wizard_steps.step4_title_org'.tr()
+                : 'wizard_steps.step4_title_ind'.tr()).split(':').last.trim(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -423,7 +411,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           Text(
             'wizard_steps.step4_desc'.tr(),
             style: const TextStyle(
-              color: AppTheme.textSecondary,
+              color: Canopy.slate,
               fontSize: 12,
               height: 1.4,
             ),
@@ -434,7 +422,7 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           Text(
             'map.select_city'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -445,16 +433,18 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
             decoration: BoxDecoration(
               color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: AppTheme.border),
+              border: Border.all(color: Canopy.hairline),
             ),
             child: DropdownButtonHideUnderline(
               child: DropdownButton<String>(
-                value: ApplyStep4Location.cityOptions.containsKey(widget.selectedCity)
-                    ? widget.selectedCity : null,
+                value: ApplyStep4Location.cityOptions
+                        .containsKey(widget.selectedCity)
+                    ? widget.selectedCity
+                    : null,
                 hint: Text('settings.city_label'.tr()),
                 isExpanded: true,
-                dropdownColor: AppTheme.surfaceAlt,
-                style: const TextStyle(color: AppTheme.textPrimary),
+                dropdownColor: Canopy.mint,
+                style: const TextStyle(color: Canopy.ink),
                 items: ApplyStep4Location.cityOptions.entries.map((entry) {
                   return DropdownMenuItem<String>(
                     value: entry.key,
@@ -480,9 +470,10 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
               runSpacing: AppTheme.spaceSm,
               children: [
                 Text(
-                  'design_copy.branches_count'.tr(namedArgs: {'count': '${widget.orgBranches.length}'}),
+                  'design_copy.branches_count'
+                      .tr(namedArgs: {'count': '${widget.orgBranches.length}'}),
                   style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                    color: Canopy.ink,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),
@@ -491,11 +482,13 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.surface,
                     foregroundColor: AppTheme.primary,
-                    side: const BorderSide(color: AppTheme.border),
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    side: const BorderSide(color: Canopy.hairline),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   ),
                   icon: const Icon(Icons.add_location_alt_outlined, size: 16),
-                  label: Text('design_ui.add_branch'.tr(), style: const TextStyle(fontSize: 11)),
+                  label: Text('design_ui.add_branch'.tr(),
+                      style: const TextStyle(fontSize: 12)),
                   onPressed: _showAddBranchDialog,
                 ),
               ],
@@ -514,11 +507,12 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                     decoration: BoxDecoration(
                       color: AppTheme.surface,
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                      border: Border.all(color: AppTheme.border),
+                      border: Border.all(color: Canopy.hairline),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.apartment_rounded, color: AppTheme.danger, size: 20),
+                        const Icon(Icons.apartment_rounded,
+                            color: AppTheme.primary, size: 20),
                         const SizedBox(width: 10),
                         Expanded(
                           child: Column(
@@ -527,20 +521,23 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
                               Text(
                                 br.branchName,
                                 style: const TextStyle(
-                                  color: AppTheme.textPrimary,
+                                  color: Canopy.ink,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 12,
                                 ),
                               ),
                               Text(
                                 br.address,
-                                style: const TextStyle(color: AppTheme.textSecondary, fontSize: 11),
+                                style: const TextStyle(
+                                    color: Canopy.slate,
+                                    fontSize: 12),
                               ),
                             ],
                           ),
                         ),
                         IconButton(
-                          icon: const Icon(Icons.delete_outline_rounded, color: AppTheme.danger, size: 18),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: Canopy.liveCrimson, size: 18),
                           onPressed: () => widget.onRemoveBranch(idx),
                         ),
                       ],
@@ -552,59 +549,41 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
           ],
 
           //  Safe Saudi Phone Number Placeholder (+966 / 05) with Validation
-          TextField(
+          CaInput(
             controller: widget.phoneController,
             keyboardType: TextInputType.phone,
             onChanged: _validatePhone,
-            style: const TextStyle(color: AppTheme.textPrimary),
-            decoration: InputDecoration(
-              labelText: 'Phone / WhatsApp Number (Saudi format) *',
-              labelStyle: const TextStyle(color: AppTheme.textSecondary),
-              hintText: '05X XXX XXXX or +966 5X XXX XXXX',
-              hintStyle: const TextStyle(color: AppTheme.textMuted),
-              prefixIcon: const Icon(Icons.phone_outlined, color: AppTheme.danger),
-              suffixIcon: widget.phoneController.text.isNotEmpty
-                  ? (_phoneValidationError == null
-                      ? const Icon(Icons.check_circle_rounded, color: AppTheme.success)
-                      : const Icon(Icons.error_outline_rounded, color: AppTheme.danger))
-                  : null,
-              filled: true,
-              fillColor: AppTheme.surface,
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: BorderSide(
-                  color: widget.phoneController.text.isNotEmpty
-                      ? (_phoneValidationError == null ? AppTheme.success.withValues(alpha: 0.5) : AppTheme.danger)
-                      : AppTheme.border,
-                ),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                borderSide: BorderSide(
-                  color: _phoneValidationError == null ? AppTheme.success : AppTheme.danger,
-                  width: 1.5,
-                ),
-              ),
-            ),
+            label: 'Phone / WhatsApp Number (Saudi format) *',
+            hint: '05X XXX XXXX or +966 5X XXX XXXX',
+            trailing: widget.phoneController.text.isNotEmpty
+                ? (_phoneValidationError == null
+                    ? const Icon(Icons.check_circle_rounded,
+                        color: Canopy.leaf)
+                    : const Icon(Icons.error_outline_rounded,
+                        color: Canopy.liveCrimson))
+                : null,
           ),
           if (_phoneValidationError != null) ...[
             const SizedBox(height: 4),
             Text(
               _phoneValidationError!,
-              style: const TextStyle(color: AppTheme.danger, fontSize: 11),
+              style: const TextStyle(color: Canopy.liveCrimson, fontSize: 12),
             ),
           ] else ...[
             const SizedBox(height: 4),
-            Text('design_ui.accepts_05xxxxxxxx_9665xxxxxxxx_or_9665xxxxxxxx_without_spaces_e_'.tr(),
-              style: const TextStyle(color: AppTheme.textMuted, fontSize: 11),
+            Text(
+              'design_ui.accepts_05xxxxxxxx_9665xxxxxxxx_or_9665xxxxxxxx_without_spaces_e_'
+                  .tr(),
+              style: const TextStyle(color: Canopy.haze, fontSize: 12),
             ),
           ],
           const SizedBox(height: AppTheme.spaceMd),
 
           // Preferred Contact Channel
-          Text('design_ui.preferred_admin_contact_method'.tr(),
+          Text(
+            'design_ui.preferred_admin_contact_method'.tr(),
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 13,
               fontWeight: FontWeight.w600,
             ),
@@ -656,22 +635,27 @@ class _ApplyStep4LocationState extends State<ApplyStep4Location> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.danger.withValues(alpha: 0.15) : AppTheme.surface,
+          color: isSelected
+              ? AppTheme.primary.withValues(alpha: 0.15)
+              : AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
           border: Border.all(
-            color: isSelected ? AppTheme.danger : AppTheme.border,
+            color: isSelected ? AppTheme.primary : Canopy.hairline,
             width: isSelected ? 1.5 : 1.0,
           ),
         ),
         child: Column(
           children: [
-            Icon(icon, color: isSelected ? AppTheme.danger : AppTheme.textSecondary, size: 20),
+            Icon(icon,
+                color: isSelected ? AppTheme.primary : Canopy.slate,
+                size: 20),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? AppTheme.textPrimary : AppTheme.textSecondary,
-                fontSize: 11,
+                color:
+                    isSelected ? Canopy.ink : Canopy.slate,
+                fontSize: 12,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),

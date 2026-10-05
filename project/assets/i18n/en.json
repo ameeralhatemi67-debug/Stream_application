@@ -139,7 +139,13 @@
     "web_offline_hint_dismiss": "Not now",
     "picker_use_centre": "Pin the centre mark",
     "picker_map_needed": "The map must be showing to place a pin",
-    "no_venue_location": "This venue has no pinned location yet, so directions aren't available."
+    "no_venue_location": "This venue has no pinned location yet, so directions aren't available.",
+    "picker_use_my_location": "Use my current location",
+    "location_service_off": "Location is turned off on this device. Turn it on, then try again.",
+    "location_permission_denied": "Location access was not allowed. You can still place the pin on the map.",
+    "location_outside": "Your current location is outside the supported map area. Place the pin on the map instead.",
+    "location_unavailable": "Your location could not be found. Try again or place the pin on the map.",
+    "open_settings": "Settings"
   },
   "feed": {
     "title": "Discovery Feed",
@@ -691,7 +697,14 @@
     "desktop_privacy": "Privacy & data",
     "desktop_legal": "Terms & policies",
     "desktop_about": "About",
-    "avatar_optional_hint": "Leave empty to use your initial."
+    "avatar_optional_hint": "Leave empty to use your initial.",
+    "edit_profile_hint": "This is how others see you in chat and on your profile.",
+    "change_photo": "Change photo",
+    "change_banner": "Change banner",
+    "choose_avatar": "Or pick an avatar",
+    "profile_media": "Profile photo & banner",
+    "upload_failed": "The image could not be uploaded. Check your connection and try again.",
+    "image_pick_failed": "That image could not be opened. Try another one."
   },
   "onboarding": {
     "subtitle": "AlSharqia Educational Knowledge Hub",

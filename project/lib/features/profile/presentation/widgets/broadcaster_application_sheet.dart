@@ -1,3 +1,5 @@
+import '../../../../core/widgets/ds/ca_fields.dart';
+import '../../../../core/widgets/ds/ca_button.dart';
 import '../../../../core/services/youtube_channel_reference.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -10,8 +12,10 @@ import '../../../../core/utils/id_generator.dart';
 import '../../../admin/models/broadcaster_application_model.dart';
 import '../../../map/models/map_tricity_domain.dart';
 import '../../../auth/presentation/widgets/location_picker_modal.dart';
-import '../../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../../core/providers/app_flags.dart';
+import '../../../../core/widgets/ds/ca_surfaces.dart';
+import 'dart:typed_data';
+import 'profile_media_editor.dart';
 
 /// Interactive In-App Application Sheet for Viewers applying to become
 /// Verified Scholars or Registering Organization Auditoriums.
@@ -27,18 +31,16 @@ class BroadcasterApplicationSheet extends StatefulWidget {
 
   static void show(BuildContext context,
       {BroadcasterApplicationModel? application, bool editingProfile = false}) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      constraints: const BoxConstraints(maxWidth: 720),
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
-      ),
-      builder: (context) => BroadcasterApplicationSheet(
-          existingApplication: application, editingProfile: editingProfile),
-    );
+    showCaSheet(context,
+        title: '',
+        framed: false,
+        useRootNavigator: false,
+        fullWidthOnPhone: true,
+        body: Builder(
+            builder: (context) => BroadcasterApplicationSheet(
+                existingApplication: application,
+                editingProfile: editingProfile)),
+        constraints: const BoxConstraints(maxWidth: 720));
   }
 
   @override
@@ -89,11 +91,18 @@ class _BroadcasterApplicationSheetState
   bool _isSubmitting = false;
   String _cityId = '';
 
+  // Profile photo & banner (edit mode): the saved URLs, or freshly picked
+  // bytes that are uploaded when the profile is saved.
+  String _avatarUrl = '', _bannerUrl = '';
+  Uint8List? _avatarBytes, _bannerBytes;
+
   @override
   void initState() {
     super.initState();
     final app = widget.existingApplication;
     _cityId = app?.cityId ?? '';
+    _avatarUrl = app?.avatarUrl ?? '';
+    _bannerUrl = app?.bannerUrl ?? '';
     _selectedRole =
         app?.accountType ?? ApplicationAccountType.individualScholar;
 
@@ -199,11 +208,11 @@ class _BroadcasterApplicationSheetState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppTheme.danger,
+            color: Canopy.liveCrimson,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: AppTheme.shadow,
+                color: Color(0x33123E26),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -254,9 +263,9 @@ class _BroadcasterApplicationSheetState
   }
 
   Future<bool> _confirmSensitiveEdit() async =>
-      await showDialog<bool>(
+      await showCaDialog<bool>(
         context: context,
-        builder: (dialogContext) => AlertDialog(
+        builder: (dialogContext) => CaAlertDialog(
           scrollable: true,
           title: Row(
             children: [
@@ -289,10 +298,7 @@ class _BroadcasterApplicationSheetState
             ),
           ),
           actions: [
-            ElevatedButton(
-              onPressed: () => Navigator.of(dialogContext).pop(true),
-              child: Text('profile.review_confirm_yes'.tr()),
-            ),
+            CaButton(label: 'profile.review_confirm_yes'.tr(), variant: CaButtonVariant.primary, onPressed: () => Navigator.of(dialogContext).pop(true)),
           ],
         ),
       ) ??
@@ -390,7 +396,7 @@ class _BroadcasterApplicationSheetState
     }
     final capacity = int.tryParse(_seatingCapacityController.text.trim()) ?? 0;
 
-    final application = BroadcasterApplicationModel(
+    var application = BroadcasterApplicationModel(
       id: widget.existingApplication?.id ?? newId(),
       accountType: _selectedRole,
       applicantNameEn: nameEn,
@@ -426,8 +432,8 @@ class _BroadcasterApplicationSheetState
       youtubeHandle: _youtubeHandleController.text.trim(),
       bioEn: _bioEnController.text.trim(),
       bioAr: _bioArController.text.trim(),
-      avatarUrl: widget.existingApplication?.avatarUrl ?? '',
-      bannerUrl: widget.existingApplication?.bannerUrl ?? '',
+      avatarUrl: _avatarUrl,
+      bannerUrl: _bannerUrl,
       status: ApplicationStatus.pending,
       submittedAt: DateTime.now(),
     );
@@ -461,6 +467,21 @@ class _BroadcasterApplicationSheetState
     var needsReview = true;
     try {
       if (widget.editingProfile) {
+        // New photos are uploaded first; a failed upload stops the save
+        // rather than storing a device-only path.
+        for (final avatar in [true, false]) {
+          final bytes = avatar ? _avatarBytes : _bannerBytes;
+          if (bytes == null) continue;
+          final url = await appProvider.uploadStreamerMediaAsset(
+              fileName:
+                  '${avatar ? 'avatar' : 'banner'}_${DateTime.now().millisecondsSinceEpoch}.png',
+              fileBytes: bytes,
+              contentType: 'image/png');
+          if (url == null) throw StateError('upload failed');
+          application = avatar
+              ? application.copyWith(avatarUrl: url)
+              : application.copyWith(bannerUrl: url);
+        }
         needsReview = await appProvider.saveBroadcasterProfile(application);
       } else {
         await appProvider.submitBroadcasterApplication(application);
@@ -484,11 +505,11 @@ class _BroadcasterApplicationSheetState
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: AppTheme.success,
+              color: Canopy.leaf,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               boxShadow: const [
                 BoxShadow(
-                  color: AppTheme.shadow,
+                  color: Color(0x33123E26),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -529,78 +550,17 @@ class _BroadcasterApplicationSheetState
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.90,
       ),
-      padding: EdgeInsets.only(
-        left: AppTheme.spaceLg,
-        right: AppTheme.spaceLg,
+      padding: EdgeInsetsDirectional.only(
+        start: AppTheme.spaceLg,
+        end: AppTheme.spaceLg,
         top: AppTheme.spaceMd,
-        bottom: bottomInset + AppTheme.spaceLg,
+        bottom: bottomInset +
+            AppTheme.spaceLg +
+            MediaQuery.paddingOf(context).bottom,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // Drag Handle
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-          const SizedBox(height: AppTheme.spaceMd),
-
-          // Header
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(AppTheme.spaceSm),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                ),
-                child: const Icon(Icons.verified_rounded,
-                    color: AppTheme.primary, size: 22),
-              ),
-              const SizedBox(width: AppTheme.spaceSm),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      (widget.editingProfile
-                              ? 'settings.edit_profile'
-                              : 'application.title')
-                          .tr(),
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      (widget.editingProfile
-                              ? 'profile.edit_review_help'
-                              : 'application.subtitle')
-                          .tr(),
-                      style: const TextStyle(
-                        color: AppTheme.textSecondary,
-                        fontSize: 11,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.close_rounded,
-                    color: AppTheme.textSecondary),
-                onPressed: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-          const Divider(color: AppTheme.border, height: 24),
-
           // Form Scroll View
           Expanded(
             child: SingleChildScrollView(
@@ -608,6 +568,89 @@ class _BroadcasterApplicationSheetState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Drag Handle
+                  Center(
+                    child: Container(
+                      width: 40,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: Canopy.hairline,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: AppTheme.spaceMd),
+
+                  // Header
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(AppTheme.spaceSm),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primary.withValues(alpha: 0.15),
+                          borderRadius:
+                              BorderRadius.circular(AppTheme.radiusMd),
+                        ),
+                        child: const Icon(Icons.verified_rounded,
+                            color: AppTheme.primary, size: 22),
+                      ),
+                      const SizedBox(width: AppTheme.spaceSm),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              (widget.editingProfile
+                                      ? 'settings.edit_profile'
+                                      : 'application.title')
+                                  .tr(),
+                              style: const TextStyle(
+                                color: Canopy.ink,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              (widget.editingProfile
+                                      ? 'profile.edit_review_help'
+                                      : 'application.subtitle')
+                                  .tr(),
+                              style: const TextStyle(
+                                color: Canopy.slate,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.close_rounded,
+                            color: Canopy.slate),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Canopy.hairline, height: 24),
+
+                  if (widget.editingProfile) ...[
+                    _buildSectionHeader('settings.profile_media'.tr(),
+                        Icons.image_outlined),
+                    const SizedBox(height: AppTheme.spaceSm),
+                    ProfileMediaEditor(
+                      name: _nameEnController.text,
+                      avatarUrl: _avatarUrl,
+                      bannerUrl: _bannerUrl,
+                      avatarBytes: _avatarBytes,
+                      bannerBytes: _bannerBytes,
+                      enabled: !_isSubmitting,
+                      onAvatarPicked: (img) =>
+                          setState(() => _avatarBytes = img.bytes),
+                      onBannerPicked: (img) =>
+                          setState(() => _bannerBytes = img.bytes),
+                    ),
+                    const SizedBox(height: AppTheme.spaceLg),
+                  ],
+
                   // 1. Role Segmented Switcher
                   if (!widget.editingProfile) _buildRoleSwitcher(),
                   const SizedBox(height: AppTheme.spaceLg),
@@ -687,64 +730,22 @@ class _BroadcasterApplicationSheetState
                   // 5. Streaming & Bio
                   _buildStreamingSection(),
                   const SizedBox(height: AppTheme.spaceXl),
-
-                  // Submit Action Button
-                  SizedBox(
-                    width: double.infinity,
-                    height: 52,
-                    child: ElevatedButton(
-                      onPressed: _isSubmitting ? null : _handleSubmit,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primary,
-                        foregroundColor: AppTheme.onMedia,
-                        shape: RoundedRectangleBorder(
-                          borderRadius:
-                              BorderRadius.circular(AppTheme.radiusMd),
-                        ),
-                        elevation: 2,
-                      ),
-                      child: _isSubmitting
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const SizedBox(
-                                  width: 18,
-                                  height: 18,
-                                  child: HadayahLoadingIndicator(
-                                    strokeWidth: 2,
-                                    color: AppTheme.onMedia,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text('application.submitting'.tr()),
-                              ],
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.send_rounded, size: 18),
-                                const SizedBox(width: 8),
-                                Flexible(
-                                  child: Text(
-                                    (widget.editingProfile
-                                            ? 'profile.save_changes'
-                                            : 'application.submit_btn')
-                                        .tr(),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                    ),
-                  ),
                 ],
               ),
             ),
+          ),
+          Padding(
+            padding: const EdgeInsetsDirectional.only(top: AppTheme.spaceLg),
+            child: SizedBox(
+                width: double.infinity,
+                child: CaButton(
+                  label: (widget.editingProfile
+                          ? 'profile.save_changes'
+                          : 'application.submit_btn')
+                      .tr(),
+                  loading: _isSubmitting,
+                  onPressed: _isSubmitting ? null : _handleSubmit,
+                )),
           ),
         ],
       ),
@@ -755,9 +756,9 @@ class _BroadcasterApplicationSheetState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceAlt,
+        color: Canopy.mint,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
+        border: Border.all(color: Canopy.hairline),
       ),
       child: Row(
         children: [
@@ -804,7 +805,9 @@ class _BroadcasterApplicationSheetState
         setState(() => _selectedRole = type);
       },
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: CanopyMotion.reduced(context)
+            ? CanopyMotion.none
+            : CanopyMotion.buttonState,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.surface : Colors.transparent,
@@ -819,8 +822,8 @@ class _BroadcasterApplicationSheetState
               icon,
               size: 20,
               color: unavailable
-                  ? AppTheme.textMuted
-                  : (isSelected ? AppTheme.primary : AppTheme.textSecondary),
+                  ? Canopy.haze
+                  : (isSelected ? AppTheme.primary : Canopy.slate),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -831,10 +834,10 @@ class _BroadcasterApplicationSheetState
                     title,
                     style: TextStyle(
                       color: unavailable
-                          ? AppTheme.textMuted
+                          ? Canopy.haze
                           : isSelected
-                              ? AppTheme.textPrimary
-                              : AppTheme.textSecondary,
+                              ? Canopy.ink
+                              : Canopy.slate,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w500,
                       fontSize: 12,
@@ -1033,7 +1036,7 @@ class _BroadcasterApplicationSheetState
           const SizedBox(height: AppTheme.spaceSm),
           Text('profile.current_location'.tr(),
               style: const TextStyle(
-                  color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+                  color: Canopy.ink, fontWeight: FontWeight.w600)),
           const SizedBox(height: AppTheme.spaceXs),
           OutlinedButton.icon(
             onPressed: _openLocationPicker,
@@ -1049,7 +1052,7 @@ class _BroadcasterApplicationSheetState
                     'coords':
                         '${_latController.text.trim()}, ${_lngController.text.trim()}',
                   }),
-            style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
         ],
       ),
@@ -1136,18 +1139,18 @@ class _BroadcasterApplicationSheetState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceAlt,
+        color: Canopy.mint,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.border),
+        border: Border.all(color: Canopy.hairline),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedCategory,
           isExpanded: true,
-          dropdownColor: AppTheme.surfaceAlt,
-          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
+          dropdownColor: Canopy.mint,
+          style: const TextStyle(color: Canopy.ink, fontSize: 13),
           icon: const Icon(Icons.arrow_drop_down_rounded,
-              color: AppTheme.textSecondary),
+              color: Canopy.slate),
           items: categories.entries
               .map((category) => DropdownMenuItem(
                     value: category.key,
@@ -1175,7 +1178,7 @@ class _BroadcasterApplicationSheetState
           child: Text(
             title,
             style: const TextStyle(
-              color: AppTheme.textPrimary,
+              color: Canopy.ink,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
@@ -1192,48 +1195,11 @@ class _BroadcasterApplicationSheetState
     required IconData icon,
     TextInputType keyboardType = TextInputType.text,
     int maxLines = 1,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            color: AppTheme.textSecondary,
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-        const SizedBox(height: 4),
-        TextField(
+  }) =>
+      CaInput(
           controller: controller,
+          label: label,
+          hint: hint,
           keyboardType: keyboardType,
-          maxLines: maxLines,
-          style: const TextStyle(color: AppTheme.textPrimary, fontSize: 13),
-          decoration: InputDecoration(
-            hintText: hint,
-            hintStyle:
-                const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-            prefixIcon: Icon(icon, size: 18, color: AppTheme.textSecondary),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-            filled: true,
-            fillColor: AppTheme.surfaceAlt,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              borderSide: const BorderSide(color: AppTheme.primary),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
+          maxLines: maxLines);
 }

@@ -1,3 +1,9 @@
+import '../../../core/layout/window_class.dart';
+import '../../../core/widgets/ds/ca_icon.dart';
+import '../../../core/widgets/ds/ca_rows.dart';
+import '../../../core/widgets/ds/ca_cards.dart';
+import '../../../core/widgets/ds/ca_button.dart';
+import '../../../core/widgets/ds/ca_navigation.dart';
 import 'dart:async';
 import '../../../core/services/youtube_channel_reference.dart';
 import 'dart:typed_data';
@@ -8,7 +14,6 @@ import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/providers/app_provider.dart';
-import '../../../core/widgets/language_switcher.dart';
 import '../../../core/services/translation/auto_translation_service.dart';
 import '../../../core/utils/id_generator.dart';
 import '../../admin/models/broadcaster_application_model.dart';
@@ -19,8 +24,8 @@ import 'steps/apply_step_3_professional.dart';
 import 'steps/apply_step_3_5_org_speakers.dart';
 import 'steps/apply_step_4_location.dart';
 import 'steps/apply_step_5_review.dart';
-import '../../../core/widgets/hadayah_loading_indicator.dart';
 import '../../../core/providers/app_flags.dart';
+import '../../../core/widgets/ds/ca_surfaces.dart';
 
 /// Dynamic Streamer / Organization Verification Application Wizard
 class StreamerApplyScreen extends StatefulWidget {
@@ -227,21 +232,24 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     if (!_validateCurrentStep()) return;
 
     if (_currentStep < _totalSteps - 1) {
-      _pageController.nextPage(
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeInOut,
-      );
+      _moveToPage(_currentStep + 1);
     }
   }
 
   void _previousStep() {
     if (_currentStep > 0) {
-      _pageController.previousPage(
-        duration: const Duration(milliseconds: 320),
-        curve: Curves.easeInOut,
-      );
+      _moveToPage(_currentStep - 1);
     } else {
       _leaveWizard();
+    }
+  }
+
+  void _moveToPage(int page) {
+    if (CanopyMotion.reduced(context)) {
+      _pageController.jumpToPage(page);
+    } else {
+      _pageController.animateToPage(page,
+          duration: CanopyMotion.sheetIn, curve: CanopyMotion.easeInOut);
     }
   }
 
@@ -260,20 +268,20 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       _leaveWizard();
       return;
     }
-    final leave = await showDialog<bool>(
+    final leave = await showCaDialog<bool>(
       context: context,
-      builder: (dialogContext) => AlertDialog(
+      builder: (dialogContext) => CaAlertDialog(
         title: Text('wizard_steps.exit_title'.tr()),
         content: Text('wizard_steps.exit_body'.tr()),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text('wizard_steps.exit_stay'.tr()),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text('wizard_steps.exit_leave'.tr()),
-          ),
+          CaButton(
+              label: 'wizard_steps.exit_stay'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => Navigator.pop(dialogContext, false)),
+          CaButton(
+              label: 'wizard_steps.exit_leave'.tr(),
+              variant: CaButtonVariant.text,
+              onPressed: () => Navigator.pop(dialogContext, true)),
         ],
       ),
     );
@@ -284,7 +292,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: AppTheme.danger,
+        backgroundColor: Canopy.liveCrimson,
         duration: const Duration(seconds: 2),
       ),
     );
@@ -302,7 +310,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       return;
     }
     final channel = YouTubeChannelReference.parse(_youtubeController.text);
-    if (!_organizationOnly && (channel == null || channel.parameter == 'custom')) {
+    if (!_organizationOnly &&
+        (channel == null || channel.parameter == 'custom')) {
       _showValidationToast('live.channel_invalid'.tr());
       return;
     }
@@ -454,9 +463,11 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
         orgNameController: _orgNameController,
         selectedCategories: _selectedCategories,
         isOrganization: _isOrganization,
-        organizationApplicationsOpen: AppFlags.instance.organizationApplicationsOpen,
+        organizationApplicationsOpen:
+            AppFlags.instance.organizationApplicationsOpen,
         organizationOnly: _organizationOnly,
-        onOrganizationOnlyChanged: (value) => setState(() => _organizationOnly = value),
+        onOrganizationOnlyChanged: (value) =>
+            setState(() => _organizationOnly = value),
         selectedTags: _selectedTags,
         onCategoriesChanged: (cats) =>
             setState(() => _selectedCategories = cats),
@@ -540,203 +551,118 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
-    final stepProgress = (_currentStep + 1) / _totalSteps;
-
+    final visualStep = _isOrganization && _currentStep > 2
+        ? (_currentStep == 3 ? 2 : _currentStep - 1)
+        : _currentStep;
+    final names = [
+      for (final name in [
+        'identity',
+        'media',
+        'professional',
+        'venue',
+        'review'
+      ])
+        'ds.apply_$name'.tr()
+    ];
+    final stepper = CaStepper(steps: names, index: visualStep);
+    final pages = Expanded(
+        child: PageView(
+      controller: _pageController,
+      physics: const NeverScrollableScrollPhysics(),
+      onPageChanged: (idx) => setState(() => _currentStep = idx),
+      children: [for (final page in _buildStepPages()) CaCard(child: page)],
+    ));
+    final footer = Padding(
+      padding: const EdgeInsets.all(AppTheme.spaceLg),
+      child: Row(children: [
+        if (_currentStep > 0) ...[
+          Flexible(
+              child: CaButton(
+                  label: 'wizard_steps.btn_back'.tr(),
+                  variant: CaButtonVariant.secondary,
+                  onPressed: _previousStep)),
+          const SizedBox(width: AppTheme.spaceMd),
+        ],
+        Expanded(
+            child: CaButton(
+          label: (_currentStep == _totalSteps - 1
+                  ? 'wizard_steps.btn_submit'
+                  : 'wizard_steps.btn_next')
+              .tr(),
+          loading: _isSubmitting,
+          onPressed: _isSubmitting
+              ? null
+              : (_currentStep == _totalSteps - 1
+                  ? _submitApplication
+                  : _nextStep),
+        )),
+      ]),
+    );
     return Scaffold(
-      backgroundColor: AppTheme.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Transform.scale(
-            scaleX: context.locale.languageCode == 'ar' ? -1.0 : 1.0,
-            child: const Icon(Icons.arrow_back_rounded,
-                color: AppTheme.textPrimary),
-          ),
-          onPressed: _previousStep,
-        ),
-        title: Text(
-          _isOrganization
-              ? 'wizard_steps.org_title'
-                  .tr(args: ['${_currentStep + 1}', '$_totalSteps'])
-              : 'wizard_steps.streamer_title'
-                  .tr(args: ['${_currentStep + 1}', '$_totalSteps']),
-          style: const TextStyle(
-            color: AppTheme.textPrimary,
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        centerTitle: true,
+      backgroundColor: Canopy.dawn,
+      appBar: CaAppBar(
+        languageBare: true,
+        leading: CaIconButton(
+            bare: true,
+            icon: CaGlyph.back,
+            label: MaterialLocalizations.of(context).backButtonTooltip,
+            onPressed: _previousStep),
+        title: Text('ds.apply_title'.tr()),
         actions: [
-          const Center(child: LanguageSwitcher(showLabel: false)),
-          IconButton(
-            key: const Key('wizard-exit'),
-            icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary),
-            tooltip: 'wizard_steps.exit_tooltip'.tr(),
-            onPressed: _confirmExit,
-          ),
+          CaIconButton(
+              bare: true,
+              key: const Key('wizard-exit'),
+              icon: CaGlyph.close,
+              label: 'wizard_steps.exit_tooltip'.tr(),
+              onPressed: _confirmExit)
         ],
       ),
       body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: BoxConstraints(maxWidth: isDesktop ? 780 : 540),
-            child: Column(
-              children: [
-                // Top Progress Bar
-                Padding(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: AppTheme.spaceLg),
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: stepProgress,
-                          backgroundColor: AppTheme.surface,
-                          valueColor: const AlwaysStoppedAnimation<Color>(
-                              AppTheme.danger),
-                          minHeight: 6,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Wrap(
-                        alignment: WrapAlignment.spaceBetween,
-                        spacing: AppTheme.spaceSm,
+          child: Center(
+              child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: CanopySize.wizardMax),
+        child: Padding(
+          padding:
+              EdgeInsetsDirectional.symmetric(horizontal: context.windowInset),
+          child: context.windowClass.index >= WindowClass.expanded.index
+              ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  SizedBox(
+                      width: CanopySize.wizardRail,
+                      child: SingleChildScrollView(
+                          child: CaCard(
+                              child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'wizard_steps.step_progress'.tr(
-                                args: ['${_currentStep + 1}', '$_totalSteps']),
-                            style: const TextStyle(
-                              color: AppTheme.textMuted,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w600,
+                          stepper,
+                          const SizedBox(height: AppTheme.spaceXl),
+                          for (var i = 0; i < names.length; i++)
+                            Padding(
+                              padding: const EdgeInsetsDirectional.only(
+                                  bottom: AppTheme.spaceLg),
+                              child: Text(names[i],
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .titleMedium
+                                      ?.copyWith(
+                                          color: i == visualStep
+                                              ? Canopy.brandGreen
+                                              : Canopy.slate)),
                             ),
-                          ),
-                          Text(
-                            'wizard_steps.step_completed'
-                                .tr(args: ['${(stepProgress * 100).toInt()}']),
-                            style: const TextStyle(
-                              color: AppTheme.danger,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                         ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: AppTheme.spaceMd),
-
-                // Wizard PageView
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                        horizontal: AppTheme.spaceLg),
-                    child: PageView(
-                      controller: _pageController,
-                      physics: const NeverScrollableScrollPhysics(),
-                      onPageChanged: (idx) =>
-                          setState(() => _currentStep = idx),
-                      children: _buildStepPages(),
-                    ),
-                  ),
-                ),
-
-                // Bottom Navigation Action Bar
-                Container(
-                  padding: const EdgeInsets.all(AppTheme.spaceLg),
-                  decoration: const BoxDecoration(
-                    color: AppTheme.surface,
-                    border: Border(top: BorderSide(color: AppTheme.border)),
-                  ),
-                  child: Row(
-                    children: [
-                      if (_currentStep > 0) ...[
-                        OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: AppTheme.textPrimary,
-                            side: const BorderSide(color: AppTheme.border),
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 20, vertical: 13),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMd),
-                            ),
-                          ),
-                          onPressed: _previousStep,
-                          child: Text('wizard_steps.btn_back'.tr()),
-                        ),
-                        const SizedBox(width: AppTheme.spaceMd),
-                      ],
-                      Expanded(
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: AppTheme.danger,
-                            foregroundColor: AppTheme.onMedia,
-                            padding: const EdgeInsets.symmetric(vertical: 13),
-                            shape: RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.circular(AppTheme.radiusMd),
-                            ),
-                            elevation: 2,
-                          ),
-                          onPressed: _isSubmitting
-                              ? null
-                              : (_currentStep == _totalSteps - 1
-                                  ? _submitApplication
-                                  : _nextStep),
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: HadayahLoadingIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                        AppTheme.onMedia),
-                                  ),
-                                )
-                              : Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Flexible(
-                                        child: Text(
-                                      _currentStep == _totalSteps - 1
-                                          ? 'wizard_steps.btn_submit'.tr()
-                                          : 'wizard_steps.btn_next'.tr(),
-                                      style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold),
-                                    )),
-                                    const SizedBox(width: 6),
-                                    _currentStep == _totalSteps - 1
-                                        ? const Icon(Icons.send_rounded,
-                                            size: 16)
-                                        : Transform.scale(
-                                            scaleX:
-                                                context.locale.languageCode ==
-                                                        'ar'
-                                                    ? -1.0
-                                                    : 1.0,
-                                            child: const Icon(
-                                                Icons.arrow_forward_rounded,
-                                                size: 16),
-                                          ),
-                                  ],
-                                ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+                      )))),
+                  const SizedBox(width: AppTheme.spaceXl),
+                  Expanded(child: Column(children: [pages, footer])),
+                ])
+              : Column(children: [
+                  Padding(
+                      padding: const EdgeInsetsDirectional.only(
+                          bottom: AppTheme.spaceLg),
+                      child: stepper),
+                  pages,
+                  footer,
+                ]),
         ),
-      ),
+      ))),
     );
   }
 }

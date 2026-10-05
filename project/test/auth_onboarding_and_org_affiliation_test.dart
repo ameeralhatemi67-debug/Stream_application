@@ -68,11 +68,17 @@ Widget createTestWidget({
   );
 }
 
-Future<void> pumpTestApp(WidgetTester tester, Widget child, AppProvider provider) async {
+Future<void> pumpTestApp(
+    WidgetTester tester, Widget child, AppProvider provider) async {
   await tester.pumpWidget(createTestWidget(child: child, provider: provider));
   await tester.pump();
   await tester.pump();
-  await tester.pumpAndSettle();
+  if (child is WelcomeScreen) {
+    // Continuous decorative drift is not part of onboarding logic.
+    await tester.pump(const Duration(seconds: 1));
+  } else {
+    await tester.pumpAndSettle();
+  }
 }
 
 void main() {
@@ -95,7 +101,8 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 80));
     });
 
-    testWidgets('TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer',
+    testWidgets(
+        'TC-AUTH-01: WelcomeScreen renders branding, Google Sign-In, and Guest Viewer',
         (tester) async {
       tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
@@ -104,7 +111,8 @@ void main() {
       expect(find.text('Hadayah Live'), findsOneWidget);
       expect(find.text('Sign Up with Google'), findsOneWidget);
       expect(find.text('Already have an account? Log In'), findsOneWidget);
-      expect(find.text('Continue as Guest Viewer (Skip Sign In)'), findsOneWidget);
+      expect(
+          find.text('Continue as Guest Viewer (Skip Sign In)'), findsOneWidget);
     });
 
     testWidgets('TC-AUTH-02: ViewerSetupScreen saves display name and avatar',
@@ -142,29 +150,34 @@ void main() {
       }
     });
 
-    testWidgets('TC-AUTH-03: RoleSelectScreen presents Viewer vs Broadcaster options',
+    testWidgets(
+        'TC-AUTH-03: RoleSelectScreen presents Viewer vs Broadcaster options',
         (tester) async {
       tester.view.physicalSize = const Size(1000, 800);
       tester.view.devicePixelRatio = 1.0;
       await pumpTestApp(tester, const RoleSelectScreen(), provider);
 
-      expect(find.text('How would you like to experience Streamer App today?'), findsOneWidget);
+      // The app-name rename stays on the design branch for now.
+      expect(find.text('How would you like to experience Streamer App today?'),
+          findsOneWidget);
       expect(find.text('I am a Viewer / Student'), findsOneWidget);
       expect(find.text('Apply to Stream (5-Step Form)'), findsOneWidget);
     });
 
-    testWidgets('TC-AUTH-04: StreamerApplyScreen wizard renders Step 1 Identity',
+    testWidgets(
+        'TC-AUTH-04: StreamerApplyScreen wizard renders Step 1 Identity',
         (tester) async {
       tester.view.physicalSize = const Size(1000, 800);
       tester.view.devicePixelRatio = 1.0;
       await pumpTestApp(tester, const StreamerApplyScreen(), provider);
 
-      expect(find.text('Streamer Verification (1/5)'), findsOneWidget);
-      expect(find.text('Step 1: Broadcaster Identity'), findsOneWidget);
+      expect(find.text('Apply'), findsOneWidget);
+      expect(find.text('Broadcaster Identity'), findsOneWidget);
       expect(find.text('Next Step'), findsOneWidget);
     });
 
-    testWidgets('TC-AUTH-05: ApplicationPendingScreen renders confirmation badge and action',
+    testWidgets(
+        'TC-AUTH-05: ApplicationPendingScreen renders confirmation badge and action',
         (tester) async {
       tester.view.physicalSize = const Size(800, 700);
       tester.view.devicePixelRatio = 1.0;
@@ -174,15 +187,20 @@ void main() {
       expect(find.text('Explore as Viewer While Waiting'), findsOneWidget);
     });
 
-    test('TC-AUTH-06: Telemetry counters update on Google login and Guest setup', () async {
-      final initialGoogleUsers = provider.viewerAnalytics.totalRegisteredGoogleUsers;
+    test(
+        'TC-AUTH-06: Telemetry counters update on Google login and Guest setup',
+        () async {
+      final initialGoogleUsers =
+          provider.viewerAnalytics.totalRegisteredGoogleUsers;
       final initialGuests = provider.viewerAnalytics.totalGuestSessions;
 
       await provider.registerGoogleUser();
-      expect(provider.viewerAnalytics.totalRegisteredGoogleUsers, equals(initialGoogleUsers + 1));
+      expect(provider.viewerAnalytics.totalRegisteredGoogleUsers,
+          equals(initialGoogleUsers + 1));
 
       await provider.recordGuestSession();
-      expect(provider.viewerAnalytics.totalGuestSessions, equals(initialGuests + 1));
+      expect(provider.viewerAnalytics.totalGuestSessions,
+          equals(initialGuests + 1));
     });
 
     test('TC-AUTH-07: Saudi phone validator logic', () {
@@ -215,20 +233,23 @@ void main() {
             (text.startsWith('@') && text.length > 2);
       }
 
-      expect(isYoutubeProofValid('https://www.youtube.com/@AlQuran4KOfficial'), isTrue);
+      expect(isYoutubeProofValid('https://www.youtube.com/@AlQuran4KOfficial'),
+          isTrue);
       expect(isYoutubeProofValid('https://youtube.com/@amir_alhatemi'), isTrue);
       expect(isYoutubeProofValid('@amir_alhatemi'), isTrue);
       expect(isYoutubeProofValid('random_text_without_handle'), isFalse);
       expect(isYoutubeProofValid('@a'), isFalse);
     });
 
-    testWidgets('TC-AUTH-09: Step 3 renders on narrow mobile screen (360x800) with zero overflow',
+    testWidgets(
+        'TC-AUTH-09: Step 3 renders on narrow mobile screen (360x800) with zero overflow',
         (tester) async {
       tester.view.physicalSize = const Size(360, 800);
       tester.view.devicePixelRatio = 1.0;
 
       final affiliationCtrl = TextEditingController();
-      final youtubeCtrl = TextEditingController(text: 'https://www.youtube.com/@AlQuran4KOfficial');
+      final youtubeCtrl = TextEditingController(
+          text: 'https://www.youtube.com/@AlQuran4KOfficial');
       final orgNameCtrl = TextEditingController();
 
       await pumpTestApp(
@@ -250,13 +271,15 @@ void main() {
       );
 
       // Verify clean render on mobile
-      expect(find.text('Step 3: Professional & Channel Info'), findsOneWidget);
+      expect(find.text('Professional & Channel Info'), findsOneWidget);
       expect(find.text('Individual Broadcaster'), findsOneWidget);
       expect(find.text('Organization / Center'), findsOneWidget);
       expect(find.text('Add Custom Field'), findsOneWidget);
     });
 
-    test('TC-ORG-AFF-01: Bi-directional Org Affiliation submission and resolution', () async {
+    test(
+        'TC-ORG-AFF-01: Bi-directional Org Affiliation submission and resolution',
+        () async {
       // Requests are resolved by the organization RPCs; use an explicit
       // backend double instead of the removed offline write fallback.
       final provider = AppProvider.withServices(
@@ -268,7 +291,8 @@ void main() {
       // Submit affiliation request from individual streamer to Org
       await provider.submitOrgAffiliationRequest(
         orgId: 'org_dalilk_04',
-        note: 'I would like to broadcast IELTS preparation workshops at the Khobar Campus.',
+        note:
+            'I would like to broadcast IELTS preparation workshops at the Khobar Campus.',
         proposedRoleEn: 'IELTS Master Instructor',
         proposedRoleAr: 'مدرب آيلتس معتمد',
       );
@@ -280,7 +304,8 @@ void main() {
 
       // Accept request to Org roster
       await provider.acceptOrgAffiliationRequest(newReq.id);
-      final acceptedReq = provider.affiliationRequests.firstWhere((r) => r.id == newReq.id);
+      final acceptedReq =
+          provider.affiliationRequests.firstWhere((r) => r.id == newReq.id);
       expect(acceptedReq.isAccepted, isTrue);
     });
   });

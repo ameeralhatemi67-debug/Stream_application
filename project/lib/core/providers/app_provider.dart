@@ -3385,11 +3385,13 @@ class AppProvider extends ChangeNotifier {
     String? nameEn,
     String? nameAr,
     String? avatarUrl,
+    String? bannerUrl,
   }) async {
     _userProfile = _userProfile.copyWith(
       nameEn: nameEn,
       nameAr: nameAr,
       avatarUrl: avatarUrl,
+      bannerUrl: bannerUrl,
     );
     if (_isGuestViewer) {
       if (nameEn != null) _guestViewerName = nameEn;
@@ -3404,6 +3406,7 @@ class AppProvider extends ChangeNotifier {
       if (nameEn != null) updates['display_name_en'] = nameEn;
       if (nameAr != null) updates['display_name_ar'] = nameAr;
       if (avatarUrl != null) updates['avatar_url'] = avatarUrl;
+      if (bannerUrl != null) updates['banner_url'] = bannerUrl;
       if (updates.isEmpty) return;
       await Supabase.instance.client
           .from('profiles')

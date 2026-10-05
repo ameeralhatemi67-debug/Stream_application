@@ -21,8 +21,12 @@ class CaButton extends StatefulWidget {
       this.trailingIcon,
       this.loading = false,
       this.holdToConfirm = false,
-      this.confirm = false});
+      this.confirm = false,
+      this.bareTrailing = false});
   final String label;
+
+  /// Trailing icon without the circular badge behind it.
+  final bool bareTrailing;
   final VoidCallback? onPressed;
   final CaButtonVariant variant;
   final CaGlyph? icon, trailingIcon;
@@ -145,9 +149,12 @@ class _CaButtonState extends State<CaButton>
         const SizedBox(width: AppTheme.spaceSm),
         Container(
             padding: const EdgeInsets.all(AppTheme.spaceXs),
-            decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: Canopy.paper.withValues(alpha: CanopySize.glassAlpha)),
+            decoration: widget.bareTrailing
+                ? null
+                : BoxDecoration(
+                    shape: BoxShape.circle,
+                    color:
+                        Canopy.paper.withValues(alpha: CanopySize.glassAlpha)),
             child: CaIcon(widget.trailingIcon!,
                 color: foreground, size: CanopySize.inlineIcon)),
       ],

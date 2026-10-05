@@ -20,6 +20,9 @@ Widget _app({required Widget child, Locale locale = const Locale('en')}) =>
       assetLoader: const DirectJsonAssetLoader(),
       child: Builder(
         builder: (context) => MaterialApp(
+          builder: (context, child) => MediaQuery(
+              data: MediaQuery.of(context).copyWith(disableAnimations: true),
+              child: child!),
           localizationsDelegates: context.localizationDelegates,
           supportedLocales: context.supportedLocales,
           locale: context.locale,
@@ -34,7 +37,8 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   group('S02 avatar fallback', () {
-    testWidgets('a picture that fails to load shows the initial, not a blank '
+    testWidgets(
+        'a picture that fails to load shows the initial, not a blank '
         'circle', (tester) async {
       // flutter_test answers every network image request with HTTP 400,
       // the same shape as a Google photo returning 429 or a deleted upload.
@@ -58,7 +62,8 @@ void main() {
     testWidgets('Arabic names use their first letter in RTL', (tester) async {
       await tester.pumpWidget(_app(
           locale: const Locale('ar'),
-          child: const StreamerAvatar(avatarUrl: null, name: 'أمير', square: true)));
+          child: const StreamerAvatar(
+              avatarUrl: null, name: 'أمير', square: true)));
       await tester.pump();
       expect(find.text('أ'), findsOneWidget);
       expect(tester.takeException(), isNull);
@@ -150,7 +155,7 @@ void main() {
       ),
     ));
     await tester.pumpAndSettle();
-    await tester.tap(find.byType(BackButtonIcon));
+    await tester.tap(find.byTooltip('Back'));
     await tester.pumpAndSettle();
     expect(find.text('settings page'), findsOneWidget);
   });
