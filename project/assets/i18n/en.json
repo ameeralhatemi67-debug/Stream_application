@@ -1,4 +1,17 @@
 {
+  "bookmarks": {
+    "all": "All saved",
+    "recordings": "Recordings",
+    "save_stream": "Save stream",
+    "remove": "Remove bookmark",
+    "play": "Play recording",
+    "view_channel": "View upcoming stream",
+    "empty_hint": "Save a lecture or an upcoming stream to find it here later.",
+    "load_failed": "Some saved items could not be loaded. Try again.",
+    "save_failed": "Your bookmark could not be updated. Please try again.",
+    "unavailable_recording": "Recording unavailable",
+    "schedule_unavailable": "Schedule ended or no longer available"
+  },
   "broadcast_session_lost": "Broadcasting stopped because this device lost its primary session. Reconnect or transfer broadcasting to this device.",
   "broadcast_primary_required": "This device is not your broadcaster device. Choose \"Use this device for broadcasting\"; if another device holds that role you will be asked before it is transferred.",
   "broadcast_state_failed": "The broadcast session could not be updated. Check your connection and try again.",

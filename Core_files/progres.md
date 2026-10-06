@@ -6,6 +6,26 @@ updated: 2026-09-27
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
 
+## 2026-10-06: Saved recordings and upcoming streams
+
+- Connected Bookmarked Lectures to actual saved content, with playback, removal,
+  type filters, loading/error/empty states and bilingual responsive rows.
+- Added checked saved actions and thumbnail badges, plus independent save controls
+  on upcoming cards. Removed the completed-session list from profile headers and
+  the avatar ring from the recording player.
+- Extended the existing private bookmark storage with public metadata and kinds;
+  normalized archive/playlist IDs and repaired optimistic error handling and stale
+  loads. Hosted migration: `20261006085602_saved_library_metadata.sql`. Existing
+  privacy/ban policies remain; a disposable SQL probe passed and security advisors
+  reported no new findings. Guest saves still last for the current session only.
+- Added 19 behavior, failure, race, legacy-resolution and EN/AR layout tests. Four
+  final phone/desktop renders were inspected; the temporary render harness was
+  removed. Physical Android behavior and real-account cross-device saves are not
+  newly verified by these checks.
+- Final regression checks: all 1,085 Flutter tests passed, static analysis found
+  zero issues, and all seven YouTube proxy/build-guard Node checks passed.
+- The configured release web build passed (103.1 seconds of compilation).
+
 ## 2026-10-06: Discovery Hub card loading skeletons
 
 - Implemented the owner-approved preview in Discovery Hub only, using the actual

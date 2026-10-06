@@ -24,6 +24,7 @@ import '../../features/organization/models/org_broadcaster_permissions.dart';
 import '../../features/organization/models/org_venue_branch_model.dart';
 import '../../features/organization/models/org_speaker_model.dart';
 import '../../features/profile/models/streamer_models.dart';
+import '../../features/discovery/models/bookmark_entry.dart';
 
 final RegExp _uuidPattern = RegExp(
   r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$',
@@ -2903,55 +2904,31 @@ class AdminDatabaseService {
     }
   }
 
-  Future<Set<String>> loadBookmarkedVodIds() async {
-    if (!_useSupabase) return {};
+  Future<List<BookmarkEntry>> loadBookmarks() async {
+    if (!_useSupabase) throw StateError('Bookmark backend unavailable');
     final uid = _client.auth.currentUser?.id;
-    if (uid == null) return {};
-    try {
-      final rows = await _client
-          .from('bookmarks')
-          .select('vod_id')
-          .eq('profile_id', uid);
-      return (rows as List)
-          .map((r) => (r as Map<String, dynamic>)['vod_id'] as String)
-          .toSet();
-    } catch (e) {
-      debugPrint('loadBookmarkedVodIds failed: $e');
-      return {};
-    }
+    if (uid == null) throw StateError('Bookmark session unavailable');
+    final rows = await _client.from('bookmarks').select()
+        .eq('profile_id', uid).order('created_at', ascending: false);
+    return rows.map((row) => BookmarkEntry.fromRow(row)).toList();
   }
 
-  Future<bool> addBookmark(String vodId, {String streamerId = ''}) async {
-    if (!_useSupabase) return false;
+  Future<void> addBookmark(BookmarkEntry entry) async {
+    if (!_useSupabase) throw StateError('Bookmark backend unavailable');
     final uid = _client.auth.currentUser?.id;
-    if (uid == null || vodId.isEmpty) return false;
-    try {
-      await _client.from('bookmarks').upsert(
-        {'profile_id': uid, 'vod_id': vodId, 'streamer_id': streamerId},
-        onConflict: 'profile_id,vod_id',
-      );
-      return true;
-    } catch (e) {
-      debugPrint('addBookmark failed: $e');
-      return false;
-    }
+    if (uid == null) throw StateError('Bookmark session unavailable');
+    await _client.from('bookmarks').upsert(
+      {'profile_id': uid, ...entry.toRow()},
+      onConflict: 'profile_id,vod_id', ignoreDuplicates: true,
+    );
   }
 
-  Future<bool> removeBookmark(String vodId) async {
-    if (!_useSupabase) return false;
+  Future<void> removeBookmark(String id) async {
+    if (!_useSupabase) throw StateError('Bookmark backend unavailable');
     final uid = _client.auth.currentUser?.id;
-    if (uid == null || vodId.isEmpty) return false;
-    try {
-      await _client
-          .from('bookmarks')
-          .delete()
-          .eq('profile_id', uid)
-          .eq('vod_id', vodId);
-      return true;
-    } catch (e) {
-      debugPrint('removeBookmark failed: $e');
-      return false;
-    }
+    if (uid == null) throw StateError('Bookmark session unavailable');
+    await _client.from('bookmarks').delete()
+        .eq('profile_id', uid).eq('vod_id', id);
   }
 
   /// Clears live flags whose broadcaster's primary device stopped sending

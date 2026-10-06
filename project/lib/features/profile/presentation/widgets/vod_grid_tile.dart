@@ -4,6 +4,9 @@ import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/widgets/safe_image_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:provider/provider.dart';
+import '../../../../core/providers/app_provider.dart';
+import '../../../discovery/models/bookmark_entry.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
@@ -24,6 +27,8 @@ class VodGridTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
     final title = vod.getLocalizedTitle(lang);
+    final saved = context.select<AppProvider, bool>(
+        (p) => p.isBookmarked(BookmarkEntry.recording(vod).id));
 
     return CaCard(
         padding: EdgeInsets.zero,
@@ -50,6 +55,35 @@ class VodGridTile extends StatelessWidget {
                             BoxDecoration(gradient: AppGradients.mediaScrim)),
                     const Center(
                         child: CaIcon(CaGlyph.play, color: Canopy.paper)),
+                    if (saved)
+                      PositionedDirectional(
+                        top: AppTheme.spaceSm,
+                        end: AppTheme.spaceSm,
+                        child: Semantics(
+                            label: 'profile.saved_lecture'.tr(),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: AppTheme.spaceSm,
+                                  vertical: AppTheme.spaceXs),
+                              decoration: BoxDecoration(
+                                  color: Canopy.mint,
+                                  borderRadius:
+                                      BorderRadius.circular(CanopyRadius.pill)),
+                              child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const CaIcon(CaGlyph.check,
+                                        size: CanopySize.inlineIcon),
+                                    const SizedBox(width: AppTheme.spaceXs),
+                                    Text('profile.saved_lecture'.tr(),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .labelSmall
+                                            ?.copyWith(
+                                                color: Canopy.brandGreen)),
+                                  ]),
+                            )),
+                      ),
                     if (vod.durationSeconds > 0)
                       PositionedDirectional(
                           bottom: AppTheme.spaceSm,

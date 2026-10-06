@@ -87,6 +87,53 @@ class YouTubeApiService {
     return _client.get(url).timeout(lookupTimeout);
   }
 
+  /// Resolves old ID-only saves without visiting a channel or its latest page.
+  /// Missing/deleted videos are omitted; an unavailable API remains an error.
+  Future<Map<String, VodModel>> fetchSavedVideos(List<String> ids) async {
+    if (!_canRead) throw const YouTubeLookupUnavailable();
+    final valid = ids
+        .toSet()
+        .where((id) => RegExp(r'^[A-Za-z0-9_-]{11}$').hasMatch(id))
+        .toList();
+    final result = <String, VodModel>{};
+    for (var offset = 0; offset < valid.length; offset += 50) {
+      final batch = valid.skip(offset).take(50).join(',');
+      final response = await _get(Uri.parse('$_baseUrl/videos').replace(
+          queryParameters: {
+            'part': 'snippet,statistics',
+            'id': batch,
+            'key': apiKey
+          }));
+      if (response.statusCode != 200) throw const YouTubeLookupUnavailable();
+      final items =
+          (jsonDecode(response.body) as Map<String, dynamic>)['items'] as List;
+      for (final item in items) {
+        final id = item['id'] as String;
+        final snippet = item['snippet'] as Map<String, dynamic>;
+        final title = snippet['title'] as String? ?? '';
+        final description = snippet['description'] as String? ?? '';
+        final published = snippet['publishedAt'] as String? ?? '';
+        result[id] = VodModel(
+            vodId: id,
+            streamerId: '',
+            titleEn: title,
+            titleAr: title,
+            descriptionEn: description,
+            descriptionAr: description,
+            youtubeVideoId: id,
+            durationSeconds: 0,
+            recordedDate:
+                published.length >= 10 ? published.substring(0, 10) : '',
+            thumbnailUrl: snippet['thumbnails']?['high']?['url'] as String? ??
+                'https://img.youtube.com/vi/$id/hqdefault.jpg',
+            viewCount: int.tryParse(
+                    item['statistics']?['viewCount']?.toString() ?? '') ??
+                0);
+      }
+    }
+    return result;
+  }
+
   /// Resolves channel handle or URL (e.g. '@ahmedamercaller'or 'https://www.youtube.com/@dalilk4english_podcast/videos') to channel ID and uploads playlist ID
   Future<Map<String, String>> fetchChannelDetails(String handleOrUrl) async {
     if (handleOrUrl.trim().isEmpty || !_canRead) return {};

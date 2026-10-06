@@ -3,6 +3,7 @@
 Updated: 2026-10-03. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
+- **Bookmarks sheet stays empty after saving** — connected to saved recordings/upcoming items, with canonical IDs and visible write failures; widget/SQL checks pass.
 - **Web Archives and playlists are empty while Android works** — server-only YouTube endpoint and sensitive Production key deployed; populated Archive/playlists and playlist videos verified live 2026-10-06.
 - **Chat send refused by chat_session_send RLS** — unqualified `stream_id` in the policy subquery resolved to the session's own column; fixed by qualifying `chat_messages.stream_id`.
 
@@ -103,6 +104,17 @@ Agents: when investigating an error, scan only these short names for a match. If
 - **Camera rotation follows Flutter virtual display** — actual Activity display ID fixes unchanged portrait framing; physical uprightness pending.
 - **Java helper missing from Android APK** — move Java source to src/main/java; runtime receive path verified.
 - **Custom viewport defeats video mute** — clear stream viewport while hidden; received black frame verified.
+
+## Bookmarks sheet stays empty after saving
+
+2026-10-06. Cause: Discovery rendered a fixed empty message instead of reading
+saved items; persistence held only recording IDs and silently ignored write
+failures. Fix: typed saved library with metadata/legacy resolution, playback and
+removal, canonical archive/playlist IDs, separate upcoming bookmarks and error
+rollback. Hosted storage migration is applied with existing ownership/ban policies.
+Verification: 19 focused tests and a disposable rollback-only SQL probe pass;
+EN/AR phone/desktop renders inspected. Physical Android and real-account
+cross-device saving are not newly verified.
 
 ## Chrome deep link reports Library not defined
 

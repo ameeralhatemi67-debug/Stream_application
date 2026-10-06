@@ -18,6 +18,7 @@ import '../../../../core/widgets/ds/ca_button.dart';
 import '../../../../core/widgets/ds/ca_cards.dart';
 import '../../../../core/widgets/ds/ca_feedback.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
+import '../../../discovery/presentation/widgets/bookmark_button.dart';
 
 class UpcomingScheduleTab extends StatefulWidget {
   const UpcomingScheduleTab({super.key, required this.streamer});
@@ -182,7 +183,18 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
 
   @override
   Widget build(BuildContext context) {
-    final provider = context.watch<AppProvider>();
+    final provider = context.read<AppProvider>();
+    context.select<
+            AppProvider, (bool, bool, List<UpcomingSchedule>?, String?, int)>(
+        (p) => (
+              p.isApprovedStreamer,
+              p.isOwnStreamerProfile(widget.streamer.streamerId),
+              p.upcomingSchedulesFor(widget.streamer.streamerId),
+              p.upcomingScheduleErrorFor(widget.streamer.streamerId),
+              Object.hashAll(
+                  (p.upcomingSchedulesFor(widget.streamer.streamerId) ?? [])
+                      .map((s) => p.hasCardReminder(s.id)))
+            ));
     final id = widget.streamer.streamerId;
     final own = provider.isApprovedStreamer &&
         provider.isOwnStreamerProfile(id) &&
@@ -433,6 +445,8 @@ class _ScheduleCardState extends State<_ScheduleCard> {
               ),
             ],
             const SizedBox(height: AppTheme.spaceMd),
+            BookmarkButton(schedule: widget.schedule),
+            const SizedBox(height: AppTheme.spaceSm),
             CaButton(
                 label: (widget.reminderOn
                         ? 'upcoming.remove_reminder'

@@ -8,6 +8,24 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Saved lectures and upcoming bookmarks, 2026-10-06
+
+Discovery's Bookmarked Lectures sheet now lists playable recordings and saved
+upcoming announcements, with All saved / Recordings / Upcoming filters and
+removal controls. Saving marks archive/playlist thumbnails and changes the
+player action to a green checked state. Upcoming saves are separate from reminder
+subscriptions and open the channel's Upcoming tab. The repeated completed-session
+list was removed from profile headers; the VOD sheet avatar no longer has a ring.
+
+The private bookmarks table stores public metadata snapshots and typed references.
+Archive/playlist aliases share a YouTube identity; old ID-only saves resolve through
+the public web proxy. Failed writes roll back, failed reads retain existing content,
+and late loads cannot overwrite a newer change or another account. Guests retain
+the existing session-only behavior. Hosted migration `20261006085602` is applied;
+ownership and banned-account policies are preserved. A rollback-only SQL probe
+passed for old-save preservation, deduplication, private reads/writes, removal and
+snapshot constraints. No new bookmark security-advisor findings.
+
 ## Discovery Hub loading skeletons, 2026-10-06
 
 The owner-approved mint card skeletons are scoped to Discovery Hub. Full cards

@@ -1,6 +1,5 @@
 import '../../../core/widgets/ds/canopy_content_motion.dart';
 import '../../../core/widgets/ds/ca_feedback.dart';
-import '../../live_stream/models/broadcast_session.dart';
 import '../../../core/widgets/ds/ca_navigation.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -105,8 +104,6 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
               p.isStreamerModeEnabled,
               p.currentUserStreamerId
             ));
-    context.select<AppProvider, List<BroadcastSession>>(
-        (p) => p.broadcastSessions);
     final lang = context.locale.languageCode;
 
     // Missing channels have an explicit unavailable state.
@@ -517,21 +514,6 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                 _toggleChannelReminder(context,
                                                     streamer.streamerId)))
                                   ]),
-                                  ...provider.broadcastSessions
-                                      .where((s) =>
-                                          !s.hidden &&
-                                          (s.organizationId ?? s.presenterId) ==
-                                              streamer.streamerId &&
-                                          (s.live ||
-                                              s.replayStatus == 'available'))
-                                      .map((s) => ListTile(
-                                          title: Text(s.title(lang)),
-                                          subtitle: Text(
-                                              'organization_v1.state_${s.state}'
-                                                  .tr()),
-                                          trailing: const CaIcon(CaGlyph.play),
-                                          onTap: () =>
-                                              context.push('/live/${s.id}'))),
                                 ])),
                       ]),
                   PositionedDirectional(

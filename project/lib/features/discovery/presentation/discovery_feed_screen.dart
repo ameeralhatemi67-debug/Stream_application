@@ -24,7 +24,7 @@ import 'widgets/streamer_grid_card.dart';
 import 'widgets/discovery_card_skeleton.dart';
 import 'widgets/tags_filter_bottom_sheet.dart';
 import '../../../core/widgets/duplicate_channel_resolution_dialog.dart';
-import '../../../core/widgets/ds/ca_surfaces.dart';
+import 'bookmarks_sheet.dart';
 
 class DiscoveryFeedScreen extends StatefulWidget {
   const DiscoveryFeedScreen({super.key});
@@ -187,21 +187,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
   }
 
   void _showBookmarksSheet(BuildContext context) {
-    showCaSheet<void>(context,
-        title: '',
-        framed: false,
-        fullWidthOnPhone: true,
-        flushOnPhone: true,
-        body: Builder(
-            builder: (sheetContext) => SafeArea(
-                top: false,
-                child: CaSheet(
-                    bareChrome: true,
-                    title: 'feed.bookmarks_sheet_title'.tr(),
-                    onClose: () => Navigator.pop(sheetContext),
-                    body: Center(
-                        child: Text('feed.no_bookmarks'.tr(),
-                            style: const TextStyle(color: Canopy.haze)))))));
+    BookmarksSheet.show(context);
   }
 
   void _clearSearch() {

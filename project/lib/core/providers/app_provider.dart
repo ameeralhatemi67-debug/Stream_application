@@ -48,6 +48,7 @@ import '../../features/admin/models/banned_user_model.dart';
 import '../../features/admin/models/stream_moderator_model.dart';
 import '../../features/admin/models/tag_moderation_model.dart';
 import '../../features/discovery/models/academic_category_model.dart';
+import '../../features/discovery/models/bookmark_entry.dart';
 import '../models/device_session_model.dart';
 import 'app_flags.dart';
 import '../config/feature_flags.dart';
@@ -393,13 +394,17 @@ class AppProvider extends ChangeNotifier {
   final Map<String, List<UpcomingSchedule>> _upcomingByStreamer = {};
   final Map<String, String> _upcomingErrors = {};
   final Set<String> _loadingUpcoming = {};
-  final UpcomingScheduleService _upcomingService = UpcomingScheduleService();
+  final UpcomingScheduleService _upcomingService;
   late final ReminderPushService _reminderPush =
       ReminderPushService(_upcomingService);
   ReminderPushStatus _reminderPushStatus = ReminderPushStatus.unavailable;
   // Starts empty and is filled from the backend for a signed-in account
   // (05 D-07). It used to ship with two sample recordings already saved.
-  final Set<String> _bookmarkedLectureIds = {};
+  final Map<String, BookmarkEntry> _bookmarks = {};
+  final Set<String> _pendingBookmarks = {};
+  bool _loadingBookmarks = false;
+  bool _bookmarkLoadFailed = false;
+  int _bookmarkRevision = 0;
   // RSVP / venue seating is local-only and hidden in the UI behind
   // kVenueRsvpEnabled (05 D-03): no table records an attendance. The seat map
   // used to ship with counts for three sample streams.
@@ -422,8 +427,10 @@ class AppProvider extends ChangeNotifier {
       SupabaseAuthService? authService,
       ConnectivityService? connectivityService,
       YouTubeApiService? youTubeService,
+      UpcomingScheduleService? upcomingService,
       OrganizationBroadcastService? organizationBroadcastService})
       : _organizationBroadcastService = organizationBroadcastService ?? OrganizationBroadcastService(),
+        _upcomingService = upcomingService ?? UpcomingScheduleService(),
         _youTubeService = youTubeService ?? YouTubeApiService(),
         _adminDbService = adminDbService,
         _authService = authService ?? SupabaseAuthService(),
@@ -2435,7 +2442,11 @@ class AppProvider extends ChangeNotifier {
     // The signed-in account's library goes with the session (05 D-07); the
     // next account must not inherit its follows and saved recordings.
     _followedStreamerIds.clear();
-    _bookmarkedLectureIds.clear();
+    _bookmarks.clear();
+    _pendingBookmarks.clear();
+    _loadingBookmarks = false;
+    _bookmarkLoadFailed = false;
+    _bookmarkRevision++;
     _reminderStreamerIds.clear();
     _cardReminderIds.clear();
     _reminderLeadMinutes = 15;
@@ -4320,27 +4331,125 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  // Bookmarks (05 D-07): persisted per account for signed-in viewers, local
-  // to the device for guests. The UI updates optimistically and the backend
-  // write follows; a failed write leaves the local state as the user set it
-  // and the next loadViewerLibrary() reconciles from the server.
-  bool isBookmarked(String id) => _bookmarkedLectureIds.contains(id);
+  bool isBookmarked(String id) =>
+      _bookmarks.containsKey(BookmarkEntry.recordingKey(id));
+  bool isUpcomingBookmarked(String id) =>
+      _bookmarks.containsKey(BookmarkEntry.upcomingKey(id));
+  bool isBookmarkPending(String id) =>
+      _pendingBookmarks.contains(BookmarkEntry.recordingKey(id));
+  bool get isLoadingBookmarks => _loadingBookmarks;
+  bool get bookmarkLoadFailed => _bookmarkLoadFailed;
+  List<BookmarkEntry> get bookmarks => List.unmodifiable(
+      _bookmarks.values.toList()..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
 
-  Future<void> toggleBookmark(String id, {String streamerId = ''}) async {
-    if (id.isEmpty) return;
-    final wasBookmarked = _bookmarkedLectureIds.contains(id);
-    if (wasBookmarked) {
-      _bookmarkedLectureIds.remove(id);
+  Future<void> toggleVodBookmark(VodModel vod) =>
+      _toggleBookmark(BookmarkEntry.recording(vod));
+  Future<void> toggleUpcomingBookmark(UpcomingSchedule schedule) =>
+      _toggleBookmark(BookmarkEntry.upcoming(schedule));
+  Future<void> removeSavedBookmark(BookmarkEntry entry) async {
+    if (_bookmarks.containsKey(entry.id)) await _toggleBookmark(entry);
+  }
+
+  Future<void> _toggleBookmark(BookmarkEntry entry) async {
+    if (_disposed || entry.id.isEmpty || _pendingBookmarks.contains(entry.id)) return;
+    final generation = _authGeneration;
+    final userId = _authService.currentSession?.user.id;
+    final previous = _bookmarks[entry.id];
+    _bookmarkRevision++;
+    _pendingBookmarks.add(entry.id);
+    if (previous == null) {
+      _bookmarks[entry.id] = entry;
     } else {
-      _bookmarkedLectureIds.add(id);
+      _bookmarks.remove(entry.id);
     }
     notifyListeners();
-    if (_authService.currentSession == null) return;
-    _adminDbService ??= await AdminDatabaseService.create();
-    if (wasBookmarked) {
-      await _adminDbService!.removeBookmark(id);
-    } else {
-      await _adminDbService!.addBookmark(id, streamerId: streamerId);
+    bool current() => !_disposed && _authGeneration == generation &&
+        _authService.currentSession?.user.id == userId;
+    try {
+      if (userId != null) {
+        _adminDbService ??= await AdminDatabaseService.create();
+        if (!current()) return;
+        if (previous == null) {
+          await _adminDbService!.addBookmark(entry);
+        } else {
+          await _adminDbService!.removeBookmark(entry.id);
+        }
+      }
+    } catch (_) {
+      if (current()) {
+        if (previous == null) {
+          _bookmarks.remove(entry.id);
+        } else {
+          _bookmarks[entry.id] = previous;
+        }
+        _bookmarkRevision++;
+        rethrow;
+      }
+    } finally {
+      if (current()) {
+        _pendingBookmarks.remove(entry.id);
+        notifyListeners();
+      }
+    }
+  }
+
+  /// Preserves saved content on errors and ignores a response superseded by
+  /// a local save/removal, account switch, or disposal.
+  Future<void> loadBookmarks() async {
+    if (_disposed || _loadingBookmarks || _authService.currentSession == null) return;
+    final generation = _authGeneration;
+    final revision = _bookmarkRevision;
+    final userId = _authService.currentSession?.user.id;
+    _loadingBookmarks = true;
+    _bookmarkLoadFailed = false;
+    notifyListeners();
+    bool current() => !_disposed && _authGeneration == generation &&
+        _authService.currentSession?.user.id == userId;
+    try {
+      _adminDbService ??= await AdminDatabaseService.create();
+      if (!current()) return;
+      final entries = await _adminDbService!.loadBookmarks();
+      final resolved = {for (final entry in entries) entry.id: entry};
+      final oldRecordings = entries.where((e) =>
+          e.kind == BookmarkKind.recording && e.vod == null).toList();
+      if (oldRecordings.isNotEmpty) {
+        try {
+          final videos = await _youTubeService.fetchSavedVideos(
+              oldRecordings.map((e) => e.id).toList());
+          for (final entry in oldRecordings) {
+            final vod = videos[entry.id];
+            if (vod != null) {
+              resolved[entry.id] = entry.resolved(
+                  vod: vod.copyWith(streamerId: entry.streamerId));
+            }
+          }
+        } catch (_) { if (current()) _bookmarkLoadFailed = true; }
+      }
+      // Announcements are independent of live rooms. Refresh their public
+      // facts so a removed/changed schedule never promises a stale start.
+      for (final streamerId in entries.where((e) => e.kind == BookmarkKind.upcoming)
+          .map((e) => e.streamerId).toSet()) {
+        try {
+          final schedules = await _upcomingService.load(streamerId);
+          for (final entry in entries.where((e) =>
+              e.kind == BookmarkKind.upcoming && e.streamerId == streamerId)) {
+            final matches = schedules.where((s) =>
+                BookmarkEntry.upcomingKey(s.id) == entry.id);
+            resolved[entry.id] = entry.resolved(
+                schedule: matches.firstOrNull, scheduleUnavailable: matches.isEmpty);
+          }
+        } catch (_) { if (current()) _bookmarkLoadFailed = true; }
+      }
+      if (current() && revision == _bookmarkRevision && _pendingBookmarks.isEmpty) {
+        _bookmarks..clear()..addAll(resolved);
+      }
+    } catch (_) {
+      if (current()) _bookmarkLoadFailed = true;
+    } finally {
+      if (current()) {
+        _loadingBookmarks = false;
+        notifyListeners();
+      }
     }
   }
 
@@ -4352,15 +4461,12 @@ class AppProvider extends ChangeNotifier {
     if (userId == null) return;
     _adminDbService ??= await AdminDatabaseService.create();
     final follows = await _adminDbService!.loadFollowedTargetIds();
-    final bookmarks = await _adminDbService!.loadBookmarkedVodIds();
     if (_authGeneration != generation) return;
     _followedStreamerIds
       ..clear()
       ..addAll(follows);
-    _bookmarkedLectureIds
-      ..clear()
-      ..addAll(bookmarks);
     notifyListeners();
+    await loadBookmarks();
   }
 
   // Notifications

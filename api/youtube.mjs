@@ -30,7 +30,7 @@ export function validateQuery(rawUrl) {
     case 'videos': {
       allowed.push('id');
       const ids = (q.id ?? '').split(',');
-      valid = ['statistics', 'liveStreamingDetails', 'snippet,liveStreamingDetails'].includes(q.part) &&
+      valid = ['statistics', 'liveStreamingDetails', 'snippet,liveStreamingDetails', 'snippet,statistics'].includes(q.part) &&
         ids.length <= 50 && ids.every(id => videoId.test(id));
       break;
     }

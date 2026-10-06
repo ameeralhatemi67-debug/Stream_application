@@ -1,9 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/ds/ca_button.dart';
 import '../../../../core/widgets/ds/ca_cards.dart';
@@ -12,6 +10,7 @@ import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../live_stream/presentation/abstract_video_player.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
+import '../../../discovery/presentation/widgets/bookmark_button.dart';
 
 /// Modal sheet for inline playback of archived YouTube VOD lectures.
 ///
@@ -53,8 +52,6 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
     final title = vod.getLocalizedTitle(lang);
-    final isSaved =
-        context.select<AppProvider, bool>((p) => p.isBookmarked(vod.vodId));
     final description = vod.getLocalizedDescription(lang).trim();
     final streamer = widget.streamer;
     final broadcasterName =
@@ -83,7 +80,7 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
                       name: broadcasterName,
                       url: streamer?.avatarUrl,
                       radius: 14,
-                      ring: CaAvatarRing.brand,
+                      ring: CaAvatarRing.none,
                       org: streamer?.isOrganization ?? false,
                       verified: streamer?.isVerified ?? false),
                   const SizedBox(width: AppTheme.spaceSm),
@@ -179,18 +176,7 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
           // Side by side when there is room, stacked on a narrow
           // phone so neither label has to wrap.
           LayoutBuilder(builder: (context, constraints) {
-            final save = CaButton(
-              // Real bookmark (05 D-07): persisted per account for
-              // signed-in viewers, local for guests.
-              icon: CaGlyph.bookmark,
-              variant: CaButtonVariant.secondary,
-              label: isSaved
-                  ? 'profile.saved_lecture'.tr()
-                  : 'profile.save_lecture'.tr(),
-              onPressed: () => context
-                  .read<AppProvider>()
-                  .toggleBookmark(vod.vodId, streamerId: vod.streamerId),
-            );
+            final save = BookmarkButton(vod: vod);
             final share = CaButton(
               // Shares the recording's real watch URL.
               icon: CaGlyph.share,

@@ -1,5 +1,15 @@
 # Design handoff: what is on master, what is not, and what to do next
 
+**2026-10-06 bookmarks update:** Bookmarked Lectures is now a functional saved
+library rather than a fixed empty sheet. It uses the current Canopy header,
+compact thumbnail/date rows, clear play/remove actions and type filters. Saved
+recordings show thumbnail badges and checked green player actions; upcoming cards
+have their own save control, independent of reminders. English/Arabic phone and
+desktop renders were inspected, including large-text widget checks. The
+owner-requested completed-session list in profile headers and the VOD avatar ring
+are removed. Saving remains account-backed for signed-in viewers and session-only
+for guests; it does not download videos.
+
 **2026-10-06 update:** The owner approved the feed-card loading preview and
 restricted implementation to Discovery Hub. Its card skeletons now follow the
 actual first catalog request, stop on completion/failure, and preserve existing

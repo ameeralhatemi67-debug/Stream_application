@@ -8,6 +8,20 @@ updated: 2026-08-09
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
 
+## ADR-012: Private saved recordings and upcoming announcements
+
+Owner request, 2026-10-06: extend the existing own-row `bookmarks` table with
+`item_kind` and a bounded public metadata snapshot. Recording keys use the YouTube
+video ID rather than archive/playlist aliases; upcoming keys are
+`upcoming:<schedule ID>`. Snapshots let the library reopen recordings without
+visiting the source channel. Old ID-only saves resolve through the existing public
+YouTube proxy. Snapshot metadata never authorizes access or proves a live state;
+upcoming schedules refresh through the public schedule service and removed/expired
+announcements are labeled accordingly. Saving is independent of reminders and
+does not download media. Writes use insert-or-ignore, keep the existing own-row
+and banned-account rules, and roll back visible state on failure. Account changes
+and newer mutations fence late reads. Guest bookmarks remain session-only.
+
 ---
 
 ## ADR-001: Persistent Dual Navigation via `go_router` StatefulShellRoute

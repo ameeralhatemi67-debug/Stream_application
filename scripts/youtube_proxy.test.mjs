@@ -36,6 +36,7 @@ test('channel, archive, playlist, statistics, watch and live read shapes accepte
     '/?resource=playlistItems&part=snippet,contentDetails&playlistId=UUah56qawts736uNxZA3inLQ&maxResults=25',
     `/?resource=playlists&part=snippet,contentDetails&channelId=${channel}&maxResults=10`,
     '/?resource=videos&part=statistics&id=bl60n6uuvWE,abcdefghijk',
+    '/?resource=videos&part=snippet,statistics&id=bl60n6uuvWE,abcdefghijk',
     '/?resource=videos&part=liveStreamingDetails&id=bl60n6uuvWE',
     '/?resource=videos&part=snippet,liveStreamingDetails&id=bl60n6uuvWE',
     `/?resource=search&part=snippet&channelId=${channel}&eventType=live&type=video`,
