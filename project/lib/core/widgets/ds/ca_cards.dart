@@ -115,12 +115,14 @@ class CaAvatar extends StatefulWidget {
       this.live = false,
       this.verified = false,
       this.org = false,
-      this.ring = CaAvatarRing.none});
+      this.ring = CaAvatarRing.none,
+      this.loadingPlaceholder});
   final String name;
   final String? url;
   final double radius;
   final bool live, verified, org;
   final CaAvatarRing ring;
+  final Widget? loadingPlaceholder;
   @override
   State<CaAvatar> createState() => _CaAvatarState();
 }
@@ -191,6 +193,7 @@ class _CaAvatarState extends State<CaAvatar>
         name: widget.name,
         square: widget.org,
         cornerRadius: CanopyRadius.orgAvatar,
+        loadingPlaceholder: widget.loadingPlaceholder,
         placeholder: fallback);
     final outerCorner = CanopyRadius.orgAvatar + inset;
     return SizedBox.square(
@@ -330,7 +333,9 @@ class CaScholarCard extends StatelessWidget {
       this.footer,
       this.statusKind,
       this.largeAvatar = false,
-      this.bannerOverlay});
+      this.bannerOverlay,
+      this.bannerLoadingPlaceholder,
+      this.avatarLoadingPlaceholder});
   final double bannerHeight;
   final Widget? footer;
 
@@ -340,6 +345,7 @@ class CaScholarCard extends StatelessWidget {
   /// Pinned to the banner's top end corner (top left in Arabic). When set, the
   /// status chip is not repeated in the card body; the overlay carries it.
   final Widget? bannerOverlay;
+  final Widget? bannerLoadingPlaceholder, avatarLoadingPlaceholder;
   static const _largeAvatarRadius = 34.0;
   final CaStatusKind? statusKind;
   final String name, subtitle;
@@ -362,7 +368,8 @@ class CaScholarCard extends StatelessWidget {
                 height: bannerHeight,
                 width: double.infinity,
                 child: Stack(fit: StackFit.expand, children: [
-                  _CardImage(url: bannerUrl),
+                  _CardImage(url: bannerUrl,
+                      loadingPlaceholder: bannerLoadingPlaceholder),
                   if (bannerOverlay != null)
                     PositionedDirectional(
                         top: AppTheme.spaceSm,
@@ -388,6 +395,7 @@ class CaScholarCard extends StatelessWidget {
                                   child: CaAvatar(
                                       name: name,
                                       url: avatarUrl,
+                                      loadingPlaceholder: avatarLoadingPlaceholder,
                                       verified: verified,
                                       org: org)),
                               const SizedBox(width: AppTheme.spaceSm),
@@ -438,6 +446,7 @@ extension on CaScholarCard {
               child: CaAvatar(
                   name: name,
                   url: avatarUrl,
+                  loadingPlaceholder: avatarLoadingPlaceholder,
                   radius: radius,
                   verified: verified,
                   org: org)),
@@ -526,8 +535,9 @@ class CaLectureTile extends StatelessWidget {
 }
 
 class _CardImage extends StatelessWidget {
-  const _CardImage({this.url});
+  const _CardImage({this.url, this.loadingPlaceholder});
   final String? url;
+  final Widget? loadingPlaceholder;
   @override
   Widget build(BuildContext context) {
     const fallback =
@@ -541,6 +551,10 @@ class _CardImage extends StatelessWidget {
                         MediaQuery.devicePixelRatioOf(context))
                     .round()),
             fit: BoxFit.cover,
+            frameBuilder: loadingPlaceholder == null
+                ? null
+                : (_, child, frame, synchronous) =>
+                    synchronous || frame != null ? child : loadingPlaceholder!,
             errorBuilder: (_, __, ___) => fallback));
   }
 }

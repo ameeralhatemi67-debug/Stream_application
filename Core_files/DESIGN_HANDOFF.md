@@ -1,5 +1,13 @@
 # Design handoff: what is on master, what is not, and what to do next
 
+**2026-10-06 update:** The owner approved the feed-card loading preview and
+restricted implementation to Discovery Hub. Its card skeletons now follow the
+actual first catalog request, stop on completion/failure, and preserve existing
+or cached cards during refreshes. Discovery banner/avatar images have opt-in
+placeholders until their first frame or error. Other screens keep their current
+loading behavior. No artificial delay or random loading state was added.
+The rest of this document retains the 2026-10-05 audit baseline.
+
 Written 2026-10-05 at the end of the design-migration session. Read this first, then `Core_files/STATUS.md`, `Core_files/decisions.md` and `CLAUDE.md`. It is meant to be enough for a new agent to continue without asking the owner for context.
 
 **Contents**

@@ -215,7 +215,10 @@ void main() {
         SizedBox(
             width: 220,
             child: StreamerGridCard(streamer: staleLive, langCode: 'en'))));
-    await tester.pumpAndSettle();
+    // Pending Discovery images now shimmer; the status assertion must not
+    // wait for an intentionally repeating animation to settle.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 200));
     expect(
         find.text('Saved listing · live status unavailable'), findsOneWidget);
     expect(find.text('LIVE'), findsNothing);

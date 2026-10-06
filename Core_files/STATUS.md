@@ -8,6 +8,18 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Discovery Hub loading skeletons, 2026-10-06
+
+The owner-approved mint card skeletons are scoped to Discovery Hub. Full cards
+appear only during a real first catalog request with no existing/cached snapshot;
+completion, failure, or loss of connectivity stops them. Refreshes and empty
+search results keep their existing content/state. Discovery banner/avatar image
+placeholders stop at the first decoded frame or error, with shared-widget defaults
+unchanged. There are no artificial delays. Queued catalog reads now skip disposed
+providers. Verification: 1,066 Flutter tests passed, configured release web build
+passed, analyzer zero, EN/AR catalogs symmetric, and phone/desktop EN/AR renders inspected.
+Production deployment follows the requested master push.
+
 ## YouTube web Archive/playlist repair, 2026-10-05
 
 The failing web build lacked a YouTube API key, and Vercel was missing the

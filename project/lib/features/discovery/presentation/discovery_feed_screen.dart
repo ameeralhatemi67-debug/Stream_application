@@ -21,6 +21,7 @@ import '../models/academic_category_model.dart';
 import '../../profile/models/streamer_models.dart';
 import '../../notifications/presentation/notification_center_sheet.dart';
 import 'widgets/streamer_grid_card.dart';
+import 'widgets/discovery_card_skeleton.dart';
 import 'widgets/tags_filter_bottom_sheet.dart';
 import '../../../core/widgets/duplicate_channel_resolution_dialog.dart';
 import '../../../core/widgets/ds/ca_surfaces.dart';
@@ -221,6 +222,10 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
         context.select<AppProvider, int>((p) => p.unreadNotificationsCount);
     final tag = context.select<AppProvider, String>((p) => p.selectedTagFilter);
     final online = context.select<AppProvider, bool>((p) => p.isOnline);
+    final loadingCards = context.select<AppProvider, bool>((p) =>
+        p.isLoadingPublicCatalog &&
+        !p.hasPublicCatalogSnapshot &&
+        p.streamers.isEmpty);
     final ownLive = context.select<AppProvider, bool>(
         (p) => p.isStreamerModeEnabled && p.isBroadcastingLive);
     final ownAudio = context.select<AppProvider, bool>(
@@ -439,8 +444,16 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                             ])),
                 ],
               ],
-              heading('feed.streamers'.tr(), displayed.length),
-              if (displayed.isEmpty)
+              if (loadingCards)
+                Padding(
+                    padding: const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
+                    child: Text('feed.streamers'.tr(),
+                        style: Theme.of(context).textTheme.titleSmall))
+              else
+                heading('feed.streamers'.tr(), displayed.length),
+              if (loadingCards)
+                const DiscoveryCardSkeletonGrid()
+              else if (displayed.isEmpty)
                 CaEmptyState(
                     title: 'feed.no_results'.tr(),
                     body: 'feed.search_feed'.tr(),

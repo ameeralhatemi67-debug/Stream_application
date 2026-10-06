@@ -6,6 +6,18 @@ updated: 2026-09-27
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
 
+## 2026-10-06: Discovery Hub card loading skeletons
+
+- Implemented the owner-approved preview in Discovery Hub only, using the actual
+  catalog request and image first-frame lifecycle. Existing/cached cards stay
+  visible during refresh; failures, offline transitions and successful empty
+  reads do not leave indefinite skeletons. Shared widget additions are opt-in.
+- Added seven loading/cache/error/image/disposal regression cases and adjusted
+  the affected offline-card test to use fixed pumps for repeating shimmer.
+- Full Flutter suite: 1,066 passed; analyzer zero. Configured release web build passed; four
+  temporary phone/desktop EN/AR renders inspected and the render test removed.
+  Existing translations remain unchanged and key-symmetric.
+
 ## 2026-10-05: secure web YouTube content repair
 
 - Reproduced the missing-key web Archive/playlist failure. Added server-only

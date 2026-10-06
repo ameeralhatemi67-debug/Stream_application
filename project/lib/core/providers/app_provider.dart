@@ -158,6 +158,8 @@ class AppProvider extends ChangeNotifier {
   /// remove cached map pins. A marker-only cache cannot do that.
   bool get hasPublicCatalogSnapshot =>
       _lastLoadedPublicStreamers != null || _publicCatalogUpdatedAt != null;
+  bool get isLoadingPublicCatalog =>
+      _publicCatalogLoad != null && _publicCatalogLoadEpoch == _catalogEpoch;
   DateTime? get publicCatalogUpdatedAt => _publicCatalogUpdatedAt;
   int get successfulCatalogRevision => _successfulCatalogRevision;
 
@@ -2278,7 +2280,7 @@ class AppProvider extends ChangeNotifier {
   static const Duration _liveFlagSweepInterval = Duration(seconds: 60);
 
   Future<void> loadVerifiedStreamersFromBackend() {
-    if (!isOnline) return Future<void>.value();
+    if (_disposed || !isOnline) return Future<void>.value();
     final active = _publicCatalogLoad;
     if (active != null && _publicCatalogLoadEpoch == _catalogEpoch) {
       // A load is already running, but it may have read the catalog before
@@ -2294,8 +2296,12 @@ class AppProvider extends ChangeNotifier {
     final request = _fetchVerifiedStreamers(epoch);
     _publicCatalogLoad = request;
     _publicCatalogLoadEpoch = epoch;
+    notifyListeners();
     request.whenComplete(() {
-      if (identical(_publicCatalogLoad, request)) _publicCatalogLoad = null;
+      if (identical(_publicCatalogLoad, request)) {
+        _publicCatalogLoad = null;
+        if (!_disposed) notifyListeners();
+      }
     });
     return request;
   }

@@ -6,6 +6,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/services/connectivity_service.dart';
 import '../../../../core/widgets/ds/ca_cards.dart';
+import '../../../../core/widgets/ds/ca_feedback.dart';
 import '../../../../core/widgets/ds/canopy_motion.dart';
 import '../../../profile/models/streamer_models.dart';
 
@@ -53,6 +54,9 @@ class StreamerGridCard extends StatelessWidget {
             // badges on the banner's top end corner instead of in the body.
             bannerHeight: _bannerHeight,
             largeAvatar: true,
+            bannerLoadingPlaceholder: const CaSkeleton(height: _bannerHeight),
+            avatarLoadingPlaceholder:
+                const CaSkeleton(shape: CaSkeletonShape.avatar),
             statusKind: isLive
                 ? (streamer.isAudioLive
                     ? CaStatusKind.audio

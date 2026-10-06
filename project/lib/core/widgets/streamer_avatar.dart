@@ -27,6 +27,8 @@ class StreamerAvatar extends StatelessWidget {
   final Color? borderColor;
   final double borderWidth;
   final Widget? placeholder;
+  /// Opt-in placeholder only until the image's first frame is ready.
+  final Widget? loadingPlaceholder;
   final double? cornerRadius;
 
   const StreamerAvatar({
@@ -38,6 +40,7 @@ class StreamerAvatar extends StatelessWidget {
     this.borderColor,
     this.borderWidth = 1.2,
     this.placeholder,
+    this.loadingPlaceholder,
     this.cornerRadius,
   });
 
@@ -57,6 +60,10 @@ class StreamerAvatar extends StatelessWidget {
             width: size,
             height: size,
             fit: BoxFit.cover,
+            frameBuilder: loadingPlaceholder == null
+                ? null
+                : (_, child, frame, synchronous) =>
+                    synchronous || frame != null ? child : loadingPlaceholder!,
             // A URL that resolves but then fails must not leave an empty
             // shape or take the surrounding screen down with it.
             errorBuilder: (_, __, ___) => fallback,
