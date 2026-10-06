@@ -18,6 +18,9 @@ For IP restrictions Vercel needs configured static egress. Keep provider quota
 limits/alerts and apply Vercel Firewall rate limits to `/api/youtube` if traffic
 requires them. The endpoint is public for guest viewing; browser-origin checks
 are not authentication or a distributed rate limiter.
+CDN hits can serve the cached public data before the function runs, so the
+function's origin check is not a cache access control. No cross-origin read
+permission is granted by the endpoint.
 
 The function permits GET only, fixed Google endpoints and validated bounded
 public queries. It rejects client keys, OAuth tokens, unknown/duplicate parameters,

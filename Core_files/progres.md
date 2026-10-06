@@ -15,9 +15,11 @@ updated: 2026-09-27
   web build and browser-key exclusion. Real local reads returned 25 videos and
   10 playlists. Redacted the exposed key in two audit documents and replaced
   the test fixture; focused YouTube tests passed afterward.
-- Production credential transfer awaits explicit approval after automatic
-  review rejection. Existing key exposure in Git history needs rotation or a
-  separate server key. Hosted content verification remains pending.
+- Production credential transfer was approved and completed 2026-10-06. The
+  key is sensitive and Production-only; redeployment of `77bba0a` is READY.
+  Public API reads, populated Archive/playlists and an opened four-video
+  playlist passed on the live site. Bundle/public-response key exclusion
+  passed. Existing Git-history exposure remains a future rotation item.
 
 ## Local master integration, 2026-09-27 10:55 +03:00
 

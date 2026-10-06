@@ -10,8 +10,8 @@ health: release_blocked
 
 ## YouTube web Archive/playlist repair, 2026-10-05
 
-The current deployed web build was confirmed to lack a YouTube API key, and
-Vercel has no corresponding environment variable. Web public Data API reads
+The failing web build lacked a YouTube API key, and Vercel was missing the
+corresponding environment variable. Web public Data API reads
 now use a validated, cached same-origin server function; the browser bundle
 contains no YouTube key. Native transport is preserved. Analyzer zero, full
 Flutter 1,059 passed, seven Node checks passed, release web build and sentinel
@@ -19,10 +19,15 @@ key exclusion verified. Real local server reads returned 25 archive items and
 10 playlists. The exposed key was removed from the test fixture and two audit
 documents, but remains in Git history and should be replaced.
 
-Production key transfer needs explicit approval following automatic review
-rejection; hosted content verification is pending. Setup:
-`doc/YouTube_web_configuration.md`. The older Phase 3 deployment note below is
-historical; the observed deployed build is `d658054` from 2026-10-05.
+Deployment verified 2026-10-06 after explicit owner approval: the existing phone
+key is stored as a sensitive, Production-only Vercel variable. Deployment
+`dpl_BFLczX7sA7HiJzeeARzNmNsRn1pF` is READY on the public domain, running
+`77bba0a`. Browser verification shows populated Hedayh Archive and playlists,
+including four videos in an opened playlist. Public API reads returned 25
+archive items and 10 playlists, and neither the bundle nor public responses
+contains the key. Setup: `doc/YouTube_web_configuration.md`; screenshots and
+evidence: `brief/evidence/2026-10-06/youtube-web-deploy/README.md`. The older
+Phase 3 deployment note below is historical.
 
 ## Streaming regression repair, 2026-10-04
 
