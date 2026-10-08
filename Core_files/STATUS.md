@@ -8,6 +8,22 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Upcoming reminders: backend deployment, 2026-10-08
+
+Hosted `zkkmfjsjouqzibvnzkau`: `dispatch-upcoming-reminders` is deployed
+(`verify_jwt=false`, authorizes itself) and migration `20261008110548` adds the
+service-role-only `verify_reminder_dispatch_key` RPC, so the cron job can use a
+database-generated Vault key instead of the service-role key. **Not finished:**
+the Vault secrets `upcoming_reminder_dispatch_key` and
+`upcoming_reminder_function_url` and the `dispatch-upcoming-reminders` cron job
+are not created yet (run `supabase/functions/dispatch-upcoming-reminders/cron.sql`
+on the hosted project), and no Firebase project values exist anywhere: the web
+build has no `FIREBASE_*` variables and the function has no confirmed
+`FIREBASE_SERVICE_ACCOUNT_JSON`/`FIREBASE_PROJECT_ID`. Until those are set, no
+reminder can reach a device (0 registered push devices on 2026-10-08). The
+reminder bell is independent of Follow by design; no delivered notification has
+been observed.
+
 ## Saved lectures and upcoming bookmarks, 2026-10-06
 
 Discovery's Bookmarked Lectures sheet now lists playable recordings and saved

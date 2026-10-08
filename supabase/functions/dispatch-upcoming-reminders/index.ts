@@ -53,11 +53,20 @@ async function firebaseAccessToken(account: {
 }
 
 Deno.serve(async (request) => {
-  if (!serviceKey || request.headers.get('authorization') !== `Bearer ${serviceKey}`) {
-    return new Response('Unauthorized', { status: 401 });
+  if (!serviceKey || !supabaseUrl) {
+    return new Response('Supabase configuration unavailable', { status: 503 });
   }
-  if (!supabaseUrl) return new Response('Supabase URL unavailable', { status: 503 });
   const db = createClient(supabaseUrl, serviceKey);
+  // The cron job presents the Vault-held dispatch key; the service-role key
+  // itself is still accepted for manual or legacy invocations.
+  const presented = (request.headers.get('authorization') ?? '')
+    .replace(/^Bearer /, '');
+  let authorized = presented !== '' && presented === serviceKey;
+  if (!authorized && presented !== '') {
+    const { data } = await db.rpc('verify_reminder_dispatch_key', { p_key: presented });
+    authorized = data === true;
+  }
+  if (!authorized) return new Response('Unauthorized', { status: 401 });
   const { data, error } = await db.rpc('claim_due_schedule_reminders');
   if (error) return new Response('Reminder claim failed', { status: 503 });
   const claims = (data ?? []) as Claim[];
