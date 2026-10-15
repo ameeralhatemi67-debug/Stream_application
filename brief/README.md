@@ -1,5 +1,7 @@
 # Hadayah Live release brief
 
+> **Active launch plan (2026-10-10 onward):** [launch/](launch/) — [owner steps](launch/01_OWNER_STEPS.md), [testing plan](launch/02_TESTING_PLAN.md), [Claude's remaining work](launch/03_CLAUDE_REMAINING_WORK.md). The phase notes below are historical.
+
 **Current phase:** P6 safety continuation (2026-09-23). Directory account/session and app live-control actions are implemented; chat blocks and app flags have verified backend foundations. P0–P4 and P8A are recorded complete. The remaining P6 work and release gates are open. This app is **not publish-ready**.
 
 ## Status by evidence

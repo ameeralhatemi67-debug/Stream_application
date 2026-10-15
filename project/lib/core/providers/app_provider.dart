@@ -21,6 +21,7 @@ import '../../features/organization/models/org_invitation.dart';
 import '../../features/live_stream/models/broadcast_session.dart';
 import '../services/upcoming_schedule_service.dart';
 import '../services/reminder_push_service.dart';
+import '../config/reminder_firebase_config.dart';
 import '../services/connectivity_service.dart';
 import '../services/public_catalog_cache.dart';
 import '../utils/id_generator.dart';
@@ -3757,72 +3758,66 @@ class AppProvider extends ChangeNotifier {
     await logout();
   }
 
-  /// PDPL data-portability export (v0.9 Checkpoint 3 Phase 2) -- a basic
-  /// export of the requesting user's own stored data: their profile,
-  /// broadcaster/organization applications, and live chat messages they
-  /// sent. profiles_select_own and broadcaster_applications_select_own
-  /// (row_level_security.sql) scope the first two to the caller's own rows;
-  /// chat_messages is filtered client-side by sender_id since its RLS is
-  /// public-read (chat_messages_select_public). Each section fails
-  /// independently so one failed query doesn't blank out the whole export.
-  Future<Map<String, dynamic>> exportMyData() async {
-    final userId = _authService.currentSession?.user.id;
-    final result = <String, dynamic>{
-      'exported_at': DateTime.now().toIso8601String(),
-    };
-    if (userId == null) {
-      result['error'] = 'Not signed in.';
-      return result;
-    }
-
-    final client = Supabase.instance.client;
-
+  /// PDPL access and portability export. The `export_my_data()` RPC
+  /// (20261015090000_data_rights_export_and_deletion.sql) reads every
+  /// user-linked table server-side in one call: profile, applications, roles,
+  /// devices, follows, bookmarks, chat, reports, blocks, mutes, bans,
+  /// reminders, organizations, invitations and YouTube channel metadata.
+  /// Other people's identities and secrets (push tokens, OAuth credentials)
+  /// stay out. Returns null when signed out or when the export fails, so the
+  /// caller never shows a partial file as complete.
+  Future<Map<String, dynamic>?> exportMyData() async {
+    if (_authService.currentSession?.user.id == null) return null;
     try {
-      result['profile'] =
-          await client.from('profiles').select().eq('id', userId).maybeSingle();
+      final data = await Supabase.instance.client.rpc('export_my_data');
+      return Map<String, dynamic>.from(data as Map);
     } catch (e) {
-      debugPrint('Data export: profile fetch failed: $e');
-      result['profile'] = null;
+      debugPrint('Data export failed: $e');
+      return null;
     }
-
-    try {
-      result['broadcaster_applications'] = await client
-          .from('broadcaster_applications')
-          .select()
-          .eq('applicant_profile_id', userId);
-    } catch (e) {
-      debugPrint('Data export: applications fetch failed: $e');
-      result['broadcaster_applications'] = [];
-    }
-
-    try {
-      result['chat_messages'] =
-          await client.from('chat_messages').select().eq('sender_id', userId);
-    } catch (e) {
-      debugPrint('Data export: chat messages fetch failed: $e');
-      result['chat_messages'] = [];
-    }
-
-    return result;
   }
 
-  /// Self-service account & data deletion (v0.9 Checkpoint 2 Phase 1) --
-  /// Apple/Google store-submission requirement. Calls the security-definer
-  /// `delete_own_account()` RPC (20260829000000_account_deletion_cascades.sql),
-  /// which deletes the caller's own auth.users row; that cascades to
-  /// profiles and everything hanging off it (broadcaster_applications,
-  /// chat_messages, user_roles, user_permissions, owned organizations via
-  /// the before-delete trigger). Local client state is cleared the same way
-  /// signOut() clears it, since the session is no longer valid either way.
-  Future<bool> deleteOwnAccount() async {
+  /// Server refusals from `delete_own_account()` the settings screen explains.
+  static const accountDeletionBlockers = {
+    'account_restricted',
+    'broadcast_active',
+    'organization_has_members',
+    'storage_cleanup_required',
+  };
+
+  /// Self-service account and data deletion (Play/App Store requirement).
+  /// `prepare_account_deletion()` reports a blocker or the uploaded files to
+  /// remove. Files go through the Storage API because Supabase refuses SQL
+  /// deletes from storage. `delete_own_account()` then re-checks, redacts the
+  /// name/email copies that do not cascade (audit log, review history) and
+  /// deletes the auth user, which cascades to every user-linked row.
+  /// Returns null on success, otherwise a code from [accountDeletionBlockers]
+  /// or 'failed'.
+  Future<String?> deleteOwnAccount() async {
+    final client = Supabase.instance.client;
     try {
-      await Supabase.instance.client.rpc('delete_own_account');
+      final prepared = Map<String, dynamic>.from(
+          await client.rpc('prepare_account_deletion') as Map);
+      final blocker = prepared['blocker'] as String?;
+      if (blocker != null) return blocker;
+      final paths =
+          List<String>.from(prepared['storage_paths'] as List? ?? const []);
+      for (var i = 0; i < paths.length; i += 100) {
+        final end = i + 100 > paths.length ? paths.length : i + 100;
+        await client.storage
+            .from('streamer-assets')
+            .remove(paths.sublist(i, end));
+      }
+      await client.rpc('delete_own_account');
+    } on PostgrestException catch (e) {
+      debugPrint('Account deletion refused: ${e.message}');
+      return accountDeletionBlockers.contains(e.message) ? e.message : 'failed';
     } catch (e) {
       debugPrint('Account deletion failed: $e');
-      return false;
+      return 'failed';
     }
     await logout();
-    return true;
+    return null;
   }
 
   // Toggle Streamer / Viewer Mode
@@ -4580,6 +4575,18 @@ class AppProvider extends ChangeNotifier {
       _cardReminderIds.contains(scheduleId);
   int get reminderLeadMinutes => _reminderLeadMinutes;
   ReminderPushStatus get reminderPushStatus => _reminderPushStatus;
+
+  /// Reminders reach people only by push. A build without the Firebase
+  /// values hides every reminder control instead of saving reminders that can
+  /// never fire (brief/launch/03 section 4).
+  bool get remindersAvailable =>
+      _debugRemindersAvailable ?? ReminderFirebaseConfig.configured;
+  bool? _debugRemindersAvailable;
+  @visibleForTesting
+  set debugRemindersAvailable(bool? value) {
+    _debugRemindersAvailable = value;
+    notifyListeners();
+  }
 
   void attachReminderPush({required Future<void> Function(String) onOpen,
       Future<void> Function(String route)? onOpenRoute}) {

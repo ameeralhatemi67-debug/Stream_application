@@ -1,6 +1,10 @@
 # 🗺️ Streamer App — Evolutionary Master Roadmap
 
-## Current release path, 2026-09-27
+## Current launch path, 2026-10-15
+
+The active Google Play launch plan is [brief/launch/](brief/launch/): [owner steps](brief/launch/01_OWNER_STEPS.md), [testing plan](brief/launch/02_TESTING_PLAN.md) and [Claude's remaining work](brief/launch/03_CLAUDE_REMAINING_WORK.md). It supersedes the order table below where they differ. Since 2026-10-01: the redesign was ported to master, streaming/RTMPS fixes, chat moderation, the YouTube web proxy, skeletons, bookmarks and the reminder dispatch key landed, and on 2026-10-15 the complete data export, account-deletion completeness, reminder hiding without push, organization pilot gating in the studio and Android 16 inset checks were added (evidence: `brief/evidence/2026-10-15/launch-unblocked/`). Hosted deployment of the 2026-10-15 migration needs the owner's approval.
+
+## Release path, 2026-09-27
 
 Hadayah is not publish-ready. This section and the updated Version 1.0 checkpoint map supersede older snapshots and calendar estimates below. [Task board](brief/management/TASK_BOARD.md) tracks active owners/branches; [release scope](brief/management/RELEASE_SCOPE.md) records evidence-backed deferrals.
 
@@ -703,9 +707,9 @@ Owner scope amendment: organization broadcasting, individual/organization broadc
 
 #### Phase 1.0.8.1: organization roles and public profiles
 
-- [ ] Task 1.0.8.1.1: Add owner/co-owner role designation, invitations, expiry, removal and permission enforcement.
-- [ ] Task 1.0.8.1.2: Add the public organization profile with real venues, branches, roster and live streams.
-- [ ] Task 1.0.8.1.3: Add organization admin member, venue and audit controls.
+- [/] Task 1.0.8.1.1: Add owner/co-owner role designation, invitations, expiry, removal and permission enforcement. Implemented by Organization V1 (`31aebbf`, `b5ad1e9`); the three-show pilot is pending.
+- [/] Task 1.0.8.1.2: Add the public organization profile with real venues, branches, roster and live streams. Implemented by Organization V1 and the redesigned profile (`696302d`); pilot pending.
+- [/] Task 1.0.8.1.3: Add organization admin member, venue and audit controls. Implemented by Organization V1; pilot pending.
 - [ ] Task 1.0.8.1.4: Update the organization specification and ADR-007.
 
 ### Checkpoint 1.0.9: P8B store and Saudi-compliance package `[Backend & Security Track]`
@@ -713,7 +717,7 @@ Owner scope amendment: organization broadcasting, individual/organization broadc
 #### Phase 1.0.9.1: store documentation and data rights
 
 - [/] Task 1.0.9.1.1: Store drafts are prepared; reconcile Data Safety, permissions, foreground-service and UGC claims with the final implemented release and obtain required owner review.
-- [ ] Task 1.0.9.1.2: Extend data export to every user-linked table and verify consent withdrawal.
+- [/] Task 1.0.9.1.2: Extend data export to every user-linked table and verify consent withdrawal. 2026-10-15: `export_my_data()` covers every user-linked table and saves as a JSON file; deletion removes uploaded files and redacts name/email copies (39 local pgTAP assertions). Not yet deployed to the hosted project. Withdrawal still means account deletion; counsel question 7 decides whether a separate withdrawal is required.
 - [/] Task 1.0.9.1.3: Arabic/English listing drafts exist; update final claims and obtain owner/counsel decisions.
 - [/] Task 1.0.9.1.4: Counsel question drafts exist; required PDPL, CST/GCAM, minors, retention and cross-border decisions remain pending.
 
@@ -732,15 +736,15 @@ Owner scope amendment: organization broadcasting, individual/organization broadc
 |---|---|---|
 | 1.0.0 P0 hardening foundation | Partial | The brief and baseline are complete. Local SQL runtime evidence could not be rerun in this audit. |
 | 1.0.1 P1 access control, RLS and secrets | Partial | Source and recorded local evidence are present. Production comparison, device scenarios and the release scan remain open. |
-| 1.0.2 P2 truthful data and real actions | Reopened | Production simulations were removed and real actions wired, but admin Overview KPIs still show sample numbers (found 2026-09-23). No device or production-database run exists. |
+| 1.0.2 P2 truthful data and real actions | Partial | Production simulations were removed and real actions wired. The sample-KPI finding of 2026-09-23 is fixed: `ViewerAnalyticsModel.createDefault()` returns zeros. No device or production-database run exists. |
 | 1.0.3 P3 true viewer presence | Partial | Presence service, count RPCs and grants are present. SQL runtime, expiry and multi-client device probes remain open. |
 | 1.0.4 P4 design and responsive app pass | Complete to recorded E1/E2 evidence | Scheme A, white theme, fonts, localization and responsive tests are complete. Physical-device visual QA remains open. |
 | 1.0.5 P8A Android release identity and branding | Partial, complete to available inputs | Identity, assets, permissions, target SDK, 16 KB checks and fail-closed signing are complete. No keystore, AAB, release scan or device smoke test exists. |
 | 1.0.6 P6 chat, moderation and admin | Not accepted | Main baseline `7b54cb5`; 440 local SQL assertions and later owner E4 evidence exist. Combined chat/admin/account physical acceptance is pending. |
 | P6S broadcast, access, playback and exits | Not accepted; integration running | Streaming source `ddcb521`, evidence `818cc12`, feeds INT-01. Camera/recovery/player physical checks and STREAM-D8 release blocker remain. |
 | 1.0.7 P5 map and offline experience | Implemented branch; needs repair/acceptance | Map tip `74157ba` feeds INT-01. Selected-card regression, phone/backend evidence and city boundaries/scope remain open. |
-| 1.0.8 P7 organizations | Partial scope deferred; retained work needs reconciliation | Broadcast switching/revocation is post-release; remaining roles, invitations, profiles and security are not blanket-waived. |
-| 1.0.9 P8B store and Saudi-compliance package | Drafts prepared; not accepted | Seven `store/` drafts exist; complete export/withdrawal/deletion work and owner/counsel review remain open. |
+| 1.0.8 P7 organizations | Implemented; pilot pending | Organization V1 delivers roles, invitations, profiles, channels, sessions and events behind `organizations_v1_enabled` and the pilot list. The studio offers an organization destination only when that organization is enabled (2026-10-15). The three-show pilot remains open. |
+| 1.0.9 P8B store and Saudi-compliance package | Drafts prepared; data rights implemented locally | Complete export and deletion are implemented and tested locally (2026-10-15), not yet deployed. Store drafts need refreshing to current code; the web deletion page, final URLs and owner/counsel review remain open. |
 | 1.0.10 P9 final verification and release gate | Not started | Full re-verification, gates, SQL, devices, release diff, store package and owner approvals remain open. |
 
 ### Release gate

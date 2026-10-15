@@ -932,9 +932,12 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     ),
 
                   // Keep the card above a shared attribution/control row.
+                  // The row clears the system navigation bar, which Android 16
+                  // always draws over the app; inside the phone tab shell the
+                  // bottom bar has already taken that inset.
                   PositionedDirectional(
                     top: _safePadding.top,
-                    bottom: 0,
+                    bottom: MediaQuery.paddingOf(context).bottom,
                     start: 0,
                     end: 0,
                     child: Column(

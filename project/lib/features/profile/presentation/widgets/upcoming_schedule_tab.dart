@@ -274,7 +274,9 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
                           isOwner: own,
                           reminderOn: provider.hasCardReminder(schedule.id),
                           onShare: () => _share(schedule),
-                          onReminder: () => _remind(schedule),
+                          onReminder: provider.remindersAvailable
+                              ? () => _remind(schedule)
+                              : null,
                           onEdit: () => _edit(schedule),
                           onDelete: () => _delete(schedule),
                         )),
@@ -294,14 +296,17 @@ class _ScheduleCard extends StatefulWidget {
       required this.isOwner,
       required this.reminderOn,
       required this.onShare,
-      required this.onReminder,
+      this.onReminder,
       required this.onEdit,
       required this.onDelete});
   final UpcomingSchedule schedule;
   final List<String> days;
   final bool isOwner;
   final bool reminderOn;
-  final VoidCallback onShare, onReminder, onEdit, onDelete;
+  final VoidCallback onShare, onEdit, onDelete;
+
+  /// Null when the build has no push delivery, which hides both entry points.
+  final VoidCallback? onReminder;
 
   @override
   State<_ScheduleCard> createState() => _ScheduleCardState();
@@ -380,19 +385,20 @@ class _ScheduleCardState extends State<_ScheduleCard> {
                 icon: const CaIcon(CaGlyph.dots),
                 onSelected: (value) => switch (value) {
                   'share' => widget.onShare(),
-                  'remind' => widget.onReminder(),
+                  'remind' => widget.onReminder?.call(),
                   'edit' => widget.onEdit(),
                   _ => widget.onDelete(),
                 },
                 itemBuilder: (_) => [
                   PopupMenuItem(
                       value: 'share', child: Text('upcoming.share'.tr())),
-                  PopupMenuItem(
-                      value: 'remind',
-                      child: Text((widget.reminderOn
-                              ? 'upcoming.remove_reminder'
-                              : 'upcoming.reminder')
-                          .tr())),
+                  if (widget.onReminder != null)
+                    PopupMenuItem(
+                        value: 'remind',
+                        child: Text((widget.reminderOn
+                                ? 'upcoming.remove_reminder'
+                                : 'upcoming.reminder')
+                            .tr())),
                   if (widget.isOwner) ...[
                     PopupMenuItem(
                         value: 'edit', child: Text('upcoming.edit'.tr())),
@@ -446,18 +452,20 @@ class _ScheduleCardState extends State<_ScheduleCard> {
             ],
             const SizedBox(height: AppTheme.spaceMd),
             BookmarkButton(schedule: widget.schedule),
-            const SizedBox(height: AppTheme.spaceSm),
-            CaButton(
-                label: (widget.reminderOn
-                        ? 'upcoming.remove_reminder'
-                        : 'upcoming.reminder')
-                    .tr(),
-                icon: widget.reminderOn ? CaGlyph.check : CaGlyph.bell,
-                confirm: widget.reminderOn,
-                variant: widget.reminderOn
-                    ? CaButtonVariant.secondary
-                    : CaButtonVariant.primary,
-                onPressed: widget.onReminder),
+            if (widget.onReminder != null) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              CaButton(
+                  label: (widget.reminderOn
+                          ? 'upcoming.remove_reminder'
+                          : 'upcoming.reminder')
+                      .tr(),
+                  icon: widget.reminderOn ? CaGlyph.check : CaGlyph.bell,
+                  confirm: widget.reminderOn,
+                  variant: widget.reminderOn
+                      ? CaButtonVariant.secondary
+                      : CaButtonVariant.primary,
+                  onPressed: widget.onReminder),
+            ],
           ]),
         ),
       ),

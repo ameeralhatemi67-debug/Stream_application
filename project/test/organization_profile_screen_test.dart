@@ -123,7 +123,7 @@ void main() {
       addTearDown(tester.view.resetDevicePixelRatio);
 
       final db = await AdminDatabaseService.create();
-      final provider = AppProvider(db);
+      final provider = AppProvider(db)..debugRemindersAvailable = true;
       seedStreamerFixtures(provider);
       await pumpTestApp(
         tester,
@@ -134,6 +134,23 @@ void main() {
       // Check for Follow & Set Reminder buttons
       expect(find.text('Follow Channel'), findsOneWidget);
       expect(find.byTooltip('Set Reminder'), findsOneWidget);
+
+      // A build without push delivery hides the bell instead of saving
+      // reminders that can never fire.
+      provider.debugRemindersAvailable = false;
+      await pumpTestApp(
+        tester,
+        const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
+        provider,
+      );
+      expect(find.text('Follow Channel'), findsOneWidget);
+      expect(find.byTooltip('Set Reminder'), findsNothing);
+      provider.debugRemindersAvailable = true;
+      await pumpTestApp(
+        tester,
+        const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
+        provider,
+      );
 
       // Check Featured Channels
       expect(find.text('Featured Channels'), findsOneWidget);

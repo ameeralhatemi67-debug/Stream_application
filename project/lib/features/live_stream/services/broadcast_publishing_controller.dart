@@ -23,7 +23,9 @@ class BroadcastPublishingController extends ChangeNotifier {
   List<ChannelConnection> get destinations => provider.channelConnections.where((c) =>
     c.id == destination?.id || c.connected && (c.organizationId == null
       ? provider.personalBroadcastApproved : provider.orgMemberships.any((m) =>
-        m.organizationId == c.organizationId && m.active &&
+        // Only organizations the rollout flag or pilot list has enabled; the
+        // server refuses the start otherwise.
+        m.organizationId == c.organizationId && m.active && m.v1Enabled &&
         (m.permissions.canGoLiveVideo || m.permissions.canGoAudioOnly)))).toList();
   bool get simplePersonalDestination => destinations.length == 1 &&
     destination?.organizationId == null && destination?.connected == true;

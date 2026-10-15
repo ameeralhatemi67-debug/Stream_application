@@ -95,50 +95,52 @@ class NotificationSettingsSection extends StatelessWidget {
           ),
           const Divider(color: Canopy.hairline, height: 24),
 
-          Text('upcoming.reminder_settings'.tr(),
-              style: const TextStyle(
-                  color: Canopy.ink,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13)),
-          const SizedBox(height: AppTheme.spaceSm),
-          Row(children: [
-            Expanded(
-                child: Text('upcoming.lead_time'.tr(),
-                    style: const TextStyle(color: Canopy.slate))),
-            DropdownButton<int>(
-              value: provider.reminderLeadMinutes,
-              items: [
-                for (var minutes = 5; minutes <= 30; minutes += 5)
-                  DropdownMenuItem(
-                      value: minutes,
-                      child: Text('$minutes ${isAr ? 'دقيقة' : 'min'}'))
-              ],
-              onChanged: provider.isLoggedInStreamer
-                  ? (value) async {
-                      if (value == null) return;
-                      try {
-                        await provider.setReminderLeadMinutes(value);
-                      } catch (_) {
-                        if (context.mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                              content: Text('upcoming.save_failed'.tr())));
+          if (provider.remindersAvailable) ...[
+            Text('upcoming.reminder_settings'.tr(),
+                style: const TextStyle(
+                    color: Canopy.ink,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13)),
+            const SizedBox(height: AppTheme.spaceSm),
+            Row(children: [
+              Expanded(
+                  child: Text('upcoming.lead_time'.tr(),
+                      style: const TextStyle(color: Canopy.slate))),
+              DropdownButton<int>(
+                value: provider.reminderLeadMinutes,
+                items: [
+                  for (var minutes = 5; minutes <= 30; minutes += 5)
+                    DropdownMenuItem(
+                        value: minutes,
+                        child: Text('$minutes ${isAr ? 'دقيقة' : 'min'}'))
+                ],
+                onChanged: provider.isLoggedInStreamer
+                    ? (value) async {
+                        if (value == null) return;
+                        try {
+                          await provider.setReminderLeadMinutes(value);
+                        } catch (_) {
+                          if (context.mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                                content: Text('upcoming.save_failed'.tr())));
+                          }
                         }
                       }
-                    }
-                  : null,
-            ),
-          ]),
-          if (provider.isLoggedInStreamer &&
-              provider.reminderPushStatus != ReminderPushStatus.granted) ...[
-            const SizedBox(height: AppTheme.spaceSm),
-            Text(
-                (provider.reminderPushStatus == ReminderPushStatus.notGranted
-                        ? 'upcoming.permission_denied'
-                        : 'upcoming.permission_unavailable')
-                    .tr(),
-                style: const TextStyle(color: Canopy.slate)),
+                    : null,
+              ),
+            ]),
+            if (provider.isLoggedInStreamer &&
+                provider.reminderPushStatus != ReminderPushStatus.granted) ...[
+              const SizedBox(height: AppTheme.spaceSm),
+              Text(
+                  (provider.reminderPushStatus == ReminderPushStatus.notGranted
+                          ? 'upcoming.permission_denied'
+                          : 'upcoming.permission_unavailable')
+                      .tr(),
+                  style: const TextStyle(color: Canopy.slate)),
+            ],
+            const Divider(color: Canopy.hairline, height: 24),
           ],
-          const Divider(color: Canopy.hairline, height: 24),
 
           //  Granular Notification Category Toggles
           Text(
@@ -233,8 +235,7 @@ class NotificationSettingsSection extends StatelessWidget {
                   label: Text(
                     name,
                     style: const TextStyle(
-                        color: Canopy.slate,
-                        fontSize: AppTheme.captionFont),
+                        color: Canopy.slate, fontSize: AppTheme.captionFont),
                   ),
                   deleteIcon: const Icon(Icons.close_rounded,
                       size: 14, color: Canopy.liveCrimson),
@@ -263,8 +264,7 @@ class NotificationSettingsSection extends StatelessWidget {
           Expanded(
             child: Text(
               title,
-              style:
-                  const TextStyle(color: Canopy.slate, fontSize: 12),
+              style: const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
           ),
           CaSwitch(

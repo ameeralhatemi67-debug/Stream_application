@@ -1,12 +1,46 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-04
+updated: 2026-10-15
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Launch work without owner inputs, 2026-10-15
+
+The active plan is `brief/launch/` (owner steps, testing plan, Claude's
+remaining work). Owner physical testing of streaming, settings, chat, viewer
+counts, UI, map and admin is recorded there as reported by the owner
+(2026-10-10). STREAM-D8 is implemented server-side through the shared channel
+authorization path (`2149722`, `cb1c10f`); which account and channel the owner's
+streaming tests used is still to be confirmed before it is recorded as accepted.
+
+Done locally on 2026-10-15, **not deployed** (hosted migration needs the owner's yes):
+- Migration `20261015090000_data_rights_export_and_deletion.sql`:
+  `export_my_data()` returns every user-linked table (secrets and other people's
+  identities left out); `prepare_account_deletion()` and a stricter
+  `delete_own_account()` refuse while banned, broadcasting, owning an
+  organization with other active members, or holding uploaded files, and redact
+  the name/email copies that do not cascade (audit log actor, review history,
+  speaker link email, invitations by email). Owners may now delete their own
+  legacy flat-path uploads. 39 pgTAP assertions in `supabase/tests/data_rights.test.sql`.
+- Settings: export saves a JSON file (share sheet / browser download); deletion
+  removes uploaded files through the Storage API first and explains each refusal.
+- Reminder controls are hidden in builds without the Firebase values, because
+  reminders are delivered only by push.
+- The studio offers an organization destination only when that organization is
+  enabled (rollout flag or pilot).
+- Android 16: the map control row clears the system navigation bar on wide
+  screens; new `android16_layout_test.dart` checks system-bar insets and tablet
+  orientations for feed, map, settings, live room, phone broadcast and studio.
+
+The older local SQL suite was rerun on a disposable copy: results are identical
+with and without the new migration, but many pre-existing files fail (see
+`brief/evidence/2026-10-15/launch-unblocked/README.md`), including an ambiguous
+`schedule_id` reference in the reminders tests. That suite needs its own repair
+pass (launch plan section 9).
 
 ## Upcoming reminders: backend deployment, 2026-10-08
 

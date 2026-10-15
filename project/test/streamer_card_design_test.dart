@@ -140,6 +140,7 @@ void main() {
             );
             final provider = AppProvider(AdminDatabaseService(null))
               ..debugSetOnlineForTests(true)
+              ..debugRemindersAvailable = true
               ..addStreamerForTests(streamer);
             if (location == 'settings') {
               provider.debugSetSignedInForTests(

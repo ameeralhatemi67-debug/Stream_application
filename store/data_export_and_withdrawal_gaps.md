@@ -1,5 +1,16 @@
 # P8B data export and consent withdrawal gap list
 
+## Update 2026-10-15: export and deletion implemented locally
+
+Migration `supabase/migrations/20261015090000_data_rights_export_and_deletion.sql` (not yet applied to the hosted project) closes most of the table below:
+
+- `export_my_data()` is one server-side read covering the Auth account (email, created/last sign-in, providers), profile and consent, roles, permissions, device sessions, applications (reviewer removed) and their review history (actor removed), custom placeholders, suggested tags, follows, bookmarks, sent chat, reports filed, own blocks, mutes and mute history received, bans received, moderator assignments, broadcast sessions, upcoming schedules, reminders and deliveries, notification preferences, push devices (tokens never included), owned organizations, memberships, invitations (by profile or email), speaker links, ownership transfers, organization events, YouTube channel metadata (no credentials), actions recorded in the audit log, and uploaded file paths. It fails as a whole rather than returning silent empty sections. Settings saves it as a JSON file or copies it.
+- Deletion: `prepare_account_deletion()` lists the caller's Storage files (own prefix, legacy uploads they own, files of a solo organization) and the client removes them through the Storage API; `delete_own_account()` refuses while files remain, while banned (`account_restricted`, handled by support so a ban cannot be shed), during an active broadcast, or while an owned organization has other active members. Before deleting it redacts the audit-log actor email/name, review-history applicant names and snapshots, speaker link email and invitations sent to the account's email. Tested by `supabase/tests/data_rights.test.sql` (39 assertions, disposable database).
+
+Still open: a separate consent withdrawal (deletion remains the only route; counsel question 7), `stream_viewers` / `chat_stream_settings` / `removed_live_streams` linkability review, export of uploaded file bytes (paths are listed; files are public URLs), Auth/Storage logs and backups, revoking the YouTube OAuth grant at Google on deletion (credentials are deleted from Vault), and the retention periods counsel approves. Retention defaults in the migration are erase-or-redact.
+
+The original inventory below is kept for reference.
+
 Status: code work deliberately deferred while the owner tests P6. This is a repository inventory, not proof of a complete data-subject response. For counsel review where rights, legal basis, retention or third-party duties are involved.
 
 ## Existing behavior

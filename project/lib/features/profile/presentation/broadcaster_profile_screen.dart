@@ -124,6 +124,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         streamer.activeStreamId != null;
     final hasReminder = context
         .select<AppProvider, bool>((p) => p.hasReminder(streamer.streamerId));
+    context.select<AppProvider, bool>((p) => p.remindersAvailable);
 
     // Only recordings loaded for this channel are shown.
     final allVods = context.select<AppProvider, List<VodModel>>(
@@ -499,20 +500,23 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                   onPressed: () => provider
                                                       .toggleFollow(streamer
                                                           .streamerId)))),
-                                    const SizedBox(width: AppTheme.spaceSm),
-                                    CanopyConfirmMotion(
-                                        active: reminder,
-                                        wiggle: true,
-                                        child: CaIconButton(
-                                            bare: true,
-                                            icon: CaGlyph.bell,
-                                            label: (reminder
-                                                    ? 'profile.reminder_on'
-                                                    : 'profile.reminder_btn')
-                                                .tr(),
-                                            onPressed: () =>
-                                                _toggleChannelReminder(context,
-                                                    streamer.streamerId)))
+                                    if (provider.remindersAvailable) ...[
+                                      const SizedBox(width: AppTheme.spaceSm),
+                                      CanopyConfirmMotion(
+                                          active: reminder,
+                                          wiggle: true,
+                                          child: CaIconButton(
+                                              bare: true,
+                                              icon: CaGlyph.bell,
+                                              label: (reminder
+                                                      ? 'profile.reminder_on'
+                                                      : 'profile.reminder_btn')
+                                                  .tr(),
+                                              onPressed: () =>
+                                                  _toggleChannelReminder(
+                                                      context,
+                                                      streamer.streamerId)))
+                                    ],
                                   ]),
                                 ])),
                       ]),

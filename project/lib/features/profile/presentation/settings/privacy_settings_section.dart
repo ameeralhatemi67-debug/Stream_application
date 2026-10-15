@@ -8,6 +8,8 @@ import '../../../../core/providers/app_provider.dart';
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
+import '../../../../core/config/app_identity.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 class PrivacySettingsSection extends StatefulWidget {
@@ -87,8 +89,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             status,
-            style: const TextStyle(
-                color: Canopy.slate, fontSize: 12, height: 1.5),
+            style:
+                const TextStyle(color: Canopy.slate, fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
@@ -181,6 +183,33 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
     _showDataExportDialog(context, pretty);
   }
 
+  /// Saves the export as a JSON file: the share sheet on phones (Files,
+  /// Drive, email), a download in the browser.
+  Future<void> _saveDataExportFile(
+      BuildContext context, String jsonText) async {
+    final now = DateTime.now();
+    final fileName = 'hadayah-data-${now.year}-'
+        '${now.month.toString().padLeft(2, '0')}-'
+        '${now.day.toString().padLeft(2, '0')}.json';
+    try {
+      await Share.shareXFiles(
+        [
+          XFile.fromData(Uint8List.fromList(utf8.encode(jsonText)),
+              mimeType: 'application/json', name: fileName)
+        ],
+        fileNameOverrides: [fileName],
+      );
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('settings.data_export_save_error_toast'.tr()),
+          backgroundColor: Canopy.liveCrimson,
+        ),
+      );
+    }
+  }
+
   void _showDataExportDialog(BuildContext context, String jsonText) {
     showCaDialog(
       context: context,
@@ -207,8 +236,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
               children: [
                 Text(
                   'settings.data_export_dialog_desc'.tr(),
-                  style: const TextStyle(
-                      color: Canopy.slate, fontSize: 12),
+                  style: const TextStyle(color: Canopy.slate, fontSize: 12),
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
                 Container(
@@ -242,11 +270,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                 style: const TextStyle(color: Canopy.haze),
               ),
             ),
-            ElevatedButton.icon(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: AppTheme.onMedia,
-              ),
+            TextButton.icon(
               icon: const Icon(Icons.copy_rounded, size: 16),
               label: Text('settings.data_export_copy_btn'.tr()),
               onPressed: () async {
@@ -257,6 +281,15 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                       content: Text('settings.data_export_copied_toast'.tr())),
                 );
               },
+            ),
+            ElevatedButton.icon(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.onMedia,
+              ),
+              icon: const Icon(Icons.save_alt_rounded, size: 16),
+              label: Text('settings.data_export_save_btn'.tr()),
+              onPressed: () => _saveDataExportFile(dialogContext, jsonText),
             ),
           ],
         );
@@ -380,11 +413,11 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
   Future<void> _handleDeleteAccount(
       BuildContext context, AppProvider provider) async {
     setState(() => _isDeletingAccount = true);
-    final success = await provider.deleteOwnAccount();
+    final error = await provider.deleteOwnAccount();
     if (!context.mounted) return;
     setState(() => _isDeletingAccount = false);
 
-    if (success) {
+    if (error == null) {
       context.go('/welcome');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('settings.delete_account_success_toast'.tr())),
@@ -392,8 +425,9 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('settings.delete_account_error_toast'.tr()),
+          content: Text(deleteAccountErrorText(error)),
           backgroundColor: Canopy.liveCrimson,
+          duration: const Duration(seconds: 8),
         ),
       );
     }
@@ -579,8 +613,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                     return ListTile(
                       leading: const Icon(Icons.forum_outlined,
                           color: AppTheme.primary),
-                      title: Text(id,
-                          style: const TextStyle(color: Canopy.ink)),
+                      title:
+                          Text(id, style: const TextStyle(color: Canopy.ink)),
                       onTap: () => Navigator.pop(dialogContext, id),
                     );
                   },
@@ -609,4 +643,15 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       ),
     );
   }
+}
+
+/// Explains why `AppProvider.deleteOwnAccount` stopped, so a blocked person
+/// knows the next step instead of seeing a generic failure.
+@visibleForTesting
+String deleteAccountErrorText(String code) {
+  if (!AppProvider.accountDeletionBlockers.contains(code)) {
+    return 'settings.delete_account_error_toast'.tr();
+  }
+  return 'settings.delete_account_blocked_$code'
+      .tr(namedArgs: {'email': AppIdentity.supportEmail});
 }
