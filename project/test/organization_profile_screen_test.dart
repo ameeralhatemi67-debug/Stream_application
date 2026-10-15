@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:streamer_app/core/widgets/ds/ca_icon.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -151,6 +152,17 @@ void main() {
         const BroadcasterProfileScreen(streamerId: 'org_dalilk_04'),
         provider,
       );
+      CaIconButton bell() => tester.widget<CaIconButton>(find.ancestor(
+          of: find.byWidgetPredicate(
+              (w) => w is CaIcon && w.glyph == CaGlyph.bell),
+          matching: find.byType(CaIconButton)));
+      expect(bell().on, isFalse, reason: 'off: plain outline bell');
+
+      // A set reminder must look different, not only change its tooltip.
+      provider.debugSetChannelReminderForTests('org_dalilk_04');
+      await tester.pumpAndSettle();
+      expect(bell().on, isTrue, reason: 'on: solid bell');
+      expect(find.byTooltip('Reminder set'), findsOneWidget);
 
       // Check Featured Channels
       expect(find.text('Featured Channels'), findsOneWidget);

@@ -506,7 +506,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                           active: reminder,
                                           wiggle: true,
                                           child: CaIconButton(
-                                              bare: true,
+                                              bare: !reminder,
+                                              on: reminder,
                                               icon: CaGlyph.bell,
                                               label: (reminder
                                                       ? 'profile.reminder_on'
@@ -572,15 +573,19 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     }
     try {
       await provider.toggleReminder(id, language: context.locale.languageCode);
-      if (context.mounted &&
-          provider.hasReminder(id) &&
-          provider.reminderPushStatus != ReminderPushStatus.granted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(
-                (provider.reminderPushStatus == ReminderPushStatus.notGranted
-                        ? 'upcoming.permission_denied'
-                        : 'upcoming.permission_unavailable')
-                    .tr())));
+      if (context.mounted) {
+        final on = provider.hasReminder(id);
+        // Say what changed; if notifications are blocked, say that instead,
+        // because the reminder cannot arrive.
+        final key = !on
+            ? 'upcoming.reminder_removed'
+            : provider.reminderPushStatus == ReminderPushStatus.granted
+                ? 'upcoming.reminder_saved'
+                : provider.reminderPushStatus == ReminderPushStatus.notGranted
+                    ? 'upcoming.permission_denied'
+                    : 'upcoming.permission_unavailable';
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(key.tr())));
       }
     } catch (_) {
       if (context.mounted) {

@@ -96,7 +96,8 @@ class CaIconButton extends StatelessWidget {
       this.onPressed,
       this.glass = false,
       this.selected = false,
-      this.bare = false});
+      this.bare = false,
+      this.on = false});
   final CaGlyph icon;
   final String label;
   final VoidCallback? onPressed;
@@ -104,6 +105,10 @@ class CaIconButton extends StatelessWidget {
 
   /// Icon only: no circle fill or border behind the glyph.
   final bool bare;
+
+  /// A toggle that is switched on (a set reminder, for example): solid brand
+  /// circle with a light glyph, so on and off read differently at a glance.
+  final bool on;
   @override
   Widget build(BuildContext context) {
     final color = glass ? Canopy.paper : Canopy.brandGreen;
@@ -111,6 +116,7 @@ class CaIconButton extends StatelessWidget {
         button: true,
         enabled: onPressed != null,
         label: label,
+        toggled: on ? true : null,
         child: Tooltip(
             message: label,
             excludeFromSemantics: true,
@@ -119,14 +125,16 @@ class CaIconButton extends StatelessWidget {
                 child: SizedBox.square(
                   dimension: CanopySize.target,
                   child: Material(
-                    color: bare
-                        ? Canopy.transparent
-                        : glass
-                            ? Canopy.paper
-                                .withValues(alpha: CanopySize.glassAlpha)
-                            : selected
-                                ? Canopy.mint
-                                : Canopy.paper,
+                    color: on
+                        ? Canopy.brandGreen
+                        : bare
+                            ? Canopy.transparent
+                            : glass
+                                ? Canopy.paper
+                                    .withValues(alpha: CanopySize.glassAlpha)
+                                : selected
+                                    ? Canopy.mint
+                                    : Canopy.paper,
                     shape: CircleBorder(
                         side: bare
                             ? BorderSide.none
@@ -143,7 +151,9 @@ class CaIconButton extends StatelessWidget {
                             child: CaIcon(icon,
                                 color: onPressed == null
                                     ? (glass ? Canopy.mist : Canopy.haze)
-                                    : color))),
+                                    : on
+                                        ? Canopy.paper
+                                        : color))),
                   ),
                 ))));
   }
