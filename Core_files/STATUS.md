@@ -39,8 +39,12 @@ Done on 2026-10-15. The migration was applied to hosted `zkkmfjsjouqzibvnzkau` o
 The older local SQL suite was rerun on a disposable copy: results are identical
 with and without the new migration, but many pre-existing files fail (see
 `brief/evidence/2026-10-15/launch-unblocked/README.md`), including an ambiguous
-`schedule_id` reference in the reminders tests. That suite needs its own repair
-pass (launch plan section 9).
+`schedule_id` reference in the reminders tests. The suite was repaired the same
+day (`cb46213`: 33 files, 708 ok) and its four defect-fix migrations were applied
+to hosted as `20261015174558`..`20261015174647` with the owner's approval: the
+reminder claim function now runs, admins can read application review history,
+anon lost leftover grants on reminder/review tables, and a ban records `ban` as
+the broadcast end reason.
 
 ## Upcoming reminders: backend deployment, 2026-10-08
 

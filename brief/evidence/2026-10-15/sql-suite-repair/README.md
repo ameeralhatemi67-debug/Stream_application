@@ -37,16 +37,16 @@ Control run: on a copy without the new migrations, the edited tests still fail e
 
 The other 15 files were already clean and are unchanged.
 
-## Real defects: four new migrations (local only, need owner approval before hosted)
+## Real defects: four new migrations (applied to hosted 2026-10-15, see the end of this file)
 
 | Migration | Defect | Effect in production |
 |---|---|---|
-| `20261015100000_fix_reminder_claim_conflict_target.sql` | `claim_due_schedule_reminders()` returns a table with `schedule_id, token, occurrence_at` columns, which are PL/pgSQL variables. That makes its `on conflict (schedule_id, token, occurrence_at)` ambiguous (42702). | Every dispatcher call fails, so no schedule reminder has ever been claimed. Fix: `on conflict on constraint schedule_reminder_deliveries_pkey`. Body and grants otherwise unchanged. |
-| `20261015100100_fix_review_history_read_policy.sql` | The `application_review_events` select policy calls `is_banned(uuid)`, which authenticated may not execute (revoked in `20260920110000`). | Every admin read of review history (`admin_database_service.dart:511`) fails with "permission denied for function is_banned". The fix uses `is_current_user_banned()`, which checks the same row. |
-| `20261015100200_reconcile_post_hardening_grants.sql` | Tables created after the 2026-09-21/23 hardening (`upcoming_schedules`, reminder tables, `schedule_reminder_deliveries`, `application_review_events`) received the migrating role's default grants. On a stack migrated as `supabase_admin` that means anon SELECT/INSERT/TRUNCATE, and TRUNCATE skips RLS. `can_subscribe_upcoming` and `register_schedule_push_device` were executable by anon. Affiliation insert/update policies have been unreachable since `20261001095030`. Five reminder/push policies used `FOR ALL`. | It revokes everything beyond each creating migration's explicit GRANT. Where the hosted defaults were already narrow, this is a no-op. It also drops the four dead affiliation write policies and splits the `FOR ALL` policies into per-command policies with identical predicates. |
-| `20261015100300_record_ban_as_broadcast_end_reason.sql` | `20261001111022` rewrote `sync_broadcast_session()` to take the end reason only from `app.broadcast_end_reason`, and `admin_update_account('ban')` never sets it. | A banned broadcaster's session ended as `ended` rather than `ban`, so `AppProvider` (`app_provider.dart:1467`) could not explain the end. The fix derives `ban` again when no explicit reason is set. |
+| `20261015174558_fix_reminder_claim_conflict_target.sql` | `claim_due_schedule_reminders()` returns a table with `schedule_id, token, occurrence_at` columns, which are PL/pgSQL variables. That makes its `on conflict (schedule_id, token, occurrence_at)` ambiguous (42702). | Every dispatcher call fails, so no schedule reminder has ever been claimed. Fix: `on conflict on constraint schedule_reminder_deliveries_pkey`. Body and grants otherwise unchanged. |
+| `20261015174605_fix_review_history_read_policy.sql` | The `application_review_events` select policy calls `is_banned(uuid)`, which authenticated may not execute (revoked in `20260920110000`). | Every admin read of review history (`admin_database_service.dart:511`) fails with "permission denied for function is_banned". The fix uses `is_current_user_banned()`, which checks the same row. |
+| `20261015174637_reconcile_post_hardening_grants.sql` | Tables created after the 2026-09-21/23 hardening (`upcoming_schedules`, reminder tables, `schedule_reminder_deliveries`, `application_review_events`) received the migrating role's default grants. On a stack migrated as `supabase_admin` that means anon SELECT/INSERT/TRUNCATE, and TRUNCATE skips RLS. `can_subscribe_upcoming` and `register_schedule_push_device` were executable by anon. Affiliation insert/update policies have been unreachable since `20261001095030`. Five reminder/push policies used `FOR ALL`. | It revokes everything beyond each creating migration's explicit GRANT. Where the hosted defaults were already narrow, this is a no-op. It also drops the four dead affiliation write policies and splits the `FOR ALL` policies into per-command policies with identical predicates. |
+| `20261015174647_record_ban_as_broadcast_end_reason.sql` | `20261001111022` rewrote `sync_broadcast_session()` to take the end reason only from `app.broadcast_end_reason`, and `admin_update_account('ban')` never sets it. | A banned broadcaster's session ended as `ended` rather than `ban`, so `AppProvider` (`app_provider.dart:1467`) could not explain the end. The fix derives `ban` again when no explicit reason is set. |
 
-Hosted note: whether the grant leakage exists on the hosted project depends on that role's default privileges, which were not checked (no hosted access in this task). Applying the migration there is safe either way. The policy drops and splits are real changes on hosted and need the owner's approval with the other three.
+Hosted note: checked during deployment. Hosted did have the leak in a narrower form: `anon` held SELECT/INSERT/UPDATE/DELETE (not TRUNCATE) on the reminder and review-history tables, and `authenticated` held full DML on `schedule_reminder_deliveries` and `application_review_events`. No anon policies existed, so RLS blocked those grants in practice. Applying the migration there is safe either way. The policy drops and splits are real changes on hosted and need the owner's approval with the other three.
 
 ## Stale fixtures and tests (updated, assertions not weakened)
 
@@ -82,3 +82,16 @@ Hosted note: whether the grant leakage exists on the hosted project depends on t
 ```bash
 docker exec -i supabase_db_P6_accept_disposable psql -XAt -U supabase_admin -d sql_suite_final_20261015 < supabase/tests/<file>
 ```
+
+## Hosted deployment (owner approved, 2026-10-15)
+
+Applied in order through the Supabase MCP connector to `zkkmfjsjouqzibvnzkau`; local files renamed to the stamped versions: `20261015174558` (reminder claim), `20261015174605` (review history policy), `20261015174637` (grants and per-command policies), `20261015174647` (ban end reason).
+
+Preflight (catalog reads only): hosted `claim_due_schedule_reminders` and `sync_broadcast_session` were byte-identical (md5) to the local base at `20261008110548`, so the replacements change only the intended lines; the FOR ALL reminder policies on hosted had exactly the predicates the split recreates; no anon policies existed on the affected tables; guests read schedules through `list_upcoming_schedules`, which is unchanged.
+
+After: both function md5s equal the repaired local database `sql_suite_final_20261015`; anon has no grants on the reminder/review tables and cannot execute `can_subscribe_upcoming`, `register_schedule_push_device` or `claim_due_schedule_reminders`; `authenticated` keeps SELECT only on `application_review_events` and nothing on `schedule_reminder_deliveries`; each reminder table has 4 per-command policies (`notification_push_preferences` 3); `affiliation_requests` keeps its select and delete policies.
+
+Advisors: no new error or warning. Security: guest-executable SECURITY DEFINER warnings fell from 11 to 9. Performance: unchanged (no new multiple-permissive-policy finding).
+
+Still open, outside these migrations: hosted `anon` holds SELECT/INSERT/UPDATE/DELETE on `affiliation_requests` (RLS has no anon policy, so it is blocked; revoke in a later grants pass), the phone-broadcast LIVE-expiry decision above, and `AdminDatabaseService.startBroadcastSession` calling a revoked function.
+
