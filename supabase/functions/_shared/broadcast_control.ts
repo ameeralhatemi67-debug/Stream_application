@@ -112,8 +112,9 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
     if(!provider || provider.snippet?.channelId!==c.channel_id) throw new ProviderError(404,'broadcast_missing');
     await result('observe',{status:provider.status.lifeCycleStatus});c=await context();
   }
-  // Scheduled observation of a live broadcast: is YouTube still receiving video? A dead phone or
-  // a laptop that lost its connection cannot report this itself. broadcast_observe_feed() marks
+  // Observing a live broadcast (the every-minute reconcile job, or a client's observe call): is
+  // YouTube still receiving video? A dead phone or a laptop that lost its connection cannot report
+  // this itself. broadcast_observe_feed() marks
   // the session interrupted (viewers see "be right back"); sweep_stale_live_flags() ends it when
   // the feed has not returned within the grace window.
   if(c.resource.operation==='observe' && c.session.state==='live' && provider?.status?.lifeCycleStatus==='live'

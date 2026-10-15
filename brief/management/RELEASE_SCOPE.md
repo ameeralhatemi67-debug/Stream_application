@@ -11,7 +11,7 @@ The active launch plan is `brief/launch/`. Changes to this register's items:
 
 ## Connection-loss rule — owner decision, 2026-10-15
 
-A broadcast whose video stops reaching YouTube (lost connection, dead phone, killed app, closed OBS) shows viewers "We'll be right back". If the feed returns within **2 minutes**, the broadcast continues; otherwise the server ends it (`ingest_lost`) and completes the YouTube broadcast. The phone keeps retrying for the same 2 minutes. Implemented locally in `20261015190100` plus the reconcile Edge Function; hosted deployment pending owner approval. Physical-device verification (kill the app mid-broadcast, watch from a second device) is still owed.
+A broadcast whose video stops reaching YouTube (lost connection, dead phone, killed app, closed OBS) shows viewers "We'll be right back". If the feed returns within **2 minutes**, the broadcast continues; otherwise the server ends it (`ingest_lost`) and completes the YouTube broadcast. The phone keeps retrying for the same 2 minutes. Deployed to hosted on 2026-10-15 (`20261015191428`, `reconcile-broadcasts` v5, `broadcast-control` v5); the app side ships with the next build. Physical-device verification (kill the app mid-broadcast, watch from a second device) is still owed.
 
 ## Organization V1 scope amendment — owner decision, 2026-10-01
 

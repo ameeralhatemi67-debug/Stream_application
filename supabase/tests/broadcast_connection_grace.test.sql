@@ -1,4 +1,4 @@
--- Connection-loss grace window (20261015190100_broadcast_connection_grace.sql).
+-- Connection-loss grace window (20261015191428_broadcast_connection_grace.sql).
 -- A lost YouTube feed marks the broadcast interrupted ("we'll be right back");
 -- a feed that returns within 2 minutes keeps it live; otherwise the scheduled
 -- reconcile claim ends it. Fixtures roll back.

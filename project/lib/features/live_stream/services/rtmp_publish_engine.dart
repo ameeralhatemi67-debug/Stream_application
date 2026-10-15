@@ -116,7 +116,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   }
 
   /// How long the phone keeps trying to restore a dropped connection. Matches
-  /// the server's grace window (sweep_stale_live_flags, 20261015190100): the
+  /// the server's grace window (sweep_stale_live_flags, 20261015191428): the
   /// broadcast stays live for viewers this long, so the phone must not give up
   /// earlier.
   static const recoveryWindow = Duration(seconds: 120);

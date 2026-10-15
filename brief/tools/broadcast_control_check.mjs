@@ -91,5 +91,5 @@ await dropped.run();dropped.c.resource.operation='start';dropped.sending();await
 dropped.live();dropped.c.resource.operation='observe';await dropped.run();
 assert.equal(dropped.c.session.state,'live');assert.deepEqual(dropped.feeds,[true]);
 dropped.stop();await dropped.run();assert.deepEqual(dropped.feeds,[true,false]);
-dropped.c.resource.operation='start';await dropped.run();assert.deepEqual(dropped.feeds,[true,false],'only scheduled observations probe the feed');
+dropped.c.resource.operation='start';await dropped.run();assert.deepEqual(dropped.feeds,[true,false],'only observe operations probe the feed');
 console.log('Provider preparation, ambiguous writes, confirmation, independent completion and replay checks passed');

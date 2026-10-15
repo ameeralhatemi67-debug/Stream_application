@@ -384,7 +384,7 @@ void main() {
               .tr(namedArgs: {'current': '0', 'total': '10'})),
           findsOneWidget);
       // The phone retries for the server's grace window before offering
-      // Retry / Leave (20261015190100).
+      // Retry / Leave (20261015191428).
       await tester.pump(const Duration(seconds: 60));
       expect(find.byKey(const Key('sender-recovery-exhausted')), findsNothing);
       await tester.pump(const Duration(seconds: 60));

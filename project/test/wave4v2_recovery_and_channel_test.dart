@@ -68,7 +68,7 @@ void main() {
   });
 
   // The phone keeps trying for the server's 2-minute grace window
-  // (20261015190100): viewers see "we'll be right back" meanwhile.
+  // (20261015191428): viewers see "we'll be right back" meanwhile.
   testWidgets('offline does not poll authority and exhausts at 2 minutes',
       (tester) async {
     var checked = 0;
