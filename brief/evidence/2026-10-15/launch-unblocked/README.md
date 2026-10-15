@@ -1,6 +1,6 @@
 # Launch work without owner inputs — 2026-10-15
 
-Scope: `brief/launch/03_CLAUDE_REMAINING_WORK.md` sections 1, 3, 4 and 5 (records, data rights, release-scope cleanup, Android 16). Nothing was deployed: no hosted migration, function, push or install.
+Scope: `brief/launch/03_CLAUDE_REMAINING_WORK.md` sections 1, 3, 4 and 5 (records, data rights, release-scope cleanup, Android 16). Nothing was deployed during the work itself. Afterwards, with the owner's approval, the data-rights migration was applied to hosted `zkkmfjsjouqzibvnzkau` on 2026-10-15 as `20261015172851` through the Supabase MCP connector (see the deployment note at the end).
 
 ## Baseline before changes
 
@@ -9,7 +9,7 @@ Scope: `brief/launch/03_CLAUDE_REMAINING_WORK.md` sections 1, 3, 4 and 5 (record
 
 ## Data rights (section 3)
 
-Migration `supabase/migrations/20261015090000_data_rights_export_and_deletion.sql`:
+Migration `supabase/migrations/20261015172851_data_rights_export_and_deletion.sql`:
 
 | Function | Behaviour |
 |---|---|
@@ -69,3 +69,12 @@ App side: `AppProvider.exportMyData()` calls the RPC and returns null on failure
 ## Final verification
 
 After the changes: `flutter analyze` 0 issues; `flutter test` 1,103 passed, 0 failed (18 new). `node brief/tools/gates.mjs`: only the known G2d and G11a failures.
+
+## Hosted deployment (after owner approval, 2026-10-15)
+
+- Preflight (read-only): hosted history ended at `20261008110548`; `storage.objects.owner_id`, `private.broadcast_provider`, `private.organization_owner_transfers`, `is_banned`, `is_current_user_banned` present; no policy-name clash. 14 objects in `streamer-assets`, 2 of them legacy flat paths.
+- Applied through the Supabase MCP connector; stamped `20261015172851` (local file renamed to match).
+- After: functions executable by `authenticated` only; private helpers not executable by `authenticated`; 2 new Storage policies present.
+- Security advisors: no new error-level finding. Pre-existing: 2 SECURITY DEFINER public views (documented D-21 exception), RLS-without-policy INFO on 3 deny-all tables, leaked-password protection off (Auth setting for the owner), and the generic SECURITY DEFINER execute warnings, which now also list the three new self-service RPCs by design.
+- Not run: a call as a real account (production impersonation declined). Behaviour evidence is the local `data_rights.test.sql` run.
+

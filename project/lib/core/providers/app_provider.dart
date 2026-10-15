@@ -3759,7 +3759,7 @@ class AppProvider extends ChangeNotifier {
   }
 
   /// PDPL access and portability export. The `export_my_data()` RPC
-  /// (20261015090000_data_rights_export_and_deletion.sql) reads every
+  /// (20261015172851_data_rights_export_and_deletion.sql) reads every
   /// user-linked table server-side in one call: profile, applications, roles,
   /// devices, follows, bookmarks, chat, reports, blocks, mutes, bans,
   /// reminders, organizations, invitations and YouTube channel metadata.

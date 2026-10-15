@@ -60,7 +60,7 @@ Blocked by 01 §4 (Firebase), 01 §5 (secrets) and the owner's approval.
 
 ## 3. Data rights (Play and PDPL requirements)
 
-- [x] **Data export covers everything.** `AppProvider.exportMyData()` today reads `profiles`, `broadcaster_applications` and sent chat only. Add every user-linked table: *(2026-10-15, local; hosted migration pending approval)*
+- [x] **Data export covers everything.** `AppProvider.exportMyData()` today reads `profiles`, `broadcaster_applications` and sent chat only. Add every user-linked table: *(2026-10-15; hosted as `20261015172851`)*
   - roles and permissions
   - device sessions
   - consent

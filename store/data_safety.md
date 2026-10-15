@@ -24,7 +24,7 @@ Supabase is the app's backend processor in this draft. Google handles OAuth, You
 
 ## Current export, deletion and retention limits
 
-Updated 2026-10-15 (local, not yet deployed): Settings > Privacy saves a complete JSON export from `export_my_data()`, and Settings > Delete account removes the user's uploaded files through the Storage API, then deletes the account with the name/email copies in the audit log and review history redacted. Details and remaining gaps: data_export_and_withdrawal_gaps.md. Metadata in audit entries is not rewritten.
+Updated 2026-10-15 (backend live on hosted; app change ships with the next build): Settings > Privacy saves a complete JSON export from `export_my_data()`, and Settings > Delete account removes the user's uploaded files through the Storage API, then deletes the account with the name/email copies in the audit log and review history redacted. Details and remaining gaps: data_export_and_withdrawal_gaps.md. Metadata in audit entries is not rewritten.
 
 No table-wide retention schedule or automatic deletion period is defined in the inspected migrations. The app limits local notification history to 30 records, and caches some catalog, moderation and device data in SharedPreferences; those bounds do not establish server retention. Backups, Auth logs, YouTube media, Google OAuth data, and external tile/image logs were not inspected. Retention wording and exceptions are **for counsel review**.
 

@@ -17,8 +17,8 @@ counts, UI, map and admin is recorded there as reported by the owner
 authorization path (`2149722`, `cb1c10f`); which account and channel the owner's
 streaming tests used is still to be confirmed before it is recorded as accepted.
 
-Done locally on 2026-10-15, **not deployed** (hosted migration needs the owner's yes):
-- Migration `20261015090000_data_rights_export_and_deletion.sql`:
+Done on 2026-10-15. The migration was applied to hosted `zkkmfjsjouqzibvnzkau` on 2026-10-15 as `20261015172851` with the owner's approval (security advisors: no new findings beyond the intended self-service RPC warning); the app changes ship with the next build:
+- Migration `20261015172851_data_rights_export_and_deletion.sql`:
   `export_my_data()` returns every user-linked table (secrets and other people's
   identities left out); `prepare_account_deletion()` and a stricter
   `delete_own_account()` refuse while banned, broadcasting, owning an

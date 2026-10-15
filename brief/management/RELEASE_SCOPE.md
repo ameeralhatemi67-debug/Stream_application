@@ -6,7 +6,7 @@ The active launch plan is `brief/launch/`. Changes to this register's items:
 - **STREAM-D8:** implemented server-side through Organization V1's shared channel authorization (owner OAuth, Vault credentials, server-created broadcasts; `2149722`, `cb1c10f`). The owner reports streaming tests passed (2026-10-10); record it as accepted only after the owner confirms which account and channel were used.
 - **SCHED-01 reminders:** builds without the Firebase values now hide every reminder control, because reminders are delivered only by push. With Firebase configured and the dispatch job scheduled, the controls return and the end-to-end evidence requirement below still applies.
 - **Organization broadcasting:** the studio offers an organization destination only when that organization is enabled (`organizations_v1_enabled` or the pilot list); the server already refused other starts. The P7 roles/invitations/profile/admin scope is implemented by Organization V1; the three-show pilot remains the gate for general availability.
-- **Data rights:** complete export and deletion are implemented and tested locally; the hosted migration is pending owner approval.
+- **Data rights:** complete export and deletion are implemented and tested locally; the migration was applied to hosted `zkkmfjsjouqzibvnzkau` on 2026-10-15 as `20261015172851`.
 - Unavailable modes re-checked 2026-10-15 in source: same-Wi-Fi Local explains it is unavailable, private streams are off (`kPrivateStreamingEnabled = false`), front camera shows Coming Soon, no system PiP is offered, and no direct browser screen capture exists (OBS on a laptop is the supported laptop path).
 
 ## Organization V1 scope amendment — owner decision, 2026-10-01

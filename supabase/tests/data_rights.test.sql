@@ -1,5 +1,5 @@
 -- export_my_data / prepare_account_deletion / delete_own_account
--- (20261015090000_data_rights_export_and_deletion.sql). Fixtures roll back.
+-- (20261015172851_data_rights_export_and_deletion.sql). Fixtures roll back.
 begin;
 set local search_path=public,extensions;
 select no_plan();
