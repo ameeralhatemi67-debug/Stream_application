@@ -112,6 +112,16 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
     if(!provider || provider.snippet?.channelId!==c.channel_id) throw new ProviderError(404,'broadcast_missing');
     await result('observe',{status:provider.status.lifeCycleStatus});c=await context();
   }
+  // Scheduled observation of a live broadcast: is YouTube still receiving video? A dead phone or
+  // a laptop that lost its connection cannot report this itself. broadcast_observe_feed() marks
+  // the session interrupted (viewers see "be right back"); sweep_stale_live_flags() ends it when
+  // the feed has not returned within the grace window.
+  if(c.resource.operation==='observe' && c.session.state==='live' && provider?.status?.lifeCycleStatus==='live'
+    && c.resource.provider_stream_id) {
+    const feed=((await call('liveStreams',{part:'id,status',id:c.resource.provider_stream_id})).items as any[])?.[0];
+    const active=feed?.status?.streamStatus==='active' && feed?.status?.healthStatus?.status!=='noData';
+    await rpc('broadcast_observe_feed',{...params,p_active:active});
+  }
   if(c.resource.operation==='start' && provider && !['live','liveStarting','complete','revoked'].includes(provider.status.lifeCycleStatus)) {
     const sending=(await call('liveStreams',{part:'id,status',id:c.resource.provider_stream_id!})).items as any[];
     if(sending?.[0]?.status?.streamStatus!=='active') throw new ProviderError(409,'waiting_for_encoder');

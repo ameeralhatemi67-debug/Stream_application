@@ -101,6 +101,8 @@ The old key is still in git history, so treat it as leaked.
 
 ## 4. Firebase (only if reminders and push are in v1.0)
 
+**Detailed click-by-click version: [04_FIREBASE_REMINDERS_SETUP.md](04_FIREBASE_REMINDERS_SETUP.md).** It also covers the reminder schedule (Vault + cron) and the end-to-end test.
+
 No Firebase project exists yet, so no reminder or push can reach a phone today.
 
 1. [ ] <https://console.firebase.google.com> → **Add project**. Use the same Google Cloud project as above if you like.

@@ -553,8 +553,8 @@ void main() {
       expect(counts.urls, ['LIVEvideo01'],
           reason: 'the room keeps the same player while the phone reconnects');
       expect(find.byKey(const Key('live-room-reconnecting')), findsOneWidget);
-      expect(find.textContaining("broadcaster's connection dropped"),
-          findsOneWidget);
+      expect(find.text("We'll be right back"), findsOneWidget);
+      expect(find.textContaining('connection issues'), findsOneWidget);
     });
 
     testWidgets('the ended room reads correctly in Arabic', (tester) async {

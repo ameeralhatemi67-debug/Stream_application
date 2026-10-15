@@ -1155,33 +1155,56 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               // 3. Floating Reactions
               FloatingReactionsOverlay(controller: _reactionsController),
 
+              // The broadcaster's video stopped reaching YouTube (lost
+              // connection or a dead phone). The server keeps the broadcast
+              // live for a 2-minute grace window and ends it if the feed does
+              // not return, so viewers are told to wait rather than shown a
+              // frozen frame under a LIVE badge.
               if (streamer.isIngestInterrupted)
-                PositionedDirectional(
-                  bottom: 52,
-                  start: 12,
-                  end: 12,
-                  child: Semantics(
-                    liveRegion: true,
-                    child: Container(
-                      key: const Key('live-room-reconnecting'),
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: AppTheme.spaceSm, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AppTheme.media.withValues(alpha: 0.85),
-                        borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                      ),
-                      child: Row(children: [
-                        const Icon(Icons.wifi_tethering_error_rounded,
-                            size: 16, color: AppTheme.warning),
-                        const SizedBox(width: AppTheme.spaceXs),
-                        Expanded(
-                          child: Text(
-                            'live.broadcaster_reconnecting'.tr(),
-                            style: const TextStyle(
-                                color: AppTheme.onMedia, fontSize: 12),
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: Semantics(
+                      liveRegion: true,
+                      container: true,
+                      child: ColoredBox(
+                        key: const Key('live-room-reconnecting'),
+                        color: AppTheme.media.withValues(alpha: 0.88),
+                        child: Center(
+                          child: SingleChildScrollView(
+                            padding: const EdgeInsets.all(AppTheme.spaceLg),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(Icons.wifi_tethering_error_rounded,
+                                    size: 40, color: AppTheme.warning),
+                                const SizedBox(height: AppTheme.spaceSm),
+                                Text(
+                                  'live.be_right_back_title'.tr(),
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      color: AppTheme.onMedia,
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: AppTheme.spaceXs),
+                                ConstrainedBox(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 360),
+                                  child: Text(
+                                    'live.be_right_back_body'.tr(),
+                                    textAlign: TextAlign.center,
+                                    style: TextStyle(
+                                        color: AppTheme.onMedia
+                                            .withValues(alpha: 0.85),
+                                        fontSize: 13,
+                                        height: 1.4),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ]),
+                      ),
                     ),
                   ),
                 ),
@@ -1426,10 +1449,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   Widget _buildChatConnectionIndicator() {
     final state = _chatController.connectionState;
     final (color, label) = switch (state) {
-      ChatConnectionState.live => (
-          Canopy.leaf,
-          'live.chat_status_live'.tr()
-        ),
+      ChatConnectionState.live => (Canopy.leaf, 'live.chat_status_live'.tr()),
       ChatConnectionState.connecting => (
           AppTheme.warning,
           'live.chat_status_connecting'.tr()
@@ -1833,8 +1853,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           Expanded(
             child: Text(
               message,
-              style:
-                  const TextStyle(color: Canopy.slate, fontSize: 12),
+              style: const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
           ),
           if (action != null) ...[
@@ -2039,7 +2058,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               Expanded(
                 child: Text(
                   message.failureReason ?? '',
-                  style: const TextStyle(color: Canopy.liveCrimson, fontSize: 12),
+                  style:
+                      const TextStyle(color: Canopy.liveCrimson, fontSize: 12),
                 ),
               ),
               if (_chatController.isRetryable(message.id))
@@ -2066,8 +2086,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 ),
                 child: Text(
                   'live.chat_send_failed_discard'.tr(),
-                  style:
-                      const TextStyle(color: Canopy.haze, fontSize: 12),
+                  style: const TextStyle(color: Canopy.haze, fontSize: 12),
                 ),
               ),
             ],
@@ -2215,9 +2234,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         availableSeats > 0
                             ? Icons.event_seat_rounded
                             : Icons.block_rounded,
-                        color: availableSeats > 0
-                            ? AppTheme.primary
-                            : Canopy.haze,
+                        color:
+                            availableSeats > 0 ? AppTheme.primary : Canopy.haze,
                         size: 15,
                       ),
                     ],

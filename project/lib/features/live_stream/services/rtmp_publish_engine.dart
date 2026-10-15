@@ -115,6 +115,12 @@ class RtmpPublishEngine extends ChangeNotifier {
     _setState(RtmpPublishState.error);
   }
 
+  /// How long the phone keeps trying to restore a dropped connection. Matches
+  /// the server's grace window (sweep_stale_live_flags, 20261015190100): the
+  /// broadcast stays live for viewers this long, so the phone must not give up
+  /// earlier.
+  static const recoveryWindow = Duration(seconds: 120);
+
   void _beginRecovery() {
     if (_disposed || _stopRequested) return;
     _watchdogTimer?.cancel();
@@ -126,8 +132,8 @@ class RtmpPublishEngine extends ChangeNotifier {
     if (!_recoveryActive) {
       _recoveryActive = true;
       _attempts = 0;
-      _deadlineAt = DateTime.now().add(const Duration(seconds: 60));
-      _recoveryDeadline = Timer(const Duration(seconds: 60), _failRecovery);
+      _deadlineAt = DateTime.now().add(recoveryWindow);
+      _recoveryDeadline = Timer(recoveryWindow, _failRecovery);
     }
     _reconnectAttempt = _attempts;
     _maxReconnectAttempts = 10;

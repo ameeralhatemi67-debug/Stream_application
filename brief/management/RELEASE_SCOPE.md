@@ -9,6 +9,10 @@ The active launch plan is `brief/launch/`. Changes to this register's items:
 - **Data rights:** complete export and deletion are implemented and tested locally; the migration was applied to hosted `zkkmfjsjouqzibvnzkau` on 2026-10-15 as `20261015172851`.
 - Unavailable modes re-checked 2026-10-15 in source: same-Wi-Fi Local explains it is unavailable, private streams are off (`kPrivateStreamingEnabled = false`), front camera shows Coming Soon, no system PiP is offered, and no direct browser screen capture exists (OBS on a laptop is the supported laptop path).
 
+## Connection-loss rule — owner decision, 2026-10-15
+
+A broadcast whose video stops reaching YouTube (lost connection, dead phone, killed app, closed OBS) shows viewers "We'll be right back". If the feed returns within **2 minutes**, the broadcast continues; otherwise the server ends it (`ingest_lost`) and completes the YouTube broadcast. The phone keeps retrying for the same 2 minutes. Implemented locally in `20261015190100` plus the reconcile Edge Function; hosted deployment pending owner approval. Physical-device verification (kill the app mid-broadcast, watch from a second device) is still owed.
+
 ## Organization V1 scope amendment — owner decision, 2026-10-01
 
 The approved Organization broadcasting V1 plan supersedes POST-01 and the organization application deferral below. It also brings server-created YouTube resources during preflight into scope under POST-02. Deliver membership/RBAC, separate personal and organization approval, owner OAuth/Vault channel connections, accepted scheduled occurrences, three concurrent session identities, Android/OBS publishing, scoped moderation, durable notifications and truthful replay/recovery states. STREAM-D8 must be closed by the shared server authorization path. Start disabled, enable named pilot organizations, and retain end/recovery controls when starts are disabled. Three simultaneous real-channel shows and physical Android verification remain mandatory release gates. No production deployment is approved by this amendment; unrelated release blockers remain open.

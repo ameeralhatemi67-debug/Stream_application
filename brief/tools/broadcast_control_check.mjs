@@ -5,7 +5,7 @@ import {ProviderError} from '../../supabase/functions/_shared/youtube_broadcast.
 globalThis.fetch=async()=>Response.json({access_token:'fake-access'});
 const id='99000000-0000-4000-8000-000000000010',channel='UCaaaaaaaaaaaaaaaaaaaaaa';
 function harness(fault) {
- const counts={stream:0,broadcast:0,bind:0,end:0,delete:0};let encoder=false,providerStatus='ready';
+ const counts={stream:0,broadcast:0,bind:0,end:0,delete:0};let encoder=false,providerStatus='ready';const feeds=[];
  const c={session:{id,owner_id:'presenter',org_id:'org',state:'preparing',title_en:'Pilot',title_ar:'',description:'',
    scheduled_start_at:new Date().toISOString(),expected_end_at:new Date(Date.now()+3600000).toISOString(),stream_id:null},
  resource:{operation:'prepare',step:null,needs_reconciliation:false,provider_stream_id:null,provider_broadcast_id:null,
@@ -13,6 +13,7 @@ function harness(fault) {
  let stream=null,broadcast=null;
  async function rpc(name,p) {
   if(name==='broadcast_operation_context') return structuredClone(c);
+  if(name==='broadcast_observe_feed'){assert.equal(p.p_token,'reservation');feeds.push(p.p_active);return;}
   assert.equal(name,'broadcast_provider_step');
   if(p.p_error){c.resource.needs_reconciliation=p.p_ambiguous;return;}
   const step=p.p_step,result=p.p_result;
@@ -64,7 +65,7 @@ function harness(fault) {
   if(resource==='videos')return {items:[{status:{uploadStatus:'processed'}}]};
   throw new Error('Unexpected API operation '+resource+' '+method);
  }
- return {c,counts,run:()=>runBroadcast(id,'reservation',rpc,{clientId:'client',clientSecret:'secret'},api),
+ return {c,counts,feeds,stop:()=>{encoder=false;},run:()=>runBroadcast(id,'reservation',rpc,{clientId:'client',clientSecret:'secret'},api),
    sending:()=>{encoder=true;},live:()=>{providerStatus='live';},end:()=>{c.resource.operation='end';c.session.state='ending';}};
 }
 for(const fault of [null,'stream','broadcast']){
@@ -83,4 +84,12 @@ await assert.rejects(unresolved.run(),/feed_creation_unresolved/);assert.equal(u
 const rejected=harness('rejected');await assert.rejects(rejected.run(),/secure_ingestion_unavailable/);
 assert.equal(rejected.c.resource.needs_reconciliation,true);
 const adopted=await rejected.run();assert.equal(adopted.ingest_url,'rtmps://a.rtmps.youtube.com/live2');assert.equal(rejected.counts.stream,1);
+// A live broadcast whose encoder stopped (dead phone, lost connection) is reported as an
+// interrupted feed on the scheduled observation; the user's own operations never probe it.
+const dropped=harness(null);
+await dropped.run();dropped.c.resource.operation='start';dropped.sending();await dropped.run();
+dropped.live();dropped.c.resource.operation='observe';await dropped.run();
+assert.equal(dropped.c.session.state,'live');assert.deepEqual(dropped.feeds,[true]);
+dropped.stop();await dropped.run();assert.deepEqual(dropped.feeds,[true,false]);
+dropped.c.resource.operation='start';await dropped.run();assert.deepEqual(dropped.feeds,[true,false],'only scheduled observations probe the feed');
 console.log('Provider preparation, ambiguous writes, confirmation, independent completion and replay checks passed');

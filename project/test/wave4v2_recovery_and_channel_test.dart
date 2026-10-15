@@ -67,7 +67,9 @@ void main() {
     await tester.pump(const Duration(seconds: 10));
   });
 
-  testWidgets('offline does not poll authority and exhausts at 60s',
+  // The phone keeps trying for the server's 2-minute grace window
+  // (20261015190100): viewers see "we'll be right back" meanwhile.
+  testWidgets('offline does not poll authority and exhausts at 2 minutes',
       (tester) async {
     var checked = 0;
     engine.isOnline = () => false;
@@ -78,9 +80,32 @@ void main() {
     await live(tester);
     await emit(tester, 'disconnected', starts.last);
     await tester.pump(const Duration(seconds: 60));
+    expect(engine.state, RtmpPublishState.reconnecting,
+        reason: 'still inside the grace window');
+    await tester.pump(const Duration(seconds: 60));
     expect(checked, 0);
     expect(starts, hasLength(1));
     expect(engine.state, RtmpPublishState.error);
+  });
+
+  testWidgets('internet back after 90s resumes the same broadcast',
+      (tester) async {
+    var online = false;
+    engine.isOnline = () => online;
+    engine.authorizeRecovery = () async => true;
+    await live(tester);
+    await emit(tester, 'disconnected', starts.last);
+    await tester.pump(const Duration(seconds: 90));
+    expect(engine.state, RtmpPublishState.reconnecting);
+    online = true;
+    await tester.pump(const Duration(seconds: 3));
+    expect(starts, hasLength(2),
+        reason: 'one reconnect once the network is back');
+    await emit(tester, 'live', starts.last);
+    expect(engine.state, RtmpPublishState.live);
+    await tester.pump(const Duration(seconds: 40));
+    expect(engine.state, RtmpPublishState.live,
+        reason: 'the old deadline no longer applies once live again');
   });
 
   for (final action in ['stop', 'denied', 'stale']) {
