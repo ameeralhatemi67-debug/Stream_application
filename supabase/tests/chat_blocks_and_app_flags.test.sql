@@ -10,8 +10,14 @@ insert into public.profiles(id,email) values
  ('66000000-0000-4000-8000-000000000003','flag-sender@example.invalid');
 insert into public.user_roles(profile_id,role) values('66000000-0000-4000-8000-000000000001','master_admin');
 insert into auth.sessions(id,user_id) values('66000000-0000-4000-8000-000000000011','66000000-0000-4000-8000-000000000001');
+-- Chat is keyed by a public broadcast session id (20261001114055), so the
+-- room needs a provider-confirmed live session owned by an approved broadcaster.
+insert into auth.users(id,email) values('66000000-0000-4000-8000-000000000004','flag-caster@example.invalid');
+insert into public.profiles(id,email,is_streamer,is_verified) values('66000000-0000-4000-8000-000000000004','flag-caster@example.invalid',true,true);
+insert into public.broadcast_sessions(id,owner_id,stream_id,broadcast_type,state,started_at,accepted_at) values
+ ('66000000-0000-4000-8000-000000000041','66000000-0000-4000-8000-000000000004','FLAGSTREAM1','liveVideo','live',now(),now());
 insert into public.chat_messages(id,stream_id,sender_id,body) values
- ('66000000-0000-4000-8000-000000000021','chatstream1','66000000-0000-4000-8000-000000000003','Salaam');
+ ('66000000-0000-4000-8000-000000000021','66000000-0000-4000-8000-000000000041','66000000-0000-4000-8000-000000000003','Salaam');
 set local role authenticated;
 select set_config('request.jwt.claims','{"sub":"66000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select throws_ok($$select public.admin_set_app_flag('chat_enabled',false,'test')$$,'42501',null,'viewer cannot toggle app flags');
@@ -26,15 +32,15 @@ select is((select count(*)::int from public.chat_messages where id='66000000-000
 select set_config('request.jwt.claims','{"sub":"66000000-0000-4000-8000-000000000002","role":"authenticated"}',true);
 select lives_ok($$delete from public.chat_user_blocks where blocker_id=auth.uid()$$,'viewer can unblock');
 select is((select count(*)::int from public.chat_messages where id='66000000-0000-4000-8000-000000000021'),1,'unblock restores access');
-select throws_ok($$insert into public.chat_reports(message_id,stream_id,reported_sender_id,reporter_id,reason) values('66000000-0000-4000-8000-000000000021','chatstream1','66000000-0000-4000-8000-000000000003',auth.uid(),'invented')$$,'23514',null,'unknown reason rejected');
+select throws_ok($$insert into public.chat_reports(message_id,stream_id,reported_sender_id,reporter_id,reason) values('66000000-0000-4000-8000-000000000021','66000000-0000-4000-8000-000000000041','66000000-0000-4000-8000-000000000003',auth.uid(),'invented')$$,'23514',null,'unknown reason rejected');
 select throws_ok($$insert into public.chat_reports(message_id,stream_id,reported_sender_id,reporter_id,reason) values('66000000-0000-4000-8000-000000000021','wrongstream','66000000-0000-4000-8000-000000000003',auth.uid(),'spam')$$,'22023',null,'forged stream rejected');
-select lives_ok($$insert into public.chat_reports(message_id,stream_id,reported_sender_id,reporter_id,reason) values('66000000-0000-4000-8000-000000000021','chatstream1','66000000-0000-4000-8000-000000000003',auth.uid(),'spam')$$,'valid report accepted');
+select lives_ok($$insert into public.chat_reports(message_id,stream_id,reported_sender_id,reporter_id,reason) values('66000000-0000-4000-8000-000000000021','66000000-0000-4000-8000-000000000041','66000000-0000-4000-8000-000000000003',auth.uid(),'spam')$$,'valid report accepted');
 select set_config('request.jwt.claims','{"sub":"66000000-0000-4000-8000-000000000001","session_id":"66000000-0000-4000-8000-000000000011","role":"authenticated"}',true);
 select throws_ok($$select public.admin_set_app_flag('unknown',false,'test')$$,'22023',null,'unknown flag rejected');
 select throws_ok($$select public.admin_set_app_flag('chat_enabled',false,' ')$$,'22023',null,'flag change requires reason');
 select lives_ok($$select public.admin_set_app_flag('chat_enabled',false,'test')$$,'master disables global chat');
 reset role;
-select throws_ok($$insert into public.chat_messages(stream_id,sender_id,body) values('chatstream1','66000000-0000-4000-8000-000000000003','Salaam')$$,'42501','Feature temporarily disabled','global chat switch blocks even trusted inserts');
+select throws_ok($$insert into public.chat_messages(stream_id,sender_id,body) values('66000000-0000-4000-8000-000000000041','66000000-0000-4000-8000-000000000003','Salaam')$$,'42501','Feature temporarily disabled','global chat switch blocks even trusted inserts');
 set local role authenticated;
 select lives_ok($$select public.admin_set_app_flag('registrations_open',false,'test')$$,'master disables registration');
 reset role;

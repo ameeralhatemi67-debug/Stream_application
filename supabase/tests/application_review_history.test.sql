@@ -83,12 +83,17 @@ select is((select count(*)::int from public.application_review_events
   where action='removed' and application_id='72000000-0000-4000-8000-000000000001'),1,
   'queue removal remains visible in the action log');
 
+-- The new applicant submits their own application; the admin then reviews it.
+select set_config('request.jwt.claims',
+  '{"sub":"71000000-0000-4000-8000-000000000003","role":"authenticated"}',true);
 insert into public.broadcaster_applications(id,applicant_profile_id,account_type,
     applicant_name_en,applicant_name_ar,email,phone,category_id,city_id,
     latitude,longitude,youtube_channel_url,youtube_handle,status) values
  ('72000000-0000-4000-8000-000000000002','71000000-0000-4000-8000-000000000003',
   'individualScholar','New applicant','متقدم جديد','newapplicant@example.invalid','333','science','khobar',
   26,50,'https://www.youtube.com/@new','new','pending');
+select set_config('request.jwt.claims',
+  '{"sub":"71000000-0000-4000-8000-000000000001","role":"authenticated"}',true);
 update public.broadcaster_applications set status='approved',reviewed_by=auth.uid()
   where id='72000000-0000-4000-8000-000000000002';
 select ok((select is_streamer and is_verified from public.profiles

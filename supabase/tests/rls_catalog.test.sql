@@ -27,7 +27,8 @@ select plan(21);
 -- is named here, so widening the surface means editing this file too.
 -- ---------------------------------------------------------------------------
 create temporary table expected_deny_all(relname text) on commit drop;
-insert into expected_deny_all values ('stream_viewers'), ('removed_live_streams');
+insert into expected_deny_all values ('stream_viewers'), ('removed_live_streams'),
+  ('schedule_reminder_deliveries');  -- service-role dispatcher only (20260930010000)
 
 create temporary table expected_anon_select(relname text) on commit drop;
 insert into expected_anon_select values
@@ -39,13 +40,21 @@ insert into expected_anon_select values
   ('app_flags'),                     -- public feature availability, no client writes
   ('streamer_custom_placeholders'),  -- approved custom cards
   ('streamer_public_profiles'),      -- non-PII view
-  ('organization_public_profiles');  -- non-PII view
+  ('organization_public_profiles'),  -- non-PII view
+  ('broadcast_sessions');            -- public sessions only, via broadcast_is_public (20261001111022)
 
 create temporary table expected_anon_execute(proname text) on commit drop;
 insert into expected_anon_execute values
   ('viewer_heartbeat'),    -- D-08: guests are counted
   ('get_viewer_counts'),   -- D-08: guests see the count
-  ('chat_sender_info');    -- guests see sender names and role badges
+  ('chat_sender_info'),    -- guests see sender names and role badges
+  ('chat_moderator_since'),    -- guests see moderator badges (20261005144121)
+  ('broadcast_is_public'),     -- public session read policy (20261001111022)
+  ('broadcast_list_sessions'), -- guests see public schedules (20261001111022)
+  ('broadcast_room'),          -- guests open a public live room (20261001114055)
+  ('broadcast_chat_read'),     -- guests read a public session's chat (20261001114055)
+  ('list_upcoming_schedules'), -- guests see sanitized announcements (20260930010000)
+  ('can_publish_upcoming');    -- announcement visibility check (20260930010000)
 
 create temporary table expected_realtime(relname text) on commit drop;
 insert into expected_realtime values
@@ -152,7 +161,7 @@ select is(
     where p.pronamespace = 'public'::regnamespace
       and has_function_privilege('anon', p.oid, 'execute')
       and p.proname not in (select proname from expected_anon_execute)),
-  '', 'R5a anon may execute only the three documented functions');
+  '', 'R5a anon may execute only the documented functions');
 
 select is(
   (select coalesce(string_agg(e.proname, ',' order by e.proname), '')

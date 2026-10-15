@@ -1,6 +1,9 @@
 -- Fresh local SQL: publish only the approving applicant's explicit venue.
 begin;
 select no_plan();
+-- New organization applications are gated by a launch switch (20261001160000).
+insert into public.app_flags(key,enabled) values('organization_applications_open',true)
+ on conflict(key) do update set enabled=true;
 insert into auth.users(id,email) values
  ('39000000-0000-4000-8000-000000000011','org-location@example.invalid'),
  ('39000000-0000-4000-8000-000000000012','other-location@example.invalid');
@@ -37,6 +40,7 @@ update public.broadcaster_applications set status='pending' where id='59000000-0
 select ok((select latitude is null from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000011'), 'pending application exposes no location');
 update public.broadcaster_applications set status='approved',account_type='individualScholar' where id='59000000-0000-4000-8000-000000000011';
 select ok((select latitude is null from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000011'), 'individual application cannot stand in for organization venue');
+update public.broadcaster_applications set account_type='organizationVenue' where id='59000000-0000-4000-8000-000000000011';
 select throws_ok($$update public.broadcaster_applications set latitude=0,longitude=0 where id='59000000-0000-4000-8000-000000000011'$$,
  '22023', null, 'approved public point cannot move outside the supported map');
 select ok((select latitude=26.4301234 and longitude=50.1004321 from public.organization_public_profiles where id='69000000-0000-4000-8000-000000000011'), 'rejected location edit preserves approved point');

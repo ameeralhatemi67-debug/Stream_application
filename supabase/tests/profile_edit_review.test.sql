@@ -1,5 +1,8 @@
 begin;
 select no_plan();
+-- New organization applications are gated by a launch switch (20261001160000).
+insert into public.app_flags(key,enabled) values('organization_applications_open',true)
+ on conflict(key) do update set enabled=true;
 insert into auth.users(id,email) values
  ('69000000-0000-4000-8000-000000000001','editor@example.invalid'),
  ('69000000-0000-4000-8000-000000000002','stranger@example.invalid');

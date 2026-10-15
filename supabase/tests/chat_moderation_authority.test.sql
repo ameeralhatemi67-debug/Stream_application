@@ -22,50 +22,57 @@ insert into auth.users (id, email) values
  ('a0000000-0000-4000-8000-000000000003', 'stranger@example.invalid'),
  ('a0000000-0000-4000-8000-000000000004', 'admin@example.invalid');
 
-insert into public.profiles (id, email, display_name_en, is_streamer, is_verified, is_currently_live, active_stream_id) values
- ('a0000000-0000-4000-8000-000000000001', 'owner@example.invalid', 'Owner', true, true, true, 'modstream1'),
- ('a0000000-0000-4000-8000-000000000002', 'viewer@example.invalid', 'Viewer', false, false, false, null),
+insert into public.profiles (id, email, display_name_en, is_streamer, is_verified) values
+ ('a0000000-0000-4000-8000-000000000001', 'owner@example.invalid', 'Owner', true, true),
+ ('a0000000-0000-4000-8000-000000000002', 'viewer@example.invalid', 'Viewer', false, false),
  -- The stranger is a verified streamer too, but of another stream entirely.
- ('a0000000-0000-4000-8000-000000000003', 'stranger@example.invalid', 'Stranger', true, true, true, 'otherstream'),
- ('a0000000-0000-4000-8000-000000000004', 'admin@example.invalid', 'Admin', false, false, false, null);
+ ('a0000000-0000-4000-8000-000000000003', 'stranger@example.invalid', 'Stranger', true, true),
+ ('a0000000-0000-4000-8000-000000000004', 'admin@example.invalid', 'Admin', false, false);
+
+-- Both streamers are live. LIVE is a provider-confirmed broadcast session
+-- (20261001111022) and the chat room is keyed by that session's id
+-- (20261001114055), so the sessions are the fixture.
+insert into public.broadcast_sessions (id, owner_id, stream_id, broadcast_type, state, started_at, accepted_at) values
+ ('a0000000-0000-4000-8000-000000000041', 'a0000000-0000-4000-8000-000000000001', 'MODSTREAM01', 'liveVideo', 'live', now(), now()),
+ ('a0000000-0000-4000-8000-000000000042', 'a0000000-0000-4000-8000-000000000003', 'OTHERSTREAM', 'liveVideo', 'live', now(), now());
 
 insert into public.user_roles (profile_id, role) values
  ('a0000000-0000-4000-8000-000000000004', 'admin');
 
 -- One message from the viewer in the owner's stream.
 insert into public.chat_messages (id, stream_id, sender_id, body) values
- ('b0000000-0000-4000-8000-000000000001', 'modstream1',
+ ('b0000000-0000-4000-8000-000000000001', 'a0000000-0000-4000-8000-000000000041',
   'a0000000-0000-4000-8000-000000000002', 'a message to moderate');
 
 -- ---------------------------------------------------------------------------
--- owns_stream / chat_can_moderate resolve from the profile that is actually
--- live on that stream id, not from anything the caller sends.
+-- owns_stream / chat_can_moderate resolve from the broadcast session that owns
+-- that room, not from anything the caller sends.
 -- ---------------------------------------------------------------------------
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
-select ok(public.owns_stream('modstream1'), 'the broadcaster owns its own stream');
-select ok(public.chat_can_moderate('modstream1'),
+select ok(public.owns_stream('a0000000-0000-4000-8000-000000000041'), 'the broadcaster owns its own stream');
+select ok(public.chat_can_moderate('a0000000-0000-4000-8000-000000000041'),
  'the broadcaster may moderate its own stream');
-select ok(not public.chat_can_moderate('otherstream'),
+select ok(not public.chat_can_moderate('a0000000-0000-4000-8000-000000000042'),
  'the broadcaster may NOT moderate a stream it does not own');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
-select ok(not public.owns_stream('modstream1'), 'a viewer owns no stream');
-select ok(not public.chat_can_moderate('modstream1'),
+select ok(not public.owns_stream('a0000000-0000-4000-8000-000000000041'), 'a viewer owns no stream');
+select ok(not public.chat_can_moderate('a0000000-0000-4000-8000-000000000041'),
  'A9 a viewer may not moderate');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
-select ok(not public.chat_can_moderate('modstream1'),
+select ok(not public.chat_can_moderate('a0000000-0000-4000-8000-000000000041'),
  'A3 an unrelated broadcaster may not moderate someone else''s stream');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000004","role":"authenticated"}', true);
-select ok(public.chat_can_moderate('modstream1'),
+select ok(public.chat_can_moderate('a0000000-0000-4000-8000-000000000041'),
  'a platform admin may moderate any stream');
 reset role;
 
@@ -103,7 +110,7 @@ select is((select count(*)::int from public.chat_messages
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 select throws_ok($$insert into public.chat_muted_users (stream_id, muted_profile_id, muted_by)
- values ('modstream1', 'a0000000-0000-4000-8000-000000000001',
+ values ('a0000000-0000-4000-8000-000000000041', 'a0000000-0000-4000-8000-000000000001',
          'a0000000-0000-4000-8000-000000000002')$$,
  '42501', null, 'A9 a viewer cannot mute anyone');
 reset role;
@@ -111,7 +118,7 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000003","role":"authenticated"}', true);
 select throws_ok($$insert into public.chat_muted_users (stream_id, muted_profile_id, muted_by)
- values ('modstream1', 'a0000000-0000-4000-8000-000000000002',
+ values ('a0000000-0000-4000-8000-000000000041', 'a0000000-0000-4000-8000-000000000002',
          'a0000000-0000-4000-8000-000000000003')$$,
  '42501', null, 'A3 an unrelated streamer cannot mute in another stream');
 reset role;
@@ -119,7 +126,7 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
 select lives_ok($$insert into public.chat_muted_users (stream_id, muted_profile_id, muted_by)
- values ('modstream1', 'a0000000-0000-4000-8000-000000000002',
+ values ('a0000000-0000-4000-8000-000000000041', 'a0000000-0000-4000-8000-000000000002',
          'a0000000-0000-4000-8000-000000000001')$$,
  'the stream owner CAN mute a sender in its own stream');
 reset role;
@@ -127,26 +134,26 @@ reset role;
 -- A11: the muted sender can no longer insert.
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
-select ok(public.chat_is_muted('modstream1', 'a0000000-0000-4000-8000-000000000002'),
+select ok(public.chat_is_muted('a0000000-0000-4000-8000-000000000041', 'a0000000-0000-4000-8000-000000000002'),
  'the muted sender can see that they are muted (drives the composer state)');
 select throws_ok($$insert into public.chat_messages (stream_id, sender_id, body)
- values ('modstream1', 'a0000000-0000-4000-8000-000000000002', 'let me back in')$$,
+ values ('a0000000-0000-4000-8000-000000000041', 'a0000000-0000-4000-8000-000000000002', 'let me back in')$$,
  '42501', null, 'A11 a muted sender cannot insert a message');
 reset role;
 
 -- But the mute is scoped to that one stream.
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
-select ok(not public.chat_is_muted('otherstream', 'a0000000-0000-4000-8000-000000000002'),
+select ok(not public.chat_is_muted('a0000000-0000-4000-8000-000000000042', 'a0000000-0000-4000-8000-000000000002'),
  'a mute in one stream does not mute the sender everywhere');
 reset role;
 
 -- Unmuting is deleting the row, and it is the same authority.
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
-delete from public.chat_muted_users where stream_id = 'modstream1';
+delete from public.chat_muted_users where stream_id = 'a0000000-0000-4000-8000-000000000041';
 reset role;
-select is((select count(*)::int from public.chat_muted_users where stream_id = 'modstream1'),
+select is((select count(*)::int from public.chat_muted_users where stream_id = 'a0000000-0000-4000-8000-000000000041'),
  1, 'a muted viewer cannot unmute themselves');
 
 -- ---------------------------------------------------------------------------
@@ -154,14 +161,14 @@ select is((select count(*)::int from public.chat_muted_users where stream_id = '
 -- and the reporter cannot read their own report back.
 -- ---------------------------------------------------------------------------
 insert into public.chat_messages (id, stream_id, sender_id, body) values
- ('b0000000-0000-4000-8000-000000000002', 'modstream1',
+ ('b0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000041',
   'a0000000-0000-4000-8000-000000000003', 'reportable');
 
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"a0000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
 select lives_ok($$insert into public.chat_reports
  (message_id, stream_id, reported_sender_id, reporter_id, reason)
- values ('b0000000-0000-4000-8000-000000000002', 'modstream1',
+ values ('b0000000-0000-4000-8000-000000000002', 'a0000000-0000-4000-8000-000000000041',
          'a0000000-0000-4000-8000-000000000003',
          'a0000000-0000-4000-8000-000000000002', 'spam')$$,
  'a signed-in viewer may file a report');

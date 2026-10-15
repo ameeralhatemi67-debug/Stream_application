@@ -34,7 +34,10 @@ reset role;
 select is((select count(*)::int from auth.sessions where user_id='65000000-0000-4000-8000-000000000002'),0,'all sessions removed');
 select is((select count(*)::int from auth.refresh_tokens where user_id='65000000-0000-4000-8000-000000000002'),0,'refresh tokens removed');
 select is((select count(*)::int from auth.users where id='65000000-0000-4000-8000-000000000002'),1,'revocation preserves account');
-update public.profiles set is_currently_live=true,broadcast_type='liveVideo',active_stream_id='abcdefghijk' where id='65000000-0000-4000-8000-000000000002';
+-- LIVE is derived from a provider-confirmed session (20261001111022); the
+-- profile flag can no longer be set directly.
+insert into public.broadcast_sessions(id,owner_id,stream_id,broadcast_type,state,started_at) values
+ ('65000000-0000-4000-8000-000000000031','65000000-0000-4000-8000-000000000002','abcdefghijk','liveVideo','live',now());
 insert into public.device_sessions(user_id,device_id,is_primary_broadcaster) values('65000000-0000-4000-8000-000000000002','test',true);
 set local role authenticated;
 select lives_ok($$select public.admin_auth_account_action('65000000-0000-4000-8000-000000000002','force_end','test')$$,'force end succeeds');
@@ -42,11 +45,17 @@ reset role;
 select ok(not (select is_currently_live from public.profiles where id='65000000-0000-4000-8000-000000000002'),'live state cleared');
 select ok((select is_primary_broadcaster from public.device_sessions where user_id='65000000-0000-4000-8000-000000000002'),'force end keeps the broadcaster''s primary device (P6S wave 3)');
 select is((select end_reason from public.broadcast_sessions where owner_id='65000000-0000-4000-8000-000000000002' order by started_at desc limit 1),'admin_end','session records admin end');
-update public.profiles set is_currently_live=true,broadcast_type='liveVideo',active_stream_id='abcdefghijk' where id='65000000-0000-4000-8000-000000000002';
+-- The provider worker finishes termination of the force-ended session.
+update public.broadcast_sessions set state='completed',termination_pending=false,ended_at=now()
+ where id='65000000-0000-4000-8000-000000000031';
+insert into public.broadcast_sessions(id,owner_id,stream_id,broadcast_type,state,started_at) values
+ ('65000000-0000-4000-8000-000000000032','65000000-0000-4000-8000-000000000002','abcdefghijk','liveVideo','live',now()+interval '1 second');
 set local role authenticated;
 select lives_ok($$select public.admin_auth_account_action('65000000-0000-4000-8000-000000000002','remove_from_feed','test')$$,'feed removal succeeds');
 reset role;
-select throws_ok($$update public.profiles set is_currently_live=true,active_stream_id='abcdefghijk' where id='65000000-0000-4000-8000-000000000002'$$,'42501',null,'even direct update cannot republish removed video');
+select throws_ok($$update public.profiles set is_currently_live=true,active_stream_id='abcdefghijk' where id='65000000-0000-4000-8000-000000000002'$$,'42501','Stream removed by moderation','even direct update cannot republish removed video');
+update public.broadcast_sessions set state='completed',termination_pending=false,ended_at=now()
+ where id='65000000-0000-4000-8000-000000000032';
 insert into public.organizations(id,name_en,name_ar,owner_profile_id) values('65000000-0000-4000-8000-000000000020','Org','Org','65000000-0000-4000-8000-000000000002');
 set local role authenticated;
 select throws_ok($$select public.admin_auth_account_action('65000000-0000-4000-8000-000000000002','delete_account','test')$$,'23503',null,'org ownership must be transferred');

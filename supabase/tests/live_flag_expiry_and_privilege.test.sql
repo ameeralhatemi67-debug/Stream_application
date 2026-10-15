@@ -33,39 +33,82 @@ select ok(not has_function_privilege('authenticated', 'public.is_banned(uuid)', 
 select ok(not has_function_privilege('anon', 'public.is_banned(uuid)', 'execute'),
  'anon cannot execute is_banned(uuid) directly');
 
--- 3. Live-flag expiry: A goes live from a primary device, then that device
--- goes silent. The sweep clears the flag; a device still beating survives it.
+-- 3. Live expiry. LIVE is provider-confirmed (20261001111022): A reserves a
+-- personal session from its primary phone and the provider worker confirms it.
+-- The sweep now ends a phone sender whose own encoder reported the feed
+-- interrupted for more than 120 s (ingest_lost); a fresh feed survives it.
+-- (A heartbeat-only expiry no longer exists: OBS is observed through YouTube,
+-- see organization_v1_sessions.test.sql.)
+update public.profiles set personal_broadcast_approved = true
+ where id = '60000000-0000-4000-8000-000000000001';
+insert into auth.sessions (id, user_id)
+ values ('60000000-0000-4000-8000-000000000011', '60000000-0000-4000-8000-000000000001');
+insert into public.channel_connections (id, owner_profile_id, youtube_channel_id, channel_title)
+ values ('60000000-0000-4000-8000-000000000021', '60000000-0000-4000-8000-000000000001',
+  'UCeeeeeeeeeeeeeeeeeeeeee', 'Expiry');
+create temporary table ids(k text primary key, v uuid);
+grant all on ids to authenticated;
+create function pg_temp.confirm_live(p_id uuid, p_watch text) returns void language plpgsql as $$
+declare v_token uuid;
+begin
+  select operation_token into v_token from private.broadcast_provider where session_id = p_id;
+  perform public.broadcast_provider_step(p_id, v_token, 'stream_create',
+    jsonb_build_object('id', 'feed-' || p_id, 'url', 'rtmps://a.rtmps.youtube.com/live2', 'key', 'fake-ingest'));
+  perform public.broadcast_provider_step(p_id, v_token, 'broadcast_create', jsonb_build_object('id', p_watch));
+  perform public.broadcast_provider_step(p_id, v_token, 'bind', '{}');
+  perform public.broadcast_provider_step(p_id, v_token, 'observe', '{"status":"live"}');
+  perform public.broadcast_provider_step(p_id, v_token, 'finish');
+end $$;
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated","session_id":"60000000-0000-4000-8000-000000000011"}', true);
 select ok(public.claim_broadcaster_device('DEV-A', 'Phone A', 'android'), 'A claims its primary device');
-select lives_ok($$select public.set_live_state(true,'liveVideo','abcdefghijk','DEV-A')$$, 'A goes live');
+insert into ids select 's1', public.broadcast_create_personal('First', 'liveVideo');
+select public.broadcast_reserve_confirmed((select v from ids where k = 's1'), 'DEV-A', 'phone_direct', 'prepare',
+ '60000000-0000-4000-8000-000000000021', 1);
 reset role;
-select is(public.sweep_stale_live_flags(), 0, 'A fresh heartbeat is not swept');
-update public.device_sessions set last_active_at = now() - interval '5 minutes'
- where user_id = '60000000-0000-4000-8000-000000000001';
-select is(public.sweep_stale_live_flags(), 1, 'A silent primary device is swept');
+select pg_temp.confirm_live((select v from ids where k = 's1'), 'abcdefghijk');
+select ok((select is_currently_live from public.profiles where id = '60000000-0000-4000-8000-000000000001'), 'A goes live');
+set local role authenticated;
+select public.report_broadcast_ingest((select v from ids where k = 's1'), 'DEV-A', 'interrupted');
+reset role;
+select is(public.sweep_stale_live_flags(), 0, 'A feed interrupted for under 120 s is not swept');
+update public.broadcast_sessions set interrupted_since = now() - interval '121 seconds'
+ where id = (select v from ids where k = 's1');
+select is(public.sweep_stale_live_flags(), 1, 'A phone feed interrupted for over 120 s is swept');
 select ok((select not is_currently_live and active_stream_id is null
- from public.profiles where id = '60000000-0000-4000-8000-000000000001'),
+ from public.profiles where id = '60000000-0000-4000-8000-000000000001')
+ and (select end_reason = 'ingest_lost' from public.broadcast_sessions where id = (select v from ids where k = 's1')),
  'Swept broadcaster is no longer live');
 select is(public.sweep_stale_live_flags(), 0, 'Sweeping again clears nothing (idempotent)');
 
 -- 4. Ending a broadcast must work even when the heartbeat has lapsed: a
 -- broadcaster whose phone slept can still switch itself off. Starting one
 -- must not.
-update public.device_sessions set last_active_at = now()
- where user_id = '60000000-0000-4000-8000-000000000001';
+-- The provider worker completes termination of the swept broadcast.
+update public.broadcast_sessions set state = 'completed', termination_pending = false, ended_at = now()
+ where id = (select v from ids where k = 's1');
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
-select lives_ok($$select public.set_live_state(true,'liveVideo','abcdefghijk','DEV-A')$$, 'A goes live again');
+insert into ids select 's2', public.broadcast_create_personal('Second', 'liveVideo');
+select public.broadcast_reserve_confirmed((select v from ids where k = 's2'), 'DEV-A', 'phone_direct', 'prepare',
+ '60000000-0000-4000-8000-000000000021', 1);
 reset role;
+select pg_temp.confirm_live((select v from ids where k = 's2'), 'abcdefghij2');
+select ok((select state = 'live' from public.broadcast_sessions where id = (select v from ids where k = 's2')), 'A goes live again');
 update public.device_sessions set last_active_at = now() - interval '5 minutes'
  where user_id = '60000000-0000-4000-8000-000000000001';
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"60000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
-select lives_ok($$select public.set_live_state(false,'offline',null,'DEV-A')$$,
+select lives_ok($$select public.end_broadcast_session((select v from ids where k = 's2'), 'DEV-A')$$,
  'A stale primary device can still END its own broadcast');
-select throws_ok($$select public.set_live_state(true,'liveVideo','abcdefghijk','DEV-A')$$,
- '42501', 'Primary device required', 'A stale primary device cannot START a broadcast');
+insert into ids select 's3', public.broadcast_create_personal('Third', 'liveVideo', now() + interval '2 hours');
+reset role;
+update public.broadcast_sessions set state = 'completed', termination_pending = false, ended_at = now()
+ where id = (select v from ids where k = 's2');
+update public.broadcast_sessions set scheduled_start_at = now(), expected_end_at = now() + interval '1 hour'
+ where id = (select v from ids where k = 's3');
+set local role authenticated;
+select throws_ok($$select public.broadcast_reserve_confirmed((select v from ids where k = 's3'), 'DEV-A', 'phone_direct', 'prepare',
+ '60000000-0000-4000-8000-000000000021', 1)$$,
+ '42501', 'Assigned primary presenter required', 'A stale primary device cannot START a broadcast');
 reset role;
 
 -- 5. A banned account cannot append to the audit log.

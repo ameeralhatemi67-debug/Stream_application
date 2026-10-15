@@ -8,11 +8,16 @@ insert into auth.users (id, email) values
 insert into public.profiles (id, bio_en) values
  ('30000000-0000-4000-8000-000000000001', 'Original'),
  ('30000000-0000-4000-8000-000000000002', 'Owner');
-insert into public.organizations (id, owner_profile_id, name_en, name_ar)
-values ('40000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000002', 'Org', 'Org');
+insert into public.organizations (id, owner_profile_id, name_en, name_ar, is_verified)
+values ('40000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000002', 'Org', 'Org', true);
+-- Membership requests go through the organization v1 RPCs (20261001095030),
+-- which require a live Auth session named by the JWT session_id claim.
+insert into auth.sessions (id, user_id) values
+ ('30000000-0000-4000-8000-000000000011', '30000000-0000-4000-8000-000000000001'),
+ ('30000000-0000-4000-8000-000000000012', '30000000-0000-4000-8000-000000000002');
 
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"30000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"30000000-0000-4000-8000-000000000001","role":"authenticated","session_id":"30000000-0000-4000-8000-000000000011"}', true);
 insert into public.broadcaster_applications (id, applicant_profile_id, account_type,
  applicant_name_en, applicant_name_ar, email, phone, category_id, status, reviewed_by, admin_review_notes, latitude, longitude)
 values ('50000000-0000-4000-8000-000000000001', auth.uid(), 'individualScholar',
@@ -27,27 +32,25 @@ select ok((select status = 'pending' and reviewed_by is null from public.broadca
  where id = '50000000-0000-4000-8000-000000000001'), 'A5 forged review UPDATE is neutralized');
 select is((select phone from public.broadcaster_applications where id = '50000000-0000-4000-8000-000000000001'),
  '0511111111', 'Pending applicant content remains editable');
-insert into public.affiliation_requests (id, organization_id, streamer_profile_id, direction, status, permissions)
+select throws_ok($$insert into public.affiliation_requests (id, organization_id, streamer_profile_id, direction, status, permissions)
 values ('60000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', auth.uid(),
- 'streamerToOrg', 'accepted', '{"can_change_location":true}');
-select ok((select status = 'pending' and permissions->>'can_change_location' = 'false'
- from public.affiliation_requests where id = '60000000-0000-4000-8000-000000000001'), 'A6 cannot insert accepted membership or grants');
-update public.affiliation_requests set status = 'accepted', permissions = '{"can_change_location":true}'
-where id = '60000000-0000-4000-8000-000000000001';
-select ok((select status = 'pending' and permissions->>'can_change_location' = 'false'
- from public.affiliation_requests where id = '60000000-0000-4000-8000-000000000001'), 'A6 cannot self-approve membership');
+ 'streamerToOrg', 'accepted', '{"can_change_location":true}')$$, '42501', null, 'A6 cannot insert accepted membership or grants');
+create temporary table request_fixture(id uuid);
+grant all on request_fixture to authenticated;
+insert into request_fixture select public.org_v1_request_join('40000000-0000-4000-8000-000000000001', 'Join');
+select throws_ok($$update public.affiliation_requests set status = 'accepted', permissions = '{"can_change_location":true}'
+where id = (select id from request_fixture)$$, '42501', null, 'A6 cannot self-approve membership');
 
-select set_config('request.jwt.claims', '{"sub":"30000000-0000-4000-8000-000000000002","role":"authenticated"}', true);
-update public.affiliation_requests set status = 'accepted', permissions = '{"can_change_location":true}'
-where id = '60000000-0000-4000-8000-000000000001';
+select set_config('request.jwt.claims', '{"sub":"30000000-0000-4000-8000-000000000002","role":"authenticated","session_id":"30000000-0000-4000-8000-000000000012"}', true);
+select public.org_v1_resolve_request((select id from request_fixture), true, '{"can_change_location":true}');
 select ok((select status = 'accepted' and permissions->>'can_change_location' = 'true'
- from public.affiliation_requests where id = '60000000-0000-4000-8000-000000000001'), 'P5 org owner can approve and grant');
+ from public.affiliation_requests where id = (select id from request_fixture)), 'P5 org owner can approve and grant');
 
 reset role;
 insert into public.banned_users (profile_id, email, reason)
 values ('30000000-0000-4000-8000-000000000001', 'applicant@example.invalid', 'Test ban');
 set local role authenticated;
-select set_config('request.jwt.claims', '{"sub":"30000000-0000-4000-8000-000000000001","role":"authenticated"}', true);
+select set_config('request.jwt.claims', '{"sub":"30000000-0000-4000-8000-000000000001","role":"authenticated","session_id":"30000000-0000-4000-8000-000000000011"}', true);
 update public.profiles set bio_en = 'Banned write' where id = auth.uid();
 select is((select bio_en from public.profiles where id = auth.uid()), 'Original', 'A7 banned profile update affects no row');
 select throws_ok($$insert into public.chat_messages (stream_id, sender_id, body)
