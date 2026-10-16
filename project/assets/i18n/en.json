@@ -1089,13 +1089,13 @@
   },
   "account_banned": {
     "title": "Account Suspended",
-    "body": "Your account has been suspended from the Streamer App platform for violating our community guidelines.",
+    "body": "Your account has been suspended from Hadayah Live for violating our community guidelines.",
     "reason_label": "Reason",
     "contact_support": "If you believe this is a mistake, contact {email}.",
     "sign_out": "Sign Out"
   },
   "auth_welcome": {
-    "brand_title": "STREAMER APP",
+    "brand_title": "HADAYAH LIVE",
     "subtitle": "Knowledge & Educational Live Streaming Platform\nEastern Province / Al Khobar / Dhahran",
     "card_title": "Get Started",
     "card_subtitle": "Sign up or log in with your Google account to access live streams, auditorium reservations, and broadcaster tools.",
@@ -1121,7 +1121,7 @@
   },
   "role_select": {
     "welcome_user": "Welcome, {}!",
-    "prompt_title": "How would you like to experience Streamer App today?",
+    "prompt_title": "How would you like to use Hadayah Live today?",
     "viewer_title": "I am a Viewer / Student",
     "viewer_badge": "Instant Access",
     "viewer_desc": "Explore live educational streams, browse archived video lectures, discover campus venues across AlSharqia, and ask live questions in chat.",

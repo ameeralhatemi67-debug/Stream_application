@@ -51,7 +51,9 @@ class RtmpForegroundService : Service() {
         }
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("You're broadcasting live")
-            .setContentText("Camera and microphone are being streamed.")
+            // Mode-neutral on purpose: audio-only broadcasts use no camera, and the
+            // mode can change while the service runs.
+            .setContentText("Your phone is streaming live video or audio.")
             .setSmallIcon(R.mipmap.ic_launcher)
             .setOngoing(true)
             .build()

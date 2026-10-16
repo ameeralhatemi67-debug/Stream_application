@@ -1,33 +1,74 @@
-# Android permissions and foreground-service declaration draft
+# Permissions and foreground-service declaration
 
-Status: 2026-09-24 code-based text for owner review. No Play Console form, release AAB merged manifest, recording or submission exists. P8B is not accepted.
+Status: 2026-10-16, ready to paste, but the video in section 3 still has to be recorded by the owner. Text is based on `project/android/app/src/main/AndroidManifest.xml` and `RtmpForegroundService.kt`. Verify against the merged manifest of the final `.aab` before submitting.
 
-## Declared behavior
+## 1. What the manifest declares and why
 
-project/android/app/src/main/AndroidManifest.xml declares INTERNET, ACCESS_NETWORK_STATE, CAMERA, RECORD_AUDIO, FOREGROUND_SERVICE, FOREGROUND_SERVICE_CAMERA, FOREGROUND_SERVICE_MICROPHONE and POST_NOTIFICATIONS. RtmpForegroundService is declared with foregroundServiceType camera|microphone and exported=false. It shows an ongoing broadcast notification and uses START_NOT_STICKY. The native RtmpPublisherBridge starts it during broadcaster-initiated RTMP publishing and stops it with the stream. The app declares no location or broad photo-library permission in this manifest.
+| Permission | Why the app needs it | When it is requested |
+| --- | --- | --- |
+| `INTERNET`, `ACCESS_NETWORK_STATE` | Load content, chat, maps and play video; show the offline notice. | Never prompts. |
+| `CAMERA` | Phone broadcast with video. | Only when an approved broadcaster opens the phone broadcast screen and chooses video; the app explains first, then the system prompt appears. |
+| `RECORD_AUDIO` | Phone broadcast audio (video or audio-only). | Same screen, same way. |
+| `FOREGROUND_SERVICE`, `FOREGROUND_SERVICE_CAMERA`, `FOREGROUND_SERVICE_MICROPHONE` | Keep a started broadcast running with a visible notification while the app is in the background or the screen is locked. | Starts only after the broadcaster taps Go live, with the app on screen. Stops when the broadcast ends. |
+| `POST_NOTIFICATIONS` | Show the ongoing broadcast notification, and reminders and organization notices. | Android 13+ system prompt, best-effort; a "no" never blocks capture. |
+| `ACCESS_COARSE_LOCATION`, `ACCESS_FINE_LOCATION` | "Use my location" when picking a venue point. | Only when the user taps that button; foreground only; never in the background. |
 
-Camera and microphone rationale: an approved broadcaster chooses phone video or audio-only and starts a live RTMP transmission. Video uses the camera and mic; audio-only uses the mic with a static video source. The permission prompt is contextual in PhoneBroadcastScreen. The RTMP destination is a broadcaster-provided endpoint, commonly YouTube; the app database carries stream metadata rather than the live media. This is implementation description, not physical-device acceptance.
+Not declared on purpose: storage or media permissions (the system photo picker is used), contacts, background location, `SYSTEM_ALERT_WINDOW`, full-screen intents.
 
-Foreground-service camera/microphone rationale: the ongoing service keeps a started phone broadcast visible and running during app backgrounding/screen lock. It does not start capture itself. If the system interrupts the service or the RTMP connection fails, the stream can stop or reconnect and viewers may lose media; do not promise uninterrupted broadcasting. Android requires matching service types and permissions, plus runtime camera/mic permission. A camera/microphone service generally must start while the app has a visible activity because those permissions are while-in-use. [Android foreground-service types](https://developer.android.com/develop/background-work/services/fgs/service-types) [Android start restrictions](https://developer.android.com/develop/background-work/services/fgs/restrictions-bg-start)
+## 2. Play Console: Foreground service permissions form
 
-POST_NOTIFICATIONS is requested so the ongoing broadcast notice can be visible on Android 13 and later; notification denial must not be described as denial of capture. The current notification always says "Camera and microphone are being streamed," even in audio-only mode. Correct that copy before using an audio-only demonstration. Confirm the final merged manifest, permission behavior and OS variants on the release AAB.
+Play Console > Policy > App content > **Foreground service permissions**. Declare two types. The notification wording was made mode-neutral on 2026-10-16: it reads "You're broadcasting live. Your phone is streaming live video or audio."
 
-Google Play asks Android 14+ apps to declare each foreground-service type in Play Console, describe the functionality and interruption impact, and link a video showing how a user starts each feature. [Play foreground-service declaration guidance](https://support.google.com/googleplay/android-developer/answer/13392821?hl=en-GB) Whether the current feature and evidence satisfy Play review is **for counsel review** and the owner.
+### Camera (`FOREGROUND_SERVICE_CAMERA`)
 
-## Proposed Play form wording, subject to evidence
+- **Describe the feature that uses this type:** "Approved broadcasters stream a live lecture from their phone camera to their own YouTube channel. The service keeps the camera capture and the stream running if the broadcaster switches apps or the screen locks, and shows an ongoing notification for as long as the camera is in use."
+- **Impact if the system delays or stops it:** "The live broadcast would freeze or end for all viewers, and the lecture would be lost. Viewers see a "We'll be right back" message and the broadcaster can reconnect within two minutes."
+- **How a user starts it:** "Only the broadcaster, by choosing Go Live > phone camera, granting camera permission and tapping Go Live while the app is open. The service starts after that tap and stops when the broadcast ends."
+- **Does a user-visible notification show?** Yes, ongoing.
 
-- Camera: "An approved broadcaster starts a phone video stream. The app uses the device camera only for that live broadcast and releases it when the stream ends."
-- Microphone: "An approved broadcaster starts video or audio-only phone streaming. The app sends live microphone audio to the configured RTMP destination until the broadcast ends."
-- Foreground service, camera and microphone: "While a phone broadcast is active, an ongoing notification accompanies camera/microphone streaming if the app moves to the background or the screen locks. Interruption may stop the stream or trigger a reconnect; viewers may experience a gap."
-- Notification: "Show the ongoing phone broadcast indicator."
+### Microphone (`FOREGROUND_SERVICE_MICROPHONE`)
 
-These are draft declarations, not verified claims for submission. The current evidence is emulator/local RTMP and local code/tests. The latest brief/LEDGER.md RESUME block explicitly lacks two physical phones, Google OAuth and authorized YouTube ingest. Do not present desktop broadcasting, same-Wi-Fi Local, private invites, or seamless background/reconnect as accepted release modes.
+- **Describe the feature:** "Approved broadcasters send live audio from the phone microphone, with video or as an audio-only broadcast. The service keeps audio capture running in the background or with the screen locked, and shows an ongoing notification."
+- **Impact if stopped:** "Viewers lose the lecture audio, which is the main content, and the broadcast ends if the connection is not restored within two minutes."
+- **How a user starts it:** "Same as camera: the broadcaster taps Go live (video or audio only) while the app is open, after granting microphone permission."
 
-## Demonstration-video shot list for a later owner recording
+### Answers to likely questions
 
-1. On a physical supported Android phone, sign in as an approved broadcaster and show the phone mode choice and the contextual camera/mic permission prompts. Keep keys and account details off screen.
-2. Start video to an authorized test ingest, show the persistent notification, app background/return and viewer playback on a second device, then stop and show capture/notification cleanup.
-3. Repeat for audio-only, including the mic permission and visible interruption behavior. Record denied-permission and system-interruption outcomes honestly.
-4. Provide Play review access instructions and a non-secret test account only through the owner's approved submission process. Do not record or publish a real stream key.
+- "Does the service start while the app is in the background?" No. It starts from a user tap on a visible screen.
+- "Does it run without the user knowing?" No. The notification is always shown, and capture indicators of the system (camera and microphone dot) show.
+- "Do you record the audio or video?" No. The phone sends the media directly to the broadcaster's YouTube live ingest. We do not receive, record or store it.
 
-The owner must review the release artifact and record actual demonstrations before using this wording. No video was made in this task.
+## 3. The demo video (the owner records it)
+
+Google asks for a link, usually an unlisted YouTube video, of about 60 to 120 seconds on a real phone, showing the feature the permission is for. Record the phone screen with the system recorder (swipe down > Screen record), and keep the stream key and RTMP address off screen.
+
+Use a reviewer or test broadcaster account that is approved, connected to a test YouTube channel.
+
+| # | What to show | Say or caption |
+| --- | --- | --- |
+| 1 | Open the app signed in as the test broadcaster. Tap **Go Live** and choose the phone camera (**Open Camera**). | "An approved broadcaster opens Go Live." |
+| 2 | Tap video. The app's explanation appears, then the system **camera** and **microphone** prompts. Tap Allow. | "The app asks for camera and microphone only here." |
+| 3 | The camera preview shows. Tap **Go live**. | "The broadcaster starts the stream." |
+| 4 | Pull down the notification shade: **You're broadcasting live** is visible. Show the system camera and microphone indicator dots. | "While live, a notification and the system indicators are always visible." |
+| 5 | Press Home, open another app for 10 seconds, then lock the screen for 10 seconds, unlock. | "The broadcast keeps running in the background and with the screen locked." |
+| 6 | On a second device (or YouTube Studio on a laptop), show the live broadcast still playing. | "Viewers keep watching." |
+| 7 | Return to the app and tap **End**. Show that the notification disappears. | "Ending the stream stops the service and the notification." |
+| 8 | Repeat steps 3 to 7 quickly in **audio-only** mode (choose the audio broadcast type before opening the phone screen). Show the notification again. | "Audio-only works the same way, sending only the microphone." |
+
+Checklist before uploading:
+- The video has the app name visible at least once.
+- No stream key, no real email address, no other person's face.
+- Set it to **Unlisted**, copy the link into both type sections of the form.
+- Read it once as if you had never seen the app.
+
+## 4. Other permission-related declarations
+
+- **Location (not background):** no special declaration form is required for foreground location. If Play asks, answer "used when the user taps *use my location* to place a venue pin".
+- **Photo and video permissions policy:** the app does not request `READ_MEDIA_IMAGES`, `READ_MEDIA_VIDEO` or `READ_EXTERNAL_STORAGE`. The Android photo picker returns a single file per tap.
+- **Exact alarms, full-screen intents, SMS, call log, accessibility, VPN, `QUERY_ALL_PACKAGES`:** none.
+- `<queries>` lists `https`/`http`/`vnd.youtube` view intents and the YouTube package only, to open links and videos.
+
+## 5. Known limits to say honestly if asked
+
+- The service is declared as both camera and microphone even in audio-only mode. This is safe because the phone broadcast screen asks for camera and then microphone permission before any setup, in every mode (`phone_broadcast_screen.dart`, `_confirmPresetAndSetup`), and stops if either is denied. The consequence: a broadcaster who denies the camera cannot do an audio-only broadcast either.
+- Interruption by the system (battery saver, a phone call) can stop the stream; the app reconnects for up to two minutes, then the server ends the broadcast.

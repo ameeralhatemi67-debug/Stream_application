@@ -161,6 +161,8 @@ Checked by Claude on 2026-10-10:
 
 Release builds refuse to run until this exists.
 
+**Easiest way (2026-10-16):** run `powershell -ExecutionPolicy Bypass -File brief\launch\make_upload_key.ps1` from the repo root in your own terminal. It asks for the password (never typed into chat), creates `%USERPROFILE%\hadayah-keys\upload-keystore.jks` and `project\android\key.properties`, and prints the SHA-1 for section 3b. The manual steps below do the same thing.
+
 1. [ ] In a terminal (Java's `keytool` comes with Android Studio):
    ```bash
    keytool -genkey -v -keystore C:/Users/User/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload

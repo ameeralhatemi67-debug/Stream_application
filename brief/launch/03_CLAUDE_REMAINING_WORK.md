@@ -79,7 +79,7 @@ Blocked by 01 §4 (Firebase), 01 §5 (secrets) and the owner's approval.
   - the audit log keeps no name or email beyond what the lawyer allows
 
   Test on a disposable local database.
-- [ ] **Web deletion page:** finish `project/web/delete-account.html` (Arabic + English) with a working request path, for example a form that writes to a request table, or a signed-in "delete my account" flow on the web build. It's served from the owner's final domain.
+- [~] **Web deletion page:** *(2026-10-16: rebranded to Hadayah Live and lists what is deleted; its request path is still a mailto link, so a form that writes to a table is the remaining improvement)* finish `project/web/delete-account.html` (Arabic + English) with a working request path, for example a form that writes to a request table, or a signed-in "delete my account" flow on the web build. It's served from the owner's final domain.
 - [x] pgTAP tests for the export RPC and deletion cascade. *(`supabase/tests/data_rights.test.sql`, 39/39)*
 
 ## 4. Release-scope cleanup (truthful UI)
@@ -110,7 +110,7 @@ The project targets API 36 (`playTargetSdkFloor = 36`), which Play requires for 
 
 Blocked by: the owner's domain and pages for the final URLs.
 
-- [ ] Update `store/data_safety.md` to the current code:
+- [x] Update `store/data_safety.md` to the current code: *(2026-10-16: copy-ready Play answer table added at the top of the file)*
   - location permission
   - Firebase Messaging SDK and push tokens
   - Vercel server proxy for YouTube reads
@@ -118,21 +118,21 @@ Blocked by: the owner's domain and pages for the final URLs.
   - YouTube OAuth tokens kept server-side in Vault
 
   Produce a ready-to-copy answer table for the Play form.
-- [ ] Update `store/listing_draft_ar_en.md`: only features that ship; Arabic and English; within the 30/80/4000 character limits.
-- [ ] Update `store/permissions_and_fgs_declaration.md`: final text for the camera and microphone foreground-service declaration, plus a **demo-video shot list**.
-- [ ] Write `store/oauth_verification.md`:
+- [x] Update `store/listing_draft_ar_en.md`: only features that ship; Arabic and English; within the 30/80/4000 character limits. *(2026-10-16, counts measured; organizations included)*
+- [x] Update `store/permissions_and_fgs_declaration.md`: final text for the camera and microphone foreground-service declaration, plus a **demo-video shot list**. *(2026-10-16; the owner still records the video; the service notification is now mode-neutral)*
+- [x] Write `store/oauth_verification.md`: *(2026-10-16; the YouTube OAuth client ID and a real custom domain are still owner inputs)*
   - scope justification for `youtube.force-ssl` (why narrower scopes aren't enough)
   - the list of every OAuth client on the project
   - the demo-video script (app name, client ID, full consent screen, connect → go live → end)
-- [ ] Write `store/reviewer_access.md`: App-access instructions for Google's reviewer (guest path + reviewer account steps). No passwords in the file.
-- [ ] Prepare the privacy policy and home page HTML (Arabic + English) from counsel's final text, for the owner to publish.
-- [ ] Feature graphic 1024×500 and a screenshot shot list.
+- [x] Write `store/reviewer_access.md`: *(2026-10-16; owner creates the reviewer account)* App-access instructions for Google's reviewer (guest path + reviewer account steps). No passwords in the file.
+- [x] Prepare the privacy policy and home page HTML (Arabic + English) from counsel's final text, for the owner to publish. *(2026-10-16: `project/web/privacy.html` and `about.html` are drafted from the code, not from counsel text; counsel still reviews. They deploy with the web build on push.)*
+- [x] Feature graphic 1024×500 and a screenshot shot list. *(2026-10-16: `store/assets/feature_graphic_1024x500.png`, `icon_512_fullbleed.png`, `store/screenshot_shot_list.md`; the owner takes the screenshots)*
 
 ## 7. Configuration for the release build
 
 Blocked by: the signing key (01 §6), the new API key and Firebase values (01 §3–4).
 
-- [ ] Update `AppIdentity` with the final website, privacy, terms and delete-account URLs and the support email.
+- [x] Update `AppIdentity` with the final website, privacy, terms and delete-account URLs and the support email. *(2026-10-16: website, home, privacy and delete URLs on the Vercel origin; one constant changes when a custom domain arrives; no terms page yet; support email unchanged)*
 - [ ] Give the owner the exact Supabase Auth redirect values (Android scheme `…://login-callback`, the web origin) for 01 §5.
 - [ ] Check `dart_define.example.json` lists every key the release needs. The owner fills the real `dart_define.local.json`; Claude never reads or copies secret values into chat.
 - [ ] Update the Vercel env vars list in `doc/YouTube_web_configuration.md` and `doc/organization-v1-owner-setup.md` for the final domain and Firebase.

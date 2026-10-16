@@ -1,6 +1,62 @@
 # Data safety working draft
 
-Status: 2026-09-24 repository-based draft. For counsel review and owner verification before any Play Console answer. No production configuration, release bundle, SDK traffic capture, or Play form was inspected. P8B is not accepted.
+Status: 2026-10-16. The copy-ready Play form answers are in the first section below. They come from the code, the migrations and the hosted backend as of 2026-10-16. No release bundle, SDK traffic capture or Play form was inspected, so counsel and the owner still verify before submitting. Where Google's definitions leave a real choice, the table says so and recommends the more cautious answer (over-declaring is safe; under-declaring is a policy violation).
+
+## Play Console answers (copy-ready)
+
+Play Console > Policy > App content > Data safety.
+
+### Part 1: the screening questions
+
+| Question | Answer | Why |
+| --- | --- | --- |
+| Does your app collect or share any of the required user data types? | **Yes** | Account, chat, location, device and media data below. |
+| Is all of the user data collected by your app encrypted in transit? | **Yes** | Cleartext traffic is off (`usesCleartextTraffic="false"`); Supabase, Google and YouTube are HTTPS; RTMPS is used for ingest. |
+| Do you provide a way for users to request that their data be deleted? | **Yes** | In-app Settings > Delete My Account, and the web page. |
+| Deletion URL | `https://stream-application-ten.vercel.app/delete-account.html` | Also states what is deleted. |
+| Independent security review (optional badge) | No | Not done. |
+| Committed to the Play Families Policy | Not applicable | Target audience is not children (see below). |
+
+### Part 2: data types
+
+"Shared" below means disclosed to a third party under Google's definition. Disclosure to a service provider that only processes data for us (Supabase, Vercel, Firebase Cloud Messaging) and users seeing each other's public content inside the app are **not** sharing, so they are marked "No". Purposes use Play's names.
+
+| Play data type | Collected | Shared | Optional? | Purpose | Notes for the form |
+| --- | --- | --- | --- | --- | --- |
+| **Personal info: Name** | Yes | No | Optional (guests need no account) | App functionality, Account management | Google display name and the profile name. |
+| **Personal info: Email address** | Yes | No | Optional | App functionality, Account management | From Google sign-in; also on applications. |
+| **Personal info: User IDs** | Yes | No | Optional | App functionality, Account management | Supabase account ID. |
+| **Personal info: Phone number** | Yes | No | Optional (only broadcaster applicants) | App functionality | Application review. |
+| **Personal info: Other info** | Yes | No | Optional | App functionality | Bio, YouTube handle, academic and organization details, roles. |
+| **Location: Precise location** | Yes | No | Optional | App functionality | "Use my location" is read on tap, foreground only, to place a venue pin. Only the venue point the user confirms is saved. Declare it because the point can equal the device position. |
+| **Messages: Other in-app messages** | Yes | No | Optional | App functionality | Live chat and reports. |
+| **Photos and videos: Photos** | Yes | No | Optional | App functionality | Avatar, banner and application images picked by the user (photo picker, no broad media permission). |
+| **Photos and videos: Videos** | Yes | **Yes** (Google / YouTube) | Optional (broadcasters only) | App functionality | Phone camera video is sent by the app to the broadcaster's YouTube live ingest. We never receive or store it. Mark **ephemerally processed: yes**. Cautious choice: declare as shared because YouTube is a third party; counsel may accept the "user-initiated" exemption instead. |
+| **Audio: Voice or sound recordings** | Yes | **Yes** (Google / YouTube) | Optional (broadcasters only) | App functionality | Same as video, including audio-only mode. Ephemeral: yes. |
+| **App activity: App interactions** | Yes | No | Optional | App functionality | Follows, bookmarks, reminders, live viewer presence. |
+| **App activity: Other user-generated content** | Yes | No | Optional | App functionality | Profile and organization text, schedules, show details. |
+| **Device or other IDs** | Yes | **Yes** (Google) | Required for notifications only | App functionality | Device ID/name/platform; the Firebase push token and installation ID. Declared as shared with Google because Firebase Messaging and the YouTube embedded player receive device or connection identifiers. |
+| **Web browsing, Contacts, Calendar, Files, Health, Financial info, Approximate location, Audio files, Emails, SMS** | No | n/a | n/a | n/a | Not collected. |
+| **App info and performance (crash logs, diagnostics)** | No | n/a | n/a | n/a | No crash or analytics SDK is installed and no error report is sent to a server. (Google Play's own vitals are not declared by developers.) |
+
+Not asked by the form but be ready to explain: no advertising SDK, no analytics SDK, no data sale, no data used for ads.
+
+### Part 3: other Play forms that depend on this
+
+| Form | Answer |
+| --- | --- |
+| Ads | No ads. |
+| Target audience | 18 and over (recommended). Choosing under-13 triggers the Families policy; do not. Counsel question 6 decides 13+. |
+| Content rating (IARC) | User-generated content: yes (chat, profiles). Users can interact: yes. Shares location with other users: venue coordinates only, public. Violence, sexual content, gambling, drugs: none from the app itself. Expect a Teen/PEGI 12-type result because of unmoderated-in-real-time chat; answer honestly. |
+| Permissions declared in the manifest | Camera, microphone, foreground service (camera, microphone), notifications, approximate and precise location. No storage or media permission. See `permissions_and_fgs_declaration.md`. |
+| Government app / Financial features / Health / News | No / none / none / no. |
+| Account deletion | The URL above, plus "the app has in-app deletion". |
+
+### Items to confirm before pressing Submit
+
+1. If you add any analytics, crash reporting or ads SDK later, this form changes.
+2. The privacy policy says data is stored in Frankfurt (Supabase `eu-central-1`); the Data safety form does not ask for a region but counsel question 4 does.
+3. Re-read Part 2 against the **merged manifest of the final `.aab`** (`bundletool`), not just this file.
 
 Google requires an accurate, package-wide Data safety form covering data collected or shared by the app and its SDKs; the form also asks about encryption in transit and deletion. These are form questions, not answers established by this draft. [Google Play Data safety guidance](https://support.google.com/googleplay/android-developer/answer/10787469?hl=en)
 

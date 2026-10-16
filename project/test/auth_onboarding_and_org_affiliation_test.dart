@@ -158,7 +158,7 @@ void main() {
       await pumpTestApp(tester, const RoleSelectScreen(), provider);
 
       // The app-name rename stays on the design branch for now.
-      expect(find.text('How would you like to experience Streamer App today?'),
+      expect(find.text('How would you like to use Hadayah Live today?'),
           findsOneWidget);
       expect(find.text('I am a Viewer / Student'), findsOneWidget);
       expect(find.text('Apply to Stream (5-Step Form)'), findsOneWidget);

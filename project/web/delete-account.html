@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Delete Account & Data Request — Dalilk</title>
-<meta name="description" content="Request deletion of your Dalilk account and personal data, in-app or without the app installed.">
+<title>Delete Account & Data Request — Hadayah Live</title>
+<meta name="description" content="Request deletion of your Hadayah Live (منصة هدايه) account and personal data, in-app or without the app installed.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,7 +19,7 @@
     --text-secondary: #A1A1AA;
     --text-muted: #71717A;
     --accent-red: #FF8080;
-    --accent-blue: #38BDF8;
+    --accent-blue: #6FCF97;
     --radius-md: 12px;
     --radius-lg: 16px;
   }
@@ -257,8 +257,8 @@
 <div class="page">
   <header class="top">
     <div class="brand"><span class="dot"></span>
-      <span data-i18n-en>Dalilk</span>
-      <span data-i18n-ar>دليلك</span>
+      <span data-i18n-en>Hadayah Live</span>
+      <span data-i18n-ar>منصة هدايه</span>
     </div>
     <div class="lang-toggle">
       <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
@@ -271,8 +271,8 @@
     <span data-i18n-ar>حذف حسابك وبياناتك</span>
   </h1>
   <p class="lede">
-    <span data-i18n-en>This page lets you request permanent deletion of your Dalilk account and personal data, whether or not you have the app installed.</span>
-    <span data-i18n-ar>تتيح لك هذه الصفحة طلب حذف حسابك وبياناتك الشخصية في منصة دليلك بشكل نهائي، سواء كان التطبيق مثبتًا لديك أم لا.</span>
+    <span data-i18n-en>This page lets you request permanent deletion of your Hadayah Live account and personal data, whether or not you have the app installed.</span>
+    <span data-i18n-ar>تتيح لك هذه الصفحة طلب حذف حسابك وبياناتك الشخصية في منصة هدايه بشكل نهائي، سواء كان التطبيق مثبتًا لديك أم لا.</span>
   </p>
 
   <div class="card">
@@ -286,26 +286,34 @@
     </p>
     <ul class="data-list">
       <li>
-        <span data-i18n-en>Your profile (name, bio, avatar, linked YouTube channel)</span>
-        <span data-i18n-ar>ملفك الشخصي (الاسم، النبذة، الصورة، قناة يوتيوب المرتبطة)</span>
+        <span data-i18n-en>Your profile (name, bio, avatar, banner, linked YouTube channel details)</span>
+        <span data-i18n-ar>ملفك الشخصي (الاسم، النبذة، الصورة، الغلاف، وبيانات قناة يوتيوب المرتبطة)</span>
       </li>
       <li>
-        <span data-i18n-en>Any broadcaster/organization verification applications</span>
-        <span data-i18n-ar>طلبات توثيق المذيع أو المؤسسة الخاصة بك</span>
+        <span data-i18n-en>Broadcaster and organization verification applications, and the images you uploaded</span>
+        <span data-i18n-ar>طلبات توثيق المذيع أو المؤسسة، والصور التي رفعتها</span>
       </li>
       <li>
-        <span data-i18n-en>Your live chat messages sent during broadcasts</span>
-        <span data-i18n-ar>رسائل الدردشة المباشرة التي أرسلتها أثناء البثوث</span>
+        <span data-i18n-en>Your live chat messages, reports you filed, and your block list</span>
+        <span data-i18n-ar>رسائل الدردشة المباشرة، والبلاغات التي قدمتها، وقائمة الحظر الخاصة بك</span>
       </li>
       <li>
-        <span data-i18n-en>Any organization you personally own (and its venues/speaker roster)</span>
-        <span data-i18n-ar>أي مؤسسة تملكها (وقاعاتها وقائمة المتحدثين فيها)</span>
+        <span data-i18n-en>Follows, saved items, reminders, notification settings and registered devices</span>
+        <span data-i18n-ar>المتابعات والعناصر المحفوظة والتذكيرات وإعدادات الإشعارات والأجهزة المسجلة</span>
       </li>
       <li>
-        <span data-i18n-en>Admin/organization roles and permissions assigned to you</span>
-        <span data-i18n-ar>أي أدوار أو صلاحيات إدارية أو تنظيمية مسندة إليك</span>
+        <span data-i18n-en>Your YouTube channel connection (the stored access credentials are destroyed)</span>
+        <span data-i18n-ar>ربط قناة يوتيوب الخاص بك (وتُتلف بيانات الاعتماد المخزنة)</span>
+      </li>
+      <li>
+        <span data-i18n-en>An organization you own alone (with its venues and speaker roster), and your roles and permissions</span>
+        <span data-i18n-ar>أي مؤسسة تملكها وحدك (مع قاعاتها وقائمة المتحدثين فيها)، وأدوارك وصلاحياتك</span>
       </li>
     </ul>
+    <p style="margin-top: 10px;">
+      <span data-i18n-en>Your name and email are also removed from our moderation and review history. Videos you streamed to YouTube stay on your own YouTube channel; delete them there.</span>
+      <span data-i18n-ar>كما يُزال اسمك وبريدك الإلكتروني من سجلات الإشراف والمراجعة لدينا. تبقى مقاطع الفيديو التي بثثتها على يوتيوب في قناتك الخاصة؛ احذفها من هناك.</span>
+    </p>
     <p style="margin-top: 10px;">
       <span data-i18n-en>This action cannot be undone. Account sign-in access is revoked immediately.</span>
       <span data-i18n-ar>لا يمكن التراجع عن هذا الإجراء. يتم إلغاء إمكانية تسجيل الدخول فورًا.</span>
@@ -368,15 +376,15 @@
       </button>
 
       <div class="status" id="status">
-        <span data-i18n-en>Opening your email app to send the request to our support team. If nothing opens, email the details above directly to <strong>polkgvd2@gmail.com</strong>.</span>
-        <span data-i18n-ar>سيتم فتح تطبيق البريد الإلكتروني لديك لإرسال الطلب إلى فريق الدعم. إذا لم يفتح شيء، أرسل التفاصيل أعلاه مباشرة إلى <strong>polkgvd2@gmail.com</strong>.</span>
+        <span data-i18n-en>Opening your email app to send the request to our support team. If nothing opens, email the details above directly to <strong>ameeralhatemi67@gmail.com</strong>.</span>
+        <span data-i18n-ar>سيتم فتح تطبيق البريد الإلكتروني لديك لإرسال الطلب إلى فريق الدعم. إذا لم يفتح شيء، أرسل التفاصيل أعلاه مباشرة إلى <strong>ameeralhatemi67@gmail.com</strong>.</span>
       </div>
     </form>
   </div>
 
   <footer>
-    <span data-i18n-en>Dalilk &middot; Account & Data Deletion Request</span>
-    <span data-i18n-ar>دليلك &middot; طلب حذف الحساب والبيانات</span>
+    <span data-i18n-en>Hadayah Live &middot; Account & Data Deletion Request &middot; <a href="/privacy.html" style="color:inherit">Privacy Policy</a></span>
+    <span data-i18n-ar>منصة هدايه &middot; طلب حذف الحساب والبيانات &middot; <a href="/privacy.html" style="color:inherit">سياسة الخصوصية</a></span>
   </footer>
 </div>
 
@@ -399,7 +407,7 @@
     }
   })();
 
-  var SUPPORT_EMAIL = 'polkgvd2@gmail.com';
+  var SUPPORT_EMAIL = 'ameeralhatemi67@gmail.com';
 
   document.getElementById('delete-form').addEventListener('submit', function (e) {
     e.preventDefault();

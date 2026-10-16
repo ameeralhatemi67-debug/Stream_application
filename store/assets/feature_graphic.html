@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Hadayah Live feature graphic 1024x500</title>
+<!--
+  Source of store/assets/feature_graphic_1024x500.png (Play feature graphic, 1024x500, opaque).
+  Regenerate from the repo root:
+  "C:\Program Files\Google\Chrome\Application\chrome.exe" --headless=new --disable-gpu --hide-scrollbars
+    --force-device-scale-factor=1 --window-size=1024,500
+    --screenshot="store\assets\feature_graphic_1024x500.png" "file:///<repo>/store/assets/feature_graphic.html"
+-->
+<style>
+  @font-face { font-family: 'Plex Arabic'; font-weight: 700; src: url('../../project/assets/fonts/IBMPlexSansArabic-700.ttf'); }
+  @font-face { font-family: 'Plex Arabic'; font-weight: 400; src: url('../../project/assets/fonts/IBMPlexSansArabic-400.ttf'); }
+  @font-face { font-family: 'Plex'; font-weight: 400 700; src: url('../../project/assets/fonts/IBMPlexSans-Variable.ttf'); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 1024px; height: 500px; overflow: hidden; }
+  body {
+    background:
+      radial-gradient(520px 420px at 22% 52%, rgba(111, 207, 151, 0.22), rgba(111, 207, 151, 0) 70%),
+      linear-gradient(135deg, #0E2418 0%, #123423 55%, #17432C 100%);
+    color: #FFFFFF;
+    position: relative;
+    font-family: 'Plex', 'Plex Arabic', sans-serif;
+  }
+  /* Soft lattice lines, quiet and decorative. */
+  .lattice {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(45deg, rgba(255,255,255,0.035) 1px, transparent 1px),
+      linear-gradient(-45deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+    background-size: 44px 44px;
+  }
+  .logo {
+    position: absolute; left: 86px; top: 112px; width: 330px;
+    filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.35));
+  }
+  .copy { position: absolute; left: 470px; right: 70px; top: 96px; }
+  .ar-title {
+    font-family: 'Plex Arabic', sans-serif; font-weight: 700; font-size: 92px; line-height: 1.15;
+    direction: rtl; text-align: left;
+  }
+  .en-title {
+    font-weight: 700; font-size: 40px; letter-spacing: 0.5px; margin-top: 4px; color: #BDE9CF;
+  }
+  .rule { width: 84px; height: 5px; border-radius: 3px; background: #6FCF97; margin: 26px 0 22px; }
+  .tag-en { font-size: 25px; font-weight: 500; line-height: 1.35; color: #E8F6EE; }
+  .tag-ar {
+    font-family: 'Plex Arabic', sans-serif; font-size: 25px; line-height: 1.5; margin-top: 10px;
+    direction: rtl; text-align: left; color: #E8F6EE;
+  }
+</style>
+</head>
+<body>
+  <div class="lattice"></div>
+  <img class="logo" src="../../project/assets/logo/colored.svg" alt="">
+  <div class="copy">
+    <div class="ar-title">منصة هدايه</div>
+    <div class="en-title">Hadayah Live</div>
+    <div class="rule"></div>
+    <div class="tag-en">Live lectures &middot; Channels &middot; Venues</div>
+    <div class="tag-ar">محاضرات مباشرة · قنوات · أماكن</div>
+  </div>
+</body>
+</html>

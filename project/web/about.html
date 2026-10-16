@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hadayah Live — Educational live lectures and venues</title>
+<meta name="description" content="Hadayah Live (منصة هدايه): watch live educational lectures, follow channels, find venues on a map, and broadcast with your own YouTube channel.">
+<link rel="icon" type="image/png" href="favicon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-base: #121214;
+    --surface-1: #1A1A1E;
+    --surface-2: #24242A;
+    --border-subtle: #27272F;
+    --text-primary: #FFFFFF;
+    --text-secondary: #A1A1AA;
+    --text-muted: #71717A;
+    --accent-red: #FF8080;
+    --accent-green: #6FCF97;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg-base); color: var(--text-primary);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    line-height: 1.6; min-height: 100vh;
+  }
+  html[dir="rtl"] body { font-family: 'Tajawal', 'Inter', sans-serif; }
+  .page { max-width: 720px; margin: 0 auto; padding: 40px 20px 64px; }
+  header.top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 32px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; }
+  .brand .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--accent-red); box-shadow: 0 0 0 4px rgba(255,128,128,0.15); }
+  .lang-toggle { display: flex; border: 1px solid var(--border-subtle); border-radius: 999px; overflow: hidden; }
+  .lang-toggle button { appearance: none; border: none; background: transparent; color: var(--text-secondary); font-family: inherit; font-size: 12px; font-weight: 700; padding: 7px 14px; cursor: pointer; }
+  .lang-toggle button.active { background: var(--surface-2); color: var(--text-primary); }
+  h1 { font-size: 28px; font-weight: 800; margin: 0 0 10px; }
+  p.lede { color: var(--text-secondary); font-size: 15px; margin: 0 0 24px; }
+  .card { background: var(--surface-1); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+  .card h2 { font-size: 15px; font-weight: 700; margin: 0 0 8px; }
+  .card p, .card li { color: var(--text-secondary); font-size: 13.5px; margin: 0 0 6px; }
+  .card ul { margin: 6px 0 0; padding-inline-start: 18px; }
+  a { color: var(--accent-green); }
+  .cta { display: inline-block; margin: 4px 8px 12px 0; padding: 12px 18px; border-radius: var(--radius-md); background: var(--accent-green); color: #12211A; font-weight: 800; font-size: 14px; text-decoration: none; }
+  .cta.secondary { background: transparent; color: var(--text-primary); border: 1px solid var(--border-subtle); }
+  footer { margin-top: 28px; font-size: 12px; color: var(--text-muted); text-align: center; }
+  footer a { color: inherit; }
+  .ar { display: none; }
+  html[dir="rtl"] .en { display: none; }
+  html[dir="rtl"] .ar { display: block; }
+  html[dir="rtl"] .cta { margin: 4px 0 12px 8px; }
+  html[dir="rtl"] footer .ar { display: inline; }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="top">
+    <div class="brand"><span class="dot"></span>
+      <span class="en">Hadayah Live</span>
+      <span class="ar">منصة هدايه</span>
+    </div>
+    <div class="lang-toggle">
+      <button type="button" id="btn-en" class="active" onclick="setLang('en')">EN</button>
+      <button type="button" id="btn-ar" onclick="setLang('ar')">AR</button>
+    </div>
+  </header>
+
+  <div class="en">
+    <h1>Educational live lectures, recordings and venues</h1>
+    <p class="lede">Hadayah Live brings live broadcasts, recorded lectures and the venues that host them into one app, in Arabic or English.</p>
+    <a class="cta" href="/">Open the web app</a>
+    <a class="cta secondary" href="/privacy.html">Privacy Policy</a>
+
+    <div class="card">
+      <h2>What you can do</h2>
+      <ul>
+        <li>Watch live lectures, chat with other viewers, and browse recordings and playlists.</li>
+        <li>Follow channels, save recordings and upcoming streams, and get reminders.</li>
+        <li>Find lecture halls and centres in Al Khobar, Dhahran and Dammam on a map that also works offline.</li>
+        <li>Approved broadcasters and organizations connect their own YouTube channel and go live from a phone or from OBS.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>How it uses your Google account and YouTube</h2>
+      <p>You sign in with Google to chat, follow and save. Broadcasters can also connect their own YouTube channel so the app can create, start and end live broadcasts on their behalf. You stay in control and can disconnect at any time. Details are in the <a href="/privacy.html">Privacy Policy</a>.</p>
+      <p>Hadayah Live uses YouTube API Services. By using it you also agree to the <a href="https://www.youtube.com/t/terms" rel="noopener">YouTube Terms of Service</a>.</p>
+    </div>
+
+    <div class="card">
+      <h2>Get the app</h2>
+      <p>Hadayah Live is coming to Google Play. Until then you can use the web app.</p>
+    </div>
+  </div>
+
+  <div class="ar">
+    <h1>محاضرات تعليمية مباشرة وتسجيلات وأماكن</h1>
+    <p class="lede">تجمع منصة هدايه البثوث المباشرة والمحاضرات المسجّلة والأماكن التي تستضيفها في تطبيق واحد، بالعربية أو الإنجليزية.</p>
+    <a class="cta" href="/">افتح تطبيق الويب</a>
+    <a class="cta secondary" href="/privacy.html">سياسة الخصوصية</a>
+
+    <div class="card">
+      <h2>ماذا يمكنك أن تفعل</h2>
+      <ul>
+        <li>شاهد المحاضرات المباشرة، وتحدّث مع المشاهدين الآخرين، وتصفّح التسجيلات وقوائم التشغيل.</li>
+        <li>تابع القنوات، واحفظ التسجيلات والبثوث القادمة، واستقبل التذكيرات.</li>
+        <li>اعثر على القاعات والمراكز في الخبر والظهران والدمام على خريطة تعمل دون إنترنت أيضًا.</li>
+        <li>يربط المذيعون والمؤسسات المعتمدون قناتهم على يوتيوب ويبثون من الهاتف أو عبر OBS.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>كيف نستخدم حساب Google ويوتيوب</h2>
+      <p>تسجّل الدخول بحساب Google للدردشة والمتابعة والحفظ. ويمكن للمذيعين أيضًا ربط قناتهم على يوتيوب ليتمكن التطبيق من إنشاء البثوث المباشرة وبدئها وإنهائها نيابةً عنهم. وأنت المتحكم دائمًا ويمكنك الفصل في أي وقت. التفاصيل في <a href="/privacy.html">سياسة الخصوصية</a>.</p>
+      <p>تستخدم منصة هدايه خدمات YouTube API، وباستخدامها توافق أيضًا على <a href="https://www.youtube.com/t/terms" rel="noopener">شروط خدمة يوتيوب</a>.</p>
+    </div>
+
+    <div class="card">
+      <h2>حمّل التطبيق</h2>
+      <p>تطبيق منصة هدايه قادم على Google Play. وإلى ذلك الحين يمكنك استخدام تطبيق الويب.</p>
+    </div>
+  </div>
+
+  <footer>
+    <a href="/privacy.html"><span class="en">Privacy Policy</span><span class="ar">سياسة الخصوصية</span></a> &middot;
+    <a href="/delete-account.html"><span class="en">Delete account &amp; data</span><span class="ar">حذف الحساب والبيانات</span></a> &middot;
+    <a href="mailto:ameeralhatemi67@gmail.com">ameeralhatemi67@gmail.com</a>
+  </footer>
+</div>
+
+<script>
+  function setLang(lang) {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.getElementById('btn-en').classList.toggle('active', lang === 'en');
+    document.getElementById('btn-ar').classList.toggle('active', lang === 'ar');
+    try { localStorage.setItem('delete-account-lang', lang); } catch (e) {}
+  }
+  (function initLang() {
+    var saved = null;
+    try { saved = localStorage.getItem('delete-account-lang'); } catch (e) {}
+    if (saved === 'ar' || saved === 'en') { setLang(saved); }
+    else if ((navigator.language || '').toLowerCase().startsWith('ar')) { setLang('ar'); }
+  })();
+</script>
+</body>
+</html>
