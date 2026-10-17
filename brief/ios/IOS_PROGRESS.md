@@ -213,3 +213,14 @@ METER | 2026-10-17T21:45:00+03:00 | weekly used 44% | resets in 6452 min
 - Problems / deviations: cloud account/run is owner-gated. No secret, signing or paid Apple account is needed for the unsigned gate itself. Skip this bridge once the Mac arrives.
 - Owner actions needed: O8, exact steps in both owner documents; no push/run attempted by builder.
 - Next: W13 log availability, then W14 without waiting for CI.
+
+### 2026-10-17 22:31 | W13 Compile-fix loop | BLOCKED
+- Commit: `master^{/record native compile evidence blocker}` — chore(ios): record native compile evidence blocker.
+- Evidence level claimed: no native compile evidence; E0 native source/configuration remains. E1 Windows baseline only.
+- What changed: STATUS records the real build-log dependency and zero native attempts. W12 already supplies the exact owner CI steps in CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md. No source, plugin or native dependency was guessed at or changed.
+- Compile loop: run none; first error class unavailable; fix none; result waiting for owner-run CI or physical Mac. path_provider_foundation/objective_c remains a suspect to inspect only if a real log supports it.
+- Checks: flutter analyze 0 issues (23.9s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:28), exit 0; Android/web SHA-256 90/90 unchanged. Flutter's new-version notice was left as-is; the project remains pinned to 3.41.2.
+- Decisions made: plan §6 account/physical gate applies to the build run. No compile iteration is counted without a real build, and this dependency does not block unrelated documentation/source work.
+- Problems / deviations: Windows cannot run Xcode, and no owner CI log was supplied. No E2 claim or repeated build retry.
+- Owner actions needed: O8 manual unsigned CI run and first-error excerpt, or O2 physical Mac access. Paid enrollment is not needed for this unsigned gate.
+- Next: W14, then W15/W16; no waiting at C4.

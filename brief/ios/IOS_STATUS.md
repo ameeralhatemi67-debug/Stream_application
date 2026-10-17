@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 4, W13 build-log gate |
+| Resume | Phase 4, W14; W13 waits for a genuine native build log |
 | Progress | 11 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W12: YAML parses and invariant checks pass; flutter analyze 0 issues (28.3s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:23), exit 0. Android/web SHA-256 90/90 unchanged. No cloud/iOS build run. |
+| Latest checks | W13 handoff: flutter analyze 0 issues (23.9s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:28), exit 0; Android/web SHA-256 90/90 unchanged. Native compile attempts: 0; no error class to fix. |
 
 ## Work orders
 
@@ -31,8 +31,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W9 | Sign in with Apple | DONE | f715230 | C3 |
 | W10 | iOS-override tests | DONE | 4fa027b | C3 |
 | W11 | App Review compliance | PARTIAL — ESC-2/ESC-3 | 4923c13 | C3 |
-| W12 | Codemagic config | DONE | master^{/add unsigned Codemagic compile gate} | C4 |
-| W13 | Compile-fix loop | WAITING for CI or Mac log |  | C4 |
+| W12 | Codemagic config | DONE | d35721d | C4 |
+| W13 | Compile-fix loop | WAITING — real CI/Mac log | master^{/record native compile evidence blocker} | C4 |
 | W14 | App Store pack | OPEN |  | C4 |
 | W15 | Truth reconciliation | OPEN |  | C4 |
 | W16 | Mac setup runbook | OPEN |  | C4 |
@@ -79,9 +79,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W13: record no real CI/Mac build log; do not invent a compile fix.
-2. W14 viewer-first English/Arabic listing, privacy, age, review and screenshot drafts.
-3. W15 truth reconciliation, then W16 Mac setup.
+1. W14 write and validate the viewer-first English/Arabic store pack.
+2. W15 correct historical iOS truth claims in its four allowed documents.
+3. W16 complete the Mac runbook, then remaining Track B work within scope.
 
 ## Audit notes and verification limits
 
@@ -94,6 +94,7 @@ Account-gated steps do not block unrelated Windows work.
 - Apple plugin 8.1.0 is the newest solver-compatible version for Flutter 3.41.2/Dart 3.11.0; only three new lockfile entries, no existing package updates. Native/plugin compilation remains pending.
 - W10 found the Arabic Google button was 61px high. Apple is now 64px (AppTheme tokens); the EN/AR test checks it remains at least as tall and fully localized. Android auth UI remains unchanged.
 - C3 scoped sweep is committed for audit; W11 remains PARTIAL because ESC-2/ESC-3 are real submission blockers. Continue unrelated Windows work.
+- W13 has zero native compile attempts and no real failure log. It is waiting for O8 or Mac access; do not preemptively patch/remove native plugins or award E2.
 
 ## Open escalations
 
