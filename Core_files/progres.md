@@ -1,10 +1,18 @@
 ---
 type: progress
 project: Streamer_app
-updated: 2026-09-27
+updated: 2026-10-17
 ---
 
 # 📈 Progress Log & Sprint Changelog: Streamer App
+
+## 2026-10-17: iOS evidence clarification (W15)
+
+- The iOS source/configuration is E0, implemented but not built or run on iOS. Windows Dart/target-platform tests are E1 host proof only; there is no native E2, simulator E2S or device E3 evidence.
+- Historical WebView "verified", "resolved" or cross-platform wording below does not establish iOS playback or universal device success. ADR-006 now records that limit. Live/VOD WKWebView playback, native auth/permissions and lifecycle behavior still require Mac/device runs.
+- HTTPS organization invitations open the browser; Associated Domains and the non-auth invite consumer remain deferred. Custom-scheme OAuth registration is E0, not an iOS auth-return test.
+- Use `brief/ios/IOS_STATUS.md` / `IOS_PROGRESS.md` for current work orders and evidence. No Android release status or code is changed by this clarification.
+
 
 ## 2026-10-06: Saved recordings and upcoming streams
 
@@ -468,7 +476,7 @@ Prior checkpoint (historical): Admin Hub checkpoint 2026-09-23, commit `11d0b09`
 
 ---
 
-## 📅 Sprint Log: 2026-08-16 (YouTube Live & VOD Architecture, Error 150/152/153 Permanent Resolution)
+## 📅 Sprint Log: 2026-08-16 (YouTube Live & VOD origin/referrer hardening; iOS E0)
 
 * **📺 YouTube Live Stream & VOD Streaming Engine Hardened (`youtube_player_adapter.dart`):**
   - Resolved YouTube Error 150/152/153 on Android WebView by implementing Strategy 1:
@@ -479,6 +487,7 @@ Prior checkpoint (historical): Admin Hub checkpoint 2026-09-23, commit `11d0b09`
   - Created ADR-006 in `Core_files/decisions.md` and research paper in `research docs/YouTube Embedded Streaming & Mobile WebView Errors (150-152-153) - Comprehensive Research & Solutions.md`.
   - Closed Bug 01 (Gray Map Canvas) and Bug 02 (YouTube Live & VOD Playback) in `doc/fix bug list.md`.
   - Verification: `flutter analyze` $\rightarrow$ 0 issues, `flutter test` $\rightarrow$ 43/43 tests passing.
+  - Evidence clarification (2026-10-17): those Dart checks are host evidence, not an iOS build or playback test. WKWebView live/VOD playback and Error 150/152/153 behavior remain E0 until native runs establish more; ADR-006's former universal iOS claim is withdrawn.
 
 ---
 

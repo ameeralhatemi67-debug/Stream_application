@@ -234,3 +234,13 @@ METER | 2026-10-17T21:45:00+03:00 | weekly used 44% | resets in 6452 min
 - Problems / deviations: privacy purpose/provider review and content frequencies need owner decisions. Source platform_analytics means no analytics SDK is insufficient to decide Apple's Analytics purpose. W11 legal/Apple deletion blockers remain. Organization copy requires actual hosted visibility or removal in both languages. No fake iPhone screenshots or final age rating.
 - Owner actions needed: O9, genuine captures and paid account steps later; exact instructions in OWNER_STEPS_IOS.md and store/README.md.
 - Next: W15, then W16; no C4 audit wait.
+
+### 2026-10-17 22:47 | W15 Truth reconciliation | DONE
+- Commit: `master^{/reconcile iOS evidence claims}` — chore(ios): reconcile iOS evidence claims.
+- Evidence level claimed: unchanged native E0 and host E1. This is a documentation correction, not new platform proof.
+- What changed: only Core_files/decisions.md (ADR-006), Core_files/progres.md, Core_files/STATUS.md and brief/LEDGER.md, plus mandatory STATUS/PROGRESS handoff. Removed the universal iOS playback guarantee; replaced the inaccurate WebKit setter description with the existing constructor settings; qualified historical host/SQL tiers and physical-test references; added browser-only HTTPS invitation limits and links to current iOS evidence.
+- Checks: flutter analyze 0 issues (24.1s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:09), exit 0; Android/web SHA-256 90/90 unchanged. App source, origin/referrer policy, supabase and brief/launch diffs empty. Whitespace check passes.
+- Decisions made: W7's [official pinned WKWebView 3.25.1 source](https://github.com/flutter/packages/blob/webview_flutter_wkwebview-v3.25.1/packages/webview_flutter/webview_flutter_wkwebview/lib/src/webkit_webview_controller.dart) supports configuration only. No E2/E2S/E3 is inferred from Dart tests or the root ledger's separate SQL E2 scheme.
+- Problems / deviations: decisions.md already had mixed CRLF/LF in HEAD; new iOS lines were written with LF to fix actual trailing-CR whitespace without a repository-wide reformat or warning suppression.
+- Owner actions needed: none new; native build/runtime, Apple and legal blockers remain as recorded.
+- Next: W16; then unblocked Track B work. C4 audit does not pause the run.

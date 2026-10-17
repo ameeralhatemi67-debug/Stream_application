@@ -65,14 +65,16 @@ and newer mutations fence late reads. Guest bookmarks remain session-only.
 ---
 
 ## ADR-006: YouTube IFrame Cross-Origin Referrer Architecture (Error 150/152/153 Prevention)
-* **Status:** `ACCEPTED` (Implemented & Verified 2026-08-16)
+* **Status:** `ACCEPTED` (shared implementation present; iOS E0, native build/runtime unverified as of 2026-10-17)
 * **Context:** YouTube's mid-2025/2026 security updates enforce strict embedder verification on mobile WebViews. Loading raw URLs or using default WebView headers caused Error 150 (embed restriction), Error 152 (Play Integrity/bot check on debug builds), and Error 153 (configuration error due to missing/same-origin `Referer` headers).
 * **Decision:** In `YouTubePlayerAdapter`, configure:
-  1. `AndroidWebViewController.setMediaPlaybackRequiresUserGesture(false)` and `WebKitWebViewController.setAllowsInlineMediaPlayback(true)`.
+  1. `AndroidWebViewController.setMediaPlaybackRequiresUserGesture(false)` and iOS `WebKitWebViewControllerCreationParams(allowsInlineMediaPlayback: true, mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{})`.
   2. Embed wrapper HTML with `<meta name="referrer" content="strict-origin-when-cross-origin">` and `iframe referrerpolicy="strict-origin-when-cross-origin"`.
   3. Base URL set strictly to `https://www.youtube-nocookie.com`.
   4. Embed source URL: `https://www.youtube-nocookie.com/embed/$videoId?autoplay=1&playsinline=1&controls=1&rel=0&modestbranding=1&enablejsapi=1`.
-* **Consequences:** 100% verified, seamless playback for both YouTube Live Streams and Archived Lectures (VODs) across all Android and iOS devices with zero Error 150/152/153 crashes.
+* **Consequences:** The origin/referrer strategy is implemented for Live and VOD. Existing Android/web observations remain platform-specific evidence; they do not guarantee every device. The former universal iOS verification claim is withdrawn. iOS playback and prevention of Errors 150/152/153 are **E0: implemented settings, not built or run on iOS**. Windows Dart tests are E1 host proof only; no native E2/E2S/E3 evidence exists.
+* **iOS evidence boundary, 2026-10-17:** W7 audited the existing WKWebView settings against [official 3.25.1 source](https://github.com/flutter/packages/blob/webview_flutter_wkwebview-v3.25.1/packages/webview_flutter/webview_flutter_wkwebview/lib/src/webkit_webview_controller.dart). This is source evidence, not playback proof. The embed base URL and referrer policy are unchanged. See `brief/ios/IOS_STATUS.md` and `IOS_PROGRESS.md` for current evidence.
+* **iOS link limitation:** Custom-scheme OAuth registration is E0 configuration. HTTPS organization invitations open the browser; Associated Domains and a non-auth invitation-link consumer are deferred. No native universal-link or completed iOS OAuth return is claimed.
 
 ---
 

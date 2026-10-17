@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 4, W15 truth reconciliation |
-| Progress | 12 / 18 work orders complete |
+| Resume | Phase 4, W16 Mac setup runbook |
+| Progress | 13 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W14: all metadata/UTF-8/review-note limits pass; flutter analyze 0 issues (24.2s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:16), exit 0. Android/web SHA-256 90/90 unchanged. No native/store run. |
+| Latest checks | W15: flutter analyze 0 issues (24.1s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:09), exit 0; Android/web SHA-256 90/90 unchanged. Four allowed truth documents corrected; source unchanged. |
 
 ## Work orders
 
@@ -33,8 +33,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W11 | App Review compliance | PARTIAL — ESC-2/ESC-3 | 4923c13 | C3 |
 | W12 | Codemagic config | DONE | d35721d | C4 |
 | W13 | Compile-fix loop | WAITING — real CI/Mac log | a3da856 | C4 |
-| W14 | App Store pack | DONE | master^{/draft viewer-first App Store pack} | C4 |
-| W15 | Truth reconciliation | OPEN |  | C4 |
+| W14 | App Store pack | DONE | d9f33e2 | C4 |
+| W15 | Truth reconciliation | DONE | master^{/reconcile iOS evidence claims} | C4 |
 | W16 | Mac setup runbook | OPEN |  | C4 |
 | W17 | Phone publisher | OPEN, Track B |  |  |
 | W18 | Push spec | OPEN, Track B |  |  |
@@ -81,9 +81,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W15 correct the four allowed truth documents, preserving origin/referrer code.
-2. W16 write exact Mac setup and Track M commands.
-3. Then complete unblocked Track B work; native build/device validation needs the Mac/iPhone.
+1. W16 Mac setup and exact Track M command/evidence runbook.
+2. W17 inspect and port the native publisher contract for experimental validation; preserve viewer-release scope.
+3. W18 write the push spec and required backend escalation without editing supabase.
 
 ## Audit notes and verification limits
 
@@ -97,6 +97,7 @@ Account-gated steps do not block unrelated Windows work.
 - W10 found the Arabic Google button was 61px high. Apple is now 64px (AppTheme tokens); the EN/AR test checks it remains at least as tall and fully localized. Android auth UI remains unchanged.
 - C3 scoped sweep is committed for audit; W11 remains PARTIAL because ESC-2/ESC-3 are real submission blockers. Continue unrelated Windows work.
 - W13 has zero native compile attempts and no real failure log. It is waiting for O8 or Mac access; do not preemptively patch/remove native plugins or award E2.
+- W15 withdrew ADR-006's universal iOS playback claim, corrected its WKWebView API description, labeled historical Dart/SQL evidence separately and added the HTTPS invite limitation in all four allowed documents. Native E0 remains.
 
 ## Open escalations
 

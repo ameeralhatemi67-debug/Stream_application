@@ -1,12 +1,21 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-15
+updated: 2026-10-17
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## iOS integration evidence, 2026-10-17
+
+The active iOS contract is `brief/ios/IOS_PLAN_V2.md`; current state and checks are in `brief/ios/IOS_STATUS.md` and `IOS_PROGRESS.md`. The native shell, bundle identity, iOS 15/iPhone configuration, permission/URL/privacy setup and Apple entitlement are **E0: implemented, not run on iOS**. Shared Dart iOS-override tests provide **E1 Windows host evidence** for auth exchange, availability gates and UI reachability.
+
+No native iOS build, simulator launch or iPhone run has been recorded; E2/E2S/E3 are not claimed. In particular, WKWebView live/VOD playback and prevention of YouTube Errors 150/152/153 remain E0 assumptions, despite historical cross-platform wording in older records. The origin/referrer implementation is unchanged.
+
+HTTPS organization invitations currently open the browser. Associated Domains and a non-auth invitation-link consumer are deferred; the custom OAuth URL scheme is not universal-link proof. W11's Apple deletion/public-policy blockers and W13's missing native build log remain open. Paid enrollment is deferred; Debug must stay free of paid entitlements.
+
 
 ## Connection-loss grace window, 2026-10-15
 
