@@ -43,3 +43,17 @@ METER | 2026-10-17T20:50:38+03:00 | weekly used 43% | resets in 6506 min
 - Problems / deviations: Flutter create emitted a new sample counter test; removed only that generated file. It replaced web/Windows migration entries; restored them. Initial byte inventory used nonpersistent sandbox TEMP; recovered verification is clean tracked diff plus a persistent post-generation 90-file hash inventory, not a before/after-generation byte proof. Sandbox SDK cache lock stalled the first version probe; approved SDK access resolved it. No Dart, Android, web, backend, launch, secret or signing changes.
 - Owner actions needed: none for W2. Mac/CI still required for compile proof; owner pushes.
 - Next: W2 identity, then W3/W4. C1 not yet ready for audit.
+
+### 2026-10-17 21:03 | W2 Identity | DONE
+- Commit: `master^{/apply iOS app identity}`, subject `feat(ios): apply iOS app identity`. W1 resolves to 5605451.
+- Evidence level claimed: E0 native identity, implemented, not run on iOS; E1 Windows host checks pass.
+- What changed: `project/pubspec.yaml` icons block sets `ios: true`, `remove_alpha_ios: true`; `project/ios/Runner/Info.plist` launcher name Hadayah Live matches Android English; app icon set regenerated from existing `assets/launcher/icon_1024.png`; launch storyboard uses existing `AppTheme.media` #243536, RGB 36/53/54.
+- Checks: `flutter analyze` exit 0, 0 issues (39.5s); one full `flutter test --reporter expanded` exit 0, `03:33 +1107: All tests passed!`, 0 failed/skipped; 90/90 Android/web SHA-256 unchanged; 1024px PNG IHDR 1024x1024, RGB color type 2, no tRNS chunk; all 25 icon manifest entries resolve; plist/storyboard XML parse; diff whitespace check passes.
+- Decisions made: isolated iOS-only generator config outside the repo disables Android/web writes while the normal pubspec keeps its existing platforms. Used `dart run flutter_launcher_icons -f <temporary config>`. Option names and CLI documented by [official flutter_launcher_icons README](https://github.com/fluttercommunity/flutter_launcher_icons/blob/master/README.md), fetched via Context7; installed generator reports v0.14.4. No source asset missing. Current AppTheme uses a white bg and dark media token; media supplies W2's dark launch color without inventing a new color or changing shared theme.
+- Problems / deviations: generator incorrectly changed `ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS` from YES to AppIcon twice. Restored the committed W1 project.pbxproj, which is outside W2's Touch list; no persistent out-of-scope edit was needed. Generator says web skipped because generate=false; hashes confirm no web writes. Arabic launcher name will be bundled with W3 localizations.
+- Owner actions needed: none for W3; Mac/CI remains necessary for E2.
+- Next: W3, W4, W5.
+
+Checkpoint C1 | W1/W2 complete, awaiting Claude audit. W1 5605451; W2 selector above. Host analyzer clean and suite 1,107 pass after each WO. No E2/iOS runtime claim. Generation's original temporary hash inventory was lost; tracked Android/web diff is clean and the persistent post-generation 90-file inventory is unchanged.
+
+METER | 2026-10-17T21:03:05+03:00 | weekly used 43% | resets in 6494 min

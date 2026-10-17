@@ -8,20 +8,20 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 1, W2 |
-| Progress | 1 / 18 work orders complete |
+| Resume | Phase 2, W3 |
+| Progress | 2 / 18 work orders complete |
 | Evidence | Native shell E0, implemented, not run on iOS. Shared Dart host checks pass. No iOS compile or runtime evidence |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; no paid-only capability configured |
 | Meter | 43% weekly; cap 50%, soft stop 45%; resetsAt 1792649794. |
-| Latest checks | W1: flutter analyze 0 issues (22.3s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:52), exit 0. iOS configuration asserts passed. Android/web Git diff clean; 90/90 SHA-256 matches since post-generation inventory. |
+| Latest checks | W2: flutter analyze 0 issues (39.5s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:33), exit 0. Store icon 1024x1024 RGB, no alpha/tRNS; all icon references resolve. Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
 | WO | Title | Status | Commit selector | Checkpoint |
 |---|---|---|---|---|
-| W1 | Generate ios/ | DONE | master^{/generate iOS platform project} | C1 |
-| W2 | Identity | OPEN |  | C1 |
+| W1 | Generate ios/ | DONE | 5605451 | C1 |
+| W2 | Identity | DONE | master^{/apply iOS app identity} | C1 |
 | W3 | Info.plist | OPEN |  | C2 |
 | W4 | Privacy manifest | OPEN |  | C2 |
 | W5 | URL scheme and deep links | OPEN |  | C2 |
@@ -48,6 +48,7 @@ Commit selectors avoid embedding a commit's own hash. Resolve with `git rev-pars
 |---|---|---|
 | iOS native shell | E0 | Implemented, not run on iOS; CocoaPods, bundle sa.hadayah.streamerapp, target 15.0, iPhone only. |
 | Discovery/watch/chat/map/profile shared Dart | E1 host baseline | Windows tests only; no iOS runtime proof. |
+| iOS name/icon/launch screen | E0 | Implemented, not run on iOS. Opaque icon checked on Windows; dark launch uses AppTheme.media #243536. |
 | WKWebView playback | E0 at best | Audit W7 pending; no iOS playback proof. |
 | Google redirect | none | W5 pending. |
 | Sign in with Apple | none | W9 pending; paid capability deferred. |
@@ -65,15 +66,17 @@ No account is required for the next Windows work orders. Paid enrollment is defe
 
 ## Next three steps
 
-1. W2 identity.
-2. W3 permissions and localizations.
-3. W4 privacy manifest.
+1. W3 permissions and localizations.
+2. W4 privacy manifest.
+3. W5 custom URL scheme and universal-link owner plan.
 
 ## Audit notes and verification limits
 
-- C1 awaits W2 and later Claude audit. Builder claims E0 for native config plus passing E1 host checks; no evidence level awarded.
+- C1 (W1/W2) is awaiting Claude audit. Native shell/identity remain E0; host checks pass. No iOS compilation or evidence promotion.
 - Initial SHA-256 inventory was written to a sandbox temporary directory and could not be recovered after that process ended. Generation has a clean tracked Android/web diff; the persistent post-generation inventory covers 90 files (77 Android, 13 web). Do not claim a pre-generation SHA comparison.
 - Flutter create also emitted an unrelated sample widget test and replaced web/Windows metadata entries. The new sample was removed and original metadata entries restored before testing.
+
+- flutter_launcher_icons 0.14.4 rewrote two unrelated asset-symbol settings in project.pbxproj. Restored that file to W1; no Xcode project change belongs to W2. Future icon regeneration must inspect that diff.
 
 ## Open escalations
 

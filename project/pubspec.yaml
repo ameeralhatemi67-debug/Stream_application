@@ -120,7 +120,8 @@ flutter:
 # which. Re-run the Python script first if the logo ever changes.
 flutter_launcher_icons:
   android: true
-  ios: false
+  ios: true
+  remove_alpha_ios: true
   # The finished square tile, for the legacy mipmaps on Android 7 and below.
   image_path: "assets/launcher/icon_1024.png"
   # Adaptive icon (Android 8+): a flat background with the mark inset into the
