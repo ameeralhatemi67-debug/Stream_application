@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 2, W4 |
-| Progress | 3 / 18 work orders complete |
+| Resume | Phase 2, W5 |
+| Progress | 4 / 18 work orders complete |
 | Evidence | Native configuration E0, implemented, not run on iOS. Shared Dart host checks pass. No iOS compile or runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
-| Meter | 43% weekly; cap 50%, soft stop 45%; resetsAt 1792649794. |
-| Latest checks | W3: flutter analyze 0 issues (18.8s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:34), exit 0. Plist allowlist, native EN/AR keys and PBX ID uniqueness pass. Android/web 90/90 SHA-256 unchanged. |
+| Meter | 2026-10-17T21:14:01+03:00 | weekly used 43% | resets in 6483 min |
+| Latest checks | W4: flutter analyze 0 issues (24.7s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:25), exit 0. Privacy XML and official data-type enum checks pass; Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -22,8 +22,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|---|---|---|
 | W1 | Generate ios/ | DONE | 5605451 | C1 |
 | W2 | Identity | DONE | 88c65a0 | C1 |
-| W3 | Info.plist | DONE | master^{/configure iOS viewer permissions} | C2 |
-| W4 | Privacy manifest | OPEN |  | C2 |
+| W3 | Info.plist | DONE | 3214951 | C2 |
+| W4 | Privacy manifest | DONE | master^{/declare iOS app privacy} | C2 |
 | W5 | URL scheme and deep links | OPEN |  | C2 |
 | W6 | Firebase inert on iOS | OPEN |  | C2 |
 | W7 | WKWebView / YouTube audit | OPEN |  | C2 |
@@ -55,6 +55,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | Phone publishing | none on iOS | Android sender only; Track B. |
 | Push | none on iOS | Deferred; W18 is spec only. |
 | Location and gallery permissions / native localization | E0 | Implemented, not run on iOS. Foreground location only; no camera/mic/background/ATS exceptions. |
+| App privacy manifest | E0 | Implemented, not run on iOS. 11 linked data types for functionality; no tracking. App reasons CA92.1/C617.1. Packaged report unverified. |
 
 ## Blockers and owner actions
 
@@ -62,14 +63,15 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 |---|---|---|
 | O1 | Owner | Paid Apple enrollment deferred (D4). Needed for Apple capability/device testing, TestFlight and App Store submission. |
 | O2 | Owner | Provide Mac access when it arrives; iPhone availability remains unknown. |
+| O3 | Owner / Claude | Before submission, reconcile the public privacy policy's Android/web wording with iOS and verify the packaged Xcode privacy report. No public page edited in this run. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W4 privacy manifest.
-2. W5 URL scheme and owner universal-link plan.
-3. W6 Firebase inert test and native initialization audit.
+1. W5 URL scheme and universal-link owner plan.
+2. W6 Firebase inert test and startup audit.
+3. W7 WKWebView assumptions audit.
 
 ## Audit notes and verification limits
 
