@@ -1,6 +1,6 @@
 # Mac setup and first iOS run
 
-Written on Windows, 2026-10-17. These commands have not been run on a Mac. Native evidence remains E0 until actual builds/runs. Use this runbook when the Mac is in the repo's reach; skip Codemagic then. Keep the existing viewer scope and paid-enrollment deferral (D4).
+Written on Windows, 2026-10-17; combined M1–M3 sequence reviewed 2026-10-18. These commands have not been run on a Mac. Native evidence remains E0 until actual builds/runs. Use this runbook when the Mac is in the repo's reach; skip Codemagic then. Keep the existing viewer scope and paid-enrollment deferral (D4).
 
 ## 1. Owner: prepare the Mac and tools
 
@@ -79,9 +79,128 @@ Owner copies dart_define.local.json **by hand** into project/ from their secure 
 
 Use the current official OpenAI desktop quickstart and its macOS download. Install/open the desktop app, sign in with the owner's ChatGPT account, select Codex for software work and open the cloned **repository root**, so AGENTS.md and the iOS mailbox are in scope. The current guide describes the ChatGPT desktop app with a Codex selection. If that installer is unavailable for the machine, follow the official Codex CLI guide; do not guess platform support or install a different product.
 
-Resume the iOS builder with IOS_STATUS.md and IOS_PROGRESS.md. There is no usage cap or soft stop. Never run budget_check.mjs, push, edit supabase, inspect secrets/signing material or disturb brief/launch. Use local master commits and continue unblocked work; the ledger is the auditor mailbox.
+Resume the iOS builder with IOS_STATUS.md and IOS_PROGRESS.md. There is no usage cap or soft stop. Never run budget_check.mjs, push, deploy backend source, inspect secrets/signing material or disturb brief/launch. W19's authorized backend source is already written; no deployment or additional backend scope is implied. Use local master commits and continue unblocked work; the ledger is the auditor mailbox.
 
 In Xcode > Settings > Accounts, the owner signs in locally with their Apple account. A free personal team is sufficient for a cable Debug install; Simulator and unsigned compilation need no paid enrollment. Keep paid enrollment deferred. Never add Sign in with Apple, Associated Domains or APNs capabilities to Debug.
+
+## M1–M3 — one default-viewer sequence
+
+After sections 1–3 are complete, this Bash sequence performs the M1 host/native
+gates, prepares the M3 matrix, then starts the M2 interactive run. Run it from the
+repository root in Terminal. Python 3.9+ is used only for local validation/JSON;
+install it through the normal Mac tool setup if unavailable. Keep the publisher
+disabled. The driver refuses an active publisher configuration and preserves any
+existing device matrix. It has not been executed on a Mac.
+
+The owner boots an available iPhone in Simulator first. The driver uses a booted
+iPhone; if several exist, set HADAYAH_SIMULATOR_ID to an actual listed ID. It never
+marks a matrix row passed. Quit Flutter with q after recording the observed rows.
+Additional runtime/small-screen/Arabic rows in sections 5–6 remain required.
+
+```sh
+bash <<'HADAYAH_M123'
+set -euo pipefail
+cd project
+python3 -c 'import sys; assert sys.version_info >= (3, 9), "Python 3.9+ required"'
+test ! -e ios/Flutter/Publisher.generated.xcconfig || {
+  echo 'Publisher is active: use the documented disable/pod-install rollback first.'; exit 1;
+}
+test -z "$(git diff --name-only -- android web)"
+test -z "$(git diff --cached --name-only -- android web)"
+taskEvidence="../brief/evidence/$(date +%F)/ios-m1-m3-$(date +%H%M%S)"
+mkdir -p "$(dirname "$taskEvidence")"
+mkdir "$taskEvidence"
+git rev-parse HEAD > "$taskEvidence/commit.txt"
+date -u '+%FT%TZ' > "$taskEvidence/date.txt"
+
+inventory() {
+  git ls-files -z -- android web |
+  while IFS= read -r -d '' taskPath; do
+    case "$taskPath" in
+      *.jks|*.keystore|*.p12|*.p8|*.mobileprovision|*/key.properties|*dart_define*|*/.env*) continue ;;
+    esac
+    if [ -f "$taskPath" ] && [ ! -L "$taskPath" ]; then
+      shasum -a 256 "$taskPath"
+    fi
+  done
+}
+inventory > "$taskEvidence/android-web-before.sha256"
+run_gate() {
+  taskLabel="$1"; shift
+  if "$@" > "$taskEvidence/$taskLabel.log" 2>&1; then
+    printf '%s | exit 0\n' "$taskLabel" | tee -a "$taskEvidence/results.txt"
+    tail -n 5 "$taskEvidence/$taskLabel.log"
+  else
+    taskExit=$?
+    printf '%s | exit %s | W13: inspect first real error class\n' "$taskLabel" "$taskExit" |
+      tee -a "$taskEvidence/results.txt"
+    tail -n 80 "$taskEvidence/$taskLabel.log"
+    return "$taskExit"
+  fi
+}
+flutter --version --machine |
+  python3 -c 'import json,sys; assert json.load(sys.stdin)["frameworkVersion"] == "3.41.2", "Use pinned Flutter 3.41.2"'
+xcodebuild -version > "$taskEvidence/xcode.txt"
+xcrun --sdk iphoneos --show-sdk-version > "$taskEvidence/ios-sdk.txt"
+pod --version > "$taskEvidence/cocoapods.txt"
+flutter doctor -v
+# Proceed only when the iOS doctor rows are resolved; other platform rows are independent.
+run_gate precache flutter precache --ios
+run_gate pub-get flutter pub get
+run_gate analyze flutter analyze
+run_gate tests flutter test
+(cd ios && pod install)
+xcodebuild -project ios/Runner.xcodeproj -target Runner -configuration Debug -showBuildSettings |
+  sed -nE '/^[[:space:]]*(CODE_SIGN_ENTITLEMENTS|PRODUCT_BUNDLE_IDENTIFIER|IPHONEOS_DEPLOYMENT_TARGET|TARGETED_DEVICE_FAMILY)[[:space:]]*=/p' |
+  tee "$taskEvidence/debug-settings.txt"
+python3 - "$taskEvidence/debug-settings.txt" <<'CHECK_SETTINGS'
+from pathlib import Path
+import sys
+settings = {}
+for line in Path(sys.argv[1]).read_text().splitlines():
+    key, separator, value = line.strip().partition(" = ")
+    if separator:
+        settings[key] = value.strip()
+assert settings.get("PRODUCT_BUNDLE_IDENTIFIER") == "sa.hadayah.streamerapp"
+assert settings.get("IPHONEOS_DEPLOYMENT_TARGET") == "15.0"
+assert settings.get("TARGETED_DEVICE_FAMILY") == "1"
+assert not settings.get("CODE_SIGN_ENTITLEMENTS"), "Debug must have no paid entitlement"
+CHECK_SETTINGS
+run_gate simulator-build flutter build ios --simulator
+run_gate unsigned-release flutter build ios --release --no-codesign
+inventory > "$taskEvidence/android-web-after.sha256"
+cmp "$taskEvidence/android-web-before.sha256" "$taskEvidence/android-web-after.sha256"
+test -z "$(git diff --name-only -- android web)"
+if [ ! -e ../brief/ios/DEVICE_MATRIX.md ]; then
+  cat > ../brief/ios/DEVICE_MATRIX.md <<'DEVICE_MATRIX'
+# iOS device matrix
+All rows PENDING until actual observations and evidence are recorded.
+Test ID | feature | expected result | device/model/OS | language | fixture | command/action | observed result | evidence path | E-level | owner hands needed
+M3-VIEWER | M3 viewer checklist in MAC_SETUP.md | See each checklist row | PENDING | EN + AR | Owner-approved | PENDING | NOT RUN | PENDING | none | Provider/device prompts as needed
+DEVICE_MATRIX
+fi
+xcrun simctl list devices available
+taskSimulatorId="${HADAYAH_SIMULATOR_ID:-}"
+if [ -z "$taskSimulatorId" ]; then
+  taskSimulatorId="$(xcrun simctl list devices available --json |
+    python3 -c 'import json,sys; devices=[d for values in json.load(sys.stdin)["devices"].values() for d in values if "iPhone" in d["name"] and d["state"]=="Booted"]; assert devices, "Boot an available iPhone in Simulator first"; print(devices[0]["udid"])')"
+fi
+test -f dart_define.local.json || {
+  echo 'Owner must copy the ignored define file privately before M2.'; exit 1;
+}
+printf 'M1 gates passed; E2 claim only. Record actual M2/M3 observations in DEVICE_MATRIX.md.\n'
+# Interactive output is not persisted by this driver. Do not copy token-bearing URLs/logs.
+flutter run --debug -d "$taskSimulatorId" --dart-define-from-file=dart_define.local.json
+HADAYAH_M123
+```
+
+If a command fails, keep its log private until sanitized and follow W13 before
+continuing. Do not batch speculative native fixes. After the interactive run,
+record each observed result, model/runtime/language/SHA and genuine screenshots;
+host tests or an installed app do not prove playback, revocation or moderation.
+Review tracked Android/web integrity once more after the run; Flutter may regenerate
+ignored plugin registrants, which must be recorded separately from source hashes.
+No signing/account material or local define content belongs in evidence.
 
 ## 4. M1 — exact first build commands
 
@@ -158,7 +277,7 @@ Run simulator-capable rows in both languages, including a small screen and the r
 
 Include Google return from running/closed app; actual Live/VOD inline playback, mute/control bridge, orientation and foreground restoration; chat report/block/moderation with authorized test accounts; map/offline/directions; location/gallery prompts and refusal; privacy/support and deletion confirmation/failure; safe areas/keyboard; offline overlays; Firebase remaining inert; and viewer publishing/channel gates. A screenshot alone does not prove successful playback or a destructive operation.
 
-For account deletion and moderation execution use disposable approved fixtures prepared by the owner. No production migration/settings change is authorized by this runbook. Keep ESC-2/ESC-3 open until their separately scoped work and evidence resolve them.
+For account deletion and moderation execution use disposable approved fixtures prepared by the owner. No production migration/settings change is authorized by this runbook. ESC-2 is resolved at E1 mocked source; W19 deployment/SQL/provider/device proof remains pending. ESC-3's in-app draft is complete; counsel approval, hosted legal text and public-page delivery remain owner/Claude actions.
 
 ## 7. M4 — owner's iPhone, then later paid distribution
 

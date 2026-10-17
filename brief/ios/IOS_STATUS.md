@@ -8,9 +8,9 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-18, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Finish optional Mac/viewer handoff docs, then await Mac/real CI log |
+| Resume | Hard stop: physical Mac or real CI log for W13 / M1–M3 |
 | Progress | 18 / 20 work orders complete |
-| Evidence | Native shell/configuration and Apple entitlement E0; E1 Windows auth/UI/config/availability tests. W18 E0 specification only. No E2, E2S, E3 or E4. |
+| Evidence | W19/W20 and publisher Dart E1 mocked/host; native shell, Apple capability and phone media E0. No native compile/run, E2, E2S, E3 or E4. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
@@ -36,7 +36,7 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W14 | App Store pack | DONE | d9f33e2 | C4 |
 | W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
 | W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
-| W17 | Phone publisher | DONE | 63b288f; c4c81c2; master^{/harden publisher recovery and direct entry} | Track B |
+| W17 | Phone publisher | DONE | 63b288f; c4c81c2 (native); afd862d (review) | Track B |
 | W18 | Push spec | DONE | bd442c8 | Track B |
 | W19 | Apple deletion revocation | DONE | d5e4b6b | §12 |
 | W20 | Legal drafts / public gaps | DONE | a0ebf8d | §12 |
@@ -64,7 +64,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | W19 revocation source E1 mocked; W20 complete bilingual legal draft/readers E1. Counsel approval, hosted legal record/public-page deployment, SQL/provider/device behavior and submission remain pending. |
 | Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
 | App Store pack | E0 drafts | Seven files: EN/AR copy, privacy mapping, age questionnaire, review notes and both requested screenshot size plans. No images, account form or upload; W11 blockers carried forward. |
-| Mac handoff | E0 runbook | MAC_SETUP.md covers Xcode/SDK/deployment distinction, pinned SDK, owner hands, Debug entitlements, exact M1–M5 commands and evidence boundaries. No Mac available. |
+| Mac handoff | E0 runbook | MAC_SETUP.md now includes one Bash M1–M3 sequence with pinned-version/source/signing checks, build logs, matrix initialization and interactive Simulator run. Bash syntax checked on Windows only; no Mac execution. |
 | Apple deletion revocation | E1 host/mocked; SQL source only | W19 reauthorization → authenticated code exchange → verified identity/nonce → refresh revoke → private identity-version proof. Deletion guard, localized failures and non-Apple sequence implemented. No SQL/hosted/provider/iPhone proof. |
 
 ## Blockers and owner actions
@@ -87,9 +87,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. Commit the script-like M1–M3 Mac sequence and completed viewer-branch follow-up.
-2. Owner provides Mac access or a sanitized real CI log; W13 handles its first native error before other work.
-3. Owner audits/deploys W19 and approves/delivers W20 legal/public text; later paid Apple/device/store gates remain.
+1. Owner transfers the intended master commits plus manager plan/ledger documents to the Mac when available, then runs MAC_SETUP.md M1–M3 with the publisher off. A supplied CI/Mac log takes priority under W13.
+2. Owner audits/deploys W19 function/secrets/new migration and verifies SQL/grants/provider deletion; owner/counsel/Claude approve and deliver matching W20 legal/public text.
+3. After viewer compilation, optionally activate W17 per IOS_PUBLISHER_HANDOFF.md and execute the iPhone E3 matrix. Paid Apple sign-in/distribution and deferred push remain separate owner gates.
 
 ## Audit notes and verification limits
 
@@ -113,6 +113,8 @@ Account-gated steps do not block unrelated Windows work.
 - W17 native self-review corrected ACK/event timing, exact orientation argument, retry quality retention, conditional permission macros and stale-operation checks. SDK loggers discard credential-bearing diagnostics; no compiler warning suppression. These are source checks, not compilation/runtime proof.
 - W17 review: native commit c4c81c2 remains separate from Dart. Transport loss/retry-only watchdog pause retains capture during Dart's bounded authorization episode; user stop, revoked authorization and exhaustion fully release it. Background eligibility is an implementation intent requiring E3, not observed survival.
 - Direct iOS phone setup now rejects unavailable/default-off capture before camera/microphone permission calls. Its narrow error screen wraps in EN/AR. Test fixture uses actual physicalSize/devicePixelRatio (known repository isolation issue); no rendering exceptions suppressed.
+- All three optional Windows follow-ups completed: native/config self-review, script-like M1–M3 sequence, and RECON section 3 re-read (62 matching platform-site lines). Both production player factory callers select YouTube; the legacy localRtmp adapter is not a shipped alternate iOS path.
+- Mac sequence was Bash syntax-checked only. It creates pending matrix rows, never automatic device passes. E2/E2S/E3 remain pending. Historical progress entries are preserved; later W17 review entries clarify bounded capture retention and direct-entry protection.
 
 ## Open escalations
 

@@ -163,3 +163,29 @@ WO-3 must map reachable D3 capabilities to official plugin/Apple permission guid
 | Public privacy/deletion pages, support, counsel | brief/OWNER_ACTIONS.md:8,11,20,24-25 still marks these pending/unverified. No legal/page-availability review in WO-0. |
 | Device/store evidence | brief/OWNER_ACTIONS.md:12; roadmap v1.1:57,63-68: owner provides device access, runs matrix, relays evidence and handles signed archive/store submission. No signing material inspected. |
 | Stop | WO-0 complete; Windows checks and Android byte comparison passed. Only this report and ledger enter the local commit; G0 pending. D1-D6 not answered by builder. |
+## 2026-10-18 follow-up — section 3 viewer branches after W19/W20/W17
+
+This re-read preserves the historical rows above. Search: all lib Dart files for
+defaultTargetPlatform, TargetPlatform, kIsWeb and Platform.is; 62 matching lines,
+including imports and the new Apple/publisher branches. No executable Platform.is
+site was found. Android/web source is unchanged. This is source/host evidence,
+not an iOS runtime audit.
+
+| Current branch group | Finding / remaining native proof |
+|---|---|
+| WindowClass, canopy_lattice_background, ca_discovery | iOS phone classification remains enabled; pointer hover remains web-only; native medium-width texture stop is intentional. Safe areas/landscape/performance need Simulator/device observations |
+| AppProvider device identity | Native platform remains defaultTargetPlatform.name.toLowerCase(), yielding ios; existing repository schema accepts device sessions. No hosted schema or device-claim proof |
+| YouTubeApiService | Native public build-setting API path remains shared with Android; web proxy remains web-only by default. Owner supplies local configuration privately; verify loading on Mac |
+| safe_image_provider | Both local-file branches include iOS and preserve neutral/missing-image behavior. Selected gallery images need real native tests |
+| SupabaseAuthService / welcome / ios_support_contact | Native Google uses the custom scheme; Apple login/deletion reauthorization are explicitly native-iOS only and fail closed. EN/AR support contact remains pre-auth reachable; Mail fallback is host tested. Provider/plugin return and actual revocation remain pending |
+| ReminderFirebaseConfig / ReminderPushService | supported excludes native iOS before initialization, listeners, permission/token calls and registration. Two future native-token labels still say android but are unreachable on iOS; ESC-4 remains deferred. Do not enable push to hide that gap |
+| OrganizationBroadcastService / ChannelConnectionsScreen | iOS service rejects before backend invocation; UI notice remains. This guard is independent of the publisher flag. Hosted channel return still requires separate backend scope |
+| Venue directions | iOS chooses Apple Maps, then Google HTTPS fallback; invalid points rejected. No native URL-scheme query or Associated Domains added |
+| YouTubePlayerAdapter / LiveBroadcastScreen / WebLivePlayerAdapter | Native WKWebView params/JavaScript bridge/base-URL path remain included for iOS; web-only recovery play-intent reset is separate. The legacy WebLivePlayerAdapter has a native delegate branch, but AbstractVideoPlayer selects it only for localRtmp; both production factory callers select youtubeEmbed: live_broadcast_screen.dart:73,1052 and vod_player_modal_sheet.dart:122–123. It is not an additional shipped native HLS path. youtube-nocookie.com and strict-origin referrer unchanged; inline/autoplay/control/foreground behavior still E0 |
+| Phone Studio / camera preview / RtmpPublishEngine | Default IOS_PHONE_PUBLISHING false preserves the viewer availability notice and performs no publisher calls. Opt-in adds a capability probe before permissions/UiKitView, audio-only initial setup and a recovery-only transport pause. Missing native implementation fails closed. Direct phone-screen setup checks availability before capture permissions; its iOS error surface wraps on a 360px viewport. E1 mocked Dart; Swift/media E0 |
+
+No additional unguarded viewer-only platform blocker was found in this pass.
+The unverified plugin, OS, playback, provider and external-app behaviors are
+explicit M2/M3/device rows in MAC_SETUP.md, not evidence to promote them. W19
+deployment, counsel/public-page delivery, HTTPS invites and paid capabilities
+remain the documented independent gates.
