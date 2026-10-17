@@ -1099,6 +1099,8 @@
     "subtitle": "Knowledge & Educational Live Streaming Platform\nEastern Province / Al Khobar / Dhahran",
     "card_title": "Get Started",
     "card_subtitle": "Sign up or log in with your Google account to access live streams, auditorium reservations, and broadcaster tools.",
+    "card_subtitle_ios": "Sign in with Apple or Google to access live streams and your viewer profile.",
+    "btn_apple": "Sign in with Apple",
     "btn_google_signup": "Sign Up with Google",
     "btn_google_login": "Already have an account? Log In",
     "divider_or": "OR",

@@ -3,6 +3,8 @@ import '../../../core/widgets/entry_background.dart';
 import '../../../core/config/app_identity.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
@@ -114,6 +116,32 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     }
   }
 
+  Future<void> _handleAppleAuth() async {
+    if (_isLoading) return;
+    final consented = await _ensureConsent();
+    if (!consented || !mounted) return;
+    setState(() => _isLoading = true);
+    try {
+      await context.read<AppProvider>().loginWithApple();
+    } on SignInWithAppleAuthorizationException catch (error) {
+      if (error.code != AuthorizationErrorCode.canceled) {
+        _showSignInUnavailable();
+      }
+    } catch (_) {
+      _showSignInUnavailable();
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  void _showSignInUnavailable() {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text('auth_welcome.sign_in_failed'.tr()),
+      backgroundColor: AppTheme.danger,
+    ));
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
@@ -189,7 +217,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'auth_welcome.card_subtitle'.tr(),
+                            (!kIsWeb &&
+                                        defaultTargetPlatform ==
+                                            TargetPlatform.iOS
+                                    ? 'auth_welcome.card_subtitle_ios'
+                                    : 'auth_welcome.card_subtitle')
+                                .tr(),
                             style: const TextStyle(
                               color: AppTheme.textSecondary,
                               fontSize: 12,
@@ -262,6 +295,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                   ),
                           ),
                           const SizedBox(height: AppTheme.spaceMd),
+
+                          if (!kIsWeb &&
+                              defaultTargetPlatform == TargetPlatform.iOS) ...[
+                            SignInWithAppleButton(
+                              key: const Key('welcome-apple'),
+                              text: 'auth_welcome.btn_apple'.tr(),
+                              height: AppTheme.space2Xl + AppTheme.spaceXl,
+                              style: SignInWithAppleButtonStyle.whiteOutlined,
+                              borderRadius:
+                                  BorderRadius.circular(AppTheme.radiusMd),
+                              onPressed: _isLoading ? null : _handleAppleAuth,
+                            ),
+                            const SizedBox(height: AppTheme.spaceMd),
+                          ],
 
                           //  2. Log In Secondary Action
                           OutlinedButton(

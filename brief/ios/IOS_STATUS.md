@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 3, W9 |
-| Progress | 8 / 18 work orders complete |
-| Evidence | Native shell/configuration E0. iOS Firebase, Studio and channel guards have E1 Windows test proof. No iOS compile or runtime evidence. |
+| Resume | Phase 3, W10 |
+| Progress | 9 / 18 work orders complete |
+| Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
-| Meter | 2026-10-17T21:45:00+03:00; weekly used 44%; resets in 6452 min |
-| Latest checks | W8 final: flutter analyze 0 issues (20.3s); full flutter test 1,112 passed / 0 failed / 0 skipped (03:30), exit 0. Focused new tests 3/3 pass. Android/web SHA-256 90/90 unchanged. |
+| Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
+| Latest checks | W9: flutter analyze 0 issues (47.1s); full flutter test 1,116 passed / 0 failed / 0 skipped (04:35), exit 0. Focused security tests 4/4 pass. Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -27,8 +27,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W5 | URL scheme and deep links | DONE | 5c4dcbd | C2 |
 | W6 | Firebase inert on iOS | DONE | 72802e5 | C2 |
 | W7 | WKWebView / YouTube audit | DONE | 580dc75 | C2 |
-| W8 | Branch audit and gating | DONE | master^{/gate iOS viewer broadcast actions} | C3 |
-| W9 | Sign in with Apple | OPEN |  | C3 |
+| W8 | Branch audit and gating | DONE | 0123921 | C3 |
+| W9 | Sign in with Apple | DONE | master^{/Sign in with Apple} | C3 |
 | W10 | iOS-override tests | OPEN |  | C3 |
 | W11 | App Review compliance | OPEN |  | C3 |
 | W12 | Codemagic config | OPEN |  | C4 |
@@ -51,7 +51,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | Discovery/watch/chat/map/profile shared Dart | E1 host baseline | Windows tests only; no iOS runtime proof. |
 | WKWebView playback | E0 | Existing settings audited against official WKWebView 3.25.1 source. Inline/autoplay/JS/referrer/runtime behavior unverified on iOS. |
 | Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
-| Sign in with Apple | none | W9 pending; paid capability deferred. |
+| Sign in with Apple | E1 host exchange tests; E0 native capability | Native button + nonce exchange implemented; Release/Profile entitlement only. Paid provider/device flow deferred; Debug has no entitlements. |
 | Phone publishing | E1 host availability gate; no iOS native publisher | Native iOS Studio entry shows FeatureInProgressModal before creating publishing state. Phone and OBS setup deferred. |
 | Push | E1 host gate; E0 native audit | iOS support/configured false tested; Android support preserved. No Firebase iOS plist, APNs entitlement or background mode; native launch unverified. |
 | Location and gallery permissions / native localization | E0 | Implemented, not run on iOS. Foreground location only; no camera/mic/background/ATS exceptions. |
@@ -68,14 +68,15 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | O3 | Owner / Claude | Before submission, reconcile the public privacy policy's Android/web wording with iOS and verify the packaged Xcode privacy report. No public page edited in this run. |
 | O4 | Owner | Verify existing Supabase OAuth callback allowlist, later run cold/warm Google return; exact steps in OWNER_STEPS_IOS.md. No hosted settings changed. |
 | O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
+| O6 | Owner, later paid activation | Apple App ID/capability and Supabase Apple provider setup; native bundle ID audience, optional browser Services ID/key/secret rotation. Exact deferred steps in OWNER_STEPS_IOS.md. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W9 native Apple sign-in and Release/Profile-only entitlement.
-2. W10 iOS-override UI/platform tests, using body-finally cleanup.
-3. W11 App Review compliance sweep.
+1. W10 iOS-override UI/platform tests, using body-finally cleanup.
+2. W11 App Review compliance sweep, including Apple deletion/revocation review.
+3. W12 Codemagic compile-gate configuration; owner runs it only before Mac access.
 
 ## Audit notes and verification limits
 
@@ -84,6 +85,8 @@ Account-gated steps do not block unrelated Windows work.
 - Flutter create also emitted an unrelated sample widget test and replaced web/Windows metadata entries. The new sample was removed and original metadata entries restored before testing.
 - flutter_launcher_icons 0.14.4 rewrites unrelated asset-symbol settings in project.pbxproj. Restored to W1 during W2; inspect that diff after future regeneration.
 - W8 widget tests must reset debugDefaultTargetPlatformOverride in the widget body finally, in addition to tearDown; Flutter verifies foundation invariants before ordinary tearDown. Keep this pattern in W9/W10.
+- Owner removed every usage cap and soft stop on 2026-10-17. Do not interpret older meter/cap text as a stop condition.
+- Apple plugin 8.1.0 is the newest solver-compatible version for Flutter 3.41.2/Dart 3.11.0; only three new lockfile entries, no existing package updates. Native/plugin compilation remains pending.
 
 ## Open escalations
 

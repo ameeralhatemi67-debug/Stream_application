@@ -3458,6 +3458,9 @@ class AppProvider extends ChangeNotifier {
     }
   }
 
+  /// Native Apple auth is observed by the existing Supabase auth listener.
+  Future<void> loginWithApple() => _authService.signInWithApple();
+
   String? _pendingOrganizationInvitation;
   String? get pendingOrganizationInvitation => _pendingOrganizationInvitation;
   Future<void> rememberOrganizationInvitation(String? destination) async {
