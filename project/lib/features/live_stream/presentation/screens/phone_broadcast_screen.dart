@@ -8,6 +8,7 @@ import '../../../../core/widgets/ds/canopy_motion.dart';
 import '../../../../core/widgets/ds/ca_icon.dart';
 import '../../../../core/layout/window_class.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
@@ -186,7 +187,7 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     setState(() => _presetConfirmed = true);
 
     final audioOnly = _appProvider.customBroadcastType == BroadcastType.liveAudio;
-    if (iosPhonePublishingEnabled &&
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS &&
         !await RtmpPublishEngine.iosNativePublisherAvailable()) {
       if (mounted) {
         setState(() => _setupError = 'live.ios_publisher_unavailable'.tr());
@@ -662,6 +663,33 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   }
 
   Widget _buildScreen(BuildContext context) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS &&
+        _setupError != null) {
+      return Scaffold(
+        backgroundColor: AppTheme.bg,
+        appBar: CaAppBar(
+          backgroundColor: AppTheme.surface,
+          title: Text('live.broadcast_from_phone'.tr()),
+        ),
+        body: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppTheme.spaceLg),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(_setupError!, textAlign: TextAlign.center,
+                      style: Theme.of(context).textTheme.bodyLarge),
+                  const SizedBox(height: AppTheme.spaceMd),
+                  TextButton(onPressed: _handleEndOrLeave,
+                      child: Text('organization_v1.close'.tr())),
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+    }
     final title = _appProvider.customLiveTitle.isEmpty
         ? 'live.phone_broadcast_default_title'.tr()
         : _appProvider.customLiveTitle;

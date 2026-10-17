@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-18, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Windows source complete; Mac/CI compilation next (W13 first real error) |
+| Resume | Finish optional Mac/viewer handoff docs, then await Mac/real CI log |
 | Progress | 18 / 20 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0; E1 Windows auth/UI/config/availability tests. W18 E0 specification only. No E2, E2S, E3 or E4. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W17 native-commit gate: flutter analyze 0 issues (18.0s); full flutter test 1,157 passed / 0 failed / 0 skipped (03:37); helper tests 3/3; host OpenStep/reference/signing checks for both variants and six plist parses passed. Android/web SHA-256 90/90 unchanged. No native compiler available. |
+| Latest checks | Final W17 review: flutter analyze 0 issues (26.1s); full flutter test 1,159 passed / 0 failed / 0 skipped (03:40); enabled-flag mocked iOS channel suite 14/14; EN/AR direct-entry guard 2/2; helper 3/3, both OpenStep variants and six plists checked; 1,897 catalog keys symmetric; Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -36,7 +36,7 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W14 | App Store pack | DONE | d9f33e2 | C4 |
 | W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
 | W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
-| W17 | Phone publisher | DONE | 63b288f (Dart); master^{/add isolated opt-in HaishinKit publisher} | Track B |
+| W17 | Phone publisher | DONE | 63b288f; c4c81c2; master^{/harden publisher recovery and direct entry} | Track B |
 | W18 | Push spec | DONE | bd442c8 | Track B |
 | W19 | Apple deletion revocation | DONE | d5e4b6b | §12 |
 | W20 | Legal drafts / public gaps | DONE | a0ebf8d | §12 |
@@ -54,7 +54,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | WKWebView playback | E0 | Existing settings audited against official WKWebView 3.25.1 source. Inline/autoplay/JS/referrer/runtime behavior unverified on iOS. |
 | Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
 | Sign in with Apple | E1 host exchange tests; E0 native capability | Native button + nonce exchange implemented; Release/Profile entitlement only. Paid provider/device flow deferred; Debug has no entitlements. |
-| Phone publishing | E0 native / E1 mocked Dart | Implemented, not run on iOS. Default-off gate; opt-in-only SwiftPM SDK, Swift bridge/capture/static IDR/background audio/drop detection with Dart-authorized retry. Native compilation and E3 media/permission/background matrix pending. |
+| Phone publishing | E0 native / E1 mocked Dart | Implemented, not run on iOS. Default-off gate and direct-entry permission guard; explicit SwiftPM opt-in, actor capture/static IDR/background intent/drop detection; Dart owns bounded authorization/retry with transport-only pause. Native compilation and E3 matrix pending. |
 | Push | E0 spec; E1 host exclusion | W18 spec complete, ESC-4 future backend migration. iOS Firebase remains disabled; no APNs/plist/background change and no native delivery proof. |
 | Location and gallery permissions / native localization | E0 | Foreground location/gallery for default viewer. Experimental alternate publisher plist adds camera/microphone/audio mode only on opt-in; no native permission proof. |
 | App privacy manifest | E0 | Default viewer: 11 linked functionality data types, no tracking; reasons CA92.1/C617.1. Opt-in publisher variant adds AudioData (12 rows); video extends PhotosOrVideos. Inactive until flag on; packaged report unverified. |
@@ -87,9 +87,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. Finish optional Windows native/config review, script-like M1–M3 runbook and viewer-branch reconciliation.
-2. Owner provides Mac access or a real sanitized CI build log; W13 handles the first actual native error before other work.
-3. Owner audits/deploys W19 and approves/publishes W20 legal content; later paid Apple/provider/device and store steps remain deferred.
+1. Commit the script-like M1–M3 Mac sequence and completed viewer-branch follow-up.
+2. Owner provides Mac access or a sanitized real CI log; W13 handles its first native error before other work.
+3. Owner audits/deploys W19 and approves/delivers W20 legal/public text; later paid Apple/device/store gates remain.
 
 ## Audit notes and verification limits
 
@@ -111,6 +111,8 @@ Account-gated steps do not block unrelated Windows work.
 - W20 complete default terms/guidelines/privacy at v1.1.0-ios-draft, marked for counsel review. No unverified PDPL compliance/instant deletion/ad-free promises. Hosted legal content not overwritten; public source pages untouched.
 - W17 §12 complete as source: Dart commit 63b288f, separate native dependency/config/media commit. SwiftPM opt-in only because HaishinKit 2.x discontinued CocoaPods; Flutter plugins stay CocoaPods/3.41.2. Default viewer has no SDK package/product references or generated flag.
 - W17 native self-review corrected ACK/event timing, exact orientation argument, retry quality retention, conditional permission macros and stale-operation checks. SDK loggers discard credential-bearing diagnostics; no compiler warning suppression. These are source checks, not compilation/runtime proof.
+- W17 review: native commit c4c81c2 remains separate from Dart. Transport loss/retry-only watchdog pause retains capture during Dart's bounded authorization episode; user stop, revoked authorization and exhaustion fully release it. Background eligibility is an implementation intent requiring E3, not observed survival.
+- Direct iOS phone setup now rejects unavailable/default-off capture before camera/microphone permission calls. Its narrow error screen wraps in EN/AR. Test fixture uses actual physicalSize/devicePixelRatio (known repository isolation issue); no rendering exceptions suppressed.
 
 ## Open escalations
 

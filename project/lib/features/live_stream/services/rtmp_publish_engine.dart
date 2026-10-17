@@ -215,7 +215,12 @@ class RtmpPublishEngine extends ChangeNotifier {
         _watchdogTimer?.cancel();
         _watchdogTimer = Timer(const Duration(seconds: 8), () {
           _connectionGeneration++;
-          _channel.invokeMethod<void>('stopStream').catchError((_) {});
+          _channel
+              .invokeMethod<void>(
+                'stopStream',
+                iosPhonePublishingEnabled ? {'retry': true} : null,
+              )
+              .catchError((_) {});
           _beginRecovery();
         });
       } catch (_) {

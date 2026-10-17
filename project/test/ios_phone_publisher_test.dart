@@ -227,6 +227,23 @@ void main() {
       expect(value.recoveryCount, 1);
     });
 
+    test('retry watchdog retains iOS capture; user stop releases it', () async {
+      final value = engine()..authorizeRecovery = () async => true;
+      await value.initializeCamera(initialAudioOnly: true);
+      await value.startPublishing('rtmp://localhost/app/MOCK_KEY');
+      final current = generation();
+      await emit({'type': 'live', 'generation': current});
+      await emit({'type': 'disconnected', 'generation': current});
+      await Future<void>.delayed(const Duration(milliseconds: 3150));
+      expect(calls.where((call) => call.method == 'startStream').length, 2);
+      await Future<void>.delayed(const Duration(milliseconds: 8150));
+      expect(calls.lastWhere((call) => call.method == 'stopStream').arguments,
+          {'retry': true});
+      await value.stopPublishing();
+      expect(calls.lastWhere((call) => call.method == 'stopStream').arguments,
+          isNull);
+    });
+
     test('revoked authorization prevents a native retry', () async {
       final value = engine()..authorizeRecovery = () async => false;
       await value.initializeCamera();
@@ -237,6 +254,8 @@ void main() {
       await Future<void>.delayed(const Duration(milliseconds: 3150));
       expect(value.state, RtmpPublishState.error);
       expect(calls.where((call) => call.method == 'startStream').length, 1);
+      expect(calls.lastWhere((call) => call.method == 'stopStream').arguments,
+          isNull);
     });
 
     test('stop invalidates late connection and mode events', () async {

@@ -14,6 +14,8 @@ import 'package:streamer_app/core/services/supabase_auth_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/auth/presentation/welcome_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/widgets/rtmp_ip_dialog.dart';
+import 'package:streamer_app/features/live_stream/presentation/screens/phone_broadcast_screen.dart';
+import 'package:streamer_app/features/live_stream/services/rtmp_publish_engine.dart';
 import 'package:streamer_app/features/map/presentation/venue_directions_launcher.dart';
 import 'package:streamer_app/features/organization/presentation/channel_connections_screen.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -99,6 +101,53 @@ void main() {
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(urlChannel, null);
   });
+
+  if (!iosPhonePublishingFlag) {
+    for (final language in ['en', 'ar']) {
+      testWidgets(
+          'direct iOS phone setup never requests capture when off ($language)',
+          (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        final provider = AppProvider.withServices(authService: _Auth());
+        final messenger =
+            TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger;
+        const permissions =
+            MethodChannel('flutter.baseflow.com/permissions/methods');
+        const publisher = MethodChannel('streamer_app/rtmp_publisher');
+        final calls = <String>[];
+        messenger.setMockMethodCallHandler(permissions, (call) async {
+          calls.add(call.method);
+          return <int, int>{};
+        });
+        messenger.setMockMethodCallHandler(publisher, (call) async {
+          calls.add(call.method);
+          return false;
+        });
+        try {
+          tester.view.physicalSize = const Size(360, 900);
+          tester.view.devicePixelRatio = 1;
+          await tester.pumpWidget(_app(
+              provider,
+              const PhoneBroadcastScreen(
+                  quickLaunchPreset: BroadcastQualityPreset.low),
+              language));
+          await tester.pump();
+          await tester.pump(const Duration(milliseconds: 100));
+          expect(
+              find.text('live.ios_publisher_unavailable'.tr()), findsWidgets);
+          expect(calls, isEmpty);
+        } finally {
+          await tester.pumpWidget(const SizedBox.shrink());
+          provider.dispose();
+          messenger.setMockMethodCallHandler(permissions, null);
+          messenger.setMockMethodCallHandler(publisher, null);
+          debugDefaultTargetPlatformOverride = null;
+          tester.view.resetPhysicalSize();
+          tester.view.resetDevicePixelRatio();
+        }
+      });
+    }
+  }
 
   for (final language in ['en', 'ar']) {
     for (final platform in [TargetPlatform.iOS, TargetPlatform.android]) {
