@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Track B, W17 experimental native publisher |
+| Resume | W18 independent push specification; W17 waits for W11 closure |
 | Progress | 14 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W16: flutter analyze 0 issues (22.2s); full flutter test 1,141 passed / 0 failed / 0 skipped (03:30), exit 0; Android/web SHA-256 90/90 unchanged. Runbook commands source-checked, not run on Mac. |
+| Latest checks | W17 dependency closeout: flutter analyze 0 issues (20.0s); full flutter test 1,141 passed / 0 failed / 0 skipped (03:36), exit 0; Android/web SHA-256 90/90 unchanged. Documentation only; no native publisher code. |
 
 ## Work orders
 
@@ -35,8 +35,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W13 | Compile-fix loop | WAITING — real CI/Mac log | a3da856 | C4 |
 | W14 | App Store pack | DONE | d9f33e2 | C4 |
 | W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
-| W16 | Mac setup runbook | DONE | master^{/document Mac setup and evidence steps} | C4 |
-| W17 | Phone publisher | OPEN, Track B |  |  |
+| W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
+| W17 | Phone publisher | BLOCKED — W11 dependency | master^{/record publisher dependency and handoff} | Track B |
 | W18 | Push spec | OPEN, Track B |  |  |
 | M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
 
@@ -77,14 +77,15 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | O7 | Owner / Claude, separate backend work | ESC-2: add and audit Apple token revocation during account deletion with server-held credentials; review current deletion restrictions. Apple activation/submission remains blocked. |
 | O8 | Owner, optional before Mac | Push and manually run Codemagic ios-compile-check; supply non-secret first-error logs or successful native build evidence. CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md contain exact steps. Skip if Mac available. |
 | O9 | Owner, at submission prep | Confirm actual privacy purposes/provider data, age/content answers, rights holder/content rights, hosted flags and review accounts; capture genuine iOS screenshots and enter metadata only after W11/native/paid gates. OWNER_STEPS_IOS.md and store/README.md have steps. |
+| O10 | Owner / Claude | W17 entry condition: close W11 ESC-2/ESC-3 or explicitly revise §9 dependency before publisher implementation. IOS_PUBLISHER_HANDOFF.md preserves the source contract/references. No routine permission question is pending. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W17 implement unblocked experimental native/Dart publisher source with default viewer gates preserved.
-2. W18 push spec and backend CHECK escalation; no backend edits.
-3. Then M1 on a physical Mac, or owner-provided CI log for W13.
+1. W18 finish push specification and backend CHECK escalation; no backend edits.
+2. Resolve W11 ESC-2/ESC-3 in separately authorized backend/site work; then resume W17.
+3. Run M1 on the physical Mac when reachable, or use an owner-provided CI log for W13.
 
 ## Audit notes and verification limits
 
@@ -100,6 +101,7 @@ Account-gated steps do not block unrelated Windows work.
 - W13 has zero native compile attempts and no real failure log. It is waiting for O8 or Mac access; do not preemptively patch/remove native plugins or award E2.
 - W15 withdrew ADR-006's universal iOS playback claim, corrected its WKWebView API description, labeled historical Dart/SQL evidence separately and added the HTTPS invite limitation in all four allowed documents. Native E0 remains.
 - C4 Windows artifacts are ready for audit. W13 native compilation is still blocked; no E2 inferred from CI YAML, store copy, truth correction or runbook.
+- W17 scheduling correction: §9 permits Windows implementation only once W11 is done. W11 remains PARTIAL; the W16 next-step note was premature. Research handoff committed, no publisher code/dependency/capture permission/background mode added. W18 is independent.
 
 ## Open escalations
 
