@@ -4,6 +4,7 @@ import '../../../core/widgets/ds/ca_cards.dart';
 import '../../../core/widgets/ds/ca_rows.dart';
 import '../../../core/widgets/ds/ca_button.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -16,6 +17,8 @@ import '../../../core/widgets/hadayah_loading_indicator.dart';
 import '../models/channel_connection.dart';
 import '../models/org_membership.dart';
 import 'channel_consent_return_screen.dart';
+import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart'
+    show FeatureInProgressModal;
 
 class ChannelConnectionsScreen extends StatefulWidget {
   const ChannelConnectionsScreen({super.key, this.returnStatus});
@@ -67,20 +70,26 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen>
   }
 
   Future<void> _refresh() => _run((p) => p.refreshChannelConnections());
-  Future<void> _connect(String? orgId) => _run((p) async {
-        // Google's return replaces the history: remember the pages under this one.
-        final under = (ChannelConsentReturnScreen.currentStack(context) ?? const <String>[])
-            .where((l) => !l.startsWith('/channels') && !l.startsWith('/channel-connected'))
-            .toList();
-        final url = await p.connectYouTubeChannel(organizationId: orgId);
-        await p.rememberChannelConsentReturn(under.isEmpty ? const ['/settings'] : under,
-            studio: false);
-        if (!await launchUrl(url,
-            mode: LaunchMode.externalApplication, webOnlyWindowName: '_self')) {
-          throw const FunctionException(
-              status: 503, details: {'error': 'channel_browser_failed'});
-        }
-      });
+  Future<void> _connect(String? orgId) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      return FeatureInProgressModal.show(context,
+          title: 'organization_v1.channels'.tr());
+    }
+    return _run((p) async {
+      // Google's return replaces the history: remember the pages under this one.
+      final under = (ChannelConsentReturnScreen.currentStack(context) ?? const <String>[])
+          .where((l) => !l.startsWith('/channels') && !l.startsWith('/channel-connected'))
+          .toList();
+      final url = await p.connectYouTubeChannel(organizationId: orgId);
+      await p.rememberChannelConsentReturn(under.isEmpty ? const ['/settings'] : under,
+          studio: false);
+      if (!await launchUrl(url,
+          mode: LaunchMode.externalApplication, webOnlyWindowName: '_self')) {
+        throw const FunctionException(
+            status: 503, details: {'error': 'channel_browser_failed'});
+      }
+    });
+  }
   @override
   Widget build(BuildContext context) {
     final (channels, memberships, personal) = context.select<AppProvider,

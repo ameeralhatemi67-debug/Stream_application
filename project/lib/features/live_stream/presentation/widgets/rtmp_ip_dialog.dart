@@ -23,6 +23,29 @@ import '../../../organization/presentation/channel_consent_return_screen.dart';
 import '../screens/phone_broadcast_screen.dart';
 import 'live_chat_layout.dart';
 
+class FeatureInProgressModal extends StatelessWidget {
+  const FeatureInProgressModal({super.key, required this.title});
+
+  final String title;
+
+  static Future<void> show(BuildContext context, {required String title}) =>
+      showDialog<void>(
+        context: context,
+        builder: (_) => FeatureInProgressModal(title: title),
+      );
+
+  @override
+  Widget build(BuildContext context) => AlertDialog(
+        title: Text(title),
+        content: Text('live_studio.btn_local_unavailable'.tr()),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text('organization_v1.close'.tr()),
+          ),
+        ],
+      );
+}
 enum StudioMode { obs, phone, local }
 
 class LiveBroadcasterStudioSheet extends StatefulWidget {
@@ -39,21 +62,26 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
   /// `connected` or `failed` when the studio reopens after Google consent.
   final String? consentStatus;
   static Future<void> show(BuildContext context,
-          {Future<void> Function()? onEndBroadcast,
-          bool openedFromVideo = false,
-          String? consentStatus}) =>
-      showCaSheet<void>(context,
-          title: 'organization_v1.studio'.tr(),
-          job: CaSheetJob.studio,
-          framed: false,
-          fullWidthOnPhone: true,
-          edgeColor: Canopy.forestDeep,
-          body: ChangeNotifierProvider<AppProvider>.value(
-              value: context.read<AppProvider>(),
-              child: LiveBroadcasterStudioSheet(
-                  onEndBroadcast: onEndBroadcast,
-                  openedFromVideo: openedFromVideo,
-                  consentStatus: consentStatus)));
+      {Future<void> Function()? onEndBroadcast,
+      bool openedFromVideo = false,
+      String? consentStatus}) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      return FeatureInProgressModal.show(context,
+          title: 'organization_v1.studio'.tr());
+    }
+    return showCaSheet<void>(context,
+        title: 'organization_v1.studio'.tr(),
+        job: CaSheetJob.studio,
+        framed: false,
+        fullWidthOnPhone: true,
+        edgeColor: Canopy.forestDeep,
+        body: ChangeNotifierProvider<AppProvider>.value(
+            value: context.read<AppProvider>(),
+            child: LiveBroadcasterStudioSheet(
+                onEndBroadcast: onEndBroadcast,
+                openedFromVideo: openedFromVideo,
+                consentStatus: consentStatus)));
+  }
   @override
   State<LiveBroadcasterStudioSheet> createState() => _StudioState();
 }

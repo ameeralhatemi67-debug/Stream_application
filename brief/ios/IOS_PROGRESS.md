@@ -131,3 +131,39 @@ METER | 2026-10-17T21:26:01+03:00 | weekly used 44% | resets in 6471 min
 Checkpoint C2 | W3–W7 complete, awaiting Claude audit. Plist reasons map to live call sites; localized native strings are bundled; app privacy manifest and plugin reasons inspected; callback scheme matches Android; Firebase gate tests pass; ATS/background/entitlements remain absent. Native configuration remains E0, iOS Firebase gate E1 host only. No E2 or iOS runtime claim.
 
 METER | 2026-10-17T21:31:53+03:00 | weekly used 44% | resets in 6465 min
+
+### 2026-10-17 21:45 | W8 Platform audit and viewer-first gates | DONE
+- Commit: `master^{/gate iOS viewer broadcast actions}`, subject `feat(ios): gate iOS viewer broadcast actions`. W7 is 580dc75.
+- Evidence level claimed: E1 for native-iOS Dart availability gates tested on Windows. Native project/player remain E0, implemented, not run on iOS.
+- What changed: `organization_broadcast_service.dart` rejects native iOS channel consent before accessing a client; `rtmp_ip_dialog.dart` gates the shared Studio entry before creating publishing state and defines the previously absent FeatureInProgressModal; `channel_connections_screen.dart` presents that notice before channel actions; `test/ios_viewer_scope_test.dart` tests backend-free channel rejection and dismissible Studio notices in EN/AR.
+- Checks: final `flutter analyze` exit 0, 0 issues (20.3s); final full `flutter test --reporter expanded` exit 0, `03:30 +1112: All tests passed!`, 0 failed/skipped. Focused new tests: `00:01 +3: All tests passed!`. Android/web 90/90 SHA-256 unchanged; catalog files unchanged; whitespace/diff review passes.
+- Decisions made: D3 viewer-first excludes the whole native iOS Studio, including its former OBS fallback. All production Studio callers use the shared show entry, and the only PhoneBroadcastScreen construction is inside that sheet. Thus no iOS camera/publishing controller is constructed through the app entry. PhoneCameraPreview's existing non-Android placeholder remains unreachable through that route. Service guard also prevents a direct iOS call from falling back to return_platform=web.
+- Modal scope: the documented FeatureInProgressModal did not exist in lib. Added a small stateless broadcasting notice beside the Studio, shared with the channel screen, within W8's allowed RECON-named files. It inherits AppTheme's dialog theme and reuses existing localized Not available / Close text; no catalog or new core-file edit needed. All new platform guards include !kIsWeb, preserving the mobile-browser path.
+
+RECON §3 audit, every row covered below (grouped by source):
+
+| Source under lib/ | Disposition |
+|---|---|
+| core/layout/window_class.dart | Preserve native iOS phone classification and shortest-side threshold. |
+| core/config/reminder_firebase_config.dart | Preserve iOS supported=false; web VAPID condition stays behind support gate. W6 tests prove host behavior. |
+| core/providers/app_provider.dart | Preserve native platform name ios for device identity; repository-only backend acceptance remains RECON §4, no hosted probe. |
+| core/services/youtube_api_service.dart | Preserve native build-time public-read key path and web-only proxy default; no credential file read. |
+| core/widgets/safe_image_provider.dart | Preserve both native FileImage branches and byte/asset/network fallbacks; iOS photo display unrun. |
+| core/widgets/ds/canopy_lattice_background.dart | Preserve web-only pointer spotlight and native-medium texture cutoff. |
+| core/widgets/ds/ca_discovery.dart | Preserve web-only hover behavior. |
+| core/services/supabase_auth_service.dart | Preserve native Google redirect, using W5 scheme; real callback still unverified. |
+| core/services/reminder_push_service.dart | Preserve refresh/sync android token labels and native no-VAPID path because ready=false makes them unreachable on iOS. W18 must change labels/schema before enabling push. |
+| core/services/organization_broadcast_service.dart | Add explicit native-iOS consent guard; preserve Android/test/web return branches unchanged. |
+| features/map/presentation/venue_directions_launcher.dart | Preserve Android Google branch, iOS Apple HTTPS daddr branch, native external launch and Google fallback; launch is not device-verified. |
+| features/live_stream/presentation/live_broadcast_screen.dart | Preserve native recovery play/mute intent; web-only pause/mute remains web-only. |
+| features/live_stream/presentation/adapters/web_live_player_adapter.dart | Preserve native navigation callbacks; page-finished callback is not iOS playback evidence. |
+| features/live_stream/presentation/adapters/youtube_player_adapter.dart | Preserve iOS command gate, WK creation params, native JS channel and HTML/base-url branch audited in W7. |
+| features/live_stream/presentation/widgets/phone_camera_preview.dart | Preserve non-Android placeholder and AndroidView gate; native iOS cannot reach the phone screen via the gated Studio entry. |
+| features/live_stream/presentation/widgets/rtmp_ip_dialog.dart | Preserve Android phone predicate, existing sender fallback/tab rules inside the sheet; native iOS now receives the notice before the entire sheet/controller exists. |
+
+- Problems / deviations: the first full W8 run was stopped after two new widget-test failures. Their assertions passed, but ordinary tearDown reset the platform override too late for Flutter's foundation-invariant check. Added widget-body finally cleanup, retaining tearDown as safety; focused 3/3 and the complete rerun now pass. Keep this cleanup pattern in W10. Initial failure log retained outside the repo; no product warning suppressed or test disabled.
+- Sources: RECON §3 plus fresh search of every kIsWeb/defaultTargetPlatform/TargetPlatform/Platform.is site in current production lib; existing call sites above; [Flutter platform override API](https://api.flutter.dev/flutter/foundation/debugDefaultTargetPlatformOverride.html). No plugin API, backend schema, Android native source or launch work changed.
+- Owner actions needed: none before W9; native execution still awaits Mac/CI.
+- Next: W9, W10, W11 while below the soft stop.
+
+METER | 2026-10-17T21:45:00+03:00 | weekly used 44% | resets in 6452 min

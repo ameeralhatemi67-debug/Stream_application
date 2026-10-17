@@ -101,6 +101,9 @@ class OrganizationBroadcastService {
       'p_end':end.toUtc().toIso8601String(),'p_type':type,'p_venue':venueId});
 
   Future<Uri> connectChannel({String? organizationId}) async {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      throw UnsupportedError('iOS channel connection is deferred.');
+    }
     final response = await client.functions.invoke('channel-authorization',headers:_sessionHeaders(),body:{
       'action':'connect','organization_id':organizationId,
       'return_platform':!kIsWeb && defaultTargetPlatform==TargetPlatform.android
