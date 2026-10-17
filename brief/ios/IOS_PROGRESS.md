@@ -303,3 +303,14 @@ METER | 2026-10-17T21:45:00+03:00 | weekly used 44% | resets in 6452 min
 - Ledger: ESC-3 Dart half resolved at E1 draft/source scope; public delivery is deployment of already-committed pages, with iOS review deltas listed for Claude. Only new appendix staged; manager pending ledger edits remain unstaged.
 - Owner actions needed: approve legal drafts, apply/publish consistent public/hosted text through the separate site/legal task, deploy W19 and complete native/provider review. No account action requested for W17 source work.
 - Next: W17 default-off Dart implementation/tests and a separate revertable native dependency/permissions/media commit. No checkpoint wait or usage stop.
+
+### 2026-10-18 | W17 phone publisher — Dart contract | PARTIAL
+- Commit: master^{/gate iOS phone publishing behind an opt-in flag} feat(ios): gate iOS phone publishing behind an opt-in flag
+- Evidence level claimed: E1 mocked host Dart only; native compilation/media remain unverified.
+- What changed: RtmpPublishEngine default-off IOS_PHONE_PUBLISHING, native isSupported probe, audio-only preparation/background-mode events; Studio and preview opt-in selection; iOS microphone/camera permission flow; bilingual labels; ios_phone_publisher_test.dart.
+- Checks: flutter analyze 0 issues (18.0s); full flutter test 1,157 passed / 0 failed / 0 skipped (03:35); enabled flag tests 13/13, default targeted engine/platform tests 40/40; Android/web SHA-256 90/90 unchanged.
+- Decisions made: §12 withdraws W11 dependency. Default-off iOS makes no publisher calls. Native capability is checked before creating UiKitView/capture, so Dart/native flag mismatch fails closed. Audio-only requests mic without camera; video resume requests camera. Android method arguments/control sequence retained.
+- Sources: Context7 [Flutter platform views](https://docs.flutter.dev/platform-integration/ios/platform-views), [Flutter iOS scene migration](https://docs.flutter.dev/release/breaking-changes/uiscenedelegate), [permission_handler iOS](https://github.com/Baseflow/flutter-permission-handler/tree/main/permission_handler#ios); exact Dart channel contract/Android reference in IOS_PUBLISHER_HANDOFF.md.
+- Problems / deviations: separate native commit required by §12. One unused test import removed after analysis; no warnings suppressed. No real iOS plugin or media execution.
+- Owner actions needed: none for this Dart source; keep flag off until native E2/E3. Existing backend, legal and Mac actions remain.
+- Next: W17 native dependency/permissions/media in a single separate revertible commit.

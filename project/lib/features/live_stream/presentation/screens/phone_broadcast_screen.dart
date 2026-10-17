@@ -185,11 +185,21 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
   Future<void> _confirmPresetAndSetup() async {
     setState(() => _presetConfirmed = true);
 
-    final cameraGranted = await _ensurePermission(
-      Permission.camera,
-      BroadcastPermissionKind.camera,
-    );
-    if (!cameraGranted) return;
+    final audioOnly = _appProvider.customBroadcastType == BroadcastType.liveAudio;
+    if (iosPhonePublishingEnabled &&
+        !await RtmpPublishEngine.iosNativePublisherAvailable()) {
+      if (mounted) {
+        setState(() => _setupError = 'live.ios_publisher_unavailable'.tr());
+      }
+      return;
+    }
+    if (!iosPhonePublishingEnabled || !audioOnly) {
+      final cameraGranted = await _ensurePermission(
+        Permission.camera,
+        BroadcastPermissionKind.camera,
+      );
+      if (!cameraGranted) return;
+    }
 
     final micGranted = await _ensurePermission(
       Permission.microphone,
@@ -197,10 +207,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
     if (!micGranted) return;
 
-    await Permission.notification.request();
+    if (!iosPhonePublishingEnabled) {
+      await Permission.notification.request();
+    }
 
     try {
-      await _engine.initializeCamera(preset: _preset);
+      await _engine.initializeCamera(preset: _preset,
+          initialAudioOnly: iosPhonePublishingEnabled && audioOnly);
       if (_appProvider.customBroadcastType == BroadcastType.liveAudio) {
         await _engine.setAudioOnly(true);
       }
@@ -265,6 +278,15 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       }
     }
     return false;
+  }
+
+  Future<void> _toggleCamera([bool? forceOff]) async {
+    final nextOff = forceOff ?? !_engine.isCameraOff;
+    if (iosPhonePublishingEnabled && !nextOff &&
+        !await _ensurePermission(Permission.camera, BroadcastPermissionKind.camera)) {
+      return;
+    }
+    await _engine.toggleCamera(forceOff);
   }
 
   Future<void> _startBroadcast() async {
@@ -1389,13 +1411,13 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                             value: !isCameraOff,
                             activeThumbColor: AppTheme.primary,
                             onChanged: (val) async {
-                              await _engine.toggleCamera(!val);
+                              await _toggleCamera(!val);
                               if (context.mounted) setModalState(() {});
                               if (mounted) setState(() {});
                             },
                           ),
                           onTap: () async {
-                            await _engine.toggleCamera(!isCameraOff);
+                            await _toggleCamera(!isCameraOff);
                             if (context.mounted) setModalState(() {});
                             if (mounted) setState(() {});
                           },

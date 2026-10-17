@@ -8,6 +8,20 @@ import 'package:flutter/services.dart';
 /// only ever read [state]/[lastError] and call these methods; they never
 /// touch the MethodChannel/EventChannel directly. That boundary is what lets
 /// v1.1 swap in an iOS-native engine behind this exact same Dart surface.
+/// Experimental iOS publishing remains off in the viewer build.
+const bool iosPhonePublishingFlag =
+    bool.fromEnvironment('IOS_PHONE_PUBLISHING', defaultValue: false);
+
+bool get iosPhonePublishingEnabled =>
+    !kIsWeb &&
+    defaultTargetPlatform == TargetPlatform.iOS &&
+    iosPhonePublishingFlag;
+
+bool get phonePublishingAvailable =>
+    !kIsWeb &&
+    (defaultTargetPlatform == TargetPlatform.android ||
+        iosPhonePublishingEnabled);
+
 enum RtmpPublishState {
   idle,
   initializingCamera,
@@ -283,9 +297,44 @@ class RtmpPublishEngine extends ChangeNotifier {
   // silent freeze: an unbounded "reconnecting"banner with no way out.
   Timer? _watchdogTimer;
 
+  bool get _iosPublishingDisabled =>
+      !kIsWeb &&
+      defaultTargetPlatform == TargetPlatform.iOS &&
+      !iosPhonePublishingFlag;
+
+  static Future<bool> iosNativePublisherAvailable() async {
+    if (!iosPhonePublishingEnabled) return false;
+    try {
+      return await _channel.invokeMethod<bool>('isSupported') ?? false;
+    } on PlatformException {
+      return false;
+    } on MissingPluginException {
+      return false;
+    }
+  }
+
+  Future<void> _requireIOSPublisher() async {
+    if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        !await iosNativePublisherAvailable()) {
+      _lastError = 'live.ios_publisher_unavailable';
+      _setState(RtmpPublishState.error);
+      throw PlatformException(
+          code: 'IOS_PUBLISHER_UNAVAILABLE', message: _lastError);
+    }
+  }
+
   Future<void> initializeCamera({
     BroadcastQualityPreset preset = BroadcastQualityPreset.medium,
+    bool initialAudioOnly = false,
   }) async {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      await _requireIOSPublisher();
+    }
+    if (iosPhonePublishingEnabled) {
+      _isAudioOnly = initialAudioOnly;
+      _isCameraOff = initialAudioOnly;
+    }
     _setState(RtmpPublishState.initializingCamera);
     _eventSub ??= _events.receiveBroadcastStream().listen(
           _onEvent,
@@ -296,6 +345,7 @@ class RtmpPublishEngine extends ChangeNotifier {
       'width': preset.width,
       'height': preset.height,
       'videoBitrate': preset.videoBitrateBps,
+      if (iosPhonePublishingEnabled) 'audioOnly': initialAudioOnly,
     };
 
     // NOT_READY means the PlatformView's native surface hasn't finished
@@ -333,7 +383,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   /// Hides video while retaining the RTMP video track. The current native
   /// implementation keeps the camera open; this is not a resource-off mode.
   Future<void> setAudioOnly(bool audioOnly) async {
-    if (_disposed) return;
+    if (_disposed || _iosPublishingDisabled) return;
     try {
       await _channel
           .invokeMethod<void>('setAudioOnly', {'audioOnly': audioOnly});
@@ -364,6 +414,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   /// at all, the call threw an unhandled async error rather than falling
   /// through to the log below.
   Future<void> setOrientation(int orientation) async {
+    if (_iosPublishingDisabled) return;
     try {
       await _channel
           .invokeMethod<void>('setOrientation', {'orientation': orientation});
@@ -377,6 +428,9 @@ class RtmpPublishEngine extends ChangeNotifier {
   bool _stopRequested = false;
 
   Future<void> startPublishing(String url) async {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      await _requireIOSPublisher();
+    }
     _cancelRecovery();
     _stopRequested = false;
     _hadLive = false;
@@ -432,7 +486,9 @@ class RtmpPublishEngine extends ChangeNotifier {
     final generation = ++_connectionGeneration;
     _publishUrl = null;
     try {
-      await _channel.invokeMethod<void>('stopStream');
+      if (!_iosPublishingDisabled) {
+        await _channel.invokeMethod<void>('stopStream');
+      }
     } on PlatformException catch (e) {
       _lastError = e.message ?? e.code;
     } finally {
@@ -455,7 +511,7 @@ class RtmpPublishEngine extends ChangeNotifier {
   }
 
   Future<void> setMuted(bool muted) async {
-    if (_disposed) return;
+    if (_disposed || _iosPublishingDisabled) return;
     try {
       await _channel.invokeMethod<void>('setMuted', {'muted': muted});
       if (_disposed) return;
@@ -556,6 +612,13 @@ class RtmpPublishEngine extends ChangeNotifier {
         _lastBitrateBps = bitrate;
         if (changed) notifyListeners();
         break;
+      case 'audioOnlyChanged':
+        if (iosPhonePublishingEnabled && event['audioOnly'] is bool) {
+          _isAudioOnly = event['audioOnly'] as bool;
+          _isCameraOff = _isAudioOnly;
+          notifyListeners();
+        }
+        break;
       case 'audioLevel':
         // Normalised 0.0-1.0 RMS from the native encoder. The Android
         // bridge does not emit this yet (v0.7 shipped mute-only), so on
@@ -630,7 +693,9 @@ class RtmpPublishEngine extends ChangeNotifier {
     _silenceTimer?.cancel();
     isMicSilent.dispose();
     _eventSub?.cancel();
-    _channel.invokeMethod<void>('dispose').catchError((_) {});
+    if (!_iosPublishingDisabled) {
+      _channel.invokeMethod<void>('dispose').catchError((_) {});
+    }
     super.dispose();
   }
 }

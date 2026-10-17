@@ -65,7 +65,8 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
       {Future<void> Function()? onEndBroadcast,
       bool openedFromVideo = false,
       String? consentStatus}) {
-    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS &&
+        !iosPhonePublishingEnabled) {
       return FeatureInProgressModal.show(context,
           title: 'organization_v1.studio'.tr());
     }
@@ -93,13 +94,12 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
   BroadcastQualityPreset _quality = BroadcastQualityPreset.medium;
   bool _audio = false, _showKey = false, _connecting = false;
   String? _loadError, _connectError;
-  bool get _android =>
-      !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
+  bool get _phoneAvailable => phonePublishingAvailable;
   @override
   void initState() {
     super.initState();
     _studio = BroadcastPublishingController(context.read<AppProvider>());
-    _studio.sender = widget.initialMode == StudioMode.phone && _android
+    _studio.sender = widget.initialMode == StudioMode.phone && _phoneAvailable
         ? 'phone_direct'
         : 'obs_laptop';
     _studio.addListener(_changed);
@@ -376,12 +376,14 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                               labels: [
                                                 'organization_v1.sender_obs'
                                                     .tr(),
-                                                'organization_v1.sender_android'
+                                                (iosPhonePublishingEnabled
+                                                    ? 'organization_v1.sender_ios'
+                                                    : 'organization_v1.sender_android')
                                                     .tr()
                                               ],
                                               disabledIndices: {
                                                 if (operationBusy) 0,
-                                                if (operationBusy || !_android)
+                                                if (operationBusy || !_phoneAvailable)
                                                   1
                                               },
                                               index: _studio.sender ==
@@ -407,7 +409,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                 index: _audio ? 1 : 0,
                                                 onChanged: (index) => setState(
                                                     () => _audio = index == 1)),
-                                          if (!_android)
+                                          if (!_phoneAvailable)
                                             Text(
                                                 'live_studio.error_phone_unsupported'
                                                     .tr(),

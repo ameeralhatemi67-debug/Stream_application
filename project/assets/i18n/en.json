@@ -279,6 +279,7 @@
     "upcoming_tab": "Upcoming"
   },
   "live": {
+    "ios_publisher_unavailable": "Phone publishing is not available right now. You can still watch streams.",
     "sender_moderation_title": "Moderation",
     "sender_mute_for": "Mute for",
     "sender_mute_5m": "5 min",
@@ -1885,6 +1886,7 @@
     "scoped_reports": "Reports for this show. Moderation affects only this room.",
     "sender_obs": "OBS",
     "sender_android": "Android phone",
+    "sender_ios": "iPhone camera",
     "activity": "Organization activity",
     "available": "Broadcasting available",
     "confirm": "Confirm",

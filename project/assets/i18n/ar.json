@@ -279,6 +279,7 @@
     "upcoming_tab": "القادمة"
   },
   "live": {
+    "ios_publisher_unavailable": "البث من الهاتف غير متاح حاليًا. لا يزال بإمكانك مشاهدة البثوث.",
     "sender_moderation_title": "الإشراف",
     "sender_mute_for": "كتم لمدة",
     "sender_mute_5m": "5 دقائق",
@@ -1885,6 +1886,7 @@
     "scoped_reports": "بلاغات هذا البرنامج. يقتصر الإشراف على هذه الغرفة.",
     "sender_obs": "OBS",
     "sender_android": "هاتف أندرويد",
+    "sender_ios": "كاميرا iPhone",
     "activity": "نشاط المؤسسات",
     "available": "البث متاح",
     "confirm": "تأكيد",

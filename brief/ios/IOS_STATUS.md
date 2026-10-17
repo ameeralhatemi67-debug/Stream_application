@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-18, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | W17 default-off phone publisher, Dart and native commits kept separate |
+| Resume | W17 native opt-in dependency/config/media commit |
 | Progress | 17 / 20 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0; E1 Windows auth/UI/config/availability tests. W18 E0 specification only. No E2, E2S, E3 or E4. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W20: flutter analyze 0 issues (21.9s); full flutter test 1,153 passed / 0 failed / 0 skipped (03:36), exit 0; focused model/iOS readers 17/17; 1,895 EN/AR keys symmetric; Android/web SHA-256 90/90 unchanged. Legal text is a counsel-review draft, no publication. |
+| Latest checks | W17 Dart: flutter analyze 0 issues (18.0s); full flutter test 1,157 passed / 0 failed / 0 skipped (03:35); enabled-flag mocked iOS channel suite 13/13; targeted default/Android/UI 40/40. Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -36,10 +36,10 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W14 | App Store pack | DONE | d9f33e2 | C4 |
 | W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
 | W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
-| W17 | Phone publisher | OPEN — §12 unblocked | fa6a3f5 (research) | Track B |
+| W17 | Phone publisher | PARTIAL — Dart complete, native next | master^{/gate iOS phone publishing behind an opt-in flag} | Track B |
 | W18 | Push spec | DONE | bd442c8 | Track B |
 | W19 | Apple deletion revocation | DONE | d5e4b6b | §12 |
-| W20 | Legal drafts / public gaps | DONE | master^{/draft bilingual iOS legal notices and public gaps} | §12 |
+| W20 | Legal drafts / public gaps | DONE | a0ebf8d | §12 |
 | M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
 
 Resolve a commit selector with `git rev-parse '<selector>'`.
@@ -54,7 +54,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | WKWebView playback | E0 | Existing settings audited against official WKWebView 3.25.1 source. Inline/autoplay/JS/referrer/runtime behavior unverified on iOS. |
 | Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
 | Sign in with Apple | E1 host exchange tests; E0 native capability | Native button + nonce exchange implemented; Release/Profile entitlement only. Paid provider/device flow deferred; Debug has no entitlements. |
-| Phone publishing | E1 host availability gate; no iOS native publisher | Native iOS Studio entry shows FeatureInProgressModal before creating publishing state. Phone and OBS setup deferred. |
+| Phone publishing | E1 mocked Dart; native implementation pending | Default-off IOS_PHONE_PUBLISHING gate, native capability probe, UiKit preview selection, permissions and recovery contract pass host tests. Separate native commit follows; no iOS compile/media proof. |
 | Push | E0 spec; E1 host exclusion | W18 spec complete, ESC-4 future backend migration. iOS Firebase remains disabled; no APNs/plist/background change and no native delivery proof. |
 | Location and gallery permissions / native localization | E0 | Implemented, not run on iOS. Foreground location only; no camera/mic/background/ATS exceptions. |
 | App privacy manifest | E0 | Implemented, not run on iOS. 11 linked data types for functionality; no tracking. App reasons CA92.1/C617.1. Packaged report unverified. |
@@ -86,9 +86,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W17 default-off Dart gate/channel tests; preserve Android behavior and independent iOS channel OAuth gate.
-2. W17 separate native SwiftPM/config/permissions/media commit with inactive privacy mapping, then self-review.
-3. Tighten M1–M3 handoff if useful; actual compilation/runtime awaits Mac/real CI log. Owner handles W19 deployment and legal approval/public delivery.
+1. Complete W17 native Swift bridge/media and opt-in dependency/config in one revertible commit.
+2. Review native project/config changes and tighten the M1–M3 runbook.
+3. Mac/CI build is the next evidence gate; owner deploys W19 and approves/delivers legal pages.
 
 ## Audit notes and verification limits
 
