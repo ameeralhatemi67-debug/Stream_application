@@ -1,0 +1,31 @@
+# Pre-Mac, manually started, unsigned compile gate. The owner runs this workflow.
+# No automatic triggers, signing integration, secrets or publishing.
+workflows:
+  ios-compile-check:
+    name: iOS viewer unsigned compile check
+    working_directory: project
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+    environment:
+      flutter: 3.41.2
+      xcode: latest
+      cocoapods: default
+    scripts:
+      - name: Record toolchain
+        script: |
+          set -e
+          flutter --version
+          xcodebuild -version
+          pod --version
+      - name: Get Flutter packages
+        script: flutter pub get
+      - name: Analyze
+        script: flutter analyze
+      - name: Full Flutter tests
+        script: flutter test --reporter expanded
+      - name: Build unsigned iOS release with example configuration
+        script: flutter build ios --release --no-codesign --dart-define-from-file=dart_define.example.json
+    artifacts:
+      - $CM_BUILD_DIR/project/build/ios/iphoneos/**/*.app
+      - /tmp/xcodebuild_logs/*.log
+

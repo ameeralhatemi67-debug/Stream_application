@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 4, W12; W11 scoped work committed, external blockers open |
-| Progress | 10 / 18 work orders complete |
+| Resume | Phase 4, W13 build-log gate |
+| Progress | 11 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W11: flutter analyze 0 issues (25.5s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:17), exit 0. Focused compliance/platform 25/25 pass. Catalogs symmetric; Android/web SHA-256 90/90 unchanged. |
+| Latest checks | W12: YAML parses and invariant checks pass; flutter analyze 0 issues (28.3s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:23), exit 0. Android/web SHA-256 90/90 unchanged. No cloud/iOS build run. |
 
 ## Work orders
 
@@ -30,8 +30,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W8 | Branch audit and gating | DONE | 0123921 | C3 |
 | W9 | Sign in with Apple | DONE | f715230 | C3 |
 | W10 | iOS-override tests | DONE | 4fa027b | C3 |
-| W11 | App Review compliance | PARTIAL — ESC-2/ESC-3 | master^{/audit App Review readiness} | C3 |
-| W12 | Codemagic config | OPEN |  | C4 |
+| W11 | App Review compliance | PARTIAL — ESC-2/ESC-3 | 4923c13 | C3 |
+| W12 | Codemagic config | DONE | master^{/add unsigned Codemagic compile gate} | C4 |
 | W13 | Compile-fix loop | WAITING for CI or Mac log |  | C4 |
 | W14 | App Store pack | OPEN |  | C4 |
 | W15 | Truth reconciliation | OPEN |  | C4 |
@@ -60,6 +60,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | iOS channel connection | E1 host guard | UI notice plus service rejection before backend access. Android/web flow preserved; no iOS OAuth channel flow. |
 | iOS platform adaptation tests | E1 Windows target-platform override | Apple iOS/Android EN/AR matrix, consent/error/cancel/paused signup, channel UI guard, Apple Maps/fallback, actual provider ios identity path. No native plugin runtime proof. |
 | App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | iOS EN/AR privacy/deletion/report/block/mute reachability tested; support mail fallback added. Native behavior, hosted moderation/deletion and complete policy content unverified. ESC-2/ESC-3 open. |
+| Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
 
 ## Blockers and owner actions
 
@@ -72,14 +73,15 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
 | O6 | Owner, later paid activation | Apple App ID/capability and Supabase Apple provider setup; native bundle ID audience, optional browser Services ID/key/secret rotation. Exact deferred steps in OWNER_STEPS_IOS.md. |
 | O7 | Owner / Claude, separate backend work | ESC-2: add and audit Apple token revocation during account deletion with server-held credentials; review current deletion restrictions. Apple activation/submission remains blocked. |
+| O8 | Owner, optional before Mac | Push and manually run Codemagic ios-compile-check; supply non-secret first-error logs or successful native build evidence. CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md contain exact steps. Skip if Mac available. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W12 Codemagic unsigned compile configuration and exact owner run steps.
-2. W13 needs a genuine CI/Mac log; record its blocker and proceed if absent.
-3. W14 store listing/privacy/review pack with W11 blockers carried forward.
+1. W13: record no real CI/Mac build log; do not invent a compile fix.
+2. W14 viewer-first English/Arabic listing, privacy, age, review and screenshot drafts.
+3. W15 truth reconciliation, then W16 Mac setup.
 
 ## Audit notes and verification limits
 

@@ -114,3 +114,9 @@ Observed on 2026-10-17: `/privacy.html` and `/about.html` return the same Flutte
 4. Through an authorized admin account, open the existing Admin Hub Terms tab (`admin.tab_terms`), edit both Privacy Policy fields and save (`admin.btn_save_terms`). Verify the saved text appears in the pre-sign-in consent reader and Settings legal reader in both languages. Arrange a scoped source change for the default offline/unconfigured fallback after the same full text is approved. No hosted editor was used by the builder.
 5. Fetch each public URL and inspect both body and title. Privacy/about must contain their actual content and differ from the Flutter root bootstrap; deletion instructions must identify Hadayah Live and the current support channel. Check on a phone browser and in-app reader, with no login required for the policy.
 6. Only after these checks, use the public URLs in App Store Connect. The W14 listing pack deliberately marks URL/content readiness as blocked rather than treating 200 as success.
+
+## W12 / W13 — optional pre-Mac compile gate
+
+Owner account action: push the intended master commits, sign in to Codemagic, connect the intended repository, choose YAML workflow `ios-compile-check` on master and start one manual run after reviewing current minutes/billing. Do not add Apple signing or publishing integrations. It uses example defines only; never upload the local define file. Retain the commit SHA, run URL, tool versions, analyzer/test results and unsigned native build result. For failure, return about 150 lines around the first real error without secrets. Full click/command/evidence steps are in [CI_OWNER_STEPS.md](CI_OWNER_STEPS.md).
+
+No job has been started and no CI account has been accessed by the builder. W13 has no real build log to fix yet. Skip Codemagic when the physical Mac is available and use Track M directly.

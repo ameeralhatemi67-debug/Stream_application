@@ -203,3 +203,13 @@ METER | 2026-10-17T21:45:00+03:00 | weekly used 44% | resets in 6452 min
 - Owner actions needed: resolve ESC-2/ESC-3 before Apple activation/submission; monitor safety reports and support; perform real native checks. Builder appended only its new escalation section to the ledger index, leaving pre-existing manager/owner ledger edits unstaged.
 - Checkpoint C3 note: W8/W9/W10 implemented and host-tested; W11 scoped fixes/checklist complete with two open external blockers. Nonce, localized prominence, gates and reachability have E1 host proof. No E2/E3, no App Review compliance verdict. Claude audits without blocking the next phase.
 - Next: W12, then W13 only if a real build log is available; continue the unblocked store/runbook work.
+
+### 2026-10-17 22:24 | W12 CI configuration | DONE
+- Commit: `master^{/add unsigned Codemagic compile gate}` — chore(ios): add unsigned Codemagic compile gate.
+- Evidence level claimed: E0 CI configuration; E1 unchanged Windows test baseline. No cloud job or iOS compilation.
+- What changed: root codemagic.yaml uses working_directory project, Flutter 3.41.2, mac_mini_m2, latest stable Xcode/default CocoaPods; records versions, pub get, analyze, full tests and unsigned release build with the existing example define file. No automatic triggers, signing, secrets or publishing. CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md explain the owner-only manual run and evidence needed for W13.
+- Checks: PyYAML syntax and project/pin/manual/unsigned invariants pass; flutter analyze 0 issues (28.3s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:23), exit 0; Android/web SHA-256 90/90 unchanged and tracked diffs empty; whitespace check clean.
+- Decisions made: Context7 verified [unsigned Flutter workflow](https://docs.codemagic.io/yaml-quick-start/first-signed-build), [working_directory](https://docs.codemagic.io/troubleshooting/common-ios-issues), [software versions](https://docs.codemagic.io/codemagic-yaml-cheatsheet.html), [M2 machine](https://docs.codemagic.io/specs/machine-type) and [manual triggers](https://docs.codemagic.io/yaml-running-builds/starting-builds-automatically). Flutter's iOS build resolves CocoaPods; no broad pod update or plugin removal. Example defines prove compilation only, not runtime connectivity.
+- Problems / deviations: cloud account/run is owner-gated. No secret, signing or paid Apple account is needed for the unsigned gate itself. Skip this bridge once the Mac arrives.
+- Owner actions needed: O8, exact steps in both owner documents; no push/run attempted by builder.
+- Next: W13 log availability, then W14 without waiting for CI.
