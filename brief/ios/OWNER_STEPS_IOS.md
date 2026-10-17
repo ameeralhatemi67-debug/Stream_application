@@ -178,19 +178,46 @@ Context7 and the official references were checked; installed client/CLI APIs wer
 also read. Supabase's October 12 TLS notice affects obsolete ciphers from November
 10; current Edge/Dart clients need no source workaround.
 
-### ESC-3 — Legal/support documents and complete privacy disclosures
+### ESC-3 / W20 — legal draft complete; public-page deployment remains
 
-Observed on 2026-10-17: `/privacy.html` and `/about.html` return the same Flutter bootstrap body as `/`, including the same SHA-256. `/delete-account.html` returns an old Dalilk-branded page. All return 200, so a status-only check misses the problem. The default in-app legal model also contains only a short Google-profile policy. Hosted legal content was not inspected.
+W20 replaces the default in-app terms, broadcaster guidelines and privacy text
+with complete EN/AR drafts, version v1.1.0-ios-draft. They are **drafts requiring
+counsel review**, not approved legal notices or a PDPL compliance certification.
+Consent summaries now mention Apple relay email and no longer minimize the data
+inventory. The existing hosted legal record has not been read or changed.
 
-1. In a separately authorized public-site task, serve the actual documents at the existing AppIdentity URLs before the SPA fallback: `https://stream-application-ten.vercel.app/privacy.html`, `/about.html`, and `/delete-account.html`. Start from the repository's existing `project/web/` documents, preserve the Play launch work, and reconcile the old deletion-page branding.
-2. Publish complete matching English/Arabic privacy disclosures for iOS as well as existing platforms. Reconcile them against `store/data_safety.md`, the W4 manifest, actual third-party services and the Xcode packaged privacy report. Cover Apple/Google identity and private relay email, optional profile/organization/contact/location/images, chat and reports, identifiers/usage, provider processing, retention/deletion, consent withdrawal/data rights and the published support contact. Do not claim the embedded video provider is ad-free or infer tracking behavior solely from the app manifest.
-3. Prepare the platform paragraph for review using this concrete delta:
-   - EN: “On iOS, Hadayah Live offers Sign in with Apple and Google sign-in. Apple may provide a private relay email address. The initial iOS release supports viewing and account features; phone publishing, channel connection and push notifications are deferred. Foreground location and selected-photo access are requested only when using the relevant feature.”
-   - AR: “يوفر Hadayah Live على iOS تسجيل الدخول باستخدام Apple أو Google، وقد توفر Apple عنوان بريد إلكتروني خاصًا لإخفاء بريدك. يدعم الإصدار الأول على iOS المشاهدة وميزات الحساب، مع تأجيل البث من الهاتف وربط القنوات والإشعارات الفورية. يُطلب الوصول إلى الموقع أثناء الاستخدام والصور المحددة عند استخدام الميزة المعنية فقط.”
-   This supplements the complete collection/retention policy; it is not a replacement for the full policy.
-4. Through an authorized admin account, open the existing Admin Hub Terms tab (`admin.tab_terms`), edit both Privacy Policy fields and save (`admin.btn_save_terms`). Verify the saved text appears in the pre-sign-in consent reader and Settings legal reader in both languages. Arrange a scoped source change for the default offline/unconfigured fallback after the same full text is approved. No hosted editor was used by the builder.
-5. Fetch each public URL and inspect both body and title. Privacy/about must contain their actual content and differ from the Flutter root bootstrap; deletion instructions must identify Hadayah Live and the current support channel. Check on a phone browser and in-app reader, with no login required for the policy.
-6. Only after these checks, use the public URLs in App Store Connect. The W14 listing pack deliberately marks URL/content readiness as blocked rather than treating 200 as success.
+The public pages already exist in commit 5991d38 with current Hadayah branding.
+The owner confirms the live site was not redeployed. W11's historical bootstrap/
+old-branding observation is therefore a deployment gap. The builder must not
+edit project/web/ or deploy the site. [PUBLIC_PAGES_GAPS.md](PUBLIC_PAGES_GAPS.md)
+lists the local Google/Android/web wording versus needed iOS changes for Claude.
+
+1. Owner/counsel approve operator details, retention/log/backup periods, hosting
+   regions/contracts, audience/children's handling, deletion restrictions and
+   actual third-party/analytics purposes. Review every EN/AR draft and the
+   conditional camera/microphone/push statements against the release flags.
+2. Claude applies the public iOS copy deltas in the separate public-site task,
+   preserving Play launch behavior. Include Apple identity/private relay,
+   real W19 deletion/revocation behavior after deployment, accurate default
+   iOS availability and provider-served ads/copies. Remove unsupported instant
+   deletion/session-revocation guarantees and confirm support timing.
+3. Owner redeploys the existing static pages with their routes before the Flutter
+   SPA fallback. Verify public titles/body/content, both languages, current
+   branding and the real deletion/support path without login on a phone.
+   HTTP 200 alone is not acceptance. No live probe was performed in W20.
+4. Publish the approved complete bilingual legal record through the existing
+   Admin Hub Terms editor and deliberately version the consent transition.
+   Match the approved default fallback. W20 does not silently overwrite hosted
+   policy text. Verify both pre-login privacy and Settings terms/privacy readers
+   on a native build; check terms access before agreeing to combined consent.
+5. Keep the AppIdentity public URLs and contact consistent with store metadata.
+   Do not submit until hosted content/delivery, W19 deployment/device behavior
+   and native review checks are complete. Do not ship the counsel-review draft
+   as if it were approved legal text.
+
+References: [Apple privacy guidelines](https://developer.apple.com/app-store/review/guidelines/#privacy),
+[account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion).
+No web, hosted Supabase/Vercel, secret, signing or account action was taken.
 
 ## W12 / W13 — optional pre-Mac compile gate
 

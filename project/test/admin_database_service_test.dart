@@ -100,17 +100,23 @@ void main() {
     test('TC-DB-02: TermsAndConditionsModel Serialization & Bilingual Helpers',
         () {
       final terms = TermsAndConditionsModel.createDefault();
-      expect(terms.version, equals('v1.0.0'));
-      expect(terms.getLocalizedTerms('en'), contains('Educational Purpose'));
-      expect(terms.getLocalizedTerms('ar'), contains('الغرض التعليمي'));
+      expect(terms.version, equals('v1.1.0-ios-draft'));
+      expect(terms.getLocalizedTerms('en'), contains('Service and agreement'));
+      expect(terms.getLocalizedTerms('ar'), contains('الخدمة والموافقة'));
       expect(
-          terms.getLocalizedGuidelines('en'), contains('Academic Integrity'));
+          terms.getLocalizedGuidelines('en'), contains('cite sources'));
       expect(
-          terms.getLocalizedGuidelines('ar'), contains('الأمانة الأكاديمية'));
+          terms.getLocalizedGuidelines('ar'), contains('اذكر المصادر'));
 
       final json = terms.toJson();
       final reconstituted = TermsAndConditionsModel.fromJson(json);
-      expect(reconstituted.version, equals('v1.0.0'));
+      expect(reconstituted.version, equals('v1.1.0-ios-draft'));
+      expect(reconstituted.privacyPolicyEn, terms.privacyPolicyEn);
+      expect(reconstituted.privacyPolicyAr, terms.privacyPolicyAr);
+      expect(terms.privacyPolicyEn, contains('Draft for counsel review'));
+      expect(terms.privacyPolicyAr, contains('مسودة للمراجعة القانونية'));
+      expect(terms.privacyPolicyEn, contains('Apple'));
+      expect(terms.privacyPolicyAr, contains('Apple'));
     });
 
     test('TC-DB-03: ViewerAnalyticsModel Serialization & Metrics Default', () {

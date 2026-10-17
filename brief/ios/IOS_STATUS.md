@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-18, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | W20 legal drafts and local public-page gap list, then flagged W17 |
-| Progress | 16 / 20 work orders complete |
+| Resume | W17 default-off phone publisher, Dart and native commits kept separate |
+| Progress | 17 / 20 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0; E1 Windows auth/UI/config/availability tests. W18 E0 specification only. No E2, E2S, E3 or E4. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W19: flutter analyze 0 issues (18.0s); full flutter test 1,153 passed / 0 failed / 0 skipped (03:45), exit 0; 12 focused Dart tests and 16 Node mocked Edge/crypto tests pass; Deno 2.9.6 production-index type check passes; Android/web SHA-256 90/90 unchanged. SQL not executed. |
+| Latest checks | W20: flutter analyze 0 issues (21.9s); full flutter test 1,153 passed / 0 failed / 0 skipped (03:36), exit 0; focused model/iOS readers 17/17; 1,895 EN/AR keys symmetric; Android/web SHA-256 90/90 unchanged. Legal text is a counsel-review draft, no publication. |
 
 ## Work orders
 
@@ -38,8 +38,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
 | W17 | Phone publisher | OPEN — §12 unblocked | fa6a3f5 (research) | Track B |
 | W18 | Push spec | DONE | bd442c8 | Track B |
-| W19 | Apple deletion revocation | DONE | master^{/enforce Apple revocation before account deletion} | §12 |
-| W20 | Legal drafts / public gaps | OPEN |  | §12 |
+| W19 | Apple deletion revocation | DONE | d5e4b6b | §12 |
+| W20 | Legal drafts / public gaps | DONE | master^{/draft bilingual iOS legal notices and public gaps} | §12 |
 | M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
 
 Resolve a commit selector with `git rev-parse '<selector>'`.
@@ -61,7 +61,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
 | iOS channel connection | E1 host guard | UI notice plus service rejection before backend access. Android/web flow preserved; no iOS OAuth channel flow. |
 | iOS platform adaptation tests | E1 Windows target-platform override | Apple iOS/Android EN/AR matrix, consent/error/cancel/paused signup, channel UI guard, Apple Maps/fallback, actual provider ios identity path. No native plugin runtime proof. |
-| App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | iOS EN/AR privacy/deletion/report/block/mute reachability tested; support mail fallback added. Native behavior, hosted moderation/deletion and complete policy content unverified. ESC-2/ESC-3 open. |
+| App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | W19 revocation source E1 mocked; W20 complete bilingual legal draft/readers E1. Counsel approval, hosted legal record/public-page deployment, SQL/provider/device behavior and submission remain pending. |
 | Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
 | App Store pack | E0 drafts | Seven files: EN/AR copy, privacy mapping, age questionnaire, review notes and both requested screenshot size plans. No images, account form or upload; W11 blockers carried forward. |
 | Mac handoff | E0 runbook | MAC_SETUP.md covers Xcode/SDK/deployment distinction, pinned SDK, owner hands, Debug entitlements, exact M1–M5 commands and evidence boundaries. No Mac available. |
@@ -73,7 +73,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 |---|---|---|
 | O1 | Owner | Paid Apple enrollment deferred (D4). Needed for Apple capability/device testing, TestFlight and App Store submission. |
 | O2 | Owner | Provide Mac access when it arrives and an iPhone when available; follow MAC_SETUP.md. Owner handles local account/license/trust/define-file steps. No paid enrollment needed for Simulator/unsigned build or free-team Debug device install. |
-| O3 | Owner / Claude | ESC-3: repair privacy/about SPA fallbacks and old deletion-page branding on the existing domain; publish complete EN/AR iOS-aware legal text and review the offline fallback and packaged privacy report. Exact acceptance checks in OWNER_STEPS_IOS.md. |
+| O3 | Owner / Claude | W20 in-app draft complete at E1. Owner/counsel approve; Claude handles iOS public copy gaps and owner redeploys the existing committed pages (5991d38) before SPA fallback. PUBLIC_PAGES_GAPS.md and OWNER_STEPS_IOS.md have concrete deltas and content acceptance. No web edits/live access this round. |
 | O4 | Owner | Verify existing Supabase OAuth callback allowlist, later run cold/warm Google return; exact steps in OWNER_STEPS_IOS.md. No hosted settings changed. |
 | O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
 | O6 | Owner, later paid activation | Apple App ID/capability and Supabase Apple provider setup; native bundle ID audience, optional browser Services ID/key/secret rotation. Exact deferred steps in OWNER_STEPS_IOS.md. |
@@ -86,9 +86,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W20 write complete EN/AR default legal drafts and PUBLIC_PAGES_GAPS.md without web edits.
-2. W17 implement default-off Dart gate/tests and a separate native dependency/permissions/publisher commit, per §12.
-3. Then native self-review and Mac runbook sequence; M1–M3 / W13 await physical Mac or a real CI log.
+1. W17 default-off Dart gate/channel tests; preserve Android behavior and independent iOS channel OAuth gate.
+2. W17 separate native SwiftPM/config/permissions/media commit with inactive privacy mapping, then self-review.
+3. Tighten M1–M3 handoff if useful; actual compilation/runtime awaits Mac/real CI log. Owner handles W19 deployment and legal approval/public delivery.
 
 ## Audit notes and verification limits
 
@@ -107,8 +107,9 @@ Account-gated steps do not block unrelated Windows work.
 - 2026-10-18 round follows §12: W17's W11 dependency withdrawn; W19 backend source authorized only for Apple deletion; W20 legal fallback authorized; push migration remains forbidden.
 - W19 fixed a test-fixture issue: installed PostgREST expects http.Response.request. Mock responses now carry request metadata. Unrelated AppProvider formatter churn was removed; only deletion logic/blocker names changed.
 - ESC-2 resolved at E1 mocked/source scope. Database proof validity is ten minutes and tied to current identity version; SQL guard/grants are unexecuted and real provider/device behavior remains pending.
+- W20 complete default terms/guidelines/privacy at v1.1.0-ios-draft, marked for counsel review. No unverified PDPL compliance/instant deletion/ad-free promises. Hosted legal content not overwritten; public source pages untouched.
 
 ## Open escalations
 
-- ESC-3 (W11): public document routing/branding and full privacy text need site/account changes and a scoped fallback follow-up.
+- ESC-3 public half: W20 in-app draft/source resolved at E1; Claude/owner handle copy review and deployment of existing public pages. Counsel/hosted approval pending.
 - ESC-4 (W18): future push implementation needs a separately authorized backend migration plus owner APNs/Firebase setup; specification complete, no backend changes.
