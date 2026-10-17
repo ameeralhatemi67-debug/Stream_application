@@ -180,3 +180,14 @@ METER | 2026-10-17T21:45:00+03:00 | weekly used 44% | resets in 6452 min
 - Owner actions needed: O6 paid activation later; exact native client-ID and optional browser Services ID/key/rotation steps in OWNER_STEPS_IOS.md. No account operation attempted. Before submission, W11 must review Apple token revocation on account deletion.
 - Policy update: owner removed all usage caps and soft stops on 2026-10-17. Re-read IOS_PLAN_V2.md §4 and CODEX_PROMPT_V2.md BUDGET; older METER/cap text is historical and never causes a stop.
 - Next: W10 iOS-override widget/platform tests; then W11 without waiting for an audit.
+
+### 2026-10-17 22:08 | W10 iOS-override tests | DONE
+- Commit: `master^{/verify iOS platform UI paths}` — feat(ios): verify iOS platform UI paths.
+- Evidence level claimed: E1 Windows tests with TargetPlatform.iOS; native runtime remains unverified.
+- What changed: `project/test/ios_platform_ui_test.dart` adds 14 tests: EN/AR iOS/Android Apple visibility and prominence; consent decline/accept; friendly failure with Google still usable; quiet cancellation; existing Apple login while signup paused; UI channel gate; Apple Maps and Google fallback; real AppProvider device identity path emits ios. W8's three Studio/service tests are retained and included in the focused run.
+- What changed: native-iOS Apple button height is 64 via AppTheme tokens after the new Arabic test found Google measured 61 versus Apple's 56. This is the test-exposed W9 prominence fix; Android/web layout and auth handlers are untouched.
+- Checks: flutter analyze 0 issues (29.6s); full flutter test 1,130 passed / 0 failed / 0 skipped (04:10), exit 0; focused 17/17 pass. Android/web 90/90 SHA-256 unchanged; tracked Android/web diff empty; diff whitespace check clean.
+- Decisions made: reuse the repository's AppProvider.withServices injection, real EN/AR DirectJsonAssetLoader, and body-finally platform reset plus tearDown. Directions tests mock only the launcher channel; identity test makes no backend claim. No new plugin API.
+- Problems / deviations: first draft used the unnamed provider constructor instead of withServices and was corrected; next run exposed the Arabic height mismatch and the source was fixed without weakening the assertion. Existing offline backend diagnostics remain; no warning suppression.
+- Owner actions needed: none for this work order. Mac and device verification still required.
+- Next: W11, including review of public legal URL delivery and Apple account-deletion revocation. These findings were researched while the full suite ran, without editing the site/backend.

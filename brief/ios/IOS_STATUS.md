@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 3, W10 |
-| Progress | 9 / 18 work orders complete |
+| Resume | Phase 3, W11 |
+| Progress | 10 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W9: flutter analyze 0 issues (47.1s); full flutter test 1,116 passed / 0 failed / 0 skipped (04:35), exit 0. Focused security tests 4/4 pass. Android/web SHA-256 90/90 unchanged. |
+| Latest checks | W10: flutter analyze 0 issues (29.6s); full flutter test 1,130 passed / 0 failed / 0 skipped (04:10), exit 0. Focused iOS/platform gates 17/17 pass. Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -28,8 +28,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W6 | Firebase inert on iOS | DONE | 72802e5 | C2 |
 | W7 | WKWebView / YouTube audit | DONE | 580dc75 | C2 |
 | W8 | Branch audit and gating | DONE | 0123921 | C3 |
-| W9 | Sign in with Apple | DONE | master^{/Sign in with Apple} | C3 |
-| W10 | iOS-override tests | OPEN |  | C3 |
+| W9 | Sign in with Apple | DONE | f715230 | C3 |
+| W10 | iOS-override tests | DONE | master^{/verify iOS platform UI paths} | C3 |
 | W11 | App Review compliance | OPEN |  | C3 |
 | W12 | Codemagic config | OPEN |  | C4 |
 | W13 | Compile-fix loop | WAITING for CI or Mac log |  | C4 |
@@ -58,6 +58,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | App privacy manifest | E0 | Implemented, not run on iOS. 11 linked data types for functionality; no tracking. App reasons CA92.1/C617.1. Packaged report unverified. |
 | HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
 | iOS channel connection | E1 host guard | UI notice plus service rejection before backend access. Android/web flow preserved; no iOS OAuth channel flow. |
+| iOS platform adaptation tests | E1 Windows target-platform override | Apple iOS/Android EN/AR matrix, consent/error/cancel/paused signup, channel UI guard, Apple Maps/fallback, actual provider ios identity path. No native plugin runtime proof. |
 
 ## Blockers and owner actions
 
@@ -74,9 +75,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W10 iOS-override UI/platform tests, using body-finally cleanup.
-2. W11 App Review compliance sweep, including Apple deletion/revocation review.
-3. W12 Codemagic compile-gate configuration; owner runs it only before Mac access.
+1. W11 App Review sweep: verify legal/deletion/UGC paths; record backend/site blockers.
+2. W12 Codemagic configuration and owner run instructions.
+3. W13 only with real CI/Mac logs; otherwise continue W14–W16.
 
 ## Audit notes and verification limits
 
@@ -87,6 +88,7 @@ Account-gated steps do not block unrelated Windows work.
 - W8 widget tests must reset debugDefaultTargetPlatformOverride in the widget body finally, in addition to tearDown; Flutter verifies foundation invariants before ordinary tearDown. Keep this pattern in W9/W10.
 - Owner removed every usage cap and soft stop on 2026-10-17. Do not interpret older meter/cap text as a stop condition.
 - Apple plugin 8.1.0 is the newest solver-compatible version for Flutter 3.41.2/Dart 3.11.0; only three new lockfile entries, no existing package updates. Native/plugin compilation remains pending.
+- W10 found the Arabic Google button was 61px high. Apple is now 64px (AppTheme tokens); the EN/AR test checks it remains at least as tall and fully localized. Android auth UI remains unchanged.
 
 ## Open escalations
 

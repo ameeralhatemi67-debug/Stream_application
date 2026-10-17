@@ -301,7 +301,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             SignInWithAppleButton(
                               key: const Key('welcome-apple'),
                               text: 'auth_welcome.btn_apple'.tr(),
-                              height: AppTheme.space2Xl + AppTheme.spaceXl,
+                              height: AppTheme.space2Xl * 2,
                               style: SignInWithAppleButtonStyle.whiteOutlined,
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
