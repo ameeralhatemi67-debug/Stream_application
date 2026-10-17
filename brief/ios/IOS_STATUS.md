@@ -8,21 +8,21 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 2, W3 |
-| Progress | 2 / 18 work orders complete |
-| Evidence | Native shell E0, implemented, not run on iOS. Shared Dart host checks pass. No iOS compile or runtime evidence |
+| Resume | Phase 2, W4 |
+| Progress | 3 / 18 work orders complete |
+| Evidence | Native configuration E0, implemented, not run on iOS. Shared Dart host checks pass. No iOS compile or runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
-| Apple enrollment | Deferred by owner, D4; no paid-only capability configured |
+| Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Meter | 43% weekly; cap 50%, soft stop 45%; resetsAt 1792649794. |
-| Latest checks | W2: flutter analyze 0 issues (39.5s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:33), exit 0. Store icon 1024x1024 RGB, no alpha/tRNS; all icon references resolve. Android/web SHA-256 90/90 unchanged. |
+| Latest checks | W3: flutter analyze 0 issues (18.8s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:34), exit 0. Plist allowlist, native EN/AR keys and PBX ID uniqueness pass. Android/web 90/90 SHA-256 unchanged. |
 
 ## Work orders
 
-| WO | Title | Status | Commit selector | Checkpoint |
+| WO | Title | Status | Commit selector or hash | Checkpoint |
 |---|---|---|---|---|
 | W1 | Generate ios/ | DONE | 5605451 | C1 |
-| W2 | Identity | DONE | master^{/apply iOS app identity} | C1 |
-| W3 | Info.plist | OPEN |  | C2 |
+| W2 | Identity | DONE | 88c65a0 | C1 |
+| W3 | Info.plist | DONE | master^{/configure iOS viewer permissions} | C2 |
 | W4 | Privacy manifest | OPEN |  | C2 |
 | W5 | URL scheme and deep links | OPEN |  | C2 |
 | W6 | Firebase inert on iOS | OPEN |  | C2 |
@@ -40,20 +40,21 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W18 | Push spec | OPEN, Track B |  |  |
 | M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
 
-Commit selectors avoid embedding a commit's own hash. Resolve with `git rev-parse '<selector>'`.
+Resolve a commit selector with `git rev-parse '<selector>'`.
 
 ## Evidence by feature
 
 | Feature | Level claimed | Limit |
 |---|---|---|
 | iOS native shell | E0 | Implemented, not run on iOS; CocoaPods, bundle sa.hadayah.streamerapp, target 15.0, iPhone only. |
+| iOS identity | E0 | Implemented, not run on iOS. Opaque 1024px icon; dark launch uses AppTheme.media #243536. |
 | Discovery/watch/chat/map/profile shared Dart | E1 host baseline | Windows tests only; no iOS runtime proof. |
-| iOS name/icon/launch screen | E0 | Implemented, not run on iOS. Opaque icon checked on Windows; dark launch uses AppTheme.media #243536. |
 | WKWebView playback | E0 at best | Audit W7 pending; no iOS playback proof. |
 | Google redirect | none | W5 pending. |
 | Sign in with Apple | none | W9 pending; paid capability deferred. |
 | Phone publishing | none on iOS | Android sender only; Track B. |
 | Push | none on iOS | Deferred; W18 is spec only. |
+| Location and gallery permissions / native localization | E0 | Implemented, not run on iOS. Foreground location only; no camera/mic/background/ATS exceptions. |
 
 ## Blockers and owner actions
 
@@ -62,21 +63,20 @@ Commit selectors avoid embedding a commit's own hash. Resolve with `git rev-pars
 | O1 | Owner | Paid Apple enrollment deferred (D4). Needed for Apple capability/device testing, TestFlight and App Store submission. |
 | O2 | Owner | Provide Mac access when it arrives; iPhone availability remains unknown. |
 
-No account is required for the next Windows work orders. Paid enrollment is deferred until the relevant Mac/device/store steps.
+Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W3 permissions and localizations.
-2. W4 privacy manifest.
-3. W5 custom URL scheme and universal-link owner plan.
+1. W4 privacy manifest.
+2. W5 URL scheme and owner universal-link plan.
+3. W6 Firebase inert test and native initialization audit.
 
 ## Audit notes and verification limits
 
-- C1 (W1/W2) is awaiting Claude audit. Native shell/identity remain E0; host checks pass. No iOS compilation or evidence promotion.
+- C1 (W1/W2) awaiting Claude audit. No iOS compilation or evidence promotion.
 - Initial SHA-256 inventory was written to a sandbox temporary directory and could not be recovered after that process ended. Generation has a clean tracked Android/web diff; the persistent post-generation inventory covers 90 files (77 Android, 13 web). Do not claim a pre-generation SHA comparison.
 - Flutter create also emitted an unrelated sample widget test and replaced web/Windows metadata entries. The new sample was removed and original metadata entries restored before testing.
-
-- flutter_launcher_icons 0.14.4 rewrote two unrelated asset-symbol settings in project.pbxproj. Restored that file to W1; no Xcode project change belongs to W2. Future icon regeneration must inspect that diff.
+- flutter_launcher_icons 0.14.4 rewrites unrelated asset-symbol settings in project.pbxproj. Restored to W1 during W2; inspect that diff after future regeneration.
 
 ## Open escalations
 
