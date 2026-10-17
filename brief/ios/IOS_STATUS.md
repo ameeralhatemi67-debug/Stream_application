@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 4, W16 Mac setup runbook |
-| Progress | 13 / 18 work orders complete |
+| Resume | Track B, W17 experimental native publisher |
+| Progress | 14 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W15: flutter analyze 0 issues (24.1s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:09), exit 0; Android/web SHA-256 90/90 unchanged. Four allowed truth documents corrected; source unchanged. |
+| Latest checks | W16: flutter analyze 0 issues (22.2s); full flutter test 1,141 passed / 0 failed / 0 skipped (03:30), exit 0; Android/web SHA-256 90/90 unchanged. Runbook commands source-checked, not run on Mac. |
 
 ## Work orders
 
@@ -34,8 +34,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W12 | Codemagic config | DONE | d35721d | C4 |
 | W13 | Compile-fix loop | WAITING — real CI/Mac log | a3da856 | C4 |
 | W14 | App Store pack | DONE | d9f33e2 | C4 |
-| W15 | Truth reconciliation | DONE | master^{/reconcile iOS evidence claims} | C4 |
-| W16 | Mac setup runbook | OPEN |  | C4 |
+| W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
+| W16 | Mac setup runbook | DONE | master^{/document Mac setup and evidence steps} | C4 |
 | W17 | Phone publisher | OPEN, Track B |  |  |
 | W18 | Push spec | OPEN, Track B |  |  |
 | M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
@@ -62,13 +62,14 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | iOS EN/AR privacy/deletion/report/block/mute reachability tested; support mail fallback added. Native behavior, hosted moderation/deletion and complete policy content unverified. ESC-2/ESC-3 open. |
 | Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
 | App Store pack | E0 drafts | Seven files: EN/AR copy, privacy mapping, age questionnaire, review notes and both requested screenshot size plans. No images, account form or upload; W11 blockers carried forward. |
+| Mac handoff | E0 runbook | MAC_SETUP.md covers Xcode/SDK/deployment distinction, pinned SDK, owner hands, Debug entitlements, exact M1–M5 commands and evidence boundaries. No Mac available. |
 
 ## Blockers and owner actions
 
 | ID | Who | Action |
 |---|---|---|
 | O1 | Owner | Paid Apple enrollment deferred (D4). Needed for Apple capability/device testing, TestFlight and App Store submission. |
-| O2 | Owner | Provide Mac access when it arrives; iPhone availability remains unknown. |
+| O2 | Owner | Provide Mac access when it arrives and an iPhone when available; follow MAC_SETUP.md. Owner handles local account/license/trust/define-file steps. No paid enrollment needed for Simulator/unsigned build or free-team Debug device install. |
 | O3 | Owner / Claude | ESC-3: repair privacy/about SPA fallbacks and old deletion-page branding on the existing domain; publish complete EN/AR iOS-aware legal text and review the offline fallback and packaged privacy report. Exact acceptance checks in OWNER_STEPS_IOS.md. |
 | O4 | Owner | Verify existing Supabase OAuth callback allowlist, later run cold/warm Google return; exact steps in OWNER_STEPS_IOS.md. No hosted settings changed. |
 | O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
@@ -81,9 +82,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W16 Mac setup and exact Track M command/evidence runbook.
-2. W17 inspect and port the native publisher contract for experimental validation; preserve viewer-release scope.
-3. W18 write the push spec and required backend escalation without editing supabase.
+1. W17 implement unblocked experimental native/Dart publisher source with default viewer gates preserved.
+2. W18 push spec and backend CHECK escalation; no backend edits.
+3. Then M1 on a physical Mac, or owner-provided CI log for W13.
 
 ## Audit notes and verification limits
 
@@ -98,6 +99,7 @@ Account-gated steps do not block unrelated Windows work.
 - C3 scoped sweep is committed for audit; W11 remains PARTIAL because ESC-2/ESC-3 are real submission blockers. Continue unrelated Windows work.
 - W13 has zero native compile attempts and no real failure log. It is waiting for O8 or Mac access; do not preemptively patch/remove native plugins or award E2.
 - W15 withdrew ADR-006's universal iOS playback claim, corrected its WKWebView API description, labeled historical Dart/SQL evidence separately and added the HTTPS invite limitation in all four allowed documents. Native E0 remains.
+- C4 Windows artifacts are ready for audit. W13 native compilation is still blocked; no E2 inferred from CI YAML, store copy, truth correction or runbook.
 
 ## Open escalations
 
