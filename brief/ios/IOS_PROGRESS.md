@@ -110,3 +110,24 @@ METER | 2026-10-17T21:19:56+03:00 | weekly used 43% | resets in 6477 min
 - Next: W7, then W8/W9 while below the soft stop.
 
 METER | 2026-10-17T21:26:01+03:00 | weekly used 44% | resets in 6471 min
+
+### 2026-10-17 21:32 | W7 WKWebView / YouTube audit | DONE
+- Commit: `master^{/audit WKWebView viewer configuration}`, subject `chore(ios): audit WKWebView viewer configuration`. W6 is 72802e5.
+- Evidence level claimed: E0 iOS player configuration, implemented, not run on iOS. E1 host regression checks pass; no native playback or compile claim.
+- What changed: reporting files only. No missing WKWebView setting found, so youtube_player_adapter.dart and ADR-006 origin/referrer behavior are unchanged.
+- Checks: `flutter analyze` exit 0, 0 issues (27.8s); one full `flutter test --reporter expanded` exit 0, `03:23 +1109: All tests passed!`, 0 failed/skipped. Adapter Git diff empty; no ATS exception key; Android/web 90/90 SHA-256 unchanged. Existing youtube_embed_page_test.dart and youtube_navigation_policy_test.dart remain host tests, not WKWebView executions.
+- Settings checked: adapter:136–149 selects WebKitWebViewControllerCreationParams for WKWebView, allowsInlineMediaPlayback=true, mediaTypesRequiringUserAction empty; :152–166 enables unrestricted JS and FlutterYouTubeBridge; :313–348 loads native HTML with baseUrl https://www.youtube-nocookie.com; :538,549–550 keeps strict-origin-when-cross-origin in meta/iframe, nocookie embed, playsinline=1 and origin; :558–606 bridges the supported IFrame API events; :227–285 waits for ready/state acknowledgements instead of inventing playback.
+- Sources: [official webview_flutter platform setup](https://github.com/flutter/packages/blob/main/packages/webview_flutter/webview_flutter/README.md), fetched via Context7 after resolving the official /flutter/packages repository; [published WKWebView 3.25.1](https://pub.dev/packages/webview_flutter_wkwebview/versions/3.25.1); [exact official 3.25.1 controller source](https://github.com/flutter/packages/blob/webview_flutter_wkwebview-v3.25.1/packages/webview_flutter/webview_flutter_wkwebview/lib/src/webkit_webview_controller.dart). Pinned source: empty action set maps to native none (:89–102), inline flag maps to WK config, loadHtmlString forwards baseUrl (:452–454), JS channel installs window bridge at document start (:473 onward). pub.dev API URL redirected to 3.26.2, so it was not treated as 3.25.1 proof.
+- Unverified assumption 1: the native plugin registers/selects WKWebView and the app compiles with all pinned native assets. Needs M1/E2.
+- Unverified assumption 2: inline playback and portrait/landscape transitions behave correctly on the supported iPhone sizes. Config is present; needs M2 and device observations.
+- Unverified assumption 3: an empty media-action set permits the intended muted/unmuted autoplay behavior under actual YouTube/WK policies. Autoplay flags are requests, not playback acknowledgements. Needs live/VOD tests.
+- Unverified assumption 4: JS setup timing, ready/state/mute/error events and play/pause/mute commands traverse the WK channel as expected. Dart/HTML contract exists; no native bridge run.
+- Unverified assumption 5: loadHtmlString's nocookie base URL and strict-origin-when-cross-origin yield the referrer/origin YouTube accepts, preventing 150/152/153 for eligible videos. No iOS referrer or successful playback evidence exists.
+- Unverified assumption 6: navigation filtering, resource failures, branded offline/retry surfaces, safe areas and foreground restoration behave correctly around the native platform view. No background playback capability or PiP promise added.
+- Problems / deviations: none requiring a code change within W7's missing-setting-only rule. No plugin update, embed URL/referrer change, warning suppression or ATS workaround.
+- Owner actions needed: Mac/CI compile and later simulator/device playback, already on Track M.
+- Next: W8, W9, W10 while below the budget soft stop.
+
+Checkpoint C2 | W3–W7 complete, awaiting Claude audit. Plist reasons map to live call sites; localized native strings are bundled; app privacy manifest and plugin reasons inspected; callback scheme matches Android; Firebase gate tests pass; ATS/background/entitlements remain absent. Native configuration remains E0, iOS Firebase gate E1 host only. No E2 or iOS runtime claim.
+
+METER | 2026-10-17T21:31:53+03:00 | weekly used 44% | resets in 6465 min

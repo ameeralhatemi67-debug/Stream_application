@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 2, W7 |
-| Progress | 6 / 18 work orders complete |
+| Resume | Phase 3, W8 |
+| Progress | 7 / 18 work orders complete |
 | Evidence | Native configuration E0. iOS Firebase platform gate has E1 Windows test proof. No iOS compile or runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
-| Meter | 2026-10-17T21:26:01+03:00 | weekly used 44% | resets in 6471 min |
-| Latest checks | W6: flutter analyze 0 issues (23.8s); full flutter test 1,109 passed / 0 failed / 0 skipped (03:27), exit 0, including 2 new platform tests. Android/web SHA-256 90/90 unchanged. |
+| Meter | 2026-10-17T21:31:53+03:00 | weekly used 44% | resets in 6465 min |
+| Latest checks | W7: flutter analyze 0 issues (27.8s); full flutter test 1,109 passed / 0 failed / 0 skipped (03:23), exit 0. Adapter unchanged; ATS absent. Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -25,8 +25,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W3 | Info.plist | DONE | 3214951 | C2 |
 | W4 | Privacy manifest | DONE | d6e6278 | C2 |
 | W5 | URL scheme and deep links | DONE | 5c4dcbd | C2 |
-| W6 | Firebase inert on iOS | DONE | master^{/test iOS Firebase exclusion} | C2 |
-| W7 | WKWebView / YouTube audit | OPEN |  | C2 |
+| W6 | Firebase inert on iOS | DONE | 72802e5 | C2 |
+| W7 | WKWebView / YouTube audit | DONE | master^{/audit WKWebView viewer configuration} | C2 |
 | W8 | Branch audit and gating | OPEN |  | C3 |
 | W9 | Sign in with Apple | OPEN |  | C3 |
 | W10 | iOS-override tests | OPEN |  | C3 |
@@ -49,7 +49,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | iOS native shell | E0 | Implemented, not run on iOS; CocoaPods, bundle sa.hadayah.streamerapp, target 15.0, iPhone only. |
 | iOS identity | E0 | Implemented, not run on iOS. Opaque 1024px icon; dark launch uses AppTheme.media #243536. |
 | Discovery/watch/chat/map/profile shared Dart | E1 host baseline | Windows tests only; no iOS runtime proof. |
-| WKWebView playback | E0 at best | Audit W7 pending; no iOS playback proof. |
+| WKWebView playback | E0 | Existing settings audited against official WKWebView 3.25.1 source. Inline/autoplay/JS/referrer/runtime behavior unverified on iOS. |
 | Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
 | Sign in with Apple | none | W9 pending; paid capability deferred. |
 | Phone publishing | none on iOS | Android sender only; Track B. |
@@ -72,13 +72,13 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W7 WKWebView assumptions audit and C2 handoff.
-2. W8 platform branch audit and viewer-first gates.
-3. W9 Apple sign-in with paid entitlements excluded from Debug.
+1. W8 platform branch audit, studio and channel gates.
+2. W9 Apple sign-in, keeping Debug/free-team entitlements empty.
+3. W10 iOS-override UI tests.
 
 ## Audit notes and verification limits
 
-- C1 (W1/W2) awaiting Claude audit. No iOS compilation or evidence promotion.
+- C1 (W1/W2) and C2 (W3–W7) await Claude audit. No iOS compilation or evidence promotion.
 - Initial SHA-256 inventory was written to a sandbox temporary directory and could not be recovered after that process ended. Generation has a clean tracked Android/web diff; the persistent post-generation inventory covers 90 files (77 Android, 13 web). Do not claim a pre-generation SHA comparison.
 - Flutter create also emitted an unrelated sample widget test and replaced web/Windows metadata entries. The new sample was removed and original metadata entries restored before testing.
 - flutter_launcher_icons 0.14.4 rewrites unrelated asset-symbol settings in project.pbxproj. Restored to W1 during W2; inspect that diff after future regeneration.
