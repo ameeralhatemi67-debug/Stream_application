@@ -120,3 +120,21 @@ Observed on 2026-10-17: `/privacy.html` and `/about.html` return the same Flutte
 Owner account action: push the intended master commits, sign in to Codemagic, connect the intended repository, choose YAML workflow `ios-compile-check` on master and start one manual run after reviewing current minutes/billing. Do not add Apple signing or publishing integrations. It uses example defines only; never upload the local define file. Retain the commit SHA, run URL, tool versions, analyzer/test results and unsigned native build result. For failure, return about 150 lines around the first real error without secrets. Full click/command/evidence steps are in [CI_OWNER_STEPS.md](CI_OWNER_STEPS.md).
 
 No job has been started and no CI account has been accessed by the builder. W13 has no real build log to fix yet. Skip Codemagic when the physical Mac is available and use Track M directly.
+
+## W14 — Store metadata and forms (later paid account)
+
+The seven drafts in `brief/ios/store/` are a reviewable pack, not submitted metadata. English/Arabic names, subtitles, promotion, keywords and description fit Apple's current limits; Arabic keywords are 75 UTF-8 bytes. Review-note paste text is 1,728 bytes.
+
+After M1–M3, the required device checks and the owner's decision to enroll:
+
+1. In App Store Connect > Apps > New App, select iOS, the paid-team bundle ID `sa.hadayah.streamerapp`, the owner-confirmed app name/primary language and an owner-chosen SKU. Do not invent an account identifier or change the bundle ID to work around signing.
+2. Add English (U.S.) and Arabic metadata from listing_en.md / listing_ar.md. Use Education as the proposed category and the actual uploaded version/build. Enter the real rights holder in Copyright; Apple's UI adds the symbol. The first version has no What's New field.
+3. Resolve ESC-3 before entering the support/privacy URLs. Confirm actual documents and contact information are delivered, not HTTP 200 Flutter fallback HTML. Reconcile the in-app default and hosted legal text with the form.
+4. Complete App Privacy from privacy_answers.md and the packaged privacy report, resolving App Functionality/Analytics purposes, provider behavior/retention and any additional categories. Optional app actions are not automatically optional disclosures.
+5. Complete the current age questionnaire from age_rating.md after reviewing the actual catalog/live-content policy. Declare UGC/chat and assess social media, ads and player navigation honestly; no parental/age-assurance feature is implemented. Use Connect's computed rating and review territories.
+6. Prepare the actual review fixtures, main demo account and separate disposable deletion account. Enter credentials and review contact name/phone only in App Store Connect; never in this repo. Finish ESC-2 Apple revocation first. Validate every navigation label in app_review_notes.md and replace its bracketed placeholders in Connect.
+7. Capture genuine iOS screenshots using screenshots.md for 6.9-inch and 6.5-inch sets in both languages. No Android captures or invented iPhone screens. Confirm supported pixels, no alpha, safe areas, actual feature visibility and absence of private data.
+8. Confirm content rights, the final encryption/export-compliance answers and all regional/account requirements against the actual build. No export-compliance plist answer has been guessed in this work.
+9. Upload a signed archive through the owner's Xcode/App Store workflow after the device checks. A processed TestFlight build supports E4; an unsigned CI artifact does not. Owner reviews the final metadata and clicks Submit in M5.
+
+No paid account operation, upload, metadata publication or screenshot capture was performed by the builder.

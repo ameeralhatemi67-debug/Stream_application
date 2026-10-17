@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 4, W14; W13 waits for a genuine native build log |
-| Progress | 11 / 18 work orders complete |
+| Resume | Phase 4, W15 truth reconciliation |
+| Progress | 12 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W13 handoff: flutter analyze 0 issues (23.9s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:28), exit 0; Android/web SHA-256 90/90 unchanged. Native compile attempts: 0; no error class to fix. |
+| Latest checks | W14: all metadata/UTF-8/review-note limits pass; flutter analyze 0 issues (24.2s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:16), exit 0. Android/web SHA-256 90/90 unchanged. No native/store run. |
 
 ## Work orders
 
@@ -32,8 +32,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W10 | iOS-override tests | DONE | 4fa027b | C3 |
 | W11 | App Review compliance | PARTIAL — ESC-2/ESC-3 | 4923c13 | C3 |
 | W12 | Codemagic config | DONE | d35721d | C4 |
-| W13 | Compile-fix loop | WAITING — real CI/Mac log | master^{/record native compile evidence blocker} | C4 |
-| W14 | App Store pack | OPEN |  | C4 |
+| W13 | Compile-fix loop | WAITING — real CI/Mac log | a3da856 | C4 |
+| W14 | App Store pack | DONE | master^{/draft viewer-first App Store pack} | C4 |
 | W15 | Truth reconciliation | OPEN |  | C4 |
 | W16 | Mac setup runbook | OPEN |  | C4 |
 | W17 | Phone publisher | OPEN, Track B |  |  |
@@ -61,6 +61,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | iOS platform adaptation tests | E1 Windows target-platform override | Apple iOS/Android EN/AR matrix, consent/error/cancel/paused signup, channel UI guard, Apple Maps/fallback, actual provider ios identity path. No native plugin runtime proof. |
 | App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | iOS EN/AR privacy/deletion/report/block/mute reachability tested; support mail fallback added. Native behavior, hosted moderation/deletion and complete policy content unverified. ESC-2/ESC-3 open. |
 | Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
+| App Store pack | E0 drafts | Seven files: EN/AR copy, privacy mapping, age questionnaire, review notes and both requested screenshot size plans. No images, account form or upload; W11 blockers carried forward. |
 
 ## Blockers and owner actions
 
@@ -74,14 +75,15 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | O6 | Owner, later paid activation | Apple App ID/capability and Supabase Apple provider setup; native bundle ID audience, optional browser Services ID/key/secret rotation. Exact deferred steps in OWNER_STEPS_IOS.md. |
 | O7 | Owner / Claude, separate backend work | ESC-2: add and audit Apple token revocation during account deletion with server-held credentials; review current deletion restrictions. Apple activation/submission remains blocked. |
 | O8 | Owner, optional before Mac | Push and manually run Codemagic ios-compile-check; supply non-secret first-error logs or successful native build evidence. CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md contain exact steps. Skip if Mac available. |
+| O9 | Owner, at submission prep | Confirm actual privacy purposes/provider data, age/content answers, rights holder/content rights, hosted flags and review accounts; capture genuine iOS screenshots and enter metadata only after W11/native/paid gates. OWNER_STEPS_IOS.md and store/README.md have steps. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W14 write and validate the viewer-first English/Arabic store pack.
-2. W15 correct historical iOS truth claims in its four allowed documents.
-3. W16 complete the Mac runbook, then remaining Track B work within scope.
+1. W15 correct the four allowed truth documents, preserving origin/referrer code.
+2. W16 write exact Mac setup and Track M commands.
+3. Then complete unblocked Track B work; native build/device validation needs the Mac/iPhone.
 
 ## Audit notes and verification limits
 
