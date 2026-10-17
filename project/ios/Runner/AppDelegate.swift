@@ -12,5 +12,10 @@ import UIKit
 
   func didInitializeImplicitFlutterEngine(_ engineBridge: FlutterImplicitEngineBridge) {
     GeneratedPluginRegistrant.register(with: engineBridge.pluginRegistry)
+    #if IOS_PHONE_PUBLISHING
+    if let registrar = engineBridge.pluginRegistry.registrar(forPlugin: "HadayahRtmpPublisher") {
+      HadayahRtmpPublisher.register(with: registrar)
+    }
+    #endif
   }
 }

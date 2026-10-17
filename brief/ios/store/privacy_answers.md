@@ -36,3 +36,32 @@ Screening: **Yes, data is collected.** Do not select Data Not Collected. The ele
 
 Source: [Apple app privacy details](https://developer.apple.com/app-store/app-privacy-details/) (retrieved 2026-10-17) for categories, linked/tracking/purpose questions and optional disclosure; the row assessments come from repository data flows. The owner completes the account form after reconciliation.
 
+## W17 experimental publisher — inactive until the flag is on
+
+Default viewer answers above remain the launch mapping. W17 source is E0 native,
+E1 mocked Dart; no capture/SDK behavior is verified. Do not enable or advertise
+phone publishing in a submitted build below E3.
+
+| Additional use when both native and Dart IOS_PHONE_PUBLISHING are on | Manifest/form mapping |
+|---|---|
+| Microphone live audio sent to the selected ingest provider | Audio Data; linked Yes, tracking No, purpose App Functionality |
+| Live camera video sent to the selected ingest provider | Existing Photos or Videos category extends to broadcast video; linked Yes, tracking No, App Functionality |
+| Static branded image in audio-only mode | App-generated image; no additional personal-data category |
+| Upload bitrate / microphone RMS | Ephemeral local UI metrics; no new analytics upload added by W17 |
+| Ingest URL/key | In-memory transport configuration; never diagnostic logs, events, storage or evidence |
+
+The base Runner/PrivacyInfo.xcprivacy explicitly marks streaming inactive. The
+opt-in helper selects Runner/PublisherPrivacy/PrivacyInfo.xcprivacy (same resource
+basename), containing the eleven viewer rows **plus AudioData**; it also selects
+Info-Publisher.plist with camera/microphone reasons and background audio. Disabling
+restores the viewer selection. A privacy manifest has no custom inactive flag;
+the declaration is selected by build configuration, with this document recording
+the conditional scope.
+
+Before activation, reconcile the selected app manifest, any packaged HaishinKit /
+Logboard dependencies, YouTube's receipt/retention of live media, the legal text,
+the actual signed build's privacy report and App Store answers. No third-party
+tracking/retention behavior is certified by the app's No-tracking setting.
+Sources: Apple's collected-data-type reference and exact SDK package/source,
+linked in IOS_PUBLISHER_HANDOFF.md. No camera, microphone or background evidence
+level is raised by these source declarations.

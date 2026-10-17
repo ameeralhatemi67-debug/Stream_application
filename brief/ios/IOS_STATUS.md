@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-18, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | W17 native opt-in dependency/config/media commit |
-| Progress | 17 / 20 work orders complete |
+| Resume | Windows source complete; Mac/CI compilation next (W13 first real error) |
+| Progress | 18 / 20 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0; E1 Windows auth/UI/config/availability tests. W18 E0 specification only. No E2, E2S, E3 or E4. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W17 Dart: flutter analyze 0 issues (18.0s); full flutter test 1,157 passed / 0 failed / 0 skipped (03:35); enabled-flag mocked iOS channel suite 13/13; targeted default/Android/UI 40/40. Android/web SHA-256 90/90 unchanged. |
+| Latest checks | W17 native-commit gate: flutter analyze 0 issues (18.0s); full flutter test 1,157 passed / 0 failed / 0 skipped (03:37); helper tests 3/3; host OpenStep/reference/signing checks for both variants and six plist parses passed. Android/web SHA-256 90/90 unchanged. No native compiler available. |
 
 ## Work orders
 
@@ -30,13 +30,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W8 | Branch audit and gating | DONE | 0123921 | C3 |
 | W9 | Sign in with Apple | DONE | f715230 | C3 |
 | W10 | iOS-override tests | DONE | 4fa027b | C3 |
-| W11 | App Review compliance | PARTIAL — ESC-2/ESC-3 | 4923c13 | C3 |
+| W11 | App Review compliance | PARTIAL — public delivery / native verification | 4923c13 | C3 |
 | W12 | Codemagic config | DONE | d35721d | C4 |
 | W13 | Compile-fix loop | WAITING — real CI/Mac log | a3da856 | C4 |
 | W14 | App Store pack | DONE | d9f33e2 | C4 |
 | W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
 | W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
-| W17 | Phone publisher | PARTIAL — Dart complete, native next | master^{/gate iOS phone publishing behind an opt-in flag} | Track B |
+| W17 | Phone publisher | DONE | 63b288f (Dart); master^{/add isolated opt-in HaishinKit publisher} | Track B |
 | W18 | Push spec | DONE | bd442c8 | Track B |
 | W19 | Apple deletion revocation | DONE | d5e4b6b | §12 |
 | W20 | Legal drafts / public gaps | DONE | a0ebf8d | §12 |
@@ -54,10 +54,10 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | WKWebView playback | E0 | Existing settings audited against official WKWebView 3.25.1 source. Inline/autoplay/JS/referrer/runtime behavior unverified on iOS. |
 | Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
 | Sign in with Apple | E1 host exchange tests; E0 native capability | Native button + nonce exchange implemented; Release/Profile entitlement only. Paid provider/device flow deferred; Debug has no entitlements. |
-| Phone publishing | E1 mocked Dart; native implementation pending | Default-off IOS_PHONE_PUBLISHING gate, native capability probe, UiKit preview selection, permissions and recovery contract pass host tests. Separate native commit follows; no iOS compile/media proof. |
+| Phone publishing | E0 native / E1 mocked Dart | Implemented, not run on iOS. Default-off gate; opt-in-only SwiftPM SDK, Swift bridge/capture/static IDR/background audio/drop detection with Dart-authorized retry. Native compilation and E3 media/permission/background matrix pending. |
 | Push | E0 spec; E1 host exclusion | W18 spec complete, ESC-4 future backend migration. iOS Firebase remains disabled; no APNs/plist/background change and no native delivery proof. |
-| Location and gallery permissions / native localization | E0 | Implemented, not run on iOS. Foreground location only; no camera/mic/background/ATS exceptions. |
-| App privacy manifest | E0 | Implemented, not run on iOS. 11 linked data types for functionality; no tracking. App reasons CA92.1/C617.1. Packaged report unverified. |
+| Location and gallery permissions / native localization | E0 | Foreground location/gallery for default viewer. Experimental alternate publisher plist adds camera/microphone/audio mode only on opt-in; no native permission proof. |
+| App privacy manifest | E0 | Default viewer: 11 linked functionality data types, no tracking; reasons CA92.1/C617.1. Opt-in publisher variant adds AudioData (12 rows); video extends PhotosOrVideos. Inactive until flag on; packaged report unverified. |
 | HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
 | iOS channel connection | E1 host guard | UI notice plus service rejection before backend access. Android/web flow preserved; no iOS OAuth channel flow. |
 | iOS platform adaptation tests | E1 Windows target-platform override | Apple iOS/Android EN/AR matrix, consent/error/cancel/paused signup, channel UI guard, Apple Maps/fallback, actual provider ios identity path. No native plugin runtime proof. |
@@ -80,15 +80,16 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | O7 | Owner, backend deployment / later paid verification | W19 source complete; ESC-2 resolved at E1 mocked. Audit/deploy only the new function/secrets/migration, verify SQL guard/grants and real revocation/deletion with paid iPhone. OWNER_STEPS_IOS.md contains commands, secret names and ordered acceptance. |
 | O8 | Owner, optional before Mac | Push and manually run Codemagic ios-compile-check; supply non-secret first-error logs or successful native build evidence. CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md contain exact steps. Skip if Mac available. |
 | O9 | Owner, at submission prep | Confirm actual privacy purposes/provider data, age/content answers, rights holder/content rights, hosted flags and review accounts; capture genuine iOS screenshots and enter metadata only after W11/native/paid gates. OWNER_STEPS_IOS.md and store/README.md have steps. |
+| O10 | Owner / Mac + iPhone | W17 source ready E0 native/E1 mocked; keep flag off. First run viewer M1–M3, then follow IOS_PUBLISHER_HANDOFF.md opt-in/rollback and E3 media matrix. No paid capability needed for free-team Debug camera/mic; do not ship before E3/privacy review. |
 | O11 | Owner / Claude, deferred Track B | ESC-4: decide separate push migration/implementation later. Both backend platform validations and both client registration labels need ios; APNs/Firebase setup needs paid owner action. IOS_PUSH_SPEC.md and OWNER_STEPS_IOS.md contain scope and acceptance tests. W18 spec is complete. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. Complete W17 native Swift bridge/media and opt-in dependency/config in one revertible commit.
-2. Review native project/config changes and tighten the M1–M3 runbook.
-3. Mac/CI build is the next evidence gate; owner deploys W19 and approves/delivers legal pages.
+1. Finish optional Windows native/config review, script-like M1–M3 runbook and viewer-branch reconciliation.
+2. Owner provides Mac access or a real sanitized CI build log; W13 handles the first actual native error before other work.
+3. Owner audits/deploys W19 and approves/publishes W20 legal content; later paid Apple/provider/device and store steps remain deferred.
 
 ## Audit notes and verification limits
 
@@ -108,6 +109,8 @@ Account-gated steps do not block unrelated Windows work.
 - W19 fixed a test-fixture issue: installed PostgREST expects http.Response.request. Mock responses now carry request metadata. Unrelated AppProvider formatter churn was removed; only deletion logic/blocker names changed.
 - ESC-2 resolved at E1 mocked/source scope. Database proof validity is ten minutes and tied to current identity version; SQL guard/grants are unexecuted and real provider/device behavior remains pending.
 - W20 complete default terms/guidelines/privacy at v1.1.0-ios-draft, marked for counsel review. No unverified PDPL compliance/instant deletion/ad-free promises. Hosted legal content not overwritten; public source pages untouched.
+- W17 §12 complete as source: Dart commit 63b288f, separate native dependency/config/media commit. SwiftPM opt-in only because HaishinKit 2.x discontinued CocoaPods; Flutter plugins stay CocoaPods/3.41.2. Default viewer has no SDK package/product references or generated flag.
+- W17 native self-review corrected ACK/event timing, exact orientation argument, retry quality retention, conditional permission macros and stale-operation checks. SDK loggers discard credential-bearing diagnostics; no compiler warning suppression. These are source checks, not compilation/runtime proof.
 
 ## Open escalations
 

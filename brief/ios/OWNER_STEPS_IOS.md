@@ -249,9 +249,37 @@ When the Mac arrives, follow [MAC_SETUP.md](MAC_SETUP.md), including the current
 
 Owner-only hands: install/sign in to Xcode locally (Settings > Accounts), handle system/license/keychain prompts, copy the ignored local define file by hand without printing it, and later connect/unlock/trust the iPhone and enable Developer Mode. Use the free personal team only for Debug; do not attach Apple sign-in, Associated Domains or APNs entitlements to it. Simulator/unsigned M1 compilation needs no paid enrollment. Never commit account/team/provisioning material. Paid activation/distribution remains deferred until the owner decides after M1–M3.
 
-## W17 — Publisher dependency
+## W17 — Experimental publisher activation (no paid capability)
 
-Section 12 withdraws the W11 dependency and authorizes flagged W17 implementation on Windows. The publisher must default off, with native configuration/dependency in a separate revertable commit from Dart changes. No paid account is required to write source; native compilation and device behavior still await the Mac/iPhone. IOS_PUBLISHER_HANDOFF.md is historical research until W17 updates it.
+W17 source is implemented, **not compiled or run on iOS**. Keep the default viewer
+flag off until the Mac build and physical iPhone matrix pass. Dart and native
+dependency/config/media are separate local commits; the native commit can be
+reverted without enabling a missing plugin in the viewer.
+
+1. Run the default viewer M1–M3 sequence first. It does not resolve HaishinKit.
+2. Follow [IOS_PUBLISHER_HANDOFF.md](IOS_PUBLISHER_HANDOFF.md): host helper tests,
+   `python3 ios/Publisher/configure.py --enable` from project/, `pod install`,
+   then both native builds with `--dart-define=IOS_PHONE_PUBLISHING=true`.
+   Python 3.9+ is required. The helper adds exact SwiftPM products to Runner while
+   Flutter plugins remain on CocoaPods; it changes no signing rule.
+3. On a free-team Debug iPhone, run the handoff's permission/video/audio-only/static
+   image/background/interruptions/drop/authorized-reconnect/stop matrix in EN/AR.
+   Supply approved disposable broadcasting fixtures through the existing owner
+   setup; never put ingest URLs/keys in logs or docs. Channel-connection OAuth
+   remains independently gated on iOS, so use a channel connected through an
+   existing supported owner workflow.
+4. The helper selects the alternate media plist/privacy manifest. Review actual
+   packaged SDKs, privacy report, remote media receipt/retention, in-app policy and
+   store answers before any release activation. This source is E0 native / E1
+   mocked Dart; device media/background behavior requires E3.
+5. Restore viewer scope with `python3 ios/Publisher/configure.py --disable`,
+   rerun `pod install`, omit the Dart flag and rebuild. Do not commit generated
+   xcconfig, activation-only project/package caches or signing changes. Exact
+   rollback and acceptance commands are in the handoff.
+
+No paid enrollment is needed for source, Simulator compilation or camera/mic in a
+free-team Debug device build. Paid Apple sign-in/APNs/distribution remain deferred.
+No compile attempt, account access or SDK package resolution was made on Windows.
 
 ## W18 — Push, deferred by D3/D4
 
