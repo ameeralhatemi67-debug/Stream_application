@@ -82,3 +82,17 @@ METER | 2026-10-17T21:03:05+03:00 | weekly used 43% | resets in 6494 min
 - Next: W5, W6, W7.
 
 METER | 2026-10-17T21:14:01+03:00 | weekly used 43% | resets in 6483 min
+
+### 2026-10-17 21:20 | W5 URL scheme and deferred universal links | DONE
+- Commit: `master^{/register iOS OAuth callback scheme}`, subject `feat(ios): register iOS OAuth callback scheme`. W4 is d6e6278.
+- Evidence level claimed: E0 native callback setup, implemented, not run on iOS; E1 Windows host checks pass. No OAuth-return or universal-link runtime claim.
+- What changed: `project/ios/Runner/Info.plist` adds CFBundleURLTypes / CFBundleURLName / CFBundleURLSchemes for `sa.hadayah.streamerapp` and disables FlutterDeepLinkingEnabled so existing Supabase app_links handling owns auth; `brief/ios/OWNER_STEPS_IOS.md` documents allowlist verification and future paid universal-link setup.
+- Checks: `flutter analyze` exit 0, 0 issues (18.7s); one full `flutter test --reporter expanded` exit 0, `03:30 +1107: All tests passed!`, 0 failed/skipped. Asserted one exact registered scheme, default Flutter handler false, zero entitlements; AASA placeholder template parses as JSON. Android/web 90/90 SHA-256 unchanged; whitespace check passes.
+- Decisions made: iOS registers the scheme, not individual hosts. login-callback and channel-connected forms are covered by that registration; Dart owns interpretation and W8 gates the channel flow. app_links 7.0.0's pinned AppLinksIosPlugin.swift implements FlutterSceneLifeCycleDelegate and registers the scene delegate (lines 22,62); the generated FlutterSceneDelegate/implicit engine lifecycle is retained. No manual native delegate added. Supabase already owns an app_links auth consumer (RECON §6).
+- Universal links: needed for HTTPS org-invite entry, deferred by D4 and absent AASA/client routing. Current shared links are hash routes, so the owner AASA plan includes both fragment-aware root matching and path matching. Adding entitlement alone would not route non-auth links through the current Supabase consumer; owner plan explicitly requires a later scoped routing change. No Associated Domains entitlement added to any configuration.
+- Sources: [app_links iOS setup](https://github.com/llfbandit/app_links/blob/main/doc/README_ios.md), [v7 scene lifecycle](https://github.com/llfbandit/app_links/blob/main/doc/README_ios_7.md), [Supabase Flutter callbacks](https://github.com/supabase/supabase-flutter/blob/main/packages/supabase_flutter/README.md#deep-links), [Apple AASA and Associated Domains](https://developer.apple.com/documentation/xcode/supporting-associated-domains), fetched through Context7. Supabase changelog scanned; [2026-10-12 TLS deprecation](https://supabase.com/changelog/cbc-tls-ciphers-deprecated) reviewed, no callback API change. No hosted Supabase query/settings edit.
+- Problems / deviations: OAuth dashboard access and future paid-domain activation are owner actions, not blockers to W6. Empty simctl callback is documented only as OS-open smoke, not sign-in proof.
+- Owner actions needed: verify callback allowlist and later test actual OAuth; universal links remain deferred. See OWNER_STEPS_IOS.md.
+- Next: W6, W7, W8.
+
+METER | 2026-10-17T21:19:56+03:00 | weekly used 43% | resets in 6477 min

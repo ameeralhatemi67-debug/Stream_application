@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 2, W5 |
-| Progress | 4 / 18 work orders complete |
+| Resume | Phase 2, W6 |
+| Progress | 5 / 18 work orders complete |
 | Evidence | Native configuration E0, implemented, not run on iOS. Shared Dart host checks pass. No iOS compile or runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
-| Meter | 2026-10-17T21:14:01+03:00 | weekly used 43% | resets in 6483 min |
-| Latest checks | W4: flutter analyze 0 issues (24.7s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:25), exit 0. Privacy XML and official data-type enum checks pass; Android/web SHA-256 90/90 unchanged. |
+| Meter | 2026-10-17T21:19:56+03:00 | weekly used 43% | resets in 6477 min |
+| Latest checks | W5: flutter analyze 0 issues (18.7s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:30), exit 0. URL scheme/link-handler/no-entitlement assertions and AASA template JSON parse pass. Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -23,8 +23,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W1 | Generate ios/ | DONE | 5605451 | C1 |
 | W2 | Identity | DONE | 88c65a0 | C1 |
 | W3 | Info.plist | DONE | 3214951 | C2 |
-| W4 | Privacy manifest | DONE | master^{/declare iOS app privacy} | C2 |
-| W5 | URL scheme and deep links | OPEN |  | C2 |
+| W4 | Privacy manifest | DONE | d6e6278 | C2 |
+| W5 | URL scheme and deep links | DONE | master^{/register iOS OAuth callback scheme} | C2 |
 | W6 | Firebase inert on iOS | OPEN |  | C2 |
 | W7 | WKWebView / YouTube audit | OPEN |  | C2 |
 | W8 | Branch audit and gating | OPEN |  | C3 |
@@ -50,12 +50,13 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | iOS identity | E0 | Implemented, not run on iOS. Opaque 1024px icon; dark launch uses AppTheme.media #243536. |
 | Discovery/watch/chat/map/profile shared Dart | E1 host baseline | Windows tests only; no iOS runtime proof. |
 | WKWebView playback | E0 at best | Audit W7 pending; no iOS playback proof. |
-| Google redirect | none | W5 pending. |
+| Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
 | Sign in with Apple | none | W9 pending; paid capability deferred. |
 | Phone publishing | none on iOS | Android sender only; Track B. |
 | Push | none on iOS | Deferred; W18 is spec only. |
 | Location and gallery permissions / native localization | E0 | Implemented, not run on iOS. Foreground location only; no camera/mic/background/ATS exceptions. |
 | App privacy manifest | E0 | Implemented, not run on iOS. 11 linked data types for functionality; no tracking. App reasons CA92.1/C617.1. Packaged report unverified. |
+| HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
 
 ## Blockers and owner actions
 
@@ -64,14 +65,16 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | O1 | Owner | Paid Apple enrollment deferred (D4). Needed for Apple capability/device testing, TestFlight and App Store submission. |
 | O2 | Owner | Provide Mac access when it arrives; iPhone availability remains unknown. |
 | O3 | Owner / Claude | Before submission, reconcile the public privacy policy's Android/web wording with iOS and verify the packaged Xcode privacy report. No public page edited in this run. |
+| O4 | Owner | Verify existing Supabase OAuth callback allowlist, later run cold/warm Google return; exact steps in OWNER_STEPS_IOS.md. No hosted settings changed. |
+| O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W5 URL scheme and universal-link owner plan.
-2. W6 Firebase inert test and startup audit.
-3. W7 WKWebView assumptions audit.
+1. W6 Firebase inert test and startup audit.
+2. W7 WKWebView assumptions audit.
+3. W8 platform branch audit and viewer-first gates.
 
 ## Audit notes and verification limits
 
