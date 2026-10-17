@@ -1094,6 +1094,9 @@
     "contact_support": "إذا كنت تعتقد أن هذا خطأ، يرجى التواصل مع {email}.",
     "sign_out": "تسجيل الخروج"
   },
+  "ios_review": {
+    "contact_support": "التواصل مع الدعم"
+  },
   "auth_welcome": {
     "brand_title": "منصة البث التعليمي",
     "subtitle": "المنصة السحابية للبث المعرفي والتعليمي المباشر\nالمنطقة الشرقية — الخبر / الظهران / الدمام",
@@ -1103,6 +1106,7 @@
     "btn_apple": "تسجيل الدخول باستخدام Apple",
     "btn_google_signup": "إنشاء حساب عبر Google",
     "btn_google_login": "لديك حساب بالفعل؟ تسجيل الدخول",
+    "btn_google_login_ios": "تسجيل الدخول عبر Google",
     "divider_or": "أو",
     "btn_guest": "المتابعة كزائر مستمع (تخطي تسجيل الدخول)",
     "error_google_failed": "تعذر تسجيل الدخول عبر Google: ",

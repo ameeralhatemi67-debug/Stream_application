@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 3, W11 |
+| Resume | Phase 4, W12; W11 scoped work committed, external blockers open |
 | Progress | 10 / 18 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0. iOS auth exchange, Firebase and availability guards have E1 Windows test proof. No iOS build/runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W10: flutter analyze 0 issues (29.6s); full flutter test 1,130 passed / 0 failed / 0 skipped (04:10), exit 0. Focused iOS/platform gates 17/17 pass. Android/web SHA-256 90/90 unchanged. |
+| Latest checks | W11: flutter analyze 0 issues (25.5s); full flutter test 1,141 passed / 0 failed / 0 skipped (04:17), exit 0. Focused compliance/platform 25/25 pass. Catalogs symmetric; Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -29,8 +29,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W7 | WKWebView / YouTube audit | DONE | 580dc75 | C2 |
 | W8 | Branch audit and gating | DONE | 0123921 | C3 |
 | W9 | Sign in with Apple | DONE | f715230 | C3 |
-| W10 | iOS-override tests | DONE | master^{/verify iOS platform UI paths} | C3 |
-| W11 | App Review compliance | OPEN |  | C3 |
+| W10 | iOS-override tests | DONE | 4fa027b | C3 |
+| W11 | App Review compliance | PARTIAL — ESC-2/ESC-3 | master^{/audit App Review readiness} | C3 |
 | W12 | Codemagic config | OPEN |  | C4 |
 | W13 | Compile-fix loop | WAITING for CI or Mac log |  | C4 |
 | W14 | App Store pack | OPEN |  | C4 |
@@ -59,6 +59,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
 | iOS channel connection | E1 host guard | UI notice plus service rejection before backend access. Android/web flow preserved; no iOS OAuth channel flow. |
 | iOS platform adaptation tests | E1 Windows target-platform override | Apple iOS/Android EN/AR matrix, consent/error/cancel/paused signup, channel UI guard, Apple Maps/fallback, actual provider ios identity path. No native plugin runtime proof. |
+| App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | iOS EN/AR privacy/deletion/report/block/mute reachability tested; support mail fallback added. Native behavior, hosted moderation/deletion and complete policy content unverified. ESC-2/ESC-3 open. |
 
 ## Blockers and owner actions
 
@@ -66,18 +67,19 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 |---|---|---|
 | O1 | Owner | Paid Apple enrollment deferred (D4). Needed for Apple capability/device testing, TestFlight and App Store submission. |
 | O2 | Owner | Provide Mac access when it arrives; iPhone availability remains unknown. |
-| O3 | Owner / Claude | Before submission, reconcile the public privacy policy's Android/web wording with iOS and verify the packaged Xcode privacy report. No public page edited in this run. |
+| O3 | Owner / Claude | ESC-3: repair privacy/about SPA fallbacks and old deletion-page branding on the existing domain; publish complete EN/AR iOS-aware legal text and review the offline fallback and packaged privacy report. Exact acceptance checks in OWNER_STEPS_IOS.md. |
 | O4 | Owner | Verify existing Supabase OAuth callback allowlist, later run cold/warm Google return; exact steps in OWNER_STEPS_IOS.md. No hosted settings changed. |
 | O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
 | O6 | Owner, later paid activation | Apple App ID/capability and Supabase Apple provider setup; native bundle ID audience, optional browser Services ID/key/secret rotation. Exact deferred steps in OWNER_STEPS_IOS.md. |
+| O7 | Owner / Claude, separate backend work | ESC-2: add and audit Apple token revocation during account deletion with server-held credentials; review current deletion restrictions. Apple activation/submission remains blocked. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W11 App Review sweep: verify legal/deletion/UGC paths; record backend/site blockers.
-2. W12 Codemagic configuration and owner run instructions.
-3. W13 only with real CI/Mac logs; otherwise continue W14–W16.
+1. W12 Codemagic unsigned compile configuration and exact owner run steps.
+2. W13 needs a genuine CI/Mac log; record its blocker and proceed if absent.
+3. W14 store listing/privacy/review pack with W11 blockers carried forward.
 
 ## Audit notes and verification limits
 
@@ -89,7 +91,9 @@ Account-gated steps do not block unrelated Windows work.
 - Owner removed every usage cap and soft stop on 2026-10-17. Do not interpret older meter/cap text as a stop condition.
 - Apple plugin 8.1.0 is the newest solver-compatible version for Flutter 3.41.2/Dart 3.11.0; only three new lockfile entries, no existing package updates. Native/plugin compilation remains pending.
 - W10 found the Arabic Google button was 61px high. Apple is now 64px (AppTheme tokens); the EN/AR test checks it remains at least as tall and fully localized. Android auth UI remains unchanged.
+- C3 scoped sweep is committed for audit; W11 remains PARTIAL because ESC-2/ESC-3 are real submission blockers. Continue unrelated Windows work.
 
 ## Open escalations
 
-None.
+- ESC-2 (W11): Apple revocation requires owner credentials and separate backend scope; no backend edits.
+- ESC-3 (W11): public document routing/branding and full privacy text need site/account changes and a scoped fallback follow-up.

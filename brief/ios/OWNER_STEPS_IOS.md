@@ -86,3 +86,31 @@ When the owner elects to activate Apple sign-in:
 7. Before submission, finish W11's account-deletion/revocation review for Apple identities and validate the Release entitlement with Xcode's resolved build settings and signed app. Source inspection of Debug is not a build/signing proof.
 
 Sources: [Supabase Apple provider guide](https://supabase.com/docs/guides/auth/social-login/auth-apple), [native Flutter nonce exchange](https://github.com/supabase/supabase-flutter/blob/main/packages/supabase_flutter/README.md#native-apple-sign-in), [plugin integration and button](https://github.com/aboutyou/dart_packages/blob/master/packages/sign_in_with_apple/sign_in_with_apple/README.md), [Apple entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.developer.applesignin). Fetched through Context7; installed plugin is 8.1.0, compatible with the pinned Flutter 3.41.2/Dart 3.11.0. Native execution remains unverified.
+
+## W11 submission blockers (ESC-2 and ESC-3)
+
+### ESC-2 — Apple account deletion
+
+The existing Settings > Account & Data > Delete Account path deletes app/auth data through existing RPCs. It does not revoke Apple's authorization. Do not activate the Apple provider for a submission build until this gap is resolved.
+
+1. Owner/Claude authorize a separate backend work order. Choose either fresh native Apple reauthorization at deletion, with a server-side authorization-code exchange and token revocation, or secure server-side retention of a provider refresh token established during Apple authorization. Bind the Apple subject to the signed-in account; do not accept a client-supplied unrelated identity.
+2. Supply the Apple signing key/client-secret setup only through the backend secret manager. The server exchanges the authorization code as required, then revokes an Apple access/refresh token at `https://appleid.apple.com/auth/revoke`. An Apple identity token or a Supabase session token is not a substitute. Nothing secret belongs in Flutter or Git.
+3. Integrate that result with the existing prepare-account-deletion/Storage cleanup/delete-own-account flow. Define retry/failure behavior so the app cannot silently report complete deletion while leaving provider authorization intact.
+4. Review the existing banned-user, active-broadcast, organization-ownership and remaining-files deletion restrictions. Document legitimate retained records and a usable completion path; do not infer compliance from an enabled button.
+5. Test first Apple sign-in, subsequent sign-in, hidden email, reauthorization/cancellation, revocation failure/retry, completed deletion and a later fresh authorization on an iPhone. Keep test credentials and tokens out of evidence. Claude audits the separate backend change before submission.
+
+References: [Apple account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion), [Sign in with Apple revocation](https://developer.apple.com/documentation/signinwithapplerestapi/revoke-tokens). W11 made no backend or secret change.
+
+### ESC-3 — Legal/support documents and complete privacy disclosures
+
+Observed on 2026-10-17: `/privacy.html` and `/about.html` return the same Flutter bootstrap body as `/`, including the same SHA-256. `/delete-account.html` returns an old Dalilk-branded page. All return 200, so a status-only check misses the problem. The default in-app legal model also contains only a short Google-profile policy. Hosted legal content was not inspected.
+
+1. In a separately authorized public-site task, serve the actual documents at the existing AppIdentity URLs before the SPA fallback: `https://stream-application-ten.vercel.app/privacy.html`, `/about.html`, and `/delete-account.html`. Start from the repository's existing `project/web/` documents, preserve the Play launch work, and reconcile the old deletion-page branding.
+2. Publish complete matching English/Arabic privacy disclosures for iOS as well as existing platforms. Reconcile them against `store/data_safety.md`, the W4 manifest, actual third-party services and the Xcode packaged privacy report. Cover Apple/Google identity and private relay email, optional profile/organization/contact/location/images, chat and reports, identifiers/usage, provider processing, retention/deletion, consent withdrawal/data rights and the published support contact. Do not claim the embedded video provider is ad-free or infer tracking behavior solely from the app manifest.
+3. Prepare the platform paragraph for review using this concrete delta:
+   - EN: “On iOS, Hadayah Live offers Sign in with Apple and Google sign-in. Apple may provide a private relay email address. The initial iOS release supports viewing and account features; phone publishing, channel connection and push notifications are deferred. Foreground location and selected-photo access are requested only when using the relevant feature.”
+   - AR: “يوفر Hadayah Live على iOS تسجيل الدخول باستخدام Apple أو Google، وقد توفر Apple عنوان بريد إلكتروني خاصًا لإخفاء بريدك. يدعم الإصدار الأول على iOS المشاهدة وميزات الحساب، مع تأجيل البث من الهاتف وربط القنوات والإشعارات الفورية. يُطلب الوصول إلى الموقع أثناء الاستخدام والصور المحددة عند استخدام الميزة المعنية فقط.”
+   This supplements the complete collection/retention policy; it is not a replacement for the full policy.
+4. Through an authorized admin account, open the existing Admin Hub Terms tab (`admin.tab_terms`), edit both Privacy Policy fields and save (`admin.btn_save_terms`). Verify the saved text appears in the pre-sign-in consent reader and Settings legal reader in both languages. Arrange a scoped source change for the default offline/unconfigured fallback after the same full text is approved. No hosted editor was used by the builder.
+5. Fetch each public URL and inspect both body and title. Privacy/about must contain their actual content and differ from the Flutter root bootstrap; deletion instructions must identify Hadayah Live and the current support channel. Check on a phone browser and in-app reader, with no login required for the policy.
+6. Only after these checks, use the public URLs in App Store Connect. The W14 listing pack deliberately marks URL/content readiness as blocked rather than treating 200 as success.

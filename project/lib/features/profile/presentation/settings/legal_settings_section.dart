@@ -2,6 +2,7 @@ import '../../../../core/widgets/ds/ca_surfaces.dart';
 import '../../../../core/widgets/ds/ca_cards.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import '../../../../core/widgets/ios_support_contact.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/providers/app_provider.dart';
@@ -49,6 +50,7 @@ class LegalSettingsSection extends StatelessWidget {
             subtitle: 'settings.view_privacy_subtitle'.tr(),
             onTap: () => _openLegalReader(context, terms, 2),
           ),
+          const IosSupportContact(),
         ],
       ),
     );

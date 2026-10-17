@@ -1094,6 +1094,9 @@
     "contact_support": "If you believe this is a mistake, contact {email}.",
     "sign_out": "Sign Out"
   },
+  "ios_review": {
+    "contact_support": "Contact support"
+  },
   "auth_welcome": {
     "brand_title": "HADAYAH LIVE",
     "subtitle": "Knowledge & Educational Live Streaming Platform\nEastern Province / Al Khobar / Dhahran",
@@ -1103,6 +1106,7 @@
     "btn_apple": "Sign in with Apple",
     "btn_google_signup": "Sign Up with Google",
     "btn_google_login": "Already have an account? Log In",
+    "btn_google_login_ios": "Sign in with Google",
     "divider_or": "OR",
     "btn_guest": "Continue as Guest Viewer (Skip Sign In)",
     "error_google_failed": "Google Sign-In failed: ",

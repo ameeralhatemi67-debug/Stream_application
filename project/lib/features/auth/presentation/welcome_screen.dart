@@ -333,7 +333,12 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                 const SizedBox(width: 8),
                                 Flexible(
                                   child: Text(
-                                    'auth_welcome.btn_google_login'.tr(),
+                                    (!kIsWeb &&
+                                                defaultTargetPlatform ==
+                                                    TargetPlatform.iOS
+                                            ? 'auth_welcome.btn_google_login_ios'
+                                            : 'auth_welcome.btn_google_login')
+                                        .tr(),
                                     style: const TextStyle(
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13,

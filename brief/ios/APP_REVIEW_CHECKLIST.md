@@ -1,0 +1,40 @@
+# iOS App Review checklist
+
+Snapshot: 2026-10-17. Viewer-first scope, iPhone, iOS 15+. This is a source/Windows-test sweep. No iOS build, device behavior or App Review approval is claimed.
+
+**Submission blocked:** native Apple sign-in is not activated/tested; Apple deletion revocation is missing (ESC-2); hosted policy/support pages and disclosures need repair (ESC-3). The physical Mac/iPhone and paid distribution steps remain outstanding.
+
+| Guideline / check | Result | Evidence and limit |
+|---|---|---|
+| 1.2 — filtering | Present in shared path; iOS host test | LiveChatController maps server banned-keyword refusal to a non-retryable failure. Existing keyword enforcement is in the backend, read only here; hosted enforcement not retested. |
+| 1.2 — report, block, moderation | Reachable in iOS override | live_broadcast_screen.dart:2005 opens showChatMessageActionsSheet on long press. EN/AR tests find viewer report/block and moderator mute. Controller reportMessage/blockUser/muteUser use existing server paths; no iOS-only exclusion. No new live moderation proof. |
+| 1.2 — published contact and response | Contact added; owner operations needed | Native iOS consent and legal settings show AppIdentity.supportEmail and a mail action. Missing Mail opens a selectable-address dialog. Owner must monitor reports/support and demonstrate timely response with the review account. |
+| 5.1.1(v) — in-app deletion | UI reachable; Apple gap OPEN | Settings account/data includes PrivacySettingsSection(dangerOnly: true). EN/AR tests exercise confirm, cancel and a refused request. AppProvider.deleteOwnAccount prepares deletion, removes owned Storage objects, invokes delete_own_account and signs out. No real deletion executed here. |
+| Apple identity revocation on deletion | BLOCKED — ESC-2 | Native ID-token login sends no Apple authorization code to a server. Existing deletion RPC only removes app/auth data; no Apple access/refresh-token revocation exists. Requires owner-held paid credentials and separately authorized backend work. |
+| Deletion restrictions | Owner review required | Existing RPC refuses banned users, active broadcasts, organizations with other active members, or remaining files. Owner/Claude must review these restrictions against account-deletion requirements; a test of the UI does not validate retention policy. |
+| 4.8 — equivalent sign-in | Dart/nonce E1; native capability E0 | iOS-only localized Apple button, equal/full-width placement; Arabic prominence corrected in W10. Consent precedes credentials; cancellation is quiet; generic failures leave Google usable. Raw nonce → SHA-256 → Apple → Supabase ID token covered by mocked exchange tests. Release/Profile entitlement only; Debug has none. Paid provider/device authentication deferred. |
+| 5.1.1 — policy access | In-app reader reachable; disclosures OPEN | Before sign-in, Consent > full policy; Settings > Governance/Legal > Privacy. EN/AR iOS tests open the real reader. Default legal model still has a short Google-only policy and incomplete collection/retention/provider information; hosted legal text was not inspected. Owner must publish complete iOS-aware legal content and arrange a scoped fallback-text update. |
+| 5.1.1 — public policy URL | BLOCKED — ESC-3 | Public privacy.html and about.html return byte-identical Flutter bootstrap HTML to /. delete-account.html returns an old Dalilk-titled document. HTTP 200 alone is not a valid privacy/support document check. Source URLs remain unchanged. |
+| Purpose strings / privacy declarations | E0 written | W3 foreground location/gallery only; W4 privacy manifest declares the viewer data inventory and required reasons. Native prompts and packaged privacy report unverified. No ATS exception or tracking request added. |
+| Android / Google Play wording | Clear for viewer scope, source audit | Four Android-specific catalog entries occur only in gated phone/Studio content, or are unused. W8 blocks the entire native iOS Studio entry. No Google Play/store string found in shared viewer UI. Google remains a provider name; iOS secondary login now explicitly says Google rather than implying every account. Hosted/dynamic legal wording needs owner review. |
+| Payments / 3.1 | No purchase flow found | No IAP, billing, checkout or payment SDK/call in pubspec or shared Dart. Existing reservations/RSVP are not payment. YouTube content may contain provider-served ads; no ad-free claim is made. Recheck if monetization is introduced. |
+| 2.1 — complete actions | Viewer paths audited; native proof pending | No empty onPressed/onTap closures found in shared lib. Unfinished phone/OBS/channel entry points show the W8 notice. Network/auth failures use existing overlays/errors. Validate every viewer action, layout, playback, permission and link on the Mac and iPhone before submission. |
+| HTTPS invitations | Known limitation | Links open the browser. No Associated Domains entitlement or non-auth invitation-link consumer. W5 owner plan is deferred; do not claim native universal-link support. |
+| Review access / metadata | Owner gate | Provide a working non-privileged review account through App Store Connect only, a live/replay fixture and functioning backend. Do not place credentials in repo docs. W14 contains metadata/review-note drafts; screenshots must be genuine iOS captures. |
+
+## Test evidence
+
+- W9: four mocked native credential/HTTP tests cover matching fresh nonces, missing token/capability and cancellation.
+- W10: fourteen new platform/UI tests plus existing three viewer gates. Full suite 1,130 pass; analyzer 0.
+- W11: eleven new compliance tests cover EN/AR pre-auth policy/support, settings reader, deletion confirmation/refusal, viewer report/block, moderator mute, Android contact exclusion and keyword-failure classification. Focused W11 + W10: 25/25 pass. Final full-suite result is recorded in IOS_PROGRESS.md.
+- These tests prove host Dart behavior and reachability, not iOS OS/plugin behavior, hosted RLS, a real account deletion or successful moderation operations.
+
+## Source references
+
+- [Apple App Review Guidelines](https://developer.apple.com/app-store/review/guidelines/), retrieved 2026-10-17: UGC controls/contact, equivalent login, policy access, deletion and complete submission expectations.
+- [Apple account deletion guidance](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion), retrieved 2026-10-17.
+- [Apple Sign in with Apple token revocation](https://developer.apple.com/documentation/signinwithapplerestapi/revoke-tokens), fetched through Context7. This endpoint takes an access/refresh token and server-held client secret, not an identity token.
+- [url_launcher official README](https://github.com/flutter/packages/blob/main/packages/url_launcher/url_launcher/README.md), fetched through Context7: direct launchUrl with failure fallback; scheme queries are for canLaunchUrl, which the new contact action does not call.
+- Repo: project/lib/core/providers/app_provider.dart (deleteOwnAccount); project/lib/features/admin/models/terms_and_conditions_model.dart (default legal text); supabase/migrations/20261015172851_data_rights_export_and_deletion.sql:87 (read only).
+- Live-page probe: privacy.html and about.html SHA-256 A0D5D6570ED2976719C13B3ABBBAAE44FB486CE4BF381F529A37C77B56918191, identical to /. delete-account.html SHA-256 044B783EB9CCCA37E9B25911FD6EB32B3E2050337BEF61A4C97F63B2B0ACA9FF. All returned HTTP 200. This is delivery evidence, not legal adequacy.
+

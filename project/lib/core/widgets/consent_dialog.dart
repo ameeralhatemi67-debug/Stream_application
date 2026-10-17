@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'ios_support_contact.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
@@ -131,6 +132,7 @@ class _ConsentDialogState extends State<ConsentDialog> {
                   'consent.data_point_location'.tr()),
               _buildDataPoint(Icons.chat_bubble_outline_rounded,
                   'consent.data_point_chat'.tr()),
+              const IosSupportContact(),
               const SizedBox(height: AppTheme.spaceSm),
               InkWell(
                 onTap: () => _showFullPolicy(context),
