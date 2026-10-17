@@ -148,3 +148,15 @@ Owner-only hands: install/sign in to Xcode locally (Settings > Accounts), handle
 ## W17 — Publisher dependency
 
 IOS_PLAN_V2.md §9 permits Windows W17 implementation once W11 is done. W11 is still PARTIAL because ESC-2 and ESC-3 require separate backend/site/account work described above. Resolve those findings and record W11 closure in the ledger, or have the owner/manager explicitly change the W17 dependency. No permission question is pending from the builder. The source contract and official SDK references are preserved in [IOS_PUBLISHER_HANDOFF.md](IOS_PUBLISHER_HANDOFF.md). No publisher code, camera/microphone usage strings or background audio mode were added; iOS publishing remains gated. W18's independent specification proceeds.
+
+## W18 — Push, deferred by D3/D4
+
+The complete implementation proposal and acceptance matrix are in [IOS_PUSH_SPEC.md](IOS_PUSH_SPEC.md). W18 is spec only; iOS Firebase stays disabled and free-team Debug keeps no entitlement file.
+
+1. Owner/Claude decide ESC-4: authorize a separate backend migration that adds `ios` to both the push-device table CHECK and registration RPC validator while preserving hardened ownership, banned-user restrictions and grants. Audit Android/web regression, token transfer/cleanup and both reminder/organization dispatchers. No migration was applied by the builder.
+2. Only after paid enrollment is chosen, enable Push Notifications for `sa.hadayah.streamerapp`. Create the Firebase iOS app in the existing reminder Firebase project. The owner creates/stores the APNs authentication key outside the repo and uploads it under Firebase Project Settings > Cloud Messaging > iOS app configuration with the requested identifiers; no key, identifier, token or account screenshot belongs in the repo/evidence.
+3. In a separately scoped implementation, supply the public per-platform Firebase iOS configuration locally, add paid-build-only APNs/background configuration, and fix both initial/refresh platform labels plus APNs-token readiness. Do not add APNs entitlements or Firebase auto-initialization to Debug. Do not disable FlutterFire method swizzling.
+4. Verify the final signed app's APNs environment against its provisioning profile through the owner's local Xcode workflow, without exporting signing/account material into evidence. Use paid Profile/Release for push tests; keep the free-team Debug build available.
+5. On an actual iPhone, execute the spec's opt-in/denial/token lifecycle, foreground/background/cold-open, EN/AR, correct-recipient and two-message-type matrix. Later test production delivery on a processed TestFlight build. Update legal/privacy/store declarations before enabling push in a release.
+
+These are later owner steps. No paid enrollment, Firebase console, APNs key, backend deployment or push delivery was attempted.
