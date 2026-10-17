@@ -96,3 +96,17 @@ METER | 2026-10-17T21:14:01+03:00 | weekly used 43% | resets in 6483 min
 - Next: W6, W7, W8.
 
 METER | 2026-10-17T21:19:56+03:00 | weekly used 43% | resets in 6477 min
+
+### 2026-10-17 21:26 | W6 Firebase remains inert on iOS | DONE
+- Commit: `master^{/test iOS Firebase exclusion}`, subject `chore(ios): test iOS Firebase exclusion`. W5 is 5c4dcbd.
+- Evidence level claimed: E1 for the iOS Dart support/configuration gate on Windows; E0 native-source audit. No iOS compile/launch proof and no level awarded.
+- What changed: `project/test/ios_firebase_config_test.dart` adds iOS unsupported/unconfigured and Android supported cases, resetting debugDefaultTargetPlatformOverride to null in tearDown. No production code or dependencies changed.
+- Checks: `flutter analyze` exit 0, 0 issues (23.8s); one full `flutter test --reporter expanded` exit 0, `03:27 +1109: All tests passed!`, 0 failed/skipped, +2 over W5. Android/web 90/90 SHA-256 unchanged; no GoogleService-Info.plist, entitlement file or UIBackgroundModes in ios/; whitespace check passes.
+- Initialization proof: the only Firebase.initializeApp in production lib is reminder_push_service.dart:25, behind the configured guard at :22. ReminderFirebaseConfig.supported (config file:14–15) excludes iOS before credential checks, and ReminderPushService.ready (service:32–33) short-circuits before Firebase.apps. main.dart calls that guarded initializer, not Firebase directly. No native AppDelegate Firebase configure call exists.
+- Linked-plugin audit: pinned firebase_core 4.15.0 `ios/firebase_core/Sources/firebase_core/FLTFirebaseCorePlugin.swift:34–48` only calls FirebaseApp.configure when FirebaseOptions.defaultOptions exists and no default app exists. No iOS plist means that branch is skipped. Pinned firebase_messaging 16.7.0 `ios/firebase_messaging/Sources/firebase_messaging/FLTFirebaseMessagingPlugin.m:299–318` returns from registerForRemoteNotificationsIfAutoInitEnabled when the default app is absent, before messaging/APNs access. Registration source at :122–153 handles UIScene without requiring an initialized app. Plugin cache paths are under the package/version directories recorded in RECON §2.
+- Sources: [official FlutterFire initialization guidance](https://firebase.google.com/docs/flutter/setup#initialize-firebase), fetched through Context7; [firebase_core 4.15.0](https://pub.dev/packages/firebase_core/versions/4.15.0) and [firebase_messaging 16.7.0](https://pub.dev/packages/firebase_messaging/versions/16.7.0), pinned package source audit above; [Flutter platform override API](https://api.flutter.dev/flutter/foundation/debugDefaultTargetPlatformOverride.html), official fallback after Context7's API index returned irrelevant embedder docs.
+- Problems / deviations: compiled native startup safety is supported by explicit plugin guards, not an iOS run. M1/M2 must still launch the app with no Firebase iOS config and watch for native startup errors. No plugin removed, warning suppressed, Firebase dashboard accessed or push capability added.
+- Owner actions needed: none for viewer Firebase configuration.
+- Next: W7, then W8/W9 while below the soft stop.
+
+METER | 2026-10-17T21:26:01+03:00 | weekly used 44% | resets in 6471 min

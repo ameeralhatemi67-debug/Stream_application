@@ -8,13 +8,13 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 |---|---|
 | Updated | 2026-10-17, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | Phase 2, W6 |
-| Progress | 5 / 18 work orders complete |
-| Evidence | Native configuration E0, implemented, not run on iOS. Shared Dart host checks pass. No iOS compile or runtime evidence. |
+| Resume | Phase 2, W7 |
+| Progress | 6 / 18 work orders complete |
+| Evidence | Native configuration E0. iOS Firebase platform gate has E1 Windows test proof. No iOS compile or runtime evidence. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
-| Meter | 2026-10-17T21:19:56+03:00 | weekly used 43% | resets in 6477 min |
-| Latest checks | W5: flutter analyze 0 issues (18.7s); full flutter test 1,107 passed / 0 failed / 0 skipped (03:30), exit 0. URL scheme/link-handler/no-entitlement assertions and AASA template JSON parse pass. Android/web SHA-256 90/90 unchanged. |
+| Meter | 2026-10-17T21:26:01+03:00 | weekly used 44% | resets in 6471 min |
+| Latest checks | W6: flutter analyze 0 issues (23.8s); full flutter test 1,109 passed / 0 failed / 0 skipped (03:27), exit 0, including 2 new platform tests. Android/web SHA-256 90/90 unchanged. |
 
 ## Work orders
 
@@ -24,8 +24,8 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W2 | Identity | DONE | 88c65a0 | C1 |
 | W3 | Info.plist | DONE | 3214951 | C2 |
 | W4 | Privacy manifest | DONE | d6e6278 | C2 |
-| W5 | URL scheme and deep links | DONE | master^{/register iOS OAuth callback scheme} | C2 |
-| W6 | Firebase inert on iOS | OPEN |  | C2 |
+| W5 | URL scheme and deep links | DONE | 5c4dcbd | C2 |
+| W6 | Firebase inert on iOS | DONE | master^{/test iOS Firebase exclusion} | C2 |
 | W7 | WKWebView / YouTube audit | OPEN |  | C2 |
 | W8 | Branch audit and gating | OPEN |  | C3 |
 | W9 | Sign in with Apple | OPEN |  | C3 |
@@ -53,7 +53,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
 | Sign in with Apple | none | W9 pending; paid capability deferred. |
 | Phone publishing | none on iOS | Android sender only; Track B. |
-| Push | none on iOS | Deferred; W18 is spec only. |
+| Push | E1 host gate; E0 native audit | iOS support/configured false tested; Android support preserved. No Firebase iOS plist, APNs entitlement or background mode; native launch unverified. |
 | Location and gallery permissions / native localization | E0 | Implemented, not run on iOS. Foreground location only; no camera/mic/background/ATS exceptions. |
 | App privacy manifest | E0 | Implemented, not run on iOS. 11 linked data types for functionality; no tracking. App reasons CA92.1/C617.1. Packaged report unverified. |
 | HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
@@ -72,9 +72,9 @@ Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. W6 Firebase inert test and startup audit.
-2. W7 WKWebView assumptions audit.
-3. W8 platform branch audit and viewer-first gates.
+1. W7 WKWebView assumptions audit and C2 handoff.
+2. W8 platform branch audit and viewer-first gates.
+3. W9 Apple sign-in with paid entitlements excluded from Debug.
 
 ## Audit notes and verification limits
 
