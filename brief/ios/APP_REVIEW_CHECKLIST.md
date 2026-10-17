@@ -1,8 +1,8 @@
 # iOS App Review checklist
 
-Snapshot: 2026-10-17. Viewer-first scope, iPhone, iOS 15+. This is a source/Windows-test sweep. No iOS build, device behavior or App Review approval is claimed.
+Snapshot: 2026-10-18. Viewer-first scope, iPhone, iOS 15+. This is a source/Windows-test sweep. No iOS build, device behavior or App Review approval is claimed.
 
-**Submission blocked:** native Apple sign-in is not activated/tested; Apple deletion revocation is missing (ESC-2); hosted policy/support pages and disclosures need repair (ESC-3). The physical Mac/iPhone and paid distribution steps remain outstanding.
+**Submission blocked:** native Apple sign-in is not activated/tested; W19 Apple deletion source passes mocked E1 checks but awaits deployment and real revocation; hosted policy/support delivery and disclosures remain pending (ESC-3). The physical Mac/iPhone and paid distribution steps remain outstanding.
 
 | Guideline / check | Result | Evidence and limit |
 |---|---|---|
@@ -10,7 +10,7 @@ Snapshot: 2026-10-17. Viewer-first scope, iPhone, iOS 15+. This is a source/Wind
 | 1.2 — report, block, moderation | Reachable in iOS override | live_broadcast_screen.dart:2005 opens showChatMessageActionsSheet on long press. EN/AR tests find viewer report/block and moderator mute. Controller reportMessage/blockUser/muteUser use existing server paths; no iOS-only exclusion. No new live moderation proof. |
 | 1.2 — published contact and response | Contact added; owner operations needed | Native iOS consent and legal settings show AppIdentity.supportEmail and a mail action. Missing Mail opens a selectable-address dialog. Owner must monitor reports/support and demonstrate timely response with the review account. |
 | 5.1.1(v) — in-app deletion | UI reachable; Apple gap OPEN | Settings account/data includes PrivacySettingsSection(dangerOnly: true). EN/AR tests exercise confirm, cancel and a refused request. AppProvider.deleteOwnAccount prepares deletion, removes owned Storage objects, invokes delete_own_account and signs out. No real deletion executed here. |
-| Apple identity revocation on deletion | BLOCKED — ESC-2 | Native ID-token login sends no Apple authorization code to a server. Existing deletion RPC only removes app/auth data; no Apple access/refresh-token revocation exists. Requires owner-held paid credentials and separately authorized backend work. |
+| Apple identity revocation on deletion | ESC-2 resolved at E1 mocked source; deployment/device pending | W19 adds native reauthorization, authenticated code exchange, signed identity/nonce binding, refresh-token revocation and service-only identity-version proof. New auth.users deletion guard refuses without fresh proof. 12 Flutter and 16 Node tests pass; production index Deno type check passes. SQL unexecuted, no hosted access or real Apple revoke/delete. |
 | Deletion restrictions | Owner review required | Existing RPC refuses banned users, active broadcasts, organizations with other active members, or remaining files. Owner/Claude must review these restrictions against account-deletion requirements; a test of the UI does not validate retention policy. |
 | 4.8 — equivalent sign-in | Dart/nonce E1; native capability E0 | iOS-only localized Apple button, equal/full-width placement; Arabic prominence corrected in W10. Consent precedes credentials; cancellation is quiet; generic failures leave Google usable. Raw nonce → SHA-256 → Apple → Supabase ID token covered by mocked exchange tests. Release/Profile entitlement only; Debug has none. Paid provider/device authentication deferred. |
 | 5.1.1 — policy access | In-app reader reachable; disclosures OPEN | Before sign-in, Consent > full policy; Settings > Governance/Legal > Privacy. EN/AR iOS tests open the real reader. Default legal model still has a short Google-only policy and incomplete collection/retention/provider information; hosted legal text was not inspected. Owner must publish complete iOS-aware legal content and arrange a scoped fallback-text update. |
@@ -27,6 +27,7 @@ Snapshot: 2026-10-17. Viewer-first scope, iPhone, iOS 15+. This is a source/Wind
 - W9: four mocked native credential/HTTP tests cover matching fresh nonces, missing token/capability and cancellation.
 - W10: fourteen new platform/UI tests plus existing three viewer gates. Full suite 1,130 pass; analyzer 0.
 - W11: eleven new compliance tests cover EN/AR pre-auth policy/support, settings reader, deletion confirmation/refusal, viewer report/block, moderator mute, Android contact exclusion and keyword-failure classification. Focused W11 + W10: 25/25 pass. Final full-suite result is recorded in IOS_PROGRESS.md.
+- W19: 12 mocked Flutter deletion tests and 16 mocked Node Edge/crypto tests; Deno 2.9.6 type check passed. SQL migration and real Apple/provider/deletion behavior are unverified.
 - These tests prove host Dart behavior and reachability, not iOS OS/plugin behavior, hosted RLS, a real account deletion or successful moderation operations.
 
 ## Source references

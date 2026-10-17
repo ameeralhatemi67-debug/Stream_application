@@ -6,15 +6,15 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 
 | Field | Value |
 |---|---|
-| Updated | 2026-10-17, Codex |
+| Updated | 2026-10-18, Codex |
 | Track | A, Windows; Mac not available |
-| Resume | M1 on reachable Mac / W13 with real CI log; W11 and W17 dependency blocked |
-| Progress | 15 / 18 work orders complete |
+| Resume | W20 legal drafts and local public-page gap list, then flagged W17 |
+| Progress | 16 / 20 work orders complete |
 | Evidence | Native shell/configuration and Apple entitlement E0; E1 Windows auth/UI/config/availability tests. W18 E0 specification only. No E2, E2S, E3 or E4. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W18: flutter analyze 0 issues (17.5s); full flutter test 1,141 passed / 0 failed / 0 skipped (03:39), exit 0; Android/web SHA-256 90/90 unchanged. Protected tracked paths also unchanged from W1 start (5991d38). No iOS build or push implementation. |
+| Latest checks | W19: flutter analyze 0 issues (18.0s); full flutter test 1,153 passed / 0 failed / 0 skipped (03:45), exit 0; 12 focused Dart tests and 16 Node mocked Edge/crypto tests pass; Deno 2.9.6 production-index type check passes; Android/web SHA-256 90/90 unchanged. SQL not executed. |
 
 ## Work orders
 
@@ -36,8 +36,10 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W14 | App Store pack | DONE | d9f33e2 | C4 |
 | W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
 | W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
-| W17 | Phone publisher | BLOCKED — W11 dependency | fa6a3f5 | Track B |
-| W18 | Push spec | DONE | master^{/specify deferred iOS push and backend scope} | Track B |
+| W17 | Phone publisher | OPEN — §12 unblocked | fa6a3f5 (research) | Track B |
+| W18 | Push spec | DONE | bd442c8 | Track B |
+| W19 | Apple deletion revocation | DONE | master^{/enforce Apple revocation before account deletion} | §12 |
+| W20 | Legal drafts / public gaps | OPEN |  | §12 |
 | M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
 
 Resolve a commit selector with `git rev-parse '<selector>'`.
@@ -63,6 +65,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
 | App Store pack | E0 drafts | Seven files: EN/AR copy, privacy mapping, age questionnaire, review notes and both requested screenshot size plans. No images, account form or upload; W11 blockers carried forward. |
 | Mac handoff | E0 runbook | MAC_SETUP.md covers Xcode/SDK/deployment distinction, pinned SDK, owner hands, Debug entitlements, exact M1–M5 commands and evidence boundaries. No Mac available. |
+| Apple deletion revocation | E1 host/mocked; SQL source only | W19 reauthorization → authenticated code exchange → verified identity/nonce → refresh revoke → private identity-version proof. Deletion guard, localized failures and non-Apple sequence implemented. No SQL/hosted/provider/iPhone proof. |
 
 ## Blockers and owner actions
 
@@ -74,19 +77,18 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | O4 | Owner | Verify existing Supabase OAuth callback allowlist, later run cold/warm Google return; exact steps in OWNER_STEPS_IOS.md. No hosted settings changed. |
 | O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
 | O6 | Owner, later paid activation | Apple App ID/capability and Supabase Apple provider setup; native bundle ID audience, optional browser Services ID/key/secret rotation. Exact deferred steps in OWNER_STEPS_IOS.md. |
-| O7 | Owner / Claude, separate backend work | ESC-2: add and audit Apple token revocation during account deletion with server-held credentials; review current deletion restrictions. Apple activation/submission remains blocked. |
+| O7 | Owner, backend deployment / later paid verification | W19 source complete; ESC-2 resolved at E1 mocked. Audit/deploy only the new function/secrets/migration, verify SQL guard/grants and real revocation/deletion with paid iPhone. OWNER_STEPS_IOS.md contains commands, secret names and ordered acceptance. |
 | O8 | Owner, optional before Mac | Push and manually run Codemagic ios-compile-check; supply non-secret first-error logs or successful native build evidence. CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md contain exact steps. Skip if Mac available. |
 | O9 | Owner, at submission prep | Confirm actual privacy purposes/provider data, age/content answers, rights holder/content rights, hosted flags and review accounts; capture genuine iOS screenshots and enter metadata only after W11/native/paid gates. OWNER_STEPS_IOS.md and store/README.md have steps. |
-| O10 | Owner / Claude | W17 entry condition: close W11 ESC-2/ESC-3 or explicitly revise §9 dependency before publisher implementation. IOS_PUBLISHER_HANDOFF.md preserves the source contract/references. No routine permission question is pending. |
 | O11 | Owner / Claude, deferred Track B | ESC-4: decide separate push migration/implementation later. Both backend platform validations and both client registration labels need ios; APNs/Firebase setup needs paid owner action. IOS_PUSH_SPEC.md and OWNER_STEPS_IOS.md contain scope and acceptance tests. W18 spec is complete. |
 
 Account-gated steps do not block unrelated Windows work.
 
 ## Next three steps
 
-1. When the Mac is reachable, follow MAC_SETUP.md and execute M1–M3; no paid enrollment needed. Before that, an owner-provided real Codemagic log enables W13.
-2. Owner/Claude resolve W11 ESC-2/ESC-3 in separate backend/site work and record closure; then resume W17 from IOS_PUBLISHER_HANDOFF.md under §9.
-3. After M1–M3, owner decides paid activation for M4/M5 and optional push implementation under ESC-4. Keep current free-team Debug/viewer gates intact.
+1. W20 write complete EN/AR default legal drafts and PUBLIC_PAGES_GAPS.md without web edits.
+2. W17 implement default-off Dart gate/tests and a separate native dependency/permissions/publisher commit, per §12.
+3. Then native self-review and Mac runbook sequence; M1–M3 / W13 await physical Mac or a real CI log.
 
 ## Audit notes and verification limits
 
@@ -102,11 +104,11 @@ Account-gated steps do not block unrelated Windows work.
 - W13 has zero native compile attempts and no real failure log. It is waiting for O8 or Mac access; do not preemptively patch/remove native plugins or award E2.
 - W15 withdrew ADR-006's universal iOS playback claim, corrected its WKWebView API description, labeled historical Dart/SQL evidence separately and added the HTTPS invite limitation in all four allowed documents. Native E0 remains.
 - C4 Windows artifacts are ready for audit. W13 native compilation is still blocked; no E2 inferred from CI YAML, store copy, truth correction or runbook.
-- W17 scheduling correction: §9 permits Windows implementation only once W11 is done. W11 remains PARTIAL; the W16 next-step note was premature. Research handoff committed, no publisher code/dependency/capture permission/background mode added. W18 is independent.
-- W18 specification complete: both Dart registration labels and both backend validations documented, native/config/account sequence and E1/E2/E3 acceptance matrix written. No push implementation, account operation, migration or delivery attempt. All remaining work is hardware/account/out-of-scope dependent.
+- 2026-10-18 round follows §12: W17's W11 dependency withdrawn; W19 backend source authorized only for Apple deletion; W20 legal fallback authorized; push migration remains forbidden.
+- W19 fixed a test-fixture issue: installed PostgREST expects http.Response.request. Mock responses now carry request metadata. Unrelated AppProvider formatter churn was removed; only deletion logic/blocker names changed.
+- ESC-2 resolved at E1 mocked/source scope. Database proof validity is ten minutes and tied to current identity version; SQL guard/grants are unexecuted and real provider/device behavior remains pending.
 
 ## Open escalations
 
-- ESC-2 (W11): Apple revocation requires owner credentials and separate backend scope; no backend edits.
 - ESC-3 (W11): public document routing/branding and full privacy text need site/account changes and a scoped fallback follow-up.
 - ESC-4 (W18): future push implementation needs a separately authorized backend migration plus owner APNs/Firebase setup; specification complete, no backend changes.

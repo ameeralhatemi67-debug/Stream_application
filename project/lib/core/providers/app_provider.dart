@@ -3786,6 +3786,10 @@ class AppProvider extends ChangeNotifier {
     'broadcast_active',
     'organization_has_members',
     'storage_cleanup_required',
+    'apple_revocation_required',
+    'apple_revocation_unavailable',
+    'apple_revocation_failed',
+    'apple_revocation_cancelled',
   };
 
   /// Self-service account and data deletion (Play/App Store requirement).
@@ -3803,6 +3807,17 @@ class AppProvider extends ChangeNotifier {
           await client.rpc('prepare_account_deletion') as Map);
       final blocker = prepared['blocker'] as String?;
       if (blocker != null) return blocker;
+      final appleLinked = prepared['requires_apple_revocation'] == true ||
+          (client.auth.currentUser?.identities
+                  ?.any((identity) => identity.provider == 'apple') ??
+              false);
+      final deletingUserId = client.auth.currentUser?.id;
+      if (appleLinked) {
+        await _authService.revokeAppleAuthorizationForDeletion();
+        if (client.auth.currentUser?.id != deletingUserId) {
+          return 'apple_revocation_failed';
+        }
+      }
       final paths =
           List<String>.from(prepared['storage_paths'] as List? ?? const []);
       for (var i = 0; i < paths.length; i += 100) {
@@ -3811,7 +3826,12 @@ class AppProvider extends ChangeNotifier {
             .from('streamer-assets')
             .remove(paths.sublist(i, end));
       }
+      if (appleLinked && client.auth.currentUser?.id != deletingUserId) {
+        return 'apple_revocation_failed';
+      }
       await client.rpc('delete_own_account');
+    } on AppleAccountDeletionException catch (error) {
+      return error.code;
     } on PostgrestException catch (e) {
       debugPrint('Account deletion refused: ${e.message}');
       return accountDeletionBlockers.contains(e.message) ? e.message : 'failed';

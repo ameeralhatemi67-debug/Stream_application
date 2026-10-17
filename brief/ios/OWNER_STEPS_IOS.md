@@ -89,17 +89,94 @@ Sources: [Supabase Apple provider guide](https://supabase.com/docs/guides/auth/s
 
 ## W11 submission blockers (ESC-2 and ESC-3)
 
-### ESC-2 — Apple account deletion
+### ESC-2 / W19 — Apple account deletion source complete, deployment pending
 
-The existing Settings > Account & Data > Delete Account path deletes app/auth data through existing RPCs. It does not revoke Apple's authorization. Do not activate the Apple provider for a submission build until this gap is resolved.
+Section 12 authorized W19. The previous forbidden-source blocker is resolved at
+E1 with mocked tests. Nothing has been deployed, no real Apple token has been
+exchanged/revoked, and the SQL migration has not been executed.
 
-1. Owner/Claude authorize a separate backend work order. Choose either fresh native Apple reauthorization at deletion, with a server-side authorization-code exchange and token revocation, or secure server-side retention of a provider refresh token established during Apple authorization. Bind the Apple subject to the signed-in account; do not accept a client-supplied unrelated identity.
-2. Supply the Apple signing key/client-secret setup only through the backend secret manager. The server exchanges the authorization code as required, then revokes an Apple access/refresh token at `https://appleid.apple.com/auth/revoke`. An Apple identity token or a Supabase session token is not a substitute. Nothing secret belongs in Flutter or Git.
-3. Integrate that result with the existing prepare-account-deletion/Storage cleanup/delete-own-account flow. Define retry/failure behavior so the app cannot silently report complete deletion while leaving provider authorization intact.
-4. Review the existing banned-user, active-broadcast, organization-ownership and remaining-files deletion restrictions. Document legitimate retained records and a usable completion path; do not infer compliance from an enabled button.
-5. Test first Apple sign-in, subsequent sign-in, hidden email, reauthorization/cancellation, revocation failure/retry, completed deletion and a later fresh authorization on an iPhone. Keep test credentials and tokens out of evidence. Claude audits the separate backend change before submission.
+The new function `apple-account-revocation` authenticates the current Supabase
+user with `auth.getUser`, loads Apple subjects from database-owned identities,
+exchanges a fresh native authorization code, verifies the returned signed Apple
+identity/nonce/audience, revokes its refresh token, then records proof. It never
+deletes the account itself or stores provider tokens. The existing deletion RPC
+and Storage cleanup remain the deletion path.
 
-References: [Apple account deletion](https://developer.apple.com/help/app-review/guideline-reference/5-1-1-account-deletion), [Sign in with Apple revocation](https://developer.apple.com/documentation/signinwithapplerestapi/revoke-tokens). W11 made no backend or secret change.
+A new migration `20261017213039_apple_account_deletion_revocation.sql` adds a
+private, RLS-protected proof table and a BEFORE DELETE guard on auth.users.
+Service-role-only RPCs read the identity snapshot and record proof for exactly
+that user/subject/identity version. Updated identities invalidate proof; validity
+is ten minutes. Proof rows contain identity identifiers/timestamps, not secrets,
+and cascade with identity/account deletion. Expired rows have no authority but
+may remain until the next attempt or account/identity deletion.
+
+Owner steps, after choosing paid Apple activation:
+
+1. Audit the new migration and `supabase/functions/apple-account-revocation/`.
+   Check the intended project's auth.identities UUID id/provider_id schema,
+   migration history, existing deletion restrictions and deployment runtime.
+   Do not edit historical migrations or apply the deferred ESC-4 push migration.
+   The local CLI generated this filename in UTC on October 17; the work was
+   performed October 18 in Riyadh.
+2. Configure these environment-only secrets in the intended Edge Functions
+   secret manager: `APPLE_TEAM_ID`, `APPLE_KEY_ID`, `APPLE_CLIENT_ID`,
+   `APPLE_PRIVATE_KEY`. For this native flow APPLE_CLIENT_ID is the exact
+   bundle ID `sa.hadayah.streamerapp`, not a browser Services ID and not a
+   Team-ID-prefixed value. Use the Sign in with Apple ES256 private key.
+   PEM line breaks may be real newlines or escaped newline sequences.
+   Never place values in Git, chat, shell command arguments/history or evidence.
+3. The function also reads the platform-provided `SUPABASE_URL`,
+   `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, and the existing
+   `PUBLIC_APP_ORIGIN` for browser-origin/CORS checks. Use the existing public
+   app origin. Keep server credentials server-side.
+4. Use the owner's authenticated CLI/console for secrets. CLI 2.115.0 help was
+   checked: `npx supabase secrets set --env-file <owner-private-file>` is
+   supported. The private file must live outside this checkout and evidence.
+   Recheck help if the owner uses a newer CLI; develop-branch docs describe a
+   different upcoming environment command. No secret command was executed here.
+5. Deploy only this function with
+   `npx supabase functions deploy apple-account-revocation`, after selecting
+   the intended linked project privately. Never omit the function name, which
+   would deploy all functions. Keep the gateway's default JWT verification;
+   the function independently validates the bearer token. Confirm the function's
+   deno.json imports and locked dependency/runtime compatibility in staging.
+6. Apply the new migration through the owner's reviewed migration workflow,
+   checking the pending migration set before the owner runs `npx supabase db push`.
+   Do not blindly include unrelated pending migrations. Install the server guard
+   before releasing a client that relies on it. With the guard installed, old
+   clients cannot bypass revocation by calling delete_own_account directly.
+   If function/secrets are missing, Apple deletion fails closed. Non-Apple
+   deletion keeps its existing path.
+7. In staging, verify direct RPC deletion of an Apple account without proof is
+   refused, ordinary users cannot write proof/call the service-only RPCs, stale
+   identity versions and expired proof are refused, and non-Apple deletion and
+   existing banned/broadcast/organization/Storage restrictions are preserved.
+   The SQL was source-reviewed only here; no local/hosted DB assertions ran.
+8. On a paid-capability iPhone build, use a disposable Apple-linked account.
+   Test cancellation, wrong Apple account, missing configuration, expired/used
+   code, provider/network failure, then successful revocation and actual data
+   deletion. Include hidden email and an account linked to both Apple and Google.
+   Compare the Apple subject, not the email. No tokens or account identifiers in
+   evidence. A signed-in Apple-linked account on unsupported platforms receives
+   the localized unavailable message rather than silently skipping revocation.
+9. Revocation, Storage cleanup and SQL deletion are separate external operations.
+   A later cleanup/deletion failure may leave the account alive with Apple already
+   revoked and some uploads removed. A retry obtains fresh authorization. Review
+   the existing banned-user and organization-owner restrictions and provide the
+   documented support completion path before submission.
+
+Local proof: 16 Node tests with mocked HTTP, including generated in-memory
+cryptographic keys, plus 12 new Flutter deletion tests. `deno check` passed for
+the production index using Deno 2.9.6. This is E1 host/source proof, not a Supabase
+deployment, actual account deletion, iOS build or Apple revocation proof.
+
+References: [Apple token exchange](https://developer.apple.com/documentation/signinwithapplerestapi/generate-and-validate-tokens),
+[revocation](https://developer.apple.com/documentation/signinwithapplerestapi/revoke-tokens),
+[client secret](https://developer.apple.com/documentation/accountorganizationaldatasharing/creating-a-client-secret),
+[verification](https://developer.apple.com/documentation/signinwithapple/verifying-a-user).
+Context7 and the official references were checked; installed client/CLI APIs were
+also read. Supabase's October 12 TLS notice affects obsolete ciphers from November
+10; current Edge/Dart clients need no source workaround.
 
 ### ESC-3 — Legal/support documents and complete privacy disclosures
 
@@ -147,7 +224,7 @@ Owner-only hands: install/sign in to Xcode locally (Settings > Accounts), handle
 
 ## W17 — Publisher dependency
 
-IOS_PLAN_V2.md §9 permits Windows W17 implementation once W11 is done. W11 is still PARTIAL because ESC-2 and ESC-3 require separate backend/site/account work described above. Resolve those findings and record W11 closure in the ledger, or have the owner/manager explicitly change the W17 dependency. No permission question is pending from the builder. The source contract and official SDK references are preserved in [IOS_PUBLISHER_HANDOFF.md](IOS_PUBLISHER_HANDOFF.md). No publisher code, camera/microphone usage strings or background audio mode were added; iOS publishing remains gated. W18's independent specification proceeds.
+Section 12 withdraws the W11 dependency and authorizes flagged W17 implementation on Windows. The publisher must default off, with native configuration/dependency in a separate revertable commit from Dart changes. No paid account is required to write source; native compilation and device behavior still await the Mac/iPhone. IOS_PUBLISHER_HANDOFF.md is historical research until W17 updates it.
 
 ## W18 — Push, deferred by D3/D4
 

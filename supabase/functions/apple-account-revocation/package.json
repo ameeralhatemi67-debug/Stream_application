@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test *.test.ts"
+  },
+  "dependencies": {
+    "jose": "6.2.12"
+  }
+}
