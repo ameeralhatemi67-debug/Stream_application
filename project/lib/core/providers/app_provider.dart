@@ -3807,7 +3807,7 @@ class AppProvider extends ChangeNotifier {
           await client.rpc('prepare_account_deletion') as Map);
       final blocker = prepared['blocker'] as String?;
       if (blocker != null) return blocker;
-      final appleLinked = prepared['requires_apple_revocation'] == true ||
+      final appleLinked = (prepared['requires_apple_revocation'] as bool?) ??
           (client.auth.currentUser?.identities
                   ?.any((identity) => identity.provider == 'apple') ??
               false);

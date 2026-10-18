@@ -3,6 +3,10 @@
 Updated: 2026-10-03. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
+- **Apple deletion proof survives a new sign-in** — version now binds both identity timestamps and the identity-data hash; local pgTAP execution pending.
+- **Apple deletion uses an old token after authorization** — current session is re-read after the Apple sheet; mocked rotation and logout checks pass.
+- **Apple deletion follows stale cached identities** — explicit server flag takes precedence; legacy responses still use the client fallback.
+- **Mac iOS sequence stops on unrelated doctor failures** — doctor exit is non-fatal; Xcode and CocoaPods rows gate the sequence explicitly; Mac execution pending.
 - **Bookmarks sheet stays empty after saving** — connected to saved recordings/upcoming items, with canonical IDs and visible write failures; widget/SQL checks pass.
 - **Web Archives and playlists are empty while Android works** — server-only YouTube endpoint and sensitive Production key deployed; populated Archive/playlists and playlist videos verified live 2026-10-06.
 - **Chat send refused by chat_session_send RLS** — unqualified `stream_id` in the policy subquery resolved to the session's own column; fixed by qualifying `chat_messages.stream_id`.
@@ -641,3 +645,31 @@ Verification: public JavaScript HTTP 200, 5,653,268 characters; compiled service
 Repair: web uses the same-origin `/api/youtube` Vercel function; the key remains server-side and is not a browser build define. The function allows only bounded public reads, rejects arbitrary URLs/client keys/unknown or duplicated query parameters, follows no redirects, times out after eight seconds, caches successes and sanitizes errors. It passes the key upstream in a header rather than a URL. Production builds fail before compiling if the server key is missing. Native retains its existing transport.
 Verification: analyzer zero issues; full Flutter suite 1,059 passed; seven Node server/build checks passed; release web build passed with a sentinel key excluded from the bundle and `/api/youtube` present. Real local handler returned 25 archive items and 10 playlists; YouTube also accepted the header-based key. After replacing the real-key fixture, the five YouTube tests passed again. No real key remains in current tracked source after redacting two audit documents and replacing the test fixture; old Git history still contains it, so rotation or a separate server key is advised.
 Deployment 2026-10-06: owner explicitly approved copying the existing phone key to Vercel's sensitive Production setting and redeploying. Variable metadata confirms `type=sensitive`, `target=[production]`. Deployment `dpl_BFLczX7sA7HiJzeeARzNmNsRn1pF` is READY at the public domain, with build ID `77bba0aec00dd7aeffd469fa02e637c343e738ef-20261006054100`. Public channel/archive/playlist API reads returned 200 with 25 archive items and 10 playlists. Browser Hedayh Archive and playlists render, and an opened playlist contains four videos; no browser errors were recorded. Bundle and public API responses contain no phone key. Invalid queries return 400, writes 405 and uncached cross-site requests 403. Cached public responses can bypass the function's origin check; no cross-origin read permission is granted. Existing key exposure in Git history remains a rotation item. Evidence: `brief/evidence/2026-10-06/youtube-web-deploy/README.md`.
+
+## Apple deletion proof survives a new sign-in
+Status: UNVERIFIED on SQL/runtime; source fix 2026-10-18.
+Observed: audit found a proof could remain current after repeat Apple sign-in during its ten-minute lifetime.
+Cause: version used updated_at alone, which GoTrue repeat sign-in need not update.
+Fix/workaround: bind updated_at, last_sign_in_at and a SHA-256 hash of identity_data in the lookup, proof RPC and trigger. Use epoch timestamps to avoid session time-zone differences.
+Verification: 41 pgTAP assertions written in supabase/tests/apple_deletion_revocation.test.sql, not executed. No migration applied or real Apple revocation tested.
+
+## Apple deletion uses an old token after authorization
+Status: FIXED in source, mocked host verification only, 2026-10-18.
+Observed: opening the Apple sheet across a session refresh could send an expired access token to the revocation function.
+Cause: the request reused the session captured before authorization.
+Fix/workaround: re-read currentSession after the sheet, reject logout/account switch, and use its current access token.
+Verification: project/test/ios_apple_deletion_test.dart covers token rotation, logout and account switch. Real Apple sheet/network flow remains unverified.
+
+## Apple deletion follows stale cached identities
+Status: FIXED in source, mocked host verification only, 2026-10-18.
+Observed: stale client Apple identities could override a false server revocation flag and prevent deletion unnecessarily.
+Cause: AppProvider OR-ed the server flag with the cached identities.
+Fix/workaround: prefer the nullable server flag; use cached identities only when the flag is absent/null.
+Verification: mocked tests cover true/false server flags against conflicting client identities and both legacy fallback cases.
+
+## Mac iOS sequence stops on unrelated doctor failures
+Status: UNVERIFIED on Mac; host fixtures pass, 2026-10-18.
+Observed: the set -e M1-M3 sequence could abort on flutter doctor failures for unrelated platforms.
+Cause: an unguarded doctor command used its overall exit status as the iOS gate.
+Fix/workaround: capture doctor output with a non-fatal exit, then require a checked Xcode iOS row and its CocoaPods version line.
+Verification: six host doctor fixtures and Bash syntax check pass; actual Mac commands and native builds remain unrun.

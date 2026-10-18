@@ -34,7 +34,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   final calls = <String>[];
   final bodies = <Map<String, dynamic>>[];
-  var requiresApple = true;
+  bool? requiresApple = true;
   var available = true;
   var cancelled = false;
   var code = 'MOCK_CODE';
@@ -42,11 +42,17 @@ void main() {
   var functionError = 'apple_revocation_failed';
   var credentialCount = 0;
   var changeAccount = false;
+  String? rotatedAccessToken;
+  var clearSession = false;
+  var expectedFunctionToken = 'MOCK_SESSION';
   String? preparedBlocker;
 
-  Future<void> session({bool apple = true, String? id}) =>
+  Future<void> session(
+          {bool apple = true,
+          String? id,
+          String accessToken = 'MOCK_SESSION'}) =>
       Supabase.instance.client.auth.setInitialSession(jsonEncode({
-        'access_token': 'MOCK_SESSION',
+        'access_token': accessToken,
         'token_type': 'bearer',
         'refresh_token': 'MOCK_REFRESH',
         'user': {
@@ -77,6 +83,9 @@ void main() {
     available = true;
     cancelled = false;
     changeAccount = false;
+    rotatedAccessToken = null;
+    clearSession = false;
+    expectedFunctionToken = 'MOCK_SESSION';
     preparedBlocker = null;
     code = 'MOCK_CODE';
     credentialCount = 0;
@@ -94,6 +103,13 @@ void main() {
         bodies.add({'apple_nonce': args['nonce']});
         if (changeAccount) {
           await session(id: '00000000-0000-4000-8000-000000000099');
+        }
+        if (rotatedAccessToken != null) {
+          await session(accessToken: rotatedAccessToken!);
+        }
+        if (clearSession) {
+          await Supabase.instance.client.auth
+              .signOut(scope: SignOutScope.local);
         }
         return {
           'type': 'appleid',
@@ -119,7 +135,8 @@ void main() {
           return http.Response(
               jsonEncode({
                 'blocker': preparedBlocker,
-                'requires_apple_revocation': requiresApple,
+                if (requiresApple != null)
+                  'requires_apple_revocation': requiresApple,
                 'storage_paths': ['MOCK_USER/avatar.png'],
               }),
               200,
@@ -128,7 +145,8 @@ void main() {
         }
         if (path.endsWith('/apple-account-revocation')) {
           calls.add('function');
-          expect(request.headers['Authorization'], 'Bearer MOCK_SESSION');
+          expect(request.headers['Authorization'],
+              'Bearer $expectedFunctionToken');
           bodies.add(jsonDecode(request.body) as Map<String, dynamic>);
           return http.Response(
               jsonEncode(functionStatus == 200
@@ -234,6 +252,52 @@ void main() {
         throwsA(isA<AppleAccountDeletionException>()));
     expect(calls, isEmpty);
   });
+
+  test('session rotated during the Apple sheet uses the new access token',
+      () async {
+    rotatedAccessToken = 'MOCK_ROTATED_SESSION';
+    expectedFunctionToken = rotatedAccessToken!;
+    await SupabaseAuthService().revokeAppleAuthorizationForDeletion();
+    expect(calls, ['function']);
+  });
+
+  test('session lost during the Apple sheet never calls the function',
+      () async {
+    clearSession = true;
+    await expectLater(
+        SupabaseAuthService().revokeAppleAuthorizationForDeletion(),
+        throwsA(isA<AppleAccountDeletionException>()
+            .having((e) => e.code, 'code', 'apple_revocation_failed')));
+    expect(calls, isEmpty);
+  });
+
+  for (final scenario in [
+    (serverFlag: false, clientApple: true, needsRevocation: false),
+    (serverFlag: true, clientApple: false, needsRevocation: true),
+    (serverFlag: null, clientApple: true, needsRevocation: true),
+    (serverFlag: null, clientApple: false, needsRevocation: false),
+  ]) {
+    test(
+        'server flag ${scenario.serverFlag} with client Apple '
+        '${scenario.clientApple} selects revocation ${scenario.needsRevocation}',
+        () async {
+      requiresApple = scenario.serverFlag;
+      await session(apple: scenario.clientApple);
+      final provider =
+          AppProvider.withServices(authService: _DeletionAuth(calls));
+      try {
+        expect(await provider.deleteOwnAccount(), isNull);
+        expect(calls, [
+          'prepare',
+          if (scenario.needsRevocation) 'revoke',
+          'storage',
+          'delete',
+        ]);
+      } finally {
+        provider.dispose();
+      }
+    });
+  }
 
   test('revocation precedes storage removal and existing deletion RPC',
       () async {

@@ -143,8 +143,23 @@ flutter --version --machine |
 xcodebuild -version > "$taskEvidence/xcode.txt"
 xcrun --sdk iphoneos --show-sdk-version > "$taskEvidence/ios-sdk.txt"
 pod --version > "$taskEvidence/cocoapods.txt"
-flutter doctor -v
-# Proceed only when the iOS doctor rows are resolved; other platform rows are independent.
+# Doctor can return non-zero for platforms outside this iOS work.
+flutter doctor -v > "$taskEvidence/doctor.log" 2>&1 || true
+cat "$taskEvidence/doctor.log"
+python3 - "$taskEvidence/doctor.log" <<'CHECK_IOS_DOCTOR'
+from pathlib import Path
+import re
+import sys
+report = Path(sys.argv[1]).read_text()
+report = re.sub(r"\x1b\[[0-9;]*m", "", report)
+# Flutter 3.41 groups CocoaPods under the Xcode row.
+xcode = re.search(r"(?ms)^\[\s*[✓√]\s*\]\s+Xcode\b[^\n]*develop for iOS.*?(?=^\[|\Z)", report)
+if not xcode:
+    sys.exit("Resolve the Xcode iOS doctor row before proceeding; see doctor.log")
+if not re.search(r"(?m)^\s+[•✓√]\s+CocoaPods version\s+\S+", xcode[0]):
+    sys.exit("Resolve the CocoaPods iOS doctor row before proceeding; see doctor.log")
+CHECK_IOS_DOCTOR
+# Other platform doctor rows are independent of these iOS checks.
 run_gate precache flutter precache --ios
 run_gate pub-get flutter pub get
 run_gate analyze flutter analyze

@@ -5,12 +5,14 @@ create table private.apple_deletion_revocations (
   identity_id uuid primary key references auth.identities(id) on delete cascade,
   user_id uuid not null references auth.users(id) on delete cascade,
   subject text not null,
-  identity_version timestamptz not null,
+  identity_version text not null,
   revoked_at timestamptz not null default clock_timestamp()
 );
 alter table private.apple_deletion_revocations enable row level security;
 revoke all on private.apple_deletion_revocations from public, anon, authenticated, service_role;
 
+-- Epoch timestamps keep the opaque version stable across session time zones.
+-- Repeat sign-ins may leave updated_at unchanged; bind sign-in time and data too.
 create function public.apple_deletion_identities(p_user_id uuid)
 returns jsonb language plpgsql security definer set search_path = '' as $$
 begin
@@ -20,7 +22,9 @@ begin
   end if;
   return coalesce((select jsonb_agg(jsonb_build_object(
     'identity_id', i.id, 'subject', i.provider_id,
-    'version', coalesce(i.updated_at, i.created_at, 'epoch'::timestamptz)))
+    'version', jsonb_build_array(
+          extract(epoch from i.updated_at), extract(epoch from i.last_sign_in_at),
+          encode(sha256(convert_to(i.identity_data::text, 'UTF8')), 'hex'))::text))
     from auth.identities i where i.user_id = p_user_id and i.provider = 'apple'), '[]'::jsonb);
 end;
 $$;
@@ -28,14 +32,16 @@ revoke all on function public.apple_deletion_identities(uuid) from public, anon,
 grant execute on function public.apple_deletion_identities(uuid) to service_role;
 
 create function public.record_apple_deletion_revocation(
-  p_user_id uuid, p_identity_id uuid, p_subject text, p_version timestamptz)
+  p_user_id uuid, p_identity_id uuid, p_subject text, p_version text)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
   perform pg_advisory_xact_lock(20260920, 12);
   if not exists (select 1 from auth.identities i
       where i.id = p_identity_id and i.user_id = p_user_id and i.provider = 'apple'
         and i.provider_id = p_subject
-        and coalesce(i.updated_at, i.created_at, 'epoch'::timestamptz) = p_version)
+        and jsonb_build_array(
+          extract(epoch from i.updated_at), extract(epoch from i.last_sign_in_at),
+          encode(sha256(convert_to(i.identity_data::text, 'UTF8')), 'hex'))::text = p_version)
       or private.account_deletion_blocker(p_user_id) is not null then
     raise exception 'Apple identity changed' using errcode = '55000';
   end if;
@@ -47,9 +53,9 @@ begin
     revoked_at = excluded.revoked_at;
 end;
 $$;
-revoke all on function public.record_apple_deletion_revocation(uuid,uuid,text,timestamptz)
+revoke all on function public.record_apple_deletion_revocation(uuid,uuid,text,text)
   from public, anon, authenticated;
-grant execute on function public.record_apple_deletion_revocation(uuid,uuid,text,timestamptz)
+grant execute on function public.record_apple_deletion_revocation(uuid,uuid,text,text)
   to service_role;
 
 -- Protect the existing deletion RPC even if a client omits the Edge Function.
@@ -62,7 +68,9 @@ begin
       and not exists (
         select 1 from private.apple_deletion_revocations r
         where r.identity_id = i.id and r.user_id = old.id and r.subject = i.provider_id
-          and r.identity_version = coalesce(i.updated_at, i.created_at, 'epoch'::timestamptz)
+          and r.identity_version = jsonb_build_array(
+          extract(epoch from i.updated_at), extract(epoch from i.last_sign_in_at),
+          encode(sha256(convert_to(i.identity_data::text, 'UTF8')), 'hex'))::text
           and r.revoked_at >= clock_timestamp() - interval '10 minutes'
       )
   ) then

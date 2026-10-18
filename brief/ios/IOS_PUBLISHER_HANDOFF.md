@@ -9,7 +9,10 @@ viewer release until native compilation and the E3 matrix pass.
 Flutter stays pinned to 3.41.2 with CocoaPods for Flutter plugins. HaishinKit 2.x
 discontinued CocoaPods support; use its SwiftPM products directly in Runner only
 after explicit activation. This does not migrate Flutter plugins to SwiftPM or
-apply the newer Flutter 3.44 template to the 3.41 shell.
+apply the newer Flutter 3.44 template to the 3.41 shell. The project's
+`pubspec.yaml` pins `flutter.config.enable-swift-package-manager: false` to
+keep Flutter plugins on CocoaPods even if the Flutter SDK is upgraded. This
+does not disable the helper's explicit Runner SwiftPM dependency opt-in.
 
 The committed viewer project has three conditional Swift source references, an
 optional xcconfig include and conditional AppDelegate registration. Every publisher

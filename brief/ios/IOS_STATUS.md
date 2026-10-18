@@ -6,7 +6,7 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 
 | Field | Value |
 |---|---|
-| Updated | 2026-10-18, Codex; manager audit verdict added 2026-10-18 (see IOS_LEDGER.md) |
+| Updated | 2026-10-18, Codex; audit follow-up findings 1, 2, 6–10 (see IOS_PROGRESS.md) |
 | Track | A, Windows; Mac not available |
 | Resume | Hard stop: physical Mac or real CI log for W13 / M1–M3 |
 | Progress | 18 / 20 work orders complete |
@@ -14,7 +14,7 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | Final W17 review: flutter analyze 0 issues (26.1s); full flutter test 1,159 passed / 0 failed / 0 skipped (03:40); enabled-flag mocked iOS channel suite 14/14; EN/AR direct-entry guard 2/2; helper 3/3, both OpenStep variants and six plists checked; 1,897 catalog keys symmetric; Android/web SHA-256 90/90 unchanged. |
+| Latest checks | Audit follow-up: flutter analyze --no-pub 0 issues (48.8s); full flutter test --reporter expanded 1,165 passed / 0 failed / 0 skipped (05:52); Edge npm test 16/16; python -B project/ios/Publisher/test_configure.py 4/4; doctor fixtures 6/6 and Bash syntax passed; 1,897 EN/AR keys symmetric. 41 new pgTAP assertions written, not executed. Android/web tracked diff empty. |
 
 ## Work orders
 
@@ -64,8 +64,8 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | W19 revocation source E1 mocked; W20 complete bilingual legal draft/readers E1. Counsel approval, hosted legal record/public-page deployment, SQL/provider/device behavior and submission remain pending. |
 | Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
 | App Store pack | E0 drafts | Seven files: EN/AR copy, privacy mapping, age questionnaire, review notes and both requested screenshot size plans. No images, account form or upload; W11 blockers carried forward. |
-| Mac handoff | E0 runbook | MAC_SETUP.md now includes one Bash M1–M3 sequence with pinned-version/source/signing checks, build logs, matrix initialization and interactive Simulator run. Bash syntax checked on Windows only; no Mac execution. |
-| Apple deletion revocation | E1 host/mocked; SQL source only | W19 reauthorization → authenticated code exchange → verified identity/nonce → refresh revoke → private identity-version proof. Deletion guard, localized failures and non-Apple sequence implemented. No SQL/hosted/provider/iPhone proof. |
+| Mac handoff | E0 runbook / host fixtures | M1–M3 doctor command is non-fatal; checked Xcode iOS/CocoaPods rows are required. Six host fixtures and Bash syntax check passed. Version/source/signing/build/matrix gates retained; no Mac execution. |
+| Apple deletion revocation | E1 host/mocked; SQL source/tests only | W19 proof binds updated_at, last_sign_in_at and SHA-256 identity-data hash. Current post-sheet session token and server flag precedence covered by mocked Dart tests. 41 pgTAP assertions written for guard/grants/expiry/stale proof/mixed providers; unexecuted. No SQL/hosted/provider/iPhone proof. |
 
 ## Blockers and owner actions
 
@@ -109,7 +109,7 @@ Account-gated steps do not block unrelated Windows work.
 - W19 fixed a test-fixture issue: installed PostgREST expects http.Response.request. Mock responses now carry request metadata. Unrelated AppProvider formatter churn was removed; only deletion logic/blocker names changed.
 - ESC-2 resolved at E1 mocked/source scope. Database proof validity is ten minutes and tied to current identity version; SQL guard/grants are unexecuted and real provider/device behavior remains pending.
 - W20 complete default terms/guidelines/privacy at v1.1.0-ios-draft, marked for counsel review. No unverified PDPL compliance/instant deletion/ad-free promises in the draft text. [AUDIT P2 fixed 2026-10-18: settings.view_privacy/view_privacy_subtitle relabelled neutrally in en/ar.] Hosted legal content not overwritten; public source pages untouched.
-- W17 §12 complete as source: Dart commit 63b288f, separate native dependency/config/media commit. SwiftPM opt-in only because HaishinKit 2.x discontinued CocoaPods; Flutter plugins stay CocoaPods/3.41.2. Default viewer has no SDK package/product references or generated flag.
+- W17 §12 complete as source: Dart commit 63b288f, separate native dependency/config/media commit. SwiftPM opt-in only because HaishinKit 2.x discontinued CocoaPods; Flutter plugins stay CocoaPods/3.41.2. Default viewer has no SDK package/product references or generated flag. pubspec.yaml pins flutter.config.enable-swift-package-manager false; the explicit Runner publisher dependency opt-in is independent.
 - W17 native self-review corrected ACK/event timing, exact orientation argument, retry quality retention, conditional permission macros and stale-operation checks. SDK loggers discard credential-bearing diagnostics; no compiler warning suppression. These are source checks, not compilation/runtime proof.
 - W17 review: native commit c4c81c2 remains separate from Dart. Transport loss/retry-only watchdog pause retains capture during Dart's bounded authorization episode; user stop, revoked authorization and exhaustion fully release it. Background eligibility is an implementation intent requiring E3, not observed survival.
 - Direct iOS phone setup now rejects unavailable/default-off capture before camera/microphone permission calls. Its narrow error screen wraps in EN/AR. Test fixture uses actual physicalSize/devicePixelRatio (known repository isolation issue); no rendering exceptions suppressed.
@@ -121,10 +121,13 @@ Account-gated steps do not block unrelated Windows work.
 - ESC-3 public half: W20 in-app draft/source resolved at E1; Claude/owner handle copy review and deployment of existing public pages. Counsel/hosted approval pending.
 - ESC-4 (W18): future push implementation needs a separately authorized backend migration plus owner APNs/Firebase setup; specification complete, no backend changes.
 
-## Manager audit 2026-10-18 (Claude): CHANGES REQUIRED
+## Manager audit follow-up 2026-10-18
 
-Audited d5e4b6b..663aee8; full verdict, commands and counts are in `IOS_LEDGER.md` (VERDICT row). Fresh host results: analyze 0 issues; full test 1,159 passed; enabled-flag iOS files 28 passed; Edge 16/16; configure helper 3/3; catalogs 1,897 symmetric; Android/web tracked diff empty. No evidence level promoted.
+Claude's original VERDICT and VERDICT follow-up remain in IOS_LEDGER.md. P1/P2 were fixed in d336e1f. This builder work order addresses findings 1, 2, 6, 7, 8, 9 and 10, with fresh host results recorded above and in IOS_PROGRESS.md. Evidence stays at E1 for mocked Dart/Edge checks; SQL and native execution remain unverified.
 
-Push blockers: P1 camera/mic purpose strings in viewer InfoPlist.strings (c4c81c2); P2 'Saudi PDPL Compliant' catalog labels vs W20 claim; P3 IOS_PLAN_V2.md, prompts and the decisions-bearing IOS_LEDGER.md are untracked or stale in Git.
-Deployment gates (not push): identity-version proof likely does not change on re-sign-in (use last_sign_in_at); add pgTAP tests for the new migration; define the support/admin completion path for Apple-linked accounts.
-Mac/iPhone and counsel/submission gates are unchanged. Builder: fix P1 and P2 (and the deployment findings if convenient) in one pass, then re-run the checks listed in the ledger.
+- Findings 1/2: identity version strengthened in the explicitly authorized, unapplied W19 migration; 41 pgTAP assertions added but not run. Edge code still passes the version through unchanged. The owner must run the local SQL suite before deployment.
+- Findings 6/7: use the current session token after the Apple sheet and prefer an explicit server revocation flag. Tests cover rotation, logout, account switch, conflicting flags and legacy fallback.
+- Findings 8/9/10: privacy §9 names Download My Data / تنزيل بياناتي; doctor output gates only the iOS rows; Flutter plugin SwiftPM is pinned off.
+- Finding 3 remains an owner decision about support/admin deletion of Apple-linked accounts. Findings 4/5 remain Mac/iPhone work; no native media change in this work order.
+- P3 remains an owner action: commit the intended manager plan, ledger and prompts for the Mac. This work order leaves those pending files untouched.
+- W19 SQL execution/deployment, real Apple revocation, Mac/iPhone media, counsel/publication and submission gates remain pending. No evidence level is promoted.

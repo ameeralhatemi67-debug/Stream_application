@@ -76,13 +76,15 @@ class SupabaseAuthService {
         scopes: const [],
         nonce: nonce,
       );
+      final currentSession = _client.auth.currentSession;
       if (credential.authorizationCode.isEmpty ||
-          _client.auth.currentUser?.id != session.user.id) {
+          currentSession == null ||
+          currentSession.user.id != session.user.id) {
         throw const AppleAccountDeletionException('apple_revocation_failed');
       }
       final result = await _client.functions.invoke(
         'apple-account-revocation',
-        headers: {'Authorization': 'Bearer ${session.accessToken}'},
+        headers: {'Authorization': 'Bearer ${currentSession.accessToken}'},
         body: {
           'authorization_code': credential.authorizationCode,
           'nonce': nonce
