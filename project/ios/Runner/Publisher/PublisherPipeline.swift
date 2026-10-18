@@ -54,6 +54,8 @@ actor PublisherPipeline: MediaMixerOutput {
   private var generation = 0
   private var epoch = 0
   private var lastUpload = Date()
+  private var receivedNetworkReport = false
+  private var lastAudioAppend = Date()
   private var lastMeter = Date.distantPast
   private var previousSession: (AVAudioSession.Category, AVAudioSession.Mode, AVAudioSession.CategoryOptions)?
 
@@ -149,7 +151,16 @@ actor PublisherPipeline: MediaMixerOutput {
     self.muted = muted
     try await setAudioOnly(audioOnly || !foreground)
     try check(token)
-    if !capturing { try await capture(epoch: token) }
+    if !capturing {
+      try await capture(epoch: token)
+    } else {
+      try AVAudioSession.sharedInstance().setActive(true)
+      if !(await mixer.isRunning) { await mixer.startRunning() }
+      try check(token)
+      await mixer.startCapturing()
+      try check(token)
+      guard await mixer.isRunning else { throw Failure.unavailable }
+    }
     try check(token)
     await setMuted(muted)
     try check(token)
@@ -192,6 +203,8 @@ actor PublisherPipeline: MediaMixerOutput {
       try check(token)
       publishing = true
       lastUpload = Date()
+      lastAudioAppend = lastUpload
+      receivedNetworkReport = false
       if self.audioOnly != audioOnly {
         await emit(PublisherEvent(name: "audioOnlyChanged", generation: generation, audioOnly: self.audioOnly))
       }
@@ -212,12 +225,16 @@ actor PublisherPipeline: MediaMixerOutput {
 
   func networkBytes(_ bytes: Int, epoch token: Int) async {
     guard token == epoch, publishing else { return }
+    receivedNetworkReport = true
     if bytes > 0 { lastUpload = Date() }
     await emit(PublisherEvent(name: "bitrate", generation: generation, value: Double(max(0, bytes)) * 8))
   }
 
   private func checkUpload(epoch token: Int) async {
-    guard token == epoch, publishing, Date().timeIntervalSince(lastUpload) >= 8 else { return }
+    guard token == epoch, publishing else { return }
+    // Audio submissions are a fallback only until the first network report.
+    let lastProgress = receivedNetworkReport ? lastUpload : lastAudioAppend
+    guard Date().timeIntervalSince(lastProgress) >= 8 else { return }
     await dropped(epoch: token)
   }
 
@@ -362,7 +379,10 @@ actor PublisherPipeline: MediaMixerOutput {
   }
   private func audio(_ buffer: AVAudioPCMBuffer, when: AVAudioTime) async {
     guard publishing, let stream else { return }
+    let token = epoch
     await stream.append(buffer, when: when)
+    guard token == epoch, publishing else { return }
+    if buffer.frameLength > 0 { lastAudioAppend = Date() }
     guard Date().timeIntervalSince(lastMeter) >= 0.1 else { return }
     lastMeter = Date()
     var sum = 0.0

@@ -3,6 +3,8 @@
 Updated: 2026-10-03. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
+- **iOS publisher retry has dead audio after an interruption** — blind E0 fix reactivates the audio session and checks/restarts mixer capture; iPhone validation pending.
+- **iOS publisher drops healthy streams without network callbacks** — E0 watchdog fallback uses recent non-empty audio submissions until the first network report; transport proof still needs iPhone.
 - **Apple deletion proof survives a new sign-in** — version now binds both identity timestamps and the identity-data hash; local pgTAP execution pending.
 - **Apple deletion uses an old token after authorization** — current session is re-read after the Apple sheet; mocked rotation and logout checks pass.
 - **Apple deletion follows stale cached identities** — explicit server flag takes precedence; legacy responses still use the client fallback.
@@ -673,3 +675,17 @@ Observed: the set -e M1-M3 sequence could abort on flutter doctor failures for u
 Cause: an unguarded doctor command used its overall exit status as the iOS gate.
 Fix/workaround: capture doctor output with a non-fatal exit, then require a checked Xcode iOS row and its CocoaPods version line.
 Verification: six host doctor fixtures and Bash syntax check pass; actual Mac commands and native builds remain unrun.
+
+## iOS publisher retry has dead audio after an interruption
+Status: UNVERIFIED, blind Swift E0 source fix in W21, 2026-10-18.
+Observed: audit found the retained-capture retry skipped audio-session activation after phone-call/Siri interruption.
+Cause: start() called capture() only when capturing was false.
+Fix/workaround: reactivate AVAudioSession; restart MediaMixer when needed, call startCapturing and require isRunning before connecting. Signatures checked against official HaishinKit 2.2.5 MediaMixer.swift.
+Verification: source review only, no Swift compile or media run. Owner must verify calls/Siri, audio routes and bounded retry on iPhone per IOS_PUBLISHER_HANDOFF.md.
+
+## iOS publisher drops healthy streams without network callbacks
+Status: UNVERIFIED, blind Swift E0 source fix in W21, 2026-10-18.
+Observed: audit found every stream could trip the eight-second upload watchdog if the network observer never called back.
+Cause: only network reports refreshed the progress timestamp.
+Fix/workaround: until the first report, use recent non-empty audio submissions as a fallback. Once a report arrives, outgoing bytes remain authoritative. Epoch checks reject late audio append completion.
+Verification: source review only. Audio submissions show feed progress, not receiver delivery; actual callback absence, socket stalls and remote audio require iPhone tests. Dart retry bounds remain unchanged.

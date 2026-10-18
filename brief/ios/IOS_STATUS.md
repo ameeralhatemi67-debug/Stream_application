@@ -6,15 +6,15 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 
 | Field | Value |
 |---|---|
-| Updated | 2026-10-18, Codex; audit follow-up findings 1, 2, 6–10 (see IOS_PROGRESS.md) |
+| Updated | 2026-10-18, Codex; W21 pre-Mac hardening (see IOS_PROGRESS.md) |
 | Track | A, Windows; Mac not available |
 | Resume | Hard stop: physical Mac or real CI log for W13 / M1–M3 |
-| Progress | 18 / 20 work orders complete |
+| Progress | Original plan 18 / 20 complete; W21 source/host work complete; W11/W13 and native gates remain |
 | Evidence | W19/W20 and publisher Dart E1 mocked/host; native shell, Apple capability and phone media E0. No native compile/run, E2, E2S, E3 or E4. |
 | Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
 | Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
 | Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | Audit follow-up: flutter analyze --no-pub 0 issues (48.8s); full flutter test --reporter expanded 1,165 passed / 0 failed / 0 skipped (05:52); Edge npm test 16/16; python -B project/ios/Publisher/test_configure.py 4/4; doctor fixtures 6/6 and Bash syntax passed; 1,897 EN/AR keys symmetric. 41 new pgTAP assertions written, not executed. Android/web tracked diff empty. |
+| Latest checks | W21: flutter analyze 0 issues (31.2s); full flutter test --reporter expanded 1,261 passed / 0 failed / 0 skipped (04:34); targeted iOS matrix 96/96; Edge npm test 16/16; python -B project/ios/Publisher/test_configure.py 4/4; doctor fixtures 6/6, Bash syntax and 1,897-key EN/AR symmetry pass. 65 tracked Android/web files inventoried; tracked diff empty. SQL/Swift execution not performed. |
 
 ## Work orders
 
@@ -40,6 +40,7 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 | W18 | Push spec | DONE | bd442c8 | Track B |
 | W19 | Apple deletion revocation | DONE | d5e4b6b | §12 |
 | W20 | Legal drafts / public gaps | DONE | a0ebf8d | §12 |
+| W21 | Pre-Mac hardening A–G | DONE, source/host scope | master^{/complete W21 pre-Mac hardening} | E1 host / E0 Swift |
 | M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
 
 Resolve a commit selector with `git rev-parse '<selector>'`.
@@ -121,13 +122,18 @@ Account-gated steps do not block unrelated Windows work.
 - ESC-3 public half: W20 in-app draft/source resolved at E1; Claude/owner handle copy review and deployment of existing public pages. Counsel/hosted approval pending.
 - ESC-4 (W18): future push implementation needs a separately authorized backend migration plus owner APNs/Firebase setup; specification complete, no backend changes.
 
-## Manager audit follow-up 2026-10-18
+## W21 pre-Mac hardening, current result
 
-Claude's original VERDICT and VERDICT follow-up remain in IOS_LEDGER.md. P1/P2 were fixed in d336e1f. This builder work order addresses findings 1, 2, 6, 7, 8, 9 and 10, with fresh host results recorded above and in IOS_PROGRESS.md. Evidence stays at E1 for mocked Dart/Edge checks; SQL and native execution remain unverified.
+| Part | Source/host result | Evidence limit |
+|---|---|---|
+| A: native finding 5 | Retained-capture retry reactivates AVAudioSession, restarts/checks mixer capture. Eight-second watchdog uses audio-submission progress until the first network report, then outgoing bytes. Epoch/cancellation guards retained. | E0 Swift; feed progress is not remote-delivery proof. Interruption and watchdog behavior require iPhone. |
+| B: finding 3 copy | EN/AR legal/deletion copy and public gap list explicitly require fresh Apple authorization inside iOS. Support offers assisted in-app deletion; email alone cannot complete it. OWNER_STEPS records the later override trade-offs. | Copy done, design decision open. No backend override added. |
+| C: Swift APIs | Pinned HaishinKit 2.2.5, Logboard 2.6.0, Flutter 3.41.2 headers and Apple declarations/isolation/availability checked; inventory in IOS_PUBLISHER_HANDOFF.md. No additional SDK mismatch found. Public Windows Swift installer is feasible; no installation/parse claimed. | E0; exact Swift importing/type checking/linking and runtime remain Mac gates. |
+| D: plugin privacy | PRIVACY_MANIFEST_AUDIT.md covers 16 cached iOS/Darwin packages plus two native-assets packages. Existing app reasons CA92.1/C617.1 cover direct calls found; no app-manifest edit needed. | E1 source reading only. package_info_plus empty SDK reason array, resolved Pods/assets and archive report need Mac review. |
+| E: iOS layouts | 96 host cases: eight surfaces, three iPhone sizes, EN/AR, scales 1/1.5 and 59/34 safe insets. Apple/Google failure UI, chat, deletion cancel/refusal, consent/full policy and support fallback included. No production overflow found or error suppression added. | E1 host layout only; native fonts, plugins and actual visual/device behavior unverified. |
+| F: App Review dry run | Checklist now marks pass/fail/needs-device with file/line evidence. Phone copy made build-neutral; unsupported email, reservations and guaranteed follower-alert promises removed. | Submission fails deployment/legal-publication gates; most native rows need-device. No approval claim. |
+| G: Mac readiness | First-30-minutes checklist and untracked/ignored transfer inventory added; doctor fixtures 6/6 and Bash syntax passed. | Host fixtures only; Mac commands still unrun. |
 
-- Findings 1/2: identity version strengthened in the explicitly authorized, unapplied W19 migration; 41 pgTAP assertions added but not run. Edge code still passes the version through unchanged. The owner must run the local SQL suite before deployment.
-- Findings 6/7: use the current session token after the Apple sheet and prefer an explicit server revocation flag. Tests cover rotation, logout, account switch, conflicting flags and legacy fallback.
-- Findings 8/9/10: privacy §9 names Download My Data / تنزيل بياناتي; doctor output gates only the iOS rows; Flutter plugin SwiftPM is pinned off.
-- Finding 3 remains an owner decision about support/admin deletion of Apple-linked accounts. Findings 4/5 remain Mac/iPhone work; no native media change in this work order.
-- P3 remains an owner action: commit the intended manager plan, ledger and prompts for the Mac. This work order leaves those pending files untouched.
-- W19 SQL execution/deployment, real Apple revocation, Mac/iPhone media, counsel/publication and submission gates remain pending. No evidence level is promoted.
+P1/P2 remain fixed in d336e1f; freshness/server-flag findings 1/2/6/7 and export-control naming remain in 6620467. W19's 41 pgTAP assertions are written, never executed here. Finding 4 remains deferred for real iPhone recovery evidence. Finding 5 has a blind E0 fix, not a device pass. P3 manager plan/ledger/prompts still require the owner's explicit transfer/commit.
+
+Stop after W21. Next work requires the owner's task or a real W13/Mac log. Paid enrollment is not needed for source work, Simulator/unsigned compilation or free-team Debug media testing. W19 deployment/SQL/provider acceptance, support design, archive privacy, counsel/publication and submission remain later gates.

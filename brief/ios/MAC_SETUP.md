@@ -1,5 +1,52 @@
 # Mac setup and first iOS run
 
+## First 30 minutes on the Mac
+
+These are orientation timeboxes, not a promise that downloads/builds finish in
+30 minutes. Start with the default viewer; keep the publisher disabled.
+
+- **0–10 minutes, tools:** install full Xcode compatible with the Mac, the iOS
+  Simulator runtime, Git, pinned Flutter 3.41.2, CocoaPods and Python 3.9+.
+  Follow section 1 for command-line-tool selection, licenses and first launch.
+  The owner handles all account/password/trust prompts locally. Simulator and
+  unsigned compilation need no paid Apple enrollment.
+- **10–15 minutes, checkout:** clone the owner's pushed master into a normal
+  local folder. Read AGENTS.md, IOS_PLAN_V2.md, IOS_STATUS.md and the ledger.
+  Confirm the intended commit with `git log -1 --oneline`. Review the transfer
+  list below before assuming a clone includes the manager decisions or config.
+- **15–20 minutes, environment:** run `flutter --version`, `xcodebuild -version`,
+  `xcrun --sdk iphoneos --show-sdk-version`, `pod --version` and `python3 --version`.
+  Run `flutter doctor -v || true`; resolve the Xcode iOS and CocoaPods rows.
+  Other platform warnings do not block this iOS sequence. Boot one iPhone Simulator.
+- **20–30 minutes, first gate:** run the M1–M3 Bash sequence below from the repo
+  root. It performs the explicit doctor-row check, pub get, analyze, tests, pod
+  install, default-viewer builds and interactive launch, with evidence logs.
+  Leave longer builds running. Do not activate W17 to diagnose a viewer failure.
+
+When something fails, paste back to Claude: commit SHA, macOS/Xcode/Flutter/pod
+versions, the exact failing command, exit code, and the first real error plus
+about 80 surrounding lines from that gate's log. Include the evidence-folder
+path. Describe the device/Simulator and visible behavior for runtime failures.
+Redact credentials, auth callback parameters, ingest URLs, stream keys, signing
+and team/account details. Never paste the define file, environment dump or raw
+signing build settings. W13 fixes the first error before starting another gate.
+
+### Files a clone may not contain
+
+| File or group | How it reaches the Mac |
+|---|---|
+| brief/ios/IOS_PLAN_V2.md; decisions-bearing IOS_LEDGER.md | Plan is currently untracked and ledger has owner/manager edits. Owner explicitly commits/transfers the intended versions before resuming. W21 does not stage them. |
+| IOS_PLAN.md and CODEX_PROMPT_V2/V3.md, CODEX_START_PROMPT.md, OPUS_START_PROMPT.md | Untracked historical/manager prompts. Owner selects what to commit/transfer; v2 plan governs. |
+| project/dart_define.local.json | Ignored runtime config. Owner securely copies it by hand for configured interactive runs; never print or commit its contents. Example defines suffice for the documented unsigned compile gate. |
+| Real evidence and device matrix, if already created locally | Owner transfers only relevant non-secret observations/screenshots and preserves existing rows; do not invent pass results. |
+| Flutter Generated.xcconfig, flutter_export_environment.sh, .dart_tool, plugin symlinks, Pods | Machine-generated; recreate through Flutter/pub/pod steps on the Mac. Do not copy Windows paths or commit generated dependencies. |
+| Publisher.generated.xcconfig and resolved publisher packages | Not needed for day one. Keep absent/default off until viewer M1–M3; later use the opt-in handoff. |
+
+The Mac does not need unrelated .claude/.vscode state, draft Core_files documents,
+old evidence folders or store asset changes to compile the viewer. Do not copy
+credentials/signing material through the repository. Later Apple/push/store setup
+remains owner work after the source/native gates.
+
 Written on Windows, 2026-10-17; combined M1–M3 sequence reviewed 2026-10-18. These commands have not been run on a Mac. Native evidence remains E0 until actual builds/runs. Use this runbook when the Mac is in the repo's reach; skip Codemagic then. Keep the existing viewer scope and paid-enrollment deferral (D4).
 
 ## 1. Owner: prepare the Mac and tools

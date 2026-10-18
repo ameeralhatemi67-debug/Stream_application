@@ -4,6 +4,21 @@ Updated 2026-10-17, W5. Follow `IOS_PLAN_V2.md`. Paid enrollment remains deferre
 
 ## Now, without paid enrollment
 
+### W21 finding 3: copy done, design decision open
+
+Apple-linked accounts can only be fully deleted inside the iOS app with fresh
+Apple authorization and successful revocation. Support cannot complete deletion
+by email alone. Support must explain this and offer assisted in-app deletion,
+including help resolving restrictions first. Do not request Apple passwords,
+authorization codes or tokens by email.
+
+The owner still needs to decide whether to add a break-glass support function in
+a separately authorized backend work order. Keeping the current guard preserves
+fail-closed revocation but leaves users without iOS/Apple access unable to finish.
+A service-only, audited override could address that case, but would delete an
+account without proof of provider revocation and needs abuse controls, explicit
+audit/retention wording and Apple/counsel review. No override is implemented here.
+
 ### Verify the existing Google OAuth return allowlist
 
 1. Owner opens the existing Supabase project in its dashboard, then Authentication > URL Configuration.
