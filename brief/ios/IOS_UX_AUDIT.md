@@ -62,3 +62,38 @@ Sources: [Flutter accessibility tests](https://docs.flutter.dev/ui/accessibility
 [scroll behavior](https://api.flutter.dev/flutter/widgets/ScrollBehavior/getScrollPhysics.html).
 Context7 plus the installed Flutter 3.41.2 scroll/route implementation were used.
 No native compile, Simulator, physical device or higher evidence level is claimed.
+
+## W23 keyboard follow-up and CaInput caller audit
+
+The W22 keyboard rows above are superseded here. The live composer now keeps
+one element tree through keyboard insets. The entire composer Row is a
+TextFieldTapRegion. Outside-tap unfocus is native-iOS-only in chat and CaInput;
+Android/web use Flutter's default. Drag dismissal remains on both platforms.
+New connection tests never reconnect the input after applying the inset.
+
+`rg -n "CaInput\(" project/lib` found all callers below, including the shared
+CaSearchField wrapper. Related external actions were checked at their callbacks:
+none gates its action on focus or changes its enabled state from a focus listener.
+Unfocus does not consume the pointer, so their submit/add/picker action still
+fires using the controller value. No additional tap-region wrapper is needed.
+The iOS CaInput host action test exercises submit, suffix, add and picker taps,
+asserting the action/value and focus result; actual native pickers remain E0.
+
+| Caller, under project/lib | Related action and source check |
+|---|---|
+| features/auth/presentation/steps/apply_step_1_identity.dart | Name/email fields; wizard Next validates controllers. No field-local external suffix action. |
+| features/auth/presentation/steps/apply_step_3_professional.dart | Custom-field dialog Add reads its controller; custom-tag sibling Add calls _submitCustomTag, reads text and clears it. YouTube trailing status remains inside the TextFormField region. |
+| features/auth/presentation/steps/apply_step_3_5_org_speakers.dart | Dialog Add reads controllers. Handle lookup trailing IconButton calls checkAndAutofill and is already inside the field region. Avatar picker and Add Speaker callbacks do not depend on input focus. |
+| features/auth/presentation/steps/apply_step_4_location.dart | Branch Add reads name/address; sibling map buttons open LocationPickerModal/_openMapPinpoint. Add/remove branch and contact preference callbacks remain enabled independently of focus. Phone trailing icon is status only. |
+| features/profile/presentation/widgets/viewer_profile_editor_dialog.dart | Save/_handleSave reads controllers; avatar picker and Cancel remain callable after unfocus. |
+| features/profile/presentation/widgets/join_org_modal_sheet.dart | Submit/_submitRequest reads role/note controllers; organization selection is independent of focus. |
+| features/profile/presentation/widgets/upcoming_schedule_editor_sheet.dart | Save/_save reads form controllers; _pickDate/_pickTime open their pickers after unfocus. |
+| features/profile/presentation/widgets/broadcaster_application_sheet.dart | Shared field builder; Submit/_handleSubmit and _openLocationPicker read state/controllers without focus guards. |
+| features/profile/presentation/settings/broadcasting_settings_section.dart | URL onChanged persists state; title/venue controllers feed start action. Campus picker/start callbacks are independent of focus. |
+| features/live_stream/presentation/widgets/rtmp_ip_dialog.dart | Optional title controller feeds studio actions; start/go-live actions remain governed by studio state, not field focus. |
+| core/widgets/ds/ca_fields.dart | CaSearchField delegates to CaInput. Any trailing control is passed through suffixIcon and stays inside its field tap region. |
+
+Sources: [Flutter onTapOutside](https://api.flutter.dev/flutter/material/TextField/onTapOutside.html)
+and [TextFieldTapRegion](https://api.flutter.dev/flutter/widgets/TextFieldTapRegion-class.html).
+Context7 was queried first; unrelated/no matching results required the official
+API pages as fallback. Host touch tests do not establish native keyboard behavior.

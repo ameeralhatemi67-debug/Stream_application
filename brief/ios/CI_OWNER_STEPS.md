@@ -23,8 +23,14 @@ unsigned compile. Once the Mac arrives, prefer MAC_SETUP.md for device work.
 5. This run resolves Flutter packages, runs `pod install`, analyzer and all
    tests, then `flutter build ios --release --no-codesign
    --dart-define-from-file=dart_define.example.json`. The publisher stays off.
-6. Download the `build/ci-logs/*.log` artifacts. A final `ios-clean` result must
-   be exit 0. Keep the commit SHA, run URL/date, actual versions, analyzer count,
+6. Download the build/ci-logs/*.log artifacts. ios-clean must exit 0 for the
+   targeted viewer files: Runner Info.plist, EN/AR InfoPlist.strings, entitlements,
+   PrivacyInfo.xcprivacy and Podfile. publisher-project must find no
+   A117000000000000000000, HaishinKit, Logboard, PublisherStrings,
+   PublisherPrivacy or Info-Publisher in the pbxproj. publisher-flag must
+   confirm Publisher.generated.xcconfig is absent. ios-diff-stat is
+   informational; the first pod install may change the tracked project and
+   workspace. Keep the commit SHA, run URL/date, actual versions, analyzer count,
    test counts, build exit and cleanup result. A .app artifact is unsigned.
 
 ## Experimental publisher, separate manual run
@@ -38,13 +44,22 @@ unsigned compile. Once the Mac arrives, prefer MAC_SETUP.md for device work.
    --dart-define-from-file=dart_define.example.json
    --dart-define=IOS_PHONE_PUBLISHING=true`.
 3. The EXIT trap runs `configure.py --disable`, even after a failed compile,
-   then `git diff --exit-code HEAD -- ios/` and verifies that
-   `ios/Flutter/Publisher.generated.xcconfig` is absent. Failed cleanup fails the
+   then runs the three targeted isolation checks described above and prints
+   git diff --stat -- ios/ for information. Failed cleanup fails the
    workflow. Flutter plugins stay on CocoaPods; publisher packages use the
    existing opt-in Runner SwiftPM configuration.
-4. Retain **enable**, **pods**, **build**, **disable** and **ios-clean** logs.
+4. Retain **enable**, **pods**, **build**, **disable**, **ios-clean**,
+   **publisher-project**, **publisher-flag** and **ios-diff-stat** logs.
    This is a compile probe; it does not authorize a publisher release or prove
    capture, interruption recovery, background behavior or Apple authentication.
+
+After the first successful viewer pod install on the Mac, review and commit
+project/ios/Runner.xcodeproj/project.pbxproj and
+project/ios/Runner.xcworkspace/contents.xcworkspacedata by explicit path, as in
+MAC_SETUP.md. No Mac output is available for the Windows builder to commit.
+The markerless cleanup fixtures are host simulations, not a CocoaPods/Xcode pass.
+An unsuccessful build keeps its own exit code; cleanup failure changes success
+to failure.
 
 ## When either run fails, paste this back to Claude
 

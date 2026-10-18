@@ -52,8 +52,10 @@ void main() {
         'apple_revocation_failed',
       ];
       for (final code in appleCodes) {
-        // These refusals intentionally share the W22 factual guidance.
-        expect(texts[code], texts[appleCodes.first]);
+        final retry =
+            locale.languageCode == 'ar' ? ' حاول مرة أخرى.' : ' Try again.';
+        expect(texts[code],
+            '${texts[appleCodes.first]}${code == 'apple_revocation_failed' ? retry : ''}');
         expect(texts[code], contains('Apple'));
         expect(texts[code], contains('iOS'));
         expect(texts[code], contains(AppIdentity.supportEmail));

@@ -14,7 +14,7 @@ source pages. Claude/owner own the public-page edits and redeployment.
 | privacy.html:164–177 | Export, immediate in-app deletion, support request within 30 days, active-account retention and limited backup copies. | Replace unconditional immediate-deletion claims with actual restrictions and failure paths. Add fresh Apple reauthorization + server token revocation; unavailable/cancelled/failed means account kept. Mention separate cleanup steps, proof validity/retention, provider copies and owner-confirmed log/backup periods. Do not imply W19 source is deployed. |
 | about.html:78–95 and Arabic counterpart | Viewer and broadcasting capabilities together, Google-only sign-in explanation, coming to Google Play. | Identify Apple or Google on eligible iOS builds and viewer-first availability. Do not advertise iOS phone/OBS/channel/push as released. Keep Android/web capabilities accurately labeled. Add iOS availability only after actual release evidence. |
 | delete-account.html:280–342 and Arabic counterpart | Current Hadayah branding, deletion inventory, immediate sign-in revocation and instant self-service, support form with a 30-day promise. | Explain Apple-linked reauthorization/revocation and blocked/retry/support paths. Account removal is not proof every existing access token/provider copy immediately disappears. Verify the support promise, intake and response operations. Apple relay email may differ from the address a person normally uses; support must verify identity without provider passwords/codes. |
-| All three | Public support contact exists and EN/AR variants are committed. | Keep the same AppIdentity contact and links in both languages; confirm the mailbox is monitored and users can email support to ask what is blocking deletion. Support cannot complete Apple-linked deletion by email alone. Approve operator identity/address, audience/children's policy and retention with counsel. |
+| All three | Public support contact exists and EN/AR variants are committed. | Keep the same AppIdentity contact and links in both languages; confirm the mailbox is monitored and users can email support to ask what is blocking deletion. Support cannot complete deletion of an Apple-linked account by email alone. Approve operator identity/address, audience/children's policy and retention with counsel. |
 
 The deletion page's form opens a mailto composer (source lines 412–430); it is not a server-submitted deletion ticket. Owner acceptance must send a test request and confirm receipt/completion, rather than infer that opening the composer submits it.
 
@@ -31,10 +31,9 @@ W21 finding 3: **copy done, design decision open**. Replace every public promise
 that email support will delete an Apple-linked account with this explanation:
 
 - EN: "An account linked to Apple can only be fully deleted inside the iOS app
-  with fresh Apple authorization. Support cannot complete deletion by email
-  alone. Your account has not been deleted. Email support to ask what is blocking it."
+  with fresh Apple authorization. Support cannot complete deletion of an Apple-linked account by email alone. Your account has not been deleted. Email support to ask what is blocking it."
 - AR: "لا يمكن إكمال حذف حساب مرتبط بـ Apple إلا داخل تطبيق iOS بتفويض جديد
-  من Apple. لا يستطيع الدعم إكمال الحذف بالبريد الإلكتروني وحده. لم يُحذف
+  من Apple. لا يستطيع الدعم إكمال حذف الحساب المرتبط بـ Apple بالبريد الإلكتروني وحده. لم يُحذف
   حسابك. راسل الدعم للسؤال عمّا يمنع الحذف."
 
 Apply this limit to the deletion form, restricted-account guidance and privacy

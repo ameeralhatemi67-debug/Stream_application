@@ -212,6 +212,13 @@ run_gate pub-get flutter pub get
 run_gate analyze flutter analyze
 run_gate tests flutter test
 (cd ios && pod install)
+run_gate viewer-resources git diff --exit-code HEAD -- \
+  ios/Runner/Info.plist ios/Runner/en.lproj/InfoPlist.strings \
+  ios/Runner/ar.lproj/InfoPlist.strings ios/Runner/Runner.entitlements \
+  ios/Runner/PrivacyInfo.xcprivacy ios/Podfile
+run_gate viewer-project bash -c 'if grep -nE "A117000000000000000000|HaishinKit|Logboard|PublisherStrings|PublisherPrivacy|Info-Publisher" ios/Runner.xcodeproj/project.pbxproj; then exit 1; else taskGrep=$?; [[ $taskGrep == 1 ]]; fi'
+run_gate viewer-flag test ! -e ios/Flutter/Publisher.generated.xcconfig
+git diff --stat -- ios/ | tee "$taskEvidence/ios-diff-stat.log"
 xcodebuild -project ios/Runner.xcodeproj -target Runner -configuration Debug -showBuildSettings |
   sed -nE '/^[[:space:]]*(CODE_SIGN_ENTITLEMENTS|PRODUCT_BUNDLE_IDENTIFIER|IPHONEOS_DEPLOYMENT_TARGET|TARGETED_DEVICE_FAMILY)[[:space:]]*=/p' |
   tee "$taskEvidence/debug-settings.txt"
@@ -255,6 +262,59 @@ printf 'M1 gates passed; E2 claim only. Record actual M2/M3 observations in DEVI
 flutter run --debug -d "$taskSimulatorId" --dart-define-from-file=dart_define.local.json
 HADAYAH_M123
 ```
+
+After the first successful viewer pod install, the owner reviews the CocoaPods
+integration and commits only these two paths from the repository root:
+
+~~~sh
+git diff -- project/ios/Runner.xcodeproj/project.pbxproj project/ios/Runner.xcworkspace/contents.xcworkspacedata
+git add -- project/ios/Runner.xcodeproj/project.pbxproj project/ios/Runner.xcworkspace/contents.xcworkspacedata
+git commit -m "chore(ios): integrate viewer CocoaPods"
+~~~
+
+This is an owner Mac step. No CocoaPods output was produced or committed on Windows.
+Do not include publisher activation, generated xcconfig, Pods or signing changes.
+
+For a later authorized publisher dependency probe, run the following from the
+repository root. Its EXIT cleanup disables the publisher even if pod install
+fails, verifies the same viewer isolation as CI, and prints the project/workspace
+diff stat for information. A build failure keeps its exit code; cleanup failure
+turns a successful probe into failure. This is source-only documentation.
+
+~~~sh
+bash <<'HADAYAH_PUBLISHER_ROUND_TRIP'
+set -euo pipefail
+cd project
+finish_publisher_probe() {
+  local taskStatus=$? taskCleanup=0 taskGrep
+  trap - EXIT
+  set +e
+  echo 'Restoring viewer configuration'
+  python3 ios/Publisher/configure.py --disable || taskCleanup=1
+  echo 'Checking viewer resources and Podfile'
+  git diff --exit-code HEAD -- \
+    ios/Runner/Info.plist ios/Runner/en.lproj/InfoPlist.strings \
+    ios/Runner/ar.lproj/InfoPlist.strings ios/Runner/Runner.entitlements \
+    ios/Runner/PrivacyInfo.xcprivacy ios/Podfile || taskCleanup=1
+  echo 'Checking publisher project references'
+  if grep -nE 'A117000000000000000000|HaishinKit|Logboard|PublisherStrings|PublisherPrivacy|Info-Publisher' ios/Runner.xcodeproj/project.pbxproj; then
+    taskCleanup=1
+  else
+    taskGrep=$?
+    if [[ $taskGrep != 1 ]]; then taskCleanup=1; fi
+  fi
+  echo 'Checking generated publisher flag is absent'
+  test ! -e ios/Flutter/Publisher.generated.xcconfig || taskCleanup=1
+  echo 'Informational iOS diff stat'
+  git diff --stat -- ios/
+  if [[ $taskStatus == 0 && $taskCleanup != 0 ]]; then taskStatus=$taskCleanup; fi
+  exit "$taskStatus"
+}
+trap finish_publisher_probe EXIT
+python3 ios/Publisher/configure.py --enable
+(cd ios && pod install)
+HADAYAH_PUBLISHER_ROUND_TRIP
+~~~
 
 If a command fails, keep its log private until sanitized and follow W13 before
 continuing. Do not batch speculative native fixes. After the interactive run,

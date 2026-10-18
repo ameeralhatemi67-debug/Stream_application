@@ -6,7 +6,8 @@ import '../../../core/widgets/ds/ca_fields.dart';
 import '../../../core/widgets/ds/ca_feedback.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_navigation.dart';
-import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb, defaultTargetPlatform;
+import 'package:flutter/foundation.dart'
+    show ValueListenable, kIsWeb, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -955,10 +956,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final single = LayoutBuilder(
         builder: (context, constraints) => Column(children: [
               ConstrainedBox(
-                  constraints:
-                      BoxConstraints(
-                          maxHeight: constraints.maxHeight *
-                              (keyboardOpen ? .25 : .45)),
+                  constraints: BoxConstraints(
+                      maxHeight:
+                          constraints.maxHeight * (keyboardOpen ? .25 : .45)),
                   child: AnimatedSize(
                       duration: CanopyMotion.chipIn,
                       curve: CanopyMotion.easeOut,
@@ -1411,39 +1411,41 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   Widget _buildCinemaTabPanel(
-          AppProvider appProvider, StreamerModel streamer, String langCode) =>
-      MediaQuery.viewInsetsOf(context).bottom > 0 && _tabController.index == 0
-          ? _buildChatTabView()
-          : ColoredBox(
-          color: Canopy.forestDeep,
-          child: LayoutBuilder(
-              builder: (context, constraints) => Column(children: [
-                    ConstrainedBox(
-                        constraints: BoxConstraints(
-                            maxHeight: constraints.maxHeight * .45),
-                        child: SingleChildScrollView(
-                            child: Padding(
-                                padding: const EdgeInsets.all(AppTheme.spaceSm),
-                                child: AnimatedBuilder(
-                                    animation: _tabController,
-                                    builder: (context, _) => CaSegmentedTabs(
-                                        dark: true,
-                                        labels: [
-                                          'live.tab_chat'.tr(),
-                                          'live.tab_sources'.tr(),
-                                          'live.tab_venue'.tr()
-                                        ],
-                                        index: _tabController.index,
-                                        onChanged:
-                                            _tabController.animateTo))))),
-                    Expanded(
-                        child:
-                            TabBarView(controller: _tabController, children: [
-                      _buildChatTabView(),
-                      _buildSourcesTabView(appProvider, streamer, langCode),
-                      _buildVenueTabView(appProvider, streamer, langCode),
-                    ])),
-                  ])));
+      AppProvider appProvider, StreamerModel streamer, String langCode) {
+    // Scaffold removes keyboard insets from the body's MediaQuery.
+    final compactChat = MediaQuery.viewInsetsOf(context).bottom > 0 &&
+        _tabController.index == 0;
+    return ColoredBox(
+        color: Canopy.forestDeep,
+        child: LayoutBuilder(
+            builder: (context, constraints) => Column(children: [
+                  ConstrainedBox(
+                      constraints: BoxConstraints(
+                          maxHeight:
+                              compactChat ? 0 : constraints.maxHeight * .45),
+                      child: SingleChildScrollView(
+                          child: Padding(
+                              padding: const EdgeInsets.all(AppTheme.spaceSm),
+                              child: AnimatedBuilder(
+                                  animation: _tabController,
+                                  builder: (context, _) => CaSegmentedTabs(
+                                      dark: true,
+                                      labels: [
+                                        'live.tab_chat'.tr(),
+                                        'live.tab_sources'.tr(),
+                                        'live.tab_venue'.tr()
+                                      ],
+                                      index: _tabController.index,
+                                      onChanged: _tabController.animateTo))))),
+                  Expanded(
+                      child: TabBarView(controller: _tabController, children: [
+                    _buildChatTabView(),
+                    _buildSourcesTabView(appProvider, streamer, langCode),
+                    _buildVenueTabView(appProvider, streamer, langCode),
+                  ])),
+                ])));
+
+    }
 
   //  Tab 1: Live Chat with Zero Top Gap, Reactions Menu & Raise Hand Toggle
   Widget _buildChatTabView() {
@@ -1551,7 +1553,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         children: [
                           ListView.builder(
                             controller: _chatScrollController,
-                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
                             physics: const AlwaysScrollableScrollPhysics(
                               parent: BouncingScrollPhysics(),
                             ),
@@ -1586,12 +1589,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               // taller than the whole panel. Between the two caps the message
               // list always keeps at least a fifth of the panel.
               ConstrainedBox(
-                constraints:
-                    BoxConstraints(
-                        maxHeight: constraints.maxHeight *
-                            (MediaQuery.viewInsetsOf(context).bottom > 0
-                                ? 0.7
-                                : 0.45)),
+                constraints: BoxConstraints(
+                    maxHeight: constraints.maxHeight *
+                        (MediaQuery.viewInsetsOf(context).bottom > 0
+                            ? 0.7
+                            : 0.45)),
                 child: SingleChildScrollView(child: _buildChatComposer()),
               ),
             ],
@@ -1962,7 +1964,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     return Padding(
         padding: const EdgeInsetsDirectional.symmetric(
             horizontal: AppTheme.spaceSm, vertical: AppTheme.spaceSm),
-        child: Row(children: [
+        child: TextFieldTapRegion(
+            child: Row(children: [
           IconButton(
               icon: Icon(Icons.back_hand_rounded,
                   color: _isHandRaised ? Canopy.majlisGold : Canopy.mist),
@@ -1972,7 +1975,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               child: TextField(
                   controller: _chatTextController,
                   focusNode: _chatFocus,
-                  onTapOutside: (_) => _chatFocus.unfocus(),
+                  onTapOutside:
+                      !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                          ? (_) => _chatFocus.unfocus()
+                          : null,
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
@@ -2009,7 +2015,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               label: 'live.send'.tr(),
               selected: true,
               onPressed: canSend ? _handleSendLocalMessage : null),
-        ]));
+        ])));
   }
 
   Widget _buildChatMessageTile(ChatMessageModel message,

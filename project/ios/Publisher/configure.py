@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Opt in to W17 without migrating Flutter's CocoaPods integration. No network I/O.
 
-Only edits the marked package blocks, three plist selections, the privacy path and
+Only edits reserved/marked publisher objects and references, three plist selections, the privacy path and
 the two localized InfoPlist.strings paths in Runner.xcodeproj, plus one ignored xcconfig. Run from any working directory.
 """
 import argparse
@@ -35,8 +35,98 @@ def remove_blocks(text):
                   r"/\* HADAYAH_PUBLISHER_\1_END \*/\n", "", text, flags=re.S)
 
 
+def remove_reserved_objects(text):
+    """Parse OpenStep containers, deleting only reserved objects/list references."""
+    if PREFIX not in text:
+        return text
+    token_pattern = re.compile(
+        r'\s+|/\*.*?\*/|//[^\n]*|"(?:\\.|[^"\\])*"|[{}()=;,]|[^\s{}()=;,"]+',
+        re.S)
+    tokens = []
+    position = 0
+    for match in token_pattern.finditer(text):
+        if match.start() != position:
+            raise ValueError("Unrecognized publisher project syntax")
+        position = match.end()
+        raw = match.group()
+        if not raw.isspace() and not raw.startswith(("/*", "//")):
+            tokens.append((raw, match.start(), match.end()))
+    if position != len(text):
+        raise ValueError("Unrecognized publisher project syntax")
+    index = 0
+    removals = []
+
+    def peek():
+        return tokens[index][0] if index < len(tokens) else None
+
+    def consume(expected=None):
+        nonlocal index
+        if index >= len(tokens) or (expected is not None and peek() != expected):
+            raise ValueError("Cannot safely parse publisher project")
+        token = tokens[index]
+        index += 1
+        return token
+
+    def scalar():
+        if peek() is None or peek() in "{}()=;,":
+            raise ValueError("Expected scalar in publisher project")
+        return consume()
+
+    def value(path):
+        if peek() == "{":
+            consume("{")
+            while peek() != "}":
+                key = scalar()
+                consume("=")
+                reserved = path == ("objects",) and key[0].startswith(PREFIX)
+                if reserved and (not re.fullmatch(PREFIX + r"[0-9A-Fa-f]{2}", key[0])
+                                 or peek() != "{"):
+                    raise ValueError("Unrecognized reserved publisher object")
+                value((*path, key[0]))
+                end = consume(";")[2]
+                if reserved:
+                    removals.append((key[1], end))
+            consume("}")
+        elif peek() == "(":
+            consume("(")
+            while peek() != ")":
+                start = index
+                value((*path, "[]"))
+                end = tokens[index - 1][2]
+                if peek() == ",":
+                    end = consume(",")[2]
+                elif peek() != ")":
+                    raise ValueError("Unrecognized publisher list separator")
+                item = tokens[start]
+                if (path[-1] in ("files", "packageProductDependencies", "packageReferences")
+                        and item[0].startswith(PREFIX)):
+                    if not re.fullmatch(PREFIX + r"[0-9A-Fa-f]{2}", item[0]):
+                        raise ValueError("Unrecognized reserved publisher reference")
+                    removals.append((item[1], end))
+            consume(")")
+        else:
+            scalar()
+
+    value(())
+    if index != len(tokens):
+        raise ValueError("Trailing publisher project syntax")
+    # A dictionary removal can contain list removals; keep the outer range.
+    ranges = []
+    for start, end in sorted(removals):
+        if ranges and start < ranges[-1][1]:
+            if end > ranges[-1][1]:
+                raise ValueError("Overlapping publisher edits")
+        else:
+            ranges.append((start, end))
+    for start, end in reversed(ranges):
+        text = text[:start] + text[end:]
+    if PREFIX in text:
+        raise ValueError("Unrecognized reserved publisher content remains")
+    return text
+
+
 def transform(text, enabled):
-    text = remove_blocks(text)
+    text = remove_reserved_objects(remove_blocks(text))
     text = text.replace("path = PublisherPrivacy/PrivacyInfo.xcprivacy;",
                         "path = PrivacyInfo.xcprivacy;")
     text = text.replace("INFOPLIST_FILE = Runner/Info-Publisher.plist;",
@@ -53,6 +143,9 @@ def transform(text, enabled):
             raise ValueError("Expected exactly one localized InfoPlist.strings per language")
     if "HADAYAH_PUBLISHER_" in text:
         raise ValueError("Malformed publisher markers; inspect project before toggling")
+    if any(value in text for value in [PREFIX, 'HaishinKit', 'Logboard',
+                                       'PublisherStrings', 'PublisherPrivacy', 'Info-Publisher']):
+        raise ValueError('Unrecognized publisher content remains; inspect project before toggling')
     if not enabled:
         return text
     if any(value in text for value in ["XCRemoteSwiftPackageReference", "packageProductDependencies", "packageReferences", PREFIX]):

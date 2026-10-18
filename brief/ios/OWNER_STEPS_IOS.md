@@ -297,6 +297,15 @@ No paid enrollment is needed for source, Simulator compilation or camera/mic in 
 free-team Debug device build. Paid Apple sign-in/APNs/distribution remain deferred.
 No compile attempt, account access or SDK package resolution was made on Windows.
 
+## W23 shared Dart Play regression
+
+W23 Play regression check, pending owner observation: on a real Android phone,
+type and send several live-room chat messages. Confirm opening the keyboard and
+tapping Send, reaction and raise hand keep the input connected and focused.
+Outside touch retains Android's default focus behavior; dragging dismisses it.
+The shared Dart keyboard compaction, mini-player bounds, drag dismissal and text
+colors also affect Android/web; native-folder hashes do not cover those changes.
+
 ## W18 — Push, deferred by D3/D4
 
 The complete implementation proposal and acceptance matrix are in [IOS_PUSH_SPEC.md](IOS_PUSH_SPEC.md). W18 is spec only; iOS Firebase stays disabled and free-team Debug keeps no entitlement file.

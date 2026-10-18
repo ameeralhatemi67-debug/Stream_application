@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
@@ -41,7 +42,7 @@ class AppRouter {
   /// [GoRouterState.extra]); without one it is the regular page push.
   static Page<void> _canopyPage(
       BuildContext context, GoRouterState state, Widget child) {
-    if (Theme.of(context).platform == TargetPlatform.iOS) {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       return CupertinoPage<void>(key: state.pageKey, child: child);
     }
     final origin = state.extra is Rect ? state.extra as Rect : null;
@@ -106,7 +107,8 @@ class AppRouter {
           }
           if (isLoggedIn &&
               provider.pendingOrganizationInvitation != null &&
-              !path.startsWith('/org-invite/') && !provider.isCurrentUserBanned) {
+              !path.startsWith('/org-invite/') &&
+              !provider.isCurrentUserBanned) {
             return provider.pendingOrganizationInvitation;
           }
           if (isLoggedIn &&
@@ -202,10 +204,15 @@ class AppRouter {
           ),
         ),
         routes: [
-          GoRoute(parentNavigatorKey:_rootNavigatorKey,path:'/shows',builder:(context,state)=>
-            OrganizationShowsScreen(initialOrganizationId:state.uri.queryParameters['org'])),
-          GoRoute(parentNavigatorKey:_rootNavigatorKey,path:'/organizations',
-            builder:(context,state)=>const OrganizationHubScreen()),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/shows',
+              builder: (context, state) => OrganizationShowsScreen(
+                  initialOrganizationId: state.uri.queryParameters['org'])),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/organizations',
+              builder: (context, state) => const OrganizationHubScreen()),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/login-callback',
@@ -344,14 +351,21 @@ class AppRouter {
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/org-invite/:id',
-            builder: (context, state) => OrgInvitationScreen(id: state.pathParameters['id']!,
-              token: state.uri.queryParameters['token']),
+            builder: (context, state) => OrgInvitationScreen(
+                id: state.pathParameters['id']!,
+                token: state.uri.queryParameters['token']),
           ),
-          GoRoute(path:'/channels',parentNavigatorKey:_rootNavigatorKey,
-            builder:(context,state)=>ChannelConnectionsScreen(returnStatus:state.uri.queryParameters['status'])),
-          GoRoute(path:'/channel-connected',parentNavigatorKey:_rootNavigatorKey,
-            builder:(context,state)=>ChannelConsentReturnScreen(returnStatus:state.uri.queryParameters['status'],
-              navigatorKey:_rootNavigatorKey)),
+          GoRoute(
+              path: '/channels',
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (context, state) => ChannelConnectionsScreen(
+                  returnStatus: state.uri.queryParameters['status'])),
+          GoRoute(
+              path: '/channel-connected',
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (context, state) => ChannelConsentReturnScreen(
+                  returnStatus: state.uri.queryParameters['status'],
+                  navigatorKey: _rootNavigatorKey)),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/account-banned',
@@ -423,8 +437,8 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                   children: [
                                     const SizedBox(height: AppTheme.spaceLg),
                                     const Center(
-                                        child: AppLogo(
-                                            size: CanopySize.railLogo)),
+                                        child:
+                                            AppLogo(size: CanopySize.railLogo)),
                                     const SizedBox(height: AppTheme.spaceXl),
 
                                     // Navigation Items
@@ -476,11 +490,10 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                     if (isPermittedAdmin)
                                       _DesktopNavItem(
                                         icon: CaGlyph.home,
-                                        label: 'design_ui.organization_admin'
-                                            .tr(),
+                                        label:
+                                            'design_ui.organization_admin'.tr(),
                                         isSelected: false,
-                                        onTap: () =>
-                                            context.push('/org-admin'),
+                                        onTap: () => context.push('/org-admin'),
                                       ),
 
                                     const Spacer(),
@@ -605,15 +618,15 @@ class _DesktopNavItem extends StatelessWidget {
                       Expanded(
                         child: Text(
                           label,
-                          style:
-                              Theme.of(context).textTheme.labelLarge?.copyWith(
-                                    color: isSelected
-                                        ? Canopy.paper
-                                        : Canopy.slate,
-                                    fontWeight: isSelected
-                                        ? FontWeight.w700
-                                        : FontWeight.w500,
-                                  ),
+                          style: Theme.of(context)
+                              .textTheme
+                              .labelLarge
+                              ?.copyWith(
+                                color: isSelected ? Canopy.paper : Canopy.slate,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                              ),
                         ),
                       ),
                       if (badge != null)
@@ -714,8 +727,7 @@ class _DeferredState extends State<_Deferred> {
       future: _loaded,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Scaffold(
-              body: Center(child: HadayahLoadingIndicator()));
+          return const Scaffold(body: Center(child: HadayahLoadingIndicator()));
         }
         if (snapshot.hasError) {
           return Scaffold(

@@ -561,6 +561,101 @@ void main() {
         debugDefaultTargetPlatformOverride = null;
       }
     });
+    testWidgets(
+        'iOS CaInput related actions fire after outside dismissal $language',
+        (tester) async {
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      final provider = _Provider();
+      final controller = TextEditingController(text: 'Saved نص');
+      final focus = FocusNode();
+      final actions = <String>[];
+      try {
+        await tester.pumpWidget(_app(
+            provider,
+            Scaffold(
+                body: Builder(
+                    builder: (context) => Column(children: [
+                          CaInput(
+                              label: 'Input',
+                              controller: controller,
+                              focusNode: focus,
+                              trailing: IconButton(
+                                  tooltip: 'Suffix',
+                                  icon: const Icon(Icons.check),
+                                  onPressed: () => actions
+                                      .add('suffix:${controller.text}'))),
+                          TextButton(
+                              onPressed: () =>
+                                  actions.add('submit:${controller.text}'),
+                              child: const Text('Submit')),
+                          IconButton(
+                              tooltip: 'Add',
+                              icon: const Icon(Icons.add),
+                              onPressed: () =>
+                                  actions.add('add:${controller.text}')),
+                          TextButton(
+                              onPressed: () {
+                                actions.add('picker:${controller.text}');
+                                showDialog<void>(
+                                    context: context,
+                                    builder: (_) => const AlertDialog(
+                                        content: Text('Picker opened')));
+                              },
+                              child: const Text('Picker')),
+                        ]))),
+            language,
+            1));
+        await tester.pumpAndSettle();
+        for (final action in ['Suffix', 'Submit', 'Add', 'Picker']) {
+          await tester.tap(find.byType(EditableText));
+          await tester.pump();
+          await tester.tap(action == 'Suffix' || action == 'Add'
+              ? find.byTooltip(action)
+              : find.text(action));
+          await tester.pumpAndSettle();
+          expect(actions.last, '${action.toLowerCase()}:Saved نص');
+          expect(focus.hasFocus, action == 'Suffix');
+        }
+        expect(find.text('Picker opened'), findsOneWidget);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        controller.dispose();
+        focus.dispose();
+        provider.dispose();
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+    testWidgets('Android CaInput outside touch retains focus $language',
+        (tester) async {
+      final provider = _Provider();
+      final focus = FocusNode();
+      try {
+        await tester.pumpWidget(_app(
+            provider,
+            Scaffold(
+                body: Column(children: [
+              CaInput(label: 'Input', focusNode: focus),
+              const SizedBox(height: 100),
+              const Text('Outside'),
+            ])),
+            language,
+            1));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byType(EditableText));
+        await tester.pump();
+        expect(focus.hasFocus, isTrue);
+        await tester.tap(find.text('Outside'));
+        await tester.pump();
+        expect(focus.hasFocus, isTrue);
+        expect(tester.testTextInput.hasAnyClients, isTrue);
+        expect(tester.takeException(), isNull);
+      } finally {
+        await tester.pumpWidget(const SizedBox.shrink());
+        focus.dispose();
+        provider.dispose();
+      }
+    });
     test('iOS app bars use legible system icons $language', () {
       expect(CaAppBar(backgroundColor: AppTheme.media).systemOverlayStyle,
           SystemUiOverlayStyle.light);

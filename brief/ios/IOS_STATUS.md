@@ -1,66 +1,78 @@
 # iOS build status
 
-Current contract: IOS_PLAN_V2.md. History: IOS_PROGRESS.md. Manager verdicts:
-IOS_LEDGER.md. Updated 2026-10-18 for W22 pre-Mac completion.
+Updated 2026-10-18 after W23. Contract: IOS_PLAN_V2.md sections 2, 3 and 12.
+History and red-first evidence: IOS_PROGRESS.md. Manager verdicts: IOS_LEDGER.md.
 
 ## Snapshot
 
 | Field | Current state |
 |---|---|
-| Track | Windows source/host work; no Mac/iPhone run |
-| Latest source | W21 50a9516; W22 master^{/complete W22 pre-Mac hardening} after commit |
-| Evidence ceiling | Dart/host E1; Swift/native E0. No E2/E2S/E3/E4 |
-| Current verification | Final analyzer 0 issues (45.4s); full Flutter 1,463 passed / 0 failed / 0 skipped (05:17); Edge 16/16; configure helper 4/4; CI fixtures 3/3; doctor fixtures 6/6. 1,898 EN/AR keys symmetric; viewer isolation and 65 Android/web file hashes pass. |
-| Original plan | 18/20 source orders complete; W11 partial for public/native/legal acceptance, W13 awaits a real native log |
-| Publishing default | Off. Viewer has no publisher package references, native flag, camera/mic purposes or background audio |
-| Apple enrollment | Deferred, D4. No paid enrollment needed for unsigned/Simulator or free-team Debug builds |
-| Usage | Owner removed caps; no budget-based stop |
+| Work order | W23-1 to W23-4 complete locally, awaiting manager audit. Stop after the W23 commit. |
+| Source | W22 base d35a29d; W23 local commit subject: fix(ios): address W22 audit findings |
+| Track/evidence | Windows source/host E1; Swift/native E0. No Mac, CI, Simulator or iPhone run. No E2/E2S/E3/E4. |
+| Fresh checks | flutter analyze --no-pub: 0 issues (30.5s); full flutter test --no-pub --reporter expanded: 1499 passed, 0 failed, 0 skipped (05:37). |
+| Host checks | configure 6/6; CI fixtures 6/6 using real temporary Git; doctor 6/6; Git Bash syntax 3/3. EN/AR 1,898 keys each, symmetric. Viewer isolation and 65/65 Android/web byte hashes pass. |
+| Publisher | Default off, unchanged. No generated xcconfig or opt-in package references in the viewer project; no camera/microphone/background purposes in viewer plist/strings. |
+| Accounts | D4 paid enrollment deferred. No account, hosted backend, secret or signing access. Owner pushes. |
 
-## W22 result by part
+## W23 result
 
-| Part | Deliverable | Limit |
-|---|---|---|
-| A, W21-1 | EN/AR factual Apple deletion refusals; platform-neutral restricted message plus conditional Apple sentence. Server identity flag stays authoritative. Legal sections 7/9, public gap and owner instructions reconciled. Apple/non-Apple restricted and localized result tests. | Blocker corrected in source; no support deletion service or backend bypass added. Finding 3 remains copy done, design decision open. |
-| B, W21-2 | PLAY_COPY_IMPACT.md records exact-search results and file:line hits for related Play claims. | No root store/, brief/launch/ or public-web edits. Screenshot pixels not searched. |
-| C | ios_layout_sweep_b_test.dart adds both landscapes, keyboard 336, 2x/3x text, all individual wizard steps, public profiles/organizations, notifications/editor and three iOS-gated notices across EN/AR. Portrait cases use all three iPhone sizes. | Host geometry/interaction only. No dedicated follows-list screen exists; actual profile follow controls and their collection are exercised. |
-| D | All three Flutter accessibility guidelines on welcome, chat actions, scrolling Settings and delete dialog at three sizes in EN/AR. Fixed support selection target and small-text contrast; Apple button preserves prominence with wrapping Google labels. | No VoiceOver/Dynamic Type/native-sheet certification. |
-| E | IOS_UX_AUDIT.md; Cupertino stack pages/back gesture, readable dark status icons, iOS orientation restore, keyboard-safe composer, outside/drag dismissal, body-bound/scaled return chip and iOS text scaling. | Native gestures, indicators, keyboard, haptics, idle timer/background need device. |
-| F | Two manual Codemagic unsigned workflows, Flutter 3.41.2, latest stable Xcode with enforced Xcode/iOS SDK 26+ floor; publisher enable/pod/build/disable and clean ios diff. CI_OWNER_STEPS.md and first-error excerpts. | YAML/Bash + fake-tool fixtures only. Neither workflow has run. No E2. |
-| G | EXPORT_COMPLIANCE.md inventories TLS, SDK crypto and standard hashes, with owner-confirmed questionnaire recommendations. iOS store pack matches deletion and viewer-only scope. | Info.plist untouched. Export classification/live Connect answers, counsel and actual store forms remain owner work. |
-| H | Fresh analyzer/full Flutter/Edge/helper checks and isolation greps recorded in PROGRESS at completion. | No SQL, hosted, native compile or device execution. |
-
-## Preserved evidence and gates
-
-| Feature / gate | Current evidence and next action |
+| Item | Source and host result |
 |---|---|
-| Native shell, bundle and permissions | E0; sa.hadayah.streamerapp, iPhone/iOS 15.0, Debug without paid entitlements. First compile via CI/Mac. |
-| Shared viewer, playback, maps and auth | Dart E1; WKWebView playback/referrer/150/152/153 behavior, Google cold/warm return and native permission prompts need Simulator/iPhone. |
-| Apple sign-in | Host nonce/exchange/availability tests E1; capability/provider/private-relay and real login/revocation need paid setup and iPhone. |
-| W19 deletion | E1 mocked Edge/Dart. Identity version includes updated_at, last_sign_in_at and identity-data hash. SQL guard/proof expiry/grants and 41 pgTAP assertions remain UNEXECUTED. Owner separately audits/deploys and verifies real provider behavior. |
-| W20 legal/public pages | Complete bilingual draft, v1.1.0-ios-draft; counsel approval, hosted legal record and public deployment remain open. Existing public source is Hadayah-branded but still needs iOS copy deltas. |
-| W17 publisher | E0 Swift, E1 mocked Dart. HaishinKit 2.2.5/Logboard 2.6.0 opt-in Runner SwiftPM; Flutter plugins remain CocoaPods, pubspec SwiftPM setting false. Original Dart/native commits remain separate. No SDK resolution or compile result. |
-| W21-3 / recovery findings 4/5 | Real calls/Siri/routes, fallback liveness, background/retry/capture cleanup remain iPhone gates. Local audio submission is not upstream-delivery proof. |
-| Privacy manifest | W21 source audit E1, native packaging E0. CA92.1/C617.1 unchanged; inspect resolved Pods/native assets and archive privacy report on Mac, including package_info_plus. |
-| Push / ESC-4 | Spec only. iOS Firebase/APNs/channel OAuth remain gated. No new push backend or platform registration label change. |
-| Invitations | HTTPS opens browser. Associated Domains/AASA and native non-auth invitation consumer remain deferred. |
-| App Store pack | Draft only; no screenshots, account forms, signed archive/upload or approval. Confirm data purposes, third-party collection, age/content answers and actual review fixtures. |
-| Support break-glass decision | Open. Current guard keeps Apple accounts when authorization/revocation is blocked. A later service-only override would need a separately authorized design, abuse/audit/retention controls and Apple/counsel review. |
+| W23-1 / W22-1 | Stable ColoredBox/LayoutBuilder/Column/TabBarView keeps EditableText mounted. Screen insets are captured above Scaffold; only the existing segmented-header slot collapses. Eight real-font EN/AR, Android/iOS, two-size cases retain the input client, visibility and focus through a 336px keyboard without reconnecting; direct TestTextInput entry sends; composer controls clear the keyboard and chrome returns. |
+| W23-2 / W22-2 | Composer Row is a TextFieldTapRegion. Send, reaction and raise hand retain focus/client and perform their actions. Native iOS outside tap dismisses; Android uses the framework touch default. Drag dismissal stays on both. CaInput uses the same platform gate; every caller is listed in IOS_UX_AUDIT.md, with related callback review and bilingual action checks. |
+| W23-3 / W22-3 | Exactly six in-app support-limit sentences now qualify Apple-linked accounts, plus matching proposed text in PUBLIC_PAGES_GAPS.md. Following contact sentences are unchanged; privacy section 9 retains web deletion URL and email. Catalog/legal and existing deletion tests pass. |
+| W23-4 / W22-4 | Markerless disable parses reserved publisher objects/list references, restores viewer paths, preserves unrelated Pods entries and refuses unknown shapes before writing. Intact-marker round trips remain byte-identical. CI logs targeted viewer resources/Podfile, publisher references and generated-flag checks; iOS diff stat is informational. Cleanup failure fails success; build failure keeps its own code. |
+| W22-5/6/7/8 | Android regression owner step added; failed Apple revocation alone gets the EN/AR retry cue with exact tests; CupertinoPage uses the native-iOS gate and existing swipe-back tests pass. Ledger report appended; earlier verdict bytes preserved. |
+
+## Shared-platform impact
+
+Unchanged Android/web native folders do not mean shared Dart behavior is unchanged.
+
+| Shared Dart behavior from W22/W23 | Android and web impact |
+|---|---|
+| Keyboard compaction and stable chat tree | Both use the compact player/header allocation and retain the composer through insets. |
+| Mini-player body bounds and scaled height | Both inherit W22's bounds/height changes. |
+| onDrag dismissal in feed, Settings and chat | Both inherit W22's drag behavior. |
+| Welcome, support and deletion text colors | Both inherit the shared contrast changes. |
+| Tap-outside after W23-2 | Custom unfocus is native-iOS-only in composer/CaInput. Android/web receive null and use Flutter's framework default; composer controls share its tap region. |
+| Deletion copy | Shared catalogs/legal qualify the Apple-only limitation. Only the transient failed Apple-revocation message gains a retry suffix. |
+
+## Preserved gates
+
+- Native shell, sa.hadayah.streamerapp/iOS 15.0 and Debug without paid entitlements
+  remain source-only. Neither Codemagic workflow has run. W13 must handle the
+  first real CI/Mac build log before other work.
+- Playback/referrer behavior, Google return, real Apple sign-in/private relay,
+  native keyboard/selection, VoiceOver, Dynamic Type and gestures need native
+  observation. Host touch/swipe tests do not prove device behavior.
+- W17 publisher remains Swift E0 and mocked Dart E1, HaishinKit 2.2.5/Logboard
+  2.6.0 opt-in SwiftPM with Flutter plugins on CocoaPods. W21-3 and recovery
+  findings 4/5 need iPhone interruption, upstream-delivery and capture proof.
+  Local audio submission is not upstream-delivery proof.
+- W19 SQL/proof expiry/grants and 41 pgTAP assertions remain unexecuted.
+  Deployment, real provider revocation and deletion acceptance are separately
+  authorized owner work. No SQL/provider work was started in W23.
+- Finding 3 support design remains open. Apple deletion guards are unchanged.
+  Legal v1.1.0-ios-draft/public pages, hosted legal record and counsel approval
+  remain open. Public source, store and Play launch files were not edited.
+- Archive privacy report, resolved Pods/native assets, package_info_plus and
+  required-reason checks need Mac packaging. Export/store answers, territories,
+  audience/content rights, review fixtures and submission remain owner/counsel work.
+- ESC-4 push is deferred. iOS Firebase/APNs and channel OAuth stay gated.
+  Associated Domains/AASA and native invitation consumption stay deferred.
 
 ## Owner next steps
 
-1. Review/push the intended commit yourself when ready. W22 includes the ledger
-   and manager verdicts; IOS_PLAN_V2.md and selected prompts are still untracked
-   owner transfer/commit choices. Keep the unrelated icon and draft files out.
-2. Manually run viewer CI, then optional publisher compile, or follow MAC_SETUP.md
-   M1-M3 on the arriving Mac. Supply the first actual error context and versions.
-   W13 fixes real errors before broad native changes. CI is never auto-started.
-3. After viewer compilation, run Simulator and iPhone matrices. Keep publisher
-   off before its E3/privacy gates. Debug must retain no paid entitlement.
-4. Separately approve/audit/deploy W19, execute SQL tests in an authorized database,
-   verify real revocation/deletion and provider account switching; owner verifies
-   OAuth allowlist without disturbing Android/web entries.
-5. Owner/Claude/counsel resolve public legal delivery, support design, privacy,
-   export/territories, content rights and review accounts before submission.
+1. Manager audits W23; owner selects and pushes intended commits. Untracked
+   manager plan/prompts, unrelated icon/observation log/drafts remain out.
+2. Run the viewer CI/Mac sequence in CI_OWNER_STEPS.md/MAC_SETUP.md. After the
+   first successful viewer pod install, review and commit the actual integrated
+   pbxproj and workspace by explicit path. No Mac output was fabricated here.
+3. Run the Simulator/iPhone matrices and the real Android phone chat typing/
+   sending Play regression in OWNER_STEPS_IOS.md. Keep publishing off until
+   its device/privacy gates pass.
 
-W22 stops after its local commit. No push, deploy, migration execution, hosted
-Supabase/Vercel access, secret/signing inspection or evidence promotion occurred.
+W23 ends after one explicit-path local commit. No push, deploy, database
+execution, hosted access, signing/secret inspection, Swift edit or dependency
+change. No later work order starts automatically.

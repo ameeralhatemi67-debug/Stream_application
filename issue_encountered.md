@@ -3,6 +3,9 @@
 Updated: 2026-10-03. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
+- **Live-room keyboard closes when it opens** — stable composer element tree and screen-level inset capture; Android/iOS host connection tests pass, physical keyboards pending.
+- **Chat Send and sibling actions dismiss typing** — composer tap region plus native-iOS-only outside dismissal; host action/focus checks pass.
+- **iOS CI cleanup rejects CocoaPods integration** — targeted viewer isolation and markerless reserved-ID cleanup; real-Git host fixtures pass, Mac execution pending.
 - **iOS publisher retry has dead audio after an interruption** — blind E0 fix reactivates the audio session and checks/restarts mixer capture; iPhone validation pending.
 - **iOS publisher drops healthy streams without network callbacks** — E0 watchdog fallback uses recent non-empty audio submissions until the first network report; transport proof still needs iPhone.
 - **Apple deletion proof survives a new sign-in** — version now binds both identity timestamps and the identity-data hash; local pgTAP execution pending.
@@ -721,5 +724,26 @@ Verification: EN/AR drag-to-bottom tests assert the chip clears the actual botto
 Status: host E1, 2026-10-18; native keyboard behavior pending. Follow-up to LIVE-05.
 Observed: at 375x667 with a 336px keyboard the composer bottom exceeded the visible area by about 30px.
 Cause: player/header/tab chrome left too little space for the bounded composer.
-Fix: reduce the compact player, omit channel header/chat tab chrome while typing and increase the composer's available share. Shared inputs/chat support outside dismissal; feed/settings/chat dismiss on drag.
-Verification: keyboard cases focus and type into every tested field, assert its rectangle clears the keyboard and keep the live player/message content. No rendering errors suppressed.
+Fix: reduce the compact player, omit channel header/chat tab chrome while typing and increase the composer's available share. W23 retains one composer tree and captures keyboard insets above Scaffold, which consumes body insets. Outside dismissal is native-iOS-only; feed/settings/chat still dismiss on drag.
+Verification: real-font EN/AR keyboard bounds and connection/focus checks, including 375x667 with a 336px keyboard. W22's enterText-based check alone missed remounting because it reattached the keyboard. No rendering errors suppressed; native keyboard observation pending.
+
+## Live-room keyboard closes when it opens
+Status: host E1, 2026-10-18; Android/iPhone observation pending.
+Observed: applying a 336px keyboard inset detached the input client in all eight new Android/iOS, EN/AR, two-size cases, even while the focus node remained focused.
+Cause: the keyboard branch replaced ColoredBox/LayoutBuilder/Column/TabBarView with a direct chat view, disposing EditableText. A first stable-tree attempt read the inset below Scaffold, left the tab header visible and failed the real-font SE bound by 1px EN/6.5px AR.
+Fix: keep the same tree, capture screen insets before the body builder, and collapse only the existing segmented header slot.
+Verification: tap, apply inset, pump frames/settle, assert live client/visibility/focus and no hide/clearClient after show, then enter through TestTextInput and send. Both the field and composer controls clear the keyboard. Do not use tester.enterText/showKeyboard after the inset to test connection survival.
+
+## Chat Send and sibling actions dismiss typing
+Status: host E1, 2026-10-18; native touch/keyboard observation pending.
+Observed: Send, reaction and raise-hand callbacks fired but lost focus in EN/AR on Android and iOS. Android outside touches also dismissed CaInput/chat.
+Cause: unconditional onTapOutside treated sibling controls as outside and overrode Flutter's mobile touch default.
+Fix: TextFieldTapRegion around the composer Row; chat/CaInput outside unfocus only on native iOS, null on Android/web. All CaInput callers and related callbacks audited in IOS_UX_AUDIT.md; none needs another wrapper.
+Verification: action-specific state/message assertions plus focus/client checks, platform-specific empty-list touches, drag dismissal, CaInput outside tests and related submit/suffix/add/picker checks.
+
+## iOS CI cleanup rejects CocoaPods integration
+Status: host E1, 2026-10-18; CocoaPods/Xcode execution pending.
+Observed: real-Git simulated pod install changed tracked pbxproj/workspace and failed the blanket diff; removing publisher markers left reserved package objects behind. Unknown reserved object shapes were accepted.
+Cause: cleanup assumed CocoaPods would not modify tracked files and relied only on comment markers.
+Fix: disable parses OpenStep containers and removes only A117000000000000000000 objects and approved list references, restores viewer paths and fails before writing on unknown syntax/content. Intact-marker round trips remain byte-identical. CI checks only viewer resources/Podfile, publisher references and generated-flag absence; the iOS diff stat is informational.
+Verification: configure 6/6 and CI 6/6 host fixtures, with real temporary Git repositories, simulated Pods/[CP] entries and marker stripping. Successful cleanup preserves unrelated entries; malformed entries leave files unchanged; a broken disable fails isolation and build failure keeps exit 7. Owner must review/commit the first actual viewer CocoaPods project/workspace on Mac.

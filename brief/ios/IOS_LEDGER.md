@@ -236,3 +236,97 @@ isolation and 65 Android/web current-byte hashes pass. Detailed failures/fixes
 and A-H evidence are in IOS_PROGRESS.md. This is a builder closeout, not a new
 manager audit or native pass. Swift E0, Dart/host E1 only. W21-3, support design,
 SQL/real provider acceptance and ESC-4 remain deferred. No push/deploy/hosted action.
+
+## VERDICT | 2026-10-18 | Claude (manager) | Pre-push audit of W22 commit d35a29d | **CHANGES REQUIRED (three small source/copy fixes before push; one CI fix before the first Codemagic run)**
+
+Scope: W22 parts A to H as committed. Builder reports were treated as claims. Read-only audit: no source edited, no push, no deploy, no migration, no hosted access, no secrets or signing material read. One throwaway framework test was run from the session scratchpad (outside the repo). This ledger entry is the only file the audit changed. No evidence level promoted: Dart/host E1, Swift/native E0.
+
+### Commands actually run (this audit, Windows host)
+
+| Check | Result |
+|---|---|
+| `flutter analyze --no-pub` (project/) | exit 0, 0 issues (58.2 s) |
+| `flutter test --no-pub --reporter expanded` (full) | exit 0, **1,463 passed / 0 failed / 0 skipped** (05:45). Fresh run; matches the builder's count (W21 was 1,261; +200 in `ios_layout_sweep_b_test.dart`, +2 in the deletion tests) |
+| `npm test` in supabase/functions/apple-account-revocation | 16 passed, 0 failed |
+| `python -B ios/Publisher/test_configure.py` / `test_ci_compile.py` | 4/4 and 3/3 pass. Doctor fixtures 6/6 not re-run by me |
+| i18n key symmetry | 1,898 / 1,898, empty symmetric difference |
+| `git diff 50a9516 d35a29d -- project/android project/web supabase project/pubspec.lock project/ios/Runner project/ios/Podfile` | empty |
+| Viewer isolation | Info.plist and en/ar InfoPlist.strings: 0 NSCamera/NSMicrophone/UIBackgroundModes; pbxproj: 0 HaishinKit/PublisherStrings/A117 IDs; no Publisher.generated.xcconfig |
+| Secret scan of d35a29d (private-key blocks, JWT-shaped, sbp_, AKIA, sk_live) | no hits |
+| codemagic.yaml | no triggers, secrets, signing or publishing sections; both workflows manual |
+| Scratch repro of two W22 chat patterns (framework only; flutter_test default platform is Android) | see W22-1 and W22-2 |
+
+### Push blockers
+
+**W22-1 (High, CONFIRMED in framework repro): opening the keyboard in the live-room chat closes the keyboard again.** `live_broadcast_screen.dart` `_buildCinemaTabPanel` (around :1413) now returns `_buildChatTabView()` directly when `viewInsets.bottom > 0` on the chat tab. Normally it returns `ColoredBox > LayoutBuilder > Column > TabBarView > _buildChatTabView()`. The composer `TextField` sits inside that subtree (`_buildChatTabViewContent`, around :1595). So the first frame that reports the keyboard unmounts the old `EditableText` and builds a new one. In the repro the focus node still reports focus, but the old state's dispose sends `TextInput.clearClient` then `TextInput.hide`, and no input client remains (`hasAnyClients=false`). On a phone the keyboard closes, the inset returns to 0 and the layout swaps back, so chat typing is effectively broken. The code is shared, so **Android is affected too**, which matters for the Play launch. The W22 keyboard sweep missed it because `tester.enterText` re-shows the keyboard after the inset change. Fix: keep one tree shape while typing, either by always building the same `ColoredBox/Column/TabBarView` and collapsing the segmented-tab header to zero height when the keyboard is open, or by reparenting the chat view with a `GlobalKey`. Test: tap the field, set `viewInsets`, pump, and assert `tester.testTextInput.hasAnyClients` is still true **without** calling `enterText` or `showKeyboard` again.
+
+**W22-2 (Medium, CONFIRMED in framework repro): every Send, reaction or raise-hand tap now dismisses the keyboard.** The composer `TextField` gained `onTapOutside: (_) => _chatFocus.unfocus()` (around :1975). Its sibling buttons (raise hand, reaction, Send) are outside the field's tap region, and there is no `TextFieldTapRegion` anywhere in `lib/`. Flutter 3.41.2's default (`editable_text.dart:6739-6768`) deliberately does **not** unfocus on mobile touch. In the repro, Send drops focus with the override (`hasFocus=false`) and keeps it with the default. This affects Android too. Fix: wrap the composer row in `TextFieldTapRegion`, or drop the override, because `keyboardDismissBehavior.onDrag` already provides the iOS dismissal. Also review the same `CaInput` override (`ca_fields.dart:324`) for forms whose submit or suffix controls sit outside the field. Test: focus, tap Send, assert the field is still focused and the message was sent.
+
+**W22-3 (Medium): new deletion copy says support can never complete deletion by email, which contradicts the Play-required email route.** The Apple-specific sentence "...cannot complete it by email alone" became the general "Support cannot complete deletion by email alone". It now appears in `settings.delete_account_confirm_body` (en/ar, also shown on Android) and in terms §7 and privacy §9 (en/ar) in `terms_and_conditions_model.dart`. But §9 still says "If you cannot sign in, use [deleteAccountUrl] or email support". `project/web/delete-account.html:274,338,379` also offers deletion without signing in, through an email request, and admins can already delete non-Apple accounts (`admin_auth_account_action`). Fix: qualify the sentence in all six places: "Support cannot complete deletion of an Apple-linked account by email alone." Then re-check the confirm-dialog and legal-reader tests.
+
+### Before the first Codemagic run (that run needs the push, so fix it with the blockers)
+
+**W22-4 (Medium): `ci_compile.sh` cleanup check will fail even when the compile succeeds.** The viewer part is CONFIRMED by inspection; the publisher part is PLAUSIBLE and needs a Mac.
+
+- **Viewer workflow.** The committed `Runner.xcodeproj/project.pbxproj` has **0** CocoaPods references, and `Runner.xcworkspace/contents.xcworkspacedata` lists only Runner. The first `pod install` writes the Pods group, `[CP]` build phases, `Pods_Runner.framework` and a `Pods/Pods.xcodeproj` workspace reference into these tracked files. `run ios-clean git diff --exit-code HEAD -- ios/` then exits 1 even after a good build.
+- **Publisher workflow.** `pod install` (CocoaPods' Xcodeproj gem) writes the whole pbxproj back out, which probably drops the standalone `/* HADAYAH_PUBLISHER_*_BEGIN/END */` comment markers. `configure.py --disable` then cannot remove the package blocks.
+- **Origin.** The same enable, `pod install`, disable order is in MAC_SETUP.md. The publisher-marker problem therefore predates W22, and my W17 audit missed it. The fake `git` and `pod` in `test_ci_compile.py` cannot catch either problem.
+
+Fix:
+1. Replace the blanket diff with targeted isolation checks. Run `git diff --exit-code` only on Info.plist, the InfoPlist.strings files, entitlements and Podfile. Check that pbxproj contains no A117 IDs, HaishinKit, PublisherStrings or Info-Publisher, and that no generated xcconfig exists.
+2. Make `--disable` remove publisher objects by their fixed `A117...` IDs rather than by comment markers.
+3. On the Mac, commit the pod-integrated viewer pbxproj and workspace once.
+4. Add a fixture where the fake `pod` rewrites the pbxproj without the markers.
+
+### Findings (non-blocking)
+
+| # | Sev | Where | Finding | Action |
+|---|---|---|---|---|
+| W22-5 | Low | shared Dart | W22 changes Android and web behaviour, not only iOS: the CaInput/composer tap-outside handlers, keyboard-open compaction, mini-player body bounds and height, `onDrag` dismissal in feed/settings/chat, and the welcome and delete-dialog text colours. STATUS's "65 Android/web hashes pass" covers native folders only. | Say so in STATUS. After W22-1/2, add a real Android phone check of live-room chat typing to the Play regression pass |
+| W22-6 | Low | en/ar `delete_account_blocked_apple_revocation_{required,unavailable,failed}` | All three are now identical, so `failed` (possibly transient) lost its retry cue. This follows W21-1's wording, so it is acceptable. | Optional: add "Try again." to `failed` only |
+| W22-7 | Low | app_router.dart:44 | The CupertinoPage gate uses `Theme.of(context).platform`, which is also iOS for web on an iPhone. The other W22 gates use `!kIsWeb && defaultTargetPlatform == iOS`. | Align the gate or document it |
+| W22-8 | Process | this ledger, W21 verdict | The builder edited the text of a manager verdict in this append-only ledger (the W21-1 paraphrase, self-declared). As read, the meaning is preserved; I could not compare it with the original. | Append corrections; never rewrite earlier rows |
+| W22-9 | Info | verified sound | Restricted vs Apple-linked routing: the server flag wins on both the prepare and late-SQL paths, with tests both ways. The 200 new sweep tests are genuine: real catalogs, `takeException` checked, platform override reset in `finally`. The app-bar overlay style matches the existing theme default. The Apple button appears only on native iOS. EXPORT_COMPLIANCE.md is cautious and claims no classification. PLAY_COPY_IMPACT.md made no Play edits. | none |
+
+### Deferred gates (checked: still deferred and honestly recorded)
+
+STATUS, PROGRESS and issue_encountered still list these as deferred, unchanged:
+
+* **Device:** W21-3 interruption and upstream liveness; findings 4/5 E3; native keyboard, VoiceOver, Dynamic Type and gestures.
+* **Support design:** finding 3 break-glass support (copy done).
+* **Database and provider:** W19 SQL (41 pgTAP assertions unexecuted), deployment and real Apple revocation; ESC-4 push.
+* **CI:** neither Codemagic workflow has run, so there is no E2.
+* **Owner and counsel:** counsel, public pages and hosted legal record; export answers; D4 paid enrollment.
+
+No evidence was promoted beyond E1/E0.
+
+### Verdict
+
+**CHANGES REQUIRED.** Fix W22-1, W22-2 and W22-3, which are small Dart and copy changes and need no Mac. Then re-run analyze, the full suite, key symmetry and the new keyboard-connection and Send-focus tests. Land W22-4 in the same follow-up, because the push leads straight to the first CI run. After that the commit set is ready to push. IOS_PLAN_V2.md and the prompts are still untracked (P3, owner choice).
+
+
+## W23 builder report | 2026-10-18 | Codex | W22 findings follow-up
+
+W23-1 to W23-4 are complete in source and host tests, awaiting manager audit.
+The live composer keeps its input connection through keyboard insets; Send,
+reaction and raise hand retain focus; native-iOS-only outside dismissal leaves
+Android/web on framework defaults. Six in-app support-limit sentences now
+qualify Apple-linked accounts. Publisher disable survives simulated markerless
+CocoaPods rewrites and refuses unknown reserved shapes; CI gates targeted viewer
+isolation and treats CocoaPods project/workspace diffs as informational.
+
+Red-first failures and fixes are recorded in IOS_PROGRESS.md. Fresh analyzer:
+0 issues (30.5s); full Flutter: 1499 passed / 0 failed / 0 skipped
+(05:37). configure 6/6, real-Git CI fixtures 6/6, doctor 6/6, Bash syntax 3/3,
+catalog symmetry 1,898/1,898, viewer isolation and 65 Android/web hashes pass.
+W22-5 shared Dart impact and Android owner regression are explicit in STATUS/
+OWNER_STEPS; failed revocation alone has a retry cue; native-iOS CupertinoPage
+gate passes existing swipe-back tests. Every earlier ledger row/verdict is intact.
+
+Dart/host E1; Swift/native E0 only. No real CocoaPods/Xcode, CI, native compile,
+device, SQL or provider acceptance is claimed. Owner must review/commit the
+first actual viewer CocoaPods project/workspace on Mac. W21-3, findings 3/4/5,
+W19 database/provider acceptance, ESC-4, counsel/publication and native/device
+gates remain open. One explicit-path local commit, fix(ios): address W22 audit
+findings; no push/deploy/hosted action. Stop after that commit. This builder
+report does not replace Claude's verdict or promote native evidence.

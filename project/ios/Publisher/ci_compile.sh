@@ -30,6 +30,26 @@ run() {
   fi
 }
 
+publisher_project_clean() {
+  local status
+  if grep -nE 'A117000000000000000000|HaishinKit|Logboard|PublisherStrings|PublisherPrivacy|Info-Publisher' ios/Runner.xcodeproj/project.pbxproj; then
+    echo 'error: publisher content survived project cleanup'
+    return 1
+  else
+    status=$?
+    if [[ $status != 1 ]]; then return "$status"; fi
+  fi
+  echo 'Viewer project contains no opt-in publisher references'
+}
+
+publisher_flag_absent() {
+  if [[ -e ios/Flutter/Publisher.generated.xcconfig ]]; then
+    echo 'error: generated publisher flag survived cleanup'
+    return 1
+  fi
+  echo 'Generated publisher flag is absent'
+}
+
 finish() {
   local status=$? cleanup=0
   trap - EXIT
@@ -38,12 +58,17 @@ finish() {
     run disable python3 ios/Publisher/configure.py --disable
     cleanup=$?
   fi
-  run ios-clean git diff --exit-code HEAD -- ios/
+  run ios-clean git diff --exit-code HEAD -- \
+    ios/Runner/Info.plist \
+    ios/Runner/en.lproj/InfoPlist.strings ios/Runner/ar.lproj/InfoPlist.strings \
+    ios/Runner/Runner.entitlements ios/Runner/PrivacyInfo.xcprivacy ios/Podfile
   if [[ $? != 0 ]]; then cleanup=1; fi
-  if [[ -e ios/Flutter/Publisher.generated.xcconfig ]]; then
-    echo 'error: generated publisher flag survived cleanup'
-    cleanup=1
-  fi
+  run publisher-project publisher_project_clean
+  if [[ $? != 0 ]]; then cleanup=1; fi
+  run publisher-flag publisher_flag_absent
+  if [[ $? != 0 ]]; then cleanup=1; fi
+  # CocoaPods may integrate the tracked project/workspace on its first run.
+  run ios-diff-stat git diff --stat -- ios/
   if [[ $status == 0 && $cleanup != 0 ]]; then status=$cleanup; fi
   exit "$status"
 }

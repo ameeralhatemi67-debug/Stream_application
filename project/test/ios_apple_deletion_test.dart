@@ -391,6 +391,10 @@ void main() {
         expect((settings[key] as String).length, greaterThan(30));
         expect(AppProvider.accountDeletionBlockers,
             contains('apple_revocation_$code'));
+        expect(
+            (settings[key] as String)
+                .endsWith(language == 'ar' ? ' حاول مرة أخرى.' : ' Try again.'),
+            code == 'failed');
       }
     }
   });
