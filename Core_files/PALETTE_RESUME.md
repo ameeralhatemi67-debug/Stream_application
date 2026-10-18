@@ -1,6 +1,6 @@
-# Palette work checkpoint — 2026-10-18
+# Palette implementation and verification — 2026-10-18
 
-Paused at the owner's request before closing the laptop. Resume this task; do not start a new redesign or change layouts.
+Completed after resuming the owner's laptop-close checkpoint. This task adds the optional palette, logo gesture and Arabic default without a layout redesign.
 
 ## Requested behavior and implementation
 
@@ -11,14 +11,15 @@ Paused at the owner's request before closing the laptop. Resume this task; do no
 - Fresh startup defaults to Arabic. The language toggle and a saved English preference are respected.
 - Main/router state is retained when switching palettes.
 
-## Verification and remaining work
+## Completed verification
 
-- `flutter analyze --no-pub`: no issues found before the final one-line removal of a Theme lookup during YouTube controller initialization. Re-run the analyzer on resume to cover that final edit.
+- Final `flutter analyze --no-pub`: no issues found.
 - All 8 focused `test/app_appearance_test.dart` tests passed: persistence, rapid toggles, failure recovery, disposal during save, font/contrast tokens, actual logo double-click, retained input state, fresh Arabic startup and saved English startup.
-- Mechanical migration check verified 102 source files with no unexpected Dart token changes after removing palette resolver calls and ignoring const/final and line endings. Manual integration files still need the last concise diff review.
-- Full test suite status is recorded below; if interrupted or incomplete, rerun it before treating the change as finished.
+- Mechanical migration check verified 102 source files with no unexpected Dart token changes after removing palette resolver calls and ignoring const/final and line endings. Manual integration changes were reviewed, including custom painters, themed SVG icons, context-aware helpers and organization app bars.
+- Full `flutter test --no-pub --concurrency=4 --reporter expanded`: all 1,545 tests passed in 05:05. This includes the expanded rendered-contrast suite: 19 screens/dialogs × 2 languages × 2 palettes, 76 passing cases. A separate run of those 76 cases also passed.
+- Arabic/English localization key symmetry and `git diff --check` passed.
 - Normal and Hidayah fixture screenshots were captured and inspected. Physical-device acceptance is not claimed.
-- Next: finish verification/diff review, confirm localization-key symmetry, then report how to use the toggle. No push or deployment is authorized by this checkpoint.
+- No required implementation or automated verification remains for this task. No push or deployment was performed. Physical-device acceptance remains outside the host/widget evidence.
 
 ## Commands and evidence
 
@@ -32,12 +33,12 @@ Run Flutter from `project/`. This host's Flutter wrapper needs SDK-cache access 
 Evidence/helper directory:
 `C:\Users\User\.codex\visualizations\2026\10\18\01a14ebb-f779-7983-828d-e719390b656d`
 
-Files: `palette-analysis-final.txt`, `appearance-tests.txt`, `palette-full-tests.txt`, `migration-verification.json`, `normal-palette.png`, `hidayah-palette.png`, `palette-edits/`, `verify_palette_migration.dart`.
+Final evidence: `palette-analysis-completed.txt`, `palette-full-tests-resumed.txt`, `palette-rendered-contrast.txt`, `appearance-tests.txt`, `migration-verification.json`, `normal-palette.png` and `hidayah-palette.png`. Earlier partial-run logs and migration helpers remain in the same directory.
 
 ## Preserve unrelated work
 
 The repository was already dirty. `skill-observations/log.md`, `store/assets/icon_512.png` and all previously untracked `.claude/`, `.vscode/`, brief/ios/evidence/research files, organization briefs, design previews and audit files belong to earlier work. They must not be staged, discarded or reverted with this task. No new branch was created.
 
-## Full-suite checkpoint result
+## Pause and resume history
 
-The full suite was deliberately stopped for the owner's pause at 04:48 with 1,472 tests passed and no reported test failure so far. It did not finish, so a full green run is still required. The task's Flutter runner (PID 40152, exact command verified) and its children were stopped; no test process is intentionally left running. Localization catalog key symmetry was checked and passed. The analyzer was clean before the final one-line controller-background revert; re-run it on resume.
+The original full-suite run was deliberately stopped for the owner's pause at 04:48 with 1,472 tests passed. Checkpoint commit: `a837513`. On resuming, the analyzer passed, rendered-contrast coverage was extended to both palettes, all 76 contrast cases passed, and the full suite completed with all 1,545 tests passing. The final analyzer run also reports zero issues. Test runners have finished.

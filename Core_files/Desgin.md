@@ -39,7 +39,7 @@ Double-click (or double-tap) the existing logo in Settings → About to switch b
 
 The Hidayah palette uses the preview's bundled IBM Plex Sans Arabic family in both languages, with existing sizes and weights. Scheme A keeps its existing language-specific font selection. Arabic is the default for an installation with no saved language; the language control and saved English choice remain supported.
 
-`project/test/app_appearance_test.dart` covers persistence in both directions, rapid toggles, failed saves, disposal during a save, the real About logo gesture, preserved widget state, contrast/font tokens and startup locale restoration.
+`project/test/app_appearance_test.dart` covers persistence in both directions, rapid toggles, failed saves, disposal during a save, the real About logo gesture, preserved widget state, contrast/font tokens and startup locale restoration. `project/test/rendered_contrast_test.dart` checks 19 screens/dialogs in both languages and both palettes, 76 cases. Completed verification: analyzer zero issues and all 1,545 Flutter tests passed.
 
 ### Entry-screen depth, selected 2026-10-01
 

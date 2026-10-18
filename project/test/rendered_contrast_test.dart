@@ -29,6 +29,7 @@ import 'package:streamer_app/features/profile/presentation/widgets/vod_player_mo
 import 'fixtures/dialog_fixtures.dart';
 import 'fixtures/streamer_fixtures.dart';
 import 'support/stub_video_player.dart';
+
 /// Rendered contrast, as opposed to the token pairs `theme_contrast_test`
 /// pins.
 ///
@@ -45,10 +46,12 @@ class _DirectJsonAssetLoader extends AssetLoader {
   Future<Map<String, dynamic>> load(String path, Locale locale) async =>
       data[locale.languageCode];
 }
+
 double _contrast(Color a, Color b) {
   final x = a.computeLuminance(), y = b.computeLuminance();
   return (math.max(x, y) + .05) / (math.min(x, y) + .05);
 }
+
 Color _composite(Color foreground, Color background) {
   final a = foreground.a;
   if (a >= 1.0) return foreground;
@@ -59,15 +62,18 @@ Color _composite(Color foreground, Color background) {
     blue: foreground.b * a + background.b * (1 - a),
   );
 }
+
 /// What the ancestor walk found behind a piece of text.
 class _Backdrop {
   final Color? color;
+
   /// A gradient or image was in the way, so a single colour cannot describe
   /// what is behind the text. Those are reported separately rather than
   /// guessed at.
   final bool indeterminate;
   const _Backdrop(this.color, {this.indeterminate = false});
 }
+
 /// The colour painted behind [element], compositing translucent layers onto
 /// whatever is behind them.
 _Backdrop _backdropOf(Element element) {
@@ -122,6 +128,7 @@ _Backdrop _backdropOf(Element element) {
     }
     return null;
   }
+
   element.visitAncestorElements((ancestor) {
     final color = layerOf(ancestor.widget);
     if (color != null && color.a > 0) {
@@ -132,7 +139,9 @@ _Backdrop _backdropOf(Element element) {
     if (indeterminate) return false;
     return true;
   });
-  if (indeterminate && layers.isEmpty) return const _Backdrop(null, indeterminate: true);
+  if (indeterminate && layers.isEmpty) {
+    return const _Backdrop(null, indeterminate: true);
+  }
   if (layers.isEmpty) return const _Backdrop(null);
   // Composite from the back forwards.
   var result = layers.last;
@@ -148,6 +157,7 @@ _Backdrop _backdropOf(Element element) {
   }
   return _Backdrop(result);
 }
+
 class _Finding {
   final String text;
   final Color foreground;
@@ -158,6 +168,7 @@ class _Finding {
   String toString() =>
       '"$text" ${_hex(foreground)} on ${_hex(background)} = ${ratio.toStringAsFixed(2)}:1';
 }
+
 String _hex(Color c) =>
     '#${(c.toARGB32() & 0xFFFFFF).toRadixString(16).padLeft(6, '0').toUpperCase()}';
 void main() {
@@ -216,13 +227,15 @@ void main() {
     'vod player sheet': () => Scaffold(
           body: VodPlayerModalSheet(
             vod: vodFixture(),
-            streamer: mockStreamers.first.copyWith(avatarUrl: '', bannerUrl: ''),
+            streamer:
+                mockStreamers.first.copyWith(avatarUrl: '', bannerUrl: ''),
           ),
         ),
     'playlist sheet': () => Scaffold(
           body: PlaylistViewerModalSheet(
             playlist: playlistFixture(),
-            streamer: mockStreamers.first.copyWith(avatarUrl: '', bannerUrl: ''),
+            streamer:
+                mockStreamers.first.copyWith(avatarUrl: '', bannerUrl: ''),
             langCode: 'en',
           ),
         ),
@@ -235,7 +248,8 @@ void main() {
         ),
     'venue navigation sheet': () => Scaffold(
           body: VenueNavigationSheet(
-            streamer: mockStreamers.first.copyWith(avatarUrl: '', bannerUrl: ''),
+            streamer:
+                mockStreamers.first.copyWith(avatarUrl: '', bannerUrl: ''),
           ),
         ),
     // UI-02/UI-03: these two sheets had the worst instance of the onMedia-
@@ -254,98 +268,103 @@ void main() {
           body: StreamerSetupGuideModal(mode: StudioMode.obs),
         ),
   };
-  for (final entry in screens.entries) {
-    for (final lang in ['en', 'ar']) {
-      testWidgets('${entry.key} $lang keeps every label readable where it sits',
-          (tester) async {
-        StubVideoPlayer.install(addTearDown: addTearDown);
-        tester.view.devicePixelRatio = 1;
-        tester.view.physicalSize = const Size(412, 915);
-        addTearDown(tester.view.resetPhysicalSize);
-        addTearDown(tester.view.resetDevicePixelRatio);
-        final provider = AppProvider();
-        if (entry.key == 'admin hub') {
-          provider.debugSetSignedInForTests(
-              email: 'admin@example.test', isMasterAdmin: true);
-        }
-        for (final streamer in mockStreamers) {
-          provider.addStreamerForTests(streamer.copyWith(
-            avatarUrl: '',
-            bannerUrl: '',
-            isCurrentlyLive: streamer.streamerId == mockStreamers.first.streamerId
-                ? true
-                : null,
-            activeStreamId:
-                streamer.streamerId == mockStreamers.first.streamerId
-                    ? 'stream_live_992'
-                    : null,
-          ));
-        }
-        await tester.pumpWidget(EasyLocalization(
-          supportedLocales: const [Locale('en'), Locale('ar')],
-          path: 'assets/i18n',
-          assetLoader: _DirectJsonAssetLoader(catalogs),
-          startLocale: Locale(lang),
-          saveLocale: false,
-          child: Builder(
-            builder: (context) => ChangeNotifierProvider.value(
-              value: provider,
-              child: MaterialApp(
-                locale: context.locale,
-                supportedLocales: context.supportedLocales,
-                localizationsDelegates: context.localizationDelegates,
-                theme: AppTheme.forLocale(Locale(lang)),
-                home: entry.value(),
+  for (final hidayah in [false, true]) {
+    final paletteName = hidayah ? 'Hidayah' : 'normal';
+    for (final entry in screens.entries) {
+      for (final lang in ['en', 'ar']) {
+        testWidgets(
+            '${entry.key} $lang $paletteName keeps every label readable where it sits',
+            (tester) async {
+          StubVideoPlayer.install(addTearDown: addTearDown);
+          tester.view.devicePixelRatio = 1;
+          tester.view.physicalSize = const Size(412, 915);
+          addTearDown(tester.view.resetPhysicalSize);
+          addTearDown(tester.view.resetDevicePixelRatio);
+          final provider = AppProvider();
+          if (entry.key == 'admin hub') {
+            provider.debugSetSignedInForTests(
+                email: 'admin@example.test', isMasterAdmin: true);
+          }
+          for (final streamer in mockStreamers) {
+            provider.addStreamerForTests(streamer.copyWith(
+              avatarUrl: '',
+              bannerUrl: '',
+              isCurrentlyLive:
+                  streamer.streamerId == mockStreamers.first.streamerId
+                      ? true
+                      : null,
+              activeStreamId:
+                  streamer.streamerId == mockStreamers.first.streamerId
+                      ? 'stream_live_992'
+                      : null,
+            ));
+          }
+          await tester.pumpWidget(EasyLocalization(
+            supportedLocales: const [Locale('en'), Locale('ar')],
+            path: 'assets/i18n',
+            assetLoader: _DirectJsonAssetLoader(catalogs),
+            startLocale: Locale(lang),
+            saveLocale: false,
+            child: Builder(
+              builder: (context) => ChangeNotifierProvider.value(
+                value: provider,
+                child: MaterialApp(
+                  locale: context.locale,
+                  supportedLocales: context.supportedLocales,
+                  localizationsDelegates: context.localizationDelegates,
+                  theme: AppTheme.forLocale(Locale(lang), hidayah: hidayah),
+                  home: entry.value(),
+                ),
               ),
             ),
-          ),
-        ));
-        await tester.pump(const Duration(milliseconds: 200));
-        while (tester.takeException() != null) {}
-        final findings = <_Finding>[];
-        var checked = 0;
-        var skipped = 0;
-        for (final element in tester.elementList(find.byType(Text))) {
-          final widget = element.widget as Text;
-          final data = widget.data;
-          // Spans carry their own per-span colours; only plain labels are
-          // resolvable from the widget alone.
-          if (data == null || data.trim().isEmpty) continue;
-          final inherited = DefaultTextStyle.of(element).style;
-          final style = widget.style;
-          final color = style?.color ??
-              (style?.inherit == false ? null : inherited.color) ??
-              Theme.of(element).textTheme.bodyMedium?.color;
-          if (color == null || color.a < 1.0) {
-            skipped++;
-            continue;
+          ));
+          await tester.pump(const Duration(milliseconds: 200));
+          while (tester.takeException() != null) {}
+          final findings = <_Finding>[];
+          var checked = 0;
+          var skipped = 0;
+          for (final element in tester.elementList(find.byType(Text))) {
+            final widget = element.widget as Text;
+            final data = widget.data;
+            // Spans carry their own per-span colours; only plain labels are
+            // resolvable from the widget alone.
+            if (data == null || data.trim().isEmpty) continue;
+            final inherited = DefaultTextStyle.of(element).style;
+            final style = widget.style;
+            final color = style?.color ??
+                (style?.inherit == false ? null : inherited.color) ??
+                Theme.of(element).textTheme.bodyMedium?.color;
+            if (color == null || color.a < 1.0) {
+              skipped++;
+              continue;
+            }
+            final backdrop = _backdropOf(element);
+            if (backdrop.indeterminate || backdrop.color == null) {
+              skipped++;
+              continue;
+            }
+            checked++;
+            final ratio = _contrast(color, backdrop.color!);
+            if (ratio < 4.5) {
+              findings.add(_Finding(
+                  data.length > 40 ? '${data.substring(0, 40)}...' : data,
+                  color,
+                  backdrop.color!,
+                  ratio));
+            }
           }
-          final backdrop = _backdropOf(element);
-          if (backdrop.indeterminate || backdrop.color == null) {
-            skipped++;
-            continue;
-          }
-          checked++;
-          final ratio = _contrast(color, backdrop.color!);
-          if (ratio < 4.5) {
-            findings.add(_Finding(
-                data.length > 40 ? '${data.substring(0, 40)}...' : data,
-                color,
-                backdrop.color!,
-                ratio));
-          }
-        }
-        await tester.pumpWidget(const SizedBox.shrink());
-        await tester.pump();
-        provider.dispose();
-        expect(checked, greaterThan(0),
-            reason: '${entry.key} $lang resolved no text against a backdrop, '
-                'so this assertion proves nothing');
-        expect(findings, isEmpty,
-            reason: '${entry.key} $lang: ${findings.length} of $checked '
-                'resolved labels fall below 4.5:1 ($skipped unresolved)\n'
-                '${findings.join("\n")}');
-      });
+          await tester.pumpWidget(const SizedBox.shrink());
+          await tester.pump();
+          provider.dispose();
+          expect(checked, greaterThan(0),
+              reason: '${entry.key} $lang resolved no text against a backdrop, '
+                  'so this assertion proves nothing');
+          expect(findings, isEmpty,
+              reason: '${entry.key} $lang: ${findings.length} of $checked '
+                  'resolved labels fall below 4.5:1 ($skipped unresolved)\n'
+                  '${findings.join("\n")}');
+        });
+      }
     }
   }
 }

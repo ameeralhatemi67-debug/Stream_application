@@ -10,7 +10,7 @@ health: release_blocked
 
 ## Optional palette and Arabic default, 2026-10-18
 
-Settings → About's existing application logo now switches between the normal palette and Hidayah gold/ivory/slate on a double-click or double-tap. The device preference is saved before applying and restored before startup. Hidayah uses the preview's already bundled IBM Plex Sans Arabic font; normal typography and layouts are retained. Arabic is the fresh-install default, while the language toggle and a saved English preference remain supported. No backend or deployment change is involved. Verification is recorded in `project/test/app_appearance_test.dart`; this is host/widget evidence, not a physical-device acceptance claim.
+Settings → About's existing application logo now switches between the normal palette and Hidayah gold/ivory/slate on a double-click or double-tap. The device preference is saved before applying and restored before startup. Hidayah uses the preview's already bundled IBM Plex Sans Arabic font; normal typography and layouts are retained. Arabic is the fresh-install default, while the language toggle and a saved English preference remain supported. No backend or deployment change is involved. Verification completed: analyzer zero issues, full Flutter suite 1,545 tests passed, including the 8 appearance tests and 76 rendered-contrast cases across 19 screens/dialogs in both languages and both palettes. Details and evidence paths: `Core_files/PALETTE_RESUME.md`. This is host/widget evidence, not a physical-device acceptance claim.
 
 ## iOS integration evidence, 2026-10-17
 
