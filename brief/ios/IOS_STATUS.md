@@ -6,7 +6,7 @@ Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LED
 
 | Field | Value |
 |---|---|
-| Updated | 2026-10-18, Codex |
+| Updated | 2026-10-18, Codex; manager audit verdict added 2026-10-18 (see IOS_LEDGER.md) |
 | Track | A, Windows; Mac not available |
 | Resume | Hard stop: physical Mac or real CI log for W13 / M1–M3 |
 | Progress | 18 / 20 work orders complete |
@@ -56,7 +56,7 @@ Resolve a commit selector with `git rev-parse '<selector>'`.
 | Sign in with Apple | E1 host exchange tests; E0 native capability | Native button + nonce exchange implemented; Release/Profile entitlement only. Paid provider/device flow deferred; Debug has no entitlements. |
 | Phone publishing | E0 native / E1 mocked Dart | Implemented, not run on iOS. Default-off gate and direct-entry permission guard; explicit SwiftPM opt-in, actor capture/static IDR/background intent/drop detection; Dart owns bounded authorization/retry with transport-only pause. Native compilation and E3 matrix pending. |
 | Push | E0 spec; E1 host exclusion | W18 spec complete, ESC-4 future backend migration. iOS Firebase remains disabled; no APNs/plist/background change and no native delivery proof. |
-| Location and gallery permissions / native localization | E0 | Foreground location/gallery for default viewer. Experimental alternate publisher plist adds camera/microphone/audio mode only on opt-in; no native permission proof. |
+| Location and gallery permissions / native localization | E0 | Foreground location/gallery for default viewer. Experimental alternate publisher plist adds camera/microphone/audio mode only on opt-in; no native permission proof. [AUDIT P1 fixed 2026-10-18: purposes moved to opt-in Runner/PublisherStrings, swapped by configure.py; viewer strings carry only name/location/photo.] |
 | App privacy manifest | E0 | Default viewer: 11 linked functionality data types, no tracking; reasons CA92.1/C617.1. Opt-in publisher variant adds AudioData (12 rows); video extends PhotosOrVideos. Inactive until flag on; packaged report unverified. |
 | HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
 | iOS channel connection | E1 host guard | UI notice plus service rejection before backend access. Android/web flow preserved; no iOS OAuth channel flow. |
@@ -108,7 +108,7 @@ Account-gated steps do not block unrelated Windows work.
 - 2026-10-18 round follows §12: W17's W11 dependency withdrawn; W19 backend source authorized only for Apple deletion; W20 legal fallback authorized; push migration remains forbidden.
 - W19 fixed a test-fixture issue: installed PostgREST expects http.Response.request. Mock responses now carry request metadata. Unrelated AppProvider formatter churn was removed; only deletion logic/blocker names changed.
 - ESC-2 resolved at E1 mocked/source scope. Database proof validity is ten minutes and tied to current identity version; SQL guard/grants are unexecuted and real provider/device behavior remains pending.
-- W20 complete default terms/guidelines/privacy at v1.1.0-ios-draft, marked for counsel review. No unverified PDPL compliance/instant deletion/ad-free promises. Hosted legal content not overwritten; public source pages untouched.
+- W20 complete default terms/guidelines/privacy at v1.1.0-ios-draft, marked for counsel review. No unverified PDPL compliance/instant deletion/ad-free promises in the draft text. [AUDIT P2 fixed 2026-10-18: settings.view_privacy/view_privacy_subtitle relabelled neutrally in en/ar.] Hosted legal content not overwritten; public source pages untouched.
 - W17 §12 complete as source: Dart commit 63b288f, separate native dependency/config/media commit. SwiftPM opt-in only because HaishinKit 2.x discontinued CocoaPods; Flutter plugins stay CocoaPods/3.41.2. Default viewer has no SDK package/product references or generated flag.
 - W17 native self-review corrected ACK/event timing, exact orientation argument, retry quality retention, conditional permission macros and stale-operation checks. SDK loggers discard credential-bearing diagnostics; no compiler warning suppression. These are source checks, not compilation/runtime proof.
 - W17 review: native commit c4c81c2 remains separate from Dart. Transport loss/retry-only watchdog pause retains capture during Dart's bounded authorization episode; user stop, revoked authorization and exhaustion fully release it. Background eligibility is an implementation intent requiring E3, not observed survival.
@@ -120,3 +120,11 @@ Account-gated steps do not block unrelated Windows work.
 
 - ESC-3 public half: W20 in-app draft/source resolved at E1; Claude/owner handle copy review and deployment of existing public pages. Counsel/hosted approval pending.
 - ESC-4 (W18): future push implementation needs a separately authorized backend migration plus owner APNs/Firebase setup; specification complete, no backend changes.
+
+## Manager audit 2026-10-18 (Claude): CHANGES REQUIRED
+
+Audited d5e4b6b..663aee8; full verdict, commands and counts are in `IOS_LEDGER.md` (VERDICT row). Fresh host results: analyze 0 issues; full test 1,159 passed; enabled-flag iOS files 28 passed; Edge 16/16; configure helper 3/3; catalogs 1,897 symmetric; Android/web tracked diff empty. No evidence level promoted.
+
+Push blockers: P1 camera/mic purpose strings in viewer InfoPlist.strings (c4c81c2); P2 'Saudi PDPL Compliant' catalog labels vs W20 claim; P3 IOS_PLAN_V2.md, prompts and the decisions-bearing IOS_LEDGER.md are untracked or stale in Git.
+Deployment gates (not push): identity-version proof likely does not change on re-sign-in (use last_sign_in_at); add pgTAP tests for the new migration; define the support/admin completion path for Apple-linked accounts.
+Mac/iPhone and counsel/submission gates are unchanged. Builder: fix P1 and P2 (and the deployment findings if convenient) in one pass, then re-run the checks listed in the ledger.

@@ -328,7 +328,7 @@ void main() {
       await tester.tap(find.text('Next Document'));
       await tester.pumpAndSettle();
       expect(
-        find.widgetWithText(CaAppBar, 'Privacy Policy (Saudi PDPL Compliant)'),
+        find.widgetWithText(CaAppBar, 'Privacy Policy'),
         findsOneWidget,
       );
 
@@ -341,7 +341,7 @@ void main() {
       await tester.tap(find.text('Previous Document'));
       await tester.pumpAndSettle();
       expect(
-        find.widgetWithText(CaAppBar, 'Privacy Policy (Saudi PDPL Compliant)'),
+        find.widgetWithText(CaAppBar, 'Privacy Policy'),
         findsOneWidget,
       );
     });

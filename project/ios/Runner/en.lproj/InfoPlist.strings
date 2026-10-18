@@ -1,6 +1,3 @@
 "CFBundleDisplayName" = "Hadayah Live";
 "NSLocationWhenInUseUsageDescription" = "Hadayah Live uses your location while you choose a venue on the map. Only the venue point you confirm is saved.";
 "NSPhotoLibraryUsageDescription" = "Choose photos for your profile, broadcaster application, and channel in Hadayah Live.";
-/* Inactive until IOS_PHONE_PUBLISHING selects Info-Publisher.plist. */
-"NSCameraUsageDescription" = "Hadayah Live uses the camera only when you choose to broadcast live video.";
-"NSMicrophoneUsageDescription" = "Hadayah Live uses the microphone when you choose a live video or audio-only broadcast.";

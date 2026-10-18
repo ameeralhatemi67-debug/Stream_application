@@ -14,7 +14,8 @@ apply the newer Flutter 3.44 template to the 3.41 shell.
 The committed viewer project has three conditional Swift source references, an
 optional xcconfig include and conditional AppDelegate registration. Every publisher
 Swift file is inside `#if IOS_PHONE_PUBLISHING`. It has **no remote package/product
-reference**, no generated publisher config, no base-plist camera/mic key and no
+reference**, no generated publisher config, no base-plist camera/mic key, no
+camera/mic purpose in the viewer's localized InfoPlist.strings and no
 background mode. The Dart bool.fromEnvironment flag defaults false, makes no
 publisher channel calls, and preserves the Studio notice. A Dart-only flag mismatch
 fails the native isSupported probe before permissions or UiKitView creation. Direct phone-screen setup also checks iOS availability before requesting capture permissions; its narrow error surface is covered in EN/AR.
@@ -27,7 +28,9 @@ unverified. SwiftPM can resolve other package metadata/transitives even when onl
 these products are linked; that risk belongs only to the opted-in build.
 
 `project/ios/Publisher/configure.py` changes marked package blocks, three plist
-selections and one privacy path, plus one ignored xcconfig. It refuses changed
+selections, one privacy path and the two InfoPlist.strings paths (the opt-in
+`Runner/PublisherStrings/*.lproj` files carry the camera/microphone purposes),
+plus one ignored xcconfig. It refuses changed
 anchors, existing unrelated SwiftPM integration, escaping paths and unmanaged
 xcconfig content. It never edits signing. Host tests cover exact byte restoration
 and idempotence. This is configuration evidence, not Xcode parsing or resolution.

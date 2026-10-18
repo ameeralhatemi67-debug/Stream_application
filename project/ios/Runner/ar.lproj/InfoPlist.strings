@@ -1,6 +1,3 @@
 "CFBundleDisplayName" = "منصة هدايه";
 "NSLocationWhenInUseUsageDescription" = "تستخدم منصة هدايه موقعك أثناء اختيار مكان على الخريطة. لا يُحفظ إلا الموقع الذي تؤكده.";
 "NSPhotoLibraryUsageDescription" = "اختر صورًا لملفك الشخصي وطلب اعتمادك كمحاضر وقناتك في منصة هدايه.";
-/* Inactive until IOS_PHONE_PUBLISHING selects Info-Publisher.plist. */
-"NSCameraUsageDescription" = "تستخدم منصة هدايه الكاميرا فقط عند اختيارك بث فيديو مباشر.";
-"NSMicrophoneUsageDescription" = "تستخدم منصة هدايه الميكروفون عند اختيارك بث فيديو مباشر أو بث صوتي فقط.";
