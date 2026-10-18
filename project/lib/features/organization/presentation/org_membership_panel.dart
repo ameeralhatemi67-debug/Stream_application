@@ -154,7 +154,7 @@ class _OrgMembershipPanelState extends State<OrgMembershipPanel> {
                     if (member == null)
                       Text('organization_v1.invite_hint_leader'.tr(),
                           style:
-                              const TextStyle(color: Canopy.slate)),
+                              TextStyle(color: paletteColor(context, Canopy.slate))),
                   ])),
                   actions: [
                     CaButton(

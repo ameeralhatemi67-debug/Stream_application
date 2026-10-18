@@ -10,11 +10,12 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/config/supabase_config.dart';
 import 'core/services/reminder_push_service.dart';
 import 'core/theme/app_theme.dart';
+import 'core/theme/app_appearance.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
 import 'core/widgets/device_session_presenter.dart';
 
-void main() async {
+Future<void> main() async {
   // ~180 debugPrint calls (some on per-rebuild or per-failure paths) stay
   // active in release builds and format strings, print to the console and, on
   // web, cost a console call each. They are diagnostics for development only
@@ -30,6 +31,8 @@ void main() async {
   }
   WidgetsFlutterBinding.ensureInitialized();
   await EasyLocalization.ensureInitialized();
+  final appearance = AppAppearance();
+  await appearance.restore();
 
   if (SupabaseConfig.isConfigured) {
     await Supabase.initialize(
@@ -49,15 +52,16 @@ void main() async {
     EasyLocalization(
       supportedLocales: const [Locale('en'), Locale('ar')],
       path: 'assets/i18n',
-      fallbackLocale: const Locale('en'),
-      startLocale: const Locale('en'),
-      child: const StreamerApp(),
+      fallbackLocale: const Locale('ar'),
+      startLocale: const Locale('ar'),
+      child: StreamerApp(appearance: appearance),
     ),
   );
 }
 
 class StreamerApp extends StatefulWidget {
-  const StreamerApp({super.key});
+  const StreamerApp({super.key, this.appearance});
+  final AppAppearance? appearance;
 
   @override
   State<StreamerApp> createState() => _StreamerAppState();
@@ -65,6 +69,7 @@ class StreamerApp extends StatefulWidget {
 
 class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
   late final AppProvider _appProvider;
+  late final AppAppearance _appearance;
   late final GoRouter _router;
   late final DeviceSessionPresenter _deviceSessionPresenter;
 
@@ -73,6 +78,8 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _appProvider = AppProvider();
+    _appearance = widget.appearance ?? AppAppearance();
+    if (widget.appearance == null) unawaited(_appearance.restore());
     // Start real-time live viewer polling now that the provider exists.
     // This is intentionally NOT done inside AppProvider's constructor so that
     // widget tests (which use their own AppProvider instances) stay free of
@@ -112,19 +119,24 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
     WidgetsBinding.instance.removeObserver(this);
     _deviceSessionPresenter.dispose();
     _appProvider.dispose();
+    _appearance.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider.value(
-      value: _appProvider,
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider<AppProvider>.value(value: _appProvider),
+        ChangeNotifierProvider<AppAppearance>.value(value: _appearance),
+      ],
       child: Builder(
         builder: (context) {
           return MaterialApp.router(
             title: AppIdentity.name(context.locale.languageCode),
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.forLocale(context.locale),
+            theme: AppTheme.forLocale(context.locale,
+                hidayah: context.select<AppAppearance, bool>((p) => p.hidayah)),
             themeMode: ThemeMode.light,
             localizationsDelegates: context.localizationDelegates,
             supportedLocales: context.supportedLocales,

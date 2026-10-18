@@ -17,13 +17,13 @@ class EntryBackground extends StatelessWidget {
           return Stack(
             fit: StackFit.expand,
             children: [
-              const DecoratedBox(
+              DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [AppTheme.bg, AppTheme.surfaceAlt],
-                    stops: [0.55, 1],
+                    colors: [paletteColor(context, AppTheme.bg), paletteColor(context, AppTheme.surfaceAlt)],
+                    stops: const [0.55, 1],
                   ),
                 ),
               ),
@@ -59,19 +59,19 @@ class _LayeredCorner extends StatelessWidget {
               height: size,
               padding: const EdgeInsets.all(AppTheme.space2Xl),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceAlt,
+                color: paletteColor(context, AppTheme.surfaceAlt),
                 borderRadius: BorderRadius.circular(AppTheme.space2Xl),
-                boxShadow: AppTheme.entrySurfaceShadow,
+                boxShadow: paletteShadows(context, AppTheme.entrySurfaceShadow),
               ),
               child: DecoratedBox(
                 decoration: BoxDecoration(
-                  gradient: const LinearGradient(
+                  gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [AppTheme.bg, AppTheme.surfaceAlt],
+                    colors: [paletteColor(context, AppTheme.bg), paletteColor(context, AppTheme.surfaceAlt)],
                   ),
                   borderRadius: BorderRadius.circular(AppTheme.spaceXl),
-                  boxShadow: AppTheme.entrySurfaceShadow,
+                  boxShadow: paletteShadows(context, AppTheme.entrySurfaceShadow),
                 ),
               ),
             ),

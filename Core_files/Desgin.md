@@ -2,7 +2,7 @@
 type: design-system
 project: Streamer_app
 status: active
-updated: 2026-09-21
+updated: 2026-10-18
 ---
 
 # 🎨 Streamer App: Master Design Contract & Token Catalog (`Desgin.md`)
@@ -30,6 +30,16 @@ The runtime source is `project/lib/core/theme/app_theme.dart`, matching `brief/a
 IBM Plex Sans and IBM Plex Sans Arabic are bundled in `project/assets/fonts/`, including OFL licenses. No runtime font download. Body is 15, title 21, display 30, caption 12. Arabic line heights are 1.8 for body, 1.6 for title and 1.5 for display. Latin line height is 1.4.
 
 Cards, buttons and inputs use radius 12; chips use 999. Spacing tokens are 4, 8, 12, 16, 24 and 32; screen inset is 18. Cards have no shadow. Forms and settings should use a centered content width no greater than 720. Compact is below 600, medium below 900, expanded starts at 900. Use directional padding and native RTL.
+
+### Optional Hidayah palette, added 2026-10-18
+
+Double-click (or double-tap) the existing logo in Settings → About to switch between Scheme A and the Hidayah palette. `AppAppearance` saves the device choice as `hidayah_palette_enabled` before applying it and restores it before app startup. The setting is independent of sign-in; another double-click restores Scheme A. Screen state and navigation remain in place.
+
+`AppPalette`, a `ThemeExtension` in `project/lib/core/theme/app_palette.dart`, resolves the existing color, gradient and shadow tokens. Hidayah uses logo gold `#C1923B`, light gold `#CFA55D`, dark gold `#73521D` for controls and readable labels, ivory `#F9F7EF`, paper `#FFFEFA`, ink `#253239` and slate `#26363E`. Gradient geometry, opacity, spacing and layouts retain their existing contracts. The owner-supplied logo artwork is preserved.
+
+The Hidayah palette uses the preview's bundled IBM Plex Sans Arabic family in both languages, with existing sizes and weights. Scheme A keeps its existing language-specific font selection. Arabic is the default for an installation with no saved language; the language control and saved English choice remain supported.
+
+`project/test/app_appearance_test.dart` covers persistence in both directions, rapid toggles, failed saves, disposal during a save, the real About logo gesture, preserved widget state, contrast/font tokens and startup locale restoration.
 
 ### Entry-screen depth, selected 2026-10-01
 

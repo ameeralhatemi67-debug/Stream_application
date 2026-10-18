@@ -55,25 +55,25 @@ class _ConnectivityBannerState extends State<ConnectivityBanner> {
           AppTheme.spaceLg, 0, AppTheme.spaceLg, AppTheme.spaceMd),
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: paletteColor(context, AppTheme.surface),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: AppTheme.warning),
+        border: Border.all(color: paletteColor(context, AppTheme.warning)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.wifi_off_rounded, color: AppTheme.warning),
+          Icon(Icons.wifi_off_rounded, color: paletteColor(context, AppTheme.warning)),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title.tr(),
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary),
                         fontWeight: FontWeight.bold)),
                 Text('offline_experience.body'.tr(),
-                    style: const TextStyle(color: AppTheme.textSecondary)),
-                Text(when, style: const TextStyle(color: AppTheme.textMuted)),
+                    style: TextStyle(color: paletteColor(context, AppTheme.textSecondary))),
+                Text(when, style: TextStyle(color: paletteColor(context, AppTheme.textMuted))),
               ],
             ),
           ),

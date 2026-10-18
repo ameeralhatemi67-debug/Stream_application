@@ -153,7 +153,7 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
               _texture,
               _pointer,
               Directionality.of(context),
-              widget.textureColor,
+              paletteColor(context, widget.textureColor),
               widget.textureOpacity)));
   @override
   Widget build(BuildContext context) => MouseRegion(
@@ -163,7 +163,7 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
       child: RepaintBoundary(
           child: CustomPaint(
               painter: widget.gradient
-                  ? _PanelGradient(_gradient, Directionality.of(context))
+                  ? _PanelGradient(_gradient, Directionality.of(context), paletteOf(context))
                   : null,
               child: RepaintBoundary(
                   child: Stack(fit: StackFit.passthrough, children: [
@@ -183,7 +183,8 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
 }
 
 class _PanelGradient extends CustomPainter {
-  _PanelGradient(this.motion, this.direction) : super(repaint: motion);
+  _PanelGradient(this.motion, this.direction, this.palette) : super(repaint: motion);
+  final AppPalette palette;
   final Animation<double> motion;
   final TextDirection direction;
   @override
@@ -192,13 +193,13 @@ class _PanelGradient extends CustomPainter {
     canvas.drawRect(
         rect,
         Paint()
-          ..shader = CanopyGradients.panelAt(motion.value)
+          ..shader = palette.gradient(CanopyGradients.panelAt(motion.value))
               .createShader(rect, textDirection: direction));
   }
 
   @override
   bool shouldRepaint(_PanelGradient old) =>
-      old.motion != motion || old.direction != direction;
+      old.motion != motion || old.direction != direction || old.palette.hidayah != palette.hidayah;
 }
 
 class _Lattice extends CustomPainter {

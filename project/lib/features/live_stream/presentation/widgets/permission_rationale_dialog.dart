@@ -42,7 +42,7 @@ class PermissionRationaleDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             CaIcon(isCamera ? CaGlyph.video : CaGlyph.mic,
-                color: Canopy.brandGreen, size: 32),
+                color: paletteColor(context, Canopy.brandGreen), size: 32),
             const SizedBox(height: AppTheme.spaceMd),
             Text(
                 (isCamera

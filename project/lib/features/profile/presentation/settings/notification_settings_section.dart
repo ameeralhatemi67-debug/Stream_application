@@ -46,8 +46,8 @@ class NotificationSettingsSection extends StatelessWidget {
             children: [
               Text(
                 'design_copy.10_minute_alert_limit'.tr(),
-                style: const TextStyle(
-                  color: Canopy.ink,
+                style: TextStyle(
+                  color: paletteColor(context, Canopy.ink),
                   fontWeight: FontWeight.bold,
                   fontSize: 13.5,
                 ),
@@ -55,17 +55,17 @@ class NotificationSettingsSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.18),
+                  color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   border: Border.all(
-                      color: AppTheme.primary.withValues(alpha: 0.5)),
+                      color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.5)),
                 ),
                 child: Text(
                   isAr
                       ? '${prefs.maxPer10Min} إشعارات'
                       : '${prefs.maxPer10Min} alerts',
-                  style: const TextStyle(
-                    color: AppTheme.primary,
+                  style: TextStyle(
+                    color: paletteColor(context, AppTheme.primary),
                     fontSize: AppTheme.captionFont,
                     fontWeight: FontWeight.bold,
                   ),
@@ -77,8 +77,8 @@ class NotificationSettingsSection extends StatelessWidget {
           Text(
             'design_copy.prevents_notification_fatigue_by_bundling_excess_alerts_into_a_sm'
                 .tr(),
-            style: const TextStyle(
-                color: Canopy.haze, fontSize: AppTheme.captionFont),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.haze), fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: 8),
           Slider(
@@ -86,26 +86,26 @@ class NotificationSettingsSection extends StatelessWidget {
             min: 1,
             max: 10,
             divisions: 9,
-            activeColor: AppTheme.primary,
-            inactiveColor: Canopy.hairline,
+            activeColor: paletteColor(context, AppTheme.primary),
+            inactiveColor: paletteColor(context, Canopy.hairline),
             label: '${prefs.maxPer10Min}',
             onChanged: (val) {
               provider.setNotificationRateLimit(val.round());
             },
           ),
-          const Divider(color: Canopy.hairline, height: 24),
+          Divider(color: paletteColor(context, Canopy.hairline), height: 24),
 
           if (provider.remindersAvailable) ...[
             Text('upcoming.reminder_settings'.tr(),
-                style: const TextStyle(
-                    color: Canopy.ink,
+                style: TextStyle(
+                    color: paletteColor(context, Canopy.ink),
                     fontWeight: FontWeight.bold,
                     fontSize: 13)),
             const SizedBox(height: AppTheme.spaceSm),
             Row(children: [
               Expanded(
                   child: Text('upcoming.lead_time'.tr(),
-                      style: const TextStyle(color: Canopy.slate))),
+                      style: TextStyle(color: paletteColor(context, Canopy.slate)))),
               DropdownButton<int>(
                 value: provider.reminderLeadMinutes,
                 items: [
@@ -137,16 +137,16 @@ class NotificationSettingsSection extends StatelessWidget {
                           ? 'upcoming.permission_denied'
                           : 'upcoming.permission_unavailable')
                       .tr(),
-                  style: const TextStyle(color: Canopy.slate)),
+                  style: TextStyle(color: paletteColor(context, Canopy.slate))),
             ],
-            const Divider(color: Canopy.hairline, height: 24),
+            Divider(color: paletteColor(context, Canopy.hairline), height: 24),
           ],
 
           //  Granular Notification Category Toggles
           Text(
             'design_copy.active_notification_categories'.tr(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.ink),
               fontWeight: FontWeight.bold,
               fontSize: 13,
             ),
@@ -210,13 +210,13 @@ class NotificationSettingsSection extends StatelessWidget {
 
           //  Muted Streamers / Organizations List
           if (mutedIds.isNotEmpty) ...[
-            const Divider(color: Canopy.hairline, height: 24),
+            Divider(color: paletteColor(context, Canopy.hairline), height: 24),
             Text(
               isAr
                   ? 'القنوات المكتومة (${mutedIds.length})'
                   : 'Muted Channels (${mutedIds.length})',
-              style: const TextStyle(
-                color: Canopy.ink,
+              style: TextStyle(
+                color: paletteColor(context, Canopy.ink),
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -231,14 +231,14 @@ class NotificationSettingsSection extends StatelessWidget {
                     ? streamer.getLocalizedName(isAr ? 'ar' : 'en')
                     : id;
                 return Chip(
-                  backgroundColor: Canopy.mint,
+                  backgroundColor: paletteColor(context, Canopy.mint),
                   label: Text(
                     name,
-                    style: const TextStyle(
-                        color: Canopy.slate, fontSize: AppTheme.captionFont),
+                    style: TextStyle(
+                        color: paletteColor(context, Canopy.slate), fontSize: AppTheme.captionFont),
                   ),
-                  deleteIcon: const Icon(Icons.close_rounded,
-                      size: 14, color: Canopy.liveCrimson),
+                  deleteIcon: Icon(Icons.close_rounded,
+                      size: 14, color: paletteColor(context, Canopy.liveCrimson)),
                   onDeleted: () {
                     provider.toggleMuteEntity(id);
                   },

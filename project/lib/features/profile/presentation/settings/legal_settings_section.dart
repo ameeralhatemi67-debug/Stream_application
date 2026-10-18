@@ -29,22 +29,22 @@ class LegalSettingsSection extends StatelessWidget {
     return CaCard(
       child: Column(
         children: [
-          _buildGovernanceRow(
+          _buildGovernanceRow(context,
             icon: Icons.description_rounded,
             title: 'settings.view_terms'.tr(),
             subtitle:
                 '${'settings.terms_version_label'.tr()}: ${terms.version}',
             onTap: () => _openLegalReader(context, terms, 0),
           ),
-          const Divider(height: 16, color: Canopy.hairline),
-          _buildGovernanceRow(
+          Divider(height: 16, color: paletteColor(context, Canopy.hairline)),
+          _buildGovernanceRow(context,
             icon: Icons.verified_user_rounded,
             title: 'settings.view_guidelines'.tr(),
             subtitle: 'settings.view_guidelines_subtitle'.tr(),
             onTap: () => _openLegalReader(context, terms, 1),
           ),
-          const Divider(height: 16, color: Canopy.hairline),
-          _buildGovernanceRow(
+          Divider(height: 16, color: paletteColor(context, Canopy.hairline)),
+          _buildGovernanceRow(context,
             icon: Icons.privacy_tip_rounded,
             title: 'settings.view_privacy'.tr(),
             subtitle: 'settings.view_privacy_subtitle'.tr(),
@@ -56,7 +56,7 @@ class LegalSettingsSection extends StatelessWidget {
     );
   }
 
-  Widget _buildGovernanceRow({
+  Widget _buildGovernanceRow(BuildContext context, {
     required IconData icon,
     required String title,
     required String subtitle,
@@ -69,7 +69,7 @@ class LegalSettingsSection extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: AppTheme.primary),
+            Icon(icon, size: 20, color: paletteColor(context, AppTheme.primary)),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
               child: Column(
@@ -77,8 +77,8 @@ class LegalSettingsSection extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Canopy.ink,
+                    style: TextStyle(
+                      color: paletteColor(context, Canopy.ink),
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -86,16 +86,16 @@ class LegalSettingsSection extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     subtitle,
-                    style: const TextStyle(
-                      color: Canopy.haze,
+                    style: TextStyle(
+                      color: paletteColor(context, Canopy.haze),
                       fontSize: AppTheme.captionFont,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: Canopy.slate),
+            Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: paletteColor(context, Canopy.slate)),
           ],
         ),
       ),

@@ -128,10 +128,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final isStreamer = appProvider.isStreamerModeEnabled;
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: paletteColor(context, Canopy.dawn),
       appBar: CaAppBar(
         title: Text('settings.title'.tr()),
-        backgroundColor: Canopy.dawn,
+        backgroundColor: paletteColor(context, Canopy.dawn),
         elevation: 0,
         actions: const [
           // Icon only, without a pill or circle behind it.
@@ -152,7 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             title: 'settings.role_mode_title'.tr(),
             icon: Icons.switch_account_rounded,
-            iconColor: AppTheme.primary,
+            iconColor: paletteColor(context, AppTheme.primary),
           ),
           const SizedBox(height: AppTheme.spaceSm),
           _buildRoleModeToggleCard(context, appProvider),
@@ -189,16 +189,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Streaming Quality Defaults, both unchanged, just relocated).
                   if (isStreamer) ...[
                     if (appProvider.isLoggedInStreamer)
-                      const Divider(
-                          height: CanopySize.stroke, color: Canopy.hairline),
+                      Divider(
+                          height: CanopySize.stroke, color: paletteColor(context, Canopy.hairline)),
                     _buildSummaryRow(
                       icon: CaGlyph.video,
                       title: 'organization_v1.channels'.tr(),
                       subtitle: 'organization_v1.channel_consent_hint'.tr(),
                       onTap: () => context.push('/channels'),
                     ),
-                    const Divider(
-                        height: CanopySize.stroke, color: Canopy.hairline),
+                    Divider(
+                        height: CanopySize.stroke, color: paletteColor(context, Canopy.hairline)),
                     _buildSummaryRow(
                       icon: CaGlyph.sliders,
                       title: 'design_copy.broadcaster_studio_preferences'.tr(),
@@ -229,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onTap: () =>
                   _showNotificationPreferencesSheet(context, appProvider),
             ),
-            const Divider(height: CanopySize.stroke, color: Canopy.hairline),
+            Divider(height: CanopySize.stroke, color: paletteColor(context, Canopy.hairline)),
 
             // Section 3.6: Chat blocks, server-owned and shared across devices.
             _buildSummaryRow(
@@ -253,7 +253,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             context,
             title: 'settings.governance_legal'.tr(),
             icon: Icons.gavel_rounded,
-            iconColor: AppTheme.primary,
+            iconColor: paletteColor(context, AppTheme.primary),
           ),
           const SizedBox(height: AppTheme.spaceSm),
           const LegalSettingsSection(),
@@ -298,7 +298,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               context,
               title: 'settings.danger_zone'.tr(),
               icon: Icons.warning_amber_rounded,
-              iconColor: AppTheme.primary,
+              iconColor: paletteColor(context, AppTheme.primary),
             ),
             const SizedBox(height: AppTheme.spaceSm),
             if (appProvider.isLoggedInStreamer &&
@@ -368,7 +368,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                               key: ValueKey(
                                                   'settings-category-$i'),
                                               selected: selected == i,
-                                              selectedTileColor: Canopy.mint,
+                                              selectedTileColor: paletteColor(context, Canopy.mint),
                                               shape: RoundedRectangleBorder(
                                                   borderRadius:
                                                       BorderRadius.circular(
@@ -429,18 +429,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
             style: Theme.of(context)
                 .textTheme
                 .titleMedium
-                ?.copyWith(color: Canopy.paper)),
+                ?.copyWith(color: paletteColor(context, Canopy.paper))),
         if (handle.isNotEmpty)
           Text(handle,
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
-                  ?.copyWith(color: Canopy.paper)),
+                  ?.copyWith(color: paletteColor(context, Canopy.paper))),
         Text(email,
             style: Theme.of(context)
                 .textTheme
                 .bodySmall
-                ?.copyWith(color: Canopy.paper)),
+                ?.copyWith(color: paletteColor(context, Canopy.paper))),
         const SizedBox(height: AppTheme.spaceSm),
         CaStatusChip(
             kind: CaStatusKind.offline,
@@ -453,8 +453,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       icon: const Icon(Icons.edit_outlined),
       label: Text('settings.edit_profile'.tr()),
       style: OutlinedButton.styleFrom(
-          foregroundColor: Canopy.paper,
-          side: const BorderSide(color: Canopy.paper)),
+          foregroundColor: paletteColor(context, Canopy.paper),
+          side: BorderSide(color: paletteColor(context, Canopy.paper))),
       onPressed: () {
         // "Edit Profile"must never open the broadcaster onboarding
         // flow for a non-verified viewer -- issue_log.md: "clicking
@@ -482,14 +482,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
         .trim();
     Widget backdrop(Widget child) => banner.isEmpty
         ? DecoratedBox(
-            decoration: const BoxDecoration(gradient: CanopyGradients.panel),
+            decoration: BoxDecoration(gradient: paletteGradient(context, CanopyGradients.panel)),
             child: CanopyLatticeBackground(
                 gradient: false,
                 child: ColoredBox(
-                    color: CanopyGradients.entryTextScrim, child: child)))
+                    color: paletteColor(context, CanopyGradients.entryTextScrim), child: child)))
         : DecoratedBox(
             decoration: BoxDecoration(
-                color: Canopy.forestDeep,
+                color: paletteColor(context, Canopy.forestDeep),
                 image: DecorationImage(
                     image: downscaledImage(buildSafeImageProvider(path: banner),
                         width: 1200),
@@ -501,8 +501,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                      Canopy.forestDeep.withValues(alpha: .45),
-                      Canopy.forestDeep.withValues(alpha: .82),
+                      paletteColor(context, Canopy.forestDeep).withValues(alpha: .45),
+                      paletteColor(context, Canopy.forestDeep).withValues(alpha: .82),
                     ])),
                 child: child));
     return CaCard(
@@ -547,14 +547,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  color: AppTheme.primary.withValues(alpha: 0.15),
+                  color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
                 child: Icon(
                   isStreamer
                       ? Icons.videocam_rounded
                       : Icons.visibility_rounded,
-                  color: AppTheme.primary,
+                  color: paletteColor(context, AppTheme.primary),
                   size: 22,
                 ),
               ),
@@ -567,8 +567,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       isStreamer
                           ? 'settings.role_streamer_active'.tr()
                           : 'settings.role_viewer_active'.tr(),
-                      style: const TextStyle(
-                        color: Canopy.ink,
+                      style: TextStyle(
+                        color: paletteColor(context, Canopy.ink),
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -581,8 +581,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               : 'settings.role_viewer_desc'.tr())
                           : ('design_copy.viewer_mode_streamer_studio_unlocked_upon_broadcaster_verificatio'
                               .tr()),
-                      style: const TextStyle(
-                        color: Canopy.slate,
+                      style: TextStyle(
+                        color: paletteColor(context, Canopy.slate),
                         fontSize: AppTheme.captionFont,
                       ),
                     ),
@@ -604,7 +604,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // broadcaster has none, so no empty divider block is drawn.
           if (!isLoggedIn || !isStreamer) ...[
             const SizedBox(height: AppTheme.spaceMd),
-            const Divider(color: Canopy.hairline, height: 1),
+            Divider(color: paletteColor(context, Canopy.hairline), height: 1),
             const SizedBox(height: AppTheme.spaceMd),
           ],
 
@@ -626,20 +626,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.onMedia,
-                  foregroundColor: Canopy.ink,
+                  backgroundColor: paletteColor(context, AppTheme.onMedia),
+                  foregroundColor: paletteColor(context, Canopy.ink),
                   padding: const EdgeInsets.symmetric(vertical: 10),
                 ),
                 icon: Container(
                   padding: const EdgeInsets.all(2),
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: AppTheme.onMedia,
+                    color: paletteColor(context, AppTheme.onMedia),
                   ),
-                  child: const Text(
+                  child: Text(
                     'G',
                     style: TextStyle(
-                      color: AppTheme.primary,
+                      color: paletteColor(context, AppTheme.primary),
                       fontWeight: FontWeight.w900,
                       fontSize: 13,
                     ),
@@ -650,6 +650,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   // Only the browser opens here; sign-in completes (or is
                   // refused) later, so nothing may claim success yet.
                   final messenger = ScaffoldMessenger.of(context);
+                  final errorColor = paletteColor(context, Canopy.liveCrimson);
                   try {
                     await provider.loginWithGoogle();
                     messenger.showSnackBar(SnackBar(
@@ -657,7 +658,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   } catch (_) {
                     messenger.showSnackBar(SnackBar(
                       content: Text('auth_welcome.sign_in_failed'.tr()),
-                      backgroundColor: Canopy.liveCrimson,
+                      backgroundColor: errorColor,
                     ));
                   }
                 },
@@ -677,8 +678,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: double.infinity,
           child: OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: Canopy.slate,
-              side: const BorderSide(color: Canopy.hairline),
+              foregroundColor: paletteColor(context, Canopy.slate),
+              side: BorderSide(color: paletteColor(context, Canopy.hairline)),
               padding: const EdgeInsets.symmetric(vertical: 10),
             ),
             icon: const Icon(Icons.logout_rounded, size: 16),
@@ -713,7 +714,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           width: double.infinity,
           child: TextButton.icon(
             style: TextButton.styleFrom(
-              foregroundColor: AppTheme.primary,
+              foregroundColor: paletteColor(context, AppTheme.primary),
               padding: const EdgeInsets.symmetric(vertical: 6),
             ),
             icon: const Icon(Icons.restart_alt_rounded, size: 16),
@@ -752,8 +753,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Expanded(
             child: Text(
           title,
-          style: const TextStyle(
-            color: Canopy.slate,
+          style: TextStyle(
+            color: paletteColor(context, Canopy.slate),
             fontSize: 12,
             fontWeight: FontWeight.bold,
             letterSpacing: 0.5,
@@ -819,17 +820,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildCustomStreamCardsEntry(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: paletteColor(context, AppTheme.surface),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: Canopy.hairline),
+        border: Border.all(color: paletteColor(context, Canopy.hairline)),
       ),
       child: ListTile(
-        leading: const Icon(Icons.photo_library_rounded,
-            color: AppTheme.primary, size: 20),
+        leading: Icon(Icons.photo_library_rounded,
+            color: paletteColor(context, AppTheme.primary), size: 20),
         title: Text(
           'settings.custom_cards_section'.tr(),
-          style: const TextStyle(
-            color: Canopy.ink,
+          style: TextStyle(
+            color: paletteColor(context, Canopy.ink),
             fontSize: 13,
             fontWeight: FontWeight.bold,
           ),
@@ -838,11 +839,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           'settings.custom_cards_desc'.tr(),
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-              color: Canopy.slate, fontSize: AppTheme.captionFont),
+          style: TextStyle(
+              color: paletteColor(context, Canopy.slate), fontSize: AppTheme.captionFont),
         ),
-        trailing: const Icon(Icons.chevron_right_rounded,
-            color: Canopy.haze, size: 20),
+        trailing: Icon(Icons.chevron_right_rounded,
+            color: paletteColor(context, Canopy.haze), size: 20),
         onTap: () => CustomStreamCardsSection.show(context),
       ),
     );

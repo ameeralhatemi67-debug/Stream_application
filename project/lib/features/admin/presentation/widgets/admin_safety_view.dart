@@ -103,7 +103,7 @@ void _showResult(BuildContext context, {String? errorKey, String? okKey}) {
   if (key == null) return;
   ScaffoldMessenger.of(context).showSnackBar(SnackBar(
     content: Text(key.tr()),
-    backgroundColor: errorKey == null ? null : Canopy.liveCrimson,
+    backgroundColor: errorKey == null ? null : paletteColor(context, Canopy.liveCrimson),
   ));
 }
 
@@ -140,7 +140,7 @@ class _ReasonDialogState extends State<_ReasonDialog> {
   Widget build(BuildContext context) {
     final text = _controller.text.trim();
     return CaAlertDialog(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: paletteColor(context, AppTheme.surface),
       title: Text(widget.title),
       content: SingleChildScrollView(
         child: Column(
@@ -148,8 +148,8 @@ class _ReasonDialogState extends State<_ReasonDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(widget.body,
-                style: const TextStyle(
-                    color: Canopy.slate, fontSize: 13)),
+                style: TextStyle(
+                    color: paletteColor(context, Canopy.slate), fontSize: 13)),
             const SizedBox(height: AppTheme.spaceMd),
             PhoneInputGuard(builder: (context, blocked) => TextField(
                       readOnly: blocked,
@@ -196,7 +196,7 @@ class _StatusMessage extends StatelessWidget {
           children: [
             Text(messageKey.tr(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Canopy.slate)),
+                style: TextStyle(color: paletteColor(context, Canopy.slate))),
             if (onRetry != null) ...[
               const SizedBox(height: AppTheme.spaceSm),
               TextButton(onPressed: onRetry, child: Text('common.retry'.tr())),
@@ -289,13 +289,13 @@ class _LiveSectionState extends State<_LiveSection> {
               'viewers': '$totalViewers',
             }),
             key: const Key('safety-live-summary'),
-            style: const TextStyle(
-                color: Canopy.ink, fontWeight: FontWeight.bold),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.ink), fontWeight: FontWeight.bold),
           ),
           if (known.length < rows.length)
             Text('safety.live_counts_partial'.tr(),
                 style:
-                    const TextStyle(color: Canopy.haze, fontSize: 12)),
+                    TextStyle(color: paletteColor(context, Canopy.haze), fontSize: 12)),
           const SizedBox(height: AppTheme.spaceMd),
           if (rows.isEmpty)
             const _StatusMessage('safety.live_empty',
@@ -304,28 +304,28 @@ class _LiveSectionState extends State<_LiveSection> {
             for (final r in rows)
               Card(
                 key: Key('safety-live-${r.profileId}'),
-                color: AppTheme.surface,
+                color: paletteColor(context, AppTheme.surface),
                 child: Padding(
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(r.name,
-                          style: const TextStyle(
-                              color: Canopy.ink,
+                          style: TextStyle(
+                              color: paletteColor(context, Canopy.ink),
                               fontWeight: FontWeight.bold)),
                       if (r.hiddenFromDiscovery)
                         Padding(
                           padding: const EdgeInsets.only(top: AppTheme.spaceXs),
                           child: Row(children: [
-                            const Icon(Icons.visibility_off_outlined,
-                                size: 14, color: AppTheme.warning),
+                            Icon(Icons.visibility_off_outlined,
+                                size: 14, color: paletteColor(context, AppTheme.warning)),
                             const SizedBox(width: AppTheme.spaceXs),
                             Flexible(
                               child: Text('safety.live_hidden_badge'.tr(),
                                   key: Key('safety-hidden-${r.profileId}'),
-                                  style: const TextStyle(
-                                      color: Canopy.slate,
+                                  style: TextStyle(
+                                      color: paletteColor(context, Canopy.slate),
                                       fontSize: 12)),
                             ),
                           ]),
@@ -342,8 +342,8 @@ class _LiveSectionState extends State<_LiveSection> {
                               : 'safety.live_viewers'
                                   .tr(namedArgs: {'count': '${r.viewerCount}'}),
                         ].join(' · '),
-                        style: const TextStyle(
-                            color: Canopy.slate, fontSize: 12),
+                        style: TextStyle(
+                            color: paletteColor(context, Canopy.slate), fontSize: 12),
                       ),
                       const SizedBox(height: AppTheme.spaceSm),
                       if (_busy.contains(r.profileId))
@@ -373,7 +373,7 @@ class _LiveSectionState extends State<_LiveSection> {
                             OutlinedButton(
                               key: Key('safety-remove-${r.profileId}'),
                               style: OutlinedButton.styleFrom(
-                                  foregroundColor: Canopy.liveCrimson),
+                                  foregroundColor: paletteColor(context, Canopy.liveCrimson)),
                               onPressed: () => _act(r, 'remove_from_feed'),
                               child: Text('safety.live_remove_from_feed'.tr()),
                             ),
@@ -598,8 +598,8 @@ class _AuditSectionState extends State<_AuditSection> {
                               key: Key('safety-audit-${e.id}'),
                               contentPadding: EdgeInsets.zero,
                               title: Text(label,
-                                  style: const TextStyle(
-                                      color: Canopy.ink,
+                                  style: TextStyle(
+                                      color: paletteColor(context, Canopy.ink),
                                       fontWeight: FontWeight.w600)),
                               subtitle: Text(
                                 [
@@ -612,8 +612,8 @@ class _AuditSectionState extends State<_AuditSection> {
                                         .format(e.createdAt.toLocal()),
                                   }),
                                 ].where((t) => t.isNotEmpty).join('\n'),
-                                style: const TextStyle(
-                                    color: Canopy.slate,
+                                style: TextStyle(
+                                    color: paletteColor(context, Canopy.slate),
                                     fontSize: 12),
                               ),
                             );
@@ -694,7 +694,7 @@ class _KeywordSectionState extends State<_KeywordSection> {
     final confirmed = await showCaDialog<bool>(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
         title: Text('safety.keyword_remove_title'
             .tr(namedArgs: {'keyword': k.keyword})),
         actions: [
@@ -736,7 +736,7 @@ class _KeywordSectionState extends State<_KeywordSection> {
       children: [
         Text('safety.keyword_hint'.tr(),
             style:
-                const TextStyle(color: Canopy.slate, fontSize: 12)),
+                TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12)),
         const SizedBox(height: AppTheme.spaceSm),
         Wrap(
           spacing: AppTheme.spaceSm,
@@ -778,7 +778,7 @@ class _KeywordSectionState extends State<_KeywordSection> {
               key: Key('safety-keyword-${k.id}'),
               contentPadding: EdgeInsets.zero,
               title: Text(k.keyword,
-                  style: const TextStyle(color: Canopy.ink)),
+                  style: TextStyle(color: paletteColor(context, Canopy.ink))),
               trailing: Wrap(
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
@@ -791,8 +791,8 @@ class _KeywordSectionState extends State<_KeywordSection> {
                   IconButton(
                     key: Key('safety-keyword-remove-${k.id}'),
                     tooltip: 'safety.keyword_remove'.tr(),
-                    icon: const Icon(Icons.delete_outline,
-                        color: Canopy.liveCrimson),
+                    icon: Icon(Icons.delete_outline,
+                        color: paletteColor(context, Canopy.liveCrimson)),
                     onPressed: _saving ? null : () => _remove(k),
                   ),
                 ],
@@ -861,7 +861,7 @@ class _SwitchesSectionState extends State<_SwitchesSection> {
       children: [
         Text('safety.switches_hint'.tr(),
             style:
-                const TextStyle(color: Canopy.slate, fontSize: 12)),
+                TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12)),
         if (flags.status == AppFlagsStatus.failed)
           _StatusMessage('safety.switches_unknown',
               key: const Key('safety-switches-error'), onRetry: flags.refresh),
@@ -871,7 +871,7 @@ class _SwitchesSectionState extends State<_SwitchesSection> {
             key: Key('safety-switch-${key.column}'),
             contentPadding: EdgeInsets.zero,
             title: Text('safety.switch_${key.column}'.tr(),
-                style: const TextStyle(color: Canopy.ink)),
+                style: TextStyle(color: paletteColor(context, Canopy.ink))),
             subtitle: Text(
               !flags.isKnown(key)
                   ? 'safety.switch_state_unknown'.tr()
@@ -880,7 +880,7 @@ class _SwitchesSectionState extends State<_SwitchesSection> {
                           : 'safety.switch_state_off')
                       .tr(),
               style:
-                  const TextStyle(color: Canopy.slate, fontSize: 12),
+                  TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12),
             ),
             value: flags.isEnabled(key),
             onChanged: _busy.contains(key) || !flags.isKnown(key)
@@ -942,12 +942,12 @@ class _PilotsSectionState extends State<_PilotsSection> {
         children: [
           Text('safety.pilots_hint'.tr(),
               style:
-                  const TextStyle(color: Canopy.slate, fontSize: 12)),
+                  TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12)),
           if (_error != null)
-            Text(_error!.tr(), style: const TextStyle(color: Canopy.liveCrimson)),
+            Text(_error!.tr(), style: TextStyle(color: paletteColor(context, Canopy.liveCrimson))),
           if (snapshot.hasError)
             Text('safety.pilot_failed'.tr(),
-                style: const TextStyle(color: Canopy.liveCrimson)),
+                style: TextStyle(color: paletteColor(context, Canopy.liveCrimson))),
           if (!snapshot.hasData && !snapshot.hasError)
             const Padding(
                 padding: EdgeInsets.all(AppTheme.spaceLg),
@@ -963,7 +963,7 @@ class _PilotsSectionState extends State<_PilotsSection> {
                   language == 'ar' && row.nameAr.isNotEmpty
                       ? row.nameAr
                       : row.nameEn,
-                  style: const TextStyle(color: Canopy.ink)),
+                  style: TextStyle(color: paletteColor(context, Canopy.ink))),
               value: row.pilot,
               onChanged: _busy.contains(row.id) ? null : (v) => _set(row.id, v),
             ),

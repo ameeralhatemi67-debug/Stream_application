@@ -10,12 +10,12 @@ class DiscoveryCardSkeleton extends StatelessWidget {
   const DiscoveryCardSkeleton({super.key});
 
   @override
-  Widget build(BuildContext context) => const CaCard(
+  Widget build(BuildContext context) => CaCard(
       padding: EdgeInsets.zero,
       child: Column(mainAxisSize: MainAxisSize.min, children: [
-        CaSkeleton(width: double.infinity, height: 128),
+        const CaSkeleton(width: double.infinity, height: 128),
         Padding(
-            padding: EdgeInsetsDirectional.fromSTEB(
+            padding: const EdgeInsetsDirectional.fromSTEB(
                 AppTheme.spaceLg, 0, AppTheme.spaceLg, AppTheme.spaceLg),
             child:
                 Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -27,14 +27,14 @@ class DiscoveryCardSkeleton extends StatelessWidget {
                         top: -34,
                         child: DecoratedBox(
                             decoration: BoxDecoration(
-                                color: Canopy.paper, shape: BoxShape.circle),
-                            child: Padding(
+                                color: paletteColor(context, Canopy.paper), shape: BoxShape.circle),
+                            child: const Padding(
                                 padding: EdgeInsets.all(2),
                                 child: CaSkeleton(
                                     shape: CaSkeletonShape.avatar,
                                     width: 68,
                                     height: 68)))),
-                    PositionedDirectional(
+                    const PositionedDirectional(
                         start: 84,
                         end: 0,
                         top: AppTheme.spaceMd,
@@ -43,13 +43,13 @@ class DiscoveryCardSkeleton extends StatelessWidget {
                             widthFactor: .65,
                             child: CaSkeleton(height: 12))),
                   ])),
-              SizedBox(height: AppTheme.spaceXs),
-              FractionallySizedBox(
+              const SizedBox(height: AppTheme.spaceXs),
+              const FractionallySizedBox(
                   alignment: AlignmentDirectional.centerStart,
                   widthFactor: .58,
                   child: CaSkeleton(height: 12)),
-              SizedBox(height: AppTheme.spaceMd),
-              Row(children: [
+              const SizedBox(height: AppTheme.spaceMd),
+              const Row(children: [
                 CaSkeleton(width: 42, height: 24),
                 SizedBox(width: AppTheme.spaceXs),
                 CaSkeleton(width: 72, height: 24),

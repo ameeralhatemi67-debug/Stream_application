@@ -116,20 +116,20 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
           }
 
           return CaAlertDialog(
-            backgroundColor: AppTheme.surface,
+            backgroundColor: paletteColor(ctx, AppTheme.surface),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              side: const BorderSide(color: Canopy.hairline),
+              side: BorderSide(color: paletteColor(ctx, Canopy.hairline)),
             ),
             title: Row(
               children: [
-                const Icon(Icons.person_add_alt_1_rounded,
-                    color: AppTheme.primary, size: 24),
+                Icon(Icons.person_add_alt_1_rounded,
+                    color: paletteColor(ctx, AppTheme.primary), size: 24),
                 const SizedBox(width: 10),
                 Text(
                   'wizard_steps.step3_5_dialog_title'.tr(),
-                  style: const TextStyle(
-                    color: Canopy.ink,
+                  style: TextStyle(
+                    color: paletteColor(ctx, Canopy.ink),
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -153,7 +153,7 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                               children: [
                                 CircleAvatar(
                                   radius: 36,
-                                  backgroundColor: Canopy.mint,
+                                  backgroundColor: paletteColor(ctx, Canopy.mint),
                                   backgroundImage: uploadedAvatarBytes != null
                                       ? MemoryImage(uploadedAvatarBytes!)
                                       : (selectedAvatar.startsWith('assets/')
@@ -167,12 +167,12 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                                   child: Container(
                                     padding: const EdgeInsets.all(4),
                                     decoration: BoxDecoration(
-                                      color: AppTheme.primary,
+                                      color: paletteColor(ctx, AppTheme.primary),
                                       borderRadius: BorderRadius.circular(
                                           AppTheme.radiusSm),
                                     ),
-                                    child: const Icon(Icons.camera_alt_rounded,
-                                        size: 14, color: AppTheme.onMedia),
+                                    child: Icon(Icons.camera_alt_rounded,
+                                        size: 14, color: paletteColor(ctx, AppTheme.onMedia)),
                                   ),
                                 ),
                               ],
@@ -181,7 +181,7 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                           const SizedBox(height: 6),
                           TextButton.icon(
                             style: TextButton.styleFrom(
-                              foregroundColor: AppTheme.primary,
+                              foregroundColor: paletteColor(ctx, AppTheme.primary),
                               padding: EdgeInsets.zero,
                             ),
                             icon:
@@ -210,7 +210,7 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                                     shape: BoxShape.circle,
                                     border: Border.all(
                                       color: isSelected
-                                          ? AppTheme.primary
+                                          ? paletteColor(ctx, AppTheme.primary)
                                           : Colors.transparent,
                                       width: 2,
                                     ),
@@ -235,8 +235,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                       label: 'wizard_steps.step1_handle_label'.tr(),
                       hint: '@amir_alhatemi or @handle',
                       trailing: IconButton(
-                        icon: const Icon(Icons.search_rounded,
-                            color: AppTheme.primary),
+                        icon: Icon(Icons.search_rounded,
+                            color: paletteColor(ctx, AppTheme.primary)),
                         tooltip: 'Auto-fill from system',
                         onPressed: () => checkAndAutofill(handleCtrl.text),
                       ),
@@ -245,14 +245,14 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                       const SizedBox(height: 6),
                       Row(
                         children: [
-                          const Icon(Icons.check_circle_rounded,
-                              color: Canopy.leaf, size: 14),
+                          Icon(Icons.check_circle_rounded,
+                              color: paletteColor(ctx, Canopy.leaf), size: 14),
                           const SizedBox(width: 4),
                           Text(
                               'design_ui.auto_filled_from_registered_streamer_profile'
                                   .tr(),
-                              style: const TextStyle(
-                                  color: Canopy.leaf,
+                              style: TextStyle(
+                                  color: paletteColor(ctx, Canopy.leaf),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600)),
                         ],
@@ -338,8 +338,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
         children: [
           Text(
             'wizard_steps.step3_5_title'.tr().split(':').last.trim(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.ink),
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -347,8 +347,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'wizard_steps.step3_5_desc'.tr(),
-            style: const TextStyle(
-              color: Canopy.slate,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.slate),
               fontSize: 12,
               height: 1.4,
             ),
@@ -363,16 +363,16 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
               Text(
                 'wizard_steps.step3_5_roster_count'
                     .tr(args: ['${speakers.length}']),
-                style: const TextStyle(
-                  color: Canopy.ink,
+                style: TextStyle(
+                  color: paletteColor(context, Canopy.ink),
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primary,
-                  foregroundColor: AppTheme.onMedia,
+                  backgroundColor: paletteColor(context, AppTheme.primary),
+                  foregroundColor: paletteColor(context, AppTheme.onMedia),
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                   shape: RoundedRectangleBorder(
@@ -394,36 +394,36 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
               padding: const EdgeInsets.symmetric(
                   vertical: 36, horizontal: AppTheme.spaceLg),
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: paletteColor(context, AppTheme.surface),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 border: Border.all(
-                    color: Canopy.hairline, style: BorderStyle.solid),
+                    color: paletteColor(context, Canopy.hairline), style: BorderStyle.solid),
               ),
               alignment: Alignment.center,
               child: Column(
                 children: [
-                  const Icon(Icons.groups_outlined,
-                      color: Canopy.haze, size: 48),
+                  Icon(Icons.groups_outlined,
+                      color: paletteColor(context, Canopy.haze), size: 48),
                   const SizedBox(height: 10),
                   Text(
                     'design_ui.no_speakers_added_yet'.tr(),
-                    style: const TextStyle(
-                        color: Canopy.ink,
+                    style: TextStyle(
+                        color: paletteColor(context, Canopy.ink),
                         fontWeight: FontWeight.bold,
                         fontSize: 14),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     'design_ui.no_speakers_added_hint'.tr(),
-                    style: const TextStyle(
-                        color: Canopy.slate, fontSize: 12),
+                    style: TextStyle(
+                        color: paletteColor(context, Canopy.slate), fontSize: 12),
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 14),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppTheme.primary,
-                      side: const BorderSide(color: AppTheme.primary),
+                      foregroundColor: paletteColor(context, AppTheme.primary),
+                      side: BorderSide(color: paletteColor(context, AppTheme.primary)),
                     ),
                     icon: const Icon(Icons.add, size: 16),
                     label: Text('design_ui.add_first_streamer'.tr()),
@@ -443,15 +443,15 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppTheme.surface,
+                    color: paletteColor(context, AppTheme.surface),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    border: Border.all(color: Canopy.hairline),
+                    border: Border.all(color: paletteColor(context, Canopy.hairline)),
                   ),
                   child: Row(
                     children: [
                       CircleAvatar(
                         radius: 20,
-                        backgroundColor: Canopy.mint,
+                        backgroundColor: paletteColor(context, Canopy.mint),
                         backgroundImage: spk.avatarBytes != null
                             ? MemoryImage(spk.avatarBytes!)
                             : (spk.avatarUrl.startsWith('assets/')
@@ -465,8 +465,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                           children: [
                             Text(
                               spk.name,
-                              style: const TextStyle(
-                                color: Canopy.ink,
+                              style: TextStyle(
+                                color: paletteColor(context, Canopy.ink),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -474,8 +474,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                             const SizedBox(height: 2),
                             Text(
                               '${spk.role} • ${spk.handle}',
-                              style: const TextStyle(
-                                color: AppTheme.primary,
+                              style: TextStyle(
+                                color: paletteColor(context, AppTheme.primary),
                                 fontSize: 12,
                               ),
                             ),
@@ -483,8 +483,8 @@ class ApplyStep35OrgSpeakers extends StatelessWidget {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(Icons.delete_outline_rounded,
-                            color: AppTheme.primary, size: 18),
+                        icon: Icon(Icons.delete_outline_rounded,
+                            color: paletteColor(context, AppTheme.primary), size: 18),
                         tooltip: 'Remove speaker',
                         onPressed: () => onRemoveSpeaker(idx),
                       ),

@@ -112,7 +112,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
     }
     final language = context.locale.languageCode;
     return Scaffold(
-        appBar: OrganizationAppBar(
+        appBar: OrganizationAppBar(context: context,
             title: Text('organization_v1.shows'.tr()),
             actions: [
               IconButton(
@@ -135,7 +135,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                       decoration: InputDecoration(
                           labelText: 'organization_v1.destination'.tr(),
                           filled: true,
-                          fillColor: Canopy.paper),
+                          fillColor: paletteColor(context, Canopy.paper)),
                       items: [
                         DropdownMenuItem(
                             value: '',
@@ -159,7 +159,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
               const SizedBox(height: AppTheme.spaceMd),
               if (selected != null && !selected.v1Enabled)
                 Text('organization_v1.not_enabled_hint'.tr(),
-                    style: const TextStyle(color: Canopy.slate)),
+                    style: TextStyle(color: paletteColor(context, Canopy.slate))),
               if (manage)
                 CaButton(
                     onPressed: _busy ? null : () => _edit(),
@@ -211,7 +211,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                                         onPressed: () => Navigator.of(context)
                                             .push(MaterialPageRoute<void>(
                                                 builder: (_) => Scaffold(
-                                                    appBar: OrganizationAppBar(
+                                                    appBar: OrganizationAppBar(context: context,
                                                         title: Text(
                                                             s.title(language))),
                                                     body: ChatModerationView(
@@ -277,7 +277,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                                     TextButton(
                                         style: TextButton.styleFrom(
                                             foregroundColor:
-                                                Canopy.liveCrimson),
+                                                paletteColor(context, Canopy.liveCrimson)),
                                         onPressed: _busy
                                             ? null
                                             : () => _run(() => context
@@ -291,7 +291,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                                     TextButton(
                                         style: TextButton.styleFrom(
                                             foregroundColor:
-                                                Canopy.liveCrimson),
+                                                paletteColor(context, Canopy.liveCrimson)),
                                         onPressed: _busy
                                             ? null
                                             : () => _run(() => context
@@ -444,8 +444,8 @@ class _ScheduleEditorState extends State<_ScheduleEditor> {
               DropdownButtonFormField<String>(
                   initialValue: _presenter,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      filled: true, fillColor: Canopy.mint),
+                  decoration: InputDecoration(
+                      filled: true, fillColor: paletteColor(context, Canopy.mint)),
                   items: presenters
                       .map((m) => DropdownMenuItem(
                           value: m.profileId,
@@ -467,8 +467,8 @@ class _ScheduleEditorState extends State<_ScheduleEditor> {
                   initialValue:
                       venues.any((v) => v.venueId == _venue) ? _venue : null,
                   isExpanded: true,
-                  decoration: const InputDecoration(
-                      filled: true, fillColor: Canopy.mint),
+                  decoration: InputDecoration(
+                      filled: true, fillColor: paletteColor(context, Canopy.mint)),
                   items: venues
                       .map((v) => DropdownMenuItem(
                           value: v.venueId,
@@ -550,7 +550,7 @@ class _ScheduleEditorState extends State<_ScheduleEditor> {
               Text('organization_v1.acceptance_reset'.tr()),
               if (_error != null)
                 Text(_error!.tr(),
-                    style: const TextStyle(color: Canopy.liveCrimson)),
+                    style: TextStyle(color: paletteColor(context, Canopy.liveCrimson))),
             ]))),
         actions: [
           CaButton(

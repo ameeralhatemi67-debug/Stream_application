@@ -28,10 +28,10 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: AppTheme.media.withValues(alpha: 0.65),
+        color: paletteColor(context, AppTheme.media).withValues(alpha: 0.65),
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         border: Border.all(
-          color: AppTheme.onMedia.withValues(alpha: 0.15),
+          color: paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.15),
           width: 0.8,
         ),
       ),
@@ -57,7 +57,7 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
 
   Widget _buildSpeakerAvatar(BuildContext context, OrgSpeakerModel speaker) {
     final isActive = activeSpeakerId == speaker.speakerId || (activeSpeakerId == null && speaker.isPermanentStaff);
-    final borderColor = isActive ? AppTheme.warning : AppTheme.primary.withValues(alpha: 0.8);
+    final borderColor = isActive ? paletteColor(context, AppTheme.warning) : paletteColor(context, AppTheme.primary).withValues(alpha: 0.8);
 
     return Tooltip(
       message: '${speaker.nameEn} • ${speaker.roleOrTitleEn}',
@@ -92,7 +92,7 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
                   boxShadow: isActive
                       ? [
                           BoxShadow(
-                            color: AppTheme.warning.withValues(alpha: 0.4),
+                            color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.4),
                             blurRadius: 6,
                             spreadRadius: 1,
                           ),
@@ -109,9 +109,9 @@ class LiveMultiSpeakerOverlay extends StatelessWidget {
                   width: 10,
                   height: 10,
                   decoration: BoxDecoration(
-                    color: Canopy.leaf, // Emerald Green Active Voice
+                    color: paletteColor(context, Canopy.leaf), // Emerald Green Active Voice
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppTheme.media, width: 1.5),
+                    border: Border.all(color: paletteColor(context, AppTheme.media), width: 1.5),
                   ),
                 ),
             ],

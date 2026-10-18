@@ -292,7 +292,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Canopy.liveCrimson,
+        backgroundColor: paletteColor(context, Canopy.liveCrimson),
         duration: const Duration(seconds: 2),
       ),
     );
@@ -599,7 +599,7 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
       ]),
     );
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: paletteColor(context, Canopy.dawn),
       appBar: CaAppBar(
         languageBare: true,
         leading: CaIconButton(
@@ -645,8 +645,8 @@ class _StreamerApplyScreenState extends State<StreamerApplyScreen> {
                                       .titleMedium
                                       ?.copyWith(
                                           color: i == visualStep
-                                              ? Canopy.brandGreen
-                                              : Canopy.slate)),
+                                              ? paletteColor(context, Canopy.brandGreen)
+                                              : paletteColor(context, Canopy.slate))),
                             ),
                         ],
                       )))),

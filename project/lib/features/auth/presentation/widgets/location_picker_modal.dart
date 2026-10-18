@@ -214,10 +214,10 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
 
     return Container(
       height: size.height * 0.85,
-      decoration: const BoxDecoration(
-        color: Canopy.dawn,
+      decoration: BoxDecoration(
+        color: paletteColor(context, Canopy.dawn),
         borderRadius:
-            BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
+            const BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
       ),
       child: Column(
         children: [
@@ -230,11 +230,11 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: AppTheme.primary.withValues(alpha: 0.12),
+                    color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.12),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
-                  child: const Icon(Icons.pin_drop_rounded,
-                      color: AppTheme.primary, size: 22),
+                  child: Icon(Icons.pin_drop_rounded,
+                      color: paletteColor(context, AppTheme.primary), size: 22),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -243,8 +243,8 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     children: [
                       Text(
                         'design_ui.pinpoint_broadcast_location'.tr(),
-                        style: const TextStyle(
-                          color: Canopy.ink,
+                        style: TextStyle(
+                          color: paletteColor(context, Canopy.ink),
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -252,22 +252,22 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                       const SizedBox(height: 2),
                       Text(
                         'map.picker_hint'.tr(),
-                        style: const TextStyle(
-                            color: Canopy.slate, fontSize: 12),
+                        style: TextStyle(
+                            color: paletteColor(context, Canopy.slate), fontSize: 12),
                       ),
                     ],
                   ),
                 ),
                 IconButton(
                   tooltip: 'design_ui.cancel'.tr(),
-                  icon: const Icon(Icons.close_rounded,
-                      color: Canopy.slate),
+                  icon: Icon(Icons.close_rounded,
+                      color: paletteColor(context, Canopy.slate)),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
             ),
           ),
-          const Divider(height: 1, color: Canopy.hairline),
+          Divider(height: 1, color: paletteColor(context, Canopy.hairline)),
 
           // Interactive Map Area
           Expanded(
@@ -278,7 +278,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
               final initial = _initialTarget(canvas);
               return Stack(
                 children: [
-                  Positioned.fill(child: Container(color: Canopy.mint)),
+                  Positioned.fill(child: Container(color: paletteColor(context, Canopy.mint))),
                   Center(
                     child: SizedBox(
                       width: canvas.width,
@@ -290,7 +290,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                           initialZoom: initial.zoom,
                           minZoom: _policy.minZoom(canvas, _padding),
                           maxZoom: kMapMaxZoom,
-                          backgroundColor: Canopy.dawn,
+                          backgroundColor: paletteColor(context, Canopy.dawn),
                           cameraConstraint: CameraConstraint.contain(
                             bounds: kTricityNavigationExtent.bounds,
                           ),
@@ -316,10 +316,10 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                                         .tr(namedArgs: {
                                       'coords': formatPickerCoordinates(picked)
                                     }),
-                                    child: const Icon(
+                                    child: Icon(
                                       Icons.location_pin,
                                       size: 48,
-                                      color: AppTheme.primary,
+                                      color: paletteColor(context, AppTheme.primary),
                                     ),
                                   ),
                                 ),
@@ -335,7 +335,7 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     child: Center(
                       child: Icon(Icons.gps_not_fixed_rounded,
                           size: 32,
-                          color: Canopy.ink.withValues(alpha: 0.7)),
+                          color: paletteColor(context, Canopy.ink).withValues(alpha: 0.7)),
                     ),
                   ),
                   ListenableBuilder(
@@ -396,9 +396,9 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
           // Selected point & confirm bar
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
-            decoration: const BoxDecoration(
-              color: AppTheme.surface,
-              border: Border(top: BorderSide(color: Canopy.hairline)),
+            decoration: BoxDecoration(
+              color: paletteColor(context, AppTheme.surface),
+              border: Border(top: BorderSide(color: paletteColor(context, Canopy.hairline))),
             ),
             child: SafeArea(
               top: false,
@@ -409,16 +409,16 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.info_outline_rounded,
-                            color: AppTheme.warning, size: 20),
+                        Icon(Icons.info_outline_rounded,
+                            color: paletteColor(context, AppTheme.warning), size: 20),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'map.picker_outside_saved'.tr(namedArgs: {
                               'coords': formatPickerCoordinates(_savedOutside!)
                             }),
-                            style: const TextStyle(
-                                color: Canopy.ink, fontSize: 13),
+                            style: TextStyle(
+                                color: paletteColor(context, Canopy.ink), fontSize: 13),
                           ),
                         ),
                       ],
@@ -428,8 +428,8 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.place_rounded,
-                          color: AppTheme.primary, size: 20),
+                      Icon(Icons.place_rounded,
+                          color: paletteColor(context, AppTheme.primary), size: 20),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Semantics(
@@ -441,8 +441,8 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                                     'lat': picked.latitude.toStringAsFixed(5),
                                     'lng': picked.longitude.toStringAsFixed(5),
                                   }),
-                            style: const TextStyle(
-                              color: Canopy.ink,
+                            style: TextStyle(
+                              color: paletteColor(context, Canopy.ink),
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
                             ),
@@ -454,8 +454,8 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
                   const SizedBox(height: AppTheme.spaceXs),
                   Text(
                     'map.picker_address_note'.tr(),
-                    style: const TextStyle(
-                        color: Canopy.slate, fontSize: 12),
+                    style: TextStyle(
+                        color: paletteColor(context, Canopy.slate), fontSize: 12),
                   ),
                   const SizedBox(height: AppTheme.spaceSm),
                   ListenableBuilder(
@@ -509,13 +509,13 @@ class _LocationPickerModalState extends State<LocationPickerModal> {
 
   Widget _zoomButton(IconData icon, String tooltip, VoidCallback onTap) {
     return Material(
-      color: AppTheme.surface,
+      color: paletteColor(context, AppTheme.surface),
       shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: const BorderSide(color: Canopy.hairline)),
+          side: BorderSide(color: paletteColor(context, Canopy.hairline))),
       child: IconButton(
         tooltip: tooltip,
-        icon: Icon(icon, color: Canopy.ink),
+        icon: Icon(icon, color: paletteColor(context, Canopy.ink)),
         constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
         onPressed: onTap,
       ),

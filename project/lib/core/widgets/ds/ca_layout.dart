@@ -31,7 +31,7 @@ class CaShell extends StatelessWidget {
                 : double.infinity,
             child: child));
     return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: paletteColor(context, Canopy.dawn),
         extendBody: pill,
         body: Stack(children: [
           Row(children: [

@@ -290,7 +290,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
               Text('$count', style: Theme.of(context).textTheme.bodySmall)
             ]));
     return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: paletteColor(context, Canopy.dawn),
         appBar: CaAppBar(
             compactLanguage: true,
             languageBare: true,
@@ -316,7 +316,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                         (unread > 0 ? ' ($unread)' : ''),
                     onPressed: () => _showNotificationsSheet(context)),
                 if (unread > 0)
-                  const PositionedDirectional(
+                  PositionedDirectional(
                       top: AppTheme.spaceSm,
                       end: AppTheme.spaceSm,
                       child: IgnorePointer(
@@ -324,7 +324,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                               dimension: AppTheme.spaceSm,
                               child: DecoratedBox(
                                   decoration: BoxDecoration(
-                                      color: Canopy.brandGreen,
+                                      color: paletteColor(context, Canopy.brandGreen),
                                       shape: BoxShape.circle))))),
               ]),
               CaIconButton(

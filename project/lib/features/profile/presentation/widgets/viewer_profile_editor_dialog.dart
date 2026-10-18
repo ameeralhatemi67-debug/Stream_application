@@ -133,7 +133,7 @@ class _ViewerProfileEditorDialogState extends State<ViewerProfileEditorDialog> {
     final theme = Theme.of(context).textTheme;
     final landscape = context.isPhoneLandscape;
     return Material(
-      color: AppTheme.surface,
+      color: paletteColor(context, AppTheme.surface),
       child: SafeArea(
         top: false,
         child: ConstrainedBox(
@@ -154,17 +154,17 @@ class _ViewerProfileEditorDialogState extends State<ViewerProfileEditorDialog> {
                       children: [
                         Text('settings.edit_profile'.tr(),
                             style: theme.titleLarge?.copyWith(
-                                color: Canopy.ink, fontWeight: FontWeight.w700)),
+                                color: paletteColor(context, Canopy.ink), fontWeight: FontWeight.w700)),
                         const SizedBox(height: 2),
                         Text('settings.edit_profile_hint'.tr(),
-                            style: theme.bodySmall?.copyWith(color: Canopy.slate)),
+                            style: theme.bodySmall?.copyWith(color: paletteColor(context, Canopy.slate))),
                       ],
                     ),
                   ),
                   IconButton(
                     tooltip: 'common.cancel'.tr(),
                     onPressed: _isSaving ? null : () => Navigator.of(context).pop(),
-                    icon: const Icon(Icons.close_rounded, color: Canopy.slate),
+                    icon: Icon(Icons.close_rounded, color: paletteColor(context, Canopy.slate)),
                   ),
                 ]),
               ),
@@ -192,7 +192,7 @@ class _ViewerProfileEditorDialogState extends State<ViewerProfileEditorDialog> {
                       ),
                       const SizedBox(height: AppTheme.spaceLg),
                       Text('settings.choose_avatar'.tr(),
-                          style: theme.labelLarge?.copyWith(color: Canopy.slate)),
+                          style: theme.labelLarge?.copyWith(color: paletteColor(context, Canopy.slate))),
                       const SizedBox(height: AppTheme.spaceSm),
                       Wrap(
                         spacing: AppTheme.spaceSm,
@@ -217,8 +217,8 @@ class _ViewerProfileEditorDialogState extends State<ViewerProfileEditorDialog> {
                                     border: Border.all(
                                       color: _avatarBytes == null &&
                                               _avatarUrl == preset
-                                          ? AppTheme.primary
-                                          : Canopy.transparent,
+                                          ? paletteColor(context, AppTheme.primary)
+                                          : paletteColor(context, Canopy.transparent),
                                       width: 2.5,
                                     ),
                                   ),
@@ -250,7 +250,7 @@ class _ViewerProfileEditorDialogState extends State<ViewerProfileEditorDialog> {
                         const SizedBox(height: AppTheme.spaceMd),
                         Text(_error!.tr(),
                             style: theme.bodySmall
-                                ?.copyWith(color: Canopy.liveCrimson)),
+                                ?.copyWith(color: paletteColor(context, Canopy.liveCrimson))),
                       ],
                     ],
                   ),
@@ -258,8 +258,8 @@ class _ViewerProfileEditorDialogState extends State<ViewerProfileEditorDialog> {
               ),
               // Actions stay visible while the form scrolls.
               DecoratedBox(
-                decoration: const BoxDecoration(
-                    border: Border(top: BorderSide(color: Canopy.hairline))),
+                decoration: BoxDecoration(
+                    border: Border(top: BorderSide(color: paletteColor(context, Canopy.hairline)))),
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(AppTheme.spaceLg,
                       AppTheme.spaceMd, AppTheme.spaceLg, AppTheme.spaceMd),

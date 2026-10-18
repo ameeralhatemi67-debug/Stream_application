@@ -44,7 +44,7 @@ class _CustomPlaceholderReviewViewState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
+        backgroundColor: isError ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, Canopy.leaf),
       ),
     );
   }
@@ -87,11 +87,11 @@ class _CustomPlaceholderReviewViewState
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (dialogContext, setDialogState) => CaAlertDialog(
-          backgroundColor: Canopy.mint,
+          backgroundColor: paletteColor(dialogContext, Canopy.mint),
           title: Text(
             'admin.custom_card_reject_title'.tr(),
-            style: const TextStyle(
-                color: Canopy.ink,
+            style: TextStyle(
+                color: paletteColor(dialogContext, Canopy.ink),
                 fontSize: 15,
                 fontWeight: FontWeight.bold),
           ),
@@ -100,8 +100,8 @@ class _CustomPlaceholderReviewViewState
             controller: controller,
             autofocus: (true) && !blocked,
             maxLines: 3,
-            style: const TextStyle(
-                color: Canopy.ink, fontSize: 13),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.ink), fontSize: 13),
             decoration: InputDecoration(
               hintText: 'admin.custom_card_reject_hint'.tr(),
               errorText: errorText,
@@ -114,8 +114,8 @@ class _CustomPlaceholderReviewViewState
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Canopy.liveCrimson,
-                foregroundColor: AppTheme.onMedia,
+                backgroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
+                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia),
               ),
               onPressed: () {
                 final text = controller.text.trim();
@@ -154,16 +154,16 @@ class _CustomPlaceholderReviewViewState
 
     return RefreshIndicator(
       onRefresh: provider.refreshCustomPlaceholders,
-      color: AppTheme.primary,
-      backgroundColor: Canopy.mint,
+      color: paletteColor(context, AppTheme.primary),
+      backgroundColor: paletteColor(context, Canopy.mint),
       child: ListView(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           Text(
             'admin.custom_cards_title'.tr(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.ink),
               fontSize: 17,
               fontWeight: FontWeight.bold,
             ),
@@ -171,28 +171,28 @@ class _CustomPlaceholderReviewViewState
           const SizedBox(height: AppTheme.spaceXs),
           Text(
             'admin.custom_cards_desc'.tr(),
-            style: const TextStyle(
-                color: Canopy.slate, fontSize: 12, height: 1.4),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.slate), fontSize: 12, height: 1.4),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           if (queue.isEmpty)
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceLg),
               decoration: BoxDecoration(
-                color: AppTheme.surface,
+                color: paletteColor(context, AppTheme.surface),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: Canopy.hairline),
+                border: Border.all(color: paletteColor(context, Canopy.hairline)),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.inbox_rounded,
-                      color: Canopy.haze, size: 22),
+                  Icon(Icons.inbox_rounded,
+                      color: paletteColor(context, Canopy.haze), size: 22),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Text(
                       'admin.custom_cards_empty'.tr(),
-                      style: const TextStyle(
-                          color: Canopy.slate, fontSize: 12.5),
+                      style: TextStyle(
+                          color: paletteColor(context, Canopy.slate), fontSize: 12.5),
                     ),
                   ),
                 ],
@@ -220,13 +220,13 @@ class _CustomPlaceholderReviewViewState
       children: [
         Row(
           children: [
-            const Icon(Icons.verified_rounded,
-                color: Canopy.leaf, size: 18),
+            Icon(Icons.verified_rounded,
+                color: paletteColor(context, Canopy.leaf), size: 18),
             const SizedBox(width: AppTheme.spaceSm),
             Text(
               'admin.custom_cards_approved_title'.tr(),
-              style: const TextStyle(
-                color: Canopy.ink,
+              style: TextStyle(
+                color: paletteColor(context, Canopy.ink),
                 fontSize: 15,
                 fontWeight: FontWeight.bold,
               ),
@@ -237,8 +237,8 @@ class _CustomPlaceholderReviewViewState
         if (approved.isEmpty)
           Text(
             'admin.custom_cards_approved_empty'.tr(),
-            style: const TextStyle(
-                color: Canopy.slate, fontSize: 12),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.slate), fontSize: 12),
           )
         else
           GridView.builder(
@@ -261,10 +261,10 @@ class _CustomPlaceholderReviewViewState
                     Image.network(
                       card.imageUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const ColoredBox(
-                        color: AppTheme.surface,
+                      errorBuilder: (_, __, ___) => ColoredBox(
+                        color: paletteColor(context, AppTheme.surface),
                         child: Icon(Icons.broken_image_outlined,
-                            color: Canopy.haze, size: 20),
+                            color: paletteColor(context, Canopy.haze), size: 20),
                       ),
                     ),
                     PositionedDirectional(
@@ -275,11 +275,11 @@ class _CustomPlaceholderReviewViewState
                         card.streamerDisplayName ?? card.streamerId,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppTheme.onMedia,
+                        style: TextStyle(
+                          color: paletteColor(context, AppTheme.onMedia),
                           fontSize: 9.5,
                           fontWeight: FontWeight.bold,
-                          shadows: [Shadow(blurRadius: 4, color: AppTheme.media)],
+                          shadows: [Shadow(blurRadius: 4, color: paletteColor(context, AppTheme.media))],
                         ),
                       ),
                     ),
@@ -299,9 +299,9 @@ class _CustomPlaceholderReviewViewState
     return Container(
       margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: paletteColor(context, AppTheme.surface),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: Canopy.hairline),
+        border: Border.all(color: paletteColor(context, Canopy.hairline)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -315,11 +315,11 @@ class _CustomPlaceholderReviewViewState
               child: Image.network(
                 card.imageUrl,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const ColoredBox(
-                  color: AppTheme.surface,
+                errorBuilder: (_, __, ___) => ColoredBox(
+                  color: paletteColor(context, AppTheme.surface),
                   child: Center(
                     child: Icon(Icons.broken_image_outlined,
-                        color: Canopy.haze, size: 28),
+                        color: paletteColor(context, Canopy.haze), size: 28),
                   ),
                 ),
               ),
@@ -336,13 +336,13 @@ class _CustomPlaceholderReviewViewState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
-                        color: AppTheme.primary.withValues(alpha: 0.18),
+                        color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.18),
                         borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                       ),
                       child: Text(
                         card.placeholderType.labelKey.tr(),
-                        style: const TextStyle(
-                          color: AppTheme.primary,
+                        style: TextStyle(
+                          color: paletteColor(context, AppTheme.primary),
                           fontSize: 10.5,
                           fontWeight: FontWeight.bold,
                         ),
@@ -354,8 +354,8 @@ class _CustomPlaceholderReviewViewState
                         card.streamerDisplayName ?? card.streamerId,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Canopy.ink,
+                        style: TextStyle(
+                          color: paletteColor(context, Canopy.ink),
                           fontSize: 13,
                           fontWeight: FontWeight.bold,
                         ),
@@ -374,8 +374,8 @@ class _CustomPlaceholderReviewViewState
                         icon: const Icon(Icons.block_rounded, size: 16),
                         label: Text('admin.btn_reject'.tr()),
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: Canopy.liveCrimson,
-                          side: const BorderSide(color: Canopy.liveCrimson),
+                          foregroundColor: paletteColor(context, Canopy.liveCrimson),
+                          side: BorderSide(color: paletteColor(context, Canopy.liveCrimson)),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),
@@ -386,17 +386,17 @@ class _CustomPlaceholderReviewViewState
                         onPressed:
                             isBusy ? null : () => _approve(provider, card),
                         icon: isBusy
-                            ? const SizedBox(
+                            ? SizedBox(
                                 width: 14,
                                 height: 14,
                                 child: HadayahLoadingIndicator(
-                                    strokeWidth: 2, color: AppTheme.onMedia),
+                                    strokeWidth: 2, color: paletteColor(context, AppTheme.onMedia)),
                               )
                             : const Icon(Icons.check_circle_rounded, size: 16),
                         label: Text('admin.btn_approve'.tr()),
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Canopy.leaf,
-                          foregroundColor: Canopy.dawn,
+                          backgroundColor: paletteColor(context, Canopy.leaf),
+                          foregroundColor: paletteColor(context, Canopy.dawn),
                           padding: const EdgeInsets.symmetric(vertical: 10),
                         ),
                       ),

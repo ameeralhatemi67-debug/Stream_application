@@ -71,14 +71,14 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         children: [
           Row(
             children: [
-              const Icon(Icons.fact_check_outlined,
-                  size: 18, color: AppTheme.primary),
+              Icon(Icons.fact_check_outlined,
+                  size: 18, color: paletteColor(context, AppTheme.primary)),
               const SizedBox(width: AppTheme.spaceSm),
               Expanded(
                 child: Text(
                   'settings.consent_record_title'.tr(),
-                  style: const TextStyle(
-                    color: Canopy.ink,
+                  style: TextStyle(
+                    color: paletteColor(context, Canopy.ink),
                     fontSize: 14,
                     fontWeight: FontWeight.bold,
                   ),
@@ -90,13 +90,13 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           Text(
             status,
             style:
-                const TextStyle(color: Canopy.slate, fontSize: 12, height: 1.5),
+                TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12, height: 1.5),
           ),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             'settings.consent_withdraw_note'.tr(),
-            style: const TextStyle(
-                color: Canopy.haze,
+            style: TextStyle(
+                color: paletteColor(context, Canopy.haze),
                 fontSize: AppTheme.captionFont,
                 height: 1.5),
           ),
@@ -112,8 +112,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         children: [
           Text(
             'settings.data_export_title'.tr(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.ink),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -121,27 +121,27 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           const SizedBox(height: 6),
           Text(
             'settings.data_export_desc'.tr(),
-            style: const TextStyle(
-                color: Canopy.slate, fontSize: AppTheme.captionFont),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.slate), fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               icon: _isExportingData
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: HadayahLoadingIndicator(
                         strokeWidth: 2,
-                        color: AppTheme.primary,
+                        color: paletteColor(context, AppTheme.primary),
                       ),
                     )
                   : const Icon(Icons.download_rounded, size: 18),
               label: Text('settings.data_export_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppTheme.primary),
+                foregroundColor: paletteColor(context, AppTheme.primary),
+                side: BorderSide(color: paletteColor(context, AppTheme.primary)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -172,7 +172,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.data_export_error_toast'.tr()),
-          backgroundColor: Canopy.liveCrimson,
+          backgroundColor: paletteColor(context, Canopy.liveCrimson),
         ),
       );
       return;
@@ -204,7 +204,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.data_export_save_error_toast'.tr()),
-          backgroundColor: Canopy.liveCrimson,
+          backgroundColor: paletteColor(context, Canopy.liveCrimson),
         ),
       );
     }
@@ -215,15 +215,15 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       context: context,
       builder: (dialogContext) {
         return CaAlertDialog(
-          backgroundColor: AppTheme.surface,
+          backgroundColor: paletteColor(dialogContext, AppTheme.surface),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: Canopy.hairline),
+            side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
           ),
           title: Text(
             'settings.data_export_dialog_title'.tr(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(dialogContext, Canopy.ink),
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
@@ -236,22 +236,22 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
               children: [
                 Text(
                   'settings.data_export_dialog_desc'.tr(),
-                  style: const TextStyle(color: Canopy.slate, fontSize: 12),
+                  style: TextStyle(color: paletteColor(dialogContext, Canopy.slate), fontSize: 12),
                 ),
                 const SizedBox(height: AppTheme.spaceSm),
                 Container(
                   constraints: const BoxConstraints(maxHeight: 360),
                   padding: const EdgeInsets.all(AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    color: Canopy.mint,
+                    color: paletteColor(dialogContext, Canopy.mint),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                    border: Border.all(color: Canopy.hairline),
+                    border: Border.all(color: paletteColor(dialogContext, Canopy.hairline)),
                   ),
                   child: SingleChildScrollView(
                     child: SelectableText(
                       jsonText,
-                      style: const TextStyle(
-                        color: Canopy.slate,
+                      style: TextStyle(
+                        color: paletteColor(dialogContext, Canopy.slate),
                         fontSize: AppTheme.captionFont,
                         fontFamily: 'monospace',
                         height: 1.4,
@@ -267,7 +267,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'common.close'.tr(),
-                style: const TextStyle(color: Canopy.haze),
+                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze)),
               ),
             ),
             TextButton.icon(
@@ -284,8 +284,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
             ),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primary,
-                foregroundColor: AppTheme.onMedia,
+                backgroundColor: paletteColor(dialogContext, AppTheme.primary),
+                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia),
               ),
               icon: const Icon(Icons.save_alt_rounded, size: 16),
               label: Text('settings.data_export_save_btn'.tr()),
@@ -301,17 +301,17 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: paletteColor(context, AppTheme.surface),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: Canopy.liveCrimson.withValues(alpha: 0.3)),
+        border: Border.all(color: paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'settings.delete_account_title'.tr(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.ink),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -319,27 +319,27 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           const SizedBox(height: 6),
           Text(
             'settings.delete_account_desc'.tr(),
-            style: const TextStyle(
-                color: Canopy.slate, fontSize: AppTheme.captionFont),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.slate), fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               icon: _isDeletingAccount
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: HadayahLoadingIndicator(
                         strokeWidth: 2,
-                        color: Canopy.liveCrimson,
+                        color: paletteColor(context, Canopy.liveCrimson),
                       ),
                     )
                   : const Icon(Icons.delete_forever_rounded, size: 18),
               label: Text('settings.delete_account_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Canopy.liveCrimson,
-                side: const BorderSide(color: Canopy.liveCrimson),
+                foregroundColor: paletteColor(context, Canopy.liveCrimson),
+                side: BorderSide(color: paletteColor(context, Canopy.liveCrimson)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -359,21 +359,21 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       context: context,
       builder: (dialogContext) {
         return CaAlertDialog(
-          backgroundColor: AppTheme.surface,
+          backgroundColor: paletteColor(dialogContext, AppTheme.surface),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-            side: const BorderSide(color: Canopy.hairline),
+            side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
           ),
           title: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: Canopy.liveCrimson, size: 22),
+              Icon(Icons.warning_amber_rounded,
+                  color: paletteColor(dialogContext, Canopy.liveCrimson), size: 22),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'settings.delete_account_confirm_title'.tr(),
-                  style: const TextStyle(
-                    color: Canopy.ink,
+                  style: TextStyle(
+                    color: paletteColor(dialogContext, Canopy.ink),
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -383,21 +383,21 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           ),
           content: Text(
             'settings.delete_account_confirm_body'.tr(),
-            style: const TextStyle(
-                color: Canopy.ink, fontWeight: FontWeight.w500, fontSize: 13),
+            style: TextStyle(
+                color: paletteColor(dialogContext, Canopy.ink), fontWeight: FontWeight.w500, fontSize: 13),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: const TextStyle(color: Canopy.haze),
+                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze)),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Canopy.liveCrimson,
-                foregroundColor: AppTheme.onMedia,
+                backgroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
+                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia),
               ),
               onPressed: () {
                 Navigator.pop(dialogContext);
@@ -427,7 +427,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(deleteAccountErrorText(error)),
-          backgroundColor: Canopy.liveCrimson,
+          backgroundColor: paletteColor(context, Canopy.liveCrimson),
           duration: const Duration(seconds: 8),
         ),
       );
@@ -445,8 +445,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         children: [
           Text(
             'settings.chat_history_title'.tr(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.ink),
               fontWeight: FontWeight.bold,
               fontSize: 14,
             ),
@@ -454,25 +454,25 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           const SizedBox(height: 6),
           Text(
             'settings.chat_history_desc'.tr(),
-            style: const TextStyle(
-                color: Canopy.slate, fontSize: AppTheme.captionFont),
+            style: TextStyle(
+                color: paletteColor(context, Canopy.slate), fontSize: AppTheme.captionFont),
           ),
           const SizedBox(height: AppTheme.spaceMd),
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
               icon: _isDeletingStreamMessages
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: HadayahLoadingIndicator(
-                          strokeWidth: 2, color: AppTheme.primary),
+                          strokeWidth: 2, color: paletteColor(context, AppTheme.primary)),
                     )
                   : const Icon(Icons.forum_outlined, size: 18),
               label: Text('settings.delete_messages_by_stream_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.primary,
-                side: const BorderSide(color: AppTheme.primary),
+                foregroundColor: paletteColor(context, AppTheme.primary),
+                side: BorderSide(color: paletteColor(context, AppTheme.primary)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -487,17 +487,17 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
             width: double.infinity,
             child: OutlinedButton.icon(
               icon: _isDeletingAllMessages
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: HadayahLoadingIndicator(
-                          strokeWidth: 2, color: Canopy.liveCrimson),
+                          strokeWidth: 2, color: paletteColor(context, Canopy.liveCrimson)),
                     )
                   : const Icon(Icons.delete_sweep_outlined, size: 18),
               label: Text('settings.delete_all_messages_btn'.tr()),
               style: OutlinedButton.styleFrom(
-                foregroundColor: Canopy.liveCrimson,
-                side: const BorderSide(color: Canopy.liveCrimson),
+                foregroundColor: paletteColor(context, Canopy.liveCrimson),
+                side: BorderSide(color: paletteColor(context, Canopy.liveCrimson)),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -517,21 +517,21 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
     showCaDialog(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: Canopy.hairline),
+          side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
         ),
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded,
-                color: Canopy.liveCrimson, size: 22),
+            Icon(Icons.warning_amber_rounded,
+                color: paletteColor(dialogContext, Canopy.liveCrimson), size: 22),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'settings.delete_all_messages_confirm_title'.tr(),
-                style: const TextStyle(
-                  color: Canopy.ink,
+                style: TextStyle(
+                  color: paletteColor(dialogContext, Canopy.ink),
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -541,18 +541,18 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         ),
         content: Text(
           'settings.delete_all_messages_confirm_body'.tr(),
-          style: const TextStyle(color: Canopy.slate, fontSize: 13),
+          style: TextStyle(color: paletteColor(dialogContext, Canopy.slate), fontSize: 13),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: Canopy.haze)),
+                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Canopy.liveCrimson,
-                foregroundColor: AppTheme.onMedia),
+                backgroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
+                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia)),
             onPressed: () {
               Navigator.pop(dialogContext);
               _handleDeleteAllMessages(context, provider);
@@ -575,7 +575,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         content: Text(success
             ? 'settings.delete_all_messages_success_toast'.tr()
             : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : Canopy.liveCrimson,
+        backgroundColor: success ? null : paletteColor(context, Canopy.liveCrimson),
       ),
     );
   }
@@ -588,14 +588,14 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
     final selectedStreamId = await showCaDialog<String>(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: const BorderSide(color: Canopy.hairline),
+          side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
         ),
         title: Text('settings.select_stream_dialog_title'.tr(),
-            style: const TextStyle(
-                color: Canopy.ink, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: paletteColor(dialogContext, Canopy.ink), fontWeight: FontWeight.bold)),
         content: SizedBox(
           width: double.maxFinite,
           child: streamIds.isEmpty
@@ -603,7 +603,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
                   child: Text(
                     'settings.select_stream_dialog_empty'.tr(),
-                    style: const TextStyle(color: Canopy.slate),
+                    style: TextStyle(color: paletteColor(dialogContext, Canopy.slate)),
                   ),
                 )
               : ListView.builder(
@@ -612,10 +612,10 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
                   itemBuilder: (context, index) {
                     final id = streamIds[index];
                     return ListTile(
-                      leading: const Icon(Icons.forum_outlined,
-                          color: AppTheme.primary),
+                      leading: Icon(Icons.forum_outlined,
+                          color: paletteColor(context, AppTheme.primary)),
                       title:
-                          Text(id, style: const TextStyle(color: Canopy.ink)),
+                          Text(id, style: TextStyle(color: paletteColor(context, Canopy.ink))),
                       onTap: () => Navigator.pop(dialogContext, id),
                     );
                   },
@@ -625,7 +625,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: const TextStyle(color: Canopy.haze)),
+                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze))),
           ),
         ],
       ),
@@ -640,7 +640,7 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
         content: Text(success
             ? 'settings.delete_messages_by_stream_success_toast'.tr()
             : 'settings.delete_all_messages_error_toast'.tr()),
-        backgroundColor: success ? null : Canopy.liveCrimson,
+        backgroundColor: success ? null : paletteColor(context, Canopy.liveCrimson),
       ),
     );
   }

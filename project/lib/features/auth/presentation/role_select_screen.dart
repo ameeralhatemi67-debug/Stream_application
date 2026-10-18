@@ -31,7 +31,7 @@ class RoleSelectScreen extends StatelessWidget {
       context.go('/streamer-apply');
     });
     return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: paletteColor(context, Canopy.dawn),
         appBar: CaAppBar(languageBare: true),
         bottomNavigationBar: dock
             ? SafeArea(
@@ -95,11 +95,11 @@ class RoleSelectScreen extends StatelessWidget {
           child: Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                  gradient: viewer ? CanopyGradients.pill : null,
-                  color: viewer ? null : Canopy.mint,
+                  gradient: viewer ? paletteGradient(context, CanopyGradients.pill) : null,
+                  color: viewer ? null : paletteColor(context, Canopy.mint),
                   borderRadius: BorderRadius.circular(CanopyRadius.input)),
               child: CaIcon(viewer ? CaGlyph.compass : CaGlyph.mic,
-                  color: viewer ? Canopy.paper : Canopy.brandGreen))),
+                  color: viewer ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen)))),
       const SizedBox(height: AppTheme.spaceMd),
       Text('role_select.${prefix}_title'.tr(),
           style: Theme.of(context).textTheme.titleLarge),
@@ -108,7 +108,7 @@ class RoleSelectScreen extends StatelessWidget {
           style: Theme.of(context)
               .textTheme
               .labelLarge
-              ?.copyWith(color: Canopy.brandGreen)),
+              ?.copyWith(color: paletteColor(context, Canopy.brandGreen))),
       const SizedBox(height: AppTheme.spaceMd),
       Text('role_select.${prefix}_desc'.tr(),
           style: Theme.of(context).textTheme.bodyMedium),

@@ -133,7 +133,7 @@ class _CaPullToRefreshState extends State<CaPullToRefresh>
                                         size: const Size.square(36),
                                         painter: _StarPainter(
                                             progress: progress,
-                                            color: Canopy.brandGreen))))));
+                                            color: paletteColor(context, Canopy.brandGreen)))))));
                   }))),
     ]);
   }

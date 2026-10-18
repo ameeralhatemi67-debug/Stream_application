@@ -124,10 +124,10 @@ class _CaButtonState extends State<CaButton>
     final destructive = widget.variant == CaButtonVariant.destructive;
     final text = widget.variant == CaButtonVariant.text;
     final foreground = !active
-        ? Canopy.slate
+        ? paletteColor(context, Canopy.slate)
         : primary || destructive
-            ? Canopy.paper
-            : Canopy.brandGreen;
+            ? paletteColor(context, Canopy.paper)
+            : paletteColor(context, Canopy.brandGreen);
     final label = Row(mainAxisSize: MainAxisSize.min, children: [
       if (widget.icon != null) ...[
         if (widget.confirm)
@@ -154,7 +154,7 @@ class _CaButtonState extends State<CaButton>
                 : BoxDecoration(
                     shape: BoxShape.circle,
                     color:
-                        Canopy.paper.withValues(alpha: CanopySize.glassAlpha)),
+                        paletteColor(context, Canopy.paper).withValues(alpha: CanopySize.glassAlpha)),
             child: CaIcon(widget.trailingIcon!,
                 color: foreground, size: CanopySize.inlineIcon)),
       ],
@@ -165,18 +165,18 @@ class _CaButtonState extends State<CaButton>
               constraints: const BoxConstraints(minHeight: CanopySize.target),
               decoration: BoxDecoration(
                 color: !active
-                    ? Canopy.mint
+                    ? paletteColor(context, Canopy.mint)
                     : destructive
-                        ? Canopy.liveCrimson
+                        ? paletteColor(context, Canopy.liveCrimson)
                         : primary || text
                             ? null
-                            : Canopy.mint,
-                gradient: active && primary ? AppGradients.pill : null,
+                            : paletteColor(context, Canopy.mint),
+                gradient: active && primary ? paletteGradient(context, AppGradients.pill) : null,
                 borderRadius: BorderRadius.circular(CanopyRadius.pill),
                 border: !primary && !destructive && !text
-                    ? Border.all(color: Canopy.mist)
+                    ? Border.all(color: paletteColor(context, Canopy.mist))
                     : null,
-                boxShadow: active && primary ? CanopyShadow.pill : null,
+                boxShadow: active && primary ? paletteShadows(context, CanopyShadow.pill) : null,
               ),
               child: ClipRRect(
                   borderRadius: BorderRadius.circular(CanopyRadius.pill),
@@ -188,7 +188,7 @@ class _CaButtonState extends State<CaButton>
                           end: AppTheme.spaceXl,
                           height: CanopySize.stroke,
                           child: ColoredBox(
-                              color: Canopy.paper.withValues(
+                              color: paletteColor(context, Canopy.paper).withValues(
                                   alpha: CanopySize.highlightAlpha))),
                     if (widget.holdToConfirm)
                       Positioned.fill(
@@ -198,7 +198,7 @@ class _CaButtonState extends State<CaButton>
                             widthFactor: _hold.value,
                             heightFactor: 1,
                             child: ColoredBox(
-                                color: Canopy.paper
+                                color: paletteColor(context, Canopy.paper)
                                     .withValues(alpha: CanopySize.glassAlpha))),
                       )),
                     Padding(
@@ -237,13 +237,13 @@ class _CaButtonState extends State<CaButton>
                                 child: CircularProgressIndicator(
                                     strokeWidth: CanopySize.ring,
                                     backgroundColor: (primary || destructive
-                                            ? Canopy.paper
-                                            : Canopy.brandGreen)
+                                            ? paletteColor(context, Canopy.paper)
+                                            : paletteColor(context, Canopy.brandGreen))
                                         .withValues(
                                             alpha: CanopySize.highlightAlpha),
                                     color: primary || destructive
-                                        ? Canopy.paper
-                                        : Canopy.brandGreen)))),
+                                        ? paletteColor(context, Canopy.paper)
+                                        : paletteColor(context, Canopy.brandGreen))))),
                   ])),
             ));
     content = DecoratedBox(
@@ -253,8 +253,8 @@ class _CaButtonState extends State<CaButton>
             border: _focused
                 ? Border.all(
                     color: active && (primary || destructive)
-                        ? Canopy.paper
-                        : Canopy.brandGreen,
+                        ? paletteColor(context, Canopy.paper)
+                        : paletteColor(context, Canopy.brandGreen),
                     width: CanopySize.focusWidth)
                 : null),
         child: content);

@@ -80,9 +80,9 @@ class CaIcon extends StatelessWidget {
         height: size,
         matchTextDirection:
             const [CaGlyph.back, CaGlyph.arrow, CaGlyph.send].contains(glyph),
-        colorFilter: glyph == CaGlyph.verified
+        colorFilter: glyph == CaGlyph.verified && !paletteOf(context).hidayah
             ? null
-            : ColorFilter.mode(color, BlendMode.srcIn),
+            : ColorFilter.mode(paletteColor(context, color), BlendMode.srcIn),
         semanticsLabel: label,
         excludeFromSemantics: label == null,
       );
@@ -111,7 +111,7 @@ class CaIconButton extends StatelessWidget {
   final bool on;
   @override
   Widget build(BuildContext context) {
-    final color = glass ? Canopy.paper : Canopy.brandGreen;
+    final color = glass ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
     return Semantics(
         button: true,
         enabled: onPressed != null,
@@ -126,23 +126,23 @@ class CaIconButton extends StatelessWidget {
                   dimension: CanopySize.target,
                   child: Material(
                     color: on
-                        ? Canopy.brandGreen
+                        ? paletteColor(context, Canopy.brandGreen)
                         : bare
-                            ? Canopy.transparent
+                            ? paletteColor(context, Canopy.transparent)
                             : glass
-                                ? Canopy.paper
+                                ? paletteColor(context, Canopy.paper)
                                     .withValues(alpha: CanopySize.glassAlpha)
                                 : selected
-                                    ? Canopy.mint
-                                    : Canopy.paper,
+                                    ? paletteColor(context, Canopy.mint)
+                                    : paletteColor(context, Canopy.paper),
                     shape: CircleBorder(
                         side: bare
                             ? BorderSide.none
                             : BorderSide(
                                 color: glass
-                                    ? Canopy.paper.withValues(
+                                    ? paletteColor(context, Canopy.paper).withValues(
                                         alpha: CanopySize.glassBorderAlpha)
-                                    : Canopy.hairline)),
+                                    : paletteColor(context, Canopy.hairline))),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                         onTap: onPressed,
@@ -150,9 +150,9 @@ class CaIconButton extends StatelessWidget {
                         child: Center(
                             child: CaIcon(icon,
                                 color: onPressed == null
-                                    ? (glass ? Canopy.mist : Canopy.haze)
+                                    ? (glass ? paletteColor(context, Canopy.mist) : paletteColor(context, Canopy.haze))
                                     : on
-                                        ? Canopy.paper
+                                        ? paletteColor(context, Canopy.paper)
                                         : color))),
                   ),
                 ))));

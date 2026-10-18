@@ -293,7 +293,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     final isAr = context.locale.languageCode == 'ar';
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: paletteColor(context, AppTheme.surface),
       shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
@@ -307,8 +307,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
             children: [
               Text(
                 marker.getLocalizedName(isAr ? 'ar' : 'en'),
-                style: const TextStyle(
-                  color: AppTheme.textPrimary,
+                style: TextStyle(
+                  color: paletteColor(sheetContext, AppTheme.textPrimary),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -316,27 +316,27 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               const SizedBox(height: 4),
               Text(
                 marker.getLocalizedVenue(isAr ? 'ar' : 'en'),
-                style: const TextStyle(
-                    color: AppTheme.textSecondary, fontSize: 13),
+                style: TextStyle(
+                    color: paletteColor(sheetContext, AppTheme.textSecondary), fontSize: 13),
               ),
               const SizedBox(height: AppTheme.spaceMd),
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                 decoration: BoxDecoration(
-                  color: AppTheme.surfaceAlt,
+                  color: paletteColor(sheetContext, AppTheme.surfaceAlt),
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: AppTheme.border),
+                  border: Border.all(color: paletteColor(sheetContext, AppTheme.border)),
                 ),
                 child: Row(
                   children: [
-                    const Icon(Icons.wifi_off_rounded,
-                        color: AppTheme.textMuted, size: 18),
+                    Icon(Icons.wifi_off_rounded,
+                        color: paletteColor(sheetContext, AppTheme.textMuted), size: 18),
                     const SizedBox(width: AppTheme.spaceSm),
                     Expanded(
                       child: Text(
                         'map.offline_marker_details_unavailable'.tr(),
-                        style: const TextStyle(
-                            color: AppTheme.textSecondary, fontSize: 12.5),
+                        style: TextStyle(
+                            color: paletteColor(sheetContext, AppTheme.textSecondary), fontSize: 12.5),
                       ),
                     ),
                   ],
@@ -349,8 +349,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                   icon: const Icon(Icons.directions_rounded, size: 18),
                   label: Text('map.open_in_maps'.tr()),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppTheme.primary,
-                    side: const BorderSide(color: AppTheme.primary),
+                    foregroundColor: paletteColor(sheetContext, AppTheme.primary),
+                    side: BorderSide(color: paletteColor(sheetContext, AppTheme.primary)),
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   onPressed: () {
@@ -382,14 +382,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
         child: Container(
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: AppTheme.primary,
+            color: paletteColor(context, AppTheme.primary),
             shape: BoxShape.circle,
-            border: Border.all(color: AppTheme.surface, width: 3),
-            boxShadow: const [BoxShadow(color: AppTheme.shadow, blurRadius: 8)],
+            border: Border.all(color: paletteColor(context, AppTheme.surface), width: 3),
+            boxShadow: [BoxShadow(color: paletteColor(context, AppTheme.shadow), blurRadius: 8)],
           ),
           child: Text('${group.memberIds.length}',
-              style: const TextStyle(
-                  color: AppTheme.onMedia,
+              style: TextStyle(
+                  color: paletteColor(context, AppTheme.onMedia),
                   fontWeight: FontWeight.bold,
                   fontSize: 16)),
         ),
@@ -412,7 +412,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     // at its own true coordinates.
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: paletteColor(context, AppTheme.surface),
       builder: (sheetContext) => SafeArea(
         child: ListView(
           shrinkWrap: true,
@@ -425,8 +425,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 child: Text(
                   'map.cluster_list_title'
                       .tr(namedArgs: {'count': '${group.memberIds.length}'}),
-                  style: const TextStyle(
-                      color: AppTheme.textPrimary, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                      color: paletteColor(sheetContext, AppTheme.textPrimary), fontWeight: FontWeight.bold),
                 ),
               ),
             ),
@@ -435,7 +435,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               if (item == null) return const SizedBox.shrink();
               return ListTile(
                 leading:
-                    const Icon(Icons.place_rounded, color: AppTheme.primary),
+                    Icon(Icons.place_rounded, color: paletteColor(sheetContext, AppTheme.primary)),
                 title: Text(label(item)),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
@@ -662,7 +662,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               return Stack(
                 children: [
                   Positioned.fill(
-                    child: Container(color: AppTheme.surfaceAlt),
+                    child: Container(color: paletteColor(context, AppTheme.surfaceAlt)),
                   ),
                   Center(
                     child: SizedBox(
@@ -675,7 +675,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                           initialZoom: initial.zoom,
                           minZoom: _policy.minZoom(canvas, _safePadding),
                           maxZoom: kMapMaxZoom,
-                          backgroundColor: AppTheme.bg,
+                          backgroundColor: paletteColor(context, AppTheme.bg),
                           cameraConstraint: CameraConstraint.contain(
                             bounds: kTricityNavigationExtent.bounds,
                           ),
@@ -744,11 +744,11 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             AppTheme.spaceXs,
                             AppTheme.spaceSm),
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
-                          border: Border.all(color: AppTheme.borderStrong),
+                          color: paletteColor(context, AppTheme.surface),
+                          border: Border.all(color: paletteColor(context, AppTheme.borderStrong)),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
-                          boxShadow: AppTheme.mapOverlayShadow,
+                          boxShadow: paletteShadows(context, AppTheme.mapOverlayShadow),
                         ),
                         child: Column(
                           mainAxisSize: MainAxisSize.min,
@@ -757,8 +757,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Icon(Icons.location_off_outlined,
-                                    color: AppTheme.textSecondary, size: 20),
+                                Icon(Icons.location_off_outlined,
+                                    color: paletteColor(context, AppTheme.textSecondary), size: 20),
                                 const SizedBox(width: AppTheme.spaceSm),
                                 Expanded(
                                   child: Column(
@@ -767,8 +767,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       Text('map.empty_title'.tr(),
-                                          style: const TextStyle(
-                                              color: AppTheme.textPrimary,
+                                          style: TextStyle(
+                                              color: paletteColor(context, AppTheme.textPrimary),
                                               fontSize: 13,
                                               fontWeight: FontWeight.bold)),
                                       Text(
@@ -776,8 +776,8 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                                                   ? 'map.empty_body'
                                                   : 'map.offline_empty_body')
                                               .tr(),
-                                          style: const TextStyle(
-                                              color: AppTheme.textSecondary,
+                                          style: TextStyle(
+                                              color: paletteColor(context, AppTheme.textSecondary),
                                               fontSize: 12)),
                                     ],
                                   ),
@@ -1112,14 +1112,14 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     return Container(
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
-        boxShadow: AppTheme.mapOverlayShadow,
+        boxShadow: paletteShadows(context, AppTheme.mapOverlayShadow),
       ),
       child: Material(
         color:
-            AppTheme.surfaceAlt.withValues(alpha: AppTheme.mapOverlayFillAlpha),
+            paletteColor(context, AppTheme.surfaceAlt).withValues(alpha: AppTheme.mapOverlayFillAlpha),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
-          side: const BorderSide(color: AppTheme.danger, width: 1.2),
+          side: BorderSide(color: paletteColor(context, AppTheme.danger), width: 1.2),
         ),
         child: InkWell(
           onTap: onTap,
@@ -1130,7 +1130,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
               width: 48,
               height: 48,
               alignment: Alignment.center,
-              child: Icon(icon, color: AppTheme.danger, size: 22),
+              child: Icon(icon, color: paletteColor(context, AppTheme.danger), size: 22),
             ),
           ),
         ),

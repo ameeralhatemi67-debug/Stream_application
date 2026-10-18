@@ -66,20 +66,20 @@ class LanguageSwitcher extends StatelessWidget {
                   ? null
                   : BoxDecoration(
                 color: overlay
-                    ? AppTheme.surface
+                    ? paletteColor(context, AppTheme.surface)
                         .withValues(alpha: canopy ? CanopySize.glassAlpha : .6)
-                    : AppTheme.surfaceAlt,
+                    : paletteColor(context, AppTheme.surfaceAlt),
                 borderRadius: BorderRadius.circular(overlay || canopy
                     ? AppTheme.radiusFull
                     : AppTheme.radiusSm),
                 border: overlay
                     ? (canopy
                         ? Border.all(
-                            color: Canopy.paper
+                            color: paletteColor(context, Canopy.paper)
                                 .withValues(alpha: CanopySize.glassBorderAlpha))
                         : null)
                     : Border.all(
-                        color: AppTheme.border,
+                        color: paletteColor(context, AppTheme.border),
                         width: 1.0,
                       ),
               ),
@@ -91,7 +91,7 @@ class LanguageSwitcher extends StatelessWidget {
                     width: canopy ? CanopySize.icon : 18,
                     height: canopy ? CanopySize.icon : 18,
                     colorFilter: ColorFilter.mode(
-                      canopy && overlay ? Canopy.paper : AppTheme.primary,
+                      canopy && overlay ? paletteColor(context, Canopy.paper) : paletteColor(context, AppTheme.primary),
                       BlendMode.srcIn,
                     ),
                   ),
@@ -106,8 +106,8 @@ class LanguageSwitcher extends StatelessWidget {
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w600,
                             color: canopy && overlay
-                                ? Canopy.paper
-                                : AppTheme.textPrimary,
+                                ? paletteColor(context, Canopy.paper)
+                                : paletteColor(context, AppTheme.textPrimary),
                           ),
                     ),
                   ],

@@ -142,7 +142,7 @@ class CaSuccessBloom extends StatelessWidget {
       curve: CanopyMotion.easeOut,
       child: child,
       builder: (context, value, child) => CustomPaint(
-          painter: _BloomRays(value),
+          painter: _BloomRays(value, paletteColor(context, Canopy.leaf)),
           child: Transform.scale(
               scale: CanopyMotion.reduced(context)
                   ? 1
@@ -152,13 +152,14 @@ class CaSuccessBloom extends StatelessWidget {
 }
 
 class _BloomRays extends CustomPainter {
-  const _BloomRays(this.value);
+  const _BloomRays(this.value, this.color);
+  final Color color;
   final double value;
   @override
   void paint(Canvas canvas, Size size) {
     if (value == 1) return;
     final paint = Paint()
-      ..color = Canopy.leaf.withValues(alpha: math.sin(value * math.pi))
+      ..color = color.withValues(alpha: math.sin(value * math.pi))
       ..strokeWidth = CanopySize.stroke;
     final centre = size.center(Offset.zero), radius = size.shortestSide / 2;
     for (var i = 0; i < 8; i++) {
@@ -170,7 +171,7 @@ class _BloomRays extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_BloomRays old) => value != old.value;
+  bool shouldRepaint(_BloomRays old) => value != old.value || color != old.color;
 }
 
 /// Runs only when an existing selected state becomes true, never on first paint.

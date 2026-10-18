@@ -50,28 +50,28 @@ class _DuplicateChannelResolutionDialogState
     final lang = context.locale.languageCode;
 
     return AlertDialog(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: paletteColor(context, AppTheme.surface),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.border, width: 1.2),
+        side: BorderSide(color: paletteColor(context, AppTheme.border), width: 1.2),
       ),
       title: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.warning.withValues(alpha: 0.15),
+              color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
-            child: const Icon(Icons.warning_amber_rounded,
-                color: AppTheme.warning, size: 22),
+            child: Icon(Icons.warning_amber_rounded,
+                color: paletteColor(context, AppTheme.warning), size: 22),
           ),
           const SizedBox(width: AppTheme.spaceMd),
           Expanded(
             child: Text(
               'design_copy.multiple_channels_detected'.tr(),
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
+              style: TextStyle(
+                color: paletteColor(context, AppTheme.textPrimary),
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -88,8 +88,8 @@ class _DuplicateChannelResolutionDialogState
           children: [
             Text(
               'design_copy.you_can_only_own_one_personal_broadcaster_channel_please_select_w'.tr(),
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
+              style: TextStyle(
+                color: paletteColor(context, AppTheme.textSecondary),
                 fontSize: 12.5,
                 height: 1.4,
               ),
@@ -110,13 +110,13 @@ class _DuplicateChannelResolutionDialogState
                     padding: const EdgeInsets.all(AppTheme.spaceMd),
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? AppTheme.primary.withValues(alpha: 0.12)
-                          : AppTheme.surfaceAlt,
+                          ? paletteColor(context, AppTheme.primary).withValues(alpha: 0.12)
+                          : paletteColor(context, AppTheme.surfaceAlt),
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       border: Border.all(
                         color: isSelected
-                            ? AppTheme.primary
-                            : AppTheme.border,
+                            ? paletteColor(context, AppTheme.primary)
+                            : paletteColor(context, AppTheme.border),
                         width: isSelected ? 1.8 : 1.0,
                       ),
                     ),
@@ -133,8 +133,8 @@ class _DuplicateChannelResolutionDialogState
                             children: [
                               Text(
                                 channel.getLocalizedName(lang),
-                                style: const TextStyle(
-                                  color: AppTheme.textPrimary,
+                                style: TextStyle(
+                                  color: paletteColor(context, AppTheme.textPrimary),
                                   fontSize: 13.5,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -142,16 +142,16 @@ class _DuplicateChannelResolutionDialogState
                               const SizedBox(height: 2),
                               Text(
                                 channel.getLocalizedTitle(lang),
-                                style: const TextStyle(
-                                  color: AppTheme.textSecondary,
+                                style: TextStyle(
+                                  color: paletteColor(context, AppTheme.textSecondary),
                                   fontSize: 11.5,
                                 ),
                               ),
                               const SizedBox(height: 2),
                               Text(
                                 channel.organizationEn,
-                                style: const TextStyle(
-                                  color: AppTheme.primary,
+                                style: TextStyle(
+                                  color: paletteColor(context, AppTheme.primary),
                                   fontSize: 11,
                                 ),
                               ),
@@ -165,17 +165,17 @@ class _DuplicateChannelResolutionDialogState
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isSelected
-                                  ? AppTheme.primary
-                                  : AppTheme.textMuted,
+                                  ? paletteColor(context, AppTheme.primary)
+                                  : paletteColor(context, AppTheme.textMuted),
                               width: 2,
                             ),
                             color: isSelected
-                                ? AppTheme.primary
+                                ? paletteColor(context, AppTheme.primary)
                                 : Colors.transparent,
                           ),
                           child: isSelected
-                              ? const Icon(Icons.check_rounded,
-                                  color: AppTheme.onMedia, size: 16)
+                              ? Icon(Icons.check_rounded,
+                                  color: paletteColor(context, AppTheme.onMedia), size: 16)
                               : null,
                         ),
                       ],
@@ -191,8 +191,8 @@ class _DuplicateChannelResolutionDialogState
       actions: [
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            foregroundColor: AppTheme.onMedia,
+            backgroundColor: paletteColor(context, AppTheme.primary),
+            foregroundColor: paletteColor(context, AppTheme.onMedia),
             padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
           ),
           onPressed: _selectedStreamerId == null

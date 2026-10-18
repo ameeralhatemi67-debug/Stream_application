@@ -146,21 +146,21 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
         height: height,
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: paletteColor(context, AppTheme.surface),
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: Canopy.liveCrimson, width: 1.5),
+          border: Border.all(color: paletteColor(context, Canopy.liveCrimson), width: 1.5),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.error_outline_rounded,
-                color: Canopy.liveCrimson, size: 36),
+            Icon(Icons.error_outline_rounded,
+                color: paletteColor(context, Canopy.liveCrimson), size: 36),
             const SizedBox(height: 10),
             Text(
               'design_ui.image_decode_error'.tr(),
-              style: const TextStyle(
-                  color: AppTheme.onMedia,
+              style: TextStyle(
+                  color: paletteColor(context, AppTheme.onMedia),
                   fontWeight: FontWeight.bold,
                   fontSize: 13),
             ),
@@ -168,8 +168,8 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
             Text(
               _decodeErrorMessage ??
                   'Unable to parse image data on this device.',
-              style: const TextStyle(
-                  color: Canopy.slate,
+              style: TextStyle(
+                  color: paletteColor(context, Canopy.slate),
                   fontSize: AppTheme.captionFont),
               textAlign: TextAlign.center,
             ),
@@ -219,7 +219,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
 
     return Container(
       height: size.height * 0.92,
-      color: AppTheme.media,
+      color: paletteColor(context, AppTheme.media),
       child: SafeArea(
         child: Column(
           children: [
@@ -231,7 +231,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                         style: Theme.of(context)
                             .textTheme
                             .titleLarge
-                            ?.copyWith(color: Canopy.paper))),
+                            ?.copyWith(color: paletteColor(context, Canopy.paper)))),
                 CaIconButton(
                     icon: CaGlyph.close,
                     glass: true,
@@ -240,7 +240,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                     onPressed: () => Navigator.of(context).pop(null)),
               ]),
             ),
-            const Divider(height: 1, color: Canopy.hairline),
+            Divider(height: 1, color: paletteColor(context, Canopy.hairline)),
             Expanded(child: LayoutBuilder(builder: (context, bounds) {
               // Keep the original capture box dimensions even in a short viewport.
               // Scrolling reveals it rather than squeezing the exported pixels.
@@ -256,7 +256,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                               // Full Screen Dimmed Backdrop
                               Positioned.fill(
                                 child: Container(
-                                  color: AppTheme.media,
+                                  color: paletteColor(context, AppTheme.media),
                                 ),
                               ),
 
@@ -270,7 +270,7 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                                   child: Container(
                                     width: cutoutWidth,
                                     height: cutoutHeight,
-                                    color: AppTheme.media,
+                                    color: paletteColor(context, AppTheme.media),
                                     child: InteractiveViewer(
                                       transformationController:
                                           _transformationController,
@@ -300,13 +300,13 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                                           ? null
                                           : BorderRadius.circular(4),
                                       border: Border.all(
-                                        color: AppTheme.onMedia
+                                        color: paletteColor(context, AppTheme.onMedia)
                                             .withValues(alpha: 0.9),
                                         width: 2.0,
                                       ),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: AppTheme.media
+                                          color: paletteColor(context, AppTheme.media)
                                               .withValues(alpha: 0.6),
                                           blurRadius: 20,
                                           spreadRadius: 4,
@@ -322,22 +322,22 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                 Container(
                   padding:
                       const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                  color: AppTheme.media,
+                  color: paletteColor(context, AppTheme.media),
                   child: Column(
                     children: [
                       Row(
                         children: [
                           Icon(Icons.photo_size_select_small_rounded,
-                              color: AppTheme.onMedia.withValues(alpha: 0.7),
+                              color: paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.7),
                               size: 20),
                           Expanded(
                             child: SliderTheme(
                               data: SliderTheme.of(context).copyWith(
-                                activeTrackColor: AppTheme.onMedia,
-                                inactiveTrackColor: Canopy.hairline,
-                                thumbColor: AppTheme.onMedia,
+                                activeTrackColor: paletteColor(context, AppTheme.onMedia),
+                                inactiveTrackColor: paletteColor(context, Canopy.hairline),
+                                thumbColor: paletteColor(context, AppTheme.onMedia),
                                 overlayColor:
-                                    AppTheme.onMedia.withValues(alpha: 0.2),
+                                    paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.2),
                                 thumbShape: const RoundSliderThumbShape(
                                     enabledThumbRadius: 7),
                                 trackHeight: 3,
@@ -350,15 +350,15 @@ class _ImageArrangeModalState extends State<ImageArrangeModal> {
                               ),
                             ),
                           ),
-                          const Icon(Icons.photo_size_select_actual_rounded,
-                              color: AppTheme.onMedia, size: 24),
+                          Icon(Icons.photo_size_select_actual_rounded,
+                              color: paletteColor(context, AppTheme.onMedia), size: 24),
                         ],
                       ),
                       const SizedBox(height: 4),
                       Text(
                         'design_ui.pinch_to_zoom_and_drag_to_reposition'.tr(),
                         style:
-                            const TextStyle(color: Canopy.mist, fontSize: 12),
+                            TextStyle(color: paletteColor(context, Canopy.mist), fontSize: 12),
                       ),
                     ],
                   ),

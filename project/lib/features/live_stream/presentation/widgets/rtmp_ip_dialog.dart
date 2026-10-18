@@ -75,7 +75,7 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
         job: CaSheetJob.studio,
         framed: false,
         fullWidthOnPhone: true,
-        edgeColor: Canopy.forestDeep,
+        edgeColor: paletteColor(context, Canopy.forestDeep),
         body: ChangeNotifierProvider<AppProvider>.value(
             value: context.read<AppProvider>(),
             child: LiveBroadcasterStudioSheet(
@@ -294,32 +294,32 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
     // returns as soon as it closes.
     final keyboardOpen = View.of(context).viewInsets.bottom > 0;
     return Material(
-        color: Canopy.forestDeep,
+        color: paletteColor(context, Canopy.forestDeep),
         child: Theme(
             data: Theme.of(context).copyWith(
                 inputDecorationTheme: Theme.of(context)
                     .inputDecorationTheme
                     .copyWith(
-                        counterStyle: const TextStyle(color: Canopy.mist)),
+                        counterStyle: TextStyle(color: paletteColor(context, Canopy.mist))),
                 textTheme: Theme.of(context)
                     .textTheme
-                    .apply(bodyColor: Canopy.paper, displayColor: Canopy.paper),
-                iconTheme: const IconThemeData(color: Canopy.paper),
+                    .apply(bodyColor: paletteColor(context, Canopy.paper), displayColor: paletteColor(context, Canopy.paper)),
+                iconTheme: IconThemeData(color: paletteColor(context, Canopy.paper)),
                 colorScheme: Theme.of(context).colorScheme.copyWith(
-                    onSurface: Canopy.paper,
-                    surface: Canopy.forestDeep,
-                    primary: Canopy.mist,
-                    onPrimary: Canopy.ink)),
+                    onSurface: paletteColor(context, Canopy.paper),
+                    surface: paletteColor(context, Canopy.forestDeep),
+                    primary: paletteColor(context, Canopy.mist),
+                    onPrimary: paletteColor(context, Canopy.ink))),
             child: Builder(
                 builder: (context) => DefaultTextStyle.merge(
-                    style: const TextStyle(color: Canopy.paper),
+                    style: TextStyle(color: paletteColor(context, Canopy.paper)),
                     child: SafeArea(
                         child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
                           ColoredBox(
-                              color: Canopy.forestDeep,
+                              color: paletteColor(context, Canopy.forestDeep),
                               child: Padding(
                                   // Title lines up with the content below it.
                                   padding: const EdgeInsetsDirectional.fromSTEB(
@@ -329,10 +329,10 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                       AppTheme.spaceXs),
                                   child: DefaultTextStyle.merge(
                                       style:
-                                          const TextStyle(color: Canopy.paper),
+                                          TextStyle(color: paletteColor(context, Canopy.paper)),
                                       child: IconTheme.merge(
-                                          data: const IconThemeData(
-                                              color: Canopy.paper),
+                                          data: IconThemeData(
+                                              color: paletteColor(context, Canopy.paper)),
                                           child: Row(children: [
                                             Expanded(
                                                 child: Text(
@@ -342,7 +342,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                         .textTheme
                                                         .titleLarge
                                                         ?.copyWith(
-                                                            color: Canopy.paper,
+                                                            color: paletteColor(context, Canopy.paper),
                                                             fontWeight:
                                                                 FontWeight
                                                                     .w700))),
@@ -449,7 +449,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                         if (_loadError != null)
                                           Text(_loadError!.tr(),
                                               style: TextStyle(
-                                                  color: Canopy.errorTint)),
+                                                  color: paletteColor(context, Canopy.errorTint))),
                                         if (widget.consentStatus ==
                                                 'connected' ||
                                             widget.consentStatus == 'failed')
@@ -459,8 +459,8 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                               style: TextStyle(
                                                   color: widget.consentStatus ==
                                                           'failed'
-                                                      ? Canopy.errorTint
-                                                      : Canopy.mint)),
+                                                      ? paletteColor(context, Canopy.errorTint)
+                                                      : paletteColor(context, Canopy.mint))),
                                         if (destinations.isEmpty) ...[
                                           const SizedBox(
                                               height: AppTheme.spaceSm),
@@ -483,14 +483,14 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                   ? null
                                                   : _connectYouTube,
                                               style: TextButton.styleFrom(
-                                                  foregroundColor: Canopy.mint),
+                                                  foregroundColor: paletteColor(context, Canopy.mint)),
                                               child: Text(
                                                   'organization_v1.reconnect'
                                                       .tr())),
                                         if (_connectError != null)
                                           Text(_connectError!.tr(),
                                               style: TextStyle(
-                                                  color: Canopy.errorTint)),
+                                                  color: paletteColor(context, Canopy.errorTint))),
                                         if (_studio.simplePersonalDestination)
                                           Text('organization_v1.going_live_on'
                                               .tr(namedArgs: {
@@ -515,11 +515,11 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                             style: Theme.of(context)
                                                 .textTheme
                                                 .bodyMedium
-                                                ?.copyWith(color: Canopy.ink),
-                                            dropdownColor: Canopy.mint,
-                                            decoration: const InputDecoration(
+                                                ?.copyWith(color: paletteColor(context, Canopy.ink)),
+                                            dropdownColor: paletteColor(context, Canopy.mint),
+                                            decoration: InputDecoration(
                                                 filled: true,
-                                                fillColor: Canopy.mint),
+                                                fillColor: paletteColor(context, Canopy.mint)),
                                             items: destinations
                                                 .map((c) => DropdownMenuItem(
                                                     value: c.id,
@@ -557,11 +557,11 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                               style: Theme.of(context)
                                                   .textTheme
                                                   .bodyMedium
-                                                  ?.copyWith(color: Canopy.ink),
-                                              dropdownColor: Canopy.mint,
-                                              decoration: const InputDecoration(
+                                                  ?.copyWith(color: paletteColor(context, Canopy.ink)),
+                                              dropdownColor: paletteColor(context, Canopy.mint),
+                                              decoration: InputDecoration(
                                                   filled: true,
-                                                  fillColor: Canopy.mint),
+                                                  fillColor: paletteColor(context, Canopy.mint)),
                                               items: choices
                                                   .map((s) => DropdownMenuItem(
                                                       value: s.id,
@@ -646,12 +646,12 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                           Text(
                                               (_studio.errorKey ?? error!).tr(),
                                               style: TextStyle(
-                                                  color: Canopy.errorTint)),
+                                                  color: paletteColor(context, Canopy.errorTint))),
                                         TextButton(
                                             onPressed:
                                                 operationBusy ? null : _load,
                                             style: TextButton.styleFrom(
-                                                foregroundColor: Canopy.mint),
+                                                foregroundColor: paletteColor(context, Canopy.mint)),
                                             child: Text(
                                                 'organization_v1.refresh'
                                                     .tr())),

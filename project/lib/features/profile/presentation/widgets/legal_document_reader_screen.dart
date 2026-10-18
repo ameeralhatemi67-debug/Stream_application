@@ -47,12 +47,12 @@ class _LegalDocumentReaderScreenState extends State<LegalDocumentReaderScreen> {
     final doc = docs[_currentIndex];
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: paletteColor(context, Canopy.dawn),
       appBar: CaAppBar(
         compactLanguage: true,
         languageBare: true,
         title: Text(doc.title),
-        backgroundColor: Canopy.dawn,
+        backgroundColor: paletteColor(context, Canopy.dawn),
         elevation: 0,
       ),
       body: SingleChildScrollView(
@@ -68,9 +68,9 @@ class _LegalDocumentReaderScreenState extends State<LegalDocumentReaderScreen> {
             horizontal: AppTheme.spaceMd,
             vertical: AppTheme.spaceSm,
           ),
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             border: Border(
-              top: BorderSide(color: Canopy.hairline),
+              top: BorderSide(color: paletteColor(context, Canopy.hairline)),
             ),
           ),
           child: Row(
@@ -84,8 +84,8 @@ class _LegalDocumentReaderScreenState extends State<LegalDocumentReaderScreen> {
               ),
               Text(
                 '${_currentIndex + 1} / 3',
-                style: const TextStyle(
-                    color: Canopy.haze, fontSize: AppTheme.captionFont),
+                style: TextStyle(
+                    color: paletteColor(context, Canopy.haze), fontSize: AppTheme.captionFont),
               ),
               Expanded(
                 child: TextButton.icon(

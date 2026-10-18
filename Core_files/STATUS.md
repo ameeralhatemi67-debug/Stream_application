@@ -1,12 +1,16 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-17
+updated: 2026-10-18
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Optional palette and Arabic default, 2026-10-18
+
+Settings → About's existing application logo now switches between the normal palette and Hidayah gold/ivory/slate on a double-click or double-tap. The device preference is saved before applying and restored before startup. Hidayah uses the preview's already bundled IBM Plex Sans Arabic font; normal typography and layouts are retained. Arabic is the fresh-install default, while the language toggle and a saved English preference remain supported. No backend or deployment change is involved. Verification is recorded in `project/test/app_appearance_test.dart`; this is host/widget evidence, not a physical-device acceptance claim.
 
 ## iOS integration evidence, 2026-10-17
 

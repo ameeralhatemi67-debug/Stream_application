@@ -4,13 +4,37 @@ import 'package:easy_localization/easy_localization.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/config/app_identity.dart';
+import '../../../../core/theme/app_appearance.dart';
+import 'package:provider/provider.dart';
 
 class AboutSettingsSection extends StatelessWidget {
   const AboutSettingsSection({super.key});
+  Future<void> _togglePalette(BuildContext context) async {
+    try {
+      await context.read<AppAppearance>().toggle();
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('settings.palette_save_error'.tr())),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) => CaCard(
         child: Column(children: [
-          const AppLogo(size: 64),
+          Semantics(
+            button: true,
+            label: 'settings.palette_toggle'.tr(),
+            onTap: () => _togglePalette(context),
+            child: GestureDetector(
+              key: const ValueKey('settings-palette-toggle'),
+              excludeFromSemantics: true,
+              behavior: HitTestBehavior.opaque,
+              onDoubleTap: () => _togglePalette(context),
+              child: const AppLogo(size: 64),
+            ),
+          ),
           const SizedBox(height: AppTheme.spaceMd),
           Text(AppIdentity.name(context.locale.languageCode),
               style: Theme.of(context).textTheme.titleLarge,

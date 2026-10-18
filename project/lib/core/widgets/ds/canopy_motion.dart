@@ -170,7 +170,7 @@ class _CaFloatingReactionState extends State<CaFloatingReaction>
           animation: _animation,
           child: widget.child ??
               CaIcon(widget.icon,
-                  color: Canopy.brandGreen, size: CanopySize.reactionIcon),
+                  color: paletteColor(context, Canopy.brandGreen), size: CanopySize.reactionIcon),
           builder: (context, child) {
             final t = _animation.value;
             final reduced = CanopyMotion.reduced(context);
@@ -235,17 +235,17 @@ class _CaLevelMeterState extends State<CaLevelMeter> {
           builder: (context, value, _) =>
               LayoutBuilder(builder: (context, constraints) {
                 final color = _level >= CanopySize.clippingThreshold
-                    ? Canopy.liveCrimson
+                    ? paletteColor(context, Canopy.liveCrimson)
                     : _level >= CanopySize.warningThreshold
-                        ? Canopy.warning
-                        : Canopy.brandGreen;
+                        ? paletteColor(context, Canopy.warning)
+                        : paletteColor(context, Canopy.brandGreen);
                 return SizedBox(
                     height: CanopySize.meterHeight,
                     child: Stack(children: [
                       Positioned.fill(
                           child: DecoratedBox(
                               decoration: BoxDecoration(
-                                  color: Canopy.mint,
+                                  color: paletteColor(context, Canopy.mint),
                                   borderRadius: BorderRadius.circular(
                                       CanopyRadius.pill)))),
                       Align(
@@ -261,7 +261,7 @@ class _CaLevelMeterState extends State<CaLevelMeter> {
                                               : null,
                                       gradient:
                                           _level < CanopySize.warningThreshold
-                                              ? CanopyGradients.pillWide
+                                              ? paletteGradient(context, CanopyGradients.pillWide)
                                               : null,
                                       borderRadius: BorderRadius.circular(
                                           CanopyRadius.pill))))),

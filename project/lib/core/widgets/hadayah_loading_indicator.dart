@@ -46,7 +46,7 @@ class _HadayahLoadingIndicatorState extends State<HadayahLoadingIndicator>
         child: CustomPaint(
           painter: _CapsulePainter(
             motion: _motion,
-            color: widget.color ?? widget.valueColor?.value ?? AppTheme.primary,
+            color: widget.color ?? widget.valueColor?.value ?? paletteColor(context, AppTheme.primary),
             strokeWidth: widget.strokeWidth ?? 5.75,
             reduceMotion: reduceMotion,
           ),

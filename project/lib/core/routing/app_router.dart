@@ -187,8 +187,8 @@ class AppRouter {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.error_outline_rounded,
-                    size: 64, color: AppTheme.danger),
+                Icon(Icons.error_outline_rounded,
+                    size: 64, color: paletteColor(context, AppTheme.danger)),
                 const SizedBox(height: AppTheme.spaceLg),
                 Text(
                   'Route Not Found (${state.error?.message ?? state.uri.toString()})',
@@ -405,7 +405,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
         ));
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
+      backgroundColor: paletteColor(context, Canopy.dawn),
       body: Stack(
         children: [
           if (isDesktop)
@@ -415,10 +415,10 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                 SizedBox(
                   width: CanopySize.railExpanded,
                   child: DecoratedBox(
-                    decoration: const BoxDecoration(
-                      color: Canopy.paper,
+                    decoration: BoxDecoration(
+                      color: paletteColor(context, Canopy.paper),
                       border: BorderDirectional(
-                        end: BorderSide(color: Canopy.hairline, width: 1.0),
+                        end: BorderSide(color: paletteColor(context, Canopy.hairline), width: 1.0),
                       ),
                     ),
                     child: SafeArea(
@@ -504,7 +504,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                           horizontal: AppTheme.spaceMd,
                                           vertical: AppTheme.spaceSm),
                                       decoration: BoxDecoration(
-                                        gradient: AppGradients.pill,
+                                        gradient: paletteGradient(context, AppGradients.pill),
                                         borderRadius: BorderRadius.circular(
                                             CanopyRadius.input),
                                       ),
@@ -514,7 +514,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                             isStreamerModeEnabled
                                                 ? CaGlyph.video
                                                 : CaGlyph.user,
-                                            color: Canopy.paper,
+                                            color: paletteColor(context, Canopy.paper),
                                           ),
                                           const SizedBox(
                                               width: AppTheme.spaceSm),
@@ -527,7 +527,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                                   .textTheme
                                                   .labelSmall
                                                   ?.copyWith(
-                                                      color: Canopy.paper,
+                                                      color: paletteColor(context, Canopy.paper),
                                                       fontWeight:
                                                           FontWeight.w600),
                                             ),
@@ -586,7 +586,7 @@ class _DesktopNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? Canopy.paper : Canopy.brandGreen;
+    final color = isSelected ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
       child: Semantics(
@@ -608,7 +608,7 @@ class _DesktopNavItem extends StatelessWidget {
                   padding: const EdgeInsetsDirectional.symmetric(
                       horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    gradient: isSelected ? AppGradients.pill : null,
+                    gradient: isSelected ? paletteGradient(context, AppGradients.pill) : null,
                     borderRadius: BorderRadius.circular(CanopyRadius.input),
                   ),
                   child: Row(
@@ -622,7 +622,7 @@ class _DesktopNavItem extends StatelessWidget {
                               .textTheme
                               .labelLarge
                               ?.copyWith(
-                                color: isSelected ? Canopy.paper : Canopy.slate,
+                                color: isSelected ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.slate),
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,
@@ -635,7 +635,7 @@ class _DesktopNavItem extends StatelessWidget {
                               horizontal: AppTheme.spaceSm,
                               vertical: AppTheme.spaceXs / 2),
                           decoration: BoxDecoration(
-                            color: Canopy.warning,
+                            color: paletteColor(context, Canopy.warning),
                             borderRadius:
                                 BorderRadius.circular(CanopyRadius.pill),
                           ),
@@ -645,7 +645,7 @@ class _DesktopNavItem extends StatelessWidget {
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                    color: Canopy.paper,
+                                    color: paletteColor(context, Canopy.paper),
                                     fontWeight: FontWeight.bold),
                           ),
                         ),

@@ -31,19 +31,19 @@ class OfflineMarker extends StatelessWidget {
             shape: BoxShape.circle,
             color: Colors.transparent,
             border: Border.all(
-              color: isSelected ? AppTheme.primary : AppTheme.onMedia,
+              color: isSelected ? paletteColor(context, AppTheme.primary) : paletteColor(context, AppTheme.onMedia),
               width: isSelected ? 2.2 : 1.8,
             ),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.media.withValues(alpha: 0.4),
+                color: paletteColor(context, AppTheme.media).withValues(alpha: 0.4),
                 blurRadius: isSelected ? 10 : 4,
               ),
             ],
           ),
           child: ColorFiltered(
-            colorFilter: const ColorFilter.mode(
-              AppTheme.textMuted,
+            colorFilter: ColorFilter.mode(
+              paletteColor(context, AppTheme.textMuted),
               BlendMode.saturation,
             ),
             child: StreamerAvatar(radius: 14, avatarUrl: marker.avatarUrl),

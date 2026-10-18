@@ -76,7 +76,7 @@ class _OrgInvitationScreenState extends State<OrgInvitationScreen> {
         .firstOrNull);
     final language = context.locale.languageCode;
     return Scaffold(
-        appBar: OrganizationAppBar(
+        appBar: OrganizationAppBar(context: context,
             title: Text('organization_v1.invitation'.tr()),
             leading: IconButton(
                 icon: const CaIcon(CaGlyph.close),

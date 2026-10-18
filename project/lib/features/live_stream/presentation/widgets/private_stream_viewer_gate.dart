@@ -49,7 +49,7 @@ class _VipBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: AppTheme.warning.withValues(alpha: 0.92),
+        color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.92),
         borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         boxShadow: const [
           BoxShadow(
@@ -59,12 +59,12 @@ class _VipBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.lock_rounded, color: Canopy.ink, size: 14),
+          Icon(Icons.lock_rounded, color: paletteColor(context, Canopy.ink), size: 14),
           const SizedBox(width: 5),
           Text(
             'design_ui.vip_invited'.tr(),
-            style: const TextStyle(
-              color: Canopy.ink,
+            style: TextStyle(
+              color: paletteColor(context, Canopy.ink),
               fontSize: AppTheme.captionFont,
               fontWeight: FontWeight.bold,
             ),
@@ -81,17 +81,17 @@ class _WaitingRoomOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.media.withValues(alpha: 0.9),
+      color: paletteColor(context, AppTheme.media).withValues(alpha: 0.9),
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(
+            SizedBox(
               width: 56,
               height: 56,
               child: HadayahLoadingIndicator(
                 strokeWidth: 2.5,
-                color: AppTheme.warning,
+                color: paletteColor(context, AppTheme.warning),
               ),
             ),
             const SizedBox(height: AppTheme.spaceLg),
@@ -103,8 +103,8 @@ class _WaitingRoomOverlay extends StatelessWidget {
             Text(
               'design_ui.waiting_for_host_to_admit_you'.tr(),
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppTheme.onMedia,
+              style: TextStyle(
+                color: paletteColor(context, AppTheme.onMedia),
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
               ),
@@ -113,7 +113,7 @@ class _WaitingRoomOverlay extends StatelessWidget {
             Text(
               'design_ui.this_is_a_private_broadcast'.tr(),
               style: TextStyle(
-                color: AppTheme.onMedia.withValues(alpha: 0.6),
+                color: paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.6),
                 fontSize: AppTheme.captionFont,
               ),
             ),
@@ -132,21 +132,21 @@ class _UnauthorizedOverlay extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppTheme.media.withValues(alpha: 0.94),
+      color: paletteColor(context, AppTheme.media).withValues(alpha: 0.94),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(AppTheme.spaceLg),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(Icons.lock_outline_rounded,
-                  color: Canopy.liveCrimson, size: 40),
+              Icon(Icons.lock_outline_rounded,
+                  color: paletteColor(context, Canopy.liveCrimson), size: 40),
               const SizedBox(height: AppTheme.spaceMd),
               Text(
                 'design_ui.this_broadcast_is_private'.tr(),
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppTheme.onMedia,
+                style: TextStyle(
+                  color: paletteColor(context, AppTheme.onMedia),
                   fontSize: 15,
                   fontWeight: FontWeight.bold,
                 ),
@@ -156,7 +156,7 @@ class _UnauthorizedOverlay extends StatelessWidget {
                 'design_ui.contact_the_host_for_access'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: AppTheme.onMedia.withValues(alpha: 0.65),
+                  color: paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.65),
                   fontSize: 12,
                 ),
               ),
@@ -164,8 +164,8 @@ class _UnauthorizedOverlay extends StatelessWidget {
               ElevatedButton(
                 onPressed: onRequestToJoin,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.warning,
-                  foregroundColor: Canopy.ink,
+                  backgroundColor: paletteColor(context, AppTheme.warning),
+                  foregroundColor: paletteColor(context, Canopy.ink),
                 ),
                 child: Text('design_ui.request_to_join'.tr(),
                     style: const TextStyle(fontWeight: FontWeight.bold)),

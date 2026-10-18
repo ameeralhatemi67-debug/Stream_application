@@ -40,11 +40,11 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
 
     if (orgIds.isEmpty) {
       return Scaffold(
-        backgroundColor: Canopy.dawn,
-        appBar: OrganizationAppBar(
+        backgroundColor: paletteColor(context, Canopy.dawn),
+        appBar: OrganizationAppBar(context: context,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded,
-                color: Canopy.ink),
+            icon: Icon(Icons.arrow_back_rounded,
+                color: paletteColor(context, Canopy.ink)),
             onPressed: () => context.go('/feed'),
           ),
           title: Text('design_ui.organization_admin'.tr()),
@@ -74,11 +74,11 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
         {OrgRole.owner, OrgRole.coOwner}.contains(membership.role);
 
     return Scaffold(
-      backgroundColor: Canopy.dawn,
-      appBar: OrganizationAppBar(
+      backgroundColor: paletteColor(context, Canopy.dawn),
+      appBar: OrganizationAppBar(context: context,
         leading: IconButton(
           icon:
-              const Icon(Icons.arrow_back_rounded, color: Canopy.ink),
+              Icon(Icons.arrow_back_rounded, color: paletteColor(context, Canopy.ink)),
           tooltip: 'design_ui.discovery'.tr(),
           onPressed: () => context.go('/feed'),
         ),
@@ -96,12 +96,12 @@ class _OrgAdminScreenState extends State<OrgAdminScreen> {
                   child: DropdownButton<String>(
                 value: activeOrgId,
                 isExpanded: true,
-                dropdownColor: Canopy.mint,
+                dropdownColor: paletteColor(context, Canopy.mint),
                 underline: const SizedBox.shrink(),
                 style: Theme.of(context)
                     .textTheme
                     .labelLarge
-                    ?.copyWith(color: Canopy.ink),
+                    ?.copyWith(color: paletteColor(context, Canopy.ink)),
                 items: orgIds
                     .map((id) => DropdownMenuItem(
                           value: id,

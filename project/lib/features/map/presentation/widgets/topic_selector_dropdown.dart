@@ -79,20 +79,20 @@ class TopicSelectorDropdown extends StatelessWidget {
 
     return PopupMenuButton<String>(
       onSelected: onCategorySelected,
-      color: AppTheme.surface,
+      color: paletteColor(context, AppTheme.surface),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        side: const BorderSide(color: AppTheme.border, width: 1.0),
+        side: BorderSide(color: paletteColor(context, AppTheme.border), width: 1.0),
       ),
       offset: const Offset(0, 44),
       itemBuilder: (context) {
         return [
-          _buildItem(
+          _buildItem(context,
             id: 'all',
             label: allTopicsLabel,
             icon: Icons.category_rounded,
           ),
-          ...categories.where((c) => c.isActive).map((c) => _buildItem(
+          ...categories.where((c) => c.isActive).map((c) => _buildItem(context,
                 id: c.id,
                 label: c.getLocalizedName(langCode),
                 icon: iconForCategoryIconName(c.iconName),
@@ -103,17 +103,17 @@ class TopicSelectorDropdown extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: AppTheme.surface.withValues(alpha: 0.80),
+          color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.80),
           borderRadius: BorderRadius.circular(14.0),
           border: Border.all(
-            color: AppTheme.border,
+            color: paletteColor(context, AppTheme.border),
             width: 1.2,
           ),
-          boxShadow: const [
+          boxShadow: [
             BoxShadow(
-              color: AppTheme.shadowSoft,
+              color: paletteColor(context, AppTheme.shadowSoft),
               blurRadius: 10,
-              offset: Offset(0, 3),
+              offset: const Offset(0, 3),
             ),
           ],
         ),
@@ -127,14 +127,14 @@ class TopicSelectorDropdown extends StatelessWidget {
                   Icon(
                     currentIcon,
                     size: 16,
-                    color: AppTheme.accent,
+                    color: paletteColor(context, AppTheme.accent),
                   ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       currentLabel,
-                      style: const TextStyle(
-                        color: AppTheme.textPrimary,
+                      style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -145,9 +145,9 @@ class TopicSelectorDropdown extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_drop_down_rounded,
-              color: AppTheme.textMuted,
+              color: paletteColor(context, AppTheme.textMuted),
               size: 20,
             ),
           ],
@@ -156,7 +156,7 @@ class TopicSelectorDropdown extends StatelessWidget {
     );
   }
 
-  PopupMenuItem<String> _buildItem({
+  PopupMenuItem<String> _buildItem(BuildContext context, {
     required String id,
     required String label,
     required IconData icon,
@@ -169,7 +169,7 @@ class TopicSelectorDropdown extends StatelessWidget {
           Icon(
             icon,
             size: 18,
-            color: isCurrent ? AppTheme.accent : AppTheme.textMuted,
+            color: isCurrent ? paletteColor(context, AppTheme.accent) : paletteColor(context, AppTheme.textMuted),
           ),
           const SizedBox(width: 8),
           Expanded(
@@ -179,17 +179,17 @@ class TopicSelectorDropdown extends StatelessWidget {
                 fontSize: 13,
                 fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
                 color:
-                    isCurrent ? AppTheme.accent : AppTheme.textPrimary,
+                    isCurrent ? paletteColor(context, AppTheme.accent) : paletteColor(context, AppTheme.textPrimary),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
           ),
           if (isCurrent)
-            const Icon(
+            Icon(
               Icons.check_rounded,
               size: 16,
-              color: AppTheme.accent,
+              color: paletteColor(context, AppTheme.accent),
             ),
         ],
       ),

@@ -90,7 +90,7 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
                           ? broadcasterName
                           : '$broadcasterName • $organization',
                       style: textTheme.bodySmall
-                          ?.copyWith(color: Canopy.brandGreen),
+                          ?.copyWith(color: paletteColor(context, Canopy.brandGreen)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -118,7 +118,7 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
       constraints:
           BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.4),
       child: ColoredBox(
-        color: Canopy.forestDeep,
+        color: paletteColor(context, Canopy.forestDeep),
         child: AbstractVideoPlayer.fromSource(
           sourceType: StreamSourceType.youtubeEmbed,
           streamUrl: vod.youtubeVideoId,
@@ -154,7 +154,7 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
               maxLines: _descriptionOpen ? null : 3,
               overflow: _descriptionOpen ? null : TextOverflow.ellipsis,
               style: textTheme.bodyMedium
-                  ?.copyWith(color: Canopy.slate, height: 1.5),
+                  ?.copyWith(color: paletteColor(context, Canopy.slate), height: 1.5),
             ),
             Align(
               alignment: AlignmentDirectional.centerStart,
@@ -163,7 +163,7 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
                         ? 'profile.show_less'
                         : 'profile.show_more')
                     .tr(),
-                color: Canopy.brandGreen,
+                color: paletteColor(context, Canopy.brandGreen),
                 icon: Icon(_descriptionOpen
                     ? Icons.keyboard_arrow_up_rounded
                     : Icons.keyboard_arrow_down_rounded),
@@ -237,7 +237,7 @@ class _VodPlayerModalSheetState extends State<VodPlayerModalSheet> {
                 width: CanopySize.handleWidth,
                 height: CanopySize.handleHeight,
                 decoration: BoxDecoration(
-                  color: Canopy.hairlineStrong,
+                  color: paletteColor(context, Canopy.hairlineStrong),
                   borderRadius: BorderRadius.circular(CanopyRadius.pill),
                 ),
               ),
@@ -298,7 +298,7 @@ class _StatPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
       decoration: BoxDecoration(
-          color: Canopy.mint,
+          color: paletteColor(context, Canopy.mint),
           borderRadius: BorderRadius.circular(CanopyRadius.pill)),
       child: Padding(
           padding: const EdgeInsetsDirectional.symmetric(
@@ -310,6 +310,6 @@ class _StatPill extends StatelessWidget {
                 style: Theme.of(context)
                     .textTheme
                     .labelMedium
-                    ?.copyWith(color: Canopy.ink)),
+                    ?.copyWith(color: paletteColor(context, Canopy.ink))),
           ])));
 }

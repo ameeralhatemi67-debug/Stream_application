@@ -229,7 +229,7 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
                       style: Theme.of(context)
                           .textTheme
                           .titleLarge
-                          ?.copyWith(color: Canopy.paper))),
+                          ?.copyWith(color: paletteColor(context, Canopy.paper)))),
               if (own)
                 CaButton(
                     label: 'upcoming.add'.tr(),
@@ -244,7 +244,7 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                     Text('upcoming.load_failed'.tr(),
-                        style: const TextStyle(color: Canopy.liveCrimson)),
+                        style: TextStyle(color: paletteColor(context, Canopy.liveCrimson))),
                     const SizedBox(height: AppTheme.spaceSm),
                     CaButton(
                         label: 'upcoming.retry'.tr(),
@@ -318,10 +318,10 @@ class _ScheduleCardState extends State<_ScheduleCard> {
 
   /// The colour the presenter picked for this entry.
   Color get _color => switch (widget.schedule.colorKey) {
-        'gold' => AppTheme.warning,
-        'berry' => Canopy.liveCrimson,
-        'slate' => AppTheme.media,
-        _ => Canopy.brandGreen,
+        'gold' => paletteColor(context, AppTheme.warning),
+        'berry' => paletteColor(context, Canopy.liveCrimson),
+        'slate' => paletteColor(context, AppTheme.media),
+        _ => paletteColor(context, Canopy.brandGreen),
       };
 
   @override
@@ -373,7 +373,7 @@ class _ScheduleCardState extends State<_ScheduleCard> {
                           child: Text(
                               '${localizations.formatMediumDate(saudi)} · $time',
                               style: textTheme.bodySmall?.copyWith(
-                                  color: Canopy.ink,
+                                  color: paletteColor(context, Canopy.ink),
                                   fontWeight: FontWeight.w600))),
                     ]),
                     Text('upcoming.saudi_time'.tr(),
@@ -427,7 +427,7 @@ class _ScheduleCardState extends State<_ScheduleCard> {
                     for (final tag in widget.schedule.tags)
                       Directionality(
                           textDirection: TextDirection.ltr,
-                          child: _Pill(label: tag, color: Canopy.brandGreen)),
+                          child: _Pill(label: tag, color: paletteColor(context, Canopy.brandGreen))),
                   ]),
             ],
             if (description.isNotEmpty) ...[
@@ -442,7 +442,7 @@ class _ScheduleCardState extends State<_ScheduleCard> {
                   tooltip:
                       (_expanded ? 'upcoming.show_less' : 'upcoming.show_more')
                           .tr(),
-                  color: Canopy.brandGreen,
+                  color: paletteColor(context, Canopy.brandGreen),
                   onPressed: () => setState(() => _expanded = !_expanded),
                   icon: Icon(_expanded
                       ? Icons.keyboard_arrow_up_rounded
@@ -492,10 +492,10 @@ class _DateBadge extends StatelessWidget {
             child: Column(mainAxisSize: MainAxisSize.min, children: [
               Text(month,
                   style: textTheme.labelSmall?.copyWith(
-                      color: Canopy.paper, fontWeight: FontWeight.w600)),
+                      color: paletteColor(context, Canopy.paper), fontWeight: FontWeight.w600)),
               Text(day,
                   style: textTheme.titleLarge?.copyWith(
-                      color: Canopy.paper, fontWeight: FontWeight.w700)),
+                      color: paletteColor(context, Canopy.paper), fontWeight: FontWeight.w700)),
             ])));
   }
 }
@@ -507,7 +507,7 @@ class _Pill extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
       decoration: BoxDecoration(
-          color: Canopy.mint,
+          color: paletteColor(context, Canopy.mint),
           borderRadius: BorderRadius.circular(CanopyRadius.pill)),
       child: Padding(
           padding: const EdgeInsetsDirectional.symmetric(
@@ -516,5 +516,5 @@ class _Pill extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .labelSmall
-                  ?.copyWith(color: Canopy.ink))));
+                  ?.copyWith(color: paletteColor(context, Canopy.ink)))));
 }

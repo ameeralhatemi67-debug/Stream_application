@@ -732,6 +732,8 @@
     "delete_messages_by_stream_success_toast": "تم حذف رسائلك في ذلك البث.",
     "build_version": "الإصدار 1.0.0 (1)",
     "release_pending": "الإصدار قيد الاختبار. مراجعة النشر لم تكتمل بعد.",
+    "palette_toggle": "انقر على الشعار مرتين لتبديل ألوان التطبيق",
+    "palette_save_error": "تعذّر حفظ ألوان التطبيق. حاول مرة أخرى.",
     "view_guidelines_subtitle": "النزاهة الأكاديمية ومعايير البث",
     "view_privacy_subtitle": "كيف نستخدم بياناتك",
     "consent_record_title": "سجل الموافقة",

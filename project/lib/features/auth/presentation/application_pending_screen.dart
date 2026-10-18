@@ -13,7 +13,7 @@ class ApplicationPendingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: paletteColor(context, Canopy.dawn),
         appBar: CaAppBar(
             languageBare: true,
             leading: CaIconButton(

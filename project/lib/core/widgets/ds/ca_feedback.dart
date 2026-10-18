@@ -90,7 +90,7 @@ class _CaChatBubbleState extends State<CaChatBubble>
   Widget build(BuildContext context) {
     final dark = widget.dark;
     final textTheme = Theme.of(context).textTheme;
-    final foreground = dark ? Canopy.paper : Canopy.ink;
+    final foreground = dark ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.ink);
     final bodyStyle = textTheme.bodyMedium?.copyWith(color: foreground);
     final showName = widget.role == CaChatRole.viewer && !widget.isOwn;
     final span = TextSpan(children: [
@@ -98,7 +98,7 @@ class _CaChatBubbleState extends State<CaChatBubble>
         TextSpan(
             text: '${dark ? '\u2068${widget.name}\u2069' : widget.name}  ',
             style: textTheme.labelLarge?.copyWith(
-                color: dark ? Canopy.mist : Canopy.brandGreen,
+                color: dark ? paletteColor(context, Canopy.mist) : paletteColor(context, Canopy.brandGreen),
                 fontWeight: FontWeight.w700)),
       TextSpan(text: widget.message),
     ], style: bodyStyle);
@@ -136,12 +136,12 @@ class _CaChatBubbleState extends State<CaChatBubble>
       return DecoratedBox(
           decoration: BoxDecoration(
               color: widget.isOwn
-                  ? (dark ? Canopy.paper.withValues(alpha: .18) : Canopy.mint)
+                  ? (dark ? paletteColor(context, Canopy.paper).withValues(alpha: .18) : paletteColor(context, Canopy.mint))
                   : dark
-                      ? Canopy.cinemaBubble
-                      : Canopy.paper,
+                      ? paletteColor(context, Canopy.cinemaBubble)
+                      : paletteColor(context, Canopy.paper),
               borderRadius: BorderRadius.circular(CanopyRadius.input),
-              boxShadow: dark || widget.isOwn ? null : CanopyShadow.card),
+              boxShadow: dark || widget.isOwn ? null : paletteShadows(context, CanopyShadow.card)),
           child: Padding(
               padding: padding,
               child: Column(
@@ -152,11 +152,11 @@ class _CaChatBubbleState extends State<CaChatBubble>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (widget.handRaised)
-                            const Padding(
-                                padding: EdgeInsetsDirectional.only(
+                            Padding(
+                                padding: const EdgeInsetsDirectional.only(
                                     end: AppTheme.spaceXs),
                                 child: Icon(Icons.back_hand_rounded,
-                                    size: 16, color: AppTheme.warning)),
+                                    size: 16, color: paletteColor(context, AppTheme.warning))),
                           Expanded(
                               child: Text.rich(span,
                                   maxLines: _open ? null : _lines,
@@ -181,7 +181,7 @@ class _CaChatBubbleState extends State<CaChatBubble>
                                           : Icons.keyboard_arrow_down_rounded,
                                       size: 20,
                                       color:
-                                          dark ? Canopy.mist : Canopy.haze)))),
+                                          dark ? paletteColor(context, Canopy.mist) : paletteColor(context, Canopy.haze))))),
                   ])));
     });
     final row = Opacity(
@@ -305,9 +305,9 @@ class CaToast extends StatelessWidget {
               onDismissed: (_) => onDismissed?.call(),
               child: Container(
                   decoration: BoxDecoration(
-                      color: Canopy.paper,
+                      color: paletteColor(context, Canopy.paper),
                       borderRadius: BorderRadius.circular(CanopyRadius.pill),
-                      boxShadow: CanopyShadow.floating),
+                      boxShadow: paletteShadows(context, CanopyShadow.floating)),
                   child: Material(
                       type: MaterialType.transparency,
                       child: InkWell(
@@ -328,18 +328,18 @@ class CaToast extends StatelessWidget {
                                             decoration: BoxDecoration(
                                                 shape: BoxShape.circle,
                                                 gradient: error
-                                                    ? AppGradients.liveSignal
-                                                    : AppGradients.pill),
+                                                    ? paletteGradient(context, AppGradients.liveSignal)
+                                                    : paletteGradient(context, AppGradients.pill)),
                                             child: Center(
                                                 child: icon == CaGlyph.check &&
                                                         !error
                                                     ? CanopyCheckDraw(
                                                         child: CaIcon(icon,
-                                                            color: Canopy.paper,
+                                                            color: paletteColor(context, Canopy.paper),
                                                             size: CanopySize
                                                                 .inlineIcon))
                                                     : CaIcon(icon,
-                                                        color: Canopy.paper,
+                                                        color: paletteColor(context, Canopy.paper),
                                                         size: CanopySize
                                                             .inlineIcon)))),
                                     const SizedBox(width: AppTheme.spaceSm),
@@ -419,7 +419,7 @@ class _CaSkeletonState extends State<CaSkeleton>
           width: width,
           height: height ?? CanopySize.skeletonLine,
           child: ColoredBox(
-              color: Canopy.mint,
+              color: paletteColor(context, Canopy.mint),
               child: CanopyMotion.reduced(context)
                   ? null
                   : AnimatedBuilder(
@@ -431,9 +431,9 @@ class _CaSkeletonState extends State<CaSkeleton>
                                       (2 * _shimmer.value - 1) *
                                       constraints.maxWidth,
                                   0),
-                              child: const DecoratedBox(
+                              child: DecoratedBox(
                                   decoration: BoxDecoration(
-                                      gradient: CanopyGradients.skeleton))))))));
+                                      gradient: paletteGradient(ctx, CanopyGradients.skeleton)))))))));
   @override
   Widget build(BuildContext context) => Semantics(
       label: widget.label ?? 'ds.loading'.tr(),
@@ -515,7 +515,7 @@ class CaEmptyState extends StatelessWidget {
                       style: Theme.of(ctx)
                           .textTheme
                           .bodyMedium
-                          ?.copyWith(color: Canopy.slate)),
+                          ?.copyWith(color: paletteColor(ctx, Canopy.slate))),
                   if (action != null) ...[
                     const SizedBox(height: AppTheme.spaceLg),
                     action!

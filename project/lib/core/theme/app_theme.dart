@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'canopy_tokens.dart';
+export 'app_palette.dart';
 // Canopy tokens back the redesigned streaming screens; the app-wide values
 // below are unchanged.
 export 'canopy_tokens.dart';
@@ -71,14 +72,14 @@ abstract final class AppTheme {
     BoxShadow(color: shadowSoft, blurRadius: 10, offset: Offset(0, 3)),
   ];
 
-  static TextTheme buildTextTheme(String languageCode) {
+  static TextTheme buildTextTheme(String languageCode, {AppPalette palette = const AppPalette()}) {
     final ar = languageCode == 'ar';
     TextStyle style(double size, double arabicHeight, {bool bold = false, Color color = textPrimary}) => TextStyle(
-      fontFamily: ar ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
+      fontFamily: ar || palette.hidayah ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
       fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
       fontSize: size, height: ar ? arabicHeight : 1.4,
       fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-      letterSpacing: 0, color: color,
+      letterSpacing: 0, color: palette.color(color),
     );
     return TextTheme(
       displayLarge: style(30, 1.5, bold: true),
@@ -103,55 +104,57 @@ abstract final class AppTheme {
 
   /// One ThemeData per language: MaterialApp rebuilds used to build a fresh one
   /// (and its text theme) every time (audit ST-01).
-  static ThemeData forLocale(Locale locale) => _themeByLanguage.putIfAbsent(
-      locale.languageCode, () => _buildTheme(locale));
+  static ThemeData forLocale(Locale locale, {bool hidayah = false}) =>
+      _themeByLanguage.putIfAbsent('${locale.languageCode}:$hidayah',
+          () => _buildTheme(locale, AppPalette(hidayah: hidayah)));
 
-  static ThemeData _buildTheme(Locale locale) => ThemeData(
+  static ThemeData _buildTheme(Locale locale, AppPalette palette) => ThemeData(
+    extensions: [palette],
     useMaterial3: true,
     brightness: Brightness.light,
-    fontFamily: locale.languageCode == 'ar' ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
+    fontFamily: locale.languageCode == 'ar' || palette.hidayah ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
     fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
-    textTheme: buildTextTheme(locale.languageCode),
-    scaffoldBackgroundColor: bg, canvasColor: bg, cardColor: surface,
-    primaryColor: primary, dividerColor: border, disabledColor: textMuted,
-    colorScheme: const ColorScheme.light(
-      primary: primary, onPrimary: onPrimary, secondary: accent,
-      onSecondary: onPrimary, tertiary: success, onTertiary: onPrimary,
-      surface: surface, onSurface: textPrimary, error: danger, onError: onPrimary,
-      outline: borderStrong, outlineVariant: border, surfaceContainerHighest: surfaceAlt,
-      onSurfaceVariant: textSecondary,
+    textTheme: buildTextTheme(locale.languageCode, palette: palette),
+    scaffoldBackgroundColor: palette.hidayah ? AppPalette.ivory : bg, canvasColor: palette.color(bg), cardColor: palette.color(surface),
+    primaryColor: palette.color(primary), dividerColor: palette.color(border), disabledColor: palette.color(textMuted),
+    colorScheme: ColorScheme.light(
+      primary: palette.color(primary), onPrimary: palette.color(onPrimary), secondary: palette.color(accent),
+      onSecondary: palette.color(onPrimary), tertiary: palette.color(success), onTertiary: palette.color(onPrimary),
+      surface: palette.color(surface), onSurface: palette.color(textPrimary), error: palette.color(danger), onError: palette.color(onPrimary),
+      outline: palette.color(borderStrong), outlineVariant: palette.color(border), surfaceContainerHighest: palette.color(surfaceAlt),
+      onSurfaceVariant: palette.color(textSecondary),
     ),
-    appBarTheme: const AppBarTheme(
-      backgroundColor: bg, foregroundColor: textPrimary,
+    appBarTheme: AppBarTheme(
+      backgroundColor: palette.color(bg), foregroundColor: palette.color(textPrimary),
       elevation: 0, scrolledUnderElevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle.dark,
-      iconTheme: IconThemeData(color: textPrimary, size: 22),
+      iconTheme: IconThemeData(color: palette.color(textPrimary), size: 22),
     ),
-    cardTheme: CardThemeData(color: surface, elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd), side: const BorderSide(color: border))),
-    dialogTheme: DialogThemeData(backgroundColor: surface, surfaceTintColor: Colors.transparent,
+    cardTheme: CardThemeData(color: palette.color(surface), elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd), side: BorderSide(color: palette.color(border)))),
+    dialogTheme: DialogThemeData(backgroundColor: palette.color(surface), surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd))),
-    bottomSheetTheme: const BottomSheetThemeData(backgroundColor: surface, surfaceTintColor: Colors.transparent),
-    navigationBarTheme: const NavigationBarThemeData(backgroundColor: surface, indicatorColor: surfaceAlt),
-    navigationRailTheme: const NavigationRailThemeData(backgroundColor: surface, indicatorColor: surfaceAlt),
-    bottomNavigationBarTheme: const BottomNavigationBarThemeData(backgroundColor: surface, selectedItemColor: primary,
-      unselectedItemColor: textMuted, type: BottomNavigationBarType.fixed, elevation: 0),
-    snackBarTheme: const SnackBarThemeData(backgroundColor: media, contentTextStyle: TextStyle(color: onMedia)),
+    bottomSheetTheme: BottomSheetThemeData(backgroundColor: palette.color(surface), surfaceTintColor: Colors.transparent),
+    navigationBarTheme: NavigationBarThemeData(backgroundColor: palette.color(surface), indicatorColor: palette.color(surfaceAlt)),
+    navigationRailTheme: NavigationRailThemeData(backgroundColor: palette.color(surface), indicatorColor: palette.color(surfaceAlt)),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(backgroundColor: palette.color(surface), selectedItemColor: palette.color(primary),
+      unselectedItemColor: palette.color(textMuted), type: BottomNavigationBarType.fixed, elevation: 0),
+    snackBarTheme: SnackBarThemeData(backgroundColor: palette.color(media), contentTextStyle: TextStyle(color: palette.color(onMedia))),
     elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(
-      foregroundColor: onPrimary, backgroundColor: primary, disabledBackgroundColor: disabled,
-      disabledForegroundColor: textMuted, elevation: 0,
+      foregroundColor: palette.color(onPrimary), backgroundColor: palette.color(primary), disabledBackgroundColor: palette.color(disabled),
+      disabledForegroundColor: palette.color(textMuted), elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: spaceLg, vertical: spaceMd),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
     outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
     filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
-    inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: surface,
-      hintStyle: const TextStyle(color: textMuted),
+    inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: palette.color(surface),
+      hintStyle: TextStyle(color: palette.color(textMuted)),
       contentPadding: const EdgeInsets.symmetric(horizontal: spaceLg, vertical: spaceMd),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: const BorderSide(color: borderStrong)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: const BorderSide(color: borderStrong)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: const BorderSide(color: primary, width: 2))),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: BorderSide(color: palette.color(borderStrong))),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: BorderSide(color: palette.color(borderStrong))),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: BorderSide(color: palette.color(primary), width: 2))),
   );
 }
 

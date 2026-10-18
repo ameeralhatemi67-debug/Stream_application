@@ -101,7 +101,7 @@ class _ChannelConnectionsScreenState extends State<ChannelConnectionsScreen>
             ));
     final owners = memberships.where((m) => m.canManageChannel).toList();
     return Scaffold(
-        appBar: OrganizationAppBar(
+        appBar: OrganizationAppBar(context: context,
             title: Text('organization_v1.channels'.tr()),
             // Opened from a return link with nothing underneath: still offer a way out.
             leading: Navigator.canPop(context)

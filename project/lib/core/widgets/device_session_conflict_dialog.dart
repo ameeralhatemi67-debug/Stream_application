@@ -54,27 +54,27 @@ class DeviceSessionConflictDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: paletteColor(context, AppTheme.surface),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-        side: const BorderSide(color: AppTheme.border, width: 1.2),
+        side: BorderSide(color: paletteColor(context, AppTheme.border), width: 1.2),
       ),
       title: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: AppTheme.warning.withValues(alpha: 0.15),
+              color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
-            child: const Icon(Icons.devices_other_rounded,
-                color: AppTheme.warning, size: 22),
+            child: Icon(Icons.devices_other_rounded,
+                color: paletteColor(context, AppTheme.warning), size: 22),
           ),
           const SizedBox(width: AppTheme.spaceMd),
           Expanded(
             child: Text('design_ui.multiple_device_login_detected'.tr(),
-              style: const TextStyle(
-                color: AppTheme.textPrimary,
+              style: TextStyle(
+                color: paletteColor(context, AppTheme.textPrimary),
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -90,8 +90,8 @@ class DeviceSessionConflictDialog extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('design_ui.this_account_is_currently_active_as_a_broadcaster_on_another_devi'.tr(),
-              style: const TextStyle(
-                color: AppTheme.textSecondary,
+              style: TextStyle(
+                color: paletteColor(context, AppTheme.textSecondary),
                 fontSize: 12.5,
                 height: 1.4,
               ),
@@ -102,14 +102,14 @@ class DeviceSessionConflictDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: AppTheme.surfaceAlt,
+                color: paletteColor(context, AppTheme.surfaceAlt),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.border),
+                border: Border.all(color: paletteColor(context, AppTheme.border)),
               ),
               child: Row(
                 children: [
                   Icon(_platformIcon(existingDevice.platform),
-                      color: AppTheme.textMuted, size: 20),
+                      color: paletteColor(context, AppTheme.textMuted), size: 20),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Column(
@@ -117,16 +117,16 @@ class DeviceSessionConflictDialog extends StatelessWidget {
                       children: [
                         Text(
                           existingDevice.deviceName,
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
+                          style: TextStyle(
+                            color: paletteColor(context, AppTheme.textPrimary),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text('design_ui.active_broadcaster_session'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.warning,
+                          style: TextStyle(
+                            color: paletteColor(context, AppTheme.warning),
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -143,14 +143,14 @@ class DeviceSessionConflictDialog extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: AppTheme.primary.withValues(alpha: 0.1),
+                color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
+                border: Border.all(color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.4)),
               ),
               child: Row(
                 children: [
                   Icon(_platformIcon(currentDevice.platform),
-                      color: AppTheme.primary, size: 20),
+                      color: paletteColor(context, AppTheme.primary), size: 20),
                   const SizedBox(width: AppTheme.spaceMd),
                   Expanded(
                     child: Column(
@@ -158,16 +158,16 @@ class DeviceSessionConflictDialog extends StatelessWidget {
                       children: [
                         Text(
                           '${currentDevice.deviceName} (This Device)',
-                          style: const TextStyle(
-                            color: AppTheme.textPrimary,
+                          style: TextStyle(
+                            color: paletteColor(context, AppTheme.textPrimary),
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text('design_ui.current_local_session'.tr(),
-                          style: const TextStyle(
-                            color: AppTheme.primary,
+                          style: TextStyle(
+                            color: paletteColor(context, AppTheme.primary),
                             fontSize: 11,
                             fontWeight: FontWeight.w500,
                           ),
@@ -185,8 +185,8 @@ class DeviceSessionConflictDialog extends StatelessWidget {
       actions: [
         OutlinedButton(
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.textSecondary,
-            side: const BorderSide(color: AppTheme.border),
+            foregroundColor: paletteColor(context, AppTheme.textSecondary),
+            side: BorderSide(color: paletteColor(context, AppTheme.border)),
           ),
           onPressed: () =>
               Navigator.of(context).pop(DeviceSessionChoice.continueAsViewer),
@@ -194,8 +194,8 @@ class DeviceSessionConflictDialog extends StatelessWidget {
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primary,
-            foregroundColor: AppTheme.onMedia,
+            backgroundColor: paletteColor(context, AppTheme.primary),
+            foregroundColor: paletteColor(context, AppTheme.onMedia),
           ),
           onPressed: () => Navigator.of(context)
               .pop(DeviceSessionChoice.transferBroadcaster),

@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 
 /// Colours. Map onto the existing AppTheme constants (see `replaces` in the JSON).
+export 'app_palette.dart';
+
 abstract final class Canopy {
   static const transparent = Color(0x00000000);
   static const broadcastGlass = Color(0xD90A2C1B);

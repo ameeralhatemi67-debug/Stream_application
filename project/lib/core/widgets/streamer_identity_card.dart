@@ -42,11 +42,11 @@ class StreamerIdentityCard extends StatelessWidget {
           width: double.infinity,
           child: Material(
             elevation: onClose == null ? 0 : 4,
-            shadowColor: AppTheme.shadow,
-            color: AppTheme.surface,
+            shadowColor: paletteColor(context, AppTheme.shadow),
+            color: paletteColor(context, AppTheme.surface),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              side: const BorderSide(color: AppTheme.border),
+              side: BorderSide(color: paletteColor(context, AppTheme.border)),
             ),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
@@ -70,7 +70,7 @@ class StreamerIdentityCard extends StatelessWidget {
                               height: bannerHeight,
                               width: double.infinity,
                               child: ColoredBox(
-                                color: AppTheme.surfaceAlt,
+                                color: paletteColor(context, AppTheme.surfaceAlt),
                                 child: image == null
                                     ? null
                                     : Image(
@@ -110,12 +110,12 @@ class StreamerIdentityCard extends StatelessWidget {
                                     height: 32,
                                     decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: AppTheme.surface
+                                      color: paletteColor(context, AppTheme.surface)
                                           .withValues(alpha: .6),
                                     ),
-                                    child: const Icon(Icons.close_rounded,
+                                    child: Icon(Icons.close_rounded,
                                         size: 21.6,
-                                        color: AppTheme.textSecondary),
+                                        color: paletteColor(context, AppTheme.textSecondary)),
                                   ),
                                 ),
                           ),
@@ -126,8 +126,8 @@ class StreamerIdentityCard extends StatelessWidget {
                             children: [
                               // A white stroke, then the account's identity ring.
                               DecoratedBox(
-                                decoration: const BoxDecoration(
-                                    color: AppTheme.surface,
+                                decoration: BoxDecoration(
+                                    color: paletteColor(context, AppTheme.surface),
                                     shape: BoxShape.circle),
                                 child: Padding(
                                   padding: const EdgeInsets.all(2),
@@ -139,15 +139,15 @@ class StreamerIdentityCard extends StatelessWidget {
                                 ),
                               ),
                               if (isVerified)
-                                const PositionedDirectional(
+                                PositionedDirectional(
                                   top: 0,
                                   end: 0,
                                   child: DecoratedBox(
                                     decoration: BoxDecoration(
-                                        color: AppTheme.surface,
+                                        color: paletteColor(context, AppTheme.surface),
                                         shape: BoxShape.circle),
                                     child: Icon(Icons.verified_rounded,
-                                        color: AppTheme.primary, size: 20),
+                                        color: paletteColor(context, AppTheme.primary), size: 20),
                                   ),
                                 ),
                             ],
@@ -165,16 +165,16 @@ class StreamerIdentityCard extends StatelessWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(name,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
-                                      color: AppTheme.textPrimary)),
+                                      color: paletteColor(context, AppTheme.textPrimary))),
                               if (title.trim().isNotEmpty) ...[
                                 const SizedBox(height: AppTheme.spaceXs),
                                 Text(title,
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         fontSize: 12,
-                                        color: AppTheme.textSecondary)),
+                                        color: paletteColor(context, AppTheme.textSecondary))),
                               ],
                             ],
                           ),
@@ -207,7 +207,7 @@ class StreamerCardStatus extends StatelessWidget {
         padding: const EdgeInsets.symmetric(
             horizontal: AppTheme.spaceSm, vertical: AppTheme.spaceXs),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: paletteColor(context, AppTheme.surface),
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
         ),
         child: Text(
@@ -223,7 +223,7 @@ class StreamerCardStatus extends StatelessWidget {
           style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: isLive ? AppTheme.danger : AppTheme.textMuted),
+              color: isLive ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.textMuted)),
         ),
       );
 }

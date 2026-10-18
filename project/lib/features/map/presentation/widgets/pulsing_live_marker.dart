@@ -96,10 +96,10 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                       height: 38,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppTheme.danger
+                        color: paletteColor(context, AppTheme.danger)
                             .withValues(alpha: _opacityAnimation.value * 0.4),
                         border: Border.all(
-                          color: AppTheme.danger
+                          color: paletteColor(context, AppTheme.danger)
                               .withValues(alpha: _opacityAnimation.value * 0.7),
                           width: 1.2,
                         ),
@@ -120,13 +120,13 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                 color: Colors.transparent,
                 border: Border.all(
                   color: widget.isSelected
-                      ? AppTheme.primary
-                      : AppTheme.danger,
+                      ? paletteColor(context, AppTheme.primary)
+                      : paletteColor(context, AppTheme.danger),
                   width: widget.isSelected ? 2.2 : 1.8,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: AppTheme.danger.withValues(alpha: 0.5),
+                    color: paletteColor(context, AppTheme.danger).withValues(alpha: 0.5),
                     blurRadius: widget.isSelected ? 12 : 6,
                     spreadRadius: 1,
                   ),
@@ -145,11 +145,11 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                 padding:
                     const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                 decoration: BoxDecoration(
-                  color: AppTheme.danger,
+                  color: paletteColor(context, AppTheme.danger),
                   borderRadius: BorderRadius.circular(8),
-                  boxShadow: const [
+                  boxShadow: [
                     BoxShadow(
-                      color: AppTheme.shadow,
+                      color: paletteColor(context, AppTheme.shadow),
                       blurRadius: 4,
                     ),
                   ],
@@ -160,16 +160,16 @@ class _PulsingLiveMarkerState extends State<PulsingLiveMarker>
                     Container(
                       width: 5,
                       height: 5,
-                      decoration: const BoxDecoration(
-                        color: AppTheme.onMedia,
+                      decoration: BoxDecoration(
+                        color: paletteColor(context, AppTheme.onMedia),
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 3),
                     Text(
                       '${widget.marker.viewerCount}',
-                      style: const TextStyle(
-                        color: AppTheme.onMedia,
+                      style: TextStyle(
+                        color: paletteColor(context, AppTheme.onMedia),
                         fontSize: 9,
                         fontWeight: FontWeight.bold,
                       ),

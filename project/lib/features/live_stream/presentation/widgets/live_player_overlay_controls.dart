@@ -203,13 +203,13 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                     }
                   },
                   style: IconButton.styleFrom(
-                      backgroundColor: Canopy.canopy900,
+                      backgroundColor: paletteColor(context, Canopy.canopy900),
                       shape: const CircleBorder()),
                   icon: Icon(
                       _showControls
                           ? Icons.visibility_off_outlined
                           : Icons.visibility_outlined,
-                      color: AppTheme.onMedia),
+                      color: paletteColor(context, AppTheme.onMedia)),
                 )),
           // Top Header Overlay: Live Badge, Viewer count pill, Quality Selector (Video only)
           if (controlsVisible && !widget.isAudioOnly)
@@ -232,14 +232,14 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                gradient: AppGradients.liveSignal,
+                                gradient: paletteGradient(context, AppGradients.liveSignal),
                                 borderRadius:
                                     BorderRadius.circular(CanopyRadius.pill),
                               ),
                               child: Text(
                                 'live.live_indicator'.tr(),
-                                style: const TextStyle(
-                                  color: AppTheme.onMedia,
+                                style: TextStyle(
+                                  color: paletteColor(context, AppTheme.onMedia),
                                   fontSize: 12,
                                   fontWeight: FontWeight.bold,
                                   letterSpacing: 0.8,
@@ -259,22 +259,22 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 3),
                             decoration: BoxDecoration(
-                              color: AppTheme.media.withValues(alpha: 0.78),
+                              color: paletteColor(context, AppTheme.media).withValues(alpha: 0.78),
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                const Icon(Icons.remove_red_eye_outlined,
-                                    size: 12, color: AppTheme.onMedia),
+                                Icon(Icons.remove_red_eye_outlined,
+                                    size: 12, color: paletteColor(context, AppTheme.onMedia)),
                                 const SizedBox(width: 5),
                                 Flexible(
                                   child: CaRollingCount(
                                     value: widget.viewerCount,
                                     suffix: 'feed.watching'.tr(),
-                                    style: const TextStyle(
-                                      color: AppTheme.onMedia,
+                                    style: TextStyle(
+                                      color: paletteColor(context, AppTheme.onMedia),
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -379,9 +379,9 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         FocusScope.of(context).unfocus();
         onPressed();
       },
-      icon: Icon(icon, color: AppTheme.onMedia, size: 20),
+      icon: Icon(icon, color: paletteColor(context, AppTheme.onMedia), size: 20),
       style: IconButton.styleFrom(
-        backgroundColor: AppTheme.media.withValues(alpha: 0.6),
+        backgroundColor: paletteColor(context, AppTheme.media).withValues(alpha: 0.6),
         minimumSize: const Size(48, 48),
         shape: const CircleBorder(),
       ),
@@ -397,30 +397,30 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
         FocusScope.of(context).unfocus();
         widget.onSelectQuality(quality);
       },
-      color: Canopy.mint,
+      color: paletteColor(context, Canopy.mint),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppTheme.media.withValues(alpha: 0.65),
+          color: paletteColor(context, AppTheme.media).withValues(alpha: 0.65),
           borderRadius: BorderRadius.circular(CanopyRadius.pill),
           border: Border.all(
-              color: AppTheme.primary.withValues(alpha: 0.6), width: 0.8),
+              color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.6), width: 0.8),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.hd_outlined, size: 14, color: AppTheme.primary),
+            Icon(Icons.hd_outlined, size: 14, color: paletteColor(context, AppTheme.primary)),
             const SizedBox(width: 4),
             Text(
               widget.selectedQuality.shortLabel,
-              style: const TextStyle(
-                color: AppTheme.onMedia,
+              style: TextStyle(
+                color: paletteColor(context, AppTheme.onMedia),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
             ),
             Icon(Icons.arrow_drop_down,
-                size: 14, color: AppTheme.onMedia.withValues(alpha: 0.7)),
+                size: 14, color: paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.7)),
           ],
         ),
       ),
@@ -432,14 +432,14 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
             children: [
               Icon(
                 isSelected ? Icons.check_rounded : Icons.hd_outlined,
-                color: isSelected ? AppTheme.primary : Canopy.haze,
+                color: isSelected ? paletteColor(context, AppTheme.primary) : paletteColor(context, Canopy.haze),
                 size: 16,
               ),
               const SizedBox(width: 8),
               Text(
                 quality.labelKey.tr(),
                 style: TextStyle(
-                  color: isSelected ? AppTheme.primary : AppTheme.onMedia,
+                  color: isSelected ? paletteColor(context, AppTheme.primary) : paletteColor(context, AppTheme.onMedia),
                   fontSize: 12,
                   fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                 ),
@@ -457,20 +457,20 @@ class LivePlayerOverlayControlsState extends State<LivePlayerOverlayControls>
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
         decoration: BoxDecoration(
-          color: AppTheme.media.withValues(alpha: 0.82),
+          color: paletteColor(context, AppTheme.media).withValues(alpha: 0.82),
           borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-          border: Border.all(color: AppTheme.warning, width: 1.2),
+          border: Border.all(color: paletteColor(context, AppTheme.warning), width: 1.2),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.mic_off_rounded,
-                size: 13, color: AppTheme.warning),
+            Icon(Icons.mic_off_rounded,
+                size: 13, color: paletteColor(context, AppTheme.warning)),
             const SizedBox(width: 6),
             Text(
               '${'live.mic_muted_badge'.tr()} · ${'live.mic_silent_badge'.tr()}',
-              style: const TextStyle(
-                color: AppTheme.warning,
+              style: TextStyle(
+                color: paletteColor(context, AppTheme.warning),
                 fontSize: AppTheme.captionFont,
                 fontWeight: FontWeight.bold,
               ),

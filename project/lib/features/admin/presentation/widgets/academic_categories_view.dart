@@ -114,7 +114,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
+        backgroundColor: isError ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, Canopy.leaf),
       ),
     );
   }
@@ -157,8 +157,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                     children: [
                       Text(
                         'design_ui.select_category_icon'.tr(),
-                        style: const TextStyle(
-                          color: Canopy.ink,
+                        style: TextStyle(
+                          color: paletteColor(ctx, Canopy.ink),
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
                         ),
@@ -186,21 +186,21 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                                   BorderRadius.circular(AppTheme.radiusSm),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Canopy.mint,
+                                  color: paletteColor(ctx, Canopy.mint),
                                   borderRadius:
                                       BorderRadius.circular(AppTheme.radiusSm),
-                                  border: Border.all(color: Canopy.hairline),
+                                  border: Border.all(color: paletteColor(ctx, Canopy.hairline)),
                                 ),
                                 child: Column(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Icon(item['icon'] as IconData,
-                                        color: AppTheme.primary, size: 24),
+                                        color: paletteColor(ctx, AppTheme.primary), size: 24),
                                     const SizedBox(height: 4),
                                     Text(
                                       item['name'] as String,
-                                      style: const TextStyle(
-                                        color: Canopy.slate,
+                                      style: TextStyle(
+                                        color: paletteColor(ctx, Canopy.slate),
                                         fontSize: 12,
                                       ),
                                       maxLines: 1,
@@ -240,17 +240,17 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
           final arHasEnglish = latinRegex.hasMatch(nameArController.text);
 
           return CaAlertDialog(
-            backgroundColor: AppTheme.surface,
+            backgroundColor: paletteColor(dialogContext, AppTheme.surface),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              side: const BorderSide(color: Canopy.hairline),
+              side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
             ),
             title: Text(
               existing == null
                   ? 'admin.category_add'.tr()
                   : 'admin.category_edit'.tr(),
-              style: const TextStyle(
-                  color: Canopy.ink, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                  color: paletteColor(dialogContext, Canopy.ink), fontWeight: FontWeight.bold),
             ),
             content: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 580),
@@ -298,14 +298,14 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                               const EdgeInsets.only(bottom: AppTheme.spaceSm),
                           child: ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: Canopy.mint,
-                              foregroundColor: AppTheme.primary,
+                              backgroundColor: paletteColor(dialogContext, Canopy.mint),
+                              foregroundColor: paletteColor(dialogContext, AppTheme.primary),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusMd),
-                                side: const BorderSide(color: Canopy.hairline),
+                                side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
                               ),
                             ),
                             icon: Icon(
@@ -328,13 +328,13 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                       children: [
                         Checkbox(
                           value: isActive,
-                          activeColor: Canopy.leaf,
+                          activeColor: paletteColor(dialogContext, Canopy.leaf),
                           onChanged: (v) =>
                               setDialogState(() => isActive = v ?? true),
                         ),
                         Text('admin.category_active'.tr(),
-                            style: const TextStyle(
-                                color: Canopy.slate, fontSize: 12)),
+                            style: TextStyle(
+                                color: paletteColor(dialogContext, Canopy.slate), fontSize: 12)),
                       ],
                     ),
                   ],
@@ -345,12 +345,12 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               TextButton(
                 onPressed: () => Navigator.pop(dialogContext),
                 child: Text('common.cancel'.tr(),
-                    style: const TextStyle(color: Canopy.haze)),
+                    style: TextStyle(color: paletteColor(dialogContext, Canopy.haze))),
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: AppTheme.onMedia),
+                    backgroundColor: paletteColor(dialogContext, AppTheme.primary),
+                    foregroundColor: paletteColor(dialogContext, AppTheme.onMedia)),
                 onPressed: () {
                   final id = (existing?.id ?? idController.text.trim())
                       .toLowerCase()
@@ -400,17 +400,17 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                     readOnly: blocked,
                     controller: controller,
                     onChanged: (_) => onChanged?.call(),
-                    style: const TextStyle(
-                        color: Canopy.ink, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, Canopy.ink), fontSize: 13),
                     decoration: InputDecoration(
                       labelText: label,
                       hintText: hint,
                       labelStyle:
-                          const TextStyle(color: Canopy.slate),
-                      hintStyle: const TextStyle(
-                          color: Canopy.haze, fontSize: 12),
+                          TextStyle(color: paletteColor(context, Canopy.slate)),
+                      hintStyle: TextStyle(
+                          color: paletteColor(context, Canopy.haze), fontSize: 12),
                       filled: true,
-                      fillColor: Canopy.mint,
+                      fillColor: paletteColor(context, Canopy.mint),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                       ),
@@ -421,8 +421,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
               padding: const EdgeInsetsDirectional.only(top: 4, start: 4),
               child: Text(
                 errorText,
-                style: const TextStyle(
-                  color: AppTheme.warning,
+                style: TextStyle(
+                  color: paletteColor(context, AppTheme.warning),
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
                 ),
@@ -437,27 +437,27 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
     showCaDialog(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: const BorderSide(color: Canopy.hairline),
+          side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
         ),
         title: Text('admin.category_delete_confirm_title'.tr(),
-            style: const TextStyle(
-                color: Canopy.ink, fontWeight: FontWeight.bold)),
+            style: TextStyle(
+                color: paletteColor(dialogContext, Canopy.ink), fontWeight: FontWeight.bold)),
         content: Text('admin.category_delete_confirm_body'.tr(),
             style:
-                const TextStyle(color: Canopy.slate, fontSize: 12)),
+                TextStyle(color: paletteColor(dialogContext, Canopy.slate), fontSize: 12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('common.cancel'.tr(),
-                style: const TextStyle(color: Canopy.haze)),
+                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: Canopy.liveCrimson,
-                foregroundColor: AppTheme.onMedia),
+                backgroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
+                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia)),
             onPressed: () {
               Navigator.pop(dialogContext);
               _run(
@@ -492,21 +492,21 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
             runSpacing: AppTheme.spaceSm,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              const Icon(Icons.category_rounded,
-                  color: AppTheme.primary, size: 20),
+              Icon(Icons.category_rounded,
+                  color: paletteColor(context, AppTheme.primary), size: 20),
               const SizedBox(width: 8),
               Text(
                 'admin.tab_categories'.tr(),
-                style: const TextStyle(
-                  color: Canopy.ink,
+                style: TextStyle(
+                  color: paletteColor(context, Canopy.ink),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                    backgroundColor: AppTheme.primary,
-                    foregroundColor: AppTheme.onMedia),
+                    backgroundColor: paletteColor(context, AppTheme.primary),
+                    foregroundColor: paletteColor(context, AppTheme.onMedia)),
                 icon: const Icon(Icons.add_rounded, size: 16),
                 label: Text('admin.category_add'.tr()),
                 onPressed: () => _showEditDialog(provider),
@@ -518,7 +518,7 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
             child: sorted.isEmpty
                 ? Center(
                     child: Text('admin.no_categories'.tr(),
-                        style: const TextStyle(color: Canopy.slate)))
+                        style: TextStyle(color: paletteColor(context, Canopy.slate))))
                 : ListView.separated(
                     itemCount: sorted.length,
                     separatorBuilder: (_, __) =>
@@ -532,8 +532,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                             children: [
                               Icon(iconForCategoryIconName(category.iconName),
                                   color: category.isActive
-                                      ? AppTheme.primary
-                                      : Canopy.haze,
+                                      ? paletteColor(context, AppTheme.primary)
+                                      : paletteColor(context, Canopy.haze),
                                   size: 20),
                               const SizedBox(width: AppTheme.spaceMd),
                               Expanded(
@@ -546,8 +546,8 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         color: category.isActive
-                                            ? Canopy.ink
-                                            : Canopy.haze,
+                                            ? paletteColor(context, Canopy.ink)
+                                            : paletteColor(context, Canopy.haze),
                                         fontWeight: FontWeight.bold,
                                         fontSize: 13,
                                       ),
@@ -556,46 +556,46 @@ class _AcademicCategoriesViewState extends State<AcademicCategoriesView> {
                                       category.id,
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(
-                                          color: Canopy.haze,
+                                      style: TextStyle(
+                                          color: paletteColor(context, Canopy.haze),
                                           fontSize: 12),
                                     ),
                                   ],
                                 ),
                               ),
                               if (isActing)
-                                const SizedBox(
+                                SizedBox(
                                   width: 16,
                                   height: 16,
                                   child: HadayahLoadingIndicator(
-                                      strokeWidth: 2, color: AppTheme.primary),
+                                      strokeWidth: 2, color: paletteColor(context, AppTheme.primary)),
                                 )
                               else ...[
                                 IconButton(
-                                  icon: const Icon(Icons.arrow_upward_rounded,
-                                      size: 16, color: Canopy.slate),
+                                  icon: Icon(Icons.arrow_upward_rounded,
+                                      size: 16, color: paletteColor(context, Canopy.slate)),
                                   onPressed: index == 0
                                       ? null
                                       : () =>
                                           _reorder(provider, sorted, index, -1),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.arrow_downward_rounded,
-                                      size: 16, color: Canopy.slate),
+                                  icon: Icon(Icons.arrow_downward_rounded,
+                                      size: 16, color: paletteColor(context, Canopy.slate)),
                                   onPressed: index == sorted.length - 1
                                       ? null
                                       : () =>
                                           _reorder(provider, sorted, index, 1),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.edit_rounded,
-                                      size: 16, color: AppTheme.primary),
+                                  icon: Icon(Icons.edit_rounded,
+                                      size: 16, color: paletteColor(context, AppTheme.primary)),
                                   onPressed: () => _showEditDialog(provider,
                                       existing: category),
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.delete_outline_rounded,
-                                      size: 16, color: Canopy.liveCrimson),
+                                  icon: Icon(Icons.delete_outline_rounded,
+                                      size: 16, color: paletteColor(context, Canopy.liveCrimson)),
                                   onPressed: () =>
                                       _confirmDelete(provider, category),
                                 ),

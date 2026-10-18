@@ -167,7 +167,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
           UpcomingScheduleTab(streamer: streamer),
         ]);
     Widget panel(Widget child) => DecoratedBox(
-        decoration: const BoxDecoration(gradient: AppGradients.panel),
+        decoration: BoxDecoration(gradient: paletteGradient(context, AppGradients.panel)),
         child: child);
     final single = NestedScrollView(
         headerSliverBuilder: (context, scrolled) => [
@@ -190,7 +190,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             ],
         body: panel(body()));
     return Scaffold(
-        backgroundColor: Canopy.dawn,
+        backgroundColor: paletteColor(context, Canopy.dawn),
         bottomNavigationBar: _dockPrimary
             ? SafeArea(
                 top: false,
@@ -267,7 +267,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 child: CanopyLatticeBackground(
                     child: SizedBox.expand(
                         child: ColoredBox(
-                            color: CanopyGradients.entryTextScrim,
+                            color: paletteColor(context, CanopyGradients.entryTextScrim),
                             child: Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
                                     AppTheme.spaceSm,
@@ -390,7 +390,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
-                                          ?.copyWith(color: Canopy.brandGreen)),
+                                          ?.copyWith(color: paletteColor(context, Canopy.brandGreen))),
                                   LayoutBuilder(
                                       builder: (context, constraints) {
                                     final bioStyle =
@@ -430,7 +430,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                         ? 'profile.show_less'
                                                         : 'profile.show_more')
                                                     .tr(),
-                                                color: Canopy.brandGreen,
+                                                color: paletteColor(context, Canopy.brandGreen),
                                                 icon: Icon(_detailsExpanded
                                                     ? Icons
                                                         .keyboard_arrow_up_rounded
@@ -639,13 +639,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelLarge
-                                        ?.copyWith(color: Canopy.ink)),
+                                        ?.copyWith(color: paletteColor(context, Canopy.ink))),
                                 Text(
                                     '@${speaker.youtubeHandle ?? streamer.youtubeHandle}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
-                                        ?.copyWith(color: Canopy.ink)),
+                                        ?.copyWith(color: paletteColor(context, Canopy.ink))),
                                 Text(speaker.getLocalizedRole(lang),
                                     style:
                                         Theme.of(context).textTheme.bodySmall),
@@ -720,11 +720,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
 
     return Builder(builder: (context) {
       final titleStyle =
-          Theme.of(context).textTheme.labelLarge?.copyWith(color: Canopy.ink);
+          Theme.of(context).textTheme.labelLarge?.copyWith(color: paletteColor(context, Canopy.ink));
       final countStyle = Theme.of(context)
           .textTheme
           .bodySmall
-          ?.copyWith(color: Canopy.brandGreen, fontWeight: FontWeight.w600);
+          ?.copyWith(color: paletteColor(context, Canopy.brandGreen), fontWeight: FontWeight.w600);
       // One shared row height (a 2-line title and the count line), so every
       // playlist is the same size whatever its title.
       final rowHeight = [
@@ -772,7 +772,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                   ),
                   // The chevron glyph mirrors itself in right-to-left, so it always
                   // points forward.
-                  const Icon(Icons.chevron_right_rounded, color: Canopy.slate),
+                  Icon(Icons.chevron_right_rounded, color: paletteColor(context, Canopy.slate)),
                 ],
               ),
             ),
@@ -812,7 +812,7 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: Canopy.dawn,
+      color: paletteColor(context, Canopy.dawn),
       child: _tabBar,
     );
   }
@@ -832,7 +832,7 @@ class _AvatarStroke extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
       decoration: BoxDecoration(
-          color: Canopy.paper,
+          color: paletteColor(context, Canopy.paper),
           shape: org ? BoxShape.rectangle : BoxShape.circle,
           borderRadius: org
               ? BorderRadius.circular(CanopyRadius.orgAvatar +

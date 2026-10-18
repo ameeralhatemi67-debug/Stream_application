@@ -83,7 +83,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                           horizontal: AppTheme.spaceSm,
                           vertical: AppTheme.spaceXs),
                       decoration: BoxDecoration(
-                          color: Canopy.mint,
+                          color: paletteColor(context, Canopy.mint),
                           borderRadius:
                               BorderRadius.circular(CanopyRadius.pill)),
                       child: Text(
@@ -93,7 +93,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                           style: Theme.of(context)
                               .textTheme
                               .labelSmall
-                              ?.copyWith(color: Canopy.brandGreen)))))
+                              ?.copyWith(color: paletteColor(context, Canopy.brandGreen))))))
           : null,
       onClose: () => Navigator.pop(context),
       scrollBody: false,
@@ -148,7 +148,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
             ),
 
             const SizedBox(height: AppTheme.spaceSm),
-            const Divider(color: Canopy.hairline, height: 1),
+            Divider(color: paletteColor(context, Canopy.hairline), height: 1),
             const SizedBox(height: AppTheme.spaceSm),
 
             // Notifications List or Empty State
@@ -161,13 +161,13 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.notifications_none_rounded,
-                          color: Canopy.haze, size: 44),
+                      Icon(Icons.notifications_none_rounded,
+                          color: paletteColor(context, Canopy.haze), size: 44),
                       const SizedBox(height: 12),
                       Text(
                         'design_copy.no_notifications_in_this_category'.tr(),
-                        style: const TextStyle(
-                          color: Canopy.ink,
+                        style: TextStyle(
+                          color: paletteColor(context, Canopy.ink),
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -176,8 +176,8 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                       Text(
                         'design_copy.you_will_receive_alerts_for_live_streams_lectures_and_invites_whe'
                             .tr(),
-                        style: const TextStyle(
-                            color: Canopy.haze, fontSize: 12),
+                        style: TextStyle(
+                            color: paletteColor(context, Canopy.haze), fontSize: 12),
                         textAlign: TextAlign.center,
                       ),
                     ],
@@ -190,7 +190,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                   shrinkWrap: true,
                   itemCount: filteredNotifications.length,
                   separatorBuilder: (_, __) =>
-                      const Divider(color: Canopy.hairline, height: 1),
+                      Divider(color: paletteColor(context, Canopy.hairline), height: 1),
                   itemBuilder: (context, idx) {
                     final notif = filteredNotifications[idx];
                     return _buildNotificationTile(
@@ -229,18 +229,18 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
       key: Key('notif_${notif.id}'),
       direction: DismissDirection.endToStart,
       background: Container(
-        color: Canopy.liveCrimson,
+        color: paletteColor(context, Canopy.liveCrimson),
         alignment: AlignmentDirectional.centerEnd,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
-            const Icon(Icons.delete_sweep_rounded,
-                color: AppTheme.onMedia, size: 20),
+            Icon(Icons.delete_sweep_rounded,
+                color: paletteColor(context, AppTheme.onMedia), size: 20),
             const SizedBox(width: 6),
             Text('design_ui.dismiss'.tr(),
-                style: const TextStyle(
-                    color: AppTheme.onMedia,
+                style: TextStyle(
+                    color: paletteColor(context, AppTheme.onMedia),
                     fontSize: 12,
                     fontWeight: FontWeight.bold)),
           ],
@@ -270,8 +270,8 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                 child: Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(
-                    color: AppTheme.primary,
+                  decoration: BoxDecoration(
+                    color: paletteColor(context, AppTheme.primary),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -281,7 +281,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
         title: Text(
           notif.getLocalizedTitle(isAr ? 'ar' : 'en'),
           style: TextStyle(
-            color: notif.isRead ? Canopy.slate : Canopy.ink,
+            color: notif.isRead ? paletteColor(context, Canopy.slate) : paletteColor(context, Canopy.ink),
             fontSize: 13,
             fontWeight: notif.isRead ? FontWeight.normal : FontWeight.bold,
           ),
@@ -292,8 +292,8 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
             const SizedBox(height: 2),
             Text(
               notif.getLocalizedBody(isAr ? 'ar' : 'en'),
-              style: const TextStyle(
-                  color: Canopy.haze, fontSize: 12, height: 1.3),
+              style: TextStyle(
+                  color: paletteColor(context, Canopy.haze), fontSize: 12, height: 1.3),
             ),
             const SizedBox(height: 4),
             Row(
@@ -301,7 +301,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                 Text(
                   _formatTimeAgo(notif.timestamp, isAr),
                   style:
-                      const TextStyle(color: Canopy.haze, fontSize: 12),
+                      TextStyle(color: paletteColor(context, Canopy.haze), fontSize: 12),
                 ),
                 if (notif.streamerId.isNotEmpty) ...[
                   const SizedBox(width: 10),
@@ -322,7 +322,7 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                                 : Icons.notifications_none_rounded,
                             size: 12,
                             color:
-                                isMuted ? Canopy.haze : AppTheme.primary,
+                                isMuted ? paletteColor(context, Canopy.haze) : paletteColor(context, AppTheme.primary),
                           ),
                           const SizedBox(width: 3),
                           Text(
@@ -331,8 +331,8 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
                                 : ('design_copy.mute'.tr()),
                             style: TextStyle(
                               color: isMuted
-                                  ? Canopy.haze
-                                  : AppTheme.primary,
+                                  ? paletteColor(context, Canopy.haze)
+                                  : paletteColor(context, AppTheme.primary),
                               fontSize: 12,
                               fontWeight: FontWeight.w600,
                             ),
@@ -398,30 +398,30 @@ class _NotificationCenterSheetState extends State<NotificationCenterSheet> {
     switch (type) {
       case NotificationType.streamerLiveVideo:
       case NotificationType.orgStreamerLiveStatus:
-        return Canopy.liveCrimson;
+        return paletteColor(context, Canopy.liveCrimson);
       case NotificationType.streamerLiveAudio:
-        return Canopy.haze;
+        return paletteColor(context, Canopy.haze);
       case NotificationType.watchMilestoneOneHour:
-        return AppTheme.warning;
+        return paletteColor(context, AppTheme.warning);
       case NotificationType.streamerApplicationApproved:
-        return Canopy.leaf;
+        return paletteColor(context, Canopy.leaf);
       case NotificationType.streamerApplicationRejected:
-        return AppTheme.warning;
+        return paletteColor(context, AppTheme.warning);
       case NotificationType.orgLiveGuestInvite:
       case NotificationType.orgAffiliationInvite:
-        return AppTheme.accent;
+        return paletteColor(context, AppTheme.accent);
       case NotificationType.streamerRemovedFromOrg:
-        return Canopy.haze;
+        return paletteColor(context, Canopy.haze);
       case NotificationType.adminNoteToStreamer:
       case NotificationType.adminNoteToOrg:
-        return AppTheme.primary;
+        return paletteColor(context, AppTheme.primary);
       case NotificationType.adminCardEditRequestStreamer:
       case NotificationType.adminCardEditRequestOrg:
-        return AppTheme.warning;
+        return paletteColor(context, AppTheme.warning);
       case NotificationType.newVodUpload:
-        return AppTheme.primary;
+        return paletteColor(context, AppTheme.primary);
       case NotificationType.systemAlert:
-        return Canopy.slate;
+        return paletteColor(context, Canopy.slate);
     }
   }
 

@@ -98,18 +98,18 @@ class ProfileMediaEditor extends StatelessWidget {
                   Image(
                       image: banner,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const DecoratedBox(
+                      errorBuilder: (_, __, ___) => DecoratedBox(
                           decoration:
-                              BoxDecoration(gradient: CanopyGradients.panel)))
+                              BoxDecoration(gradient: paletteGradient(context, CanopyGradients.panel))))
                 else
-                  const DecoratedBox(
+                  DecoratedBox(
                       decoration:
-                          BoxDecoration(gradient: CanopyGradients.panel)),
+                          BoxDecoration(gradient: paletteGradient(context, CanopyGradients.panel))),
                 PositionedDirectional(
                   end: AppTheme.spaceSm,
                   top: AppTheme.spaceSm,
                   child: Material(
-                    color: Canopy.forestDeep.withValues(alpha: .62),
+                    color: paletteColor(context, Canopy.forestDeep).withValues(alpha: .62),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     child: InkWell(
                       key: const Key('profile-change-banner'),
@@ -120,14 +120,14 @@ class ProfileMediaEditor extends StatelessWidget {
                             horizontal: AppTheme.spaceMd,
                             vertical: AppTheme.spaceSm),
                         child: Row(mainAxisSize: MainAxisSize.min, children: [
-                          const Icon(Icons.photo_camera_outlined,
-                              size: 18, color: Canopy.paper),
+                          Icon(Icons.photo_camera_outlined,
+                              size: 18, color: paletteColor(context, Canopy.paper)),
                           const SizedBox(width: AppTheme.spaceXs),
                           Text('settings.change_banner'.tr(),
                               style: Theme.of(context)
                                   .textTheme
                                   .labelLarge
-                                  ?.copyWith(color: Canopy.paper)),
+                                  ?.copyWith(color: paletteColor(context, Canopy.paper))),
                         ]),
                       ),
                     ),
@@ -145,8 +145,8 @@ class ProfileMediaEditor extends StatelessWidget {
               height: _avatarSize,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: Canopy.mint,
-                border: Border.all(color: Canopy.paper, width: 3),
+                color: paletteColor(context, Canopy.mint),
+                border: Border.all(color: paletteColor(context, Canopy.paper), width: 3),
                 boxShadow: const [
                   BoxShadow(color: Color(0x33123E26), blurRadius: 8)
                 ],
@@ -161,7 +161,7 @@ class ProfileMediaEditor extends StatelessWidget {
               child: avatar == null
                   ? Text(initial,
                       style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          color: AppTheme.primary, fontWeight: FontWeight.w700))
+                          color: paletteColor(context, AppTheme.primary), fontWeight: FontWeight.w700))
                   : null,
             ),
           ),

@@ -20,7 +20,7 @@ class StreamerEditorSheet extends StatefulWidget {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: paletteColor(context, AppTheme.surface),
       shape: const RoundedRectangleBorder(
         borderRadius:
             BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
@@ -122,24 +122,24 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: AppTheme.surfaceAlt,
+            color: paletteColor(context, AppTheme.surfaceAlt),
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: AppTheme.danger, width: 1.5),
-            boxShadow: const [
+            border: Border.all(color: paletteColor(context, AppTheme.danger), width: 1.5),
+            boxShadow: [
               BoxShadow(
-                  color: AppTheme.shadow, blurRadius: 16, offset: Offset(0, 4)),
+                  color: paletteColor(context, AppTheme.shadow), blurRadius: 16, offset: const Offset(0, 4)),
             ],
           ),
           child: Row(
             children: [
-              const Icon(Icons.warning_amber_rounded,
-                  color: AppTheme.danger, size: 22),
+              Icon(Icons.warning_amber_rounded,
+                  color: paletteColor(context, AppTheme.danger), size: 22),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   message,
-                  style: const TextStyle(
-                    color: AppTheme.textPrimary,
+                  style: TextStyle(
+                    color: paletteColor(context, AppTheme.textPrimary),
                     fontSize: 12.5,
                     fontWeight: FontWeight.bold,
                   ),
@@ -287,7 +287,7 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.streamer_updated'.tr()),
-          backgroundColor: AppTheme.primary,
+          backgroundColor: paletteColor(context, AppTheme.primary),
         ),
       );
     } else {
@@ -295,7 +295,7 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('settings.streamer_added'.tr()),
-          backgroundColor: AppTheme.danger,
+          backgroundColor: paletteColor(context, AppTheme.danger),
         ),
       );
     }
@@ -331,7 +331,7 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                     isEditing
                         ? Icons.edit_rounded
                         : Icons.person_add_alt_1_rounded,
-                    color: AppTheme.danger,
+                    color: paletteColor(context, AppTheme.danger),
                     size: 22,
                   ),
                   const SizedBox(width: 8),
@@ -339,8 +339,8 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                     isEditing
                         ? 'settings.edit_streamer'.tr()
                         : 'settings.add_streamer'.tr(),
-                    style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                    style: TextStyle(
+                      color: paletteColor(context, AppTheme.textPrimary),
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -348,13 +348,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                 ],
               ),
               IconButton(
-                icon: const Icon(Icons.close_rounded,
-                    size: 20, color: AppTheme.textMuted),
+                icon: Icon(Icons.close_rounded,
+                    size: 20, color: paletteColor(context, AppTheme.textMuted)),
                 onPressed: () => Navigator.pop(context),
               ),
             ],
           ),
-          const Divider(color: AppTheme.border),
+          Divider(color: paletteColor(context, AppTheme.border)),
 
           // Scrollable Form Body
           Flexible(
@@ -367,8 +367,8 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   Text(
                     'settings.add_streamer_desc'.tr(),
-                    style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textSecondary), fontSize: 12),
                   ),
                   const SizedBox(height: 16),
 
@@ -378,25 +378,25 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _nameEnController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
+                    decoration: InputDecoration(
                       hintText: 'e.g. Dr. Salman Al-Fahad',
                       labelText: 'Full Name (English) *',
                       prefixIcon: Icon(Icons.person_rounded,
-                          size: 18, color: AppTheme.danger),
+                          size: 18, color: paletteColor(context, AppTheme.danger)),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _nameArController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
+                    decoration: InputDecoration(
                       hintText: 'مثال: د. سلمان الفهد',
                       labelText: 'الاسم الكامل (بالعربي)',
                       prefixIcon: Icon(Icons.person_outline_rounded,
-                          size: 18, color: AppTheme.primary),
+                          size: 18, color: paletteColor(context, AppTheme.primary)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -407,25 +407,25 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _titleEnController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
+                    decoration: InputDecoration(
                       hintText: 'e.g. Associate Professor of AI',
                       labelText: 'Academic Title / Role (English) *',
                       prefixIcon: Icon(Icons.school_rounded,
-                          size: 18, color: AppTheme.danger),
+                          size: 18, color: paletteColor(context, AppTheme.danger)),
                     ),
                   ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _titleArController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
+                    decoration: InputDecoration(
                       hintText: 'مثال: أستاذ مشارك في الذكاء الاصطناعي',
                       labelText: 'المسمى الأكاديمي (بالعربي)',
                       prefixIcon: Icon(Icons.school_outlined,
-                          size: 18, color: AppTheme.primary),
+                          size: 18, color: paletteColor(context, AppTheme.primary)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -436,13 +436,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _orgController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'e.g. KFUPM / Dhahran Techno Valley',
                       labelText: 'settings.university_org'.tr(),
-                      prefixIcon: const Icon(Icons.business_rounded,
-                          size: 18, color: AppTheme.textMuted),
+                      prefixIcon: Icon(Icons.business_rounded,
+                          size: 18, color: paletteColor(context, AppTheme.textMuted)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -454,14 +454,14 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   TextField(
                     controller: _bioController,
                     maxLines: 2,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       hintText:
                           'Brief summary of lectures, topics, or research...',
                       labelText: 'settings.bio_research'.tr(),
-                      prefixIcon: const Icon(Icons.description_outlined,
-                          size: 18, color: AppTheme.textMuted),
+                      prefixIcon: Icon(Icons.description_outlined,
+                          size: 18, color: paletteColor(context, AppTheme.textMuted)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -471,13 +471,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _avatarUrlController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'https://... or assets/images/...',
                       labelText: 'settings.profile_pic_url'.tr(),
-                      prefixIcon: const Icon(Icons.account_circle_outlined,
-                          size: 18, color: AppTheme.primary),
+                      prefixIcon: Icon(Icons.account_circle_outlined,
+                          size: 18, color: paletteColor(context, AppTheme.primary)),
                       helperText:
                           'Leave empty for default clean gray avatar placeholder',
                     ),
@@ -489,13 +489,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _bannerUrlController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'https://... or assets/images/...',
                       labelText: 'settings.banner_pic_url'.tr(),
-                      prefixIcon: const Icon(Icons.image_outlined,
-                          size: 18, color: AppTheme.primary),
+                      prefixIcon: Icon(Icons.image_outlined,
+                          size: 18, color: paletteColor(context, AppTheme.primary)),
                       helperText:
                           'Leave empty for default dark abstract background',
                     ),
@@ -508,13 +508,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedCity,
-                    dropdownColor: AppTheme.surfaceAlt,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    dropdownColor: paletteColor(context, AppTheme.surfaceAlt),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       labelText: 'settings.city_label'.tr(),
-                      prefixIcon: const Icon(Icons.location_city_rounded,
-                          size: 18, color: AppTheme.danger),
+                      prefixIcon: Icon(Icons.location_city_rounded,
+                          size: 18, color: paletteColor(context, AppTheme.danger)),
                     ),
                     items: supportedCities.map((city) {
                       return DropdownMenuItem<String>(
@@ -533,13 +533,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                     key: _venueKey,
                     child: TextField(
                       controller: _venueController,
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary, fontSize: 13),
+                      style: TextStyle(
+                          color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                       decoration: InputDecoration(
                         hintText: 'e.g. Grand Auditorium Hall / Campus Center',
                         labelText: '${'settings.venue_label'.tr()} *',
-                        prefixIcon: const Icon(Icons.pin_drop_rounded,
-                            size: 18, color: AppTheme.danger),
+                        prefixIcon: Icon(Icons.pin_drop_rounded,
+                            size: 18, color: paletteColor(context, AppTheme.danger)),
                       ),
                     ),
                   ),
@@ -551,13 +551,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _tagsController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: '#AI, #MachineLearning, #Cloud',
                       labelText: '${'settings.tags_label'.tr()} *',
-                      prefixIcon: const Icon(Icons.tag_rounded,
-                          size: 18, color: AppTheme.danger),
+                      prefixIcon: Icon(Icons.tag_rounded,
+                          size: 18, color: paletteColor(context, AppTheme.danger)),
                       helperText: 'Add at least one tag (comma separated)',
                     ),
                   ),
@@ -568,13 +568,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   DropdownButtonFormField<String>(
                     initialValue: _selectedCategory,
-                    dropdownColor: AppTheme.surfaceAlt,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
-                    decoration: const InputDecoration(
+                    dropdownColor: paletteColor(context, AppTheme.surfaceAlt),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
+                    decoration: InputDecoration(
                       labelText: 'Academic Category',
                       prefixIcon: Icon(Icons.category_rounded,
-                          size: 18, color: AppTheme.primary),
+                          size: 18, color: paletteColor(context, AppTheme.primary)),
                     ),
                     items: [
                       DropdownMenuItem(
@@ -604,13 +604,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _youtubeController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'e.g. ahmedamercaller or full URL',
                       labelText: '${'settings.linked_youtube'.tr()} *',
-                      prefixIcon: const Icon(Icons.smart_display_rounded,
-                          size: 18, color: AppTheme.danger),
+                      prefixIcon: Icon(Icons.smart_display_rounded,
+                          size: 18, color: paletteColor(context, AppTheme.danger)),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -620,13 +620,13 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
                   const SizedBox(height: 6),
                   TextField(
                     controller: _streamKeyController,
-                    style: const TextStyle(
-                        color: AppTheme.textPrimary, fontSize: 13),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textPrimary), fontSize: 13),
                     decoration: InputDecoration(
                       hintText: 'rtmp://... (Optional for testing)',
                       labelText: 'settings.stream_key'.tr(),
-                      prefixIcon: const Icon(Icons.key_rounded,
-                          size: 18, color: AppTheme.textMuted),
+                      prefixIcon: Icon(Icons.key_rounded,
+                          size: 18, color: paletteColor(context, AppTheme.textMuted)),
                     ),
                   ),
                   // 12. Custom Stream Cards (Cluster 1 Task 4b).
@@ -658,8 +658,8 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
             child: ElevatedButton.icon(
               onPressed: _submitForm,
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.danger,
-                foregroundColor: AppTheme.onMedia,
+                backgroundColor: paletteColor(context, AppTheme.danger),
+                foregroundColor: paletteColor(context, AppTheme.onMedia),
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -688,8 +688,8 @@ class _StreamerEditorSheetState extends State<StreamerEditorSheet> {
       key: key,
       child: Text(
         title,
-        style: const TextStyle(
-          color: AppTheme.textPrimary,
+        style: TextStyle(
+          color: paletteColor(context, AppTheme.textPrimary),
           fontSize: 13,
           fontWeight: FontWeight.bold,
         ),

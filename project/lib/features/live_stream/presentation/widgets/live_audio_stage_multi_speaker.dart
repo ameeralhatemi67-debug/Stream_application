@@ -202,13 +202,13 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
       child: Container(
         width: double.infinity,
         height: double.infinity,
-        decoration: const BoxDecoration(
-          color: AppTheme.media,
+        decoration: BoxDecoration(
+          color: paletteColor(context, AppTheme.media),
         ),
         child: CanopyLatticeBackground(
             texture: false,
             child: ColoredBox(
-                color: CanopyGradients.entryTextScrim,
+                color: paletteColor(context, CanopyGradients.entryTextScrim),
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
@@ -220,7 +220,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         height: 140,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Canopy.leaf
+                          color: paletteColor(context, Canopy.leaf)
                               .withValues(alpha: _shouldAnimate ? 0.08 : 0.02),
                         ),
                       ),
@@ -240,8 +240,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                   horizontal: 8, vertical: 3.5),
                               decoration: BoxDecoration(
                                 color: _shouldAnimate
-                                    ? Canopy.liveCrimson
-                                    : AppTheme.surface,
+                                    ? paletteColor(context, Canopy.liveCrimson)
+                                    : paletteColor(context, AppTheme.surface),
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusSm),
                               ),
@@ -252,8 +252,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                     Icons.mic_rounded,
                                     size: 11,
                                     color: _shouldAnimate
-                                        ? AppTheme.onMedia
-                                        : Canopy.haze,
+                                        ? paletteColor(context, AppTheme.onMedia)
+                                        : paletteColor(context, Canopy.haze),
                                   ),
                                   const SizedBox(width: 4),
                                   Flexible(
@@ -263,8 +263,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                       overflow: TextOverflow.ellipsis,
                                       style: TextStyle(
                                         color: _shouldAnimate
-                                            ? AppTheme.onMedia
-                                            : Canopy.haze,
+                                            ? paletteColor(context, AppTheme.onMedia)
+                                            : paletteColor(context, Canopy.haze),
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                         letterSpacing: 0.6,
@@ -286,26 +286,26 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                 // half-transparent dark scrim, which failed both over a
                                 // bright frame and over a dark one.
                                 decoration: BoxDecoration(
-                                  color: AppTheme.media.withValues(alpha: 0.78),
+                                  color: paletteColor(context, AppTheme.media).withValues(alpha: 0.78),
                                   borderRadius:
                                       BorderRadius.circular(AppTheme.radiusSm),
                                   border: Border.all(
-                                    color: Canopy.hairline,
+                                    color: paletteColor(context, Canopy.hairline),
                                   ),
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
-                                    const Icon(Icons.people_outline_rounded,
-                                        size: 12, color: AppTheme.onMedia),
+                                    Icon(Icons.people_outline_rounded,
+                                        size: 12, color: paletteColor(context, AppTheme.onMedia)),
                                     const SizedBox(width: 4),
                                     Flexible(
                                       child: Text(
                                         '${speakers.length} ${'live.speakers_count'.tr()}',
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: AppTheme.onMedia,
+                                        style: TextStyle(
+                                          color: paletteColor(context, AppTheme.onMedia),
                                           fontSize: 12,
                                           fontWeight: FontWeight.w600,
                                         ),
@@ -339,13 +339,13 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppTheme.media,
+                            color: paletteColor(context, AppTheme.media),
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusFull),
                             border: Border.all(
                               color: _shouldAnimate
-                                  ? Canopy.leaf.withValues(alpha: 0.5)
-                                  : Canopy.hairline,
+                                  ? paletteColor(context, Canopy.leaf).withValues(alpha: 0.5)
+                                  : paletteColor(context, Canopy.hairline),
                             ),
                             boxShadow: const [
                               BoxShadow(
@@ -364,8 +364,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                 child: Text(
                                   activeSpeaker
                                       .getLocalizedName(widget.langCode),
-                                  style: const TextStyle(
-                                    color: AppTheme.onMedia,
+                                  style: TextStyle(
+                                    color: paletteColor(context, AppTheme.onMedia),
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -388,8 +388,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: _shouldAnimate
-                                        ? Canopy.paper
-                                        : Canopy.mist,
+                                        ? paletteColor(context, Canopy.paper)
+                                        : paletteColor(context, Canopy.mist),
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -399,8 +399,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                               Container(
                                 width: 3.5,
                                 height: 3.5,
-                                decoration: const BoxDecoration(
-                                  color: Canopy.haze,
+                                decoration: BoxDecoration(
+                                  color: paletteColor(context, Canopy.haze),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -409,8 +409,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                 child: CaRollingCount(
                                   value: widget.viewerCount,
                                   suffix: 'live.listening_count'.tr(),
-                                  style: const TextStyle(
-                                    color: Canopy.mist,
+                                  style: TextStyle(
+                                    color: paletteColor(context, Canopy.mist),
                                     fontSize: 12,
                                   ),
                                 ),
@@ -452,7 +452,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Canopy.leaf.withValues(
+                            color: paletteColor(context, Canopy.leaf).withValues(
                               alpha: 0.60 * (1.0 - _voiceRippleAnimation.value),
                             ),
                             width: 1.8,
@@ -475,7 +475,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Canopy.leaf.withValues(
+                            color: paletteColor(context, Canopy.leaf).withValues(
                               alpha: 0.45 * (1.0 - progress),
                             ),
                             width: 1.4,
@@ -491,13 +491,13 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                     shape: BoxShape.circle,
                     border: Border.all(
                       color:
-                          _shouldAnimate ? Canopy.leaf : Canopy.hairline,
+                          _shouldAnimate ? paletteColor(context, Canopy.leaf) : paletteColor(context, Canopy.hairline),
                       width: 2.2,
                     ),
                     boxShadow: _shouldAnimate
-                        ? const [
+                        ? [
                             BoxShadow(
-                              color: Canopy.leaf,
+                              color: paletteColor(context, Canopy.leaf),
                               blurRadius: 14,
                               spreadRadius: 2,
                             ),
@@ -515,10 +515,10 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
                           color: _shouldAnimate
-                              ? Canopy.leaf
-                              : Canopy.mint,
+                              ? paletteColor(context, Canopy.leaf)
+                              : paletteColor(context, Canopy.mint),
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.media, width: 1.5),
+                          border: Border.all(color: paletteColor(context, AppTheme.media), width: 1.5),
                         ),
                         child: Icon(
                           _shouldAnimate
@@ -526,8 +526,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                               : Icons.mic_off_rounded,
                           size: 11,
                           color: _shouldAnimate
-                              ? AppTheme.onMedia
-                              : Canopy.haze,
+                              ? paletteColor(context, AppTheme.onMedia)
+                              : paletteColor(context, Canopy.haze),
                         ),
                       ),
                     ],
@@ -547,8 +547,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
             Flexible(
               child: Text(
                 speaker.getLocalizedName(widget.langCode),
-                style: const TextStyle(
-                  color: AppTheme.onMedia,
+                style: TextStyle(
+                  color: paletteColor(context, AppTheme.onMedia),
                   fontSize: 13.5,
                   fontWeight: FontWeight.bold,
                 ),
@@ -563,8 +563,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
           width: 220,
           child: Text(
             speaker.getLocalizedRole(widget.langCode),
-            style: const TextStyle(
-              color: AppTheme.primary,
+            style: TextStyle(
+              color: paletteColor(context, AppTheme.primary),
               fontSize: 12,
               fontWeight: FontWeight.w500,
             ),
@@ -614,7 +614,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                 decoration: BoxDecoration(
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: Canopy.leaf.withValues(
+                                    color: paletteColor(context, Canopy.leaf).withValues(
                                       alpha: 0.65 *
                                           (1.0 - _voiceRippleAnimation.value),
                                     ),
@@ -631,14 +631,14 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                             shape: BoxShape.circle,
                             border: Border.all(
                               color: isSpeaking && _shouldAnimate
-                                  ? Canopy.leaf
-                                  : Canopy.hairline,
+                                  ? paletteColor(context, Canopy.leaf)
+                                  : paletteColor(context, Canopy.hairline),
                               width: isSpeaking && _shouldAnimate ? 2.0 : 1.0,
                             ),
                             boxShadow: isSpeaking && _shouldAnimate
-                                ? const [
+                                ? [
                                     BoxShadow(
-                                      color: Canopy.leaf,
+                                      color: paletteColor(context, Canopy.leaf),
                                       blurRadius: 10,
                                       spreadRadius: 1.5,
                                     ),
@@ -656,11 +656,11 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                 padding: const EdgeInsets.all(3.0),
                                 decoration: BoxDecoration(
                                   color: isSpeaking && _shouldAnimate
-                                      ? Canopy.leaf
-                                      : Canopy.mint,
+                                      ? paletteColor(context, Canopy.leaf)
+                                      : paletteColor(context, Canopy.mint),
                                   shape: BoxShape.circle,
                                   border: Border.all(
-                                    color: AppTheme.media,
+                                    color: paletteColor(context, AppTheme.media),
                                     width: 1.2,
                                   ),
                                 ),
@@ -670,8 +670,8 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                                       : Icons.mic_off_rounded,
                                   size: isSpeaking ? 9.5 : 8,
                                   color: isSpeaking && _shouldAnimate
-                                      ? AppTheme.onMedia
-                                      : Canopy.haze,
+                                      ? paletteColor(context, AppTheme.onMedia)
+                                      : paletteColor(context, Canopy.haze),
                                 ),
                               ),
                             ],
@@ -693,7 +693,7 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
                         child: Text(
                           speaker.getLocalizedName(widget.langCode),
                           style: TextStyle(
-                            color: isSpeaking ? AppTheme.onMedia : Canopy.mist,
+                            color: isSpeaking ? paletteColor(context, AppTheme.onMedia) : paletteColor(context, Canopy.mist),
                             fontSize: 12,
                             fontWeight: isSpeaking
                                 ? FontWeight.bold
@@ -716,6 +716,6 @@ class _LiveAudioStageMultiSpeakerState extends State<LiveAudioStageMultiSpeaker>
   }
 
   /// The embed exposes no level signal. This icon makes no speech-level claim.
-  Widget _buildAudioIcon({bool isSmall = false}) => const CaIcon(CaGlyph.mic,
-      color: Canopy.mist, size: CanopySize.inlineIcon);
+  Widget _buildAudioIcon({bool isSmall = false}) => CaIcon(CaGlyph.mic,
+      color: paletteColor(context, Canopy.mist), size: CanopySize.inlineIcon);
 }

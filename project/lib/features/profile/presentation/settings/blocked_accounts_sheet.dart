@@ -80,7 +80,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text((errorKey ?? 'settings.unblocked_toast').tr()),
-        backgroundColor: errorKey == null ? null : Canopy.liveCrimson,
+        backgroundColor: errorKey == null ? null : paletteColor(context, Canopy.liveCrimson),
       ),
     );
   }
@@ -101,8 +101,8 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
             children: [
               Text(
                 'settings.blocked_accounts_title'.tr(),
-                style: const TextStyle(
-                  color: Canopy.ink,
+                style: TextStyle(
+                  color: paletteColor(context, Canopy.ink),
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -110,22 +110,22 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
               const SizedBox(height: AppTheme.spaceXs),
               Text(
                 'settings.blocked_accounts_hint'.tr(),
-                style: const TextStyle(
-                    color: Canopy.slate, fontSize: 12, height: 1.4),
+                style: TextStyle(
+                    color: paletteColor(context, Canopy.slate), fontSize: 12, height: 1.4),
               ),
               if (_list.isStale && !_loading) ...[
                 const SizedBox(height: AppTheme.spaceSm),
                 Row(
                   key: const Key('blocked-accounts-stale'),
                   children: [
-                    const Icon(Icons.cloud_off_rounded,
-                        size: 16, color: AppTheme.warning),
+                    Icon(Icons.cloud_off_rounded,
+                        size: 16, color: paletteColor(context, AppTheme.warning)),
                     const SizedBox(width: AppTheme.spaceXs),
                     Expanded(
                       child: Text(
                         'settings.blocked_accounts_stale'.tr(),
-                        style: const TextStyle(
-                            color: AppTheme.warning, fontSize: 12),
+                        style: TextStyle(
+                            color: paletteColor(context, AppTheme.warning), fontSize: 12),
                       ),
                     ),
                     TextButton(
@@ -145,7 +145,7 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
                 Text(
                   'settings.blocked_accounts_empty'.tr(),
                   key: const Key('blocked-accounts-empty'),
-                  style: const TextStyle(color: Canopy.haze),
+                  style: TextStyle(color: paletteColor(context, Canopy.haze)),
                 )
               else
                 Flexible(
@@ -158,13 +158,13 @@ class _BlockedAccountsSheetState extends State<BlockedAccountsSheet> {
                       return ListTile(
                         key: Key('blocked-account-$id'),
                         contentPadding: EdgeInsets.zero,
-                        leading: const Icon(Icons.block_rounded,
-                            color: Canopy.haze),
+                        leading: Icon(Icons.block_rounded,
+                            color: paletteColor(context, Canopy.haze)),
                         title: Text(
                           (name == null || name.isEmpty)
                               ? 'settings.blocked_account_unknown'.tr()
                               : name,
-                          style: const TextStyle(color: Canopy.ink),
+                          style: TextStyle(color: paletteColor(context, Canopy.ink)),
                         ),
                         trailing: _pending.contains(id)
                             ? const SizedBox(

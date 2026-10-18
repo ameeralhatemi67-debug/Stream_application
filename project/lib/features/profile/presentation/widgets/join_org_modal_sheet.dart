@@ -51,7 +51,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.error_select_org'.tr()),
-          backgroundColor: Canopy.liveCrimson,
+          backgroundColor: paletteColor(context, Canopy.liveCrimson),
         ),
       );
       return;
@@ -61,7 +61,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.error_note_empty'.tr()),
-          backgroundColor: Canopy.liveCrimson,
+          backgroundColor: paletteColor(context, Canopy.liveCrimson),
         ),
       );
       return;
@@ -87,7 +87,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('affiliation_modal.submitted_toast'.tr()),
-          backgroundColor: Canopy.leaf,
+          backgroundColor: paletteColor(context, Canopy.leaf),
         ),
       );
     } catch (e) {
@@ -95,7 +95,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
-          backgroundColor: Canopy.liveCrimson,
+          backgroundColor: paletteColor(context, Canopy.liveCrimson),
         ),
       );
     } finally {
@@ -115,9 +115,9 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
         right: 20,
         bottom: MediaQuery.viewInsetsOf(context).bottom + 20,
       ),
-      decoration: const BoxDecoration(
-        color: AppTheme.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: paletteColor(context, AppTheme.surface),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SingleChildScrollView(
         child: Column(
@@ -130,7 +130,7 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: Canopy.hairline,
+                  color: paletteColor(context, Canopy.hairline),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -140,14 +140,14 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             // Header Title
             Row(
               children: [
-                const Icon(Icons.business_rounded,
-                    color: Canopy.liveCrimson, size: 22),
+                Icon(Icons.business_rounded,
+                    color: paletteColor(context, Canopy.liveCrimson), size: 22),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
                     'affiliation_modal.title'.tr(),
-                    style: const TextStyle(
-                      color: Canopy.ink,
+                    style: TextStyle(
+                      color: paletteColor(context, Canopy.ink),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -158,8 +158,8 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             const SizedBox(height: 6),
             Text(
               'affiliation_modal.subtitle'.tr(),
-              style: const TextStyle(
-                color: Canopy.slate,
+              style: TextStyle(
+                color: paletteColor(context, Canopy.slate),
                 fontSize: 12,
                 height: 1.35,
               ),
@@ -169,8 +169,8 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
             // Organization Directory Selector
             Text(
               'affiliation_modal.select_org'.tr(),
-              style: const TextStyle(
-                color: Canopy.ink,
+              style: TextStyle(
+                color: paletteColor(context, Canopy.ink),
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -186,11 +186,11 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? Canopy.liveCrimson.withValues(alpha: 0.12)
-                        : Canopy.mint,
+                        ? paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.12)
+                        : paletteColor(context, Canopy.mint),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(
-                      color: isSelected ? Canopy.liveCrimson : Canopy.hairline,
+                      color: isSelected ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, Canopy.hairline),
                       width: isSelected ? 1.5 : 1.0,
                     ),
                   ),
@@ -209,16 +209,16 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                               context.locale.languageCode == 'ar'
                                   ? org.fullNameAr
                                   : org.fullNameEn,
-                              style: const TextStyle(
-                                color: Canopy.ink,
+                              style: TextStyle(
+                                color: paletteColor(context, Canopy.ink),
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
                             ),
                             Text(
                               '${org.venues.length} Campus Locations • ${org.affiliatedSpeakers.length} Affiliated Speakers',
-                              style: const TextStyle(
-                                color: Canopy.haze,
+                              style: TextStyle(
+                                color: paletteColor(context, Canopy.haze),
                                 fontSize: AppTheme.captionFont,
                               ),
                             ),
@@ -226,8 +226,8 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                         ),
                       ),
                       if (isSelected)
-                        const Icon(Icons.check_circle_rounded,
-                            color: Canopy.liveCrimson, size: 20),
+                        Icon(Icons.check_circle_rounded,
+                            color: paletteColor(context, Canopy.liveCrimson), size: 20),
                     ],
                   ),
                 ),
@@ -260,8 +260,8 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
               width: double.infinity,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Canopy.liveCrimson,
-                  foregroundColor: AppTheme.onMedia,
+                  backgroundColor: paletteColor(context, Canopy.liveCrimson),
+                  foregroundColor: paletteColor(context, AppTheme.onMedia),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -269,12 +269,12 @@ class _JoinOrgModalSheetState extends State<JoinOrgModalSheet> {
                 ),
                 onPressed: _isSubmitting ? null : _submitRequest,
                 child: _isSubmitting
-                    ? const SizedBox(
+                    ? SizedBox(
                         height: 20,
                         width: 20,
                         child: HadayahLoadingIndicator(
                           strokeWidth: 2,
-                          color: AppTheme.onMedia,
+                          color: paletteColor(context, AppTheme.onMedia),
                         ),
                       )
                     : Row(

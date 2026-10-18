@@ -6,11 +6,11 @@ import '../../../core/widgets/ds/ca_navigation.dart';
 
 /// Visual shell only: callers own every selector, route and server callback.
 class OrganizationAppBar extends CaAppBar {
-  OrganizationAppBar({super.key, Widget? title, super.leading, super.actions})
+  OrganizationAppBar({required BuildContext context, super.key, Widget? title, super.leading, super.actions})
       : super(
             title: title == null ? null : _OrganizationBarTitle(child: title),
             toolbarHeight: CanopySize.appBarScaled,
-            backgroundColor: Canopy.dawn,
+            backgroundColor: paletteColor(context, Canopy.dawn),
             elevation: 0,
             compactLanguage: true,
             languageBare: true);
@@ -100,17 +100,17 @@ class OrganizationChip extends StatelessWidget {
       padding: const EdgeInsetsDirectional.symmetric(
           horizontal: AppTheme.spaceSm, vertical: AppTheme.spaceXs),
       decoration: BoxDecoration(
-          color: Canopy.mint,
+          color: paletteColor(context, Canopy.mint),
           borderRadius: BorderRadius.circular(CanopyRadius.pill)),
       child: Row(mainAxisSize: MainAxisSize.min, children: [
         CaIcon(icon,
-            color: available ? Canopy.infoTeal : Canopy.brandGreen,
+            color: available ? paletteColor(context, Canopy.infoTeal) : paletteColor(context, Canopy.brandGreen),
             size: CanopySize.inlineIcon),
         const SizedBox(width: AppTheme.spaceXs),
         Flexible(
             child: Text(label,
                 style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    color: available ? Canopy.infoTeal : Canopy.brandGreen))),
+                    color: available ? paletteColor(context, Canopy.infoTeal) : paletteColor(context, Canopy.brandGreen)))),
       ]));
 }
 
@@ -130,8 +130,8 @@ class OrganizationProgress extends StatelessWidget {
                   child: Container(
                       height: CanopySize.stepBar,
                       decoration: BoxDecoration(
-                          gradient: completed[i] ? AppGradients.pill : null,
-                          color: completed[i] ? null : Canopy.mist,
+                          gradient: completed[i] ? paletteGradient(context, AppGradients.pill) : null,
+                          color: completed[i] ? null : paletteColor(context, Canopy.mist),
                           borderRadius:
                               BorderRadius.circular(CanopyRadius.pill)))),
             ]
@@ -148,7 +148,7 @@ class OrganizationSwitcher extends StatelessWidget {
       child: Container(
           padding: const EdgeInsets.all(AppTheme.spaceMd),
           decoration: BoxDecoration(
-              color: Canopy.mint,
+              color: paletteColor(context, Canopy.mint),
               borderRadius: BorderRadius.circular(CanopyRadius.card)),
           child: Row(children: [
             const CaIcon(CaGlyph.home),

@@ -89,15 +89,15 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
 
   Color get _accentColor {
     if (widget.marker.isVideoLive) {
-      return AppTheme.danger; // Pinkish-red
+      return paletteColor(context, AppTheme.danger); // Pinkish-red
     } else if (widget.marker.isAudioLive) {
-      return AppTheme.textMuted; // Atmospheric gray
+      return paletteColor(context, AppTheme.textMuted); // Atmospheric gray
     }
     return widget.isSelected
-        ? AppTheme.primary
+        ? paletteColor(context, AppTheme.primary)
         : widget.isMine
-            ? AppTheme.accent
-            : AppTheme.borderStrong;
+            ? paletteColor(context, AppTheme.accent)
+            : paletteColor(context, AppTheme.borderStrong);
   }
 
   Widget _buildAvatarImage() {
@@ -139,14 +139,14 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
 
   Widget _buildFallbackIcon() {
     return Container(
-      color: AppTheme.surfaceAlt,
+      color: paletteColor(context, AppTheme.surfaceAlt),
       alignment: Alignment.center,
       child: Icon(
         widget.marker.isOrganization
             ? Icons.apartment_rounded
             : Icons.person_rounded,
         size: 20.0,
-        color: AppTheme.textSecondary,
+        color: paletteColor(context, AppTheme.textSecondary),
       ),
     );
   }
@@ -258,7 +258,7 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                       // clearly against any basemap.
                       border: Border.all(
                         color: widget.isSelected
-                            ? AppTheme.primary
+                            ? paletteColor(context, AppTheme.primary)
                             : primaryAccent,
                         width: widget.isSelected ? 2.2 : 1.8,
                       ),
@@ -266,7 +266,7 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                         BoxShadow(
                           color: isLive
                               ? primaryAccent.withValues(alpha: 0.45)
-                              : AppTheme.media.withValues(alpha: 0.4),
+                              : paletteColor(context, AppTheme.media).withValues(alpha: 0.4),
                           blurRadius: widget.isSelected ? 10 : (isLive ? 8 : 4),
                           spreadRadius: isLive ? 1 : 0,
                         ),
@@ -289,17 +289,17 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                         padding: const EdgeInsets.symmetric(
                             horizontal: 5.0, vertical: 1.5),
                         decoration: BoxDecoration(
-                          color: isVideo ? AppTheme.danger : AppTheme.media,
+                          color: isVideo ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.media),
                           borderRadius: BorderRadius.circular(8.0),
                           border: isAudio
                               ? Border.all(
-                                  color: AppTheme.textMuted, width: 0.8)
+                                  color: paletteColor(context, AppTheme.textMuted), width: 0.8)
                               : null,
-                          boxShadow: const [
+                          boxShadow: [
                             BoxShadow(
-                              color: AppTheme.shadow,
+                              color: paletteColor(context, AppTheme.shadow),
                               blurRadius: 4,
-                              offset: Offset(0, 1),
+                              offset: const Offset(0, 1),
                             ),
                           ],
                         ),
@@ -311,8 +311,8 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                               Container(
                                 width: 4.5,
                                 height: 4.5,
-                                decoration: const BoxDecoration(
-                                  color: AppTheme.onMedia,
+                                decoration: BoxDecoration(
+                                  color: paletteColor(context, AppTheme.onMedia),
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -321,24 +321,24 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                                 widget.marker.viewerCount > 0
                                     ? '${widget.marker.viewerCount}'
                                     : 'LIVE',
-                                style: const TextStyle(
-                                  color: AppTheme.onMedia,
+                                style: TextStyle(
+                                  color: paletteColor(context, AppTheme.onMedia),
                                   fontSize: 8.5,
                                   fontWeight: FontWeight.w700,
                                   height: 1.1,
                                 ),
                               ),
                             ] else if (isAudio) ...[
-                              const Icon(
+                              Icon(
                                 Icons.mic_rounded,
                                 size: 9.0,
-                                color: AppTheme.onMedia,
+                                color: paletteColor(context, AppTheme.onMedia),
                               ),
                               const SizedBox(width: 2.5),
                               Text(
                                 'design_ui.audio'.tr(),
-                                style: const TextStyle(
-                                  color: AppTheme.onMedia,
+                                style: TextStyle(
+                                  color: paletteColor(context, AppTheme.onMedia),
                                   fontSize: 8.0,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.3,
@@ -360,7 +360,7 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                         width: 13.0,
                         height: 13.0,
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: paletteColor(context, AppTheme.surface),
                           shape: BoxShape.circle,
                           border: Border.all(
                             color: primaryAccent,
@@ -382,13 +382,13 @@ class _SpatialStreamerMarkerState extends State<SpatialStreamerMarker>
                         width: 16,
                         height: 16,
                         decoration: BoxDecoration(
-                          color: AppTheme.accent,
+                          color: paletteColor(context, AppTheme.accent),
                           shape: BoxShape.circle,
                           border:
-                              Border.all(color: AppTheme.surface, width: 1.5),
+                              Border.all(color: paletteColor(context, AppTheme.surface), width: 1.5),
                         ),
-                        child: const Icon(Icons.star_rounded,
-                            color: AppTheme.onMedia, size: 11),
+                        child: Icon(Icons.star_rounded,
+                            color: paletteColor(context, AppTheme.onMedia), size: 11),
                       ),
                     ),
                 ],

@@ -26,7 +26,7 @@ class CaChip extends StatelessWidget {
           if (icon != null) ...[
             CaIcon(icon!,
                 size: CanopySize.inlineIcon,
-                color: color == Canopy.paper ? color : Canopy.brandGreen),
+                color: color == paletteColor(context, Canopy.paper) ? color : paletteColor(context, Canopy.brandGreen)),
             const SizedBox(width: AppTheme.spaceSm)
           ],
           Flexible(
@@ -62,14 +62,14 @@ class CaChip extends StatelessWidget {
                           constraints: const BoxConstraints(
                               minHeight: CanopySize.target),
                           decoration: BoxDecoration(
-                              color: selected ? null : Canopy.paper,
+                              color: selected ? null : paletteColor(context, Canopy.paper),
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
                               border: selected
                                   ? null
-                                  : Border.all(color: Canopy.hairline)),
+                                  : Border.all(color: paletteColor(context, Canopy.hairline))),
                           child: Stack(fit: StackFit.passthrough, children: [
-                            contents(Canopy.slate),
+                            contents(paletteColor(context, Canopy.slate)),
                             if (value > 0)
                               Positioned.fill(
                                   child: IgnorePointer(
@@ -87,9 +87,9 @@ class CaChip extends StatelessWidget {
                                                               CanopyRadius
                                                                   .pill),
                                                       gradient:
-                                                          AppGradients.pill),
+                                                          paletteGradient(context, AppGradients.pill)),
                                                   child: contents(
-                                                      Canopy.paper)))))),
+                                                      paletteColor(context, Canopy.paper))))))),
                           ])),
                     )))));
   }
@@ -192,7 +192,7 @@ class CaSegmentedTabs extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(AppTheme.spaceXs),
           decoration: BoxDecoration(
-              color: dark ? Canopy.canopy900 : Canopy.mint,
+              color: dark ? paletteColor(context, Canopy.canopy900) : paletteColor(context, Canopy.mint),
               borderRadius: BorderRadius.circular(CanopyRadius.pill)),
           child: SizedBox(
               height: height,
@@ -211,12 +211,12 @@ class CaSegmentedTabs extends StatelessWidget {
                           heightFactor: 1,
                           child: DecoratedBox(
                               decoration: BoxDecoration(
-                                  gradient: AppGradients.pill,
+                                  gradient: paletteGradient(context, AppGradients.pill),
                                   borderRadius: BorderRadius.circular(
                                       CanopyRadius.pill))))),
                 ),
                 Positioned.fill(
-                    child: row(dark ? Canopy.mist : Canopy.brandGreen,
+                    child: row(dark ? paletteColor(context, Canopy.mist) : paletteColor(context, Canopy.brandGreen),
                         interactive: true)),
                 Positioned.fill(
                     child: IgnorePointer(
@@ -227,7 +227,7 @@ class CaSegmentedTabs extends StatelessWidget {
                       curve: CanopyMotion.easeOut,
                       builder: (_, value, __) => ClipRect(
                           clipper: _ThumbClip(value!),
-                          child: row(Canopy.paper))),
+                          child: row(paletteColor(context, Canopy.paper)))),
                 ))),
               ])),
         );
@@ -287,15 +287,15 @@ class CaInput extends StatelessWidget {
         OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none);
     Widget errorRow(BuildContext context, String message) =>
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          const CaIcon(CaGlyph.alert,
-              color: Canopy.liveCrimson, size: CanopySize.inlineIcon),
+          CaIcon(CaGlyph.alert,
+              color: paletteColor(context, Canopy.liveCrimson), size: CanopySize.inlineIcon),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
               child: Text(message,
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall
-                      ?.copyWith(color: Canopy.liveCrimson))),
+                      ?.copyWith(color: paletteColor(context, Canopy.liveCrimson)))),
         ]);
     return PhoneInputGuard(
         showHint: !readOnly,
@@ -331,15 +331,15 @@ class CaInput extends StatelessWidget {
                         forceErrorText: error,
                         errorBuilder: errorRow,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: enabled ? Canopy.ink : Canopy.slate),
+                            color: enabled ? paletteColor(context, Canopy.ink) : paletteColor(context, Canopy.slate)),
                         decoration: InputDecoration(
                           hintText: hint,
                           filled: true,
-                          fillColor: Canopy.mint,
+                          fillColor: paletteColor(context, Canopy.mint),
                           hintStyle: Theme.of(context)
                               .textTheme
                               .bodyLarge
-                              ?.copyWith(color: Canopy.haze),
+                              ?.copyWith(color: paletteColor(context, Canopy.haze)),
                           isDense: true,
                           contentPadding: const EdgeInsetsDirectional.symmetric(
                               horizontal: AppTheme.spaceLg,
@@ -351,18 +351,18 @@ class CaInput extends StatelessWidget {
                           disabledBorder: rest,
                           focusedBorder: OutlineInputBorder(
                               borderRadius: radius,
-                              borderSide: const BorderSide(
-                                  color: Canopy.brandGreen,
+                              borderSide: BorderSide(
+                                  color: paletteColor(context, Canopy.brandGreen),
                                   width: CanopySize.focusWidth)),
                           errorBorder: OutlineInputBorder(
                               borderRadius: radius,
-                              borderSide: const BorderSide(
-                                  color: Canopy.liveCrimson,
+                              borderSide: BorderSide(
+                                  color: paletteColor(context, Canopy.liveCrimson),
                                   width: CanopySize.focusWidth)),
                           focusedErrorBorder: OutlineInputBorder(
                               borderRadius: radius,
-                              borderSide: const BorderSide(
-                                  color: Canopy.liveCrimson,
+                              borderSide: BorderSide(
+                                  color: paletteColor(context, Canopy.liveCrimson),
                                   width: CanopySize.focusWidth)),
                           prefixIcon: icon == null
                               ? null
@@ -446,8 +446,8 @@ class CaSwitch extends StatelessWidget {
       child: Switch(
           value: value,
           onChanged: onChanged,
-          activeThumbColor: Canopy.paper,
-          activeTrackColor: Canopy.brandGreen,
-          inactiveThumbColor: Canopy.slate,
-          inactiveTrackColor: Canopy.mist));
+          activeThumbColor: paletteColor(context, Canopy.paper),
+          activeTrackColor: paletteColor(context, Canopy.brandGreen),
+          inactiveThumbColor: paletteColor(context, Canopy.slate),
+          inactiveTrackColor: paletteColor(context, Canopy.mist)));
 }

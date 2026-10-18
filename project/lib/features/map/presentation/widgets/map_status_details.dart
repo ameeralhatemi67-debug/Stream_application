@@ -29,7 +29,7 @@ class MapAttributionRail extends StatelessWidget {
     final url =
         manifest?.attributionUrl ?? 'https://www.openstreetmap.org/copyright';
     return Material(
-      color: AppTheme.surface.withValues(alpha: 0.9),
+      color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.9),
       borderRadius: const BorderRadiusDirectional.only(
           topEnd: Radius.circular(AppTheme.radiusSm)),
       child: Row(
@@ -53,11 +53,11 @@ class MapAttributionRail extends StatelessWidget {
                       child: Text(
                         credit,
                         textDirection: TextDirection.ltr,
-                        style: const TextStyle(
-                          color: AppTheme.textSecondary,
+                        style: TextStyle(
+                          color: paletteColor(context, AppTheme.textSecondary),
                           fontSize: 12,
                           decoration: TextDecoration.underline,
-                          decorationColor: AppTheme.textSecondary,
+                          decorationColor: paletteColor(context, AppTheme.textSecondary),
                         ),
                       ),
                     ),
@@ -69,8 +69,8 @@ class MapAttributionRail extends StatelessWidget {
           IconButton(
             tooltip: 'map.details_open'.tr(),
             onPressed: onDetails,
-            icon: const Icon(Icons.info_outline_rounded,
-                size: 20, color: AppTheme.textSecondary),
+            icon: Icon(Icons.info_outline_rounded,
+                size: 20, color: paletteColor(context, AppTheme.textSecondary)),
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           ),
         ],
@@ -97,17 +97,17 @@ class MapWebOfflineHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.surface.withValues(alpha: 0.95),
+      color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.95),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
-        side: const BorderSide(color: AppTheme.border),
+        side: BorderSide(color: paletteColor(context, AppTheme.border)),
       ),
       child: Padding(
         padding: const EdgeInsetsDirectional.only(start: AppTheme.spaceMd),
         child: Row(
           children: [
-            const Icon(Icons.download_for_offline_outlined,
-                color: AppTheme.primary, size: 20),
+            Icon(Icons.download_for_offline_outlined,
+                color: paletteColor(context, AppTheme.primary), size: 20),
             const SizedBox(width: AppTheme.spaceSm),
             Expanded(
               child: Text(
@@ -115,8 +115,8 @@ class MapWebOfflineHint extends StatelessWidget {
                         ? 'map.web_offline_hint_evicted'
                         : 'map.web_offline_hint')
                     .tr(),
-                style: const TextStyle(
-                    color: AppTheme.textPrimary, fontSize: 12.5),
+                style: TextStyle(
+                    color: paletteColor(context, AppTheme.textPrimary), fontSize: 12.5),
               ),
             ),
             TextButton(
@@ -128,8 +128,8 @@ class MapWebOfflineHint extends StatelessWidget {
               IconButton(
                 tooltip: 'map.web_offline_hint_dismiss'.tr(),
                 onPressed: onDismiss,
-                icon: const Icon(Icons.close_rounded,
-                    size: 18, color: AppTheme.textSecondary),
+                icon: Icon(Icons.close_rounded,
+                    size: 18, color: paletteColor(context, AppTheme.textSecondary)),
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               ),
           ],
@@ -158,10 +158,10 @@ class MapConnectionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.surface.withValues(alpha: 0.95),
+      color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.95),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
-        side: BorderSide(color: AppTheme.warning.withValues(alpha: 0.5)),
+        side: BorderSide(color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -180,14 +180,14 @@ class MapConnectionChip extends StatelessWidget {
                         vertical: AppTheme.spaceXs),
                     child: Row(
                       children: [
-                        const Icon(Icons.cloud_off_rounded,
-                            color: AppTheme.warning, size: 18),
+                        Icon(Icons.cloud_off_rounded,
+                            color: paletteColor(context, AppTheme.warning), size: 18),
                         const SizedBox(width: AppTheme.spaceSm),
                         Expanded(
                           child: Text(
                             label,
-                            style: const TextStyle(
-                              color: AppTheme.textPrimary,
+                            style: TextStyle(
+                              color: paletteColor(context, AppTheme.textPrimary),
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -203,7 +203,7 @@ class MapConnectionChip extends StatelessWidget {
           TextButton(
             onPressed: isRetrying ? null : onRetry,
             style: TextButton.styleFrom(
-              foregroundColor: AppTheme.primary,
+              foregroundColor: paletteColor(context, AppTheme.primary),
               minimumSize: const Size(48, 48),
             ),
             child: Text(
@@ -260,10 +260,10 @@ class MapPackStatusCard extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 420),
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
-        border: Border.all(color: AppTheme.borderStrong),
+        color: paletteColor(context, AppTheme.surface),
+        border: Border.all(color: paletteColor(context, AppTheme.borderStrong)),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        boxShadow: AppTheme.mapOverlayShadow,
+        boxShadow: paletteShadows(context, AppTheme.mapOverlayShadow),
       ),
       child: Semantics(
         liveRegion: true,
@@ -274,19 +274,19 @@ class MapPackStatusCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                const Icon(Icons.map_outlined, color: AppTheme.warning),
+                Icon(Icons.map_outlined, color: paletteColor(context, AppTheme.warning)),
                 const SizedBox(width: AppTheme.spaceSm),
                 Expanded(
                   child: Text('map.pack_unavailable_title'.tr(),
-                      style: const TextStyle(
-                          color: AppTheme.textPrimary,
+                      style: TextStyle(
+                          color: paletteColor(context, AppTheme.textPrimary),
                           fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
             const SizedBox(height: AppTheme.spaceXs),
             Text(problemText(controller.problem),
-                style: const TextStyle(color: AppTheme.textSecondary)),
+                style: TextStyle(color: paletteColor(context, AppTheme.textSecondary))),
             const SizedBox(height: AppTheme.spaceSm),
             Wrap(
               spacing: AppTheme.spaceSm,
@@ -328,7 +328,7 @@ Future<void> showMapDetailsSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: AppTheme.surface,
+    backgroundColor: paletteColor(context, AppTheme.surface),
     shape: const RoundedRectangleBorder(
       borderRadius:
           BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
@@ -363,7 +363,7 @@ class _MapDetailsBody extends StatelessWidget {
   final bool backendOnline;
   final ScrollController scroll;
 
-  Widget _section(String title, List<Widget> children) => Padding(
+  Widget _section(BuildContext context, String title, List<Widget> children) => Padding(
         padding: const EdgeInsets.only(bottom: AppTheme.spaceLg),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -371,8 +371,8 @@ class _MapDetailsBody extends StatelessWidget {
             Semantics(
               header: true,
               child: Text(title,
-                  style: const TextStyle(
-                      color: AppTheme.textPrimary,
+                  style: TextStyle(
+                      color: paletteColor(context, AppTheme.textPrimary),
                       fontSize: 15,
                       fontWeight: FontWeight.bold)),
             ),
@@ -382,8 +382,8 @@ class _MapDetailsBody extends StatelessWidget {
         ),
       );
 
-  Text _body(String text) => Text(text,
-      style: const TextStyle(color: AppTheme.textSecondary, height: 1.4));
+  Text _body(BuildContext context, String text) => Text(text,
+      style: TextStyle(color: paletteColor(context, AppTheme.textSecondary), height: 1.4));
 
   @override
   Widget build(BuildContext context) {
@@ -395,8 +395,8 @@ class _MapDetailsBody extends StatelessWidget {
         controller: scroll,
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         children: [
-          _section('map.details_title'.tr(), [
-            _body(controller.isReady
+          _section(context, 'map.details_title'.tr(), [
+            _body(context, controller.isReady
                 ? (!controller.supportsWebOffline
                         ? 'map.details_pack_ready'
                         : web?.state == WebOfflineState.ready
@@ -407,10 +407,10 @@ class _MapDetailsBody extends StatelessWidget {
                     ? 'map.pack_loading'.tr()
                     : MapPackStatusCard.problemText(controller.problem)),
             const SizedBox(height: AppTheme.spaceXs),
-            _body('map.details_coverage'.tr()),
+            _body(context, 'map.details_coverage'.tr()),
             if (manifest != null && manifest.isStale(DateTime.now())) ...[
               const SizedBox(height: AppTheme.spaceXs),
-              _body('map.details_pack_stale'
+              _body(context, 'map.details_pack_stale'
                   .tr(namedArgs: {'date': manifest.dataDate})),
             ],
             if (pack != null) ...[
@@ -420,7 +420,7 @@ class _MapDetailsBody extends StatelessWidget {
                   'id': manifest!.packId,
                   'size': (pack.bytes / (1 << 20)).toStringAsFixed(1),
                 }),
-                style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
+                style: TextStyle(color: paletteColor(context, AppTheme.textMuted), fontSize: 12),
               ),
             ],
             if (!controller.isReady &&
@@ -432,8 +432,8 @@ class _MapDetailsBody extends StatelessWidget {
               ),
             ],
           ]),
-          _section('map.details_venues_title'.tr(), [
-            _body(backendOnline
+          _section(context, 'map.details_venues_title'.tr(), [
+            _body(context, backendOnline
                 ? 'map.details_venues_online'.tr()
                 : venuesUpdatedAt == null
                     ? 'map.offline_last_updated_never'.tr()
@@ -441,8 +441,8 @@ class _MapDetailsBody extends StatelessWidget {
                         .tr(namedArgs: {'time': _date(venuesUpdatedAt)})),
           ]),
           if (controller.supportsWebOffline && web != null)
-            _section('map.web_offline_title'.tr(), [
-              _body(_webText(web, pack?.bytes)),
+            _section(context, 'map.web_offline_title'.tr(), [
+              _body(context, _webText(web, pack?.bytes)),
               const SizedBox(height: AppTheme.spaceSm),
               if (web.state == WebOfflineState.preparing)
                 web.total == 0
@@ -471,8 +471,8 @@ class _MapDetailsBody extends StatelessWidget {
                   ],
                 ),
             ]),
-          _section('map.details_credits_title'.tr(), [
-            _body('map.details_credits_body'.tr()),
+          _section(context, 'map.details_credits_title'.tr(), [
+            _body(context, 'map.details_credits_body'.tr()),
             TextButton.icon(
               icon: const Icon(Icons.open_in_new_rounded, size: 16),
               label: Text(manifest?.attributionShort ?? kOsmCreditFallback),
@@ -485,13 +485,13 @@ class _MapDetailsBody extends StatelessWidget {
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text('map.details_notices'.tr(),
-                    style: const TextStyle(color: AppTheme.textPrimary)),
+                    style: TextStyle(color: paletteColor(context, AppTheme.textPrimary))),
                 children: [
                   SelectableText(
                     controller.notice!,
                     textDirection: TextDirection.ltr,
-                    style: const TextStyle(
-                        color: AppTheme.textSecondary, fontSize: 12),
+                    style: TextStyle(
+                        color: paletteColor(context, AppTheme.textSecondary), fontSize: 12),
                   ),
                 ],
               ),
