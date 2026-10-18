@@ -25,7 +25,10 @@ class IosSupportContact extends StatelessWidget {
       context: context,
       builder: (context) => AlertDialog(
         title: Text('ios_review.contact_support'.tr()),
-        content: const SelectableText(AppIdentity.supportEmail),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: AppTheme.spaceLg * 3),
+          child: const SelectableText(AppIdentity.supportEmail),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -52,8 +55,12 @@ class IosSupportContact extends StatelessWidget {
             icon: const Icon(Icons.mail_outline_rounded),
             label: Text('ios_review.contact_support'.tr()),
           ),
-          SelectableText(AppIdentity.supportEmail,
-              style: Theme.of(context).textTheme.bodySmall),
+          ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: AppTheme.spaceLg * 3),
+            child: SelectableText(AppIdentity.supportEmail,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
+          ),
         ],
       ),
     );

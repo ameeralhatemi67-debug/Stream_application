@@ -18,7 +18,7 @@ Draft: 2026-10-17. Derived from store/listing_draft_ar_en.md, store/data_safety.
 | Copyright | 2026 <owner-confirmed rights holder>; do not invent an entity or SKU |
 | Support URL | https://stream-application-ten.vercel.app/about.html — BLOCKED by ESC-3 |
 | Privacy URL | https://stream-application-ten.vercel.app/privacy.html — BLOCKED by ESC-3 |
-| Public deletion URL | https://stream-application-ten.vercel.app/delete-account.html — old branding, ESC-3 |
+| Public deletion URL | https://stream-application-ten.vercel.app/delete-account.html — current Hadayah branding in committed source; iOS wording/public deployment unverified, ESC-3 |
 | Optional marketing URL | https://stream-application-ten.vercel.app |
 | Support contact | AppIdentity.supportEmail; owner maintains the inbox |
 
@@ -41,3 +41,14 @@ The counts exclude headings and surrounding blank lines. Keywords are limited in
 
 Sources: [Apple app information](https://developer.apple.com/help/app-store-connect/reference/app-information/app-information/), [platform metadata limits](https://developer.apple.com/help/app-store-connect/reference/app-information/platform-version-information), [app privacy](https://developer.apple.com/app-store/app-privacy-details/), [age definitions](https://developer.apple.com/help/app-store-connect/reference/app-information/age-ratings-values-and-definitions/), [screenshot specifications](https://developer.apple.com/help/app-store-connect/reference/app-information/screenshot-specifications/), retrieved 2026-10-17. Recheck at the eventual submission date.
 
+
+## W22 reconciliation, 2026-10-18
+
+All seven files re-read against current catalogs and legal drafts. Apple or
+Google sign-in is conditional on completed native/provider gates. Default iOS
+has no push, channel OAuth, phone publishing or purchase flow. Public source is
+Hadayah-branded, but hosted delivery has not been checked. Review notes now name
+Privacy Policy, Download My Data and Delete My Account accurately and explain
+fresh Apple authorization, refusal/account-kept and email-for-blocking-question
+limits. No support deletion service is promised. No listing, screenshots or
+Connect form has been published. See ../EXPORT_COMPLIANCE.md before upload.

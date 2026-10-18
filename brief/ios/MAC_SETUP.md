@@ -35,7 +35,7 @@ signing build settings. W13 fixes the first error before starting another gate.
 
 | File or group | How it reaches the Mac |
 |---|---|
-| brief/ios/IOS_PLAN_V2.md; decisions-bearing IOS_LEDGER.md | Plan is currently untracked and ledger has owner/manager edits. Owner explicitly commits/transfers the intended versions before resuming. W21 does not stage them. |
+| brief/ios/IOS_PLAN_V2.md; decisions-bearing IOS_LEDGER.md | Plan is currently untracked; owner selects and explicitly commits/transfers it. W22 commits the current ledger with the manager verdicts. Confirm both intended versions reached the Mac before resuming. |
 | IOS_PLAN.md and CODEX_PROMPT_V2/V3.md, CODEX_START_PROMPT.md, OPUS_START_PROMPT.md | Untracked historical/manager prompts. Owner selects what to commit/transfer; v2 plan governs. |
 | project/dart_define.local.json | Ignored runtime config. Owner securely copies it by hand for configured interactive runs; never print or commit its contents. Example defines suffice for the documented unsigned compile gate. |
 | Real evidence and device matrix, if already created locally | Owner transfers only relevant non-secret observations/screenshots and preserves existing rows; do not invent pass results. |

@@ -34,5 +34,7 @@ Discover participating organizations, their public pages, teams, venues and sche
 YOUR ACCOUNT AND SAFETY
 Browse and watch as a guest. Sign in with Apple or Google for chat, follows and saved content. Report messages, block users and manage your account and privacy in Settings.
 
+An Apple-linked account is deleted inside the iOS app with fresh Apple authorization. If deletion is blocked, the account has not been deleted; email support to ask what is blocking it. Support cannot complete deletion by email alone. Phone publishing, channel connection and push notifications are not available in this iOS release.
+
 Hadayah Live uses YouTube API Services and the YouTube player. Use of these services is subject to the YouTube Terms of Service: https://www.youtube.com/t/terms
 

@@ -224,7 +224,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     : 'auth_welcome.card_subtitle')
                                 .tr(),
                             style: const TextStyle(
-                              color: AppTheme.textSecondary,
+                              color: AppTheme.textPrimary,
+                              fontWeight: FontWeight.w500,
                               fontSize: 12,
                               height: 1.4,
                             ),
@@ -288,7 +289,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                             fontWeight: FontWeight.bold,
                                             fontSize: 14,
                                           ),
-                                          overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
                                     ],
@@ -301,7 +301,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             SignInWithAppleButton(
                               key: const Key('welcome-apple'),
                               text: 'auth_welcome.btn_apple'.tr(),
-                              height: AppTheme.space2Xl * 2,
+                              height: MediaQuery.textScalerOf(context)
+                                  .scale(AppTheme.space2Xl * 2)
+                                  .clamp(AppTheme.space2Xl * 2 + AppTheme.spaceLg,
+                                      double.infinity),
                               style: SignInWithAppleButtonStyle.whiteOutlined,
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
@@ -343,7 +346,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                       fontWeight: FontWeight.w600,
                                       fontSize: 13,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],
@@ -399,7 +401,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                     ),
-                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ),
                               ],

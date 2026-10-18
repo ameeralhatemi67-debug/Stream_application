@@ -8,8 +8,9 @@ Updated 2026-10-17, W5. Follow `IOS_PLAN_V2.md`. Paid enrollment remains deferre
 
 Apple-linked accounts can only be fully deleted inside the iOS app with fresh
 Apple authorization and successful revocation. Support cannot complete deletion
-by email alone. Support must explain this and offer assisted in-app deletion,
-including help resolving restrictions first. Do not request Apple passwords,
+by email alone. The account has not been deleted if a required step is blocked.
+Users can email support to ask what is blocking deletion. No support deletion
+service is promised. Do not request Apple passwords,
 authorization codes or tokens by email.
 
 The owner still needs to decide whether to add a break-glass support function in

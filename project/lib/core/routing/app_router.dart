@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPage;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -40,6 +41,9 @@ class AppRouter {
   /// [GoRouterState.extra]); without one it is the regular page push.
   static Page<void> _canopyPage(
       BuildContext context, GoRouterState state, Widget child) {
+    if (Theme.of(context).platform == TargetPlatform.iOS) {
+      return CupertinoPage<void>(key: state.pageKey, child: child);
+    }
     final origin = state.extra is Rect ? state.extra as Rect : null;
     return CustomTransitionPage<void>(
         key: state.pageKey,

@@ -6,7 +6,7 @@ import '../../../core/widgets/ds/ca_fields.dart';
 import '../../../core/widgets/ds/ca_feedback.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
 import '../../../core/widgets/ds/ca_navigation.dart';
-import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
+import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -456,10 +456,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _roomProvider?.removeListener(_syncRoomConnection);
     _stopRoom();
     _chatTick.dispose();
-    // Always restore portrait + the normal system chrome, even if the user
-    // backed out of the room while still in fullscreen landscape -- leaving
-    // the app locked to landscape after this screen is gone would strand
-    // every other screen sideways.
+    // Restore iOS viewer orientation freedom and normal system chrome;
+    // Android keeps its existing portrait return policy.
     _restorePortraitChrome();
     _tabController.dispose();
     _chatTextController.dispose();
@@ -470,7 +468,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   }
 
   void _restorePortraitChrome() {
-    SystemChrome.setPreferredOrientations(const [DeviceOrientation.portraitUp]);
+    SystemChrome.setPreferredOrientations(
+        !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+            ? const [
+                DeviceOrientation.portraitUp,
+                DeviceOrientation.landscapeLeft,
+                DeviceOrientation.landscapeRight,
+              ]
+            : const [DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
   }
 
@@ -946,17 +951,20 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               if (!_isFullscreen)
                 Flexible(flex: 0, child: boundedHeader(constraints)),
             ]));
+    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     final single = LayoutBuilder(
         builder: (context, constraints) => Column(children: [
               ConstrainedBox(
                   constraints:
-                      BoxConstraints(maxHeight: constraints.maxHeight * .45),
+                      BoxConstraints(
+                          maxHeight: constraints.maxHeight *
+                              (keyboardOpen ? .25 : .45)),
                   child: AnimatedSize(
                       duration: CanopyMotion.chipIn,
                       curve: CanopyMotion.easeOut,
                       alignment: Alignment.topCenter,
                       child: viewport(false))),
-              if (!_isFullscreen) boundedHeader(constraints),
+              if (!_isFullscreen && !keyboardOpen) boundedHeader(constraints),
               if (!_isFullscreen) Expanded(child: panel),
             ]));
     return Scaffold(
@@ -1404,7 +1412,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
   Widget _buildCinemaTabPanel(
           AppProvider appProvider, StreamerModel streamer, String langCode) =>
-      ColoredBox(
+      MediaQuery.viewInsetsOf(context).bottom > 0 && _tabController.index == 0
+          ? _buildChatTabView()
+          : ColoredBox(
           color: Canopy.forestDeep,
           child: LayoutBuilder(
               builder: (context, constraints) => Column(children: [
@@ -1541,6 +1551,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         children: [
                           ListView.builder(
                             controller: _chatScrollController,
+                            keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                             physics: const AlwaysScrollableScrollPhysics(
                               parent: BouncingScrollPhysics(),
                             ),
@@ -1576,7 +1587,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               // list always keeps at least a fifth of the panel.
               ConstrainedBox(
                 constraints:
-                    BoxConstraints(maxHeight: constraints.maxHeight * 0.45),
+                    BoxConstraints(
+                        maxHeight: constraints.maxHeight *
+                            (MediaQuery.viewInsetsOf(context).bottom > 0
+                                ? 0.7
+                                : 0.45)),
                 child: SingleChildScrollView(child: _buildChatComposer()),
               ),
             ],
@@ -1957,6 +1972,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               child: TextField(
                   controller: _chatTextController,
                   focusNode: _chatFocus,
+                  onTapOutside: (_) => _chatFocus.unfocus(),
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium

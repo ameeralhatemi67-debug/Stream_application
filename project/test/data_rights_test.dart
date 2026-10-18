@@ -46,8 +46,33 @@ void main() {
       expect(texts['account_restricted'], contains(AppIdentity.supportEmail));
       expect(texts['storage_cleanup_required'],
           contains(AppIdentity.supportEmail));
-      expect(texts.values.toSet().length, texts.length,
-          reason: 'each refusal has its own explanation');
+      const appleCodes = [
+        'apple_revocation_required',
+        'apple_revocation_unavailable',
+        'apple_revocation_failed',
+      ];
+      for (final code in appleCodes) {
+        // These refusals intentionally share the W22 factual guidance.
+        expect(texts[code], texts[appleCodes.first]);
+        expect(texts[code], contains('Apple'));
+        expect(texts[code], contains('iOS'));
+        expect(texts[code], contains(AppIdentity.supportEmail));
+        expect(
+            texts[code],
+            contains(locale.languageCode == 'ar'
+                ? 'لم يُحذف حسابك'
+                : 'Your account has not been deleted'));
+        expect(
+            texts[code],
+            contains(locale.languageCode == 'ar'
+                ? 'للسؤال عمّا يمنع الحذف'
+                : 'to ask what is blocking it'));
+      }
+      final otherRefusals =
+          texts.entries.where((entry) => !appleCodes.contains(entry.key));
+      expect(otherRefusals.map((entry) => entry.value).toSet().length,
+          otherRefusals.length,
+          reason: 'other refusals retain their specific next steps');
     });
   }
 }

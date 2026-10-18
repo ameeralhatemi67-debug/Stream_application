@@ -365,7 +365,7 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
                 .read<AppProvider>()
                 .refreshCatalogIfOlderThan(Duration.zero),
             child:
-                ListView(padding: EdgeInsetsDirectional.fromSTEB(context.windowInset, AppTheme.spaceSm, context.windowInset, AppTheme.space2Xl), children: [
+                ListView(keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag, padding: EdgeInsetsDirectional.fromSTEB(context.windowInset, AppTheme.spaceSm, context.windowInset, AppTheme.space2Xl), children: [
               const ConnectivityBanner(),
               if (!inlineSearch) ...[
                 search(),

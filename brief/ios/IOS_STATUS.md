@@ -1,139 +1,66 @@
 # iOS build status
 
-Plan: `IOS_PLAN_V2.md`. History: `IOS_PROGRESS.md`. Decisions/verdicts: `IOS_LEDGER.md`.
+Current contract: IOS_PLAN_V2.md. History: IOS_PROGRESS.md. Manager verdicts:
+IOS_LEDGER.md. Updated 2026-10-18 for W22 pre-Mac completion.
 
 ## Snapshot
 
-| Field | Value |
+| Field | Current state |
 |---|---|
-| Updated | 2026-10-18, Codex; W21 pre-Mac hardening (see IOS_PROGRESS.md) |
-| Track | A, Windows; Mac not available |
-| Resume | Hard stop: physical Mac or real CI log for W13 / M1–M3 |
-| Progress | Original plan 18 / 20 complete; W21 source/host work complete; W11/W13 and native gates remain |
-| Evidence | W19/W20 and publisher Dart E1 mocked/host; native shell, Apple capability and phone media E0. No native compile/run, E2, E2S, E3 or E4. |
-| Mac / iPhone | Mac arriving, ETA unknown; iPhone availability unknown |
-| Apple enrollment | Deferred by owner, D4; Debug/free-team builds must exclude paid capabilities |
-| Usage policy | No cap; owner update 2026-10-17. Historical meters are informational. |
-| Latest checks | W21: flutter analyze 0 issues (31.2s); full flutter test --reporter expanded 1,261 passed / 0 failed / 0 skipped (04:34); targeted iOS matrix 96/96; Edge npm test 16/16; python -B project/ios/Publisher/test_configure.py 4/4; doctor fixtures 6/6, Bash syntax and 1,897-key EN/AR symmetry pass. 65 tracked Android/web files inventoried; tracked diff empty. SQL/Swift execution not performed. |
+| Track | Windows source/host work; no Mac/iPhone run |
+| Latest source | W21 50a9516; W22 master^{/complete W22 pre-Mac hardening} after commit |
+| Evidence ceiling | Dart/host E1; Swift/native E0. No E2/E2S/E3/E4 |
+| Current verification | Final analyzer 0 issues (45.4s); full Flutter 1,463 passed / 0 failed / 0 skipped (05:17); Edge 16/16; configure helper 4/4; CI fixtures 3/3; doctor fixtures 6/6. 1,898 EN/AR keys symmetric; viewer isolation and 65 Android/web file hashes pass. |
+| Original plan | 18/20 source orders complete; W11 partial for public/native/legal acceptance, W13 awaits a real native log |
+| Publishing default | Off. Viewer has no publisher package references, native flag, camera/mic purposes or background audio |
+| Apple enrollment | Deferred, D4. No paid enrollment needed for unsigned/Simulator or free-team Debug builds |
+| Usage | Owner removed caps; no budget-based stop |
 
-## Work orders
+## W22 result by part
 
-| WO | Title | Status | Commit selector or hash | Checkpoint |
-|---|---|---|---|---|
-| W1 | Generate ios/ | DONE | 5605451 | C1 |
-| W2 | Identity | DONE | 88c65a0 | C1 |
-| W3 | Info.plist | DONE | 3214951 | C2 |
-| W4 | Privacy manifest | DONE | d6e6278 | C2 |
-| W5 | URL scheme and deep links | DONE | 5c4dcbd | C2 |
-| W6 | Firebase inert on iOS | DONE | 72802e5 | C2 |
-| W7 | WKWebView / YouTube audit | DONE | 580dc75 | C2 |
-| W8 | Branch audit and gating | DONE | 0123921 | C3 |
-| W9 | Sign in with Apple | DONE | f715230 | C3 |
-| W10 | iOS-override tests | DONE | 4fa027b | C3 |
-| W11 | App Review compliance | PARTIAL — public delivery / native verification | 4923c13 | C3 |
-| W12 | Codemagic config | DONE | d35721d | C4 |
-| W13 | Compile-fix loop | WAITING — real CI/Mac log | a3da856 | C4 |
-| W14 | App Store pack | DONE | d9f33e2 | C4 |
-| W15 | Truth reconciliation | DONE | 5f250f3 | C4 |
-| W16 | Mac setup runbook | DONE | 6b667f4 | C4 |
-| W17 | Phone publisher | DONE | 63b288f; c4c81c2 (native); afd862d (review) | Track B |
-| W18 | Push spec | DONE | bd442c8 | Track B |
-| W19 | Apple deletion revocation | DONE | d5e4b6b | §12 |
-| W20 | Legal drafts / public gaps | DONE | a0ebf8d | §12 |
-| W21 | Pre-Mac hardening A–G | DONE, source/host scope | master^{/complete W21 pre-Mac hardening} | E1 host / E0 Swift |
-| M1–M5 | Mac track | WAITING for physical Mac | | C5/C6 |
-
-Resolve a commit selector with `git rev-parse '<selector>'`.
-
-## Evidence by feature
-
-| Feature | Level claimed | Limit |
+| Part | Deliverable | Limit |
 |---|---|---|
-| iOS native shell | E0 | Implemented, not run on iOS; CocoaPods, bundle sa.hadayah.streamerapp, target 15.0, iPhone only. |
-| iOS identity | E0 | Implemented, not run on iOS. Opaque 1024px icon; dark launch uses AppTheme.media #243536. |
-| Discovery/watch/chat/map/profile shared Dart | E1 host baseline | Windows tests only; no iOS runtime proof. |
-| WKWebView playback | E0 | Existing settings audited against official WKWebView 3.25.1 source. Inline/autoplay/JS/referrer/runtime behavior unverified on iOS. |
-| Google redirect | E0 | Custom scheme registered; app_links owns auth callback. Hosted allowlist and cold/warm return unverified. |
-| Sign in with Apple | E1 host exchange tests; E0 native capability | Native button + nonce exchange implemented; Release/Profile entitlement only. Paid provider/device flow deferred; Debug has no entitlements. |
-| Phone publishing | E0 native / E1 mocked Dart | Implemented, not run on iOS. Default-off gate and direct-entry permission guard; explicit SwiftPM opt-in, actor capture/static IDR/background intent/drop detection; Dart owns bounded authorization/retry with transport-only pause. Native compilation and E3 matrix pending. |
-| Push | E0 spec; E1 host exclusion | W18 spec complete, ESC-4 future backend migration. iOS Firebase remains disabled; no APNs/plist/background change and no native delivery proof. |
-| Location and gallery permissions / native localization | E0 | Foreground location/gallery for default viewer. Experimental alternate publisher plist adds camera/microphone/audio mode only on opt-in; no native permission proof. [AUDIT P1 fixed 2026-10-18: purposes moved to opt-in Runner/PublisherStrings, swapped by configure.py; viewer strings carry only name/location/photo.] |
-| App privacy manifest | E0 | Default viewer: 11 linked functionality data types, no tracking; reasons CA92.1/C617.1. Opt-in publisher variant adds AudioData (12 rows); video extends PhotosOrVideos. Inactive until flag on; packaged report unverified. |
-| HTTPS organization invitations | Deferred | Open in browser. No Associated Domains entitlement or non-auth link consumer; future owner plan in OWNER_STEPS_IOS.md. |
-| iOS channel connection | E1 host guard | UI notice plus service rejection before backend access. Android/web flow preserved; no iOS OAuth channel flow. |
-| iOS platform adaptation tests | E1 Windows target-platform override | Apple iOS/Android EN/AR matrix, consent/error/cancel/paused signup, channel UI guard, Apple Maps/fallback, actual provider ios identity path. No native plugin runtime proof. |
-| App Review legal / UGC / deletion | E1 host UI; submission BLOCKED | W19 revocation source E1 mocked; W20 complete bilingual legal draft/readers E1. Counsel approval, hosted legal record/public-page deployment, SQL/provider/device behavior and submission remain pending. |
-| Pre-Mac compile workflow | E0 configuration; E1 Windows baseline | Manual-only Codemagic YAML, Flutter 3.41.2, unsigned release/example defines. No CI job, no E2 claim. |
-| App Store pack | E0 drafts | Seven files: EN/AR copy, privacy mapping, age questionnaire, review notes and both requested screenshot size plans. No images, account form or upload; W11 blockers carried forward. |
-| Mac handoff | E0 runbook / host fixtures | M1–M3 doctor command is non-fatal; checked Xcode iOS/CocoaPods rows are required. Six host fixtures and Bash syntax check passed. Version/source/signing/build/matrix gates retained; no Mac execution. |
-| Apple deletion revocation | E1 host/mocked; SQL source/tests only | W19 proof binds updated_at, last_sign_in_at and SHA-256 identity-data hash. Current post-sheet session token and server flag precedence covered by mocked Dart tests. 41 pgTAP assertions written for guard/grants/expiry/stale proof/mixed providers; unexecuted. No SQL/hosted/provider/iPhone proof. |
+| A, W21-1 | EN/AR factual Apple deletion refusals; platform-neutral restricted message plus conditional Apple sentence. Server identity flag stays authoritative. Legal sections 7/9, public gap and owner instructions reconciled. Apple/non-Apple restricted and localized result tests. | Blocker corrected in source; no support deletion service or backend bypass added. Finding 3 remains copy done, design decision open. |
+| B, W21-2 | PLAY_COPY_IMPACT.md records exact-search results and file:line hits for related Play claims. | No root store/, brief/launch/ or public-web edits. Screenshot pixels not searched. |
+| C | ios_layout_sweep_b_test.dart adds both landscapes, keyboard 336, 2x/3x text, all individual wizard steps, public profiles/organizations, notifications/editor and three iOS-gated notices across EN/AR. Portrait cases use all three iPhone sizes. | Host geometry/interaction only. No dedicated follows-list screen exists; actual profile follow controls and their collection are exercised. |
+| D | All three Flutter accessibility guidelines on welcome, chat actions, scrolling Settings and delete dialog at three sizes in EN/AR. Fixed support selection target and small-text contrast; Apple button preserves prominence with wrapping Google labels. | No VoiceOver/Dynamic Type/native-sheet certification. |
+| E | IOS_UX_AUDIT.md; Cupertino stack pages/back gesture, readable dark status icons, iOS orientation restore, keyboard-safe composer, outside/drag dismissal, body-bound/scaled return chip and iOS text scaling. | Native gestures, indicators, keyboard, haptics, idle timer/background need device. |
+| F | Two manual Codemagic unsigned workflows, Flutter 3.41.2, latest stable Xcode with enforced Xcode/iOS SDK 26+ floor; publisher enable/pod/build/disable and clean ios diff. CI_OWNER_STEPS.md and first-error excerpts. | YAML/Bash + fake-tool fixtures only. Neither workflow has run. No E2. |
+| G | EXPORT_COMPLIANCE.md inventories TLS, SDK crypto and standard hashes, with owner-confirmed questionnaire recommendations. iOS store pack matches deletion and viewer-only scope. | Info.plist untouched. Export classification/live Connect answers, counsel and actual store forms remain owner work. |
+| H | Fresh analyzer/full Flutter/Edge/helper checks and isolation greps recorded in PROGRESS at completion. | No SQL, hosted, native compile or device execution. |
 
-## Blockers and owner actions
+## Preserved evidence and gates
 
-| ID | Who | Action |
-|---|---|---|
-| O1 | Owner | Paid Apple enrollment deferred (D4). Needed for Apple capability/device testing, TestFlight and App Store submission. |
-| O2 | Owner | Provide Mac access when it arrives and an iPhone when available; follow MAC_SETUP.md. Owner handles local account/license/trust/define-file steps. No paid enrollment needed for Simulator/unsigned build or free-team Debug device install. |
-| O3 | Owner / Claude | W20 in-app draft complete at E1. Owner/counsel approve; Claude handles iOS public copy gaps and owner redeploys the existing committed pages (5991d38) before SPA fallback. PUBLIC_PAGES_GAPS.md and OWNER_STEPS_IOS.md have concrete deltas and content acceptance. No web edits/live access this round. |
-| O4 | Owner | Verify existing Supabase OAuth callback allowlist, later run cold/warm Google return; exact steps in OWNER_STEPS_IOS.md. No hosted settings changed. |
-| O5 | Owner / scoped future work | After paid enrollment: host AASA, implement invite link consumer, attach Associated Domains only to paid builds and verify on device. Deferred per D4. |
-| O6 | Owner, later paid activation | Apple App ID/capability and Supabase Apple provider setup; native bundle ID audience, optional browser Services ID/key/secret rotation. Exact deferred steps in OWNER_STEPS_IOS.md. |
-| O7 | Owner, backend deployment / later paid verification | W19 source complete; ESC-2 resolved at E1 mocked. Audit/deploy only the new function/secrets/migration, verify SQL guard/grants and real revocation/deletion with paid iPhone. OWNER_STEPS_IOS.md contains commands, secret names and ordered acceptance. |
-| O8 | Owner, optional before Mac | Push and manually run Codemagic ios-compile-check; supply non-secret first-error logs or successful native build evidence. CI_OWNER_STEPS.md and OWNER_STEPS_IOS.md contain exact steps. Skip if Mac available. |
-| O9 | Owner, at submission prep | Confirm actual privacy purposes/provider data, age/content answers, rights holder/content rights, hosted flags and review accounts; capture genuine iOS screenshots and enter metadata only after W11/native/paid gates. OWNER_STEPS_IOS.md and store/README.md have steps. |
-| O10 | Owner / Mac + iPhone | W17 source ready E0 native/E1 mocked; keep flag off. First run viewer M1–M3, then follow IOS_PUBLISHER_HANDOFF.md opt-in/rollback and E3 media matrix. No paid capability needed for free-team Debug camera/mic; do not ship before E3/privacy review. |
-| O11 | Owner / Claude, deferred Track B | ESC-4: decide separate push migration/implementation later. Both backend platform validations and both client registration labels need ios; APNs/Firebase setup needs paid owner action. IOS_PUSH_SPEC.md and OWNER_STEPS_IOS.md contain scope and acceptance tests. W18 spec is complete. |
+| Feature / gate | Current evidence and next action |
+|---|---|
+| Native shell, bundle and permissions | E0; sa.hadayah.streamerapp, iPhone/iOS 15.0, Debug without paid entitlements. First compile via CI/Mac. |
+| Shared viewer, playback, maps and auth | Dart E1; WKWebView playback/referrer/150/152/153 behavior, Google cold/warm return and native permission prompts need Simulator/iPhone. |
+| Apple sign-in | Host nonce/exchange/availability tests E1; capability/provider/private-relay and real login/revocation need paid setup and iPhone. |
+| W19 deletion | E1 mocked Edge/Dart. Identity version includes updated_at, last_sign_in_at and identity-data hash. SQL guard/proof expiry/grants and 41 pgTAP assertions remain UNEXECUTED. Owner separately audits/deploys and verifies real provider behavior. |
+| W20 legal/public pages | Complete bilingual draft, v1.1.0-ios-draft; counsel approval, hosted legal record and public deployment remain open. Existing public source is Hadayah-branded but still needs iOS copy deltas. |
+| W17 publisher | E0 Swift, E1 mocked Dart. HaishinKit 2.2.5/Logboard 2.6.0 opt-in Runner SwiftPM; Flutter plugins remain CocoaPods, pubspec SwiftPM setting false. Original Dart/native commits remain separate. No SDK resolution or compile result. |
+| W21-3 / recovery findings 4/5 | Real calls/Siri/routes, fallback liveness, background/retry/capture cleanup remain iPhone gates. Local audio submission is not upstream-delivery proof. |
+| Privacy manifest | W21 source audit E1, native packaging E0. CA92.1/C617.1 unchanged; inspect resolved Pods/native assets and archive privacy report on Mac, including package_info_plus. |
+| Push / ESC-4 | Spec only. iOS Firebase/APNs/channel OAuth remain gated. No new push backend or platform registration label change. |
+| Invitations | HTTPS opens browser. Associated Domains/AASA and native non-auth invitation consumer remain deferred. |
+| App Store pack | Draft only; no screenshots, account forms, signed archive/upload or approval. Confirm data purposes, third-party collection, age/content answers and actual review fixtures. |
+| Support break-glass decision | Open. Current guard keeps Apple accounts when authorization/revocation is blocked. A later service-only override would need a separately authorized design, abuse/audit/retention controls and Apple/counsel review. |
 
-Account-gated steps do not block unrelated Windows work.
+## Owner next steps
 
-## Next three steps
+1. Review/push the intended commit yourself when ready. W22 includes the ledger
+   and manager verdicts; IOS_PLAN_V2.md and selected prompts are still untracked
+   owner transfer/commit choices. Keep the unrelated icon and draft files out.
+2. Manually run viewer CI, then optional publisher compile, or follow MAC_SETUP.md
+   M1-M3 on the arriving Mac. Supply the first actual error context and versions.
+   W13 fixes real errors before broad native changes. CI is never auto-started.
+3. After viewer compilation, run Simulator and iPhone matrices. Keep publisher
+   off before its E3/privacy gates. Debug must retain no paid entitlement.
+4. Separately approve/audit/deploy W19, execute SQL tests in an authorized database,
+   verify real revocation/deletion and provider account switching; owner verifies
+   OAuth allowlist without disturbing Android/web entries.
+5. Owner/Claude/counsel resolve public legal delivery, support design, privacy,
+   export/territories, content rights and review accounts before submission.
 
-1. Owner transfers the intended master commits plus manager plan/ledger documents to the Mac when available, then runs MAC_SETUP.md M1–M3 with the publisher off. A supplied CI/Mac log takes priority under W13.
-2. Owner audits/deploys W19 function/secrets/new migration and verifies SQL/grants/provider deletion; owner/counsel/Claude approve and deliver matching W20 legal/public text.
-3. After viewer compilation, optionally activate W17 per IOS_PUBLISHER_HANDOFF.md and execute the iPhone E3 matrix. Paid Apple sign-in/distribution and deferred push remain separate owner gates.
-
-## Audit notes and verification limits
-
-- C1 (W1/W2) and C2 (W3–W7) await Claude audit. No iOS compilation or evidence promotion.
-- Initial SHA-256 inventory was written to a sandbox temporary directory and could not be recovered after that process ended. Generation has a clean tracked Android/web diff; the persistent post-generation inventory covers 90 files (77 Android, 13 web). Do not claim a pre-generation SHA comparison.
-- Flutter create also emitted an unrelated sample widget test and replaced web/Windows metadata entries. The new sample was removed and original metadata entries restored before testing.
-- flutter_launcher_icons 0.14.4 rewrites unrelated asset-symbol settings in project.pbxproj. Restored to W1 during W2; inspect that diff after future regeneration.
-- W8 widget tests must reset debugDefaultTargetPlatformOverride in the widget body finally, in addition to tearDown; Flutter verifies foundation invariants before ordinary tearDown. Keep this pattern in W9/W10.
-- Owner removed every usage cap and soft stop on 2026-10-17. Do not interpret older meter/cap text as a stop condition.
-- Apple plugin 8.1.0 is the newest solver-compatible version for Flutter 3.41.2/Dart 3.11.0; only three new lockfile entries, no existing package updates. Native/plugin compilation remains pending.
-- W10 found the Arabic Google button was 61px high. Apple is now 64px (AppTheme tokens); the EN/AR test checks it remains at least as tall and fully localized. Android auth UI remains unchanged.
-- C3 scoped sweep is committed for audit; W11 remains PARTIAL because ESC-2/ESC-3 are real submission blockers. Continue unrelated Windows work.
-- W13 has zero native compile attempts and no real failure log. It is waiting for O8 or Mac access; do not preemptively patch/remove native plugins or award E2.
-- W15 withdrew ADR-006's universal iOS playback claim, corrected its WKWebView API description, labeled historical Dart/SQL evidence separately and added the HTTPS invite limitation in all four allowed documents. Native E0 remains.
-- C4 Windows artifacts are ready for audit. W13 native compilation is still blocked; no E2 inferred from CI YAML, store copy, truth correction or runbook.
-- 2026-10-18 round follows §12: W17's W11 dependency withdrawn; W19 backend source authorized only for Apple deletion; W20 legal fallback authorized; push migration remains forbidden.
-- W19 fixed a test-fixture issue: installed PostgREST expects http.Response.request. Mock responses now carry request metadata. Unrelated AppProvider formatter churn was removed; only deletion logic/blocker names changed.
-- ESC-2 resolved at E1 mocked/source scope. Database proof validity is ten minutes and tied to current identity version; SQL guard/grants are unexecuted and real provider/device behavior remains pending.
-- W20 complete default terms/guidelines/privacy at v1.1.0-ios-draft, marked for counsel review. No unverified PDPL compliance/instant deletion/ad-free promises in the draft text. [AUDIT P2 fixed 2026-10-18: settings.view_privacy/view_privacy_subtitle relabelled neutrally in en/ar.] Hosted legal content not overwritten; public source pages untouched.
-- W17 §12 complete as source: Dart commit 63b288f, separate native dependency/config/media commit. SwiftPM opt-in only because HaishinKit 2.x discontinued CocoaPods; Flutter plugins stay CocoaPods/3.41.2. Default viewer has no SDK package/product references or generated flag. pubspec.yaml pins flutter.config.enable-swift-package-manager false; the explicit Runner publisher dependency opt-in is independent.
-- W17 native self-review corrected ACK/event timing, exact orientation argument, retry quality retention, conditional permission macros and stale-operation checks. SDK loggers discard credential-bearing diagnostics; no compiler warning suppression. These are source checks, not compilation/runtime proof.
-- W17 review: native commit c4c81c2 remains separate from Dart. Transport loss/retry-only watchdog pause retains capture during Dart's bounded authorization episode; user stop, revoked authorization and exhaustion fully release it. Background eligibility is an implementation intent requiring E3, not observed survival.
-- Direct iOS phone setup now rejects unavailable/default-off capture before camera/microphone permission calls. Its narrow error screen wraps in EN/AR. Test fixture uses actual physicalSize/devicePixelRatio (known repository isolation issue); no rendering exceptions suppressed.
-- All three optional Windows follow-ups completed: native/config self-review, script-like M1–M3 sequence, and RECON section 3 re-read (62 matching platform-site lines). Both production player factory callers select YouTube; the legacy localRtmp adapter is not a shipped alternate iOS path.
-- Mac sequence was Bash syntax-checked only. It creates pending matrix rows, never automatic device passes. E2/E2S/E3 remain pending. Historical progress entries are preserved; later W17 review entries clarify bounded capture retention and direct-entry protection.
-
-## Open escalations
-
-- ESC-3 public half: W20 in-app draft/source resolved at E1; Claude/owner handle copy review and deployment of existing public pages. Counsel/hosted approval pending.
-- ESC-4 (W18): future push implementation needs a separately authorized backend migration plus owner APNs/Firebase setup; specification complete, no backend changes.
-
-## W21 pre-Mac hardening, current result
-
-| Part | Source/host result | Evidence limit |
-|---|---|---|
-| A: native finding 5 | Retained-capture retry reactivates AVAudioSession, restarts/checks mixer capture. Eight-second watchdog uses audio-submission progress until the first network report, then outgoing bytes. Epoch/cancellation guards retained. | E0 Swift; feed progress is not remote-delivery proof. Interruption and watchdog behavior require iPhone. |
-| B: finding 3 copy | EN/AR legal/deletion copy and public gap list explicitly require fresh Apple authorization inside iOS. Support offers assisted in-app deletion; email alone cannot complete it. OWNER_STEPS records the later override trade-offs. | Copy done, design decision open. No backend override added. |
-| C: Swift APIs | Pinned HaishinKit 2.2.5, Logboard 2.6.0, Flutter 3.41.2 headers and Apple declarations/isolation/availability checked; inventory in IOS_PUBLISHER_HANDOFF.md. No additional SDK mismatch found. Public Windows Swift installer is feasible; no installation/parse claimed. | E0; exact Swift importing/type checking/linking and runtime remain Mac gates. |
-| D: plugin privacy | PRIVACY_MANIFEST_AUDIT.md covers 16 cached iOS/Darwin packages plus two native-assets packages. Existing app reasons CA92.1/C617.1 cover direct calls found; no app-manifest edit needed. | E1 source reading only. package_info_plus empty SDK reason array, resolved Pods/assets and archive report need Mac review. |
-| E: iOS layouts | 96 host cases: eight surfaces, three iPhone sizes, EN/AR, scales 1/1.5 and 59/34 safe insets. Apple/Google failure UI, chat, deletion cancel/refusal, consent/full policy and support fallback included. No production overflow found or error suppression added. | E1 host layout only; native fonts, plugins and actual visual/device behavior unverified. |
-| F: App Review dry run | Checklist now marks pass/fail/needs-device with file/line evidence. Phone copy made build-neutral; unsupported email, reservations and guaranteed follower-alert promises removed. | Submission fails deployment/legal-publication gates; most native rows need-device. No approval claim. |
-| G: Mac readiness | First-30-minutes checklist and untracked/ignored transfer inventory added; doctor fixtures 6/6 and Bash syntax passed. | Host fixtures only; Mac commands still unrun. |
-
-P1/P2 remain fixed in d336e1f; freshness/server-flag findings 1/2/6/7 and export-control naming remain in 6620467. W19's 41 pgTAP assertions are written, never executed here. Finding 4 remains deferred for real iPhone recovery evidence. Finding 5 has a blind E0 fix, not a device pass. P3 manager plan/ledger/prompts still require the owner's explicit transfer/commit.
-
-Stop after W21. Next work requires the owner's task or a real W13/Mac log. Paid enrollment is not needed for source work, Simulator/unsigned compilation or free-team Debug media testing. W19 deployment/SQL/provider acceptance, support design, archive privacy, counsel/publication and submission remain later gates.
+W22 stops after its local commit. No push, deploy, migration execution, hosted
+Supabase/Vercel access, secret/signing inspection or evidence promotion occurred.

@@ -383,7 +383,8 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
           ),
           content: Text(
             'settings.delete_account_confirm_body'.tr(),
-            style: const TextStyle(color: Canopy.slate, fontSize: 13),
+            style: const TextStyle(
+                color: Canopy.ink, fontWeight: FontWeight.w500, fontSize: 13),
           ),
           actions: [
             TextButton(
@@ -649,6 +650,10 @@ class _PrivacySettingsSectionState extends State<PrivacySettingsSection> {
 /// knows the next step instead of seeing a generic failure.
 @visibleForTesting
 String deleteAccountErrorText(String code) {
+  if (code == 'account_restricted_apple') {
+    return '${deleteAccountErrorText('account_restricted')} '
+        '${'settings.delete_account_apple_linked_requirement'.tr()}';
+  }
   if (!AppProvider.accountDeletionBlockers.contains(code)) {
     return 'settings.delete_account_error_toast'.tr();
   }

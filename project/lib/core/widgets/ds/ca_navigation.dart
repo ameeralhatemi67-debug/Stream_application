@@ -2,6 +2,7 @@ import 'dart:ui' as ui;
 import 'dart:ui' show ImageFilter;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../providers/app_provider.dart';
@@ -27,7 +28,14 @@ class CaAppBar extends AppBar {
       // Icon-only language control, without the circle behind it.
       bool languageBare = false,
       List<Widget>? actions})
-      : super(actions: [
+      : super(
+          foregroundColor: backgroundColor == AppTheme.media ? Canopy.paper : null,
+          iconTheme: backgroundColor == AppTheme.media
+              ? const IconThemeData(color: Canopy.paper)
+              : null,
+          systemOverlayStyle: backgroundColor == AppTheme.media
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark, actions: [
           if (!(actions ?? []).any(_hasLanguage))
             CaLanguageChip(
                 glass: backgroundColor == AppTheme.media,

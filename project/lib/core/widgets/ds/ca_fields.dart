@@ -321,6 +321,7 @@ class CaInput extends StatelessWidget {
                         maxLines: maxLines,
                         onChanged: onChanged,
                         onFieldSubmitted: onSubmitted,
+                        onTapOutside: (_) => FocusManager.instance.primaryFocus?.unfocus(),
                         validator: validator,
                         forceErrorText: error,
                         errorBuilder: errorRow,

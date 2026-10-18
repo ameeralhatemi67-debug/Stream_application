@@ -2,3 +2,5 @@
 # Hash-verified map pack: the app checks these exact bytes against
 # manifest.json, so line endings must never be rewritten on checkout.
 project/assets/maps/tricity/** -text
+# Keep the Mac CI driver parseable by Git Bash on Windows checkouts too.
+project/ios/Publisher/ci_compile.sh text eol=lf

@@ -350,6 +350,34 @@ void main() {
     }
   });
 
+  for (final linked in [true, false]) {
+    test('restricted account Apple-linked $linked selects only relevant copy',
+        () async {
+      preparedBlocker = 'account_restricted';
+      requiresApple = linked;
+      // Server binding takes precedence over the opposite cached identity.
+      await session(apple: !linked);
+      final provider =
+          AppProvider.withServices(authService: _DeletionAuth(calls));
+      try {
+        expect(await provider.deleteOwnAccount(),
+            linked ? 'account_restricted_apple' : 'account_restricted');
+        expect(calls, ['prepare']);
+        for (final language in ['en', 'ar']) {
+          final settings =
+              (jsonDecode(File('assets/i18n/$language.json').readAsStringSync())
+                  as Map)['settings'] as Map;
+          expect(settings['delete_account_blocked_account_restricted'],
+              isNot(contains('Apple')));
+          expect(settings['delete_account_apple_linked_requirement'],
+              contains('Apple'));
+        }
+      } finally {
+        provider.dispose();
+      }
+    });
+  }
+
   test('all Apple deletion errors have clear EN/AR text and symmetric keys',
       () {
     for (final language in ['en', 'ar']) {

@@ -60,6 +60,12 @@ Updated: 2026-10-03. This is a local troubleshooting record, not proof that the 
 - **Edit Account Profile dropdown crashes for cs_tech** — saved category retained exactly once; editor/save regression passes.
 - **Gradle daemon disappears with native memory exhaustion** — confirmed Windows memory exhaustion before Android launch; recovery/rebuild pending.
 
+- **iOS viewer blocks back swipe and locks portrait after a room** — Cupertino stack pages and orientation restoration corrected; host gestures/channel calls pass, device observation pending.
+- **iOS support email has a small selection target** — minimum height and stronger text contrast added; host accessibility guidelines pass, VoiceOver pending.
+- **Arabic return-to-broadcast chip overflows or overlaps navigation** — body-bound clamping and scaled height added; host EN/AR drag bounds pass.
+
+- **iOS live chat composer is partly behind the keyboard** — compact chrome/composer allocation fixed; keyboard-rectangle host checks pass, native keyboard observation pending.
+
 Agents: when investigating an error, scan only these short names for a match. If one matches, read that entry's section; do not reread the whole file by default. When you fix a new issue, append a concise entry under a clear heading and add its short, searchable error name here. Record the fix and how it was verified; label it `UNVERIFIED` if runtime confirmation is pending. Do not mark an unresolved issue fixed, and update an existing entry instead of creating a duplicate.
 
 - **Profile edits unnecessarily resubmit verification or report cached success** — separate server-reviewed edit path; descriptive edits publish, sensitive revisions await approval; hosted migration and owner retest pending.
@@ -689,3 +695,31 @@ Observed: audit found every stream could trip the eight-second upload watchdog i
 Cause: only network reports refreshed the progress timestamp.
 Fix/workaround: until the first report, use recent non-empty audio submissions as a fallback. Once a report arrives, outgoing bytes remain authoritative. Epoch checks reject late audio append completion.
 Verification: source review only. Audio submissions show feed progress, not receiver delivery; actual callback absence, socket stalls and remote audio require iPhone tests. Dart retry bounds remain unchanged.
+
+## iOS viewer blocks back swipe and locks portrait after a room
+Status: host E1, 2026-10-18; device observation pending.
+Observed: custom GoRouter transition pages lacked Cupertino edge gestures; room disposal requested portrait only despite iOS allowing landscape.
+Cause: generic custom transitions and the Android portrait-return policy were shared by iOS.
+Fix: use CupertinoPage on iOS profile/live pushes, and restore all supported iPhone orientations on disposal. Dark media app bars also select light status icons.
+Verification: EN/AR real-router swipe-back and captured SystemChrome arguments in ios_layout_sweep_b_test.dart. No iOS native execution.
+
+## iOS support email has a small selection target
+Status: host E1, 2026-10-18; VoiceOver/device observation pending.
+Observed: scrolling Settings during iOSTapTargetGuideline checks found a 17-20px selectable support address; English contrast checks also failed for small welcome/deletion/support text.
+Cause: unconstrained SelectableText and thin small-font rendering.
+Fix: give the selectable address a minimum 48px height, preserve growth for large text, and use stronger text color/weight. Welcome action labels wrap; Apple button height follows scaling and stays at least as prominent as Google.
+Verification: all three Flutter accessibility guidelines across three iPhone sizes and EN/AR; no semantic/error suppression.
+
+## Arabic return-to-broadcast chip overflows or overlaps navigation
+Status: host E1, 2026-10-18; device observation pending.
+Observed: Arabic at 1.5x overflowed the fixed 64px chip; full-screen clamping could place it behind the shell bottom navigation.
+Cause: fixed height and MediaQuery screen dimensions instead of actual Scaffold body bounds.
+Fix: use LayoutBuilder body bounds and height derived from text scaling.
+Verification: EN/AR drag-to-bottom tests assert the chip clears the actual bottom bar, with no layout exception.
+
+## iOS live chat composer is partly behind the keyboard
+Status: host E1, 2026-10-18; native keyboard behavior pending. Follow-up to LIVE-05.
+Observed: at 375x667 with a 336px keyboard the composer bottom exceeded the visible area by about 30px.
+Cause: player/header/tab chrome left too little space for the bounded composer.
+Fix: reduce the compact player, omit channel header/chat tab chrome while typing and increase the composer's available share. Shared inputs/chat support outside dismissal; feed/settings/chat dismiss on drag.
+Verification: keyboard cases focus and type into every tested field, assert its rectangle clears the keyboard and keep the live player/message content. No rendering errors suppressed.

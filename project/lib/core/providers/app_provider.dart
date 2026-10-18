@@ -3802,15 +3802,20 @@ class AppProvider extends ChangeNotifier {
   /// or 'failed'.
   Future<String?> deleteOwnAccount() async {
     final client = Supabase.instance.client;
+    var appleLinked = client.auth.currentUser?.identities
+            ?.any((identity) => identity.provider == 'apple') ??
+        false;
     try {
       final prepared = Map<String, dynamic>.from(
           await client.rpc('prepare_account_deletion') as Map);
+      appleLinked =
+          (prepared['requires_apple_revocation'] as bool?) ?? appleLinked;
       final blocker = prepared['blocker'] as String?;
-      if (blocker != null) return blocker;
-      final appleLinked = (prepared['requires_apple_revocation'] as bool?) ??
-          (client.auth.currentUser?.identities
-                  ?.any((identity) => identity.provider == 'apple') ??
-              false);
+      if (blocker != null) {
+        return blocker == 'account_restricted' && appleLinked
+            ? 'account_restricted_apple'
+            : blocker;
+      }
       final deletingUserId = client.auth.currentUser?.id;
       if (appleLinked) {
         await _authService.revokeAppleAuthorizationForDeletion();
@@ -3834,6 +3839,9 @@ class AppProvider extends ChangeNotifier {
       return error.code;
     } on PostgrestException catch (e) {
       debugPrint('Account deletion refused: ${e.message}');
+      if (e.message == 'account_restricted' && appleLinked) {
+        return 'account_restricted_apple';
+      }
       return accountDeletionBlockers.contains(e.message) ? e.message : 'failed';
     } catch (e) {
       debugPrint('Account deletion failed: $e');

@@ -130,8 +130,12 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
             supportedLocales: context.supportedLocales,
             locale: context.locale,
             routerConfig: _router,
-            builder: (context, child) => MediaQuery.withClampedTextScaling(
-                maxScaleFactor: 1.3, child: child ?? const SizedBox.shrink()),
+            builder: (context, child) =>
+                !kIsWeb && defaultTargetPlatform == TargetPlatform.iOS
+                    ? child ?? const SizedBox.shrink()
+                    : MediaQuery.withClampedTextScaling(
+                        maxScaleFactor: 1.3,
+                        child: child ?? const SizedBox.shrink()),
           );
         },
       ),

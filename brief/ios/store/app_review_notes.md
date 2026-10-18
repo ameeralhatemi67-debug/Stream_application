@@ -18,11 +18,11 @@ Hadayah Live is an Arabic/English educational viewing app. The iOS release is vi
 2. For chat, follows and saved content, use Sign in with Google with the demo account entered in App Review Information, or Sign in with Apple using the review device's account. The account route follows the completed provider session.
 3. In the supplied room [REVIEW ROOM/STREAM URL], long-press another test user's message to find Report and Block. Moderators can mute/delete through their stream role. Please use the prepared test content.
 4. Follow a channel, save a recording/upcoming broadcast and open the library. On the map, choose a venue and open directions. Location is requested only when using the relevant location action; selected-photo access is optional.
-5. Settings > Governance/Legal > Privacy opens the policy reader and support contact. Settings > Account & Data > Delete Account opens confirmation. Use the separate disposable account supplied in Review Information when testing deletion.
+5. Settings > Governance/Legal > Privacy Policy opens the policy reader; Contact Support opens email. Settings > Account & Data > Delete My Account opens confirmation (Yes, Delete My Account). An Apple-linked account is deleted inside the iOS app with fresh Apple authorization. If blocked, the account has not been deleted; email support to ask what is blocking it. Support cannot complete deletion by email alone. Use the separate disposable account supplied in Review Information when testing deletion.
 6. Organization pages show participating organizations and venues [TEST ORGANIZATION, if included]. Arabic can be selected in-app; layout mirrors for RTL.
 7. Phone publishing, OBS/channel setup and push are deferred in this iOS release. The corresponding entry points explain availability. HTTPS organization invitations currently open the browser; native universal links are not advertised.
 
-No purchase flow is offered. Backend services remain available during review. Contact the support address in Review Information for assistance.
+No purchase flow is offered. The owner must keep backend services available during review. Contact the support address in Review Information with questions.
 
 ## Evidence / owner completion
 

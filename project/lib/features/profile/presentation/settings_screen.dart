@@ -394,6 +394,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 constraints:
                     const BoxConstraints(maxWidth: CanopySize.settingsMax),
                 child: ListView(
+                    keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     children: [
                       ...personal,
