@@ -35,11 +35,11 @@ Cards, buttons and inputs use radius 12; chips use 999. Spacing tokens are 4, 8,
 
 Double-click (or double-tap) the existing logo in Settings → About to switch between Scheme A and the Hidayah palette. `AppAppearance` saves the device choice as `hidayah_palette_enabled` before applying it and restores it before app startup. The setting is independent of sign-in; another double-click restores Scheme A. Screen state and navigation remain in place.
 
-`AppPalette`, a `ThemeExtension` in `project/lib/core/theme/app_palette.dart`, resolves the existing color, gradient and shadow tokens. Hidayah uses logo gold `#C1923B`, light gold `#CFA55D`, dark gold `#73521D` for controls and readable labels, ivory `#F9F7EF`, paper `#FFFEFA`, ink `#253239` and slate `#26363E`. Gradient geometry, opacity, spacing and layouts retain their existing contracts. The owner-supplied logo artwork is preserved.
+`AppPalette`, a `ThemeExtension` in `project/lib/core/theme/app_palette.dart`, resolves the existing color, gradient and shadow tokens. Hidayah uses logo gold `#C1923B`, light gold `#CFA55D`, dark gold `#73521D` for standalone labels, ivory `#F9F7EF`, paper `#FFFEFA`, ink `#253239` and slate `#26363E`. Primary gradient fills use the preview's bright gold → light gold stops and ink labels/icons through `paletteOnAccent`; media and destructive surfaces retain their light foregrounds. The profile's decorative gold header has no gray scrim, with ink navigation icons. Gradient geometry, spacing and layouts retain their existing contracts.
 
 The Hidayah palette uses the preview's bundled IBM Plex Sans Arabic family in both languages, with existing sizes and weights. Scheme A keeps its existing language-specific font selection. Arabic is the default for an installation with no saved language; the language control and saved English choice remain supported.
 
-`project/test/app_appearance_test.dart` covers persistence in both directions, rapid toggles, failed saves, disposal during a save, the real About logo gesture, preserved widget state, contrast/font tokens and startup locale restoration. `project/test/rendered_contrast_test.dart` checks 19 screens/dialogs in both languages and both palettes, 76 cases. Completed verification: analyzer zero issues and all 1,545 Flutter tests passed.
+`project/test/app_appearance_test.dart` covers persistence in both directions, rapid toggles, failed saves, disposal during a save, the real About logo gesture, preserved widget state, contrast/font tokens and startup locale restoration. `project/test/rendered_contrast_test.dart` checks 19 screens/dialogs in both languages and both palettes, 76 cases. Completed follow-up verification: analyzer zero issues and all 1,547 Flutter tests passed, plus Android APK compilation and Android 16 emulator launcher/persistence checks.
 
 ### Entry-screen depth, selected 2026-10-01
 
@@ -51,7 +51,7 @@ Other screens retain their existing elevation. The supplied logo stays unchanged
 ### Supplied logo assets
 
 
-All nine files in `project/assets/logo/` are owner-supplied and are preserved as delivered; none is regenerated. `AppLogo` renders `colored.svg` at runtime, with `black.svg` as the monochrome variant. `square.svg` / `square.png` and `cercal.svg` / `cercal.png` are the square and circular lockups reserved for launcher, adaptive and web icons in P8A; `colored.png` and `black.png` are the raster equivalents, and `logoInkscapeMaker.svg` is the editable source. The concept logo in the original token JSON is superseded by these files.
+Files in `project/assets/logo/` are owner-supplied and are preserved as delivered; none is regenerated. `AppLogo` renders `colored.svg` in the normal palette, the supplied `clearlogo2.png` in Hidayah, and `black.svg` when explicitly monochrome. The gold PNG preserves the supplied shadows. Only the runtime PNG is bundled; `clearlogo2.svg` and `logo2.svg` remain source masters. `logo2.png` supplies the gold legacy launcher tile. `square.svg` / `square.png` and `cercal.svg` / `cercal.png` are the square and circular lockups reserved for launcher, adaptive and web icons in P8A; `colored.png` and `black.png` are the raster equivalents, and `logoInkscapeMaker.svg` is the editable source. The concept logo in the original token JSON is superseded by these files.
 
 ### Launcher icon, themed icon and splash (P8A)
 
@@ -72,6 +72,10 @@ mipmaps, the adaptive and monochrome drawables and the web icons.
   `square.png` tile.
 - Checked at 192, 96 and 48 px under a circular and a squircle mask, and as a
   themed silhouette: `brief/assets/launcher_icon_check.png`.
+
+Android palette switching uses `DefaultLauncher` and `HidayahLauncher` activity aliases. `MainActivity` and its OAuth/channel callback filters remain enabled in both palettes. `AppAppearance` saves the preference before syncing the icon, retries it at startup, and reports an icon-only failure without losing the saved palette. Android 13+ applies alias changes atomically; older versions enable the destination before disabling the previous alias. The OS retains component state across restarts. Launcher refresh timing and system themed-icon colors remain launcher-controlled. iOS and web currently switch the in-app logo only.
+
+`brief/tools/make_hidayah_launcher_assets.py` packages the supplied `logo2.png` and `clearlogo2.png` into separate Android gold resources. The adaptive mark fits within the central 72dp safe zone; the ivory background is sampled from the supplied tile. Normal launcher resources are untouched.
 
 The launch window is white with the mark centred, in **both** light and dark
 mode. The app ships one light `ThemeData`, so `values-night/` deliberately

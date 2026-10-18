@@ -99,7 +99,7 @@ class RoleSelectScreen extends StatelessWidget {
                   color: viewer ? null : paletteColor(context, Canopy.mint),
                   borderRadius: BorderRadius.circular(CanopyRadius.input)),
               child: CaIcon(viewer ? CaGlyph.compass : CaGlyph.mic,
-                  color: viewer ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen)))),
+                  color: viewer ? paletteOnAccent(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen)))),
       const SizedBox(height: AppTheme.spaceMd),
       Text('role_select.${prefix}_title'.tr(),
           style: Theme.of(context).textTheme.titleLarge),

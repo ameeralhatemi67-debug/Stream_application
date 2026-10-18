@@ -3,6 +3,7 @@
 Updated: 2026-10-03. This is a local troubleshooting record, not proof that the database tests passed.
 
 ## Issue-name index — scan this list first
+- **Gold palette leaves green logo and muted gradients** — FIXED; bright gold/ink controls, supplied gold artwork and Android launcher aliases; widget/full-suite and Android 16 emulator checks passed, Samsung launcher acceptance pending.
 - **Live-room keyboard closes when it opens** — stable composer element tree and screen-level inset capture; Android/iOS host connection tests pass, physical keyboards pending.
 - **Chat Send and sibling actions dismiss typing** — composer tap region plus native-iOS-only outside dismissal; host action/focus checks pass.
 - **iOS CI cleanup rejects CocoaPods integration** — targeted viewer isolation and markerless reserved-ID cleanup; real-Git host fixtures pass, Mac execution pending.
@@ -747,3 +748,11 @@ Observed: real-Git simulated pod install changed tracked pbxproj/workspace and f
 Cause: cleanup assumed CocoaPods would not modify tracked files and relied only on comment markers.
 Fix: disable parses OpenStep containers and removes only A117000000000000000000 objects and approved list references, restores viewer paths and fails before writing on unknown syntax/content. Intact-marker round trips remain byte-identical. CI checks only viewer resources/Podfile, publisher references and generated-flag absence; the iOS diff stat is informational.
 Verification: configure 6/6 and CI 6/6 host fixtures, with real temporary Git repositories, simulated Pods/[CP] entries and marker stripping. Successful cleanup preserves unrelated entries; malformed entries leave files unchanged; a broken disable fails isolation and build failure keeps exit 7. Owner must review/commit the first actual viewer CocoaPods project/workspace on Mac.
+
+
+## Gold palette leaves green logo and muted gradients
+Status: fixed locally, 2026-10-18; physical Samsung launcher acceptance pending.
+Observed: selected controls looked nearly flat brown and Settings still showed the green logo in the gold palette.
+Cause: gradient fills reused the dark label gold mapping, and AppLogo always rendered the original SVG. The new PNG also required an explicit pubspec asset entry.
+Fix: bright logo-gold gradient stops with ink foregrounds, no gray tint over the gold profile header, palette-aware supplied PNG artwork, and Android launcher aliases synced after preference persistence and on startup. Keep MainActivity and callback filters enabled. An icon failure preserves the saved palette and reports a separate retry message.
+Verification: full Flutter suite 1,547 passed, focused appearance 10 passed, rendered contrast 76 passed, analyzer zero issues, Android debug build and Android 16 emulator foreground toggles/restarts in both directions. Gold icon observed in the app drawer. Source artwork stays unchanged. Launcher refresh, existing pinned shortcuts and system themed-icon colors remain launcher-dependent; iOS/web currently change only in-app artwork.

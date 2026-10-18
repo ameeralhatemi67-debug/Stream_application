@@ -24,7 +24,7 @@ class _CaFocusRingState extends State<CaFocusRing> {
       onFocusChange: (value) => setState(() => _focused = value),
       child: CustomPaint(
           foregroundPainter: _FocusOutline(_focused,
-              widget.onDark ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen), widget.radius),
+              widget.onDark ? paletteColor(context, Canopy.paper) : paletteOnAccent(context, Canopy.brandGreen), widget.radius),
           child: widget.child));
 }
 

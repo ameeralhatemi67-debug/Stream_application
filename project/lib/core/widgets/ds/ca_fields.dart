@@ -26,7 +26,7 @@ class CaChip extends StatelessWidget {
           if (icon != null) ...[
             CaIcon(icon!,
                 size: CanopySize.inlineIcon,
-                color: color == paletteColor(context, Canopy.paper) ? color : paletteColor(context, Canopy.brandGreen)),
+                color: color == paletteOnAccent(context, Canopy.paper) ? color : paletteColor(context, Canopy.brandGreen)),
             const SizedBox(width: AppTheme.spaceSm)
           ],
           Flexible(
@@ -41,7 +41,7 @@ class CaChip extends StatelessWidget {
         selected: onSelected == null ? null : selected,
         enabled: onSelected == null ? null : true,
         child: CaFocusRing(
-            onDark: selected,
+            onDark: selected && !paletteOf(context).hidayah,
             child: Material(
                 type: MaterialType.transparency,
                 child: InkWell(
@@ -89,7 +89,7 @@ class CaChip extends StatelessWidget {
                                                       gradient:
                                                           paletteGradient(context, AppGradients.pill)),
                                                   child: contents(
-                                                      paletteColor(context, Canopy.paper))))))),
+                                                      paletteOnAccent(context, Canopy.paper))))))),
                           ])),
                     )))));
   }
@@ -163,7 +163,7 @@ class CaSegmentedTabs extends StatelessWidget {
                         enabled:
                             interactive ? !disabledIndices.contains(i) : null,
                         child: CaFocusRing(
-                            onDark: dark || index == i,
+                            onDark: (dark || index == i) && !(index == i && paletteOf(context).hidayah),
                             child: InkWell(
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
@@ -227,7 +227,7 @@ class CaSegmentedTabs extends StatelessWidget {
                       curve: CanopyMotion.easeOut,
                       builder: (_, value, __) => ClipRect(
                           clipper: _ThumbClip(value!),
-                          child: row(paletteColor(context, Canopy.paper)))),
+                          child: row(paletteOnAccent(context, Canopy.paper)))),
                 ))),
               ])),
         );

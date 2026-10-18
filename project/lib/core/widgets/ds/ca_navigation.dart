@@ -116,13 +116,13 @@ class _PillDestination extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
     final color =
-        Color.lerp(paletteColor(context, Canopy.brandGreen), paletteColor(context, Canopy.paper), selectedness.clamp(0, 1))!;
+        Color.lerp(paletteColor(context, Canopy.brandGreen), paletteOnAccent(context, Canopy.paper), selectedness.clamp(0, 1))!;
     return Semantics(
         button: true,
         selected: selectedness > .5,
         label: label,
         child: CaFocusRing(
-            onDark: selectedness > .5,
+            onDark: selectedness > .5 && !paletteOf(context).hidayah,
             child: Tooltip(
                 message: label,
                 excludeFromSemantics: true,
@@ -197,7 +197,7 @@ class _Destination extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
-    final color = selected ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
+    final color = selected ? paletteOnAccent(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
     final icon = CaIcon(index == 0 ? CaGlyph.list : CaGlyph.map, color: color);
     final text = Text(label,
         textAlign: stacked ? TextAlign.center : TextAlign.start,
@@ -210,7 +210,7 @@ class _Destination extends StatelessWidget {
         selected: selected,
         label: label,
         child: CaFocusRing(
-            onDark: selected,
+            onDark: selected && !paletteOf(context).hidayah,
             child: Tooltip(
                 message: label,
                 excludeFromSemantics: true,
@@ -332,7 +332,7 @@ class CaRail extends StatelessWidget {
                                                                 .tr()
                                                         ? CaGlyph.video
                                                         : CaGlyph.user,
-                                                    color: paletteColor(context, Canopy.paper)),
+                                                    color: paletteOnAccent(context, Canopy.paper)),
                                                 const SizedBox(
                                                     width: AppTheme.spaceSm),
                                               ],
@@ -351,7 +351,7 @@ class CaRail extends StatelessWidget {
                                                                       .w600
                                                                   : null,
                                                               color: expanded
-                                                                  ? paletteColor(context, Canopy.paper)
+                                                                  ? paletteOnAccent(context, Canopy.paper)
                                                                   : paletteColor(context, Canopy
                                                                       .brandGreen))))
                                             ])),

@@ -335,11 +335,13 @@ class CaToast extends StatelessWidget {
                                                         !error
                                                     ? CanopyCheckDraw(
                                                         child: CaIcon(icon,
-                                                            color: paletteColor(context, Canopy.paper),
+                                                            color: paletteOnAccent(context, Canopy.paper),
                                                             size: CanopySize
                                                                 .inlineIcon))
                                                     : CaIcon(icon,
-                                                        color: paletteColor(context, Canopy.paper),
+                                                        color: error
+                                                            ? paletteColor(context, Canopy.paper)
+                                                            : paletteOnAccent(context, Canopy.paper),
                                                         size: CanopySize
                                                             .inlineIcon)))),
                                     const SizedBox(width: AppTheme.spaceSm),

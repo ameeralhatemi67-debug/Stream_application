@@ -51,7 +51,7 @@ class AdminCount extends StatelessWidget {
                   style: Theme.of(context)
                       .textTheme
                       .labelSmall
-                      ?.copyWith(color: paletteColor(context, Canopy.paper))))));
+                      ?.copyWith(color: paletteOnAccent(context, Canopy.paper))))));
 }
 
 /// Reflows dense identity/action rows when translated or scaled text needs room.

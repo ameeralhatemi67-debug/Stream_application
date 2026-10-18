@@ -9,6 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/theme/app_appearance.dart';
+import 'package:streamer_app/core/theme/app_launcher_icon.dart';
+import 'package:streamer_app/core/widgets/app_logo.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/core/widgets/ds/ca_button.dart';
 import 'package:streamer_app/features/profile/presentation/settings/about_settings_section.dart';
@@ -99,7 +101,8 @@ Future<void> _capture(WidgetTester tester, String name) async {
   await tester.runAsync(() async {
     final image = await boundary.toImage();
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
-    await File('$directory/$name.png').writeAsBytes(bytes!.buffer.asUint8List());
+    await File('$directory/$name.png')
+        .writeAsBytes(bytes!.buffer.asUint8List());
     image.dispose();
   });
 }
@@ -119,6 +122,8 @@ void main() {
 
   setUp(() async {
     SharedPreferences.setMockInitialValues({});
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(AppLauncherIcon.channel, (_) async => null);
     await EasyLocalization.ensureInitialized();
   });
 
@@ -179,6 +184,51 @@ void main() {
     restarted.dispose();
   });
 
+  test('launcher receives the saved choice on restore and both toggles',
+      () async {
+    final choices = <bool>[];
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(AppLauncherIcon.channel, (call) async {
+      expect(call.method, 'setHidayahIcon');
+      final enabled = (call.arguments as Map)['enabled'] as bool;
+      final store = await SharedPreferences.getInstance();
+      expect(store.getBool(AppAppearance.preferenceKey) ?? false, enabled);
+      choices.add(enabled);
+      return null;
+    });
+    final first = AppAppearance();
+    await first.restore();
+    await first.toggle();
+    final restarted = AppAppearance();
+    await restarted.restore();
+    await restarted.toggle();
+    expect(choices, [false, true, true, false]);
+    first.dispose();
+    restarted.dispose();
+  });
+
+  test('launcher failure preserves the saved palette and allows another toggle',
+      () async {
+    var fail = true;
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(AppLauncherIcon.channel, (_) async {
+      if (fail) throw PlatformException(code: 'launcher_icon_failed');
+      return null;
+    });
+    final appearance = AppAppearance();
+    await expectLater(
+        appearance.toggle(), throwsA(isA<LauncherIconException>()));
+    expect(appearance.hidayah, isTrue);
+    expect(
+        (await SharedPreferences.getInstance())
+            .getBool(AppAppearance.preferenceKey),
+        isTrue);
+    fail = false;
+    await appearance.toggle();
+    expect(appearance.hidayah, isFalse);
+    appearance.dispose();
+  });
+
   test('gold palette preserves opacity, gradient geometry, contrast and fonts',
       () {
     const gold = AppPalette(hidayah: true);
@@ -204,10 +254,17 @@ void main() {
         expect((b + .05) / (a + .05), greaterThanOrEqualTo(4.5));
       }
     }
+    expect(gold.gradient(AppGradients.pill).colors,
+        [AppPalette.gold, AppPalette.goldLight]);
+    const translucent = LinearGradient(colors: [
+      Color(0x4417643F), Color(0x88327044),
+    ]);
+    expect(gold.gradient(translucent).colors.map((c) => c.a),
+        translucent.colors.map((c) => c.a));
     for (final background in gold.gradient(AppGradients.pill).colors) {
       expect(
-          (AppPalette.paper.computeLuminance() + .05) /
-              (background.computeLuminance() + .05),
+          (background.computeLuminance() + .05) /
+              (AppPalette.ink.computeLuminance() + .05),
           greaterThanOrEqualTo(4.5));
     }
   });
@@ -223,6 +280,9 @@ void main() {
     await tester.pumpWidget(_harness(appearance));
     await tester.pumpAndSettle();
     final input = find.byKey(const ValueKey('preserved-input'));
+    await tester.runAsync(() => precacheImage(
+        const AssetImage('assets/logo/clearlogo2.png'), tester.element(input)));
+    await tester.pumpAndSettle();
     await tester.enterText(input, 'تبقى هذه الكتابة');
     tester.testTextInput.hide();
     await tester.pumpAndSettle();
@@ -234,6 +294,16 @@ void main() {
     await _capture(tester, 'normal-palette');
     await _doubleTap(tester);
     expect(appearance.hidayah, isTrue);
+    final logoImage = tester.widget<Image>(find.descendant(
+        of: find.byType(AppLogo), matching: find.byType(Image)));
+    expect((logoImage.image as AssetImage).assetName,
+        'assets/logo/clearlogo2.png');
+    expect(
+        tester
+            .widget<RawImage>(find.descendant(
+                of: find.byType(AppLogo), matching: find.byType(RawImage)))
+            .image,
+        isNotNull);
     expect(Theme.of(tester.element(input)).colorScheme.primary,
         AppPalette.goldInk);
     expect(identical(before, tester.state(input)), isTrue);

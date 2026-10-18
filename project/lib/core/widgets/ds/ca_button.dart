@@ -125,9 +125,11 @@ class _CaButtonState extends State<CaButton>
     final text = widget.variant == CaButtonVariant.text;
     final foreground = !active
         ? paletteColor(context, Canopy.slate)
-        : primary || destructive
-            ? paletteColor(context, Canopy.paper)
-            : paletteColor(context, Canopy.brandGreen);
+        : primary
+            ? paletteOnAccent(context, Canopy.paper)
+            : destructive
+                ? paletteColor(context, Canopy.paper)
+                : paletteColor(context, Canopy.brandGreen);
     final label = Row(mainAxisSize: MainAxisSize.min, children: [
       if (widget.icon != null) ...[
         if (widget.confirm)
@@ -236,14 +238,10 @@ class _CaButtonState extends State<CaButton>
                                 dimension: CanopySize.buttonRing,
                                 child: CircularProgressIndicator(
                                     strokeWidth: CanopySize.ring,
-                                    backgroundColor: (primary || destructive
-                                            ? paletteColor(context, Canopy.paper)
-                                            : paletteColor(context, Canopy.brandGreen))
+                                    backgroundColor: foreground
                                         .withValues(
                                             alpha: CanopySize.highlightAlpha),
-                                    color: primary || destructive
-                                        ? paletteColor(context, Canopy.paper)
-                                        : paletteColor(context, Canopy.brandGreen))))),
+                                    color: foreground)))),
                   ])),
             ));
     content = DecoratedBox(
@@ -252,9 +250,11 @@ class _CaButtonState extends State<CaButton>
             borderRadius: BorderRadius.circular(CanopyRadius.pill),
             border: _focused
                 ? Border.all(
-                    color: active && (primary || destructive)
-                        ? paletteColor(context, Canopy.paper)
-                        : paletteColor(context, Canopy.brandGreen),
+                    color: active && primary
+                        ? paletteOnAccent(context, Canopy.paper)
+                        : active && destructive
+                            ? paletteColor(context, Canopy.paper)
+                            : paletteColor(context, Canopy.brandGreen),
                     width: CanopySize.focusWidth)
                 : null),
         child: content);

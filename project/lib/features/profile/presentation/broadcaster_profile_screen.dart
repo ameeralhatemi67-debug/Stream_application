@@ -267,7 +267,9 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 child: CanopyLatticeBackground(
                     child: SizedBox.expand(
                         child: ColoredBox(
-                            color: paletteColor(context, CanopyGradients.entryTextScrim),
+                            color: paletteOf(context).hidayah
+                                ? Canopy.transparent
+                                : paletteColor(context, CanopyGradients.entryTextScrim),
                             child: Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
                                     AppTheme.spaceSm,
@@ -281,7 +283,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                     // its middle.
                                     child: SizedBox(
                                         height: CanopySize.target,
-                                        child: Row(children: [
+                                        child: ColorFiltered(
+                                          colorFilter: ColorFilter.mode(
+                                              paletteOnAccent(context, Canopy.paper),
+                                              BlendMode.srcIn),
+                                          child: Row(children: [
                                           CaIconButton(
                                               bare: true,
                                               icon: CaGlyph.back,
@@ -317,7 +323,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                 glass: true,
                                                 onPressed: () => _shareChannel(
                                                     streamer, lang)),
-                                        ]))))))))),
+                                        ])))))))))),
         // The card rises over the green panel, so the panel keeps its height and
         // everything below the card moves up with it.
         Padding(

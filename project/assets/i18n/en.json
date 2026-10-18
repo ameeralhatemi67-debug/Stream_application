@@ -734,6 +734,7 @@
     "release_pending": "Testing build. Release review is still pending.",
     "palette_toggle": "Double-click the logo to switch color palettes",
     "palette_save_error": "Could not save the color palette. Please try again.",
+    "palette_icon_error": "Your colors were saved, but the home-screen icon could not change. Reopen the app to try again.",
     "view_guidelines_subtitle": "Academic integrity and broadcast standards",
     "view_privacy_subtitle": "How your data is used",
     "consent_record_title": "Consent record",

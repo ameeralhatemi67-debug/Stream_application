@@ -514,7 +514,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                             isStreamerModeEnabled
                                                 ? CaGlyph.video
                                                 : CaGlyph.user,
-                                            color: paletteColor(context, Canopy.paper),
+                                            color: paletteOnAccent(context, Canopy.paper),
                                           ),
                                           const SizedBox(
                                               width: AppTheme.spaceSm),
@@ -527,7 +527,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                                   .textTheme
                                                   .labelSmall
                                                   ?.copyWith(
-                                                      color: paletteColor(context, Canopy.paper),
+                                                      color: paletteOnAccent(context, Canopy.paper),
                                                       fontWeight:
                                                           FontWeight.w600),
                                             ),
@@ -586,7 +586,7 @@ class _DesktopNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
+    final color = isSelected ? paletteOnAccent(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
       child: Semantics(
@@ -594,7 +594,7 @@ class _DesktopNavItem extends StatelessWidget {
         selected: isSelected,
         label: label,
         child: CaFocusRing(
-          onDark: isSelected,
+          onDark: isSelected && !paletteOf(context).hidayah,
           radius: CanopyRadius.input,
           child: Material(
             type: MaterialType.transparency,
@@ -622,7 +622,7 @@ class _DesktopNavItem extends StatelessWidget {
                               .textTheme
                               .labelLarge
                               ?.copyWith(
-                                color: isSelected ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.slate),
+                                color: isSelected ? paletteOnAccent(context, Canopy.paper) : paletteColor(context, Canopy.slate),
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,

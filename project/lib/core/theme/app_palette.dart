@@ -15,8 +15,8 @@ class AppPalette extends ThemeExtension<AppPalette> {
   static const ink = Color(0xFF253239);
   static const slate = Color(0xFF26363E);
 
-  // Primary controls retain a dark gold so their existing light labels and
-  // outlined labels on ivory both pass AA. Decorative panels use logo gold.
+  // Standalone labels use dark gold; filled gradient controls use logo gold
+  // with the ink foreground returned by paletteOnAccent.
   static const _colors = <int, Color>{
     0xFFFFFF: paper,
     0xECF6EF: Color(0xFFF0EDE4),
@@ -63,7 +63,16 @@ class AppPalette extends ThemeExtension<AppPalette> {
 
   T gradient<T extends Gradient>(T original) {
     if (!hidayah) return original;
-    final colors = original.colors.map(color).toList(growable: false);
+    final rgb = original.colors.map((c) => c.toARGB32() & 0x00FFFFFF).toList();
+    final accent = rgb.length == 2 &&
+        ((rgb[0] == 0x145030 && rgb[1] == 0x22804D) ||
+            (rgb[0] == 0x17643F && rgb[1] == 0x327044));
+    final colors = accent
+        ? [
+            gold.withValues(alpha: original.colors[0].a),
+            goldLight.withValues(alpha: original.colors[1].a),
+          ]
+        : original.colors.map(color).toList(growable: false);
     if (original is LinearGradient) {
       return LinearGradient(
         begin: original.begin,
@@ -114,6 +123,12 @@ AppPalette paletteOf(BuildContext context) =>
 
 Color paletteColor(BuildContext context, Color original) =>
     paletteOf(context).color(original);
+
+/// Foreground for the bright primary gradient, independent of media whites.
+Color paletteOnAccent(BuildContext context, Color original) =>
+    paletteOf(context).hidayah
+        ? AppPalette.ink.withValues(alpha: original.a)
+        : original;
 
 T paletteGradient<T extends Gradient>(BuildContext context, T original) =>
     paletteOf(context).gradient(original);

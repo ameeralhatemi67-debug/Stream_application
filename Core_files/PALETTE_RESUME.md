@@ -7,11 +7,11 @@ Completed after resuming the owner's laptop-close checkpoint. This task adds the
 - Optional Hidayah gold/ivory/slate palette, selected by double-clicking or double-tapping the existing logo in Settings → About; repeat to restore the normal palette.
 - `AppAppearance` saves `hidayah_palette_enabled` using SharedPreferences before applying the selection. Writes are serialized, errors preserve the previous choice, and startup restores the saved palette.
 - `AppPalette` is a ThemeExtension. Existing constant tokens remain unchanged; UI consumers now resolve colors, gradients and shadows against the active palette. This accounts for the broad, mechanical source diff. No layout redesign, backend changes or new dependencies.
-- The new palette uses the preview's IBM Plex Sans Arabic, already bundled, for both languages. Normal mode keeps its existing typography. Owner-supplied logo assets remain unchanged.
+- The new palette uses the preview's IBM Plex Sans Arabic, already bundled, for both languages. Normal mode keeps its existing typography. The supplied source logos remain unchanged; Hidayah now renders `clearlogo2.png`, and Android gold launcher resources are derived from `logo2.png` and `clearlogo2.png`.
 - Fresh startup defaults to Arabic. The language toggle and a saved English preference are respected.
 - Main/router state is retained when switching palettes.
 
-## Completed verification
+## Initial completed verification
 
 - Final `flutter analyze --no-pub`: no issues found.
 - All 8 focused `test/app_appearance_test.dart` tests passed: persistence, rapid toggles, failure recovery, disposal during save, font/contrast tokens, actual logo double-click, retained input state, fresh Arabic startup and saved English startup.
@@ -38,6 +38,26 @@ Final evidence: `palette-analysis-completed.txt`, `palette-full-tests-resumed.tx
 ## Preserve unrelated work
 
 The repository was already dirty. `skill-observations/log.md`, `store/assets/icon_512.png` and all previously untracked `.claude/`, `.vscode/`, brief/ios/evidence/research files, organization briefs, design previews and audit files belong to earlier work. They must not be staged, discarded or reverted with this task. No new branch was created.
+
+## Follow-up: gradients and logos corrected
+
+Owner device screenshots showed overly dark, nearly flat controls and the unchanged green application logo. Primary gradients now use the preview's exact `#C1923B` → `#CFA55D` with `#253239` text/icons. Profile header gray tint is removed in Hidayah; its icons use ink. Normal palette values remain intact. Gradient opacity is preserved.
+
+`AppLogo` switches to the supplied `clearlogo2.png` in Hidayah. Android uses a method channel and two launcher aliases: `DefaultLauncher` / `HidayahLauncher`. The real MainActivity remains enabled with its callback filters. The palette is saved before changing the icon; an icon failure leaves the saved palette intact, shows an icon-specific message, and is retried on startup. iOS/web currently change the in-app logo only.
+
+Verification after this correction:
+
+- Full Flutter suite: **1,547 tests passed** in 11:05.
+- Focused appearance suite: 10 tests, including saved-state/native-channel ordering, failure recovery, actual double-tap, decoded gold logo pixels, startup and both palette choices.
+- Rendered contrast: all 76 cases passed for both languages and both palettes.
+- Android debug APK compiled, with the supplied PNG present in its asset bundle.
+- Android 16 emulator: the running app's actual AppAppearance toggled false → true, PackageManager exposed exactly one HidayahLauncher, and the app process remained alive. After force-stop/relaunch the real app restored gold; toggling true → false restored exactly one DefaultLauncher. A second restart restored false. The gold icon was also inspected in the Android app drawer. No physical phone was connected or changed.
+- Native evidence: `android-hidayah-palette-restarted.png` and `android-launcher-gold-drawer.png`. An earlier capture recorded an emulator System UI wait dialog during host load, not an app crash. An extra debug-helper attempt while the app was backgrounded did not complete; the foreground toggle and both restart checks above had already passed. The headless emulator and helper were closed afterward.
+- Additional logs: `palette-logo-full-tests.txt`, `palette-logo-correction-tests.txt`, `palette-logo-appearance-final.txt`, `palette-logo-analysis-final.txt`, `palette-logo-android-build-final.txt` in the existing evidence directory. Impeccable's mechanical detector returned no findings for the changed targets.
+
+Launcher refresh timing, pinned-shortcut migration on an existing installation and Android system themed-icon colors depend on the launcher; Samsung home-screen behavior is not claimed from emulator evidence. On the first update to alias-based launchers, an existing home shortcut may need to be added again. No backend deployment or Git push was performed.
+
+Implementation reference: [Android activity aliases](https://developer.android.com/guide/topics/manifest/activity-alias-element) and [atomic component state updates](https://developer.android.com/reference/android/content/pm/PackageManager#setComponentEnabledSettings(java.util.List)).
 
 ## Pause and resume history
 

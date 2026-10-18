@@ -18,6 +18,9 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "streamer_app/appearance")
+            .setMethodCallHandler(LauncherIconController(applicationContext))
+
         // v0.7 Checkpoint 2 -- direct platform-channel wrapper against
         // RootEncoder, owned end to end by RtmpPublisherBridge. See
         // doc/Roadmap/v0.7_Mobile_Streaming_Android.md.

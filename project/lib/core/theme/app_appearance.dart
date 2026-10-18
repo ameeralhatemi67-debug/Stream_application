@@ -1,9 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'app_launcher_icon.dart';
 
 /// A device preference, independent of sign-in and server-owned settings.
 class AppAppearance extends ChangeNotifier {
-  AppAppearance({SharedPreferences? preferences}) : _preferences = preferences;
+  AppAppearance({
+    SharedPreferences? preferences,
+    Future<void> Function(bool)? updateLauncherIcon,
+  })  : _preferences = preferences,
+        _updateLauncherIcon = updateLauncherIcon ?? AppLauncherIcon.apply;
+
+  final Future<void> Function(bool) _updateLauncherIcon;
 
   static const preferenceKey = 'hidayah_palette_enabled';
   SharedPreferences? _preferences;
@@ -27,6 +34,12 @@ class AppAppearance extends ChangeNotifier {
     } catch (error) {
       debugPrint('Appearance preference could not be loaded: $error');
     }
+    try {
+      await _updateLauncherIcon(_hidayah);
+    } catch (error) {
+      // A later startup or toggle retries; an icon failure must not lose the theme.
+      debugPrint('Launcher icon could not be restored: $error');
+    }
   }
 
   /// Serialize double-clicks so a slow write cannot restore an older choice.
@@ -39,6 +52,7 @@ class AppAppearance extends ChangeNotifier {
       }
       _hidayah = next;
       if (!_disposed) notifyListeners();
+      await _updateLauncherIcon(next);
     });
     _pendingWrite =
         operation.then<void>((_) {}, onError: (Object _, StackTrace __) {});

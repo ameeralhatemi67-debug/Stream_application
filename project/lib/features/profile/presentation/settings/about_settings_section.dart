@@ -5,6 +5,7 @@ import '../../../../core/theme/app_theme.dart';
 import '../../../../core/widgets/app_logo.dart';
 import '../../../../core/config/app_identity.dart';
 import '../../../../core/theme/app_appearance.dart';
+import '../../../../core/theme/app_launcher_icon.dart';
 import 'package:provider/provider.dart';
 
 class AboutSettingsSection extends StatelessWidget {
@@ -12,10 +13,12 @@ class AboutSettingsSection extends StatelessWidget {
   Future<void> _togglePalette(BuildContext context) async {
     try {
       await context.read<AppAppearance>().toggle();
-    } catch (_) {
+    } catch (error) {
       if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('settings.palette_save_error'.tr())),
+        SnackBar(content: Text((error is LauncherIconException
+            ? 'settings.palette_icon_error'
+            : 'settings.palette_save_error').tr())),
       );
     }
   }
