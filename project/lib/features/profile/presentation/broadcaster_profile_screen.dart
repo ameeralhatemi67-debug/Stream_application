@@ -21,6 +21,8 @@ import '../../live_stream/presentation/widgets/rtmp_ip_dialog.dart';
 import '../models/streamer_models.dart';
 import '../models/vod_models.dart';
 import 'widgets/vod_grid_tile.dart';
+import 'widgets/channel_content_item.dart';
+import '../../../core/services/hidden_content_service.dart';
 import 'widgets/org_branches_modal_sheet.dart';
 import 'widgets/join_org_modal_sheet.dart';
 import 'widgets/playlist_viewer_modal_sheet.dart';
@@ -828,7 +830,17 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 for (final vod in vodList)
                   SizedBox(
                       width: width,
-                      child: VodGridTile(vod: vod, streamer: streamer)),
+                      child: vod.youtubeVideoId.isEmpty
+                          ? VodGridTile(vod: vod, streamer: streamer)
+                          : ChannelContentItem(
+                              streamerId: streamer.streamerId,
+                              kind: HiddenContentKind.video,
+                              itemId: vod.youtubeVideoId,
+                              title:
+                                  vod.getLocalizedTitle(context.locale.languageCode),
+                              shareText:
+                                  '${vod.getLocalizedTitle(context.locale.languageCode)}\nhttps://www.youtube.com/watch?v=${vod.youtubeVideoId}',
+                              child: VodGridTile(vod: vod, streamer: streamer))),
               ]));
     });
   }
@@ -868,7 +880,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         separatorBuilder: (_, __) => const SizedBox(height: AppTheme.spaceMd),
         itemBuilder: (context, index) {
           final playlist = playlists[index];
-          return CaCard(
+          return ChannelContentItem(
+              streamerId: streamer.streamerId,
+              kind: HiddenContentKind.playlist,
+              itemId: playlist.playlistId,
+              title: playlist.getLocalizedTitle(lang),
+              shareText:
+                  '${playlist.getLocalizedTitle(lang)}\n${playlist.youtubePlaylistUrl.isNotEmpty ? playlist.youtubePlaylistUrl : 'https://www.youtube.com/playlist?list=${playlist.playlistId}'}',
+              child: CaCard(
             padding: const EdgeInsets.all(AppTheme.spaceMd),
             onTap: () => _showPlaylistModal(context, playlist, streamer, lang),
             child: SizedBox(
@@ -905,7 +924,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 ],
               ),
             ),
-          );
+          ));
         },
       );
     });

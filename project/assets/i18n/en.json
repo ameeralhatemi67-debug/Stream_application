@@ -1730,6 +1730,19 @@
     "open_studio": "Open YouTube Studio",
     "close": "Close"
   },
+  "content_actions": {
+    "share_video": "Share video",
+    "share_playlist": "Share playlist",
+    "hide": "Hide from viewers",
+    "hide_hint": "Only you will see it in the app. YouTube is not changed.",
+    "show": "Show to viewers",
+    "show_hint": "It will appear on your channel for everyone.",
+    "hidden_badge": "Hidden from viewers",
+    "hidden_done": "Hidden from viewers",
+    "shown_done": "Visible to viewers again",
+    "save_failed": "Could not save the change. Please try again.",
+    "link_copied": "Link copied"
+  },
   "upcoming": {
     "title": "Upcoming Live",
     "planned": "Planned stream",

@@ -8,6 +8,14 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Hide and share videos and playlists, 2026-10-19
+
+A channel owner (a streamer on their own channel, or an organization owner) long-presses a video or playlist, in both designs, to **hide** it from viewers or **share** it. Hidden items stay on YouTube; the app only stops listing them. The owner sees them blurred with a "hidden" icon, everyone else does not get them at all (profile grids, playlist contents and the live page's recordings). Share sends the title and the YouTube link, and falls back to copying the link in browsers without a share sheet. Viewers can share too, but only the owner sees the hide option.
+
+The list lives in `public.hidden_channel_content` (migration `20261019084719`, applied to the hosted project): everyone can read it, only the channel owner can insert or delete (`streamer_id = auth.uid()` or `owns_organization`). Checked on the hosted database with the owner, another signed-in user and a signed-out caller. `supabase/tests/hidden_channel_content.test.sql` covers the same cases for the local pgTAP run (not run here; Docker was off). Bookmarks a viewer saved before an item was hidden still open it; that is not filtered.
+
+Debug builds now also list `MainActivity` as a launcher entry so `flutter run` works after the gold palette disabled the `DefaultLauncher` alias on a phone (debug installs show one extra icon).
+
 ## Hidayah Gold palette and website layouts, 2026-10-19
 
 The Settings → About logo toggle now switches between the current green design and the **Hidayah Gold** proposal, for team comparison. Gold replaces the first gold draft: role-based tokens from the logo (`hidayah_gold.dart`), night-slate panels, minted gold primary actions lit from the top, and ink selected states. On windows 1024 px and wider, gold also switches five screens to website layouts: Discovery, Map, Streamer account, Live (video and audio-only) and the Broadcast studio, under a top navigation bar with a footer. All other screens, and phones, keep today's layouts with the new colours. Details: `Core_files/Desgin.md` ("Optional Hidayah palette"). Verification: analyzer zero issues; new `test/hidayah_web_layout_test.dart` (website layouts at 1024 and 1440 px in both languages, green and phone layouts unchanged); updated appearance tests; rendered-contrast suite 76/76 for both palettes. Screenshots were rendered with the real fonts through `test/web_design_capture_test.dart` (set `WEB_CAPTURE_DIR`); the live page and chat need a live backend, so its capture uses stand-ins. Not yet checked in a real browser session against live data or on a physical phone.

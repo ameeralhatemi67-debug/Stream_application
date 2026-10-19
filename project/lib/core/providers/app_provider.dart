@@ -20,6 +20,7 @@ import '../../features/organization/models/org_event_text.dart';
 import '../../features/organization/models/org_invitation.dart';
 import '../../features/live_stream/models/broadcast_session.dart';
 import '../services/upcoming_schedule_service.dart';
+import '../services/hidden_content_service.dart';
 import '../services/reminder_push_service.dart';
 import '../config/reminder_firebase_config.dart';
 import '../services/connectivity_service.dart';
@@ -331,6 +332,16 @@ class AppProvider extends ChangeNotifier {
   final Map<String, List<PlaylistModel>> _streamerPlaylists = {};
   final Set<String> _syncedYouTubeStreamers = {};
 
+  // Videos and playlists a channel owner hid inside the app, by streamer id.
+  // Entries are `video:<youtube id>` / `playlist:<youtube id>`.
+  final Map<String, Set<String>> _hiddenContent = {};
+  int _hiddenContentVersion = 0;
+  final Map<String, ({List<VodModel> source, int version, List<VodModel> visible})>
+      _visibleVodsCache = {};
+  final Map<String,
+          ({List<PlaylistModel> source, int version, List<PlaylistModel> visible})>
+      _visiblePlaylistsCache = {};
+
   // Live Viewer Polling
   Timer? _liveViewerTimer;
   static const Duration _liveViewerPollInterval = Duration(seconds: 60);
@@ -396,6 +407,7 @@ class AppProvider extends ChangeNotifier {
   final Map<String, String> _upcomingErrors = {};
   final Set<String> _loadingUpcoming = {};
   final UpcomingScheduleService _upcomingService;
+  final HiddenContentService _hiddenContentService;
   late final ReminderPushService _reminderPush =
       ReminderPushService(_upcomingService);
   ReminderPushStatus _reminderPushStatus = ReminderPushStatus.unavailable;
@@ -429,9 +441,11 @@ class AppProvider extends ChangeNotifier {
       ConnectivityService? connectivityService,
       YouTubeApiService? youTubeService,
       UpcomingScheduleService? upcomingService,
+      HiddenContentService? hiddenContentService,
       OrganizationBroadcastService? organizationBroadcastService})
       : _organizationBroadcastService = organizationBroadcastService ?? OrganizationBroadcastService(),
         _upcomingService = upcomingService ?? UpcomingScheduleService(),
+        _hiddenContentService = hiddenContentService ?? HiddenContentService(),
         _youTubeService = youTubeService ?? YouTubeApiService(),
         _adminDbService = adminDbService,
         _authService = authService ?? SupabaseAuthService(),
@@ -3278,11 +3292,101 @@ class AppProvider extends ChangeNotifier {
   /// Recordings this streamer actually has. An empty list means "nothing
   /// recorded yet"and the UI shows an empty state -- it used to fall back to
   /// a compiled-in sample archive (P2 truthful data).
-  List<VodModel> getVodsForStreamer(String streamerId) =>
-      _streamerVods[streamerId] ?? const [];
+  ///
+  /// Videos the channel owner hid are left out unless the caller is that owner,
+  /// who sees them marked as hidden.
+  List<VodModel> getVodsForStreamer(String streamerId) {
+    final all = _streamerVods[streamerId] ?? const <VodModel>[];
+    final hidden = _hiddenContent[streamerId];
+    if (hidden == null || hidden.isEmpty || canManageChannelContent(streamerId)) {
+      return all;
+    }
+    // Screens select on this list, so keep returning the same instance until
+    // the source or the hidden set changes.
+    final cached = _visibleVodsCache[streamerId];
+    if (cached != null &&
+        identical(cached.source, all) &&
+        cached.version == _hiddenContentVersion) {
+      return cached.visible;
+    }
+    final visible = visibleVideosFor(streamerId, all);
+    _visibleVodsCache[streamerId] =
+        (source: all, version: _hiddenContentVersion, visible: visible);
+    return visible;
+  }
 
-  List<PlaylistModel> getPlaylistsForStreamer(String streamerId) =>
-      _streamerPlaylists[streamerId] ?? const [];
+  List<PlaylistModel> getPlaylistsForStreamer(String streamerId) {
+    final all = _streamerPlaylists[streamerId] ?? const <PlaylistModel>[];
+    final hidden = _hiddenContent[streamerId];
+    if (hidden == null || hidden.isEmpty || canManageChannelContent(streamerId)) {
+      return all;
+    }
+    final cached = _visiblePlaylistsCache[streamerId];
+    if (cached != null &&
+        identical(cached.source, all) &&
+        cached.version == _hiddenContentVersion) {
+      return cached.visible;
+    }
+    final visible = all
+        .where((p) => !hidden.contains(
+            HiddenContentService.key(HiddenContentKind.playlist, p.playlistId)))
+        .toList(growable: false);
+    _visiblePlaylistsCache[streamerId] = (
+      source: all,
+      version: _hiddenContentVersion,
+      visible: visible
+    );
+    return visible;
+  }
+
+  /// [videos] without the ones [streamerId]'s owner hid, for everyone but that
+  /// owner. Returns the same list when nothing is hidden.
+  List<VodModel> visibleVideosFor(String streamerId, List<VodModel> videos) {
+    final hidden = _hiddenContent[streamerId];
+    if (hidden == null || hidden.isEmpty || canManageChannelContent(streamerId)) {
+      return videos;
+    }
+    return videos
+        .where((v) => !hidden.contains(
+            HiddenContentService.key(HiddenContentKind.video, v.youtubeVideoId)))
+        .toList(growable: false);
+  }
+
+  /// Whether the signed-in user may hide or show this channel's videos and
+  /// playlists: the streamer on their own channel, or an organization's owner.
+  bool canManageChannelContent(String streamerId) =>
+      isLoggedInStreamer &&
+      isApprovedStreamer &&
+      isStreamerModeEnabled &&
+      isOwnStreamerProfile(streamerId);
+
+  bool isContentHidden(
+          String streamerId, HiddenContentKind kind, String itemId) =>
+      _hiddenContent[streamerId]
+          ?.contains(HiddenContentService.key(kind, itemId)) ??
+      false;
+
+  /// Hides or shows one video or playlist inside the app only. Throws when the
+  /// change could not be saved, leaving the visible state as it was.
+  Future<void> setContentHidden(String streamerId, HiddenContentKind kind,
+      String itemId, bool hidden) async {
+    if (!canManageChannelContent(streamerId)) {
+      throw StateError('Only the channel owner can hide content');
+    }
+    await _hiddenContentService.setHidden(streamerId, kind, itemId, hidden);
+    final set = _hiddenContent.putIfAbsent(streamerId, () => <String>{});
+    final key = HiddenContentService.key(kind, itemId);
+    hidden ? set.add(key) : set.remove(key);
+    _hiddenContentVersion++;
+    notifyListeners();
+  }
+
+  @visibleForTesting
+  void setHiddenContentForTests(String streamerId, Set<String> keys) {
+    _hiddenContent[streamerId] = keys;
+    _hiddenContentVersion++;
+    notifyListeners();
+  }
 
   Future<void> loadYouTubeChannelData({
     required String streamerId,
@@ -3310,6 +3414,12 @@ class AppProvider extends ChangeNotifier {
       if (getStreamerById(streamerId)?.youtubeHandle != handle) return;
       _streamerVods[streamerId] = vods;
       _streamerPlaylists[streamerId] = playlists;
+      try {
+        _hiddenContent[streamerId] = await _hiddenContentService.load(streamerId);
+        _hiddenContentVersion++;
+      } catch (e) {
+        debugPrint('Hidden content could not be loaded: $e');
+      }
       _syncedYouTubeStreamers.add(streamerId);
       notifyListeners();
     } catch (_) {
@@ -3322,10 +3432,12 @@ class AppProvider extends ChangeNotifier {
     required String playlistId,
   }) async {
     try {
-      return await _youTubeService.fetchPlaylistItems(
-        streamerId: streamerId,
-        playlistId: playlistId,
-      );
+      return visibleVideosFor(
+          streamerId,
+          await _youTubeService.fetchPlaylistItems(
+            streamerId: streamerId,
+            playlistId: playlistId,
+          ));
     } catch (e) {
       debugPrint('Error fetching playlist videos: $e');
       return [];

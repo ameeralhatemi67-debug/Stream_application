@@ -11,6 +11,8 @@ import '../../../../core/providers/app_provider.dart';
 import '../../models/streamer_models.dart';
 import '../../models/vod_models.dart';
 import 'vod_player_modal_sheet.dart';
+import 'channel_content_item.dart';
+import '../../../../core/services/hidden_content_service.dart';
 import '../../../../core/widgets/hadayah_loading_indicator.dart';
 
 /// Modal bottom sheet for viewing and playing lectures inside a playlist.
@@ -94,12 +96,17 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
     }
   }
 
+  List<VodModel> get _shownVideos => context
+      .read<AppProvider>()
+      .visibleVideosFor(widget.streamer.streamerId, _videos);
+
   void _playAll() {
-    if (_videos.isNotEmpty) {
+    final shown = _shownVideos;
+    if (shown.isNotEmpty) {
       Navigator.pop(context);
       VodPlayerModalSheet.show(
         context,
-        vod: _videos.first,
+        vod: shown.first,
         streamer: widget.streamer,
       );
     }
@@ -136,6 +143,9 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
   Widget build(BuildContext context) {
     final playlistTitle = widget.playlist.getLocalizedTitle(widget.langCode);
     final broadcasterName = widget.streamer.getLocalizedName(widget.langCode);
+    // Videos the channel owner hid are left out for everyone else.
+    context.watch<AppProvider>();
+    final videos = _shownVideos;
 
     return Container(
       constraints: BoxConstraints(
@@ -190,7 +200,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '$broadcasterName • ${_videos.isNotEmpty ? _videos.length : widget.playlist.videoCount} ${'profile.lectures_count'.tr()}',
+                          '$broadcasterName • ${videos.isNotEmpty ? videos.length : widget.playlist.videoCount} ${'profile.lectures_count'.tr()}',
                           style: TextStyle(
                             color: paletteColor(context, AppTheme.primary),
                             fontSize: 12,
@@ -220,7 +230,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
               child: SizedBox(
                 width: double.infinity,
                 child: ElevatedButton.icon(
-                  onPressed: _videos.isNotEmpty ? _playAll : null,
+                  onPressed: videos.isNotEmpty ? _playAll : null,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: paletteColor(context, AppTheme.primary),
                     foregroundColor: paletteColor(context, AppTheme.onMedia),
@@ -270,7 +280,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         ],
                       ),
                     )
-                  : _videos.isEmpty
+                  : videos.isEmpty
                       ? Center(
                           child: Padding(
                             padding: const EdgeInsets.all(32),
@@ -313,12 +323,12 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                           ].reduce((a, b) => a > b ? a : b);
                           return ListView.separated(
                             padding: const EdgeInsets.all(AppTheme.spaceLg),
-                            itemCount: _videos.length,
+                            itemCount: videos.length,
                             separatorBuilder: (_, __) =>
                                 const SizedBox(height: AppTheme.spaceMd),
                             itemBuilder: (context, index) {
-                              final video = _videos[index];
-                              return CaCard(
+                              final video = videos[index];
+                              final card = CaCard(
                                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                                 onTap: () {
                                   Navigator.pop(context);
@@ -404,6 +414,15 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                   ]),
                                 ),
                               );
+                              if (video.youtubeVideoId.isEmpty) return card;
+                              return ChannelContentItem(
+                                  streamerId: widget.streamer.streamerId,
+                                  kind: HiddenContentKind.video,
+                                  itemId: video.youtubeVideoId,
+                                  title: video.getLocalizedTitle(widget.langCode),
+                                  shareText:
+                                      '${video.getLocalizedTitle(widget.langCode)}\nhttps://www.youtube.com/watch?v=${video.youtubeVideoId}',
+                                  child: card);
                             },
                           );
                         }),
