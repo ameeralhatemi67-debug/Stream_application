@@ -326,6 +326,14 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                 onPressed: () =>
                                                     LiveBroadcasterStudioSheet
                                                         .show(context)),
+                                          if (own)
+                                            CaIconButton(
+                                                bare: true,
+                                                icon: CaGlyph.gear,
+                                                label: 'nav.settings'.tr(),
+                                                glass: true,
+                                                onPressed: () =>
+                                                    context.push('/settings')),
                                           if (streamer.youtubeHandle
                                               .trim()
                                               .isNotEmpty)
@@ -610,6 +618,15 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               : () => _shareChannel(streamer, lang),
                           onStudio: own
                               ? () => LiveBroadcasterStudioSheet.show(context)
+                              : null,
+                          onBranches: streamer.isOrganization &&
+                                  streamer.venues.isNotEmpty
+                              ? () => OrgBranchesModalSheet.show(context,
+                                  orgName: streamer.getLocalizedName(lang),
+                                  venues: streamer.venues)
+                              : null,
+                          onJoin: canJoin
+                              ? () => JoinOrgModalSheet.show(context)
                               : null)),
                   SliverPersistentHeader(
                       pinned: true,
@@ -634,32 +651,23 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                               child: HidayahNightBand(
                                   radius: BorderRadius.circular(20),
                                   child: body())),
-                          const SizedBox(width: 32),
-                          SizedBox(
-                              width: 340,
-                              child: SingleChildScrollView(
-                                  primary: false,
-                                  child: ProfileWebSidebar(
-                                      streamer: streamer,
-                                      selectedSpeakerId: _selectedSpeakerId,
-                                      onSpeaker: (id) => setState(() {
-                                            _selectedSpeakerId =
-                                                _selectedSpeakerId == id
-                                                    ? null
-                                                    : id;
-                                            _tabController?.animateTo(0);
-                                          }),
-                                      onBranches: streamer.isOrganization &&
-                                              streamer.venues.isNotEmpty
-                                          ? () => OrgBranchesModalSheet.show(
-                                              context,
-                                              orgName:
-                                                  streamer.getLocalizedName(lang),
-                                              venues: streamer.venues)
-                                          : null,
-                                      onJoin: canJoin
-                                          ? () => JoinOrgModalSheet.show(context)
-                                          : null))),
+                          if (ProfileWebSidebar.hasSidebar(streamer)) ...[
+                            const SizedBox(width: 32),
+                            SizedBox(
+                                width: 340,
+                                child: SingleChildScrollView(
+                                    primary: false,
+                                    child: ProfileWebSidebar(
+                                        streamer: streamer,
+                                        selectedSpeakerId: _selectedSpeakerId,
+                                        onSpeaker: (id) => setState(() {
+                                              _selectedSpeakerId =
+                                                  _selectedSpeakerId == id
+                                                      ? null
+                                                      : id;
+                                              _tabController?.animateTo(0);
+                                            })))),
+                          ],
                         ])))));
   }
 

@@ -16,6 +16,11 @@ RES = ROOT / "project/android/app/src/main/res"
 S800, S900, S950 = (0x24, 0x2E, 0x37), (0x15, 0x1D, 0x24), (0x0B, 0x11, 0x17)
 GOLD = (0xC1, 0x92, 0x3B)
 
+# Mark width as a share of the tile; 20% smaller than the first version
+# (.56 / .67) after the owner saw it crowd the Samsung squircle (2026-10-19).
+MARK_ADAPTIVE = .45
+MARK_LEGACY = .54
+
 
 def night(side):
     """The night gradient (top-left to bottom-right) with the gold glow."""
@@ -46,7 +51,7 @@ def place(canvas, mark, width_ratio):
 def rounded_tile(mark, side):
     """Legacy / browser icon: the night tile with rounded corners."""
     big = side * 4
-    tile = place(night(big), mark, .67)
+    tile = place(night(big), mark, MARK_LEGACY)
     mask = Image.new("L", (big, big))
     ImageDraw.Draw(mask).rounded_rectangle((0, 0, big - 1, big - 1),
                                            radius=round(big * .24), fill=255)
@@ -67,7 +72,7 @@ def main():
         drawable.mkdir(exist_ok=True)
         night(side).save(drawable / "ic_hidayah_background.png")
         # The visible mark fits inside the adaptive icon's central 72dp safe zone.
-        place(Image.new("RGBA", (side, side)), mark, .56).save(
+        place(Image.new("RGBA", (side, side)), mark, MARK_ADAPTIVE).save(
             drawable / "ic_hidayah_foreground.png")
     adaptive = RES / "mipmap-anydpi-v26"
     adaptive.mkdir(exist_ok=True)

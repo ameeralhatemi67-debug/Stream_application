@@ -129,10 +129,17 @@ class HidayahWebHeader extends StatelessWidget {
                     bottom: BorderSide(
                         color:
                             dark ? HidayahGold.s800 : HidayahGold.hairline))),
-            child: HidayahWebWidth(
-                child: Row(children: [
-              Flexible(
-                  flex: 2,
+            child: Center(
+                child: ConstrainedBox(
+                    constraints: const BoxConstraints(
+                        maxWidth:
+                            HidayahWeb.headerMax + HidayahWeb.headerGutter * 2),
+                    child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: HidayahWeb.headerGutter),
+                        child: Row(children: [
+              ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 340),
                   child: InkWell(
                       onTap: () => _go(context, HidayahWebSection.discover),
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
@@ -160,7 +167,6 @@ class HidayahWebHeader extends StatelessWidget {
               const SizedBox(width: 28),
               // Links scroll rather than overflow on narrow or enlarged text.
               Expanded(
-                  flex: 5,
                   child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
                       child: Row(children: [
@@ -206,7 +212,7 @@ class HidayahWebHeader extends StatelessWidget {
                     compact: true,
                     onPressed: () => context.push('/welcome')),
               ],
-            ]))));
+            ]))))));
   }
 }
 

@@ -11,6 +11,11 @@ abstract final class HidayahWeb {
   static const maxContent = 1200.0;
   static const gutter = 40.0;
   static const headerHeight = 72.0;
+
+  /// The navigation bar is wider than the 1200 px content column so the brand
+  /// and the account tools sit nearer the window edges.
+  static const headerMax = 1640.0;
+  static const headerGutter = 32.0;
   static const radius = 16.0;
   static const hover = Duration(milliseconds: 250);
 }

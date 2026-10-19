@@ -104,7 +104,14 @@ void main() {
             lang: lang);
         expect(find.byType(HidayahWebHeader), findsOneWidget);
         expect(find.byType(ProfileWebHero), findsOneWidget);
-        expect(find.byType(ProfileWebSidebar), findsOneWidget);
+        // About lives in the identity block; a non-organization channel has no
+        // sidebar, so its tab content takes the full width.
+        expect(
+            find.descendant(
+                of: find.byType(ProfileWebHero),
+                matching: find.byType(ProfileWebAbout)),
+            findsOneWidget);
+        expect(find.byType(ProfileWebSidebar), findsNothing);
         await tester.tap(find.text('profile.archive_tab'.tr()));
         await tester.pump(const Duration(milliseconds: 400));
         expect(tester.takeException(), isNull);

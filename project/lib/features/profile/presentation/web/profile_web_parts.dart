@@ -23,12 +23,14 @@ class ProfileWebHero extends StatelessWidget {
       required this.onWatch,
       required this.onReminder,
       this.onShare,
-      this.onStudio});
+      this.onStudio,
+      this.onBranches,
+      this.onJoin});
   final StreamerModel streamer;
   final bool live, uncertain, following, reminder, remindersAvailable;
   final int recordings, playlists;
   final VoidCallback onFollow, onWatch, onReminder;
-  final VoidCallback? onShare, onStudio;
+  final VoidCallback? onShare, onStudio, onBranches, onJoin;
 
   static const _cover = 230.0;
   static const _avatar = 62.0;
@@ -193,6 +195,8 @@ class ProfileWebHero extends StatelessWidget {
                             onPressed: onStudio),
                     ]))),
               ])),
+          ProfileWebAbout(
+              streamer: streamer, onBranches: onBranches, onJoin: onJoin),
         ]),
         PositionedDirectional(
             top: _cover - _avatar - 6,
@@ -262,24 +266,116 @@ class ProfileWebTabs extends StatelessWidget {
                   ])))));
 }
 
-/// About, organization tools and speakers beside the channel content.
-class ProfileWebSidebar extends StatelessWidget {
-  const ProfileWebSidebar(
-      {super.key,
-      required this.streamer,
-      required this.selectedSpeakerId,
-      required this.onSpeaker,
-      this.onBranches,
-      this.onJoin});
+/// "About" inside the channel identity block: bio, place, venue, tags and the
+/// organization actions. Renders nothing when the channel has none of them.
+class ProfileWebAbout extends StatelessWidget {
+  const ProfileWebAbout(
+      {super.key, required this.streamer, this.onBranches, this.onJoin});
   final StreamerModel streamer;
-  final String? selectedSpeakerId;
-  final ValueChanged<String> onSpeaker;
   final VoidCallback? onBranches, onJoin;
   @override
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
     final s = streamer;
+    final bio = s.getLocalizedBio(lang);
+    final city = s.getLocalizedCity(lang);
+    final venue = s.getLocalizedVenue(lang);
     final tags = s.tags.where((t) => t.trim().isNotEmpty).toSet().toList();
+    if (bio.isEmpty &&
+        city.isEmpty &&
+        venue.isEmpty &&
+        tags.isEmpty &&
+        onBranches == null &&
+        onJoin == null) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+        padding: const EdgeInsets.only(top: 22),
+        child: DecoratedBox(
+            decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: HidayahGold.hairline))),
+            child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('web.about'.tr(), style: HidayahText.display(18)),
+                      const SizedBox(height: 12),
+                      if (bio.isNotEmpty) ...[
+                        ConstrainedBox(
+                            constraints: const BoxConstraints(maxWidth: 820),
+                            child: Text(bio, style: HidayahText.body(14.5))),
+                        const SizedBox(height: 14),
+                      ],
+                      Wrap(spacing: 22, runSpacing: 8, children: [
+                        if (city.isNotEmpty)
+                          _AboutMeta(CaGlyph.pin, city),
+                        if (venue.isNotEmpty)
+                          _AboutMeta(CaGlyph.home, venue),
+                      ]),
+                      if (tags.isNotEmpty) ...[
+                        const SizedBox(height: 12),
+                        Wrap(spacing: 6, runSpacing: 6, children: [
+                          for (final t in tags) HidayahTag(t),
+                        ]),
+                      ],
+                      if (onBranches != null || onJoin != null) ...[
+                        const SizedBox(height: 14),
+                        Wrap(spacing: 8, runSpacing: 8, children: [
+                          if (onBranches != null)
+                            HidayahButton(
+                                label:
+                                    '${s.venues.length} ${'profile.campus_branches_btn'.tr()}',
+                                icon: CaGlyph.map,
+                                kind: HidayahButtonKind.ghost,
+                                compact: true,
+                                onPressed: onBranches),
+                          if (onJoin != null)
+                            HidayahButton(
+                                label: 'design_ui.join_an_organization'.tr(),
+                                icon: CaGlyph.users,
+                                kind: HidayahButtonKind.ghost,
+                                compact: true,
+                                onPressed: onJoin),
+                        ]),
+                      ],
+                    ]))));
+  }
+}
+
+class _AboutMeta extends StatelessWidget {
+  const _AboutMeta(this.icon, this.text);
+  final CaGlyph icon;
+  final String text;
+  @override
+  Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [
+        CaIcon(icon, color: HidayahGold.s700, size: 15),
+        const SizedBox(width: 6),
+        Flexible(
+            child: Text(text,
+                style: HidayahText.body(13.5, color: HidayahGold.s700, height: 1.4))),
+      ]);
+}
+
+/// Organization speakers beside the channel content (only organizations with
+/// affiliated speakers have a sidebar; see [hasSidebar]).
+class ProfileWebSidebar extends StatelessWidget {
+  const ProfileWebSidebar(
+      {super.key,
+      required this.streamer,
+      required this.selectedSpeakerId,
+      required this.onSpeaker});
+  final StreamerModel streamer;
+  final String? selectedSpeakerId;
+  final ValueChanged<String> onSpeaker;
+
+  static bool hasSidebar(StreamerModel s) =>
+      s.isOrganization && s.affiliatedSpeakers.isNotEmpty;
+
+  @override
+  Widget build(BuildContext context) {
+    final lang = context.locale.languageCode;
+    final s = streamer;
     Widget box(String title, List<Widget> children) => Padding(
         padding: const EdgeInsets.only(bottom: 16),
         child: HidayahCard(
@@ -292,52 +388,6 @@ class ProfileWebSidebar extends StatelessWidget {
                   ...children,
                 ])));
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-      box('web.about'.tr(), [
-        if (s.getLocalizedBio(lang).isNotEmpty) ...[
-          Text(s.getLocalizedBio(lang), style: HidayahText.body(14)),
-          const SizedBox(height: 14),
-        ],
-        if (s.getLocalizedCity(lang).isNotEmpty)
-          Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: HidayahMeta(
-                  icon: CaGlyph.pin,
-                  text: s.getLocalizedCity(lang),
-                  color: HidayahGold.s700)),
-        if (s.getLocalizedVenue(lang).isNotEmpty)
-          Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: HidayahMeta(
-                  icon: CaGlyph.home,
-                  text: s.getLocalizedVenue(lang),
-                  color: HidayahGold.s700)),
-        if (tags.isNotEmpty) ...[
-          const SizedBox(height: 6),
-          Wrap(spacing: 6, runSpacing: 6, children: [
-            for (final t in tags) HidayahTag(t),
-          ]),
-        ],
-        if (onBranches != null || onJoin != null) ...[
-          const SizedBox(height: 14),
-          Wrap(spacing: 8, runSpacing: 8, children: [
-            if (onBranches != null)
-              HidayahButton(
-                  label:
-                      '${s.venues.length} ${'profile.campus_branches_btn'.tr()}',
-                  icon: CaGlyph.map,
-                  kind: HidayahButtonKind.ghost,
-                  compact: true,
-                  onPressed: onBranches),
-            if (onJoin != null)
-              HidayahButton(
-                  label: 'design_ui.join_an_organization'.tr(),
-                  icon: CaGlyph.users,
-                  kind: HidayahButtonKind.ghost,
-                  compact: true,
-                  onPressed: onJoin),
-          ]),
-        ],
-      ]),
       if (s.isOrganization && s.affiliatedSpeakers.isNotEmpty)
         box('profile.featured_channels'.tr(), [
           Text('profile.featured_channels_hint'.tr(),
