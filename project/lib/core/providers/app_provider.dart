@@ -948,20 +948,8 @@ class AppProvider extends ChangeNotifier {
     try {
       final result=await _organizationBroadcastService.control(id,device!.deviceId,sender,'prepare',destination:destination);
       if(!current()) throw StateError('Device changed');
-      final session=BroadcastSession.fromRow(Map<String,dynamic>.from(result['session'] as Map));
-      if(session.channelConnectionId!=destination.id) throw StateError('Destination changed');
-      _publishingSession=session; _publishingDestination=destination;
-      _liveSessionId=session.id; _liveWatchId=session.watchId;
-      _selectedBroadcastOrgId=session.organizationId; _selectedVenueBranchId=session.venueId;
-      _broadcastSenderMode=sender;
-      _customLiveTitle=session.titleEn.isEmpty?session.titleAr:session.titleEn;
-      _customBroadcastType=session.broadcastType=='liveAudio'?BroadcastType.liveAudio:BroadcastType.liveVideo;
-      _customYouTubeVideoId=session.watchId??'';
-      _customYouTubeLiveUrl=session.watchId==null?'':'https://www.youtube.com/watch?v=${session.watchId}';
-      _phoneBroadcastRtmpUrl=result['ingest_url'] as String;
-      _phoneBroadcastStreamKey=result['ingest_key'] as String;
-      _isBroadcastingLive=session.live; _broadcastSessionError=null;
-      notifyListeners(); return result;
+      _applyPrepared(result,sender,destination);
+      return result;
     } catch (_) {
       final partial=await loadBroadcastSession(id).catchError((_)=>null);
       if(current() && partial!=null) {
@@ -973,6 +961,94 @@ class AppProvider extends ChangeNotifier {
       rethrow;
     }
   }
+  /// Makes a prepare result this device's publishing session.
+  void _applyPrepared(Map<String,dynamic> result,String sender,ChannelConnection destination) {
+    final session=BroadcastSession.fromRow(Map<String,dynamic>.from(result['session'] as Map));
+    if(session.channelConnectionId!=destination.id) throw StateError('Destination changed');
+    _publishingSession=session; _publishingDestination=destination;
+    _liveSessionId=session.id; _liveWatchId=session.watchId;
+    _selectedBroadcastOrgId=session.organizationId; _selectedVenueBranchId=session.venueId;
+    _broadcastSenderMode=sender;
+    _customLiveTitle=session.titleEn.isEmpty?session.titleAr:session.titleEn;
+    _customBroadcastType=session.broadcastType=='liveAudio'?BroadcastType.liveAudio:BroadcastType.liveVideo;
+    _customYouTubeVideoId=session.watchId??'';
+    _customYouTubeLiveUrl=session.watchId==null?'':'https://www.youtube.com/watch?v=${session.watchId}';
+    _phoneBroadcastRtmpUrl=result['ingest_url'] as String;
+    _phoneBroadcastStreamKey=result['ingest_key'] as String;
+    _isBroadcastingLive=session.live; _broadcastSessionError=null;
+    notifyListeners();
+  }
+
+  /// Prepares [id] on YouTube for this phone without making it the publishing
+  /// session: the studio does this as soon as it opens, so Preview has nothing
+  /// left to wait for. [adoptPreparedBroadcast] takes the result over.
+  Future<Map<String,dynamic>> prewarmBroadcast(String id,ChannelConnection destination) async {
+    final device=_currentDeviceSession;
+    if(device?.isPrimaryBroadcaster!=true) throw StateError('Primary device required');
+    return _organizationBroadcastService.control(id,device!.deviceId,'phone_direct','prepare',destination:destination);
+  }
+
+  void adoptPreparedBroadcast(Map<String,dynamic> result,String sender,ChannelConnection destination) {
+    if(_disposed || _currentDeviceSession?.isPrimaryBroadcaster!=true) throw StateError('Primary device required');
+    _applyPrepared(result,sender,destination);
+  }
+
+  Future<Map<String,dynamic>> updatePersonalBroadcast(String id,String title,String type) =>
+      _organizationBroadcastService.updatePersonal(id,title,type);
+
+  // A prepared broadcast the studio did not use. It is ended after a short
+  // grace, so closing and reopening the studio reuses it instead of creating
+  // (and paying YouTube quota for) another one.
+  String? _releasedWarmId;
+  Timer? _releasedWarmTimer;
+  @visibleForTesting
+  static Duration warmReleaseGrace=const Duration(seconds:90);
+
+  void releaseWarmBroadcast(String id) {
+    if(_disposed || _publishingSession?.id==id) return;
+    _releasedWarmTimer?.cancel();
+    final previous=_releasedWarmId;
+    if(previous!=null && previous!=id) unawaited(_endWarmBroadcast(previous));
+    _releasedWarmId=id;
+    _releasedWarmTimer=Timer(warmReleaseGrace,(){
+      _releasedWarmTimer=null; _releasedWarmId=null;
+      unawaited(_endWarmBroadcast(id));
+    });
+  }
+
+  /// The studio reopened: keep the released preparation for reuse.
+  String? reclaimWarmBroadcast() {
+    _releasedWarmTimer?.cancel(); _releasedWarmTimer=null;
+    final id=_releasedWarmId; _releasedWarmId=null;
+    return id;
+  }
+
+  /// Ends a preparation now (sender or destination changed). Never-live
+  /// broadcasts are deleted from YouTube.
+  Future<void> discardWarmBroadcast(String id) {
+    if(_releasedWarmId==id) {_releasedWarmTimer?.cancel(); _releasedWarmTimer=null; _releasedWarmId=null;}
+    return _endWarmBroadcast(id);
+  }
+
+  Future<void> _endWarmBroadcast(String id) async {
+    if(_publishingSession?.id==id) return;
+    try {
+      await _organizationBroadcastService.control(id,_currentDeviceSession?.deviceId??'management','phone_direct','end');
+    } catch (e) {
+      // The reconcile job ends a preparation whose window has passed.
+      debugPrint('Unused preparation not ended: ${e.runtimeType}');
+    }
+  }
+
+  /// Hide (or keep) this session's recording in the app when its live ends.
+  Future<void> setBroadcastHideReplay(String id,bool hidden) async {
+    await _organizationBroadcastService.setHideReplay(id,hidden);
+    if(_publishingSession?.id==id) {
+      _publishingSession=_publishingSession!.withHideReplay(hidden);
+      notifyListeners();
+    }
+  }
+
   Future<void> endOrganizationSession(BroadcastSession session) async {
     if(_publishingSession?.id==session.id) {
       await setBroadcasterLive(false);
@@ -1130,6 +1206,7 @@ class AppProvider extends ChangeNotifier {
   bool _deviceHeartbeatBusy = false;
   int _deviceGeneration = 0;
   bool _liveStateBusy = false;
+  bool _cancelLiveStart = false;
   Completer<void>? _liveStateCompletion;
   bool get broadcastOperationBusy => _liveStateBusy;
   // Bumped whenever this device asserts or withdraws LIVE, so a status read
@@ -2192,13 +2269,28 @@ class AppProvider extends ChangeNotifier {
   Timer? _realtimeRefreshTimer;
   bool _realtimeNeedsAdminRefresh = false;
 
-  void _scheduleRealtimeRefresh({required bool admin}) {
+  bool _realtimeNeedsRoomRefresh = false;
+
+  void _scheduleRealtimeRefresh({required bool admin, bool rooms = false}) {
     _realtimeNeedsAdminRefresh = _realtimeNeedsAdminRefresh || admin;
+    _realtimeNeedsRoomRefresh = _realtimeNeedsRoomRefresh || rooms;
     _realtimeRefreshTimer?.cancel();
     _realtimeRefreshTimer = Timer(const Duration(seconds: 1), () {
       final withAdmin = _realtimeNeedsAdminRefresh;
       _realtimeNeedsAdminRefresh = false;
+      final withRooms = _realtimeNeedsRoomRefresh;
+      _realtimeNeedsRoomRefresh = false;
       if (_disposed) return;
+      if (withRooms) {
+        // Open rooms read their own session; one that just went live or
+        // ended must not wait for its 20 s poll.
+        for (final entry in _roomSessions.entries.toList()) {
+          if (const ['scheduled', 'preparing', 'live', 'ending']
+              .contains(entry.value.state)) {
+            unawaited(refreshBroadcastRoom(entry.key).catchError((_) {}));
+          }
+        }
+      }
       if (withAdmin) {
         refreshAdminData(); // also reloads the public catalog
       } else {
@@ -2246,6 +2338,15 @@ class AppProvider extends ChangeNotifier {
           // detection, so it arrives even for edge cases those might miss
           // (issue_log.md: "when I delete an account as an admin, I can see
           // the change ... in my web test, but not in my phone").
+          // Sent by the database whenever a broadcast goes live or leaves
+          // live (20261019150000). It carries no ids: re-read what this
+          // account may see. Viewers learn of a new live within ~1-2 s
+          // instead of on the next 15-30 s catalog poll.
+          .onBroadcast(
+            event: 'catalog_changed',
+            callback: (_) =>
+                _scheduleRealtimeRefresh(admin: false, rooms: true),
+          )
           .onBroadcast(
             event: 'streamer_deleted',
             callback: (payload) {
@@ -2910,6 +3011,7 @@ class AppProvider extends ChangeNotifier {
     _connectivitySub?.cancel();
     _connectivityService?.dispose();
     _realtimeRefreshTimer?.cancel();
+    _releasedWarmTimer?.cancel();
     _reminderPush.dispose();
     super.dispose();
   }
@@ -4303,10 +4405,17 @@ class AppProvider extends ChangeNotifier {
     if(session==null || destination==null || _broadcastSenderMode!='phone_direct') {
       _broadcastSessionError='organization_v1.assignment_required';notifyListeners();return false;
     }
-    try {
-      await prepareBroadcast(session.id,'phone_direct',destination);
+    bool validIngest() {
       final uri=Uri.tryParse(phoneBroadcastFullUrl);
       return uri?.scheme=='rtmps' && RegExp(r'^(?:[a-z0-9-]+\.)*rtmps?\.youtube\.com$').hasMatch(uri?.host??'') && _phoneBroadcastStreamKey.isNotEmpty;
+    }
+    // The studio just prepared this session and its feed. 'start' checks the
+    // presenter's authority again on the server, so a second prepare here
+    // would only add a round trip to YouTube before the camera connects.
+    if(session.state=='preparing' && validIngest()) return true;
+    try {
+      await prepareBroadcast(session.id,'phone_direct',destination);
+      return validIngest();
     } catch(error) {
       _broadcastSessionError=OrganizationBroadcastService.errorKey(error);notifyListeners();return false;
     }
@@ -4318,28 +4427,40 @@ class AppProvider extends ChangeNotifier {
   Future<void> setBroadcasterLive(bool live, [BuildContext? context]) async {
     final generation=_deviceGeneration, authGeneration=_authGeneration;
     bool current()=>!_disposed && generation==_deviceGeneration && authGeneration==_authGeneration;
+    // An End while a start is still confirming: the start stops retrying.
+    if(!live && _liveStateBusy) _cancelLiveStart=true;
     while(_liveStateBusy) {
       await _liveStateCompletion?.future;
       if(!current()) return;
     }
     final device=_currentDeviceSession, session=_publishingSession;
     if(session==null || (live && device?.isPrimaryBroadcaster!=true)) {
+      // Nothing left to end (an earlier End already cleared it).
+      if(!live && session==null) return;
       _broadcastSessionError=session==null?'organization_v1.assignment_required':'broadcast_primary_required';notifyListeners();return;
     }
-    _liveStateBusy=true; _liveAssertionEpoch++;
+    _liveStateBusy=true; _liveAssertionEpoch++; _cancelLiveStart=false;
     final completion=Completer<void>(); _liveStateCompletion=completion;
     _broadcastSessionError=null; notifyListeners();
     try {
+      // The server answers with the session it left behind; reading it again
+      // would only add a round trip before LIVE (or ended) shows.
+      BroadcastSession? answered(Map<String,dynamic> result) => result['session'] is Map
+          ? BroadcastSession.fromRow(Map<String,dynamic>.from(result['session'] as Map)) : null;
       if(live) {
         final deadline=DateTime.now().add(const Duration(seconds:65));
         while(current() && DateTime.now().isBefore(deadline)) {
+          BroadcastSession? observed;
           try {
-            await _organizationBroadcastService.control(session.id,device!.deviceId,_broadcastSenderMode,'start',destination:_publishingDestination);
+            // The server waits (checking every second) for YouTube to receive
+            // the encoder and confirm the live, so one call usually suffices.
+            observed=answered(await _organizationBroadcastService.control(session.id,device!.deviceId,_broadcastSenderMode,'start',destination:_publishingDestination));
           } on FunctionException catch(error) {
             if(!OrganizationBroadcastService.waitingForEncoder(error)) rethrow;
           }
           if(!current() || _currentDeviceSession?.isPrimaryBroadcaster!=true || _publishingSession?.id!=session.id) return;
-          final observed=await loadBroadcastSession(session.id);
+          if(_cancelLiveStart) throw StateError('Start cancelled');
+          observed??=await loadBroadcastSession(session.id);
           if(!current()) return;
           if(observed==null || !['preparing','live'].contains(observed.state)) throw StateError('Session ended');
           _publishingSession=observed;
@@ -4347,21 +4468,22 @@ class AppProvider extends ChangeNotifier {
             _isBroadcastingLive=true; _liveWatchId=observed.watchId;
             _remoteBroadcastEndReason=null; break;
           }
-          await Future<void>.delayed(const Duration(seconds:3));
+          await Future<void>.delayed(const Duration(seconds:1));
         }
         if(!_isBroadcastingLive) throw StateError('Provider confirmation pending');
       } else {
         // Remove credentials immediately; retain the session until termination is confirmed.
         _phoneBroadcastStreamKey=''; _phoneBroadcastRtmpUrl='';
-        await _organizationBroadcastService.control(session.id,device?.deviceId??'management',
+        final result=await _organizationBroadcastService.control(session.id,device?.deviceId??'management',
           session.senderMode=='phone_direct'?'phone_direct':'obs_laptop','end');
         if(!current()) return;
-        final observed=await loadBroadcastSession(session.id);
+        final observed=answered(result) ?? await loadBroadcastSession(session.id);
         if(!current()) return;
         if(observed==null || observed.active) throw StateError('Termination pending');
         _isBroadcastingLive=false; _clearPublishingState();
       }
-      await loadVerifiedStreamersFromBackend();
+      // LIVE (or ended) shows now; the catalog catches up behind it.
+      unawaited(loadVerifiedStreamersFromBackend());
     } catch (error) {
       if(!current()) return;
       final observed=await loadBroadcastSession(session.id).catchError((_)=>null);

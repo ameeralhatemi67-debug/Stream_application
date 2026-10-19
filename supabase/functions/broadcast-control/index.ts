@@ -24,6 +24,15 @@ Deno.serve(async request=>{
   const server=createClient(url,service,{auth:{persistSession:false,autoRefreshToken:false}});
   const serverRpc=(name:string,params:Record<string,unknown>)=>rpc(server,name,params);
   let id:string|undefined,reservation:string|undefined;
+  // Reason codes only; tokens, keys and request bodies are never logged.
+  async function record(error:unknown) {
+    console.error(JSON.stringify({session:id??null,reason:error instanceof ProviderError?error.reason:'operation_failed',
+      status:error instanceof ProviderError?error.status:null,ambiguous:error instanceof ProviderError?error.ambiguous:null,
+      detail:error instanceof ProviderError?null:error instanceof Error?error.name:typeof error}));
+    if(id&&reservation) await serverRpc('broadcast_provider_step',{p_id:id,p_token:reservation,p_step:'observe',
+      p_error:error instanceof ProviderError?error.reason:'operation_failed',p_ambiguous:error instanceof ProviderError?error.ambiguous:true}).catch(()=>{});
+  }
+  const runtime=(globalThis as {EdgeRuntime?:{waitUntil(task:Promise<unknown>):void}}).EdgeRuntime;
   try {
     const authorization=request.headers.get('authorization')??'';
     const token=/^Bearer\s+(.+)$/i.exec(authorization)?.[1];
@@ -40,14 +49,12 @@ Deno.serve(async request=>{
       p_connection_id:body.connection_id??null,p_channel_revision:body.channel_revision??null});
     if(claim.done) return Response.json({done:true},{headers});
     reservation=claim.token;
-    return Response.json(await runBroadcast(id!,reservation!,serverRpc,credentials),{headers});
+    // End answers as soon as YouTube has ended the broadcast; feed retirement
+    // finishes in the background (the reconcile job retries it if this fails).
+    return Response.json(await runBroadcast(id!,reservation!,serverRpc,credentials,undefined,
+      runtime?{background:task=>runtime.waitUntil(task.catch(record))}:{}),{headers});
   } catch(error) {
-    // Reason codes only; tokens, keys and request bodies are never logged.
-    console.error(JSON.stringify({session:id??null,reason:error instanceof ProviderError?error.reason:'operation_failed',
-      status:error instanceof ProviderError?error.status:null,ambiguous:error instanceof ProviderError?error.ambiguous:null,
-      detail:error instanceof ProviderError?null:error instanceof Error?error.name:typeof error}));
-    if(id&&reservation) await serverRpc('broadcast_provider_step',{p_id:id,p_token:reservation,p_step:'observe',
-      p_error:error instanceof ProviderError?error.reason:'operation_failed',p_ambiguous:error instanceof ProviderError?error.ambiguous:true}).catch(()=>{});
+    await record(error);
     return Response.json({error:error instanceof ProviderError?error.reason:'operation_failed'},
       {status:error instanceof ProviderError?error.status:409,headers});
   }

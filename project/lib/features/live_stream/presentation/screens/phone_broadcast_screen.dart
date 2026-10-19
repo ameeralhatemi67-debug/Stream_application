@@ -306,13 +306,15 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       _weStartedBroadcast = true;
       await _engine.startPublishing(_appProvider.phoneBroadcastFullUrl);
       final connected = await _engine.waitUntilLive();
-      if (!mounted) return;
+      // End during the connect already stopped the camera and ends the session.
+      if (!mounted || _closing) return;
       if (!connected || !_weStartedBroadcast) {
         await _stopBroadcast();
         return;
       }
       _appProvider.setBroadcastSenderMode('phone_direct');
       await _appProvider.setBroadcasterLive(true, context);
+      if (!mounted || _closing) return;
       if (!_appProvider.isBroadcastingLive) await _stopBroadcast();
     } on Exception {
       await _stopBroadcast();
@@ -458,36 +460,46 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
       if (!end || !mounted || _closing || _leavingAfterDisplacement) return;
     }
     setState(() => _closing = true);
-    var confirmed = true;
     // Only an end this screen asked the server for can fail to be confirmed;
     // a Leave with nothing listed makes no server call at all.
     final owned = _weStartedBroadcast || _ownsPreparedSession;
-    try {
-      await _stopBroadcast();
-      // The camera has stopped either way. A failed end call leaves the
-      // listing in place (the provider restores it), so say so instead of
-      // implying the listing is gone.
-      confirmed = !owned ||
-          (_appProvider.publishingSession == null &&
-              !_appProvider.isBroadcastingLive);
-    } catch (e) {
-      debugPrint('[PhoneBroadcastScreen] end failed: ${e.runtimeType}');
-      confirmed = false;
-    }
+    _weStartedBroadcast = false;
+    _wasListed = false;
+    // Closing is as quick as the camera stopping. The server end continues
+    // behind the closed page: viewers see the live end as soon as the server
+    // accepts it, and YouTube completes it in the same call.
+    await _engine.stopPublishing();
     if (!mounted) return;
-    if (!confirmed) {
+    final overlay = Overlay.of(context, rootOverlay: true);
+    final warning = paletteColor(context, AppTheme.warning);
+    final ending = owned ? _endOnServer(_appProvider) : null;
+    final route = ModalRoute.of(context);
+    if (route != null && route.isCurrent) Navigator.of(context).pop();
+    // A failed end call leaves the listing in place (the provider restores
+    // it), so say so instead of implying the listing is gone.
+    if (ending != null && !await ending && overlay.mounted) {
       InteractiveToastOverlay.show(
-        context,
+        overlay.context,
+        overlay: overlay,
         title: 'live.end_unconfirmed_title'.tr(),
         message: 'live.end_unconfirmed_body'.tr(),
         icon: Icons.warning_amber_rounded,
-        accentColor: paletteColor(context, AppTheme.warning),
+        accentColor: warning,
         duration: const Duration(seconds: 10),
         messageMaxLines: 6,
       );
     }
-    final route = ModalRoute.of(context);
-    if (route != null && route.isCurrent) Navigator.of(context).pop();
+  }
+
+  /// Ends this broadcast's server session; true once the end is confirmed.
+  static Future<bool> _endOnServer(AppProvider provider) async {
+    try {
+      await provider.setBroadcasterLive(false);
+      return provider.publishingSession == null && !provider.isBroadcastingLive;
+    } catch (e) {
+      debugPrint('[PhoneBroadcastScreen] end failed: ${e.runtimeType}');
+      return false;
+    }
   }
 
   Future<void> _stopBroadcast() async {
@@ -1239,6 +1251,28 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
     );
   }
 
+  bool _savingHideReplay = false;
+
+  /// Saves the hide-the-recording choice on this broadcast's session. The
+  /// database hides the video when the live ends; the owner can show it again
+  /// from the channel page.
+  Future<void> _setHideReplay(bool value) async {
+    final session = _appProvider.publishingSession;
+    if (session == null || _savingHideReplay) return;
+    setState(() => _savingHideReplay = true);
+    try {
+      await _appProvider.setBroadcastHideReplay(session.id, value);
+    } catch (e) {
+      debugPrint('[PhoneBroadcastScreen] hide choice failed: ${e.runtimeType}');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('live.hide_replay_failed'.tr())));
+      }
+    } finally {
+      if (mounted) setState(() => _savingHideReplay = false);
+    }
+  }
+
   void _showStreamerControlsSheet(StreamerModel streamer) {
     showCaSheet<void>(
       context,
@@ -1451,6 +1485,58 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                           },
                         ),
                         const SizedBox(height: 8),
+
+                        // Hide the recording in the app when this live ends.
+                        if (_appProvider.publishingSession != null) ...[
+                          Builder(builder: (context) {
+                            final hide =
+                                _appProvider.publishingSession?.hideReplay ??
+                                    false;
+                            Future<void> toggle(bool value) async {
+                              final saving = _setHideReplay(value);
+                              setModalState(() {});
+                              await saving;
+                              if (context.mounted) setModalState(() {});
+                            }
+
+                            return ListTile(
+                              key: const Key('phone-hide-replay'),
+                              shape: RoundedRectangleBorder(
+                                borderRadius:
+                                    BorderRadius.circular(AppTheme.radiusMd),
+                              ),
+                              tileColor: paletteColor(context, Canopy.mint),
+                              leading: Icon(
+                                  hide
+                                      ? Icons.visibility_off_rounded
+                                      : Icons.visibility_rounded,
+                                  color: paletteColor(context, AppTheme.primary)),
+                              title: Text(
+                                'live.hide_replay'.tr(),
+                                style: TextStyle(
+                                    color: paletteColor(context, Canopy.ink),
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 13.5),
+                              ),
+                              subtitle: Text(
+                                'live.hide_replay_sub'.tr(),
+                                style: TextStyle(
+                                    color: paletteColor(context, Canopy.slate),
+                                    fontSize: AppTheme.captionFont),
+                              ),
+                              trailing: Switch(
+                                value: hide,
+                                activeThumbColor:
+                                    paletteColor(context, AppTheme.primary),
+                                onChanged: _savingHideReplay ? null : toggle,
+                              ),
+                              onTap: _savingHideReplay
+                                  ? null
+                                  : () => toggle(!hide),
+                            );
+                          }),
+                          const SizedBox(height: 8),
+                        ],
 
                         // 4.  Private Attendees Admission (if private)
                         if (_appProvider.isActiveStreamPrivate) ...[

@@ -81,6 +81,14 @@ class OrganizationBroadcastService {
     params:{'p_id':session.id,'p_accept':accept,'p_revision':session.revision});
   Future<String> createPersonal(String title,String type) async => await client.rpc('broadcast_create_personal',
     params:{'p_title':title,'p_type':type}) as String;
+  /// Title and video/audio choice of a personal session not yet live. Returns
+  /// the session row.
+  Future<Map<String,dynamic>> updatePersonal(String id,String title,String type) async =>
+    Map<String,dynamic>.from(await client.rpc('broadcast_update_personal',
+      params:{'p_id':id,'p_title':title,'p_type':type}) as Map);
+  /// Hide the recording in the app when this session's live ends.
+  Future<void> setHideReplay(String id,bool hidden) =>
+    client.rpc('broadcast_set_hide_replay',params:{'p_id':id,'p_hidden':hidden});
   Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
     final result=await client.functions.invoke('broadcast-control',headers:_sessionHeaders(),body:{'session_id':sessionId,
       'device_id':deviceId,'sender_mode':sender,'action':action,

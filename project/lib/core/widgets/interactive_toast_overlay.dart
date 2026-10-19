@@ -20,8 +20,10 @@ class InteractiveToastOverlay {
     String? actionLabel,
     VoidCallback? onActionPressed,
     int messageMaxLines = 2,
+    OverlayState? overlay,
   }) {
     showWidget(context,
+        overlay: overlay,
         builder: (ctx, dismissToast) => _InteractiveToastWidget(
               title: title,
               message: message,
@@ -44,15 +46,18 @@ class InteractiveToastOverlay {
   }
 
   /// Shared single-toast lifetime and replacement policy for branded renderers.
+  /// [overlay] shows the toast after the page that asked for it has closed
+  /// (pass the root overlay captured before closing).
   static void showWidget(
     BuildContext context, {
     required Widget Function(BuildContext, VoidCallback) builder,
     Duration duration = CanopyMotion.toastLifetime,
+    OverlayState? overlay,
   }) {
     dismiss();
     final entry = OverlayEntry(builder: (ctx) => builder(ctx, dismiss));
     _currentEntry = entry;
-    Overlay.of(context).insert(entry);
+    (overlay ?? Overlay.of(context)).insert(entry);
     _dismissTimer = Timer(duration, dismiss);
   }
 

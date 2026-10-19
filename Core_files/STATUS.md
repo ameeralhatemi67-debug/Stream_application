@@ -8,6 +8,19 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Faster go-live, low-latency streaming and "hide the video when the live ends", 2026-10-19
+
+Owner targets: viewers see a new live within 15 s (ideally under 3 s); camera-to-viewer delay 5–10 s (never over 12 s); ending as fast as starting. What changed (ADR-012):
+
+- **Early YouTube handshake.** Opening the Broadcast studio on a phone with the presenter's own connected channel creates the session and prepares the YouTube feed, broadcast and binding in the background. Preview adopts it (title/video-audio choices made meanwhile are applied with `broadcast_update_personal`; the YouTube title follows on start). Closing the studio keeps it 90 s for reuse, then ends it; switching to OBS or another destination ends it at once. A preparation whose window passed is ended by the reconcile job (`stale_expired`).
+- **Go live.** No second prepare at Go Live; the phone's first connect reuses the running preview encoder instead of reopening the camera; 1 s keyframes. `broadcast-control` now waits server-side (1 s checks, 15 s budget) for YouTube to receive the encoder, transitions, and waits for `live`, so one call usually confirms the live (was: phone retries every 3 s plus extra reads). Cached Google access token per warm function instance.
+- **Lag.** New YouTube broadcasts use `latencyPreference: ultraLow` (falls back to `low` if YouTube refuses it for a channel). Ultra-low supports up to 1080p and no closed captions; our presets are ≤1080p.
+- **Viewers see it live.** Every change into or out of `live` sends a content-free public Realtime broadcast (`catalog_changed`); the app re-reads the catalog and open rooms within ~1–2 s (was the 15/30 s feed poll and the room's 20 s poll).
+- **End.** The page closes as soon as the camera stops; the server end continues behind it (unconfirmed ends still show the warning toast). `broadcast-control` answers End right after YouTube completes the broadcast; feed retirement and the replay check finish in the background (`EdgeRuntime.waitUntil`). An End tapped during Go Live stops the start's retries.
+- **Hide the video when the live ends.** A switch in the studio (before starting) and in the live screen's ⋮ options sheet. When a live ends with it on, its video is added to `hidden_channel_content`; the owner shows it again from the channel page's long-press menu.
+
+Migration `20261019150000_fast_go_live_and_hidden_replay.sql` (not deployed). Verification: analyzer 0; new Flutter tests in `broadcaster_studio_entry_test.dart` (7) and `phone_broadcast_end_test.dart` (3); full suite in the ledger block; new `supabase/tests/fast_go_live_and_hidden_replay.test.sql` 44/44 on a disposable copy, the other 36 SQL files identical with and without the migration (rls_catalog's 3 failures predate it: `hidden_channel_content` is missing from its anon allowlist, plus the admin-built copy's grant drift); edge logic checked with a Node harness against a fake YouTube API (not committed; no Deno here); Android debug APK builds. **Not measured on a phone or against real YouTube**: the second counts above are design targets until a physical test. Deploy needs the migration plus redeploying `broadcast-control` and `reconcile-broadcasts`.
+
 ## Hide and share videos and playlists, 2026-10-19
 
 A channel owner (a streamer on their own channel, or an organization owner) long-presses a video or playlist, in both designs, to **hide** it from viewers or **share** it. Hidden items stay on YouTube; the app only stops listing them. The owner sees them blurred with a "hidden" icon, everyone else does not get them at all (profile grids, playlist contents and the live page's recordings). Share sends the title and the YouTube link, and falls back to copying the link in browsers without a share sheet. Viewers can share too, but only the owner sees the hide option.

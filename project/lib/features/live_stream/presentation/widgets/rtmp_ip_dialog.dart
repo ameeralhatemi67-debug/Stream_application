@@ -133,11 +133,23 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
     try {
       await _studio.load();
       if (mounted) setState(() => _loadError = null);
+      _prewarm();
     } catch (_) {
       if (mounted) {
         setState(() => _loadError = 'organization_v1.publish_failure');
       }
     }
+  }
+
+  String get _defaultTitle => 'organization_v1.default_title'
+      .tr(namedArgs: {'channel': _studio.destination?.title ?? ''});
+
+  /// Starts the YouTube handshake while the presenter picks options, so
+  /// Preview opens the camera without waiting for it.
+  void _prewarm() {
+    if (!mounted || widget.onEndBroadcast != null) return;
+    _studio.prewarm(
+        title: _defaultTitle, type: _audio ? 'liveAudio' : 'liveVideo');
   }
 
   @override
@@ -212,10 +224,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
     }
     final typed = _title.text.trim();
     // The title is optional: an empty one becomes "<channel> – Live".
-    final title = typed.isNotEmpty
-        ? typed
-        : 'organization_v1.default_title'
-            .tr(namedArgs: {'channel': _studio.destination?.title ?? ''});
+    final title = typed.isNotEmpty ? typed : _defaultTitle;
     if (!await _studio.prepare(title, _audio ? 'liveAudio' : 'liveVideo') ||
         !mounted) {
       return;
@@ -596,11 +605,19 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                       'phone_direct'
                                                   ? 1
                                                   : 0,
-                                              onChanged: (index) => setState(
-                                                  () => _studio.sender =
-                                                      index == 0
-                                                          ? 'obs_laptop'
-                                                          : 'phone_direct')),
+                                              onChanged: (index) {
+                                                setState(() => _studio.sender =
+                                                    index == 0
+                                                        ? 'obs_laptop'
+                                                        : 'phone_direct');
+                                                // The background preparation is
+                                                // for this phone only.
+                                                if (index == 0) {
+                                                  _studio.discardWarm();
+                                                } else {
+                                                  _prewarm();
+                                                }
+                                              }),
                                           const SizedBox(
                                               height: AppTheme.spaceMd),
                                           if (_studio.destination
@@ -735,7 +752,8 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                 .toList(),
                                             onChanged: frozen || operationBusy
                                                 ? null
-                                                : (id) => setState(() {
+                                                : (id) {
+                                                    setState(() {
                                                       _studio.destination =
                                                           destinations
                                                               .where((c) =>
@@ -743,7 +761,10 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                                               .firstOrNull;
                                                       _studio.session = null;
                                                       _studio.confirmed = false;
-                                                    })),
+                                                    });
+                                                    _studio.discardWarm();
+                                                    _prewarm();
+                                                  }),
                                         ],
                                         if (_studio
                                                 .destination?.organizationId !=
@@ -796,6 +817,27 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                                               readOnly:
                                                   context.isPhoneLandscape),
                                         ],
+                                        if (destinations.isNotEmpty &&
+                                            _studio.session?.state != 'ending')
+                                          SwitchListTile(
+                                              key: const Key(
+                                                  'studio-hide-replay'),
+                                              contentPadding: EdgeInsets.zero,
+                                              value: _studio.hideReplay,
+                                              activeThumbColor: paletteColor(
+                                                  context, Canopy.mint),
+                                              onChanged: operationBusy
+                                                  ? null
+                                                  : (value) => _studio
+                                                      .setHideReplay(value),
+                                              title: Text(
+                                                  'live.hide_replay'.tr()),
+                                              subtitle: Text(
+                                                  'live.hide_replay_sub'.tr(),
+                                                  style: TextStyle(
+                                                      color: paletteColor(
+                                                          context,
+                                                          Canopy.mist)))),
                                         if (frozen &&
                                             _studio.ingestKey.isNotEmpty &&
                                             _studio.sender == 'obs_laptop') ...[

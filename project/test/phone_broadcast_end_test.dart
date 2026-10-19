@@ -59,6 +59,8 @@ class _Db extends AdminDatabaseService {
   int stops = 0;
   bool failStop = false;
   int endRequests = 0;
+  int prepares = 0;
+  final hideChoices = <bool>[];
   Completer<void>? endGate;
   bool useSession = false;
   bool rejectIngest = false;
@@ -174,6 +176,7 @@ class _CanonicalBroadcasts extends EmptyBroadcasts {
       {ChannelConnection? destination}) async {
     db.deviceId = deviceId;
     if (action == 'prepare') {
+      db.prepares++;
       if (!db.permitted) throw const FunctionException(status: 403);
       return {
         'session': Map<String, dynamic>.of(row),
@@ -193,6 +196,12 @@ class _CanonicalBroadcasts extends EmptyBroadcasts {
       row['state'] = 'completed';
     }
     return {'session': Map<String, dynamic>.of(row)};
+  }
+
+  @override
+  Future<void> setHideReplay(String id, bool hidden) async {
+    db.hideChoices.add(hidden);
+    row['hide_replay'] = hidden;
   }
 }
 
@@ -333,11 +342,13 @@ void main() {
     (const Locale('ar'), const Size(915, 412), 1.0),
     (const Locale('ar'), const Size(360, 780), 2.0),
   ]) {
-    testWidgets('camera preview stays private and Back cancels preparation: $locale $size $scale',
+    testWidgets(
+        'camera preview stays private and Back cancels preparation: $locale $size $scale',
         (tester) async {
       final db = _Db();
       final p = await tester.runAsync(() => broadcaster(db));
-      await open(tester, p!, locale: locale, size: size, textScale: scale, autoStart: false);
+      await open(tester, p!,
+          locale: locale, size: size, textScale: scale, autoStart: false);
       expect(calls, contains('prepare'));
       expect(calls, isNot(contains('startStream')));
       expect(db.starts, 0);
@@ -455,9 +466,16 @@ void main() {
   // Golden font preloading lives on the design branch; nothing to load here.
   Future<void> captureFonts() async {}
   const hudSizes = <Size>[
-    Size(320, 640), Size(360, 780), Size(393, 852), Size(412, 915),
-    Size(600, 900), Size(852, 393), Size(820, 1100), Size(1024, 720),
-    Size(1280, 760), Size(1600, 900),
+    Size(320, 640),
+    Size(360, 780),
+    Size(393, 852),
+    Size(412, 915),
+    Size(600, 900),
+    Size(852, 393),
+    Size(820, 1100),
+    Size(1024, 720),
+    Size(1280, 760),
+    Size(1600, 900),
   ];
   Iterable<double> hudScales(Size size) =>
       [1.0, 1.6, if (size.shortestSide < 600) 1.3];
@@ -1202,6 +1220,84 @@ void main() {
     expect(find.text('organization_v1.prepare'.tr()), findsNothing);
     expect(calls.where((c) => c == 'startStream').length, 1);
     expect(find.byType(PhoneBroadcastScreen), findsOneWidget);
+    await close(tester, p, db);
+  });
+
+  testWidgets('Go live uses the studio feed: no second prepare first',
+      (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    expect(db.prepares, 1, reason: 'the studio (here: the fixture) prepared');
+    await open(tester, p!, autoStart: false);
+    await tester.tap(find.byKey(const Key('phone-start-broadcast')));
+    await tester.pump();
+    expect(calls.where((c) => c == 'startStream'), hasLength(1));
+    messenger.handlePlatformMessage(events.name,
+        events.codec.encodeSuccessEnvelope({'type': 'live'}), (_) {});
+    await tester.pump();
+    expect(db.starts, 1);
+    expect(p.isBroadcastingLive, isTrue);
+    expect(db.prepares, 1,
+        reason: 'the start re-checks authority on the server; no re-prepare');
+    await close(tester, p, db);
+  });
+
+  testWidgets('End closes the page at once and the server end follows',
+      (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!, wideConfirmation: true);
+    await goLive(tester);
+    InteractiveToastOverlay.dismiss();
+    db.endGate = Completer<void>();
+    await tester.tap(endButton);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('phone-end-confirm-end')));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 500));
+    expect(calls, contains('stopStream'));
+    expect(find.byType(PhoneBroadcastScreen), findsNothing,
+        reason: 'the page does not wait for the server');
+    expect(db.endRequests, 1);
+    expect(p.publishingSession, isNotNull, reason: 'end still in flight');
+    db.endGate!.complete();
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await tester.pump();
+    expect(p.publishingSession, isNull);
+    expect(p.isBroadcastingLive, isFalse);
+    expect(find.text('live.end_unconfirmed_title'.tr()), findsNothing);
+    await close(tester, p, db);
+  });
+
+  testWidgets('options menu hides the video when the live ends',
+      (tester) async {
+    final db = _Db();
+    final p = await tester.runAsync(() => broadcaster(db));
+    await open(tester, p!);
+    await tester.tap(find.byTooltip('live.tooltip_controls'.tr()).first);
+    await tester.pumpAndSettle();
+    final tile = find.byKey(const Key('phone-hide-replay'));
+    await tester.ensureVisible(tile);
+    expect(find.text('live.hide_replay'.tr()), findsOneWidget);
+    expect(
+        tester
+            .widget<Switch>(
+                find.descendant(of: tile, matching: find.byType(Switch)))
+            .value,
+        isFalse);
+    await tester.tap(find.descendant(of: tile, matching: find.byType(Switch)));
+    await tester
+        .runAsync(() => Future<void>.delayed(const Duration(milliseconds: 20)));
+    await tester.pumpAndSettle();
+    expect(db.hideChoices, [true]);
+    expect(p.publishingSession?.hideReplay, isTrue);
+    expect(
+        tester
+            .widget<Switch>(
+                find.descendant(of: tile, matching: find.byType(Switch)))
+            .value,
+        isTrue);
     await close(tester, p, db);
   });
 }

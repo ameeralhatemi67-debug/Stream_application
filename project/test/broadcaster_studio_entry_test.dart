@@ -174,8 +174,13 @@ class _Broadcasts extends OrganizationBroadcastService {
   @override Future<List<ChannelConnection>> connections() async=>[destination];
   @override Future<List<OrgMembership>> memberships({String? organizationId}) async=>[];
   @override Future<List<BroadcastSession>> sessions({String? organizationId,bool mine=false}) async=>creates==0?[]:[BroadcastSession.fromRow(row)];
-  @override Future<BroadcastSession?> session(String id) async=>BroadcastSession.fromRow(row);
+  int reads=0;
+  final updates=<(String,String)>[], hideChoices=<bool>[];
+  @override Future<BroadcastSession?> session(String id) async {reads++;return BroadcastSession.fromRow(row);}
   @override Future<String> createPersonal(String title,String type) async {creates++;createdTitle=title;return 'session';}
+  @override Future<Map<String,dynamic>> updatePersonal(String id,String title,String type) async {
+    updates.add((title,type));row['title_en']=title;row['broadcast_type']=type;return Map<String,dynamic>.of(row);}
+  @override Future<void> setHideReplay(String id,bool hidden) async {hideChoices.add(hidden);row['hide_replay']=hidden;}
   @override Future<Map<String,dynamic>> control(String sessionId,String deviceId,String sender,String action,{ChannelConnection? destination}) async {
     actions.add(action);
     if(action=='prepare') {
@@ -280,6 +285,117 @@ void main() {
     p.dispose();await db.devices.close();
   });
 
+  Future<void> settle()=>Future<void>.delayed(const Duration(milliseconds:20));
+
+  test('opening the studio prepares YouTube in the background; Preview adopts it',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='phone_direct'..confirmed=true;
+    studio.prewarm(title:'Default',type:'liveVideo');
+    await settle();
+    expect(broadcasts.creates,1);expect(broadcasts.prepares,1);
+    expect(studio.frozen,isFalse,reason:'the options stay open while it prepares');
+    expect(p.publishingSession,isNull);
+    expect(p.phoneBroadcastStreamKey,isEmpty,reason:'not the publishing session until Preview');
+    expect(await studio.prepare('Default','liveVideo'),isTrue);
+    expect(broadcasts.creates,1);expect(broadcasts.prepares,1,reason:'Preview had nothing left to wait for');
+    expect(broadcasts.updates,isEmpty);
+    expect(p.publishingSession?.id,'session');expect(p.phoneBroadcastStreamKey,'test-only-key');
+    expect(await p.checkBroadcastPermission(),isTrue);
+    expect(broadcasts.prepares,1,reason:'Go live does not prepare a second time');
+    studio.dispose();p.dispose();await db.devices.close();
+  });
+
+  test('a title or audio choice made after the pre-warm is applied on Preview',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='phone_direct'..confirmed=true;
+    studio.prewarm(title:'Default',type:'liveVideo');
+    // Preview while the handshake is still running waits for it.
+    expect(await studio.prepare('My lesson','liveAudio'),isTrue);
+    expect(broadcasts.creates,1);expect(broadcasts.prepares,1);
+    expect(broadcasts.updates,[('My lesson','liveAudio')]);
+    expect(p.publishingSession?.titleEn,'My lesson');expect(p.publishingSession?.broadcastType,'liveAudio');
+    studio.dispose();p.dispose();await db.devices.close();
+  });
+
+  test('switching to OBS ends the unused phone preparation first',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='phone_direct'..confirmed=true;
+    studio.prewarm(title:'Default',type:'liveVideo');
+    await settle();
+    studio.sender='obs_laptop';studio.discardWarm();
+    expect(await studio.prepare('Default','liveVideo'),isTrue);
+    expect(broadcasts.actions,['prepare','end','prepare']);
+    expect(broadcasts.creates,2);
+    studio.dispose();p.dispose();await db.devices.close();
+  });
+
+  test('closing and reopening the studio reuses the preparation; unused, it is ended after the grace',()async {
+    final grace=AppProvider.warmReleaseGrace;
+    addTearDown(()=>AppProvider.warmReleaseGrace=grace);
+    AppProvider.warmReleaseGrace=const Duration(milliseconds:50);
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    broadcasts.row['device_id']=p.currentDeviceSession!.deviceId;
+    broadcasts.row['expected_end_at']=DateTime.now().toUtc().add(const Duration(hours:1)).toIso8601String();
+    final first=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='phone_direct'..confirmed=true;
+    first.prewarm(title:'Default',type:'liveVideo');
+    await settle();first.dispose();
+    final reopened=BroadcastPublishingController(p)..sender='phone_direct';
+    await reopened.load();
+    expect(reopened.frozen,isFalse,reason:'an unused preparation is not shown as a frozen show');
+    reopened.prewarm(title:'Default',type:'liveVideo');
+    await Future<void>.delayed(const Duration(milliseconds:120));
+    expect(broadcasts.actions,isNot(contains('end')),reason:'reclaimed before the grace ran out');
+    expect(broadcasts.creates,1);
+    reopened.dispose();
+    // Closed again and not reopened: ended once the grace passes.
+    await Future<void>.delayed(const Duration(milliseconds:120));
+    expect(broadcasts.actions.last,'end');
+    expect(broadcasts.creates,1);
+    p.dispose();await db.devices.close();
+  });
+
+  test('the hide-the-video choice is saved with the prepared session',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    final studio=BroadcastPublishingController(p)..destination=_Broadcasts.destination..sender='obs_laptop'..confirmed=true;
+    await studio.setHideReplay(true);
+    expect(broadcasts.hideChoices,isEmpty,reason:'nothing prepared yet');
+    expect(await studio.prepare('Show','liveVideo'),isTrue);
+    expect(broadcasts.hideChoices,[true]);expect(studio.session?.hideReplay,isTrue);
+    await studio.setHideReplay(false);
+    expect(broadcasts.hideChoices,[true,false]);expect(studio.session?.hideReplay,isFalse);
+    await p.setBroadcastHideReplay('session',true);
+    expect(p.publishingSession?.hideReplay,isTrue);
+    studio.dispose();p.dispose();await db.devices.close();
+  });
+
+  test('a confirmed start or end needs no extra session read',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts();
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    await p.prepareBroadcast('session','obs_laptop',_Broadcasts.destination);
+    await p.setBroadcasterLive(true);
+    expect(p.isBroadcastingLive,isTrue);expect(broadcasts.reads,0);
+    await p.setBroadcasterLive(false);
+    expect(p.publishingSession,isNull);expect(broadcasts.reads,0);
+    p.dispose();await db.devices.close();
+  });
+
+  test('End during a start that waits for the encoder stops its retries',()async {
+    final db=_StudioDb(), broadcasts=_Broadcasts()
+      ..startError=const FunctionException(status:409,details:{'error':'waiting_for_encoder'});
+    final p=await _broadcaster(db,broadcasts:broadcasts);
+    await p.prepareBroadcast('session','obs_laptop',_Broadcasts.destination);
+    final start=p.setBroadcasterLive(true);final end=p.setBroadcasterLive(false);
+    await Future.wait([start,end]).timeout(const Duration(seconds:5));
+    expect(broadcasts.actions,['prepare','start','end']);
+    expect(p.publishingSession,isNull);expect(p.isBroadcastingLive,isFalse);
+    p.dispose();await db.devices.close();
+  });
+
   for(final locale in [const Locale('en'),const Locale('ar')]) {
     testWidgets('one personal channel is selected without extra confirmation: $locale',(tester)async {
       final db=_StudioDb();final p=await tester.runAsync(()=>_broadcaster(db));
@@ -293,6 +409,7 @@ void main() {
       expect(find.byType(DropdownButtonFormField<String>),findsNothing);
       expect(find.textContaining('Confirmed channel'),findsOneWidget);
       expect(find.byType(TextField),findsOneWidget);
+      expect(find.byKey(const Key('studio-hide-replay')),findsOneWidget);
       // The title is optional: Preview is available before anything is typed.
       final preview=find.widgetWithText(CaButton,'organization_v1.preview'.tr());
       expect(tester.widget<CaButton>(preview).onPressed,isNotNull);

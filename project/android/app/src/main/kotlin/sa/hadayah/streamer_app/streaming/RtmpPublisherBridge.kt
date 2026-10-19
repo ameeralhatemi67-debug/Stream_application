@@ -25,6 +25,9 @@ class RtmpPublisherBridge(private val appContext: Context, private val displayId
     MethodChannel.MethodCallHandler, EventChannel.StreamHandler {
     private var preview: SurfaceView? = null
     private var stream: RtmpStream? = null
+    // Dart generation the current instance reports events under. The preview
+    // instance has none (-1) until its first connect adopts one.
+    private var streamGeneration = -1
     private var eventSink: EventChannel.EventSink? = null
     private val main = Handler(Looper.getMainLooper())
     private var nativeGeneration = 0
@@ -82,11 +85,13 @@ class RtmpPublisherBridge(private val appContext: Context, private val displayId
     private fun makeStream(dartGeneration: Int): RtmpStream {
         releaseStream()
         val token = nativeGeneration
+        streamGeneration = dartGeneration
         fun event(type: String, value: Long? = null) {
             main.post {
                 if (token != nativeGeneration) return@post
+                val generation = streamGeneration
                 if (type == "disconnected" || type == "error") releaseStream()
-                eventSink?.success(mapOf("type" to type, "generation" to dartGeneration,
+                eventSink?.success(mapOf("type" to type, "generation" to generation,
                     "value" to value))
             }
         }
@@ -102,7 +107,9 @@ class RtmpPublisherBridge(private val appContext: Context, private val displayId
         val camera = RearCameraSource(appContext)
         val current = RtmpStream(appContext, checker, camera, MicrophoneSource())
         stream = current
-        check(current.prepareVideo(width, height, bitrate, rotation = 0) &&
+        // A keyframe every second (SDK default 2 s): YouTube sees the feed sooner,
+        // ultra-low-latency segments stay short and viewers join faster.
+        check(current.prepareVideo(width, height, bitrate, iFrameInterval = 1, rotation = 0) &&
             current.prepareAudio(44100, true, 128_000)) { "Unsupported encoder configuration" }
         // Display events cover both landscape directions and 180-degree rotations.
         // SDK sensor polling follows UI only after a matching sensor event and
@@ -175,7 +182,18 @@ class RtmpPublisherBridge(private val appContext: Context, private val displayId
                     }
                     muted = call.argument<Boolean>("muted") ?: muted
                     audioOnly = call.argument<Boolean>("audioOnly") ?: audioOnly
-                    val current = makeStream(call.argument<Int>("generation") ?: 0)
+                    val generation = call.argument<Int>("generation") ?: 0
+                    val prepared = stream
+                    // The first connect reuses the preview's camera and encoders, which are
+                    // already running, instead of reopening them. Any later attempt (stopStream
+                    // and disconnects release the instance) builds a fresh one.
+                    val current = if (prepared != null && !prepared.isStreaming && streamGeneration == -1) {
+                        streamGeneration = generation
+                        syncOrientation()
+                        if (audioOnly) prepared.getGlInterface().muteVideo() else prepared.getGlInterface().unMuteVideo()
+                        (prepared.audioSource as? MicrophoneSource)?.let { if (muted) it.mute() else it.unMute() }
+                        prepared
+                    } else makeStream(generation)
                     val intent = Intent(appContext, RtmpForegroundService::class.java)
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
                         appContext.startForegroundService(intent) else appContext.startService(intent)

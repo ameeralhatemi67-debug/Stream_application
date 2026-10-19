@@ -16,8 +16,10 @@ class BroadcastSession {
     required this.state,required this.revision,required this.titleEn,required this.titleAr,required this.broadcastType,
     required this.startUtc,required this.endUtc,required this.accepted,required this.watchId,required this.replayStatus,
     required this.terminationPending,required this.channelConnectionId,this.scheduleId,this.venueId,
-    this.senderMode='unspecified',this.deviceId,this.hidden=false});
+    this.senderMode='unspecified',this.deviceId,this.hidden=false,this.hideReplay=false});
   final bool hidden;
+  /// The presenter chose to hide the recording in the app when the live ends.
+  final bool hideReplay;
   final String senderMode;
   final String? deviceId;
   final String id,presenterId,state,titleEn,titleAr,broadcastType,replayStatus;
@@ -38,5 +40,11 @@ class BroadcastSession {
     watchId:row['stream_id'] as String?,replayStatus:row['replay_status'] as String? ?? 'not_started',
     terminationPending:row['termination_pending']==true,channelConnectionId:row['channel_connection_id'] as String?,
     scheduleId:row['schedule_id'] as String?,venueId:row['venue_id'] as String?,
-    hidden:row['hidden_from_discovery']==true, senderMode:row['sender_mode'] as String? ?? 'unspecified',deviceId:row['device_id'] as String?);
+    hidden:row['hidden_from_discovery']==true, senderMode:row['sender_mode'] as String? ?? 'unspecified',deviceId:row['device_id'] as String?,
+    hideReplay:row['hide_replay']==true);
+  BroadcastSession withHideReplay(bool value) => BroadcastSession(id:id,presenterId:presenterId,organizationId:organizationId,
+    state:state,revision:revision,titleEn:titleEn,titleAr:titleAr,broadcastType:broadcastType,startUtc:startUtc,endUtc:endUtc,
+    accepted:accepted,watchId:watchId,replayStatus:replayStatus,terminationPending:terminationPending,
+    channelConnectionId:channelConnectionId,scheduleId:scheduleId,venueId:venueId,senderMode:senderMode,deviceId:deviceId,
+    hidden:hidden,hideReplay:value);
 }

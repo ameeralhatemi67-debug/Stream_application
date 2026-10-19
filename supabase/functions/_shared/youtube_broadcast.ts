@@ -17,6 +17,30 @@ export async function googleToken(params: URLSearchParams): Promise<Record<strin
   return await response.json();
 }
 
+// Access tokens live about an hour. A warm function instance reuses one per
+// grant instead of asking Google again on every studio and go-live call.
+const accessTokens = new Map<string, {token: string; expires: number}>();
+
+export async function accessToken(credentials: {clientId: string; clientSecret: string},
+  refresh: string): Promise<string> {
+  const key = `${credentials.clientId}\u0000${refresh}`;
+  const cached = accessTokens.get(key);
+  if (cached && cached.expires > Date.now()) return cached.token;
+  const token = await googleToken(new URLSearchParams({grant_type:'refresh_token',client_id:credentials.clientId,
+    client_secret:credentials.clientSecret,refresh_token:refresh}));
+  if (typeof token.access_token !== 'string') throw new ProviderError(401,'owner_reconnection_required');
+  const lifetime = typeof token.expires_in === 'number' ? token.expires_in : 0;
+  if (lifetime > 300) {
+    if (accessTokens.size > 500) accessTokens.clear();
+    accessTokens.set(key,{token:token.access_token,expires:Date.now()+(lifetime-120)*1000});
+  }
+  return token.access_token;
+}
+
+export function forgetAccessToken(credentials: {clientId: string}, refresh: string): void {
+  accessTokens.delete(`${credentials.clientId}\u0000${refresh}`);
+}
+
 export async function youtube(token: string, resource: string, params: Record<string, string>,
   method = 'GET', body?: unknown): Promise<Record<string, unknown>> {
   const url = new URL(resource, youtubeApi);

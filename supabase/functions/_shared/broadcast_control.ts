@@ -1,4 +1,4 @@
-import {googleToken,ingestionAddress,ProviderError,youtube} from './youtube_broadcast.ts';
+import {accessToken,forgetAccessToken,ingestionAddress,ProviderError,youtube} from './youtube_broadcast.ts';
 
 type Rpc = (name:string,params:Record<string,unknown>) => Promise<any>;
 type Api = typeof youtube;
@@ -10,22 +10,40 @@ type Context = {
   channel_id:string;refresh_token:string;ingest_key:string|null;
 };
 
+export type RunOptions = {
+  /** Keeps work running after the response is sent (EdgeRuntime.waitUntil). */
+  background?: (task:Promise<void>) => void;
+  /** How long one 'start' call waits for YouTube before asking the caller to try again. */
+  startBudgetMs?: number;
+  pollMs?: number;
+  sleep?: (ms:number) => Promise<void>;
+};
+
 export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
-  credentials:{clientId:string;clientSecret:string},api:Api=youtube):Promise<Record<string,unknown>> {
+  credentials:{clientId:string;clientSecret:string},api:Api=youtube,options:RunOptions={}):Promise<Record<string,unknown>> {
   const params={p_id:id,p_token:reservation};
   const context=():Promise<Context>=>rpc('broadcast_operation_context',params);
   let c=await context();
-  const token=await googleToken(new URLSearchParams({grant_type:'refresh_token',client_id:credentials.clientId,
-    client_secret:credentials.clientSecret,refresh_token:c.refresh_token}));
-  if(typeof token.access_token!=='string') throw new ProviderError(401,'owner_reconnection_required');
-  const access=token.access_token;
-  const call=(resource:string,query:Record<string,string>,method='GET',body?:unknown)=>api(access,resource,query,method,body);
+  const refresh=c.refresh_token;
+  const access=await accessToken(credentials,refresh);
+  const call=async(resource:string,query:Record<string,string>,method='GET',body?:unknown)=>{
+    try {return await api(access,resource,query,method,body);}
+    catch(error) {
+      // A revoked or expired grant: the next operation asks Google again.
+      if(error instanceof ProviderError && error.status===401) forgetAccessToken(credentials,refresh);
+      throw error;
+    }
+  };
+  const poll=options.pollMs??1000;
+  const sleep=options.sleep??((ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms)));
+  const startDeadline=Date.now()+(options.startBudgetMs??15000);
   const result=(step:string,value:unknown)=>rpc('broadcast_provider_step',{...params,p_step:step,p_result:value});
-  async function write(step:string,resource:string,query:Record<string,string>,method:string,body:unknown,project:(data:any)=>unknown) {
+  async function write(step:string,resource:string,query:Record<string,string>,method:string,body:unknown,project:(data:any)=>unknown,
+    request?:()=>Promise<any>) {
     c=await context(); // Fresh permission and destination fence before every privileged write.
     await rpc('broadcast_provider_step',{...params,p_step:step});
     try {
-      const response=await call(resource,query,method,body);
+      const response=await (request?request():call(resource,query,method,body));
       let projected:unknown;
       // The provider write already succeeded: a rejected result must be reconciled, not repeated.
       try {projected=project(response);}
@@ -42,6 +60,7 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
     c=await context();
   }
   const marker=`Hadayah session ${id}`;
+  const title=()=>Array.from(c.session.title_en||c.session.title_ar).slice(0,100).join('');
   function feed(data:any) {
     if(data.snippet?.channelId!==c.channel_id || data.contentDetails?.isReusable!==false) throw new ProviderError(409,'feed_identity_mismatch',true);
     if(typeof data.id!=='string'||typeof data.cdn?.ingestionInfo?.streamName!=='string'||!data.cdn.ingestionInfo.streamName) throw new ProviderError(409,'feed_result_invalid',true);
@@ -61,6 +80,38 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
       if(!page) return matches;
     }
     throw new ProviderError(409,'reconciliation_page_limit',true);
+  }
+  // Ultra-low latency keeps the phone-to-viewer delay to a few seconds. A
+  // channel YouTube refuses it for still goes live, with low latency.
+  async function insertBroadcast() {
+    const body=(latencyPreference:string)=>({
+      snippet:{title:title(),description:`${c.session.description}\n${marker}`,
+        scheduledStartTime:c.session.scheduled_start_at,scheduledEndTime:c.session.expected_end_at},
+      status:{privacyStatus:'public',selfDeclaredMadeForKids:false},contentDetails:{enableAutoStart:false,enableAutoStop:false,
+        enableDvr:true,recordFromStart:true,latencyPreference,monitorStream:{enableMonitorStream:false}},
+    });
+    const query={part:'id,snippet,status,contentDetails'};
+    try {return await call('liveBroadcasts',query,'POST',body('ultraLow'));}
+    catch(error) {
+      if(!(error instanceof ProviderError) || error.status!==400 || !/latency/i.test(error.reason)) throw error;
+      return await call('liveBroadcasts',query,'POST',body('low'));
+    }
+  }
+  // The studio prepares a broadcast as soon as it opens, before the presenter
+  // has chosen a title. Best effort: going live never waits on the title.
+  async function retitle(item:any) {
+    const wanted=title();
+    if(!wanted || item.snippet?.title===wanted || !['created','ready'].includes(item.status?.lifeCycleStatus)) return;
+    const scheduled=Date.parse(item.snippet?.scheduledStartTime??'');
+    const start=Math.max(Number.isNaN(scheduled)?0:scheduled,Date.now()+60000);
+    const end=Date.parse(c.session.expected_end_at);
+    try {
+      await call('liveBroadcasts',{part:'id,snippet'},'PUT',{id:c.resource.provider_broadcast_id,snippet:{title:wanted,
+        description:`${c.session.description}\n${marker}`,scheduledStartTime:new Date(start).toISOString(),
+        ...(end>start?{scheduledEndTime:new Date(end).toISOString()}:{})}});
+    } catch(error) {
+      console.error(JSON.stringify({session:id,reason:error instanceof ProviderError?`title_${error.reason}`:'title_update_failed'}));
+    }
   }
   if(c.resource.needs_reconciliation) {
     if(c.resource.step==='stream_create' && !c.resource.provider_stream_id) {
@@ -94,12 +145,7 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
     if(!c.resource.provider_stream_id) await write('stream_create','liveStreams',{part:'id,snippet,cdn,contentDetails'},'POST',{
       snippet:{title:marker,description:marker},cdn:{frameRate:'variable',resolution:'variable',ingestionType:'rtmp'},contentDetails:{isReusable:false},
     },feed);
-    if(!c.resource.provider_broadcast_id) await write('broadcast_create','liveBroadcasts',{part:'id,snippet,status,contentDetails'},'POST',{
-      snippet:{title:Array.from(c.session.title_en||c.session.title_ar).slice(0,100).join(''),description:`${c.session.description}\n${marker}`,
-        scheduledStartTime:c.session.scheduled_start_at,scheduledEndTime:c.session.expected_end_at},
-      status:{privacyStatus:'public',selfDeclaredMadeForKids:false},contentDetails:{enableAutoStart:false,enableAutoStop:false,
-        enableDvr:true,recordFromStart:true,monitorStream:{enableMonitorStream:false}},
-    },broadcast);
+    if(!c.resource.provider_broadcast_id) await write('broadcast_create','liveBroadcasts',{},'POST',undefined,broadcast,insertBroadcast);
     if(!c.resource.bound) await write('bind','liveBroadcasts/bind',{part:'id,contentDetails',id:c.resource.provider_broadcast_id!,streamId:c.resource.provider_stream_id!},'POST',undefined,data=>{
       if(data.contentDetails?.boundStreamId!==c.resource.provider_stream_id) throw new ProviderError(409,'binding_unconfirmed',true);
       return {};
@@ -124,10 +170,30 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
     await rpc('broadcast_observe_feed',{...params,p_active:active});
   }
   if(c.resource.operation==='start' && provider && !['live','liveStarting','complete','revoked'].includes(provider.status.lifeCycleStatus)) {
-    const sending=(await call('liveStreams',{part:'id,status',id:c.resource.provider_stream_id!})).items as any[];
-    if(sending?.[0]?.status?.streamStatus!=='active') throw new ProviderError(409,'waiting_for_encoder');
+    const titled=retitle(provider);
+    try {
+      // Wait here, checking every second, until YouTube receives the encoder,
+      // instead of making the phone call back every few seconds.
+      for(;;) {
+        const sending=(await call('liveStreams',{part:'id,status',id:c.resource.provider_stream_id!})).items as any[];
+        if(sending?.[0]?.status?.streamStatus==='active') break;
+        if(Date.now()+poll>startDeadline) throw new ProviderError(409,'waiting_for_encoder');
+        await sleep(poll);
+      }
+    } finally {await titled;}
     await write('transition_live','liveBroadcasts/transition',{part:'id,status',id:c.resource.provider_broadcast_id!,broadcastStatus:'live'},'POST',undefined,
       data=>({status:data.status.lifeCycleStatus}));
+  }
+  // YouTube answers a transition with liveStarting and goes live a few seconds
+  // later. Waiting for it here confirms the live in this one call.
+  if(c.resource.operation==='start' && c.session.state==='preparing' && provider && !c.resource.broadcast_deleted) {
+    while(Date.now()+poll<=startDeadline) {
+      await sleep(poll);
+      const status=((await call('liveBroadcasts',{part:'id,status',id:c.resource.provider_broadcast_id!})).items as any[])?.[0]?.status?.lifeCycleStatus;
+      if(status==='liveStarting') continue;
+      if(typeof status==='string') {await result('observe',{status});c=await context();}
+      break;
+    }
   }
   if(c.resource.operation==='end' && provider && !['complete','revoked'].includes(provider.status.lifeCycleStatus)) {
     // Upcoming/preparing broadcasts cannot transition to complete. Delete the never-live broadcast instead.
@@ -139,22 +205,32 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
   if(c.resource.operation==='end' && !c.resource.provider_broadcast_id) {
     await result('observe',{status:'complete'});c=await context();
   }
-  if(['processing_replay','completed','cancelled'].includes(c.session.state) && c.resource.provider_stream_id && !c.resource.feed_retired) {
-    await write('feed_delete','liveStreams',{id:c.resource.provider_stream_id},'DELETE',undefined,()=>({}));
-  }
-  if(c.session.state==='processing_replay' && c.session.stream_id) {
-    if(c.resource.broadcast_deleted) {await result('observe',{replay:'missing'});c=await context();}
-    else {
-    const video=(await call('videos',{part:'id,status,processingDetails',id:c.session.stream_id})).items as any[];
-    const replay=video?.[0]?.status?.uploadStatus;
-    if(replay==='processed') await result('observe',{replay:'available'});
-    else if(['failed','rejected','deleted'].includes(replay)||(!video?.length && Date.now()-Date.parse(c.session.expected_end_at)>24*3600000)) await result('observe',{replay:'missing'});
+  async function settle() {
+    if(['processing_replay','completed','cancelled'].includes(c.session.state) && c.resource.provider_stream_id && !c.resource.feed_retired) {
+      await write('feed_delete','liveStreams',{id:c.resource.provider_stream_id},'DELETE',undefined,()=>({}));
     }
-  } else if(c.session.state==='processing_replay' && !c.session.stream_id) {
-    await result('observe',{replay:'missing'});
+    if(c.session.state==='processing_replay' && c.session.stream_id) {
+      if(c.resource.broadcast_deleted) {await result('observe',{replay:'missing'});c=await context();}
+      else {
+      const video=(await call('videos',{part:'id,status,processingDetails',id:c.session.stream_id})).items as any[];
+      const replay=video?.[0]?.status?.uploadStatus;
+      if(replay==='processed') await result('observe',{replay:'available'});
+      else if(['failed','rejected','deleted'].includes(replay)||(!video?.length && Date.now()-Date.parse(c.session.expected_end_at)>24*3600000)) await result('observe',{replay:'missing'});
+      }
+    } else if(c.session.state==='processing_replay' && !c.session.stream_id) {
+      await result('observe',{replay:'missing'});
+    }
+    c=await context();
+    await rpc('broadcast_provider_step',{...params,p_step:'finish'});
   }
-  c=await context();
-  await rpc('broadcast_provider_step',{...params,p_step:'finish'});
+  // YouTube has ended the broadcast and viewers already see it ended. Retiring
+  // the feed and checking the replay finish after the presenter is answered.
+  if(c.resource.operation==='end' && options.background) {
+    const response={session:c.session,termination_pending:c.session.state==='ending'};
+    options.background(settle());
+    return response;
+  }
+  await settle();
   // Only the preparing presenter receives ingest credentials. Never persist them on the client.
   return {session:c.session,...(c.resource.operation==='prepare'?{ingest_url:c.resource.ingest_url,ingest_key:c.ingest_key}:{}),
     termination_pending:c.session.state==='ending'};

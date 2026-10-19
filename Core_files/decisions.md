@@ -113,6 +113,30 @@ Guest reads remain public; browser origin checks are not authentication.
 Provider quota controls and distributed Firewall rate limits remain separate
 operational controls. Setup and verification: `doc/YouTube_web_configuration.md`.
 
+## ADR-012: Low-latency go-live (2026-10-19)
+
+Owner targets: a new live reaches viewers in under 15 s (ideally 3 s), the
+camera-to-viewer delay stays at 5–10 s and never above 12 s, and ending is as
+fast as starting.
+
+- **Latency:** new YouTube broadcasts request `latencyPreference: ultraLow`
+  (YouTube's 2–5 s mode; no closed captions, max 1080p, which our presets
+  respect), falling back to `low` when YouTube refuses it. Encoder keyframes
+  every 1 s. Normal latency (the old default) cannot meet the 12 s ceiling.
+- **Handshake early:** the studio prepares the presenter's own phone broadcast
+  as soon as it opens. Trade-off accepted: a studio visit that never goes live
+  still spends YouTube quota (create feed/broadcast/bind, then delete), and
+  the broadcast is listed on YouTube as upcoming while the studio is open, as
+  it already was during Preview. A 90 s reuse grace and reuse of a leftover
+  preparation limit the cost; the reconcile job ends expired preparations.
+- **Confirmation in one call:** `broadcast-control` waits for YouTube (1 s
+  checks within a 15 s budget) instead of the phone polling every 3 s.
+- **Viewer signal:** session changes into or out of `live` send a public
+  Realtime broadcast with no ids (`catalog_changed`); clients re-read what they
+  may see. Profiles RLS still keeps other accounts' rows off Realtime.
+- **End:** the phone screen closes once the camera stops; the server end and
+  its feed cleanup continue after the response.
+
 ## ADR-008: Bundled Three-City Vector Map Pack, One Viewport Policy
 * **Status:** `PROPOSED` (branch `codex/tricity-map-upgrade`, 2026-09-26; awaiting independent audit and owner approval)
 * **Context:** The Spatial Map drew Esri/OSM raster tiles only while the backend was reachable, fell back to three unsourced city polygons offline, allowed a Saudi-wide camera (zoom 5, centre-only constraint) and showed missing-data tiles at deep zoom. The venue picker used its own online OSM layer and guessed neighbourhood addresses from latitude thresholds. Research and plan: `brief/research/p5-tricity-map-upgrade/`.
