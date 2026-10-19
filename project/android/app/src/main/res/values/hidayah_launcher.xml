@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="hidayah_launcher_background">#F8F5EC</color>
+    <!-- Night slate s900: the Hidayah Gold launcher tile. -->
+    <color name="hidayah_launcher_background">#151D24</color>
 </resources>

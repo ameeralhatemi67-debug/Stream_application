@@ -87,6 +87,8 @@ flutter:
     - assets/logo/colored.svg
     - assets/logo/black.svg
     - assets/logo/clearlogo2.png
+    # Browser tab icon while the Hidayah Gold palette is on (web only).
+    - assets/logo/hidayah_icon_192.png
     - assets/Language.svg
     - assets/i18n/en.json
     - assets/i18n/ar.json
