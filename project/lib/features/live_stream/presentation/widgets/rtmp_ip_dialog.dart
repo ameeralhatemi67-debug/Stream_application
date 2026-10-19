@@ -22,6 +22,8 @@ import '../../../organization/models/org_membership.dart';
 import '../../../organization/presentation/channel_consent_return_screen.dart';
 import '../screens/phone_broadcast_screen.dart';
 import 'live_chat_layout.dart';
+import '../../../../core/widgets/app_logo.dart';
+import '../../../web/presentation/hidayah_web_kit.dart';
 
 class FeatureInProgressModal extends StatelessWidget {
   const FeatureInProgressModal({super.key, required this.title});
@@ -69,6 +71,20 @@ class LiveBroadcasterStudioSheet extends StatefulWidget {
         !iosPhonePublishingEnabled) {
       return FeatureInProgressModal.show(context,
           title: 'organization_v1.studio'.tr());
+    }
+    if (context.usesHidayahWeb) {
+      // The website studio is a full page: an overview beside the controls.
+      final provider = context.read<AppProvider>();
+      return showGeneralDialog<void>(
+          context: context,
+          barrierLabel: 'organization_v1.studio'.tr(),
+          transitionDuration: CanopyMotion.sheetIn,
+          pageBuilder: (_, __, ___) => ChangeNotifierProvider<AppProvider>.value(
+              value: provider,
+              child: LiveBroadcasterStudioSheet(
+                  onEndBroadcast: onEndBroadcast,
+                  openedFromVideo: openedFromVideo,
+                  consentStatus: consentStatus)));
     }
     return showCaSheet<void>(context,
         title: 'organization_v1.studio'.tr(),
@@ -228,6 +244,199 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
     if (mounted) setState(() {});
   }
 
+  /// [parts] is the sheet: its title bar, the scrolling controls and, when
+  /// present, the action footer. The website studio swaps the title bar for a
+  /// page bar and sets an overview beside the controls.
+  Widget _frame(BuildContext context, List<Widget> parts,
+      {required bool live, required bool frozen}) {
+    if (!context.usesHidayahWeb) {
+      return Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: parts);
+    }
+    return ColoredBox(
+        color: HidayahGold.s950,
+        child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+          _webBar(context, live),
+          Expanded(
+              child: HidayahWebWidth(
+                  child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 28),
+                      child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            Expanded(
+                                child: SingleChildScrollView(
+                                    child: _webOverview(context, live, frozen))),
+                            const SizedBox(width: 28),
+                            SizedBox(
+                                width: 480,
+                                child: Container(
+                                    decoration: BoxDecoration(
+                                        color: HidayahGold.s900,
+                                        borderRadius: BorderRadius.circular(16),
+                                        border: Border.all(
+                                            color: HidayahGold.s800)),
+                                    clipBehavior: Clip.antiAlias,
+                                    child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: parts.sublist(1)))),
+                          ])))),
+        ]));
+  }
+
+  Widget _webBar(BuildContext context, bool live) => Container(
+      height: HidayahWeb.headerHeight,
+      decoration: const BoxDecoration(
+          color: HidayahGold.s900,
+          border: Border(bottom: BorderSide(color: HidayahGold.s800))),
+      child: HidayahWebWidth(
+          child: Row(children: [
+        const AppLogo(size: 36),
+        const SizedBox(width: 12),
+        Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('organization_v1.studio'.tr(),
+                  style: HidayahText.display(21, color: HidayahGold.g50)),
+              Text('web.studio_sub'.tr(),
+                  style: HidayahText.body(12, color: HidayahGold.s300, height: 1.3)),
+            ]),
+        const Spacer(),
+        live
+            ? HidayahLiveBadge(label: 'web.badge_live'.tr())
+            : HidayahGlassBadge(label: 'web.studio_offline'.tr()),
+        const SizedBox(width: 12),
+        const CaLanguageChip(glass: true, compact: true, bare: true),
+        const SizedBox(width: 8),
+        HidayahButton(
+            label: 'organization_v1.close'.tr(),
+            icon: CaGlyph.close,
+            kind: HidayahButtonKind.onDark,
+            compact: true,
+            onPressed: () => Navigator.pop(context)),
+      ])));
+
+  Widget _webOverview(BuildContext context, bool live, bool frozen) {
+    final destination = _studio.destination?.title ?? '';
+    final steps = [
+      ('web.studio_step1'.tr(), destination.isNotEmpty),
+      ('web.studio_step2'.tr(), frozen),
+      ('web.studio_step3'.tr(), live),
+    ];
+    final status = live
+        ? 'web.studio_live'
+        : frozen
+            ? 'web.studio_ready'
+            : 'web.studio_setup';
+    Widget fact(String label, String value) => Expanded(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Text(HidayahText.upper(context, label),
+              style: HidayahText.eyebrow(context, HidayahGold.g300)),
+          const SizedBox(height: 6),
+          Text(value.isEmpty ? '—' : value,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: HidayahText.body(15,
+                  color: HidayahGold.g50, weight: FontWeight.w700, height: 1.35)),
+        ]));
+    return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      HidayahNightBand(
+          radius: BorderRadius.circular(16),
+          child: Padding(
+              padding: const EdgeInsets.all(28),
+              child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(status.tr(),
+                        style: HidayahText.display(30, color: HidayahGold.g50)),
+                    const SizedBox(height: 6),
+                    Text('${status}_body'.tr(),
+                        style: HidayahText.body(14.5, color: HidayahGold.s300)),
+                    const SizedBox(height: 24),
+                    Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                      fact('web.studio_destination'.tr(), destination),
+                      fact(
+                          'web.studio_sender'.tr(),
+                          (_studio.sender == 'phone_direct'
+                                  ? (iosPhonePublishingEnabled
+                                      ? 'organization_v1.sender_ios'
+                                      : 'organization_v1.sender_android')
+                                  : 'organization_v1.sender_obs')
+                              .tr()),
+                      fact('web.studio_format'.tr(),
+                          (_audio ? 'organization_v1.audio' : 'design_copy.video')
+                              .tr()),
+                    ]),
+                  ]))),
+      const SizedBox(height: 20),
+      Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+              color: HidayahGold.s900,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: HidayahGold.s800)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Text('web.studio_steps'.tr(),
+                style: HidayahText.display(19, color: HidayahGold.g50)),
+            const SizedBox(height: 16),
+            for (var i = 0; i < steps.length; i++)
+              Padding(
+                  padding: const EdgeInsets.only(bottom: 14),
+                  child: Row(children: [
+                    Container(
+                        width: 30,
+                        height: 30,
+                        decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            gradient: steps[i].$2 ? HidayahGradients.minted : null,
+                            border: steps[i].$2
+                                ? null
+                                : Border.all(color: HidayahGold.s600)),
+                        child: Center(
+                            child: steps[i].$2
+                                ? const CaIcon(CaGlyph.check,
+                                    color: HidayahGold.s900, size: 16)
+                                : Text('${i + 1}',
+                                    style: HidayahText.body(13,
+                                        color: HidayahGold.s300,
+                                        weight: FontWeight.w700,
+                                        height: 1)))),
+                    const SizedBox(width: 14),
+                    Expanded(
+                        child: Text(steps[i].$1,
+                            style: HidayahText.body(15,
+                                color: steps[i].$2
+                                    ? HidayahGold.g50
+                                    : HidayahGold.s300,
+                                weight: FontWeight.w600,
+                                height: 1.4))),
+                  ])),
+          ])),
+      const SizedBox(height: 20),
+      Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+              color: HidayahGold.s900,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: HidayahGold.s800)),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+            Row(children: [
+              const CaIcon(CaGlyph.info, color: HidayahGold.g300, size: 20),
+              const SizedBox(width: 10),
+              Text('web.studio_help'.tr(),
+                  style: HidayahText.display(19, color: HidayahGold.g50)),
+            ]),
+            const SizedBox(height: 10),
+            Text('organization_v1.obs_hint'.tr(),
+                style: HidayahText.body(14, color: HidayahGold.s200)),
+          ])),
+    ]);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (widget.openedFromVideo && isCompactLandscapeChat(context)) {
@@ -314,10 +523,7 @@ class _StudioState extends State<LiveBroadcasterStudioSheet> {
                 builder: (context) => DefaultTextStyle.merge(
                     style: TextStyle(color: paletteColor(context, Canopy.paper)),
                     child: SafeArea(
-                        child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
+                        child: _frame(context, live: live, frozen: frozen, [
                           ColoredBox(
                               color: paletteColor(context, Canopy.forestDeep),
                               child: Padding(

@@ -35,6 +35,8 @@ import '../../features/organization/presentation/organization_shows_screen.dart'
 import '../../features/organization/presentation/organization_hub_screen.dart';
 import '../../features/splash/presentation/app_splash_screen.dart';
 import '../../features/auth/presentation/screens/account_banned_screen.dart';
+import '../../features/web/presentation/hidayah_web_header.dart';
+import '../../features/web/presentation/hidayah_web_kit.dart';
 import '../widgets/hadayah_loading_indicator.dart';
 
 class AppRouter {
@@ -389,6 +391,24 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Gold palette on a laptop: a website with a top navigation bar instead
+    // of the app's side rail. The branches keep their own stacks either way.
+    if (context.usesHidayahWeb) {
+      return Scaffold(
+          backgroundColor: HidayahGold.g50,
+          body: Stack(children: [
+            Column(children: [
+              HidayahWebHeader(
+                  active: navigationShell.currentIndex == 0
+                      ? HidayahWebSection.discover
+                      : HidayahWebSection.map,
+                  onBranch: (index) => navigationShell.goBranch(index,
+                      initialLocation: index == navigationShell.currentIndex)),
+              Expanded(child: navigationShell),
+            ]),
+            const FloatingStreamMiniPlayer(),
+          ]));
+    }
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
     final (
       isStreamerModeEnabled,
@@ -586,7 +606,7 @@ class _DesktopNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? paletteOnAccent(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
+    final color = isSelected ? paletteOnSelected(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
       child: Semantics(
@@ -594,7 +614,7 @@ class _DesktopNavItem extends StatelessWidget {
         selected: isSelected,
         label: label,
         child: CaFocusRing(
-          onDark: isSelected && !paletteOf(context).hidayah,
+          onDark: isSelected,
           radius: CanopyRadius.input,
           child: Material(
             type: MaterialType.transparency,
@@ -608,7 +628,7 @@ class _DesktopNavItem extends StatelessWidget {
                   padding: const EdgeInsetsDirectional.symmetric(
                       horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    gradient: isSelected ? paletteGradient(context, AppGradients.pill) : null,
+                    gradient: isSelected ? paletteSelectedFill(context, AppGradients.pill) : null,
                     borderRadius: BorderRadius.circular(CanopyRadius.input),
                   ),
                   child: Row(
@@ -622,7 +642,7 @@ class _DesktopNavItem extends StatelessWidget {
                               .textTheme
                               .labelLarge
                               ?.copyWith(
-                                color: isSelected ? paletteOnAccent(context, Canopy.paper) : paletteColor(context, Canopy.slate),
+                                color: isSelected ? paletteOnSelected(context, Canopy.paper) : paletteColor(context, Canopy.slate),
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,

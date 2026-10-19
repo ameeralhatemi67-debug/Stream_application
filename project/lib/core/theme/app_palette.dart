@@ -1,59 +1,96 @@
 import 'package:flutter/material.dart';
+import 'hidayah_gold.dart';
+export 'hidayah_gold.dart';
 
 /// The original tokens remain constant; themed consumers resolve them here.
+/// With [hidayah] on, each green-system value resolves to the Hidayah Gold
+/// value for the role it plays (see [HidayahGold]).
 @immutable
 class AppPalette extends ThemeExtension<AppPalette> {
   const AppPalette({this.hidayah = false});
 
   final bool hidayah;
 
-  static const gold = Color(0xFFC1923B);
-  static const goldLight = Color(0xFFCFA55D);
-  static const goldInk = Color(0xFF73521D);
-  static const ivory = Color(0xFFF9F7EF);
-  static const paper = Color(0xFFFFFEFA);
-  static const ink = Color(0xFF253239);
-  static const slate = Color(0xFF26363E);
+  static const gold = HidayahGold.g500;
+  static const goldLight = HidayahGold.g400;
 
-  // Standalone labels use dark gold; filled gradient controls use logo gold
-  // with the ink foreground returned by paletteOnAccent.
+  /// Bronze: the primary/brand colour as text or as a fill under white text.
+  static const goldInk = HidayahGold.g700;
+  static const ivory = HidayahGold.g50;
+  static const paper = HidayahGold.card;
+  static const ink = HidayahGold.s900;
+
+  /// Media and dark app-bar surfaces.
+  static const slate = HidayahGold.s900;
+
+  // Keyed by the green system's RGB. Dark greens that carried white text or
+  // acted as text resolve to bronze (still a dark colour, so white text and
+  // ivory backgrounds keep their contrast); surfaces resolve to ivory/white;
+  // the forest darks resolve to night slate.
   static const _colors = <int, Color>{
+    // AppTheme (scheme A)
     0xFFFFFF: paper,
-    0xECF6EF: Color(0xFFF0EDE4),
-    0xD9DDDE: Color(0xFFDEDFD9),
-    0x737B7D: Color(0xFF707878),
+    0xECF6EF: HidayahGold.g100,
+    0xD9DDDE: HidayahGold.hairline,
+    0x737B7D: HidayahGold.s500,
     0x202B2B: ink,
-    0x485554: Color(0xFF58666B),
-    0x586563: Color(0xFF58666B),
+    0x485554: HidayahGold.s700,
+    0x586563: HidayahGold.s600,
     0x17643F: goldInk,
-    0x327044: Color(0xFF8D672B),
-    0x9D3044: Color(0xFFA43D42),
+    0x327044: goldInk,
+    0x22613D: HidayahGold.success,
+    0x7C5012: HidayahGold.warning,
+    0x9D3044: HidayahGold.live,
     0x243536: slate,
-    0xE5E8E7: Color(0xFFEDEAE2),
-    0xD7EDDC: Color(0xFFEFE4CD),
-    0xB8DBB9: Color(0xFFE3D3B2),
-    0x0A2C1B: slate,
-    0x0E3A24: Color(0xFF33454E),
-    0x145030: goldInk,
-    0x22804D: Color(0xFF8D672B),
-    0x2F9A55: goldLight,
-    0x31A05A: Color(0xFFD7B47B),
-    0xBFE6CD: Color(0xFFECE3D2),
-    0xE3F6EA: Color(0xFFF0EDE4),
+    0xE5E8E7: Color(0xFFEDE8DE),
+    0xD7EDDC: HidayahGold.g100,
+    0xB8DBB9: HidayahGold.g200,
+    // Canopy
+    0x0A2C1B: HidayahGold.s950,
+    0x0E3A24: HidayahGold.s800,
+    0x145030: HidayahGold.g800,
+    0x22804D: goldInk,
+    0x2F9A55: HidayahGold.g400,
+    0x31A05A: HidayahGold.g300,
+    0xBFE6CD: HidayahGold.g200,
+    0xE3F6EA: HidayahGold.g100,
     0xF4FFF7: ivory,
     0x12251C: ink,
-    0x3C5247: Color(0xFF58666B),
-    0x5D7266: Color(0xFF58666B),
-    0xD3E5DA: Color(0xFFDEDFD9),
-    0x7A9585: Color(0xFF707878),
-    0xB3263E: Color(0xFFA43D42),
+    0x3C5247: HidayahGold.s700,
+    0x5D7266: HidayahGold.s600,
+    0xD3E5DA: HidayahGold.hairline,
+    0x7A9585: HidayahGold.s500,
+    0xB3263E: HidayahGold.live,
     0xC9A24B: gold,
-    0x1B7A6E: goldInk,
-    0x123E26: slate,
-    0x256B3F: goldInk,
-    0x123E24: gold,
-    0x23773F: goldLight,
+    0x1B7A6E: HidayahGold.info,
+    0x123E26: HidayahGold.g900,
+    0x123E24: HidayahGold.s800,
+    0x23773F: HidayahGold.s900,
+    0x256B3F: HidayahGold.g600,
+    0xA3203A: Color(0xFF9A1C2E),
+    0xC8344C: Color(0xFFC2343F),
   };
+
+  // Whole gradients that change design rather than hue, keyed by their
+  // stop colours.
+  static final _gradients = <String, Gradient>{
+    _key(const [0x145030, 0x22804D]): HidayahGradients.minted, // pill
+    _key(const [0x17643F, 0x327044]): HidayahGradients.minted, // brand
+    _key(const [0x256B3F, 0x31A05A]): HidayahGradients.meter, // pillWide
+    _key(const [0x123E24, 0x23773F, 0x31A05A]): HidayahGradients.night, // panel
+    _key(const [0x0E3A24, 0x17643F, 0x2F9A55]): HidayahGradients.night, // canopy
+    _key(const [0xF4FFF7, 0xE3F6EA]): HidayahGradients.ivory, // dawn
+    _key(const [0xD7EDDC, 0xB8DBB9]):
+        const LinearGradient(colors: [HidayahGold.g100, HidayahGold.g200]),
+    _key(const [0xBFE6CD, 0xE3F6EA]): const LinearGradient(
+        begin: AlignmentDirectional.topStart,
+        end: AlignmentDirectional.bottomEnd,
+        colors: [HidayahGold.g200, HidayahGold.g100]),
+    _key(const [0x145030, 0x31A05A, 0xBFE6CD, 0x145030]): HidayahGradients.ring,
+    _key(const [0xA3203A, 0xC8344C]): HidayahGradients.live,
+  };
+
+  static String _key(List<int> rgb) => rgb.join(',');
 
   Color color(Color original) {
     if (!hidayah) return original;
@@ -64,15 +101,9 @@ class AppPalette extends ThemeExtension<AppPalette> {
   T gradient<T extends Gradient>(T original) {
     if (!hidayah) return original;
     final rgb = original.colors.map((c) => c.toARGB32() & 0x00FFFFFF).toList();
-    final accent = rgb.length == 2 &&
-        ((rgb[0] == 0x145030 && rgb[1] == 0x22804D) ||
-            (rgb[0] == 0x17643F && rgb[1] == 0x327044));
-    final colors = accent
-        ? [
-            gold.withValues(alpha: original.colors[0].a),
-            goldLight.withValues(alpha: original.colors[1].a),
-          ]
-        : original.colors.map(color).toList(growable: false);
+    final designed = _gradients[_key(rgb)];
+    if (designed is T) return _carryAlpha(designed, original) as T;
+    final colors = original.colors.map(color).toList(growable: false);
     if (original is LinearGradient) {
       return LinearGradient(
         begin: original.begin,
@@ -109,6 +140,14 @@ class AppPalette extends ThemeExtension<AppPalette> {
     return original;
   }
 
+  /// A translucent green gradient stays as translucent in gold: the overall
+  /// opacity of the original carries over to the designed replacement.
+  static Gradient _carryAlpha(Gradient designed, Gradient original) {
+    final alpha = original.colors.map((c) => c.a).reduce((a, b) => a < b ? a : b);
+    if (alpha >= 1) return designed;
+    return designed.withOpacity(alpha);
+  }
+
   @override
   AppPalette copyWith({bool? hidayah}) =>
       AppPalette(hidayah: hidayah ?? this.hidayah);
@@ -132,6 +171,17 @@ Color paletteOnAccent(BuildContext context, Color original) =>
 
 T paletteGradient<T extends Gradient>(BuildContext context, T original) =>
     paletteOf(context).gradient(original);
+
+/// Selected chips, tabs and navigation items on light surfaces. Normally the
+/// accent pill; in Hidayah an ink fill, so gold stays on the primary action.
+Gradient paletteSelectedFill(BuildContext context, Gradient original) =>
+    paletteOf(context).hidayah ? HidayahGradients.selected : original;
+
+/// Foreground on [paletteSelectedFill].
+Color paletteOnSelected(BuildContext context, Color original) =>
+    paletteOf(context).hidayah
+        ? HidayahGold.g200.withValues(alpha: original.a)
+        : original;
 
 List<BoxShadow> paletteShadows(BuildContext context, List<BoxShadow> original) {
   final palette = paletteOf(context);

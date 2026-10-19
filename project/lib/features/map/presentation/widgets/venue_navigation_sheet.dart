@@ -308,7 +308,11 @@ class VenueNavigationSheet extends StatelessWidget {
                           child: Text(
                             '${auditoriumInfo.seatingCapacity} Seats',
                             style: TextStyle(
-                              color: paletteColor(context, AppTheme.accent),
+                              // Bronze on its own tint is too faint; gold
+                              // tags use the darker bronze.
+                              color: paletteOf(context).hidayah
+                                  ? HidayahGold.g800
+                                  : AppTheme.accent,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),

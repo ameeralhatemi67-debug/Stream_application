@@ -24,6 +24,8 @@ import 'widgets/map_status_details.dart';
 import 'widgets/spatial_streamer_marker.dart';
 import 'widgets/marker_summary_card.dart';
 import 'widgets/top_spatial_search_bar.dart';
+import 'web/map_web_panel.dart';
+import '../../web/presentation/hidayah_web_kit.dart';
 import 'widgets/city_selector_dropdown.dart';
 import 'widgets/topic_selector_dropdown.dart';
 import 'widgets/streamer_sliding_drawer.dart';
@@ -601,6 +603,43 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       if (mounted) _measureInsets();
     });
 
+    final searchBar = TopSpatialSearchBar(
+      visibleStreamers: displayedStreamers,
+      cachedMarkers: isOnline ? const [] : visibleCachedMarkers,
+      onCitySelected: _selectCity,
+      onStreamerSelected: (streamerId) {
+        final current = displayedStreamers
+            .where((s) => s.streamerId == streamerId)
+            .firstOrNull;
+        if (current != null) _selectStreamer(current);
+      },
+      onCachedMarkerSelected: (marker) {
+        _focusVenue(marker.coordinates, kVenueFocusZoom);
+        _showCachedMarkerInfo(context, marker);
+      },
+    );
+    final cityDropdown = CitySelectorDropdown(
+      selectedCityId: _selectedCityId,
+      onCitySelected: _selectCity,
+    );
+    final topicDropdown = TopicSelectorDropdown(
+      selectedCategoryId: currentCategoryFilter,
+      categories: context.select<AppProvider, List<AcademicCategoryModel>>(
+          (p) => p.academicCategories),
+      onCategorySelected: (categoryId) {
+        context.read<AppProvider>().setCategoryFilter(categoryId);
+        if (selectedStreamer != null &&
+            !categoryFilterMatches(categoryId, selectedStreamer.categoryId)) {
+          setState(() {
+            _selectedStreamerId = null;
+          });
+        }
+      },
+    );
+    // Gold palette on a laptop: search, filters and the venue list live in a
+    // website side panel instead of floating over the map.
+    final web = context.usesHidayahWeb;
+
     return Scaffold(
       key: _scaffoldKey,
       drawerScrimColor: isDesktop ? Colors.transparent : null,
@@ -611,6 +650,15 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
       ),
       body: Row(
         children: [
+          if (web)
+            MapWebPanel(
+              streamers: displayedStreamers,
+              selectedId: _selectedStreamerId,
+              onSelect: _selectStreamer,
+              searchBar: searchBar,
+              cityDropdown: cityDropdown,
+              topicDropdown: topicDropdown,
+            ),
           // Main Map Canvas Viewport
           Expanded(
             child: LayoutBuilder(builder: (context, constraints) {
@@ -625,40 +673,6 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 });
               }
               final initial = _policy.overviewTarget(canvas, _safePadding);
-              final searchBar = TopSpatialSearchBar(
-                visibleStreamers: displayedStreamers,
-                cachedMarkers: isOnline ? const [] : visibleCachedMarkers,
-                onCitySelected: _selectCity,
-                onStreamerSelected: (streamerId) {
-                  final current = displayedStreamers
-                      .where((s) => s.streamerId == streamerId)
-                      .firstOrNull;
-                  if (current != null) _selectStreamer(current);
-                },
-                onCachedMarkerSelected: (marker) {
-                  _focusVenue(marker.coordinates, kVenueFocusZoom);
-                  _showCachedMarkerInfo(context, marker);
-                },
-              );
-              final cityDropdown = CitySelectorDropdown(
-                selectedCityId: _selectedCityId,
-                onCitySelected: _selectCity,
-              );
-              final topicDropdown = TopicSelectorDropdown(
-                selectedCategoryId: currentCategoryFilter,
-                categories: context.select<AppProvider, List<AcademicCategoryModel>>(
-                    (p) => p.academicCategories),
-                onCategorySelected: (categoryId) {
-                  context.read<AppProvider>().setCategoryFilter(categoryId);
-                  if (selectedStreamer != null &&
-                      !categoryFilterMatches(
-                          categoryId, selectedStreamer.categoryId)) {
-                    setState(() {
-                      _selectedStreamerId = null;
-                    });
-                  }
-                },
-              );
               return Stack(
                 children: [
                   Positioned.fill(
@@ -853,7 +867,9 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                             // Wide canvases (landscape phones, tablets,
                             // desktop) use one control row so the overview
                             // keeps enough visible map below the controls.
-                            if (available.width >= 720)
+                            if (web)
+                              const SizedBox.shrink()
+                            else if (available.width >= 720)
                               Row(
                                 children: [
                                   Expanded(flex: 5, child: searchBar),
@@ -912,7 +928,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                     ),
                   ),
 
-                  if (isDesktop)
+                  if (isDesktop && !web)
                     Positioned(
                       right: AppTheme.spaceMd,
                       top: 0,

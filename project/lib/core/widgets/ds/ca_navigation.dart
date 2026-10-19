@@ -116,13 +116,13 @@ class _PillDestination extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
     final color =
-        Color.lerp(paletteColor(context, Canopy.brandGreen), paletteOnAccent(context, Canopy.paper), selectedness.clamp(0, 1))!;
+        Color.lerp(paletteColor(context, Canopy.brandGreen), paletteOnSelected(context, Canopy.paper), selectedness.clamp(0, 1))!;
     return Semantics(
         button: true,
         selected: selectedness > .5,
         label: label,
         child: CaFocusRing(
-            onDark: selectedness > .5 && !paletteOf(context).hidayah,
+            onDark: selectedness > .5,
             child: Tooltip(
                 message: label,
                 excludeFromSemantics: true,
@@ -141,7 +141,7 @@ class _PillDestination extends StatelessWidget {
                                           opacity: selectedness.clamp(0, 1),
                                           child: DecoratedBox(
                                               decoration: BoxDecoration(
-                                                  gradient: paletteGradient(context, AppGradients.pill),
+                                                  gradient: paletteSelectedFill(context, AppGradients.pill),
                                                   borderRadius:
                                                       const BorderRadius.all(
                                                           Radius.circular(
@@ -197,7 +197,7 @@ class _Destination extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
-    final color = selected ? paletteOnAccent(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
+    final color = selected ? paletteOnSelected(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
     final icon = CaIcon(index == 0 ? CaGlyph.list : CaGlyph.map, color: color);
     final text = Text(label,
         textAlign: stacked ? TextAlign.center : TextAlign.start,
@@ -210,7 +210,7 @@ class _Destination extends StatelessWidget {
         selected: selected,
         label: label,
         child: CaFocusRing(
-            onDark: selected && !paletteOf(context).hidayah,
+            onDark: selected,
             child: Tooltip(
                 message: label,
                 excludeFromSemantics: true,
@@ -235,7 +235,7 @@ class _Destination extends StatelessWidget {
                                       : 0,
                               vertical: AppTheme.spaceSm),
                           decoration: BoxDecoration(
-                              gradient: selected ? paletteGradient(context, AppGradients.pill) : null,
+                              gradient: selected ? paletteSelectedFill(context, AppGradients.pill) : null,
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill)),
                           child: stacked

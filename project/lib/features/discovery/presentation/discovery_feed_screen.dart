@@ -25,6 +25,8 @@ import 'widgets/discovery_card_skeleton.dart';
 import 'widgets/tags_filter_bottom_sheet.dart';
 import '../../../core/widgets/duplicate_channel_resolution_dialog.dart';
 import 'bookmarks_sheet.dart';
+import 'web/discovery_web_view.dart';
+import '../../web/presentation/hidayah_web_kit.dart';
 
 class DiscoveryFeedScreen extends StatefulWidget {
   const DiscoveryFeedScreen({super.key});
@@ -289,6 +291,22 @@ class _DiscoveryFeedScreenState extends State<DiscoveryFeedScreen>
               Text(label, style: Theme.of(context).textTheme.titleMedium),
               Text('$count', style: Theme.of(context).textTheme.bodySmall)
             ]));
+    if (context.usesHidayahWeb) {
+      return DiscoveryWebView(
+          displayed: displayed,
+          live: live,
+          categories: categories,
+          selectedCategory: selectedCategory,
+          onCategory: (id) =>
+              context.read<AppProvider>().setCategoryFilter(id),
+          searchController: _searchController,
+          searchFocus: _searchFocusNode,
+          onSearchChanged: _onSearchChanged,
+          onClearSearch: _clearSearch,
+          onFilters: () => TagsFilterBottomSheet.show(context),
+          tagActive: tag != 'all',
+          loading: loadingCards);
+    }
     return Scaffold(
         backgroundColor: paletteColor(context, Canopy.dawn),
         appBar: CaAppBar(

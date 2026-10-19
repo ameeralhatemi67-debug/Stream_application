@@ -41,6 +41,9 @@ import 'widgets/live_room_connection_view.dart';
 import '../../../core/services/connectivity_service.dart';
 import '../../admin/models/streamer_custom_placeholder_model.dart';
 import 'widgets/rtmp_ip_dialog.dart';
+import 'web/live_web_parts.dart';
+import '../../web/presentation/hidayah_web_header.dart';
+import '../../web/presentation/hidayah_web_kit.dart';
 
 class LiveBroadcastScreen extends StatefulWidget {
   final String streamId;
@@ -967,6 +970,25 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               if (!_isFullscreen && !keyboardOpen) boundedHeader(constraints),
               if (!_isFullscreen) Expanded(child: panel),
             ]));
+    if (context.usesHidayahWeb && !_isFullscreen) {
+      return HidayahWebPage(
+          dark: true,
+          body: LiveWebLayout(
+              streamer: streamer,
+              viewport: viewport(true),
+              panel: panel,
+              viewerCount: viewerCount,
+              following: appProvider.isFollowing(streamer.channelProfileId),
+              onFollow: () =>
+                  appProvider.toggleFollow(streamer.channelProfileId),
+              onMinimize: () =>
+                  _minimizeToMiniPlayer(appProvider, streamer, langCode),
+              onStudio: appProvider.isLoggedInStreamer &&
+                      appProvider.isStreamerModeEnabled
+                  ? () => LiveBroadcasterStudioSheet.show(context,
+                      openedFromVideo: true)
+                  : null));
+    }
     return Scaffold(
       backgroundColor: paletteColor(context, Canopy.forestDeep),
       resizeToAvoidBottomInset: true,

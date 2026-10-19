@@ -26,6 +26,9 @@ import 'widgets/join_org_modal_sheet.dart';
 import 'widgets/playlist_viewer_modal_sheet.dart';
 import 'widgets/upcoming_schedule_tab.dart';
 import '../../../core/services/reminder_push_service.dart';
+import '../../web/presentation/hidayah_web_header.dart';
+import '../../web/presentation/hidayah_web_kit.dart';
+import 'web/profile_web_parts.dart';
 
 class BroadcasterProfileScreen extends StatefulWidget {
   final String streamerId;
@@ -169,6 +172,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     Widget panel(Widget child) => DecoratedBox(
         decoration: BoxDecoration(gradient: paletteGradient(context, AppGradients.panel)),
         child: child);
+    if (context.usesHidayahWeb) {
+      return _buildWebProfile(context, streamer, isFollowing, hasReminder,
+          watchLive, appProvider, lang, allVods, activePlaylists,
+          displayedVods, displayedPlaylists, body);
+    }
     final single = NestedScrollView(
         headerSliverBuilder: (context, scrolled) => [
               SliverToBoxAdapter(child: header),
@@ -284,8 +292,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                     child: SizedBox(
                                         height: CanopySize.target,
                                         child: ColorFiltered(
+                                          // Both palettes put a dark panel
+                                          // behind these icons (green, or
+                                          // gold's night slate).
                                           colorFilter: ColorFilter.mode(
-                                              paletteOnAccent(context, Canopy.paper),
+                                              paletteOf(context).hidayah
+                                                  ? HidayahGold.g50
+                                                  : Canopy.paper,
                                               BlendMode.srcIn),
                                           child: Row(children: [
                                           CaIconButton(
@@ -546,6 +559,108 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             child: _buildFeaturedChannelsSection(
                 context, streamer, vods, playlists, lang)),
     ]);
+  }
+
+  /// The channel page as a website (gold palette, laptop): cover and identity,
+  /// an underline tab strip, the tab content on a night shelf, and an About
+  /// sidebar. The tab contents are the same widgets the app uses.
+  Widget _buildWebProfile(
+      BuildContext context,
+      StreamerModel streamer,
+      bool following,
+      bool reminder,
+      bool watchLive,
+      AppProvider provider,
+      String lang,
+      List<VodModel> allVods,
+      List<PlaylistModel> allPlaylists,
+      List<VodModel> vods,
+      List<PlaylistModel> playlists,
+      Widget Function() body) {
+    final uncertain = !provider.isOnline || provider.isUsingCachedCatalog;
+    final own = provider.isLoggedInStreamer &&
+        provider.isApprovedStreamer &&
+        provider.isStreamerModeEnabled &&
+        provider.isOwnStreamerProfile(streamer.streamerId);
+    final canJoin = !streamer.isOrganization &&
+        provider.isLoggedInStreamer &&
+        provider.isOwnStreamerProfile(streamer.streamerId);
+    return HidayahWebPage(
+        active: own ? HidayahWebSection.channel : null,
+        body: NestedScrollView(
+            headerSliverBuilder: (context, scrolled) => [
+                  SliverToBoxAdapter(
+                      child: ProfileWebHero(
+                          streamer: streamer,
+                          live: watchLive,
+                          uncertain: uncertain,
+                          following: following,
+                          reminder: reminder,
+                          remindersAvailable: provider.remindersAvailable,
+                          recordings: allVods.length,
+                          playlists: allPlaylists.length,
+                          onFollow: () =>
+                              provider.toggleFollow(streamer.streamerId),
+                          onWatch: () => context
+                              .push('/live/${streamer.activeStreamId}'),
+                          onReminder: () => _toggleChannelReminder(
+                              context, streamer.streamerId),
+                          onShare: streamer.youtubeHandle.trim().isEmpty
+                              ? null
+                              : () => _shareChannel(streamer, lang),
+                          onStudio: own
+                              ? () => LiveBroadcasterStudioSheet.show(context)
+                              : null)),
+                  SliverPersistentHeader(
+                      pinned: true,
+                      delegate: _SliverTabBarDelegate(
+                          AnimatedBuilder(
+                              animation: _tabController!,
+                              builder: (context, _) => ProfileWebTabs(
+                                  index: 2 - _tabController!.index,
+                                  onChanged: (visual) =>
+                                      _tabController!.animateTo(2 - visual),
+                                  playlists: playlists.length,
+                                  recordings: vods.length)),
+                          ProfileWebTabs.height)),
+                ],
+            body: HidayahWebWidth(
+                child: Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 24),
+                    child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Expanded(
+                              child: HidayahNightBand(
+                                  radius: BorderRadius.circular(20),
+                                  child: body())),
+                          const SizedBox(width: 32),
+                          SizedBox(
+                              width: 340,
+                              child: SingleChildScrollView(
+                                  primary: false,
+                                  child: ProfileWebSidebar(
+                                      streamer: streamer,
+                                      selectedSpeakerId: _selectedSpeakerId,
+                                      onSpeaker: (id) => setState(() {
+                                            _selectedSpeakerId =
+                                                _selectedSpeakerId == id
+                                                    ? null
+                                                    : id;
+                                            _tabController?.animateTo(0);
+                                          }),
+                                      onBranches: streamer.isOrganization &&
+                                              streamer.venues.isNotEmpty
+                                          ? () => OrgBranchesModalSheet.show(
+                                              context,
+                                              orgName:
+                                                  streamer.getLocalizedName(lang),
+                                              venues: streamer.venues)
+                                          : null,
+                                      onJoin: canJoin
+                                          ? () => JoinOrgModalSheet.show(context)
+                                          : null))),
+                        ])))));
   }
 
   void _shareChannel(StreamerModel streamer, String lang) => Share.share(

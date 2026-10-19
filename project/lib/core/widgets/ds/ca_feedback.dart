@@ -502,7 +502,7 @@ class CaEmptyState extends StatelessWidget {
                 width: CanopySize.emptyArtWidth,
                 height: CanopySize.emptyArtHeight,
                 child: CustomPaint(
-                    painter: _Arches(value),
+                    painter: _Arches(value, paletteColor(ctx, Canopy.mist)),
                     child: Center(child: CaIcon(icon)))),
             const SizedBox(height: AppTheme.spaceLg),
             Opacity(
@@ -527,12 +527,13 @@ class CaEmptyState extends StatelessWidget {
 }
 
 class _Arches extends CustomPainter {
-  const _Arches(this.progress);
+  const _Arches(this.progress, this.color);
   final double progress;
+  final Color color;
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Canopy.mist
+      ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = CanopySize.ring;
     for (var i = 0; i < 3; i++) {
@@ -549,5 +550,6 @@ class _Arches extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_Arches old) => old.progress != progress;
+  bool shouldRepaint(_Arches old) =>
+      old.progress != progress || old.color != color;
 }

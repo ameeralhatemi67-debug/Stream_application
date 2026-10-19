@@ -115,6 +115,12 @@ flutter:
         - asset: assets/fonts/IBMPlexSansArabic-400.ttf
         - asset: assets/fonts/IBMPlexSansArabic-700.ttf
           weight: 700
+    # Hidayah Gold website display face (SIL OFL, assets/fonts/OFL-Reem-Kufi.txt).
+    - family: Reem Kufi
+      fonts:
+        - asset: assets/fonts/ReemKufi-Variable.ttf
+        - asset: assets/fonts/ReemKufi-Variable.ttf
+          weight: 600
 
 
 # Launcher, adaptive and web icons, built by `dart run flutter_launcher_icons`

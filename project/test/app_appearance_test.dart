@@ -239,9 +239,14 @@ void main() {
     expect(themed.textTheme.bodyLarge!.fontFamily, 'IBM Plex Sans Arabic');
     expect(normal.textTheme.bodyLarge!.fontFamily, 'IBM Plex Sans');
     expect(gold.color(AppTheme.shadowSoft).a, AppTheme.shadowSoft.a);
-    expect(gold.gradient(AppGradients.panel).begin, AppGradients.panel.begin);
-    expect(gold.gradient(AppGradients.panel).stops, AppGradients.panel.stops);
-    expect(gold.gradient(AppGradients.panel).colors.first, AppPalette.gold);
+    // The green panel becomes the night slate panel (a designed gradient,
+    // not a hue swap), and accent pills become the minted gold lit from the
+    // top, so they read the same in Arabic and English.
+    expect(gold.gradient(AppGradients.panel), HidayahGradients.night);
+    expect(gold.gradient(CanopyGradients.canopy), HidayahGradients.night);
+    expect(gold.gradient(AppGradients.pill), HidayahGradients.minted);
+    expect(HidayahGradients.minted.begin, Alignment.topCenter);
+    expect(HidayahGradients.minted.end, Alignment.bottomCenter);
     for (final background in [AppPalette.ivory, AppPalette.paper]) {
       for (final foreground in [
         AppTheme.textPrimary,
@@ -254,13 +259,26 @@ void main() {
         expect((b + .05) / (a + .05), greaterThanOrEqualTo(4.5));
       }
     }
-    expect(gold.gradient(AppGradients.pill).colors,
-        [AppPalette.gold, AppPalette.goldLight]);
+    expect(gold.gradient(AppGradients.pill).colors.last, AppPalette.gold);
     const translucent = LinearGradient(colors: [
       Color(0x4417643F), Color(0x88327044),
     ]);
-    expect(gold.gradient(translucent).colors.map((c) => c.a),
-        translucent.colors.map((c) => c.a));
+    // A translucent accent stays translucent once redesigned.
+    expect(gold.gradient(translucent).colors.every((c) => c.a < .3), isTrue);
+    // Gold never carries small text on ivory; bronze does.
+    expect(
+        (AppPalette.ivory.computeLuminance() + .05) /
+            (AppPalette.gold.computeLuminance() + .05),
+        lessThan(3));
+    expect(
+        (AppPalette.ivory.computeLuminance() + .05) /
+            (AppPalette.goldInk.computeLuminance() + .05),
+        greaterThanOrEqualTo(4.5));
+    // Selected chips and tabs use ink with pale gold, well above 4.5:1.
+    expect(
+        (HidayahGold.g200.computeLuminance() + .05) /
+            (HidayahGold.s800.computeLuminance() + .05),
+        greaterThanOrEqualTo(7));
     for (final background in gold.gradient(AppGradients.pill).colors) {
       expect(
           (background.computeLuminance() + .05) /

@@ -178,7 +178,11 @@ class _CaButtonState extends State<CaButton>
                 border: !primary && !destructive && !text
                     ? Border.all(color: paletteColor(context, Canopy.mist))
                     : null,
-                boxShadow: active && primary ? paletteShadows(context, CanopyShadow.pill) : null,
+                boxShadow: active && primary
+                    ? (paletteOf(context).hidayah
+                        ? HidayahShadow.minted
+                        : paletteShadows(context, CanopyShadow.pill))
+                    : null,
               ),
               child: ClipRRect(
                   borderRadius: BorderRadius.circular(CanopyRadius.pill),
@@ -189,9 +193,12 @@ class _CaButtonState extends State<CaButton>
                           start: AppTheme.spaceXl,
                           end: AppTheme.spaceXl,
                           height: CanopySize.stroke,
+                          // The minted coin's top edge catches the light.
                           child: ColoredBox(
-                              color: paletteColor(context, Canopy.paper).withValues(
-                                  alpha: CanopySize.highlightAlpha))),
+                              color: paletteOf(context).hidayah
+                                  ? HidayahGold.shine.withValues(alpha: .9)
+                                  : paletteColor(context, Canopy.paper).withValues(
+                                      alpha: CanopySize.highlightAlpha))),
                     if (widget.holdToConfirm)
                       Positioned.fill(
                           child: Align(

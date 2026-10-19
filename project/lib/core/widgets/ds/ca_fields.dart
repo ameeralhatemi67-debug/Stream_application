@@ -26,7 +26,7 @@ class CaChip extends StatelessWidget {
           if (icon != null) ...[
             CaIcon(icon!,
                 size: CanopySize.inlineIcon,
-                color: color == paletteOnAccent(context, Canopy.paper) ? color : paletteColor(context, Canopy.brandGreen)),
+                color: color == paletteOnSelected(context, Canopy.paper) ? color : paletteColor(context, Canopy.brandGreen)),
             const SizedBox(width: AppTheme.spaceSm)
           ],
           Flexible(
@@ -41,7 +41,7 @@ class CaChip extends StatelessWidget {
         selected: onSelected == null ? null : selected,
         enabled: onSelected == null ? null : true,
         child: CaFocusRing(
-            onDark: selected && !paletteOf(context).hidayah,
+            onDark: selected,
             child: Material(
                 type: MaterialType.transparency,
                 child: InkWell(
@@ -87,9 +87,9 @@ class CaChip extends StatelessWidget {
                                                               CanopyRadius
                                                                   .pill),
                                                       gradient:
-                                                          paletteGradient(context, AppGradients.pill)),
+                                                          paletteSelectedFill(context, AppGradients.pill)),
                                                   child: contents(
-                                                      paletteOnAccent(context, Canopy.paper))))))),
+                                                      paletteOnSelected(context, Canopy.paper))))))),
                           ])),
                     )))));
   }
@@ -163,7 +163,11 @@ class CaSegmentedTabs extends StatelessWidget {
                         enabled:
                             interactive ? !disabledIndices.contains(i) : null,
                         child: CaFocusRing(
-                            onDark: (dark || index == i) && !(index == i && paletteOf(context).hidayah),
+                            // Gold's dark-panel thumb is minted (light); every
+                            // other selected thumb is a dark fill.
+                            onDark: index == i
+                                ? !(dark && paletteOf(context).hidayah)
+                                : dark,
                             child: InkWell(
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
@@ -211,7 +215,10 @@ class CaSegmentedTabs extends StatelessWidget {
                           heightFactor: 1,
                           child: DecoratedBox(
                               decoration: BoxDecoration(
-                                  gradient: paletteGradient(context, AppGradients.pill),
+                                  gradient: dark
+                                      ? paletteGradient(context, AppGradients.pill)
+                                      : paletteSelectedFill(
+                                          context, AppGradients.pill),
                                   borderRadius: BorderRadius.circular(
                                       CanopyRadius.pill))))),
                 ),
@@ -227,7 +234,9 @@ class CaSegmentedTabs extends StatelessWidget {
                       curve: CanopyMotion.easeOut,
                       builder: (_, value, __) => ClipRect(
                           clipper: _ThumbClip(value!),
-                          child: row(paletteOnAccent(context, Canopy.paper)))),
+                          child: row(dark
+                              ? paletteOnAccent(context, Canopy.paper)
+                              : paletteOnSelected(context, Canopy.paper)))),
                 ))),
               ])),
         );

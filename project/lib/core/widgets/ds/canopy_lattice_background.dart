@@ -153,7 +153,10 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
               _texture,
               _pointer,
               Directionality.of(context),
-              paletteColor(context, widget.textureColor),
+              // On the gold palette's night panels the star reads as gilt.
+              paletteOf(context).hidayah && widget.textureColor == Canopy.paper
+                  ? HidayahGold.g300
+                  : paletteColor(context, widget.textureColor),
               widget.textureOpacity)));
   @override
   Widget build(BuildContext context) => MouseRegion(

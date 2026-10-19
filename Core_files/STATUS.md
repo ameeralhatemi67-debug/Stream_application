@@ -1,12 +1,16 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-18
+updated: 2026-10-19
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Hidayah Gold palette and website layouts, 2026-10-19
+
+The Settings → About logo toggle now switches between the current green design and the **Hidayah Gold** proposal, for team comparison. Gold replaces the first gold draft: role-based tokens from the logo (`hidayah_gold.dart`), night-slate panels, minted gold primary actions lit from the top, and ink selected states. On windows 1024 px and wider, gold also switches five screens to website layouts: Discovery, Map, Streamer account, Live (video and audio-only) and the Broadcast studio, under a top navigation bar with a footer. All other screens, and phones, keep today's layouts with the new colours. Details: `Core_files/Desgin.md` ("Optional Hidayah palette"). Verification: analyzer zero issues; new `test/hidayah_web_layout_test.dart` (website layouts at 1024 and 1440 px in both languages, green and phone layouts unchanged); updated appearance tests; rendered-contrast suite 76/76 for both palettes. Screenshots were rendered with the real fonts through `test/web_design_capture_test.dart` (set `WEB_CAPTURE_DIR`); the live page and chat need a live backend, so its capture uses stand-ins. Not yet checked in a real browser session against live data or on a physical phone.
 
 ## Optional palette and Arabic default, 2026-10-18
 
