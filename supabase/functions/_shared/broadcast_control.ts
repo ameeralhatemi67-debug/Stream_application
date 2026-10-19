@@ -4,11 +4,17 @@ type Rpc = (name:string,params:Record<string,unknown>) => Promise<any>;
 type Api = typeof youtube;
 type Context = {
   session:{id:string;owner_id:string;org_id:string|null;device_id:string;state:string;title_en:string;title_ar:string;
-    description:string;scheduled_start_at:string;expected_end_at:string;replay_status:string;stream_id:string|null},
+    description:string;scheduled_start_at:string;expected_end_at:string;ended_at:string|null;replay_status:string;stream_id:string|null},
   resource:{operation:string;step:string|null;needs_reconciliation:boolean;provider_stream_id:string|null;
     provider_broadcast_id:string|null;ingest_url:string|null;bound:boolean;feed_retired:boolean;broadcast_deleted:boolean},
   channel_id:string;refresh_token:string;ingest_key:string|null;
 };
+
+// YouTube shows a finished live as a post-live recording at once but reports
+// it 'processed' only hours later (about 12 h observed). A recording YouTube
+// did not keep ("This live stream recording is not available") stays
+// 'uploaded' for good, so after this long the replay counts as missing.
+export const replayGiveUpMs = 48*3600000;
 
 export type RunOptions = {
   /** Keeps work running after the response is sent (EdgeRuntime.waitUntil). */
@@ -152,7 +158,10 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
     });
   }
   let provider:any=null;
-  if(c.resource.provider_broadcast_id && !c.resource.broadcast_deleted) {
+  // After the live YouTube's broadcast is complete; only the feed and the
+  // replay are left, and an owner-deleted broadcast must not block them.
+  const over=['processing_replay','completed','cancelled'].includes(c.session.state);
+  if(c.resource.provider_broadcast_id && !c.resource.broadcast_deleted && !over) {
     provider=(await call('liveBroadcasts',{part:'id,snippet,status,contentDetails',id:c.resource.provider_broadcast_id})).items;
     provider=provider?.[0];
     if(!provider || provider.snippet?.channelId!==c.channel_id) throw new ProviderError(404,'broadcast_missing');
@@ -207,15 +216,22 @@ export async function runBroadcast(id:string,reservation:string,rpc:Rpc,
   }
   async function settle() {
     if(['processing_replay','completed','cancelled'].includes(c.session.state) && c.resource.provider_stream_id && !c.resource.feed_retired) {
-      await write('feed_delete','liveStreams',{id:c.resource.provider_stream_id},'DELETE',undefined,()=>({}));
+      // A feed already gone from YouTube is retired, not deleted again on every check.
+      await write('feed_delete','liveStreams',{id:c.resource.provider_stream_id},'DELETE',undefined,()=>({}),
+        ()=>call('liveStreams',{id:c.resource.provider_stream_id!},'DELETE').catch(error=>{
+          if(error instanceof ProviderError && error.status===404) return {};
+          throw error;
+        }));
     }
     if(c.session.state==='processing_replay' && c.session.stream_id) {
       if(c.resource.broadcast_deleted) {await result('observe',{replay:'missing'});c=await context();}
       else {
-      const video=(await call('videos',{part:'id,status,processingDetails',id:c.session.stream_id})).items as any[];
-      const replay=video?.[0]?.status?.uploadStatus;
-      if(replay==='processed') await result('observe',{replay:'available'});
-      else if(['failed','rejected','deleted'].includes(replay)||(!video?.length && Date.now()-Date.parse(c.session.expected_end_at)>24*3600000)) await result('observe',{replay:'missing'});
+      const video=((await call('videos',{part:'id,status,processingDetails',id:c.session.stream_id})).items as any[])?.[0];
+      const upload=video?.status?.uploadStatus,processing=video?.processingDetails?.processingStatus;
+      const overdue=Date.now()-Date.parse(c.session.ended_at??c.session.expected_end_at)>replayGiveUpMs;
+      if(upload==='processed'||processing==='succeeded') await result('observe',{replay:'available'});
+      else if(['failed','rejected','deleted'].includes(upload)||processing==='failed'||overdue
+        ||(!video && Date.now()-Date.parse(c.session.expected_end_at)>24*3600000)) await result('observe',{replay:'missing'});
       }
     } else if(c.session.state==='processing_replay' && !c.session.stream_id) {
       await result('observe',{replay:'missing'});
