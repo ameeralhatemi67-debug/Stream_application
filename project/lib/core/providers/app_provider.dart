@@ -2339,7 +2339,7 @@ class AppProvider extends ChangeNotifier {
           // (issue_log.md: "when I delete an account as an admin, I can see
           // the change ... in my web test, but not in my phone").
           // Sent by the database whenever a broadcast goes live or leaves
-          // live (20261019150000). It carries no ids: re-read what this
+          // live (20261019155816). It carries no ids: re-read what this
           // account may see. Viewers learn of a new live within ~1-2 s
           // instead of on the next 15-30 s catalog poll.
           .onBroadcast(

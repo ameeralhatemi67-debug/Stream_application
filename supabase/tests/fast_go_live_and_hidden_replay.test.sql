@@ -1,5 +1,5 @@
 -- Faster go-live and "hide the video when the live ends"
--- (20261019150000_fast_go_live_and_hidden_replay.sql). Fixtures roll back.
+-- (20261019155816_fast_go_live_and_hidden_replay.sql). Fixtures roll back.
 begin;
 set local search_path=public,extensions;
 select no_plan();
