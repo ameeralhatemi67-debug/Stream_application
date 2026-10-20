@@ -1,4 +1,4 @@
--- Replay checks back off and end (20261019170000_replay_check_backoff.sql).
+-- Replay checks back off and end (20261020075541_replay_check_backoff.sql).
 -- Time passing is simulated by moving a session's timestamps into the past.
 -- Fixtures roll back.
 begin;
