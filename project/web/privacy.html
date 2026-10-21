@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Privacy Policy — Hadayah Live</title>
-<meta name="description" content="How Hadayah Live (منصة هدايه) collects, uses, shares and deletes your data, including Google and YouTube data.">
+<meta name="description" content="How Hadayah Live (منصة هدايه) collects, uses, shares and deletes your data, including Google, YouTube and Sign in with Apple data.">
 <link rel="icon" type="image/png" href="favicon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -78,6 +78,22 @@
   .card strong { color: var(--text-primary); }
   a { color: var(--accent-green); }
 
+  .card p.notice {
+    background: var(--surface-2);
+    border-inline-start: 3px solid var(--accent-red);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin: 10px 0 0;
+  }
+  /* Text the owner or counsel must confirm before this page is relied on. */
+  .placeholder {
+    color: var(--accent-red);
+    font-weight: 700;
+    background: rgba(255, 128, 128, 0.12);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+
   footer { margin-top: 28px; font-size: 11px; color: var(--text-muted); text-align: center; }
 
   .ar { display: none; }
@@ -102,38 +118,39 @@
   <!-- ===================== ENGLISH ===================== -->
   <div class="en">
     <h1>Privacy Policy</h1>
-    <p class="meta">Hadayah Live (منصة هدايه) · Last updated: 16 October 2026 · Contact: <a href="mailto:ameeralhatemi67@gmail.com">ameeralhatemi67@gmail.com</a></p>
+    <p class="meta">Hadayah Live (منصة هدايه) · Last updated: 21 October 2026 · Contact: <a href="mailto:ameeralhatemi67@gmail.com">ameeralhatemi67@gmail.com</a></p>
 
     <div class="card">
       <h2>1. Who we are</h2>
-      <p>Hadayah Live is an educational live-broadcasting and discovery app for lectures, venues and organizations, available on Android and on the web. This policy explains what personal data the app handles and why. For any privacy question or request, write to the contact address above.</p>
+      <p>Hadayah Live is an educational live-broadcasting and discovery app for lectures, venues and organizations, available on Android and on the web. If you use the iOS app, this policy covers it too. The iOS app is for watching and account features: it does not offer phone broadcasting, YouTube channel connection or push notifications. This policy explains what personal data the app handles and why. For any privacy question or request, write to the contact address above.</p>
+      <p><span class="placeholder">[TO CONFIRM — owner/counsel: the operator's legal name and address]</span></p>
     </div>
 
     <div class="card">
       <h2>2. What we collect</h2>
       <ul>
-        <li><strong>Account data.</strong> When you sign in with Google we receive your name, email address, profile picture and a unique account ID. You can also use the app as a guest without an account.</li>
+        <li><strong>Account data.</strong> When you sign in with Google we receive your name, email address, profile picture and a unique account ID. If you use the iOS app and sign in with Apple, we receive a stable Apple user ID and, if you choose to share them, your name and email address. Apple may give us a private relay address that forwards to your inbox instead of your real email, and it shares your name only the first time you sign in to the app with Apple. We never see your Google or Apple password. You can also use the app as a guest without an account.</li>
         <li><strong>Profile content you add.</strong> Display name, bio, avatar, banner and your YouTube channel handle.</li>
         <li><strong>Broadcaster and organization applications.</strong> Name, email, phone number, academic or organization details, YouTube handle, venue details and the images you upload. Administrators add review notes.</li>
         <li><strong>Venue location.</strong> A venue point you confirm on the map is saved and shown publicly on the map. If you tap "use my location" the app reads your precise location once, only to place the map pin on your device. Nothing is sent until you confirm a point, and only that venue point is saved. The app never reads your location in the background.</li>
         <li><strong>Chat and safety data.</strong> Chat messages you send, reports you file, accounts you block, and mutes or bans applied to you, with the related moderation records.</li>
         <li><strong>Your activity.</strong> Channels you follow, recordings and upcoming streams you save, reminders you set and notification preferences.</li>
-        <li><strong>Device and notification data.</strong> A device identifier, device name and platform, the time the device was last active, a push-notification token (Firebase Cloud Messaging) and live viewer presence, used to keep the live viewer count accurate and to deliver notifications.</li>
+        <li><strong>Device and notification data.</strong> A device identifier, device name and platform, the time the device was last active, a push-notification token (Firebase Cloud Messaging, on Android and the web) and live viewer presence, used to keep the live viewer count accurate and to deliver notifications. The iOS app does not register for push notifications, so it sends no push token.</li>
         <li><strong>Consent record.</strong> The version of this policy you accepted and when.</li>
-        <li><strong>Camera and microphone.</strong> Only when an approved broadcaster starts a phone broadcast. Live video and audio are sent directly to the broadcaster's YouTube live ingest. We do not record or store them.</li>
+        <li><strong>Camera and microphone.</strong> Only when an approved broadcaster starts a phone broadcast on Android. Live video and audio are sent directly to the broadcaster's YouTube live ingest. We do not record or store them. The iOS app does not offer phone broadcasting; if that changes, we will update this policy before it is offered.</li>
         <li><strong>Technical data.</strong> Like any online service, our providers (section 5) process your IP address and connection details to deliver the service.</li>
       </ul>
     </div>
 
     <div class="card">
       <h2>3. Google and YouTube data</h2>
-      <p>A broadcaster (an individual, or an organization owner) can connect their own YouTube channel. This uses Google sign-in with the sensitive scope <strong>youtube.force-ssl</strong>, which lets our server, on the broadcaster's behalf, create the live broadcast and its stream, link them, start, end and check them, and read the channel's identity (ID and title).</p>
+      <p>A broadcaster (an individual, or an organization owner) can connect their own YouTube channel on Android or the web. Channel connection is not available in the iOS app. This uses Google sign-in with the sensitive scope <strong>youtube.force-ssl</strong>, which lets our server, on the broadcaster's behalf, create the live broadcast and its stream, link them, start, end and check them, and read the channel's identity (ID and title).</p>
       <ul>
         <li>We never see your Google password.</li>
         <li>The access credentials are stored on the server in an encrypted secrets vault, are never sent to the app or to other users, and are used only for the actions above.</li>
         <li>You can disconnect the channel inside the app, or revoke access at any time in your Google Account (<a href="https://myaccount.google.com/permissions" rel="noopener">myaccount.google.com/permissions</a>). Deleting your account destroys the stored credentials.</li>
         <li>Hadayah Live's use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">Google API Services User Data Policy</a>, including the Limited Use requirements. We use Google user data only to provide the broadcasting features you request. We do not sell it, use it for advertising, or allow humans to read it except where you ask for support, for security, or where the law requires.</li>
-        <li>Videos play through the YouTube embedded player (youtube-nocookie.com). YouTube's own terms and <a href="https://policies.google.com/privacy" rel="noopener">privacy policy</a> apply to what it collects.</li>
+        <li>Videos play through the YouTube embedded player (youtube-nocookie.com). YouTube controls that player and may show ads in it. YouTube's own terms and <a href="https://policies.google.com/privacy" rel="noopener">privacy policy</a> apply to what it collects. Using youtube-nocookie.com does not mean YouTube collects nothing.</li>
       </ul>
     </div>
 
@@ -143,19 +160,22 @@
         <li>To run the app: sign-in, profiles, discovery, the venue map, live rooms, chat, follows, bookmarks, reminders and notifications.</li>
         <li>To review broadcaster and organization applications and to run organization tools (members, roles, invitations, schedules and shows).</li>
         <li>To keep the community safe: moderation, reports, blocks, mutes and bans.</li>
+        <li>To show administrators combined viewing and engagement statistics so they can run the service. <span class="placeholder">[TO CONFIRM — owner/counsel: the purposes these statistics are used for]</span></li>
         <li>To keep the service reliable and secure, and to comply with the law.</li>
       </ul>
-      <p>We do not sell personal data, and the app shows no advertising.</p>
+      <p>We do not sell personal data. The app does not run its own ads or include an advertising SDK. Videos are played by YouTube, which may show its own ads (see section 3).</p>
     </div>
 
     <div class="card">
       <h2>5. Who we share data with</h2>
       <ul>
         <li><strong>Supabase</strong> (database, sign-in, file storage and server functions). Our project is hosted in Frankfurt, Germany (AWS eu-central-1), so your data is stored outside Saudi Arabia.</li>
-        <li><strong>Google</strong> (Google sign-in, the YouTube API and player, and Firebase Cloud Messaging for push notifications).</li>
+        <li><strong>Google</strong> (Google sign-in, the YouTube API and player, and Firebase Cloud Messaging for push notifications on Android and the web).</li>
+        <li><strong>Apple</strong> (Sign in with Apple, if you use the iOS app). When you delete an Apple-linked account, our server sends Apple a fresh authorization from you so that Apple revokes the app's sign-in. It uses those Apple credentials only for that step and does not store them.</li>
         <li><strong>Vercel</strong> (hosting of the web app and a server endpoint that reads public YouTube information).</li>
         <li><strong>Map and image providers</strong> may receive your IP address and the map area you view when tiles or images load.</li>
       </ul>
+      <p><span class="placeholder">[TO CONFIRM — owner/counsel: where Google, Apple, Vercel and the map and image providers process data, and the contractual protections for transfers outside Saudi Arabia]</span></p>
       <p><strong>What other users can see:</strong> your display name, avatar and profile, chat messages in the room where you post them, and organization and venue pages and coordinates you publish. Administrators and moderators can see reports and moderation records. We disclose data to authorities only when the law requires it.</p>
     </div>
 
@@ -163,16 +183,21 @@
       <h2>6. Your choices and rights</h2>
       <ul>
         <li><strong>Access and copy.</strong> Settings → Privacy → export my data saves a JSON file of the data linked to your account.</li>
-        <li><strong>Delete.</strong> Settings → Account &amp; Data → Delete My Account removes your account and linked data immediately. Without the app, use the <a href="/delete-account.html">deletion request page</a>; we respond within 30 days.</li>
+        <li><strong>Delete.</strong> Settings → Account &amp; Data → Delete My Account deletes your account and linked data. The app first checks whether something must be done: end a live broadcast, transfer ownership of an organization you own that has other members (or remove them), or email us about a restricted account. Deletion runs as separate steps (your uploaded files are removed, then the account is deleted). If a step fails, the app tells you and your account is kept, though some files may already be removed; you can try again. Without the app, use the <a href="/delete-account.html">deletion request page</a>; we respond within 30 days. <span class="placeholder">[TO CONFIRM — owner: support can meet this 30-day response time]</span></li>
+        <li><strong>Apple-linked accounts.</strong> In the iOS app, deleting an account linked to Apple asks you for a fresh Apple authorization, and our server must revoke the app's Apple sign-in before the account is deleted. If that step is unavailable, cancelled or fails, the account is kept and the app explains how to retry or contact support. <span class="placeholder">[TO CONFIRM — owner: the Apple revocation server function is deployed and tested on a real iPhone before the iOS app is submitted]</span></li>
         <li><strong>Correct.</strong> Edit your profile in the app, or write to us.</li>
-        <li><strong>Withdraw consent.</strong> Delete your account, or write to us. Notifications and location can also be switched off in your phone's settings, and notification categories inside the app.</li>
+        <li><strong>Withdraw consent.</strong> Delete your account, or write to us (an Apple-linked account still has to be deleted in the iOS app, as below). Notifications and location can also be switched off in your phone's settings, and notification categories inside the app.</li>
+        <li><strong>Proving it is you.</strong> Support may ask you to confirm that you own the account, but will never ask for your Google or Apple password or sign-in codes.</li>
         <li>You may also contact us to exercise any other right you have under applicable law, including the Saudi Personal Data Protection Law.</li>
       </ul>
+      <p class="notice"><strong>Apple-linked accounts:</strong> this limit applies to every deletion request made outside the iOS app. An account linked to Apple can only be fully deleted inside the iOS app with fresh Apple authorization. Support cannot complete deletion of an Apple-linked account by email alone. Your account has not been deleted. Email support to ask what is blocking it.</p>
     </div>
 
     <div class="card">
       <h2>7. Retention</h2>
-      <p>We keep your data while your account is active. When you delete your account, your profile and linked data are removed, uploaded files are deleted, and your name and email are removed from moderation and review records. Provider backups may keep copies for a limited time before they expire. Chat messages you sent are deleted with the account.</p>
+      <p>We keep your data while your account is active. When deletion completes, your profile and linked data are removed, uploaded files are deleted, and your name and email are removed from moderation and review records; the rest of that operational history can remain. Chat messages you sent are deleted with the account.</p>
+      <p>Our providers' logs and backups have their own expiry schedules and may keep copies for a limited time. <span class="placeholder">[TO CONFIRM — owner/counsel: log and backup retention periods, and any exceptions the law requires]</span> Deleting your account does not delete your Google or Apple account, your videos on YouTube, or copies, exports and screenshots that you or other people already made.</p>
+      <p>If you delete an Apple-linked account, our server keeps a private record that the Apple revocation succeeded (which Apple identity, its version and the time). The record is valid for ten minutes and cannot authorize a deletion after that. It is removed with the account; if the account is not deleted, the record can stay until you try again or the account is deleted.</p>
     </div>
 
     <div class="card">
@@ -182,7 +207,8 @@
 
     <div class="card">
       <h2>9. Children</h2>
-      <p>Hadayah Live is not directed at children under 13, and we do not knowingly collect their data. If you believe a child has given us data, contact us and we will delete it.</p>
+      <p>Hadayah Live is not directed at children under 13, and we do not knowingly collect their data. The app has no age verification or parental controls. If you believe a child has given us data, contact us and we will delete it. An Apple-linked account has to be deleted in the iOS app (section 6), and we will explain how.</p>
+      <p><span class="placeholder">[TO CONFIRM — counsel: the intended audience age and the children's policy]</span></p>
     </div>
 
     <div class="card">
@@ -194,38 +220,39 @@
   <!-- ===================== ARABIC ===================== -->
   <div class="ar">
     <h1>سياسة الخصوصية</h1>
-    <p class="meta">منصة هدايه (Hadayah Live) · آخر تحديث: 16 أكتوبر 2026 · التواصل: <a href="mailto:ameeralhatemi67@gmail.com">ameeralhatemi67@gmail.com</a></p>
+    <p class="meta">منصة هدايه (Hadayah Live) · آخر تحديث: 21 أكتوبر 2026 · التواصل: <a href="mailto:ameeralhatemi67@gmail.com">ameeralhatemi67@gmail.com</a></p>
 
     <div class="card">
       <h2>1. من نحن</h2>
-      <p>منصة هدايه تطبيق للبث المباشر التعليمي واكتشاف المحاضرات والأماكن والمؤسسات، يعمل على أندرويد وعلى الويب. توضح هذه السياسة البيانات الشخصية التي يتعامل معها التطبيق ولماذا. لأي سؤال أو طلب يخص الخصوصية، راسلنا على البريد أعلاه.</p>
+      <p>منصة هدايه تطبيق للبث المباشر التعليمي واكتشاف المحاضرات والأماكن والمؤسسات، يعمل على أندرويد وعلى الويب. وإذا كنت تستخدم تطبيق iOS فهذه السياسة تشمله أيضًا. تطبيق iOS مخصص للمشاهدة وميزات الحساب، ولا يتيح البث من الهاتف أو ربط قناة يوتيوب أو الإشعارات الفورية. توضح هذه السياسة البيانات الشخصية التي يتعامل معها التطبيق ولماذا. لأي سؤال أو طلب يخص الخصوصية، راسلنا على البريد أعلاه.</p>
+      <p><span class="placeholder">[للتأكيد من المالك أو المستشار القانوني: الاسم القانوني لمشغّل الخدمة وعنوانه]</span></p>
     </div>
 
     <div class="card">
       <h2>2. ما الذي نجمعه</h2>
       <ul>
-        <li><strong>بيانات الحساب.</strong> عند تسجيل الدخول بحساب Google نستلم اسمك وبريدك الإلكتروني وصورتك ومعرّف حساب فريدًا. ويمكنك أيضًا استخدام التطبيق كزائر دون حساب.</li>
+        <li><strong>بيانات الحساب.</strong> عند تسجيل الدخول بحساب Google نستلم اسمك وبريدك الإلكتروني وصورتك ومعرّف حساب فريدًا. وإذا كنت تستخدم تطبيق iOS وسجّلت الدخول عبر Apple نستلم معرّف مستخدم ثابتًا من Apple، واسمك وبريدك الإلكتروني إن اخترت مشاركتهما. وقد تمنحنا Apple عنوان بريد ترحيل خاصًا يحوّل الرسائل إلى بريدك بدلًا من عنوانك الحقيقي، ولا تشارك اسمك إلا في المرة الأولى التي تسجّل فيها الدخول إلى التطبيق عبر Apple. ولا نرى كلمة مرور حسابك في Google أو Apple أبدًا. ويمكنك أيضًا استخدام التطبيق كزائر دون حساب.</li>
         <li><strong>محتوى ملفك الشخصي.</strong> اسم العرض والنبذة والصورة والغلاف ومعرّف قناتك على يوتيوب.</li>
         <li><strong>طلبات المذيعين والمؤسسات.</strong> الاسم والبريد ورقم الجوال والتفاصيل الأكاديمية أو بيانات المؤسسة ومعرّف يوتيوب وتفاصيل المكان والصور التي ترفعها. ويضيف المشرفون ملاحظات المراجعة.</li>
         <li><strong>موقع المكان.</strong> تُحفظ نقطة المكان التي تؤكدها على الخريطة وتُعرض علنًا عليها. وإذا ضغطت «استخدم موقعي» يقرأ التطبيق موقعك الدقيق مرة واحدة فقط لوضع الدبوس على الخريطة في جهازك، ولا يُرسل شيء قبل أن تؤكد النقطة، ولا تُحفظ إلا نقطة المكان. ولا يقرأ التطبيق موقعك في الخلفية أبدًا.</li>
         <li><strong>بيانات الدردشة والسلامة.</strong> رسائل الدردشة التي ترسلها، والبلاغات التي تقدمها، والحسابات التي تحظرها، وأي كتم أو حظر يُطبَّق عليك مع سجلات الإشراف المرتبطة.</li>
         <li><strong>نشاطك.</strong> القنوات التي تتابعها، والتسجيلات والبثوث القادمة التي تحفظها، والتذكيرات التي تضبطها، وتفضيلات الإشعارات.</li>
-        <li><strong>بيانات الجهاز والإشعارات.</strong> معرّف الجهاز واسمه ومنصته ووقت آخر نشاط، ورمز الإشعارات (Firebase Cloud Messaging) وحضور المشاهد في البث، وذلك لضبط عدد المشاهدين وإيصال الإشعارات.</li>
+        <li><strong>بيانات الجهاز والإشعارات.</strong> معرّف الجهاز واسمه ومنصته ووقت آخر نشاط، ورمز الإشعارات (Firebase Cloud Messaging على أندرويد والويب) وحضور المشاهد في البث، وذلك لضبط عدد المشاهدين وإيصال الإشعارات. ولا يسجّل تطبيق iOS للإشعارات الفورية، فلا يرسل رمز إشعارات.</li>
         <li><strong>سجل الموافقة.</strong> إصدار هذه السياسة الذي وافقت عليه ووقت الموافقة.</li>
-        <li><strong>الكاميرا والميكروفون.</strong> فقط عندما يبدأ مذيع معتمد بثًا من هاتفه. يُرسل الفيديو والصوت مباشرة إلى قناة يوتيوب الخاصة بالمذيع، ولا نسجّلهما ولا نخزّنهما.</li>
+        <li><strong>الكاميرا والميكروفون.</strong> فقط عندما يبدأ مذيع معتمد بثًا من هاتف أندرويد. يُرسل الفيديو والصوت مباشرة إلى قناة يوتيوب الخاصة بالمذيع، ولا نسجّلهما ولا نخزّنهما. ولا يتيح تطبيق iOS البث من الهاتف، وإذا تغيّر ذلك فسنحدّث هذه السياسة قبل إتاحته.</li>
         <li><strong>بيانات تقنية.</strong> كأي خدمة على الإنترنت، يعالج مزودو الخدمة (القسم 5) عنوان IP وتفاصيل الاتصال لتقديم الخدمة.</li>
       </ul>
     </div>
 
     <div class="card">
       <h2>3. بيانات Google ويوتيوب</h2>
-      <p>يمكن للمذيع (فردًا كان أو مالك مؤسسة) ربط قناته على يوتيوب. يستخدم ذلك تسجيل الدخول بحساب Google مع النطاق الحساس <strong>youtube.force-ssl</strong>، وهو يتيح لخادمنا نيابةً عن المذيع إنشاء البث المباشر ومجرى البث وربطهما وبدءهما وإنهاءهما وفحص حالتهما، وقراءة هوية القناة (المعرّف والعنوان).</p>
+      <p>يمكن للمذيع (فردًا كان أو مالك مؤسسة) ربط قناته على يوتيوب من أندرويد أو الويب، ولا يتاح ربط القناة في تطبيق iOS. يستخدم ذلك تسجيل الدخول بحساب Google مع النطاق الحساس <strong>youtube.force-ssl</strong>، وهو يتيح لخادمنا نيابةً عن المذيع إنشاء البث المباشر ومجرى البث وربطهما وبدءهما وإنهاءهما وفحص حالتهما، وقراءة هوية القناة (المعرّف والعنوان).</p>
       <ul>
         <li>لا نرى كلمة مرور حساب Google أبدًا.</li>
         <li>تُخزَّن بيانات الاعتماد على الخادم داخل خزنة أسرار مشفّرة، ولا تُرسل إلى التطبيق ولا إلى المستخدمين الآخرين، وتُستخدم فقط للإجراءات المذكورة أعلاه.</li>
         <li>يمكنك فصل القناة من داخل التطبيق، أو إلغاء الوصول في أي وقت من حساب Google الخاص بك (<a href="https://myaccount.google.com/permissions" rel="noopener">myaccount.google.com/permissions</a>). وحذف حسابك يُتلف بيانات الاعتماد المخزنة.</li>
         <li>يلتزم استخدام منصة هدايه للمعلومات الواردة من واجهات Google وأي نقل لها إلى تطبيق آخر بـ<a href="https://developers.google.com/terms/api-services-user-data-policy" rel="noopener">سياسة بيانات المستخدم لخدمات Google API</a> بما فيها متطلبات الاستخدام المحدود. نستخدم بيانات Google فقط لتقديم ميزات البث التي تطلبها، ولا نبيعها ولا نستخدمها في الإعلانات، ولا نسمح للبشر بقراءتها إلا بطلبك للدعم أو لأغراض الأمان أو عند إلزام القانون.</li>
-        <li>تُعرض المقاطع عبر مشغّل يوتيوب المضمّن (youtube-nocookie.com)، وتنطبق شروط يوتيوب و<a href="https://policies.google.com/privacy" rel="noopener">سياسة الخصوصية</a> الخاصة بها على ما يجمعه.</li>
+        <li>تُعرض المقاطع عبر مشغّل يوتيوب المضمّن (youtube-nocookie.com). ويتحكم يوتيوب في هذا المشغّل وقد يعرض فيه إعلانات، وتنطبق شروط يوتيوب و<a href="https://policies.google.com/privacy" rel="noopener">سياسة الخصوصية</a> الخاصة بها على ما يجمعه. ولا يعني استخدام youtube-nocookie.com أن يوتيوب لا يجمع أي بيانات.</li>
       </ul>
     </div>
 
@@ -235,19 +262,22 @@
         <li>لتشغيل التطبيق: تسجيل الدخول والملفات الشخصية والاكتشاف وخريطة الأماكن وغرف البث والدردشة والمتابعات والمحفوظات والتذكيرات والإشعارات.</li>
         <li>لمراجعة طلبات المذيعين والمؤسسات وتشغيل أدوات المؤسسة (الأعضاء والأدوار والدعوات والجداول والبثوث).</li>
         <li>لحماية المجتمع: الإشراف والبلاغات والحظر والكتم.</li>
+        <li>لعرض إحصاءات مجمّعة عن المشاهدة والتفاعل على المشرفين لإدارة الخدمة. <span class="placeholder">[للتأكيد من المالك أو المستشار القانوني: الأغراض التي تُستخدم لها هذه الإحصاءات]</span></li>
         <li>لإبقاء الخدمة موثوقة وآمنة، وللالتزام بالأنظمة.</li>
       </ul>
-      <p>لا نبيع البيانات الشخصية، ولا يعرض التطبيق إعلانات.</p>
+      <p>لا نبيع البيانات الشخصية. ولا يعرض التطبيق إعلانات خاصة به ولا يتضمن حزمة برمجية للإعلانات. أما المقاطع فيشغّلها يوتيوب، وقد يعرض فيها إعلاناته (انظر القسم 3).</p>
     </div>
 
     <div class="card">
       <h2>5. مع من نشارك البيانات</h2>
       <ul>
         <li><strong>Supabase</strong> (قاعدة البيانات وتسجيل الدخول وتخزين الملفات ودوال الخادم). مشروعنا مستضاف في فرانكفورت بألمانيا (AWS eu-central-1)، فتُخزَّن بياناتك خارج المملكة العربية السعودية.</li>
-        <li><strong>Google</strong> (تسجيل الدخول وواجهة يوتيوب والمشغّل وFirebase Cloud Messaging للإشعارات).</li>
+        <li><strong>Google</strong> (تسجيل الدخول وواجهة يوتيوب والمشغّل وFirebase Cloud Messaging للإشعارات على أندرويد والويب).</li>
+        <li><strong>Apple</strong> (تسجيل الدخول عبر Apple إذا كنت تستخدم تطبيق iOS). وعند حذف حساب مرتبط بـ Apple يرسل خادمنا إلى Apple تفويضًا جديدًا منك لتلغي Apple تسجيل الدخول إلى التطبيق، ويستخدم بيانات اعتماد Apple هذه لتلك الخطوة فقط ولا يخزّنها.</li>
         <li><strong>Vercel</strong> (استضافة تطبيق الويب ونقطة خادم تقرأ معلومات يوتيوب العامة).</li>
         <li><strong>مزودو الخرائط والصور</strong> قد يستلمون عنوان IP ومنطقة الخريطة التي تعرضها عند تحميل البلاطات أو الصور.</li>
       </ul>
+      <p><span class="placeholder">[للتأكيد من المالك أو المستشار القانوني: أماكن معالجة Google وApple وVercel ومزودي الخرائط والصور للبيانات، والحماية التعاقدية لنقلها خارج المملكة العربية السعودية]</span></p>
       <p><strong>ما يراه المستخدمون الآخرون:</strong> اسم العرض والصورة والملف الشخصي، ورسائلك في الغرفة التي تكتب فيها، وصفحات المؤسسات والأماكن وإحداثياتها التي تنشرها. ويرى المشرفون البلاغات وسجلات الإشراف. ولا نفصح عن البيانات للجهات الرسمية إلا عند إلزام النظام بذلك.</p>
     </div>
 
@@ -255,16 +285,21 @@
       <h2>6. خياراتك وحقوقك</h2>
       <ul>
         <li><strong>الاطلاع والنسخ.</strong> من الإعدادات ← الخصوصية ← تصدير بياناتي، يُحفظ ملف JSON بالبيانات المرتبطة بحسابك.</li>
-        <li><strong>الحذف.</strong> من الإعدادات ← الحساب والبيانات ← حذف حسابي، يُحذف حسابك وبياناتك المرتبطة فورًا. ودون التطبيق استخدم <a href="/delete-account.html">صفحة طلب الحذف</a>، ونرد خلال 30 يومًا.</li>
+        <li><strong>الحذف.</strong> من الإعدادات ← الحساب والبيانات ← حذف حسابي، يُحذف حسابك وبياناتك المرتبطة. ويتحقق التطبيق أولًا مما يلزم قبل الحذف: إنهاء البث المباشر، أو نقل ملكية مؤسسة تملكها ولها أعضاء آخرون (أو إزالتهم)، أو مراسلتنا بشأن حساب مقيّد. ويتم الحذف على خطوات منفصلة (تُزال الملفات التي رفعتها ثم يُحذف الحساب)، فإذا تعثرت خطوة أخبرك التطبيق وبقي حسابك، وقد تكون بعض الملفات قد أُزيلت، ويمكنك المحاولة مجددًا. ودون التطبيق استخدم <a href="/delete-account.html">صفحة طلب الحذف</a>، ونرد خلال 30 يومًا. <span class="placeholder">[للتأكيد من المالك: قدرة الدعم على الرد خلال 30 يومًا]</span></li>
+        <li><strong>الحسابات المرتبطة بـ Apple.</strong> في تطبيق iOS يطلب حذف الحساب المرتبط بـ Apple تفويضًا جديدًا من Apple، ويجب أن يلغي خادمنا تسجيل الدخول عبر Apple إلى التطبيق قبل حذف الحساب. وإذا تعذرت هذه الخطوة أو أُلغيت أو فشلت يبقى الحساب ويوضح التطبيق كيفية المحاولة مجددًا أو التواصل مع الدعم. <span class="placeholder">[للتأكيد من المالك: نشر دالة الخادم لإلغاء تفويض Apple واختبارها على جهاز iPhone حقيقي قبل تقديم تطبيق iOS]</span></li>
         <li><strong>التصحيح.</strong> عدّل ملفك الشخصي في التطبيق، أو راسلنا.</li>
-        <li><strong>سحب الموافقة.</strong> احذف حسابك أو راسلنا. ويمكنك أيضًا إيقاف الإشعارات والموقع من إعدادات هاتفك، وإيقاف فئات الإشعارات داخل التطبيق.</li>
+        <li><strong>سحب الموافقة.</strong> احذف حسابك أو راسلنا (ويبقى حذف الحساب المرتبط بـ Apple داخل تطبيق iOS كما يلي). ويمكنك أيضًا إيقاف الإشعارات والموقع من إعدادات هاتفك، وإيقاف فئات الإشعارات داخل التطبيق.</li>
+        <li><strong>إثبات هويتك.</strong> قد يطلب منك الدعم تأكيد ملكيتك للحساب، لكنه لن يطلب أبدًا كلمة مرور Google أو Apple أو رموز تسجيل الدخول.</li>
         <li>يمكنك التواصل معنا لممارسة أي حق آخر يكفله لك النظام المعمول به، بما في ذلك نظام حماية البيانات الشخصية السعودي.</li>
       </ul>
+      <p class="notice"><strong>الحسابات المرتبطة بـ Apple:</strong> ينطبق هذا القيد على كل طلب حذف يُقدَّم خارج تطبيق iOS. لا يمكن إكمال حذف حساب مرتبط بـ Apple إلا داخل تطبيق iOS بتفويض جديد من Apple. لا يستطيع الدعم إكمال حذف الحساب المرتبط بـ Apple بالبريد الإلكتروني وحده. لم يُحذف حسابك. راسل الدعم للسؤال عمّا يمنع الحذف.</p>
     </div>
 
     <div class="card">
       <h2>7. مدة الاحتفاظ</h2>
-      <p>نحتفظ ببياناتك ما دام حسابك فعّالًا. وعند حذف حسابك يُزال ملفك الشخصي والبيانات المرتبطة به، وتُحذف الملفات المرفوعة، ويُزال اسمك وبريدك من سجلات الإشراف والمراجعة. وقد تحتفظ النسخ الاحتياطية لدى مزودي الخدمة بنسخ لمدة محدودة قبل أن تنتهي. وتُحذف رسائل الدردشة التي أرسلتها مع الحساب.</p>
+      <p>نحتفظ ببياناتك ما دام حسابك فعّالًا. وعند اكتمال الحذف يُزال ملفك الشخصي والبيانات المرتبطة به، وتُحذف الملفات المرفوعة، ويُزال اسمك وبريدك من سجلات الإشراف والمراجعة، وقد يبقى باقي هذا السجل التشغيلي. وتُحذف رسائل الدردشة التي أرسلتها مع الحساب.</p>
+      <p>ولسجلات مزودي الخدمة ونسخهم الاحتياطية جداول انتهاء خاصة بها، وقد تحتفظ بنسخ لمدة محدودة. <span class="placeholder">[للتأكيد من المالك أو المستشار القانوني: مدد الاحتفاظ بالسجلات والنسخ الاحتياطية، وأي استثناءات يفرضها النظام]</span> ولا يؤدي حذف حسابك إلى حذف حسابك في Google أو Apple، ولا فيديوهاتك على يوتيوب، ولا النسخ أو الصادرات أو لقطات الشاشة التي احتفظت بها أنت أو غيرك.</p>
+      <p>وعند حذف حساب مرتبط بـ Apple يحتفظ خادمنا بسجل خاص يثبت نجاح إلغاء تفويض Apple (أي هوية Apple وإصدارها ووقت الإلغاء). يبقى السجل صالحًا عشر دقائق ولا يمكنه تفويض الحذف بعدها، ويُزال مع الحساب؛ وإذا لم يُحذف الحساب فقد يبقى السجل حتى تحاول مجددًا أو يُحذف الحساب.</p>
     </div>
 
     <div class="card">
@@ -274,7 +309,8 @@
 
     <div class="card">
       <h2>9. الأطفال</h2>
-      <p>منصة هدايه غير موجهة للأطفال دون 13 عامًا، ولا نجمع بياناتهم عن علم. وإذا اعتقدت أن طفلًا زوّدنا ببيانات فتواصل معنا وسنحذفها.</p>
+      <p>منصة هدايه غير موجهة للأطفال دون 13 عامًا، ولا نجمع بياناتهم عن علم، ولا يتضمن التطبيق نظامًا للتحقق من العمر أو رقابة أبوية. وإذا اعتقدت أن طفلًا زوّدنا ببيانات فتواصل معنا وسنحذفها. أما الحساب المرتبط بـ Apple فيجب حذفه داخل تطبيق iOS (القسم 6)، وسنوضح لك كيفية ذلك.</p>
+      <p><span class="placeholder">[للتأكيد من المستشار القانوني: الفئة العمرية المستهدفة وسياسة الأطفال]</span></p>
     </div>
 
     <div class="card">

@@ -241,6 +241,27 @@
 
   .status.visible { display: block; }
 
+  .notice {
+    background: var(--surface-2);
+    border-inline-start: 3px solid var(--accent-red);
+    border-radius: var(--radius-md);
+    padding: 12px 14px;
+    margin-top: 12px;
+  }
+
+  .notice p { margin: 0 0 6px; }
+  .notice p:last-child { margin-bottom: 0; }
+  .card a { color: var(--accent-blue); }
+
+  /* Text the owner or counsel must confirm before this page is relied on. */
+  .placeholder {
+    color: var(--accent-red);
+    font-weight: 700;
+    background: rgba(255, 128, 128, 0.12);
+    border-radius: 4px;
+    padding: 0 4px;
+  }
+
   footer {
     margin-top: 28px;
     font-size: 11px;
@@ -271,8 +292,8 @@
     <span data-i18n-ar>حذف حسابك وبياناتك</span>
   </h1>
   <p class="lede">
-    <span data-i18n-en>This page lets you request permanent deletion of your Hadayah Live account and personal data, whether or not you have the app installed.</span>
-    <span data-i18n-ar>تتيح لك هذه الصفحة طلب حذف حسابك وبياناتك الشخصية في منصة هدايه بشكل نهائي، سواء كان التطبيق مثبتًا لديك أم لا.</span>
+    <span data-i18n-en>This page lets you request permanent deletion of your Hadayah Live account and personal data, whether or not you have the app installed. An account linked to Apple is the exception: it has to be deleted in the iOS app (see below).</span>
+    <span data-i18n-ar>تتيح لك هذه الصفحة طلب حذف حسابك وبياناتك الشخصية في منصة هدايه بشكل نهائي، سواء كان التطبيق مثبتًا لديك أم لا. ويُستثنى من ذلك الحساب المرتبط بـ Apple، إذ يجب حذفه داخل تطبيق iOS (انظر أدناه).</span>
   </p>
 
   <div class="card">
@@ -309,14 +330,18 @@
         <span data-i18n-en>An organization you own alone (with its venues and speaker roster), and your roles and permissions</span>
         <span data-i18n-ar>أي مؤسسة تملكها وحدك (مع قاعاتها وقائمة المتحدثين فيها)، وأدوارك وصلاحياتك</span>
       </li>
+      <li>
+        <span data-i18n-en>For an account linked to Apple, the app's Sign in with Apple authorization, which our server revokes with Apple before the account is deleted</span>
+        <span data-i18n-ar>في الحساب المرتبط بـ Apple: تفويض تسجيل الدخول عبر Apple، إذ يلغيه خادمنا لدى Apple قبل حذف الحساب</span>
+      </li>
     </ul>
     <p style="margin-top: 10px;">
-      <span data-i18n-en>Your name and email are also removed from our moderation and review history. Videos you streamed to YouTube stay on your own YouTube channel; delete them there.</span>
-      <span data-i18n-ar>كما يُزال اسمك وبريدك الإلكتروني من سجلات الإشراف والمراجعة لدينا. تبقى مقاطع الفيديو التي بثثتها على يوتيوب في قناتك الخاصة؛ احذفها من هناك.</span>
+      <span data-i18n-en>Your name and email are also removed from our moderation and review history. Videos you streamed to YouTube stay on your own YouTube channel; delete them there. Deleting your Hadayah Live account does not delete your Google or Apple account.</span>
+      <span data-i18n-ar>كما يُزال اسمك وبريدك الإلكتروني من سجلات الإشراف والمراجعة لدينا. تبقى مقاطع الفيديو التي بثثتها على يوتيوب في قناتك الخاصة؛ احذفها من هناك. ولا يؤدي حذف حسابك في منصة هدايه إلى حذف حسابك في Google أو Apple.</span>
     </p>
     <p style="margin-top: 10px;">
-      <span data-i18n-en>This action cannot be undone. Account sign-in access is revoked immediately.</span>
-      <span data-i18n-ar>لا يمكن التراجع عن هذا الإجراء. يتم إلغاء إمكانية تسجيل الدخول فورًا.</span>
+      <span data-i18n-en>This action cannot be undone. Once deletion completes, the account can no longer be signed in to. It does not instantly end every session already open on another device, and copies in our providers' logs and backups expire on their own schedules (see the <a href="/privacy.html">Privacy Policy</a>).</span>
+      <span data-i18n-ar>لا يمكن التراجع عن هذا الإجراء. وبعد اكتمال الحذف لا يمكن تسجيل الدخول إلى الحساب، لكنه لا ينهي فورًا كل جلسة مفتوحة على جهاز آخر، وتنتهي النسخ الموجودة في سجلات مزودي الخدمة ونسخهم الاحتياطية وفق جداولها الخاصة (انظر <a href="/privacy.html">سياسة الخصوصية</a>).</span>
     </p>
   </div>
 
@@ -326,8 +351,12 @@
       <span data-i18n-ar>هل التطبيق مثبت لديك؟</span>
     </h2>
     <p>
-      <span data-i18n-en>Sign in, then go to <strong>Settings → Account & Data → Delete My Account</strong> for instant, self-service deletion.</span>
-      <span data-i18n-ar>سجّل الدخول، ثم اذهب إلى <strong>الإعدادات ← الحساب والبيانات ← حذف حسابي</strong> لحذف حسابك فورًا بنفسك.</span>
+      <span data-i18n-en>Sign in, then go to <strong>Settings → Account & Data → Delete My Account</strong> to delete your account yourself. The app first tells you if something must be done: end a live broadcast, transfer ownership of an organization you own that has other members (or remove them), or email support about a restricted account. If a step fails, your account is kept and you can try again.</span>
+      <span data-i18n-ar>سجّل الدخول، ثم اذهب إلى <strong>الإعدادات ← الحساب والبيانات ← حذف حسابي</strong> لتحذف حسابك بنفسك. ويخبرك التطبيق أولًا إن كان يلزم شيء قبل الحذف: إنهاء البث المباشر، أو نقل ملكية مؤسسة تملكها ولها أعضاء آخرون (أو إزالتهم)، أو مراسلة الدعم بشأن حساب مقيّد. وإذا تعثرت خطوة يبقى حسابك ويمكنك المحاولة مجددًا.</span>
+    </p>
+    <p style="margin-top: 10px;">
+      <span data-i18n-en><strong>Account linked to Apple?</strong> Use the iOS app. It asks for a fresh Apple authorization, then our server revokes the app's Sign in with Apple authorization before deleting the account. If that step is unavailable, cancelled or fails, your account is kept and the app explains how to retry or contact support. <span class="placeholder">[TO CONFIRM — owner: the Apple revocation server function is deployed and tested on a real iPhone before the iOS app is submitted]</span></span>
+      <span data-i18n-ar><strong>حسابك مرتبط بـ Apple؟</strong> استخدم تطبيق iOS؛ إذ يطلب تفويضًا جديدًا من Apple، ثم يلغي خادمنا تفويض تسجيل الدخول عبر Apple قبل حذف الحساب. وإذا تعذرت هذه الخطوة أو أُلغيت أو فشلت يبقى حسابك ويوضح التطبيق كيفية المحاولة مجددًا أو التواصل مع الدعم. <span class="placeholder">[للتأكيد من المالك: نشر دالة الخادم لإلغاء تفويض Apple واختبارها على جهاز iPhone حقيقي قبل تقديم تطبيق iOS]</span></span>
     </p>
   </div>
 
@@ -339,9 +368,24 @@
       <span data-i18n-ar>طلب الحذف دون تسجيل الدخول</span>
     </h2>
     <p>
-      <span data-i18n-en>Can't sign in, or don't have the app? Submit this form and we will locate and delete your account and data within 30 days.</span>
-      <span data-i18n-ar>لا يمكنك تسجيل الدخول أو لا تملك التطبيق؟ أرسل هذا النموذج وسنقوم بالبحث عن حسابك وحذف بياناتك خلال 30 يومًا.</span>
+      <span data-i18n-en>Can't sign in, or don't have the app? Submit this form and we will locate your account and delete it and its data within 30 days. <span class="placeholder">[TO CONFIRM — owner: support can meet this 30-day response time]</span></span>
+      <span data-i18n-ar>لا يمكنك تسجيل الدخول أو لا تملك التطبيق؟ أرسل هذا النموذج وسنبحث عن حسابك ونحذفه مع بياناته خلال 30 يومًا. <span class="placeholder">[للتأكيد من المالك: قدرة الدعم على الرد خلال 30 يومًا]</span></span>
     </p>
+    <p style="margin-top: 8px;">
+      <span data-i18n-en>The button opens your email app with the request filled in; nothing is sent until you send that email. Support may ask you to confirm that you own the account, but will never ask for your Google or Apple password or sign-in codes.</span>
+      <span data-i18n-ar>يفتح الزر تطبيق البريد لديك وفيه الطلب جاهزًا، ولا يُرسل شيء حتى ترسل تلك الرسالة. وقد يطلب منك الدعم تأكيد ملكيتك للحساب، لكنه لن يطلب أبدًا كلمة مرور Google أو Apple أو رموز تسجيل الدخول.</span>
+    </p>
+
+    <div class="notice">
+      <p>
+        <span data-i18n-en><strong>Account linked to Apple?</strong> A request sent with this form gets this reply: An account linked to Apple can only be fully deleted inside the iOS app with fresh Apple authorization. Support cannot complete deletion of an Apple-linked account by email alone. Your account has not been deleted. Email support to ask what is blocking it.</span>
+        <span data-i18n-ar><strong>حسابك مرتبط بـ Apple؟</strong> هذا هو الرد على أي طلب يُرسل عبر هذا النموذج: لا يمكن إكمال حذف حساب مرتبط بـ Apple إلا داخل تطبيق iOS بتفويض جديد من Apple. لا يستطيع الدعم إكمال حذف الحساب المرتبط بـ Apple بالبريد الإلكتروني وحده. لم يُحذف حسابك. راسل الدعم للسؤال عمّا يمنع الحذف.</span>
+      </p>
+      <p>
+        <span data-i18n-en>If you signed in with Apple and chose to hide your email, your account's email is an Apple private relay address (ending in privaterelay.appleid.com), not the address you normally use. Your Apple account settings show the relay address the app received.</span>
+        <span data-i18n-ar>إذا سجّلت الدخول عبر Apple واخترت إخفاء بريدك، فبريد حسابك عنوان ترحيل خاص من Apple (ينتهي بـ <bdi>privaterelay.appleid.com</bdi>) وليس العنوان الذي تستخدمه عادةً. وتعرض إعدادات حسابك في Apple عنوان الترحيل الذي تلقاه التطبيق.</span>
+      </p>
+    </div>
 
     <form id="delete-form">
       <label for="email">
