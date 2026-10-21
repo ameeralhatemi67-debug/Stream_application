@@ -30,10 +30,10 @@ class CitySelectorDropdown extends StatelessWidget {
     return PopupMenuButton<String>(
       tooltip: 'map.choose_place'.tr(),
       onSelected: onCitySelected,
-      color: paletteColor(context, AppTheme.surface),
+      color: AppTheme.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        side: BorderSide(color: paletteColor(context, AppTheme.border), width: 1.0),
+        side: const BorderSide(color: AppTheme.border, width: 1.0),
       ),
       offset: const Offset(0, 44),
       itemBuilder: (context) {
@@ -48,7 +48,7 @@ class CitySelectorDropdown extends StatelessWidget {
                       ? Icons.map_outlined
                       : Icons.location_on_rounded,
                   size: 18,
-                  color: isCurrent ? paletteColor(context, AppTheme.primary) : paletteColor(context, AppTheme.textMuted),
+                  color: isCurrent ? AppTheme.primary : AppTheme.textMuted,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -59,17 +59,17 @@ class CitySelectorDropdown extends StatelessWidget {
                       fontWeight:
                           isCurrent ? FontWeight.bold : FontWeight.normal,
                       color:
-                          isCurrent ? paletteColor(context, AppTheme.primary) : paletteColor(context, AppTheme.textPrimary),
+                          isCurrent ? AppTheme.primary : AppTheme.textPrimary,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
                 if (isCurrent)
-                  Icon(
+                  const Icon(
                     Icons.check_rounded,
                     size: 16,
-                    color: paletteColor(context, AppTheme.primary),
+                    color: AppTheme.primary,
                   ),
               ],
             ),
@@ -80,17 +80,17 @@ class CitySelectorDropdown extends StatelessWidget {
         height: 44,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
-          color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.80),
+          color: AppTheme.surface.withValues(alpha: 0.80),
           borderRadius: BorderRadius.circular(14.0),
           border: Border.all(
-            color: paletteColor(context, AppTheme.border),
+            color: AppTheme.border,
             width: 1.2,
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-              color: paletteColor(context, AppTheme.shadowSoft),
+              color: AppTheme.shadowSoft,
               blurRadius: 10,
-              offset: const Offset(0, 3),
+              offset: Offset(0, 3),
             ),
           ],
         ),
@@ -101,17 +101,17 @@ class CitySelectorDropdown extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.location_on_rounded,
                     size: 16,
-                    color: paletteColor(context, AppTheme.primary),
+                    color: AppTheme.primary,
                   ),
                   const SizedBox(width: 6),
                   Flexible(
                     child: Text(
                       labelFor(selectedCityId, langCode),
-                      style: TextStyle(
-                        color: paletteColor(context, AppTheme.textPrimary),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
@@ -122,9 +122,9 @@ class CitySelectorDropdown extends StatelessWidget {
                 ],
               ),
             ),
-            Icon(
+            const Icon(
               Icons.arrow_drop_down_rounded,
-              color: paletteColor(context, AppTheme.textMuted),
+              color: AppTheme.textMuted,
               size: 20,
             ),
           ],

@@ -163,7 +163,7 @@ class _OrganizationHubScreenState extends State<OrganizationHubScreen> {
             if (_error != null)
               _Notice(
                   text: _error!.tr(),
-                  color: paletteColor(context, Canopy.liveCrimson),
+                  color: Canopy.liveCrimson,
                   onRetry: _refresh),
             if (invitations.isNotEmpty) ...[
               _Header('organization_v1.pending_invitations'.tr()),
@@ -178,7 +178,7 @@ class _OrganizationHubScreenState extends State<OrganizationHubScreen> {
             if (_loaded && visible.isEmpty && invitations.isEmpty)
               _Notice(
                   text: 'organization_v1.no_organizations'.tr(),
-                  color: paletteColor(context, Canopy.slate)),
+                  color: Canopy.slate),
             for (final m in visible)
               _MembershipCard(
                 membership: m,
@@ -237,7 +237,7 @@ class _Notice extends StatelessWidget {
             const EdgeInsetsDirectional.symmetric(vertical: AppTheme.spaceSm),
         child: CaBanner(
             message: text,
-            kind: color == paletteColor(context, Canopy.liveCrimson)
+            kind: color == Canopy.liveCrimson
                 ? CaBannerKind.error
                 : CaBannerKind.info,
             action: onRetry == null
@@ -298,7 +298,7 @@ class _InvitationCard extends StatelessWidget {
                   'organization_v1.expires'.tr(namedArgs: {
                     'date': _date(context, invitation.expiresAt)
                   }),
-                  style: TextStyle(color: paletteColor(context, Canopy.slate))),
+                  style: const TextStyle(color: Canopy.slate)),
               const SizedBox(height: AppTheme.spaceSm),
               Wrap(
                   spacing: AppTheme.spaceSm,
@@ -372,7 +372,7 @@ class _MembershipCard extends StatelessWidget {
                   ]),
               if (!m.v1Enabled)
                 Text('organization_v1.not_enabled_hint'.tr(),
-                    style: TextStyle(color: paletteColor(context, Canopy.slate))),
+                    style: const TextStyle(color: Canopy.slate)),
               if (m.transferToMe)
                 _Banner(
                     text: 'organization_v1.transfer_incoming'.tr(namedArgs: {
@@ -473,9 +473,9 @@ class _Banner extends StatelessWidget {
         margin: const EdgeInsets.only(top: AppTheme.spaceSm),
         padding: const EdgeInsets.all(AppTheme.spaceMd),
         decoration: BoxDecoration(
-            color: paletteColor(context, Canopy.mint),
+            color: Canopy.mint,
             borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-            border: Border.all(color: paletteColor(context, Canopy.hairline))),
+            border: Border.all(color: Canopy.hairline)),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           Text(text),
           const SizedBox(height: AppTheme.spaceSm),
@@ -508,8 +508,8 @@ class _Step extends StatelessWidget {
                       ? Icons.radio_button_unchecked
                       : Icons.error_outline),
               color: done
-                  ? paletteColor(context, Canopy.leaf)
-                  : (optional ? paletteColor(context, Canopy.haze) : paletteColor(context, AppTheme.warning)),
+                  ? Canopy.leaf
+                  : (optional ? Canopy.haze : AppTheme.warning),
               size: 20,
               semanticLabel: (done
                       ? 'organization_v1.step_done'
@@ -542,7 +542,7 @@ class _EventTile extends StatelessWidget {
           event.read
               ? Icons.notifications_none_outlined
               : Icons.notifications_active_outlined,
-          color: event.read ? paletteColor(context, Canopy.haze) : paletteColor(context, AppTheme.primary),
+          color: event.read ? Canopy.haze : AppTheme.primary,
           semanticLabel:
               (event.read ? 'organization_v1.read' : 'organization_v1.unread')
                   .tr()),

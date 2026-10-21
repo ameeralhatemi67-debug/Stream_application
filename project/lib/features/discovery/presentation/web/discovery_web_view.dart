@@ -444,9 +444,12 @@ class _AlsoLive extends StatelessWidget {
 class _QuietFeature extends StatelessWidget {
   const _QuietFeature();
   @override
-  Widget build(BuildContext context) => AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Container(
+  // At least 16:9 like the player it stands in for, taller when large text
+  // needs the room.
+  Widget build(BuildContext context) => LayoutBuilder(
+      builder: (context, constraints) => Container(
+          constraints: BoxConstraints(minHeight: constraints.maxWidth * 9 / 16),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
               color: const Color(0x08FFFFFF),
               borderRadius: BorderRadius.circular(18),
@@ -454,7 +457,7 @@ class _QuietFeature extends StatelessWidget {
                   Border.all(color: HidayahGold.g300.withValues(alpha: .22))),
           padding: const EdgeInsets.all(32),
           child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 const AppLogo(size: 84),
                 const SizedBox(height: 18),

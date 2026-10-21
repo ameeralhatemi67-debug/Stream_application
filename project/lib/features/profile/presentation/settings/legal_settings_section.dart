@@ -36,14 +36,14 @@ class LegalSettingsSection extends StatelessWidget {
                 '${'settings.terms_version_label'.tr()}: ${terms.version}',
             onTap: () => _openLegalReader(context, terms, 0),
           ),
-          Divider(height: 16, color: paletteColor(context, Canopy.hairline)),
+          const Divider(height: 16, color: Canopy.hairline),
           _buildGovernanceRow(context,
             icon: Icons.verified_user_rounded,
             title: 'settings.view_guidelines'.tr(),
             subtitle: 'settings.view_guidelines_subtitle'.tr(),
             onTap: () => _openLegalReader(context, terms, 1),
           ),
-          Divider(height: 16, color: paletteColor(context, Canopy.hairline)),
+          const Divider(height: 16, color: Canopy.hairline),
           _buildGovernanceRow(context,
             icon: Icons.privacy_tip_rounded,
             title: 'settings.view_privacy'.tr(),
@@ -69,7 +69,7 @@ class LegalSettingsSection extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           children: [
-            Icon(icon, size: 20, color: paletteColor(context, AppTheme.primary)),
+            Icon(icon, size: 20, color: AppTheme.primary),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
               child: Column(
@@ -77,8 +77,8 @@ class LegalSettingsSection extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.ink),
+                    style: const TextStyle(
+                      color: Canopy.ink,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
@@ -86,16 +86,16 @@ class LegalSettingsSection extends StatelessWidget {
                   const SizedBox(height: 1),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.haze),
+                    style: const TextStyle(
+                      color: Canopy.haze,
                       fontSize: AppTheme.captionFont,
                     ),
                   ),
                 ],
               ),
             ),
-            Icon(Icons.arrow_forward_ios_rounded,
-                size: 14, color: paletteColor(context, Canopy.slate)),
+            const Icon(Icons.arrow_forward_ios_rounded,
+                size: 14, color: Canopy.slate),
           ],
         ),
       ),

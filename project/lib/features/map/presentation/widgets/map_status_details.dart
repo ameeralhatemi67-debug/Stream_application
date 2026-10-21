@@ -29,7 +29,7 @@ class MapAttributionRail extends StatelessWidget {
     final url =
         manifest?.attributionUrl ?? 'https://www.openstreetmap.org/copyright';
     return Material(
-      color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.9),
+      color: AppTheme.surface.withValues(alpha: 0.9),
       borderRadius: const BorderRadiusDirectional.only(
           topEnd: Radius.circular(AppTheme.radiusSm)),
       child: Row(
@@ -53,11 +53,11 @@ class MapAttributionRail extends StatelessWidget {
                       child: Text(
                         credit,
                         textDirection: TextDirection.ltr,
-                        style: TextStyle(
-                          color: paletteColor(context, AppTheme.textSecondary),
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
                           fontSize: 12,
                           decoration: TextDecoration.underline,
-                          decorationColor: paletteColor(context, AppTheme.textSecondary),
+                          decorationColor: AppTheme.textSecondary,
                         ),
                       ),
                     ),
@@ -69,8 +69,8 @@ class MapAttributionRail extends StatelessWidget {
           IconButton(
             tooltip: 'map.details_open'.tr(),
             onPressed: onDetails,
-            icon: Icon(Icons.info_outline_rounded,
-                size: 20, color: paletteColor(context, AppTheme.textSecondary)),
+            icon: const Icon(Icons.info_outline_rounded,
+                size: 20, color: AppTheme.textSecondary),
             constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
           ),
         ],
@@ -97,17 +97,17 @@ class MapWebOfflineHint extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.95),
+      color: AppTheme.surface.withValues(alpha: 0.95),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
-        side: BorderSide(color: paletteColor(context, AppTheme.border)),
+        side: const BorderSide(color: AppTheme.border),
       ),
       child: Padding(
         padding: const EdgeInsetsDirectional.only(start: AppTheme.spaceMd),
         child: Row(
           children: [
-            Icon(Icons.download_for_offline_outlined,
-                color: paletteColor(context, AppTheme.primary), size: 20),
+            const Icon(Icons.download_for_offline_outlined,
+                color: AppTheme.primary, size: 20),
             const SizedBox(width: AppTheme.spaceSm),
             Expanded(
               child: Text(
@@ -115,8 +115,8 @@ class MapWebOfflineHint extends StatelessWidget {
                         ? 'map.web_offline_hint_evicted'
                         : 'map.web_offline_hint')
                     .tr(),
-                style: TextStyle(
-                    color: paletteColor(context, AppTheme.textPrimary), fontSize: 12.5),
+                style: const TextStyle(
+                    color: AppTheme.textPrimary, fontSize: 12.5),
               ),
             ),
             TextButton(
@@ -128,8 +128,8 @@ class MapWebOfflineHint extends StatelessWidget {
               IconButton(
                 tooltip: 'map.web_offline_hint_dismiss'.tr(),
                 onPressed: onDismiss,
-                icon: Icon(Icons.close_rounded,
-                    size: 18, color: paletteColor(context, AppTheme.textSecondary)),
+                icon: const Icon(Icons.close_rounded,
+                    size: 18, color: AppTheme.textSecondary),
                 constraints: const BoxConstraints(minWidth: 48, minHeight: 48),
               ),
           ],
@@ -158,10 +158,10 @@ class MapConnectionChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.95),
+      color: AppTheme.surface.withValues(alpha: 0.95),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppTheme.mapOverlayRadius),
-        side: BorderSide(color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.5)),
+        side: BorderSide(color: AppTheme.warning.withValues(alpha: 0.5)),
       ),
       child: Row(
         children: [
@@ -180,14 +180,14 @@ class MapConnectionChip extends StatelessWidget {
                         vertical: AppTheme.spaceXs),
                     child: Row(
                       children: [
-                        Icon(Icons.cloud_off_rounded,
-                            color: paletteColor(context, AppTheme.warning), size: 18),
+                        const Icon(Icons.cloud_off_rounded,
+                            color: AppTheme.warning, size: 18),
                         const SizedBox(width: AppTheme.spaceSm),
                         Expanded(
                           child: Text(
                             label,
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textPrimary),
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
                               fontSize: 12.5,
                               fontWeight: FontWeight.w600,
                             ),
@@ -203,7 +203,7 @@ class MapConnectionChip extends StatelessWidget {
           TextButton(
             onPressed: isRetrying ? null : onRetry,
             style: TextButton.styleFrom(
-              foregroundColor: paletteColor(context, AppTheme.primary),
+              foregroundColor: AppTheme.primary,
               minimumSize: const Size(48, 48),
             ),
             child: Text(
@@ -260,10 +260,10 @@ class MapPackStatusCard extends StatelessWidget {
       constraints: const BoxConstraints(maxWidth: 420),
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: paletteColor(context, AppTheme.surface),
-        border: Border.all(color: paletteColor(context, AppTheme.borderStrong)),
+        color: AppTheme.surface,
+        border: Border.all(color: AppTheme.borderStrong),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        boxShadow: paletteShadows(context, AppTheme.mapOverlayShadow),
+        boxShadow: AppTheme.mapOverlayShadow,
       ),
       child: Semantics(
         liveRegion: true,
@@ -274,19 +274,19 @@ class MapPackStatusCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(Icons.map_outlined, color: paletteColor(context, AppTheme.warning)),
+                const Icon(Icons.map_outlined, color: AppTheme.warning),
                 const SizedBox(width: AppTheme.spaceSm),
                 Expanded(
                   child: Text('map.pack_unavailable_title'.tr(),
-                      style: TextStyle(
-                          color: paletteColor(context, AppTheme.textPrimary),
+                      style: const TextStyle(
+                          color: AppTheme.textPrimary,
                           fontWeight: FontWeight.bold)),
                 ),
               ],
             ),
             const SizedBox(height: AppTheme.spaceXs),
             Text(problemText(controller.problem),
-                style: TextStyle(color: paletteColor(context, AppTheme.textSecondary))),
+                style: const TextStyle(color: AppTheme.textSecondary)),
             const SizedBox(height: AppTheme.spaceSm),
             Wrap(
               spacing: AppTheme.spaceSm,
@@ -328,7 +328,7 @@ Future<void> showMapDetailsSheet(
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
-    backgroundColor: paletteColor(context, AppTheme.surface),
+    backgroundColor: AppTheme.surface,
     shape: const RoundedRectangleBorder(
       borderRadius:
           BorderRadius.vertical(top: Radius.circular(AppTheme.radiusLg)),
@@ -371,8 +371,8 @@ class _MapDetailsBody extends StatelessWidget {
             Semantics(
               header: true,
               child: Text(title,
-                  style: TextStyle(
-                      color: paletteColor(context, AppTheme.textPrimary),
+                  style: const TextStyle(
+                      color: AppTheme.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.bold)),
             ),
@@ -383,7 +383,7 @@ class _MapDetailsBody extends StatelessWidget {
       );
 
   Text _body(BuildContext context, String text) => Text(text,
-      style: TextStyle(color: paletteColor(context, AppTheme.textSecondary), height: 1.4));
+      style: const TextStyle(color: AppTheme.textSecondary, height: 1.4));
 
   @override
   Widget build(BuildContext context) {
@@ -420,7 +420,7 @@ class _MapDetailsBody extends StatelessWidget {
                   'id': manifest!.packId,
                   'size': (pack.bytes / (1 << 20)).toStringAsFixed(1),
                 }),
-                style: TextStyle(color: paletteColor(context, AppTheme.textMuted), fontSize: 12),
+                style: const TextStyle(color: AppTheme.textMuted, fontSize: 12),
               ),
             ],
             if (!controller.isReady &&
@@ -485,13 +485,13 @@ class _MapDetailsBody extends StatelessWidget {
               ExpansionTile(
                 tilePadding: EdgeInsets.zero,
                 title: Text('map.details_notices'.tr(),
-                    style: TextStyle(color: paletteColor(context, AppTheme.textPrimary))),
+                    style: const TextStyle(color: AppTheme.textPrimary)),
                 children: [
                   SelectableText(
                     controller.notice!,
                     textDirection: TextDirection.ltr,
-                    style: TextStyle(
-                        color: paletteColor(context, AppTheme.textSecondary), fontSize: 12),
+                    style: const TextStyle(
+                        color: AppTheme.textSecondary, fontSize: 12),
                   ),
                 ],
               ),

@@ -44,13 +44,13 @@ class CaSheet extends StatelessWidget {
   Widget build(BuildContext context) => ClipRRect(
       borderRadius: BorderRadius.circular(CanopyRadius.sheetTop),
       child: Material(
-          color: paletteColor(context, Canopy.paper),
+          color: Canopy.paper,
           child: LayoutBuilder(builder: (context, bounds) {
             final header = ColoredBox(
-                color: paletteColor(context, Canopy.dawn),
+                color: Canopy.dawn,
                 child: CanopyLatticeBackground(
                     gradient: false,
-                    textureColor: paletteColor(context, Canopy.brandGreen),
+                    textureColor: Canopy.brandGreen,
                     textureOpacity: CanopyTexture.headerLatticeOpacity,
                     child: Stack(children: [
                       Padding(
@@ -62,7 +62,7 @@ class CaSheet extends StatelessWidget {
                                   width: CanopySize.handleWidth,
                                   height: CanopySize.handleHeight,
                                   decoration: BoxDecoration(
-                                      color: paletteColor(context, Canopy.hairlineStrong),
+                                      color: Canopy.hairlineStrong,
                                       borderRadius: BorderRadius.circular(
                                           CanopyRadius.pill))),
                               const SizedBox(height: AppTheme.spaceMd)
@@ -159,9 +159,9 @@ class CaDialog extends StatelessWidget {
   final VoidCallback? onClose;
   @override
   Widget build(BuildContext context) => Dialog(
-      backgroundColor: paletteColor(context, Canopy.transparent),
+      backgroundColor: Canopy.transparent,
       elevation: 0,
-      surfaceTintColor: paletteColor(context, Canopy.transparent),
+      surfaceTintColor: Canopy.transparent,
       clipBehavior: Clip.none,
       insetAnimationDuration: CanopyMotion.reduced(context)
           ? CanopyMotion.none
@@ -176,15 +176,15 @@ class CaDialog extends StatelessWidget {
               : CanopySize.dialogCompactMax),
       child: DecoratedBox(
           decoration: BoxDecoration(
-              color: paletteColor(context, Canopy.paper),
+              color: Canopy.paper,
               borderRadius: BorderRadius.circular(CanopyRadius.dialog),
-              boxShadow: paletteShadows(context, CanopyShadow.floating)),
+              boxShadow: CanopyShadow.floating),
           child: Padding(
               padding: const EdgeInsets.all(AppTheme.spaceXl),
               child: LayoutBuilder(builder: (context, bounds) {
                 final header = CanopyLatticeBackground(
                     gradient: false,
-                    textureColor: paletteColor(context, Canopy.brandGreen),
+                    textureColor: Canopy.brandGreen,
                     textureOpacity: CanopyTexture.headerLatticeOpacity,
                     child: Row(children: [
                       Expanded(
@@ -364,11 +364,11 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
                 context: placed,
                 removeBottom: true,
                 child: edge
-                    ? Material(color: paletteColor(context, edgeColor), child: body)
+                    ? Material(color: edgeColor, child: body)
                     : ClipRRect(
                         borderRadius:
                             BorderRadius.circular(CanopyRadius.sheetTop),
-                        child: Material(color: paletteColor(context, Canopy.paper), child: body))));
+                        child: Material(color: Canopy.paper, child: body))));
     Widget child;
     if (fullWidthOnPhone &&
         job != CaSheetJob.confirmation &&
@@ -388,14 +388,14 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
                       maxHeight: media.size.height * CanopySize.sheetHeightFraction),
                   child: BottomSheet(
                       animationController: controller,
-                      backgroundColor: paletteColor(context, Canopy.transparent),
+                      backgroundColor: Canopy.transparent,
                       elevation: 0,
                       onClosing: close,
                       builder: (_) => ClipRRect(
                           borderRadius: const BorderRadius.vertical(
                               top: Radius.circular(CanopyRadius.sheetTop)),
                           child: ColoredBox(
-                              color: paletteColor(context, edgeColor),
+                              color: edgeColor,
                               child: Padding(
                                   padding: EdgeInsetsDirectional.only(
                                       start: flushOnPhone
@@ -465,7 +465,7 @@ class _CaSurfaceRoute<T> extends PopupRoute<T> {
                       child: presentation == CaSheetPresentation.sheet
                           ? BottomSheet(
                               animationController: controller,
-                              backgroundColor: paletteColor(context, Canopy.transparent),
+                              backgroundColor: Canopy.transparent,
                               elevation: 0,
                               onClosing: close,
                               builder: (_) => surface())

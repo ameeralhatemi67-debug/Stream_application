@@ -88,12 +88,12 @@ class _BroadcastingSettingsSectionState
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: paletteColor(context, AppTheme.surface),
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(
           color: isBroadcasting
-              ? (isAudioLive ? paletteColor(context, Canopy.haze) : paletteColor(context, Canopy.liveCrimson))
-              : paletteColor(context, Canopy.hairline),
+              ? (isAudioLive ? Canopy.haze : Canopy.liveCrimson)
+              : Canopy.hairline,
           width: isBroadcasting ? 1.5 : 1.0,
         ),
       ),
@@ -110,8 +110,8 @@ class _BroadcastingSettingsSectionState
                     height: 8,
                     decoration: BoxDecoration(
                       color: isBroadcasting
-                          ? (isAudioLive ? paletteColor(context, Canopy.haze) : paletteColor(context, Canopy.liveCrimson))
-                          : paletteColor(context, Canopy.haze),
+                          ? (isAudioLive ? Canopy.haze : Canopy.liveCrimson)
+                          : Canopy.haze,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -124,8 +124,8 @@ class _BroadcastingSettingsSectionState
                         : 'settings.broadcast_status_offline'.tr(),
                     style: TextStyle(
                       color: isBroadcasting
-                          ? (isAudioLive ? paletteColor(context, AppTheme.onMedia) : paletteColor(context, Canopy.liveCrimson))
-                          : paletteColor(context, Canopy.haze),
+                          ? (isAudioLive ? AppTheme.onMedia : Canopy.liveCrimson)
+                          : Canopy.haze,
                       fontWeight: FontWeight.bold,
                       fontSize: 12,
                     ),
@@ -138,11 +138,11 @@ class _BroadcastingSettingsSectionState
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
                     color: isAudioLive
-                        ? paletteColor(context, AppTheme.media)
-                        : paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.2),
+                        ? AppTheme.media
+                        : Canopy.liveCrimson.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                     border: isAudioLive
-                        ? Border.all(color: paletteColor(context, Canopy.haze), width: 0.8)
+                        ? Border.all(color: Canopy.haze, width: 0.8)
                         : null,
                   ),
                   child: Text(
@@ -150,7 +150,7 @@ class _BroadcastingSettingsSectionState
                         ? '342 ${'live.listening_count'.tr()}'
                         : '342 ${'settings.viewers_count'.tr()}',
                     style: TextStyle(
-                      color: isAudioLive ? paletteColor(context, AppTheme.onMedia) : paletteColor(context, Canopy.liveCrimson),
+                      color: isAudioLive ? AppTheme.onMedia : Canopy.liveCrimson,
                       fontSize: AppTheme.captionFont,
                       fontWeight: FontWeight.bold,
                     ),
@@ -163,8 +163,8 @@ class _BroadcastingSettingsSectionState
           //  Broadcast Identity Selector (Scholar vs Organization)
           Text(
             'admin.broadcast_identity'.tr(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.slate),
+            style: const TextStyle(
+              color: Canopy.slate,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -189,12 +189,12 @@ class _BroadcastingSettingsSectionState
                     ],
                   ),
                   selected: provider.selectedBroadcastOrgId == null,
-                  selectedColor: paletteColor(context, AppTheme.primary).withValues(alpha: 0.2),
-                  backgroundColor: paletteColor(context, Canopy.mint),
+                  selectedColor: AppTheme.primary.withValues(alpha: 0.2),
+                  backgroundColor: Canopy.mint,
                   labelStyle: TextStyle(
                     color: provider.selectedBroadcastOrgId == null
-                        ? paletteColor(context, AppTheme.primary)
-                        : paletteColor(context, Canopy.slate),
+                        ? AppTheme.primary
+                        : Canopy.slate,
                     fontSize: AppTheme.captionFont,
                     fontWeight: provider.selectedBroadcastOrgId == null
                         ? FontWeight.bold
@@ -202,8 +202,8 @@ class _BroadcastingSettingsSectionState
                   ),
                   side: BorderSide(
                     color: provider.selectedBroadcastOrgId == null
-                        ? paletteColor(context, AppTheme.primary)
-                        : paletteColor(context, Canopy.hairline),
+                        ? AppTheme.primary
+                        : Canopy.hairline,
                   ),
                   onSelected: (selected) {
                     if (selected) {
@@ -230,12 +230,12 @@ class _BroadcastingSettingsSectionState
                     ],
                   ),
                   selected: provider.selectedBroadcastOrgId == 'org_dalilk_04',
-                  selectedColor: paletteColor(context, AppTheme.warning).withValues(alpha: 0.2),
-                  backgroundColor: paletteColor(context, Canopy.mint),
+                  selectedColor: AppTheme.warning.withValues(alpha: 0.2),
+                  backgroundColor: Canopy.mint,
                   labelStyle: TextStyle(
                     color: provider.selectedBroadcastOrgId == 'org_dalilk_04'
-                        ? paletteColor(context, AppTheme.warning)
-                        : paletteColor(context, Canopy.slate),
+                        ? AppTheme.warning
+                        : Canopy.slate,
                     fontSize: AppTheme.captionFont,
                     fontWeight:
                         provider.selectedBroadcastOrgId == 'org_dalilk_04'
@@ -244,8 +244,8 @@ class _BroadcastingSettingsSectionState
                   ),
                   side: BorderSide(
                     color: provider.selectedBroadcastOrgId == 'org_dalilk_04'
-                        ? paletteColor(context, AppTheme.warning)
-                        : paletteColor(context, Canopy.hairline),
+                        ? AppTheme.warning
+                        : Canopy.hairline,
                   ),
                   onSelected: null,
                 ),
@@ -257,8 +257,8 @@ class _BroadcastingSettingsSectionState
           //  /  Broadcast Format Segmented Selector
           Text(
             'settings.broadcast_format'.tr(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.slate),
+            style: const TextStyle(
+              color: Canopy.slate,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -277,14 +277,14 @@ class _BroadcastingSettingsSectionState
                     decoration: BoxDecoration(
                       color: provider.customBroadcastType ==
                               BroadcastType.liveVideo
-                          ? paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.2)
-                          : paletteColor(context, Canopy.mint),
+                          ? Canopy.liveCrimson.withValues(alpha: 0.2)
+                          : Canopy.mint,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       border: Border.all(
                         color: provider.customBroadcastType ==
                                 BroadcastType.liveVideo
-                            ? paletteColor(context, Canopy.liveCrimson)
-                            : paletteColor(context, Canopy.hairline),
+                            ? Canopy.liveCrimson
+                            : Canopy.hairline,
                         width: 1.2,
                       ),
                     ),
@@ -296,8 +296,8 @@ class _BroadcastingSettingsSectionState
                           size: 16,
                           color: provider.customBroadcastType ==
                                   BroadcastType.liveVideo
-                              ? paletteColor(context, Canopy.liveCrimson)
-                              : paletteColor(context, Canopy.haze),
+                              ? Canopy.liveCrimson
+                              : Canopy.haze,
                         ),
                         const SizedBox(width: 6),
                         Flexible(
@@ -306,8 +306,8 @@ class _BroadcastingSettingsSectionState
                             style: TextStyle(
                               color: provider.customBroadcastType ==
                                       BroadcastType.liveVideo
-                                  ? paletteColor(context, AppTheme.onMedia)
-                                  : paletteColor(context, Canopy.slate),
+                                  ? AppTheme.onMedia
+                                  : Canopy.slate,
                               fontSize: 12,
                               fontWeight: provider.customBroadcastType ==
                                       BroadcastType.liveVideo
@@ -335,14 +335,14 @@ class _BroadcastingSettingsSectionState
                     decoration: BoxDecoration(
                       color: provider.customBroadcastType ==
                               BroadcastType.liveAudio
-                          ? paletteColor(context, AppTheme.media)
-                          : paletteColor(context, Canopy.mint),
+                          ? AppTheme.media
+                          : Canopy.mint,
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       border: Border.all(
                         color: provider.customBroadcastType ==
                                 BroadcastType.liveAudio
-                            ? paletteColor(context, Canopy.haze)
-                            : paletteColor(context, Canopy.hairline),
+                            ? Canopy.haze
+                            : Canopy.hairline,
                         width: 1.2,
                       ),
                     ),
@@ -354,8 +354,8 @@ class _BroadcastingSettingsSectionState
                           size: 16,
                           color: provider.customBroadcastType ==
                                   BroadcastType.liveAudio
-                              ? paletteColor(context, AppTheme.onMedia)
-                              : paletteColor(context, Canopy.haze),
+                              ? AppTheme.onMedia
+                              : Canopy.haze,
                         ),
                         const SizedBox(width: 6),
                         Flexible(
@@ -364,8 +364,8 @@ class _BroadcastingSettingsSectionState
                             style: TextStyle(
                               color: provider.customBroadcastType ==
                                       BroadcastType.liveAudio
-                                  ? paletteColor(context, AppTheme.onMedia)
-                                  : paletteColor(context, Canopy.slate),
+                                  ? AppTheme.onMedia
+                                  : Canopy.slate,
                               fontSize: 12,
                               fontWeight: provider.customBroadcastType ==
                                       BroadcastType.liveAudio
@@ -409,8 +409,8 @@ class _BroadcastingSettingsSectionState
           if (provider.selectedBroadcastOrgId != null) ...[
             Text(
               'admin.select_campus_branch'.tr(),
-              style: TextStyle(
-                color: paletteColor(context, Canopy.slate),
+              style: const TextStyle(
+                color: Canopy.slate,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -422,19 +422,19 @@ class _BroadcastingSettingsSectionState
                     .getOrganizationVenues(provider.selectedBroadcastOrgId!);
                 final langCode = context.locale.languageCode;
                 return InputDecorator(
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     prefixIcon: Icon(Icons.apartment_rounded,
-                        color: paletteColor(ctx, AppTheme.warning), size: 20),
+                        color: AppTheme.warning, size: 20),
                     contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                   ),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       value: provider.selectedVenueBranchId,
                       isExpanded: true,
-                      dropdownColor: paletteColor(ctx, Canopy.mint),
-                      style: TextStyle(
-                          color: paletteColor(ctx, Canopy.ink), fontSize: 13),
+                      dropdownColor: Canopy.mint,
+                      style: const TextStyle(
+                          color: Canopy.ink, fontSize: 13),
                       items: branches.map((b) {
                         return DropdownMenuItem<String>(
                           value: b.venueId,
@@ -456,8 +456,8 @@ class _BroadcastingSettingsSectionState
             // Presenters / Co-Hosts Multi-Select Chips
             Text(
               'admin.select_co_speakers'.tr(),
-              style: TextStyle(
-                color: paletteColor(context, Canopy.slate),
+              style: const TextStyle(
+                color: Canopy.slate,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -481,18 +481,18 @@ class _BroadcastingSettingsSectionState
                       ),
                       label: Text(spk.getLocalizedName(langCode)),
                       selected: isChecked,
-                      selectedColor: paletteColor(ctx, AppTheme.warning).withValues(alpha: 0.25),
-                      backgroundColor: paletteColor(ctx, Canopy.mint),
+                      selectedColor: AppTheme.warning.withValues(alpha: 0.25),
+                      backgroundColor: Canopy.mint,
                       labelStyle: TextStyle(
                         color: isChecked
-                            ? paletteColor(ctx, AppTheme.warning)
-                            : paletteColor(ctx, Canopy.slate),
+                            ? AppTheme.warning
+                            : Canopy.slate,
                         fontSize: AppTheme.captionFont,
                         fontWeight:
                             isChecked ? FontWeight.bold : FontWeight.normal,
                       ),
                       side: BorderSide(
-                        color: isChecked ? paletteColor(ctx, AppTheme.warning) : paletteColor(ctx, Canopy.hairline),
+                        color: isChecked ? AppTheme.warning : Canopy.hairline,
                       ),
                       onSelected: (_) =>
                           provider.toggleCoSpeaker(spk.speakerId),
@@ -514,9 +514,9 @@ class _BroadcastingSettingsSectionState
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
                 backgroundColor:
-                    isBroadcasting ? paletteColor(context, AppTheme.surface) : paletteColor(context, AppTheme.primary),
+                    isBroadcasting ? AppTheme.surface : AppTheme.primary,
                 foregroundColor:
-                    isBroadcasting ? paletteColor(context, Canopy.ink) : paletteColor(context, AppTheme.onPrimary),
+                    isBroadcasting ? Canopy.ink : AppTheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
@@ -557,21 +557,21 @@ class _BroadcastingSettingsSectionState
         children: [
           Text(
             'settings.quality'.tr(),
-            style: TextStyle(
-                color: paletteColor(context, Canopy.slate),
+            style: const TextStyle(
+                color: Canopy.slate,
                 fontSize: 12,
                 fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: AppTheme.spaceSm),
           DropdownButtonFormField<String>(
             initialValue: quality,
-            dropdownColor: paletteColor(context, Canopy.mint),
-            style: TextStyle(color: paletteColor(context, Canopy.ink), fontSize: 13),
-            decoration: InputDecoration(
+            dropdownColor: Canopy.mint,
+            style: const TextStyle(color: Canopy.ink, fontSize: 13),
+            decoration: const InputDecoration(
               contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               prefixIcon:
-                  Icon(Icons.hd_outlined, color: paletteColor(context, AppTheme.primary), size: 20),
+                  Icon(Icons.hd_outlined, color: AppTheme.primary, size: 20),
             ),
             items: [
               DropdownMenuItem(

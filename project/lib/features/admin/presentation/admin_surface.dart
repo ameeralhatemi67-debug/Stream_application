@@ -27,7 +27,7 @@ class AdminCard extends StatelessWidget {
       child: DecoratedBox(
           position: DecorationPosition.foreground,
           decoration: BoxDecoration(
-              border: Border.all(color: paletteColor(context, Canopy.hairline)),
+              border: Border.all(color: Canopy.hairline),
               borderRadius: BorderRadius.circular(CanopyRadius.card)),
           child: CaCard(
               variant: CaCardVariant.flat, padding: padding, child: child)));
@@ -45,13 +45,13 @@ class AdminCount extends StatelessWidget {
               padding: const EdgeInsetsDirectional.symmetric(
                   horizontal: AppTheme.spaceSm, vertical: AppTheme.spaceXs),
               decoration: BoxDecoration(
-                  gradient: paletteGradient(context, CanopyGradients.pill),
+                  gradient: CanopyGradients.pill,
                   borderRadius: BorderRadius.circular(CanopyRadius.pill)),
               child: Text('$count',
                   style: Theme.of(context)
                       .textTheme
                       .labelSmall
-                      ?.copyWith(color: paletteOnAccent(context, Canopy.paper))))));
+                      ?.copyWith(color: AppPalette.ink)))));
 }
 
 /// Reflows dense identity/action rows when translated or scaled text needs room.

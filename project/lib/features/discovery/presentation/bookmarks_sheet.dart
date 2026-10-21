@@ -92,7 +92,7 @@ class _BookmarksSheetState extends State<BookmarksSheet> {
                         style: Theme.of(context)
                             .textTheme
                             .bodySmall
-                            ?.copyWith(color: paletteColor(context, Canopy.liveCrimson))),
+                            ?.copyWith(color: Canopy.liveCrimson)),
                     Align(
                         alignment: AlignmentDirectional.centerStart,
                         child: CaButton(
@@ -172,7 +172,7 @@ class _BookmarkRow extends StatelessWidget {
             Text(broadcaster,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.bodySmall?.copyWith(color: paletteColor(context, Canopy.brandGreen))),
+                style: theme.bodySmall?.copyWith(color: Canopy.brandGreen)),
           ],
           if (detail != null && detail.isNotEmpty) ...[
             const SizedBox(height: AppTheme.spaceXs),
@@ -191,7 +191,7 @@ class _BookmarkRow extends StatelessWidget {
           child: recording
               ? Stack(fit: StackFit.expand, children: [
                   ColoredBox(
-                      color: paletteColor(context, Canopy.mint),
+                      color: Canopy.mint,
                       child: entry.vod == null
                           ? const Center(child: CaIcon(CaGlyph.videooff))
                           : Image(
@@ -201,21 +201,21 @@ class _BookmarkRow extends StatelessWidget {
                                       : 'https://img.youtube.com/vi/${entry.vod!.youtubeVideoId}/hqdefault.jpg'),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) =>
-                                  ColoredBox(color: paletteColor(context, Canopy.forestDeep)),
+                                  const ColoredBox(color: Canopy.forestDeep),
                               frameBuilder: (_, child, frame, synchronous) =>
                                   synchronous || frame != null
                                       ? child
-                                      : ColoredBox(color: paletteColor(context, Canopy.mint)))),
+                                      : const ColoredBox(color: Canopy.mint))),
                   if (openable) ...[
-                    DecoratedBox(
+                    const DecoratedBox(
                         decoration:
-                            BoxDecoration(gradient: paletteGradient(context, AppGradients.mediaScrim))),
-                    Center(
-                        child: CaIcon(CaGlyph.play, color: paletteColor(context, Canopy.paper))),
+                            BoxDecoration(gradient: AppGradients.mediaScrim)),
+                    const Center(
+                        child: CaIcon(CaGlyph.play, color: Canopy.paper)),
                   ],
                 ])
               : ColoredBox(
-                  color: paletteColor(context, Canopy.mint),
+                  color: Canopy.mint,
                   child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -234,7 +234,7 @@ class _BookmarkRow extends StatelessWidget {
                   ? 'bookmarks.play'.tr()
                   : 'bookmarks.view_channel'.tr(),
               child: Material(
-                  color: paletteColor(context, Canopy.transparent),
+                  color: Canopy.transparent,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   clipBehavior: Clip.antiAlias,
                   child: InkWell(

@@ -38,22 +38,22 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: paletteColor(context, AppTheme.surface),
+              color: AppTheme.surface,
               border: Border.all(
                 color: isSelected
-                    ? paletteColor(context, AppTheme.primary)
+                    ? AppTheme.primary
                     : isLive
-                        ? paletteColor(context, AppTheme.danger)
-                        : paletteColor(context, AppTheme.border),
+                        ? AppTheme.danger
+                        : AppTheme.border,
                 width: isSelected ? 2.5 : 1.5,
               ),
               boxShadow: [
                 BoxShadow(
                   color: isSelected
-                      ? paletteColor(context, AppTheme.primary).withValues(alpha: 0.4)
+                      ? AppTheme.primary.withValues(alpha: 0.4)
                       : (isLive
-                          ? paletteColor(context, AppTheme.danger).withValues(alpha: 0.3)
-                          : paletteColor(context, AppTheme.textMuted)),
+                          ? AppTheme.danger.withValues(alpha: 0.3)
+                          : AppTheme.textMuted),
                   blurRadius: isSelected ? 8 : 4,
                   offset: const Offset(0, 2),
                 ),
@@ -69,9 +69,9 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                           width: 44,
                           height: 44,
                           errorBuilder: (context, error, stackTrace) => Container(
-                            color: paletteColor(context, AppTheme.surfaceAlt),
-                            child: Icon(Icons.person_rounded,
-                                size: 18, color: paletteColor(context, AppTheme.textMuted)),
+                            color: AppTheme.surfaceAlt,
+                            child: const Icon(Icons.person_rounded,
+                                size: 18, color: AppTheme.textMuted),
                           ),
                         )
                       : CachedNetworkImage(
@@ -80,14 +80,14 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                           width: 44,
                           height: 44,
                           placeholder: (context, url) => Container(
-                            color: paletteColor(context, AppTheme.surfaceAlt),
-                            child: Icon(Icons.person_rounded,
-                                size: 18, color: paletteColor(context, AppTheme.textMuted)),
+                            color: AppTheme.surfaceAlt,
+                            child: const Icon(Icons.person_rounded,
+                                size: 18, color: AppTheme.textMuted),
                           ),
                           errorWidget: (context, url, error) => Container(
-                            color: paletteColor(context, AppTheme.surfaceAlt),
-                            child: Icon(Icons.person_rounded,
-                                size: 18, color: paletteColor(context, AppTheme.textMuted)),
+                            color: AppTheme.surfaceAlt,
+                            child: const Icon(Icons.person_rounded,
+                                size: 18, color: AppTheme.textMuted),
                           ),
                         ),
                 ),
@@ -100,9 +100,9 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                       height: 10,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: paletteColor(context, AppTheme.danger),
+                        color: AppTheme.danger,
                         border: Border.all(
-                            color: paletteColor(context, AppTheme.surface), width: 1.5),
+                            color: AppTheme.surface, width: 1.5),
                       ),
                     ),
                   ),
@@ -122,24 +122,24 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
             color: isSelected
-                ? paletteColor(context, AppTheme.surfaceAlt)
-                : paletteColor(context, AppTheme.surface).withValues(alpha: 0.95),
+                ? AppTheme.surfaceAlt
+                : AppTheme.surface.withValues(alpha: 0.95),
             borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             border: Border.all(
               color: isSelected
-                  ? paletteColor(context, AppTheme.primary)
+                  ? AppTheme.primary
                   : isLive
-                      ? paletteColor(context, AppTheme.danger).withValues(alpha: 0.8)
-                      : paletteColor(context, AppTheme.border),
+                      ? AppTheme.danger.withValues(alpha: 0.8)
+                      : AppTheme.border,
               width: isSelected ? 2.0 : (isLive ? 1.5 : 1.0),
             ),
             boxShadow: [
               BoxShadow(
                 color: isSelected
-                    ? paletteColor(context, AppTheme.primary).withValues(alpha: 0.3)
+                    ? AppTheme.primary.withValues(alpha: 0.3)
                     : (isLive
-                        ? paletteColor(context, AppTheme.danger).withValues(alpha: 0.2)
-                        : paletteColor(context, AppTheme.textMuted)),
+                        ? AppTheme.danger.withValues(alpha: 0.2)
+                        : AppTheme.textMuted),
                 blurRadius: isSelected ? 8 : 4,
                 offset: const Offset(0, 2),
               ),
@@ -159,7 +159,7 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: Border.all(
-                        color: isLive ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.border),
+                        color: isLive ? AppTheme.danger : AppTheme.border,
                         width: 1.2,
                       ),
                     ),
@@ -169,11 +169,11 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                               marker.avatarUrl,
                               fit: BoxFit.cover,
                               errorBuilder: (context, error, stackTrace) => Container(
-                                color: paletteColor(context, AppTheme.surfaceAlt),
-                                child: Icon(
+                                color: AppTheme.surfaceAlt,
+                                child: const Icon(
                                   Icons.person_rounded,
                                   size: 14,
-                                  color: paletteColor(context, AppTheme.textMuted),
+                                  color: AppTheme.textMuted,
                                 ),
                               ),
                             )
@@ -181,19 +181,19 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                               imageUrl: marker.avatarUrl,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Container(
-                                color: paletteColor(context, AppTheme.surfaceAlt),
-                                child: Icon(
+                                color: AppTheme.surfaceAlt,
+                                child: const Icon(
                                   Icons.person_rounded,
                                   size: 14,
-                                  color: paletteColor(context, AppTheme.textMuted),
+                                  color: AppTheme.textMuted,
                                 ),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                color: paletteColor(context, AppTheme.surfaceAlt),
-                                child: Icon(
+                                color: AppTheme.surfaceAlt,
+                                child: const Icon(
                                   Icons.person_rounded,
                                   size: 14,
-                                  color: paletteColor(context, AppTheme.textMuted),
+                                  color: AppTheme.textMuted,
                                 ),
                               ),
                             ),
@@ -209,8 +209,8 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                       children: [
                         Text(
                           marker.getLocalizedName(langCode),
-                          style: TextStyle(
-                            color: paletteColor(context, AppTheme.textPrimary),
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
                             fontSize: 11,
                             fontWeight: FontWeight.w700,
                           ),
@@ -225,7 +225,7 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                               height: 5,
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: isLive ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.textMuted),
+                                color: isLive ? AppTheme.danger : AppTheme.textMuted,
                               ),
                             ),
                             const SizedBox(width: 3),
@@ -234,7 +234,7 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                                   ? 'map.live_badge'.tr()
                                   : 'map.offline_badge'.tr(),
                               style: TextStyle(
-                                color: isLive ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.textMuted),
+                                color: isLive ? AppTheme.danger : AppTheme.textMuted,
                                 fontSize: 9,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -243,8 +243,8 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                               const SizedBox(width: 4),
                               Text(
                                 '${marker.viewerCount}',
-                                style: TextStyle(
-                                  color: paletteColor(context, AppTheme.textSecondary),
+                                style: const TextStyle(
+                                  color: AppTheme.textSecondary,
                                   fontSize: 9,
                                   fontWeight: FontWeight.w500,
                                 ),
@@ -265,14 +265,14 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                     decoration: BoxDecoration(
-                      color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.2),
+                      color: AppTheme.primary.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.5), width: 0.5),
+                      border: Border.all(color: AppTheme.primary.withValues(alpha: 0.5), width: 0.5),
                     ),
                     child: Text(
                       'feed.${marker.categoryId == 'cs_tech' ? 'cat_cs' : marker.categoryId == 'islamic_studies' ? 'cat_islamic' : marker.categoryId == 'engineering' ? 'cat_eng' : 'cat_all'}'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(context, AppTheme.primary),
+                      style: const TextStyle(
+                        color: AppTheme.primary,
                         fontSize: 8.5,
                         fontWeight: FontWeight.w600,
                       ),
@@ -283,13 +283,13 @@ class MapDiscoveryChannelCardMarker extends StatelessWidget {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
                       decoration: BoxDecoration(
-                        color: paletteColor(context, AppTheme.bg).withValues(alpha: 0.6),
+                        color: AppTheme.bg.withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
                         marker.getLocalizedVenue(langCode),
-                        style: TextStyle(
-                          color: paletteColor(context, AppTheme.textSecondary),
+                        style: const TextStyle(
+                          color: AppTheme.textSecondary,
                           fontSize: 8.5,
                           fontWeight: FontWeight.w500,
                         ),

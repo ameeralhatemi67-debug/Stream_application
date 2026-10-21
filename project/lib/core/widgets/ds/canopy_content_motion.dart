@@ -142,7 +142,7 @@ class CaSuccessBloom extends StatelessWidget {
       curve: CanopyMotion.easeOut,
       child: child,
       builder: (context, value, child) => CustomPaint(
-          painter: _BloomRays(value, paletteColor(context, Canopy.leaf)),
+          painter: _BloomRays(value, Canopy.leaf),
           child: Transform.scale(
               scale: CanopyMotion.reduced(context)
                   ? 1

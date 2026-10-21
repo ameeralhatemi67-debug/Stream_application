@@ -11,17 +11,19 @@ double contrast(Color a, Color b) {
 }
 
 void main() {
-  test('scheme A surfaces, accents and gradient stops meet AA', () {
-    for (final bg in [AppTheme.bg, AppTheme.surface, AppTheme.surfaceAlt]) {
+  test('Hidayah Gold surfaces, accents and gradient stops meet AA', () {
+    for (final bg in [AppTheme.bg, AppTheme.surface, AppTheme.surfaceAlt, AppPalette.ivory]) {
       for (final fg in [AppTheme.textPrimary, AppTheme.textSecondary,
         AppTheme.textMuted, AppTheme.primary, AppTheme.success,
         AppTheme.warning, AppTheme.danger]) {
         expect(contrast(fg, bg), greaterThanOrEqualTo(4.5), reason: '$fg on $bg');
       }
     }
+    // Gold fills carry ink text, never white.
     for (final bg in AppGradients.brand.colors) {
-      expect(contrast(AppTheme.onPrimary, bg), greaterThanOrEqualTo(4.5));
+      expect(contrast(AppPalette.ink, bg), greaterThanOrEqualTo(4.5));
     }
+    expect(contrast(AppTheme.onPrimary, AppTheme.primary), greaterThanOrEqualTo(4.5));
     for (final bg in AppGradients.soft.colors) {
       expect(contrast(AppTheme.textPrimary, bg), greaterThanOrEqualTo(4.5));
     }
@@ -35,7 +37,7 @@ void main() {
     for (final lang in ['en', 'ar']) {
       final theme = AppTheme.forLocale(Locale(lang));
       expect(theme.brightness, Brightness.light);
-      expect(theme.scaffoldBackgroundColor, const Color(0xFFFFFFFF));
+      expect(theme.scaffoldBackgroundColor, AppPalette.ivory);
       expect(theme.textTheme.bodyLarge!.fontSize, spec['typeScale']['body']['size']);
       expect(theme.textTheme.bodyLarge!.height, lang == 'ar' ? 1.8 : 1.4);
       expect(theme.textTheme.titleLarge!.height, lang == 'ar' ? 1.6 : 1.4);

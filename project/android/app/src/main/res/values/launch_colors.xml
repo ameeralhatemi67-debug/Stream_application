@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Hidayah Gold night slate s900: the launch window behind the gold mark. -->
+    <color name="launch_night">#151D24</color>
+</resources>

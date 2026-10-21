@@ -43,15 +43,15 @@ class _ConsentDialogState extends State<ConsentDialog> {
       context: context,
       builder: (ctx) => AlertDialog(
         scrollable: true,
-        backgroundColor: paletteColor(ctx, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: BorderSide(color: paletteColor(ctx, AppTheme.border)),
+          side: const BorderSide(color: AppTheme.border),
         ),
         title: Text(
           'settings.view_privacy'.tr(),
-          style: TextStyle(
-            color: paletteColor(ctx, AppTheme.textPrimary),
+          style: const TextStyle(
+            color: AppTheme.textPrimary,
             fontWeight: FontWeight.bold,
             fontSize: 15,
           ),
@@ -61,8 +61,8 @@ class _ConsentDialogState extends State<ConsentDialog> {
           child: SingleChildScrollView(
             child: SelectableText(
               terms.getLocalizedPrivacy(isAr ? 'ar' : 'en'),
-              style: TextStyle(
-                color: paletteColor(ctx, AppTheme.textSecondary),
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
                 fontSize: 13,
                 height: 1.5,
               ),
@@ -72,8 +72,8 @@ class _ConsentDialogState extends State<ConsentDialog> {
         actions: [
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: paletteColor(ctx, AppTheme.primary),
-              foregroundColor: paletteColor(ctx, AppTheme.onMedia),
+              backgroundColor: AppTheme.primary,
+              foregroundColor: AppTheme.onMedia,
             ),
             onPressed: () => Navigator.pop(ctx),
             child: Text('common.close'.tr()),
@@ -89,21 +89,21 @@ class _ConsentDialogState extends State<ConsentDialog> {
       canPop: false,
       child: AlertDialog(
         scrollable: true,
-        backgroundColor: paletteColor(context, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: BorderSide(color: paletteColor(context, AppTheme.border)),
+          side: const BorderSide(color: AppTheme.border),
         ),
         title: Row(
           children: [
-            Icon(Icons.privacy_tip_rounded,
-                color: paletteColor(context, AppTheme.primary), size: 22),
+            const Icon(Icons.privacy_tip_rounded,
+                color: AppTheme.primary, size: 22),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 'consent.title'.tr(),
-                style: TextStyle(
-                  color: paletteColor(context, AppTheme.textPrimary),
+                style: const TextStyle(
+                  color: AppTheme.textPrimary,
                   fontWeight: FontWeight.bold,
                   fontSize: 16,
                 ),
@@ -119,8 +119,8 @@ class _ConsentDialogState extends State<ConsentDialog> {
             children: [
               Text(
                 'consent.body_intro'.tr(),
-                style: TextStyle(
-                  color: paletteColor(context, AppTheme.textSecondary),
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
                   fontSize: 12.5,
                   height: 1.4,
                 ),
@@ -140,8 +140,8 @@ class _ConsentDialogState extends State<ConsentDialog> {
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
                     'consent.view_full_policy'.tr(),
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.primary),
+                    style: const TextStyle(
+                      color: AppTheme.primary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                       decoration: TextDecoration.underline,
@@ -158,7 +158,7 @@ class _ConsentDialogState extends State<ConsentDialog> {
                   children: [
                     Checkbox(
                       value: _agreed,
-                      activeColor: paletteColor(context, AppTheme.primary),
+                      activeColor: AppTheme.primary,
                       onChanged: (val) =>
                           setState(() => _agreed = val ?? false),
                     ),
@@ -167,8 +167,8 @@ class _ConsentDialogState extends State<ConsentDialog> {
                         padding: const EdgeInsets.only(top: 12),
                         child: Text(
                           'consent.checkbox_label'.tr(),
-                          style: TextStyle(
-                            color: paletteColor(context, AppTheme.textPrimary),
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
                             fontSize: 12.5,
                           ),
                         ),
@@ -185,13 +185,13 @@ class _ConsentDialogState extends State<ConsentDialog> {
             onPressed: () => Navigator.pop(context, false),
             child: Text(
               'common.decline'.tr(),
-              style: TextStyle(color: paletteColor(context, AppTheme.textMuted)),
+              style: const TextStyle(color: AppTheme.textMuted),
             ),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-              backgroundColor: paletteColor(context, AppTheme.primary),
-              foregroundColor: paletteColor(context, AppTheme.onMedia),
+              backgroundColor: AppTheme.primary,
+              foregroundColor: AppTheme.onMedia,
             ),
             onPressed: _agreed ? () => Navigator.pop(context, true) : null,
             child: Text('consent.accept_btn'.tr()),
@@ -207,13 +207,13 @@ class _ConsentDialogState extends State<ConsentDialog> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 15, color: paletteColor(context, AppTheme.textMuted)),
+          Icon(icon, size: 15, color: AppTheme.textMuted),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                color: paletteColor(context, AppTheme.textSecondary),
+              style: const TextStyle(
+                color: AppTheme.textSecondary,
                 fontSize: 12,
                 height: 1.4,
               ),

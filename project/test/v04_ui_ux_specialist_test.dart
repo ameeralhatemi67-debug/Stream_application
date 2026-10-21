@@ -50,21 +50,20 @@ void main() {
       expect(enKeys.length, greaterThanOrEqualTo(30));
     });
 
-    test('TC-THEME-01: Scheme A Light Theme Palette & High Contrast Ratios',
-        () {
+    // Hidayah Gold is the only design since 2026-10-21.
+    test('TC-THEME-01: Hidayah Gold palette tokens', () {
       expect(AppTheme.bg, equals(const Color(0xFFFFFFFF)));
       expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
-      expect(AppTheme.surfaceAlt, equals(const Color(0xFFECF6EF)));
-      expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
+      expect(AppTheme.surfaceAlt, equals(HidayahGold.g100));
 
-      expect(AppTheme.textPrimary, equals(const Color(0xFF202B2B)));
-      expect(AppTheme.textSecondary, equals(const Color(0xFF485554)));
-      expect(AppTheme.textMuted, equals(const Color(0xFF586563)));
+      expect(AppTheme.textPrimary, equals(HidayahGold.s900));
+      expect(AppTheme.textSecondary, equals(HidayahGold.s700));
+      expect(AppTheme.textMuted, equals(HidayahGold.s600));
 
-      expect(AppTheme.danger, equals(const Color(0xFF9D3044)));
-      expect(AppTheme.success, equals(const Color(0xFF22613D)));
-      expect(AppTheme.primary, equals(const Color(0xFF17643F)));
-      expect(AppTheme.accent, equals(const Color(0xFF17643F)));
+      expect(AppTheme.danger, equals(HidayahGold.live));
+      expect(AppTheme.success, equals(HidayahGold.success));
+      expect(AppTheme.primary, equals(HidayahGold.g700));
+      expect(AppTheme.accent, equals(HidayahGold.g700));
     });
 
     test(
@@ -72,10 +71,9 @@ void main() {
         () {
       expect(AppTheme.bg, equals(const Color(0xFFFFFFFF)));
       expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
-      expect(AppTheme.surfaceAlt, equals(const Color(0xFFECF6EF)));
-      expect(AppTheme.surface, equals(const Color(0xFFFFFFFF)));
-      expect(AppTheme.primary, equals(const Color(0xFF17643F)));
-      expect(AppTheme.danger, equals(const Color(0xFF9D3044)));
+      expect(AppTheme.surfaceAlt, equals(HidayahGold.g100));
+      expect(AppTheme.primary, equals(HidayahGold.g700));
+      expect(AppTheme.danger, equals(HidayahGold.live));
     });
 
     test('TC-PITCH-01: Pitch Director Mode Activation & Live State Forcing',

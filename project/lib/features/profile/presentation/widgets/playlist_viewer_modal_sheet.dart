@@ -119,10 +119,10 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
     Widget fallback() => Container(
           width: width,
           height: height,
-          color: paletteColor(context, Canopy.mint),
+          color: Canopy.mint,
           alignment: Alignment.center,
-          child: Icon(Icons.video_library_rounded,
-              size: 18, color: paletteColor(context, Canopy.haze)),
+          child: const Icon(Icons.video_library_rounded,
+              size: 18, color: Canopy.haze),
         );
     final provider = resolveImageProviderOrNull(url);
     return ClipRRect(
@@ -151,11 +151,11 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.sizeOf(context).height * 0.85,
       ),
-      decoration: BoxDecoration(
-        color: paletteColor(context, Canopy.dawn),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20.0)),
+      decoration: const BoxDecoration(
+        color: Canopy.dawn,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20.0)),
         border: Border(
-          top: BorderSide(color: paletteColor(context, Canopy.hairline), width: 1.5),
+          top: BorderSide(color: Canopy.hairline, width: 1.5),
         ),
       ),
       child: SafeArea(
@@ -169,7 +169,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                 height: 4,
                 margin: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, Canopy.slate).withValues(alpha: 0.4),
+                  color: Canopy.slate.withValues(alpha: 0.4),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -190,8 +190,8 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                       children: [
                         Text(
                           playlistTitle,
-                          style: TextStyle(
-                            color: paletteColor(context, Canopy.ink),
+                          style: const TextStyle(
+                            color: Canopy.ink,
                             fontSize: 15,
                             fontWeight: FontWeight.bold,
                           ),
@@ -201,8 +201,8 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         const SizedBox(height: 3),
                         Text(
                           '$broadcasterName • ${'profile.lectures_count'.plural(videos.isNotEmpty ? videos.length : widget.playlist.videoCount)}',
-                          style: TextStyle(
-                            color: paletteColor(context, AppTheme.primary),
+                          style: const TextStyle(
+                            color: AppTheme.primary,
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                           ),
@@ -214,7 +214,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                     label: MaterialLocalizations.of(context).closeButtonTooltip,
                     child: IconButton(
                       icon:
-                          Icon(Icons.close_rounded, color: paletteColor(context, Canopy.slate)),
+                          const Icon(Icons.close_rounded, color: Canopy.slate),
                       onPressed: () => Navigator.pop(context),
                     ),
                   ),
@@ -232,10 +232,10 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                 child: ElevatedButton.icon(
                   onPressed: videos.isNotEmpty ? _playAll : null,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: paletteColor(context, AppTheme.primary),
-                    foregroundColor: paletteColor(context, AppTheme.onMedia),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.onMedia,
                     disabledBackgroundColor:
-                        paletteColor(context, AppTheme.primary).withValues(alpha: 0.3),
+                        AppTheme.primary.withValues(alpha: 0.3),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -252,7 +252,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
             ),
 
             const SizedBox(height: 8),
-            Divider(color: paletteColor(context, Canopy.hairline), height: 1),
+            const Divider(color: Canopy.hairline, height: 1),
 
             // Video List or Loading State
             Expanded(
@@ -261,19 +261,19 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          SizedBox(
+                          const SizedBox(
                             width: 28,
                             height: 28,
                             child: HadayahLoadingIndicator(
                               strokeWidth: 2.5,
-                              color: paletteColor(context, AppTheme.primary),
+                              color: AppTheme.primary,
                             ),
                           ),
                           const SizedBox(height: 12),
                           Text(
                             'design_copy.loading_playlist_lectures'.tr(),
-                            style: TextStyle(
-                              color: paletteColor(context, Canopy.haze),
+                            style: const TextStyle(
+                              color: Canopy.haze,
                               fontSize: 12,
                             ),
                           ),
@@ -287,14 +287,14 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.playlist_play_rounded,
-                                    color: paletteColor(context, Canopy.haze), size: 40),
+                                const Icon(Icons.playlist_play_rounded,
+                                    color: Canopy.haze, size: 40),
                                 const SizedBox(height: 10),
                                 Text(
                                   'design_copy.no_lectures_available_in_this_playlist_currently'
                                       .tr(),
-                                  style: TextStyle(
-                                    color: paletteColor(context, Canopy.slate),
+                                  style: const TextStyle(
+                                    color: Canopy.slate,
                                     fontSize: 13,
                                   ),
                                   textAlign: TextAlign.center,
@@ -307,11 +307,11 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                           final titleStyle = Theme.of(context)
                               .textTheme
                               .labelLarge
-                              ?.copyWith(color: paletteColor(context, Canopy.ink));
+                              ?.copyWith(color: Canopy.ink);
                           final viewsStyle = Theme.of(context)
                               .textTheme
                               .bodySmall
-                              ?.copyWith(color: paletteColor(context, Canopy.haze));
+                              ?.copyWith(color: Canopy.haze);
                           // Every lecture row has the same height: a thumbnail
                           // or a 2-line title and the views line, whichever is
                           // taller.
@@ -362,7 +362,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                                   end: AppTheme.spaceXs,
                                                   child: DecoratedBox(
                                                     decoration: BoxDecoration(
-                                                      color: paletteColor(context, Canopy.forestDeep),
+                                                      color: Canopy.forestDeep,
                                                       borderRadius:
                                                           BorderRadius.circular(
                                                               CanopyRadius
@@ -379,8 +379,8 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                                                             .textTheme
                                                             .labelSmall
                                                             ?.copyWith(
-                                                                color: paletteColor(context, Canopy
-                                                                    .paper)),
+                                                                color: Canopy
+                                                                    .paper),
                                                       ),
                                                     ),
                                                   ),

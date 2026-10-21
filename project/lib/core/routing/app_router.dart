@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
 import '../providers/app_provider.dart';
+import '../providers/app_experience.dart';
 import '../widgets/app_logo.dart';
 import '../widgets/ds/ca_focus_ring.dart';
 import '../widgets/ds/ca_icon.dart';
@@ -90,7 +91,7 @@ class AppRouter {
   /// Must be created once (e.g. in a State.initState), not per-build --
   /// GoRouter expects a stable instance so its internal navigation state
   /// survives widget rebuilds.
-  static GoRouter build(AppProvider provider) {
+  static GoRouter build(AppProvider provider, {AppExperience? experience}) {
     // Pages opened with push (channel, live, sign-in) show their own address
     // on the web, so a channel or live link can be copied, shared and
     // reloaded; it used to stay on #/feed (audit 2026-10-21, P0-5).
@@ -128,6 +129,12 @@ class AppRouter {
 
           if (path == '/splash' && state.uri.queryParameters['from'] != null) {
             return state.uri.queryParameters['from'];
+          }
+
+          // The Settings logo switches the whole shell to Taysir; its home
+          // replaces the Discovery feed as the landing page.
+          if (path == '/feed' && experience?.taysir == true) {
+            return Experience.taysir.home;
           }
 
           // Cluster 4 Task 16: a platform-banned account is locked out of the
@@ -191,8 +198,8 @@ class AppRouter {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.error_outline_rounded,
-                    size: 64, color: paletteColor(context, AppTheme.danger)),
+                const Icon(Icons.error_outline_rounded,
+                    size: 64, color: AppTheme.danger),
                 const SizedBox(height: AppTheme.spaceLg),
                 Text(
                   'Route Not Found (${state.error?.message ?? state.uri.toString()})',
@@ -400,7 +407,9 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
       return Scaffold(
           backgroundColor: HidayahGold.g50,
           body: Stack(children: [
-            Column(children: [
+            // No system bars on a browser; a landscape tablet has them.
+            SafeArea(
+                child: Column(children: [
               HidayahWebHeader(
                   active: navigationShell.currentIndex == 0
                       ? HidayahWebSection.discover
@@ -408,7 +417,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                   onBranch: (index) => navigationShell.goBranch(index,
                       initialLocation: index == navigationShell.currentIndex)),
               Expanded(child: navigationShell),
-            ]),
+            ])),
             const FloatingStreamMiniPlayer(),
           ]));
     }
@@ -428,7 +437,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
         ));
 
     return Scaffold(
-      backgroundColor: paletteColor(context, Canopy.dawn),
+      backgroundColor: Canopy.dawn,
       body: Stack(
         children: [
           if (isDesktop)
@@ -438,10 +447,10 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                 SizedBox(
                   width: CanopySize.railExpanded,
                   child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: paletteColor(context, Canopy.paper),
+                    decoration: const BoxDecoration(
+                      color: Canopy.paper,
                       border: BorderDirectional(
-                        end: BorderSide(color: paletteColor(context, Canopy.hairline), width: 1.0),
+                        end: BorderSide(color: Canopy.hairline, width: 1.0),
                       ),
                     ),
                     child: SafeArea(
@@ -527,7 +536,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                           horizontal: AppTheme.spaceMd,
                                           vertical: AppTheme.spaceSm),
                                       decoration: BoxDecoration(
-                                        gradient: paletteGradient(context, AppGradients.pill),
+                                        gradient: AppGradients.pill,
                                         borderRadius: BorderRadius.circular(
                                             CanopyRadius.input),
                                       ),
@@ -537,7 +546,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                             isStreamerModeEnabled
                                                 ? CaGlyph.video
                                                 : CaGlyph.user,
-                                            color: paletteOnAccent(context, Canopy.paper),
+                                            color: AppPalette.ink,
                                           ),
                                           const SizedBox(
                                               width: AppTheme.spaceSm),
@@ -550,7 +559,7 @@ class ResponsiveScaffoldWithNestedNavigation extends StatelessWidget {
                                                   .textTheme
                                                   .labelSmall
                                                   ?.copyWith(
-                                                      color: paletteOnAccent(context, Canopy.paper),
+                                                      color: AppPalette.ink,
                                                       fontWeight:
                                                           FontWeight.w600),
                                             ),
@@ -609,7 +618,7 @@ class _DesktopNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? paletteOnSelected(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
+    final color = isSelected ? HidayahGold.g200 : Canopy.brandGreen;
     return Padding(
       padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
       child: Semantics(
@@ -631,7 +640,7 @@ class _DesktopNavItem extends StatelessWidget {
                   padding: const EdgeInsetsDirectional.symmetric(
                       horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    gradient: isSelected ? paletteSelectedFill(context, AppGradients.pill) : null,
+                    gradient: isSelected ? HidayahGradients.selected : null,
                     borderRadius: BorderRadius.circular(CanopyRadius.input),
                   ),
                   child: Row(
@@ -645,7 +654,7 @@ class _DesktopNavItem extends StatelessWidget {
                               .textTheme
                               .labelLarge
                               ?.copyWith(
-                                color: isSelected ? paletteOnSelected(context, Canopy.paper) : paletteColor(context, Canopy.slate),
+                                color: isSelected ? HidayahGold.g200 : Canopy.slate,
                                 fontWeight: isSelected
                                     ? FontWeight.w700
                                     : FontWeight.w500,
@@ -658,7 +667,7 @@ class _DesktopNavItem extends StatelessWidget {
                               horizontal: AppTheme.spaceSm,
                               vertical: AppTheme.spaceXs / 2),
                           decoration: BoxDecoration(
-                            color: paletteColor(context, Canopy.warning),
+                            color: Canopy.warning,
                             borderRadius:
                                 BorderRadius.circular(CanopyRadius.pill),
                           ),
@@ -668,7 +677,7 @@ class _DesktopNavItem extends StatelessWidget {
                                 .textTheme
                                 .labelSmall
                                 ?.copyWith(
-                                    color: paletteColor(context, Canopy.paper),
+                                    color: Canopy.paper,
                                     fontWeight: FontWeight.bold),
                           ),
                         ),

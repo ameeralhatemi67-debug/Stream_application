@@ -59,7 +59,7 @@ class IosSupportContact extends StatelessWidget {
             constraints: const BoxConstraints(minHeight: AppTheme.spaceLg * 3),
             child: SelectableText(AppIdentity.supportEmail,
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: paletteColor(context, AppTheme.textPrimary), fontWeight: FontWeight.w600)),
+                    color: AppTheme.textPrimary, fontWeight: FontWeight.w600)),
           ),
         ],
       ),

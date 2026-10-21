@@ -33,7 +33,7 @@ import 'support/stub_video_player.dart';
 /// (brief/audit/2026-10-21_USER_FLOW_AND_ATTENTION_AUDIT_HIDAYAH_GOLD.md).
 
 /// The app's localization, with CLDR plural rules on as in main.dart.
-Widget _localized(Widget child, {String lang = 'en', bool gold = false}) =>
+Widget _localized(Widget child, {String lang = 'en'}) =>
     EasyLocalization(
         supportedLocales: const [Locale('en'), Locale('ar')],
         startLocale: Locale(lang),
@@ -43,7 +43,7 @@ Widget _localized(Widget child, {String lang = 'en', bool gold = false}) =>
         assetLoader: const DirectJsonAssetLoader(),
         child: Builder(
             builder: (context) => MaterialApp(
-                theme: AppTheme.forLocale(context.locale, hidayah: gold),
+                theme: AppTheme.forLocale(context.locale),
                 locale: context.locale,
                 supportedLocales: context.supportedLocales,
                 localizationsDelegates: context.localizationDelegates,
@@ -467,8 +467,7 @@ void main() {
         await tester.pumpWidget(_localized(
             ChangeNotifierProvider<AppProvider>.value(
                 value: provider, child: BroadcasterProfileScreen(streamerId: id)),
-            lang: lang,
-            gold: true));
+            lang: lang));
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 500));
         final hero = find.byType(ProfileWebHero);
@@ -657,15 +656,14 @@ void main() {
   });
 
   test('snackbars name their font so Arabic never waits for a download', () {
-    for (final (lang, gold, family) in [
-      ('ar', false, 'IBM Plex Sans Arabic'),
-      ('en', true, 'IBM Plex Sans Arabic'),
-      ('en', false, 'IBM Plex Sans'),
+    for (final (lang, family) in [
+      ('ar', 'IBM Plex Sans Arabic'),
+      ('en', 'IBM Plex Sans Arabic'),
     ]) {
       final style =
-          AppTheme.forLocale(Locale(lang), hidayah: gold).snackBarTheme
+          AppTheme.forLocale(Locale(lang)).snackBarTheme
               .contentTextStyle!;
-      expect(style.fontFamily, family, reason: '$lang gold=$gold');
+      expect(style.fontFamily, family, reason: lang);
       expect(style.fontFamilyFallback,
           containsAll(['IBM Plex Sans Arabic', 'IBM Plex Sans']));
       expect(style.color, isNotNull);

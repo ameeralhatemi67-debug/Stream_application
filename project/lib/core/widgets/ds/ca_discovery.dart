@@ -76,10 +76,10 @@ class _CaHeroCardState extends State<CaHeroCard> {
                                       .round()),
                               fit: BoxFit.cover,
                               errorBuilder: (_, __, ___) => const SizedBox()))),
-              Positioned.fill(
+              const Positioned.fill(
                   child: DecoratedBox(
                       decoration:
-                          BoxDecoration(gradient: paletteGradient(context, AppGradients.mediaScrim)))),
+                          BoxDecoration(gradient: AppGradients.mediaScrim))),
               Positioned.fill(
                   child: IgnorePointer(
                       child: CanopyLatticeBackground(
@@ -89,8 +89,8 @@ class _CaHeroCardState extends State<CaHeroCard> {
               Positioned.fill(
                   child: ColoredBox(
                       color: image == null
-                          ? paletteColor(context, CanopyGradients.entryTextScrim)
-                          : paletteColor(context, CanopyGradients.heroTextScrim))),
+                          ? CanopyGradients.entryTextScrim
+                          : CanopyGradients.heroTextScrim)),
               ConstrainedBox(
                   constraints: BoxConstraints(minHeight: widget.height),
                   child: Padding(
@@ -110,7 +110,7 @@ class _CaHeroCardState extends State<CaHeroCard> {
                                   if (widget.viewerLabel != null || widget.viewerSuffix != null)
                                     DecoratedBox(
                                         decoration: BoxDecoration(
-                                            color: paletteColor(context, Canopy.forestDeep),
+                                            color: Canopy.forestDeep,
                                             borderRadius: BorderRadius.circular(
                                                 CanopyRadius.pill)),
                                         child: Padding(
@@ -127,25 +127,25 @@ class _CaHeroCardState extends State<CaHeroCard> {
                                                         .labelSmall
                                                         ?.copyWith(
                                                             color:
-                                                                paletteColor(context, Canopy.paper)))
+                                                                Canopy.paper))
                                                 : Text(widget.viewerLabel!,
                                                     style: Theme.of(context)
                                                         .textTheme
                                                         .labelSmall
-                                                        ?.copyWith(color: paletteColor(context, Canopy.paper))))),
+                                                        ?.copyWith(color: Canopy.paper)))),
                                 ]),
                             const SizedBox(height: AppTheme.spaceXl),
                             Text(widget.title,
                                 style: Theme.of(context)
                                     .textTheme
                                     .titleLarge
-                                    ?.copyWith(color: paletteColor(context, Canopy.paper))),
+                                    ?.copyWith(color: Canopy.paper)),
                             const SizedBox(height: AppTheme.spaceSm),
                             Text(widget.presenter,
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
-                                    ?.copyWith(color: paletteColor(context, Canopy.paper))),
+                                    ?.copyWith(color: Canopy.paper)),
                             const SizedBox(height: AppTheme.spaceMd),
                             if (widget.showAction)
                               CaButton(
@@ -165,7 +165,7 @@ class CaChipRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) => ShaderMask(
       blendMode: BlendMode.dstIn,
-      shaderCallback: (bounds) => paletteGradient(context, CanopyGradients.edgeFade).createShader(bounds),
+      shaderCallback: (bounds) => CanopyGradients.edgeFade.createShader(bounds),
       child: SingleChildScrollView(
           scrollDirection: Axis.horizontal,
           padding: const EdgeInsetsDirectional.symmetric(

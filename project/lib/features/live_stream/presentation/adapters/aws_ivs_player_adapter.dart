@@ -56,7 +56,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
     return AspectRatio(
       aspectRatio: widget.aspectRatio,
       child: Container(
-        color: paletteColor(context, AppTheme.media),
+        color: AppTheme.media,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -65,20 +65,20 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
               // A video surface, so it takes the media pair: the label below
               // is `onMedia` white, which was invisible against the near-white
               // surfaceAlt this was given in the scheme A migration.
-              decoration: BoxDecoration(
-                color: paletteColor(context, AppTheme.media),
+              decoration: const BoxDecoration(
+                color: AppTheme.media,
               ),
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.cloud_sync_rounded,
-                        color: paletteColor(context, AppTheme.primary), size: 56),
+                    const Icon(Icons.cloud_sync_rounded,
+                        color: AppTheme.primary, size: 56),
                     const SizedBox(height: AppTheme.spaceSm),
                     Text(
                       'live.ivs_stream_title'.tr(),
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: paletteColor(context, AppTheme.onMedia),
+                            color: AppTheme.onMedia,
                             fontWeight: FontWeight.bold,
                           ),
                     ),
@@ -88,7 +88,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                          color: paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.54),
+                          color: AppTheme.onMedia.withValues(alpha: 0.54),
                           fontSize: AppTheme.captionFont),
                     ),
                   ],
@@ -115,7 +115,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, AppTheme.media).withValues(alpha: 0.7),
+                  color: AppTheme.media.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -124,16 +124,16 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: BoxDecoration(
-                        color: paletteColor(context, AppTheme.primary),
+                      decoration: const BoxDecoration(
+                        color: AppTheme.primary,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'live.ivs_latency_badge'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(context, AppTheme.onMedia),
+                      style: const TextStyle(
+                        color: AppTheme.onMedia,
                         fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.bold,
                       ),
@@ -161,7 +161,7 @@ class _AwsIvsPlayerAdapterState extends State<AwsIvsPlayerAdapter> {
                     _isPlaying
                         ? Icons.pause_circle_filled
                         : Icons.play_circle_filled,
-                    color: paletteColor(context, AppTheme.onMedia),
+                    color: AppTheme.onMedia,
                     size: 32,
                   ),
                 ),

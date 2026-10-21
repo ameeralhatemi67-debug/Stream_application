@@ -24,6 +24,7 @@ import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'package:streamer_app/core/config/app_identity.dart';
 import 'package:streamer_app/core/providers/app_flags.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
+import 'package:streamer_app/core/providers/app_experience.dart';
 import 'package:streamer_app/core/services/supabase_auth_service.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
 import 'package:streamer_app/features/auth/presentation/welcome_screen.dart';
@@ -102,8 +103,11 @@ Widget _app(AppProvider provider, Widget home, String language, double scale) =>
       saveLocale: false,
       path: 'assets/i18n',
       assetLoader: const DirectJsonAssetLoader(),
-      child: ChangeNotifierProvider<AppProvider>.value(
-          value: provider,
+      child: MultiProvider(
+          providers: [
+            ChangeNotifierProvider<AppProvider>.value(value: provider),
+            ChangeNotifierProvider<AppExperience>(create: (_) => AppExperience()),
+          ],
           child: Builder(
               builder: (context) => MaterialApp(
                   theme: AppTheme.forLocale(context.locale),

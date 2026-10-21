@@ -135,7 +135,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                       decoration: InputDecoration(
                           labelText: 'organization_v1.destination'.tr(),
                           filled: true,
-                          fillColor: paletteColor(context, Canopy.paper)),
+                          fillColor: Canopy.paper),
                       items: [
                         DropdownMenuItem(
                             value: '',
@@ -159,7 +159,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
               const SizedBox(height: AppTheme.spaceMd),
               if (selected != null && !selected.v1Enabled)
                 Text('organization_v1.not_enabled_hint'.tr(),
-                    style: TextStyle(color: paletteColor(context, Canopy.slate))),
+                    style: const TextStyle(color: Canopy.slate)),
               if (manage)
                 CaButton(
                     onPressed: _busy ? null : () => _edit(),
@@ -277,7 +277,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                                     TextButton(
                                         style: TextButton.styleFrom(
                                             foregroundColor:
-                                                paletteColor(context, Canopy.liveCrimson)),
+                                                Canopy.liveCrimson),
                                         onPressed: _busy
                                             ? null
                                             : () => _run(() => context
@@ -291,7 +291,7 @@ class _ShowsState extends State<OrganizationShowsScreen> {
                                     TextButton(
                                         style: TextButton.styleFrom(
                                             foregroundColor:
-                                                paletteColor(context, Canopy.liveCrimson)),
+                                                Canopy.liveCrimson),
                                         onPressed: _busy
                                             ? null
                                             : () => _run(() => context
@@ -444,8 +444,8 @@ class _ScheduleEditorState extends State<_ScheduleEditor> {
               DropdownButtonFormField<String>(
                   initialValue: _presenter,
                   isExpanded: true,
-                  decoration: InputDecoration(
-                      filled: true, fillColor: paletteColor(context, Canopy.mint)),
+                  decoration: const InputDecoration(
+                      filled: true, fillColor: Canopy.mint),
                   items: presenters
                       .map((m) => DropdownMenuItem(
                           value: m.profileId,
@@ -467,8 +467,8 @@ class _ScheduleEditorState extends State<_ScheduleEditor> {
                   initialValue:
                       venues.any((v) => v.venueId == _venue) ? _venue : null,
                   isExpanded: true,
-                  decoration: InputDecoration(
-                      filled: true, fillColor: paletteColor(context, Canopy.mint)),
+                  decoration: const InputDecoration(
+                      filled: true, fillColor: Canopy.mint),
                   items: venues
                       .map((v) => DropdownMenuItem(
                           value: v.venueId,
@@ -550,7 +550,7 @@ class _ScheduleEditorState extends State<_ScheduleEditor> {
               Text('organization_v1.acceptance_reset'.tr()),
               if (_error != null)
                 Text(_error!.tr(),
-                    style: TextStyle(color: paletteColor(context, Canopy.liveCrimson))),
+                    style: const TextStyle(color: Canopy.liveCrimson)),
             ]))),
         actions: [
           CaButton(

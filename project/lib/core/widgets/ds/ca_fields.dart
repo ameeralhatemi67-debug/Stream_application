@@ -26,7 +26,7 @@ class CaChip extends StatelessWidget {
           if (icon != null) ...[
             CaIcon(icon!,
                 size: CanopySize.inlineIcon,
-                color: color == paletteOnSelected(context, Canopy.paper) ? color : paletteColor(context, Canopy.brandGreen)),
+                color: color == HidayahGold.g200 ? color : Canopy.brandGreen),
             const SizedBox(width: AppTheme.spaceSm)
           ],
           Flexible(
@@ -62,14 +62,14 @@ class CaChip extends StatelessWidget {
                           constraints: const BoxConstraints(
                               minHeight: CanopySize.target),
                           decoration: BoxDecoration(
-                              color: selected ? null : paletteColor(context, Canopy.paper),
+                              color: selected ? null : Canopy.paper,
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
                               border: selected
                                   ? null
-                                  : Border.all(color: paletteColor(context, Canopy.hairline))),
+                                  : Border.all(color: Canopy.hairline)),
                           child: Stack(fit: StackFit.passthrough, children: [
-                            contents(paletteColor(context, Canopy.slate)),
+                            contents(Canopy.slate),
                             if (value > 0)
                               Positioned.fill(
                                   child: IgnorePointer(
@@ -87,9 +87,9 @@ class CaChip extends StatelessWidget {
                                                               CanopyRadius
                                                                   .pill),
                                                       gradient:
-                                                          paletteSelectedFill(context, AppGradients.pill)),
+                                                          HidayahGradients.selected),
                                                   child: contents(
-                                                      paletteOnSelected(context, Canopy.paper))))))),
+                                                      HidayahGold.g200)))))),
                           ])),
                     )))));
   }
@@ -163,11 +163,9 @@ class CaSegmentedTabs extends StatelessWidget {
                         enabled:
                             interactive ? !disabledIndices.contains(i) : null,
                         child: CaFocusRing(
-                            // Gold's dark-panel thumb is minted (light); every
+                            // The dark-panel thumb is minted (light); every
                             // other selected thumb is a dark fill.
-                            onDark: index == i
-                                ? !(dark && paletteOf(context).hidayah)
-                                : dark,
+                            onDark: index == i ? !dark : dark,
                             child: InkWell(
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
@@ -196,7 +194,7 @@ class CaSegmentedTabs extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.all(AppTheme.spaceXs),
           decoration: BoxDecoration(
-              color: dark ? paletteColor(context, Canopy.canopy900) : paletteColor(context, Canopy.mint),
+              color: dark ? Canopy.canopy900 : Canopy.mint,
               borderRadius: BorderRadius.circular(CanopyRadius.pill)),
           child: SizedBox(
               height: height,
@@ -216,14 +214,13 @@ class CaSegmentedTabs extends StatelessWidget {
                           child: DecoratedBox(
                               decoration: BoxDecoration(
                                   gradient: dark
-                                      ? paletteGradient(context, AppGradients.pill)
-                                      : paletteSelectedFill(
-                                          context, AppGradients.pill),
+                                      ? AppGradients.pill
+                                      : HidayahGradients.selected,
                                   borderRadius: BorderRadius.circular(
                                       CanopyRadius.pill))))),
                 ),
                 Positioned.fill(
-                    child: row(dark ? paletteColor(context, Canopy.mist) : paletteColor(context, Canopy.brandGreen),
+                    child: row(dark ? Canopy.mist : Canopy.brandGreen,
                         interactive: true)),
                 Positioned.fill(
                     child: IgnorePointer(
@@ -235,8 +232,8 @@ class CaSegmentedTabs extends StatelessWidget {
                       builder: (_, value, __) => ClipRect(
                           clipper: _ThumbClip(value!),
                           child: row(dark
-                              ? paletteOnAccent(context, Canopy.paper)
-                              : paletteOnSelected(context, Canopy.paper)))),
+                              ? AppPalette.ink
+                              : HidayahGold.g200))),
                 ))),
               ])),
         );
@@ -296,15 +293,15 @@ class CaInput extends StatelessWidget {
         OutlineInputBorder(borderRadius: radius, borderSide: BorderSide.none);
     Widget errorRow(BuildContext context, String message) =>
         Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          CaIcon(CaGlyph.alert,
-              color: paletteColor(context, Canopy.liveCrimson), size: CanopySize.inlineIcon),
+          const CaIcon(CaGlyph.alert,
+              color: Canopy.liveCrimson, size: CanopySize.inlineIcon),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
               child: Text(message,
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall
-                      ?.copyWith(color: paletteColor(context, Canopy.liveCrimson)))),
+                      ?.copyWith(color: Canopy.liveCrimson))),
         ]);
     return PhoneInputGuard(
         showHint: !readOnly,
@@ -340,15 +337,15 @@ class CaInput extends StatelessWidget {
                         forceErrorText: error,
                         errorBuilder: errorRow,
                         style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: enabled ? paletteColor(context, Canopy.ink) : paletteColor(context, Canopy.slate)),
+                            color: enabled ? Canopy.ink : Canopy.slate),
                         decoration: InputDecoration(
                           hintText: hint,
                           filled: true,
-                          fillColor: paletteColor(context, Canopy.mint),
+                          fillColor: Canopy.mint,
                           hintStyle: Theme.of(context)
                               .textTheme
                               .bodyLarge
-                              ?.copyWith(color: paletteColor(context, Canopy.haze)),
+                              ?.copyWith(color: Canopy.haze),
                           isDense: true,
                           contentPadding: const EdgeInsetsDirectional.symmetric(
                               horizontal: AppTheme.spaceLg,
@@ -360,18 +357,18 @@ class CaInput extends StatelessWidget {
                           disabledBorder: rest,
                           focusedBorder: OutlineInputBorder(
                               borderRadius: radius,
-                              borderSide: BorderSide(
-                                  color: paletteColor(context, Canopy.brandGreen),
+                              borderSide: const BorderSide(
+                                  color: Canopy.brandGreen,
                                   width: CanopySize.focusWidth)),
                           errorBorder: OutlineInputBorder(
                               borderRadius: radius,
-                              borderSide: BorderSide(
-                                  color: paletteColor(context, Canopy.liveCrimson),
+                              borderSide: const BorderSide(
+                                  color: Canopy.liveCrimson,
                                   width: CanopySize.focusWidth)),
                           focusedErrorBorder: OutlineInputBorder(
                               borderRadius: radius,
-                              borderSide: BorderSide(
-                                  color: paletteColor(context, Canopy.liveCrimson),
+                              borderSide: const BorderSide(
+                                  color: Canopy.liveCrimson,
                                   width: CanopySize.focusWidth)),
                           prefixIcon: icon == null
                               ? null
@@ -455,8 +452,8 @@ class CaSwitch extends StatelessWidget {
       child: Switch(
           value: value,
           onChanged: onChanged,
-          activeThumbColor: paletteColor(context, Canopy.paper),
-          activeTrackColor: paletteColor(context, Canopy.brandGreen),
-          inactiveThumbColor: paletteColor(context, Canopy.slate),
-          inactiveTrackColor: paletteColor(context, Canopy.mist)));
+          activeThumbColor: Canopy.paper,
+          activeTrackColor: Canopy.brandGreen,
+          inactiveThumbColor: Canopy.slate,
+          inactiveTrackColor: Canopy.mist));
 }

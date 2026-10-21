@@ -313,7 +313,7 @@ class _UpcomingScheduleEditorSheetState
                   padding:
                       const EdgeInsetsDirectional.only(top: AppTheme.spaceMd),
                   child: Text(_error!,
-                      style: TextStyle(color: paletteColor(context, Canopy.liveCrimson)))),
+                      style: const TextStyle(color: Canopy.liveCrimson))),
           ]),
         ),
       ),

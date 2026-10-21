@@ -54,21 +54,21 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       margin: const EdgeInsets.only(bottom: AppTheme.spaceMd),
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       decoration: BoxDecoration(
-        color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.12),
+        color: AppTheme.warning.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.4)),
+        border: Border.all(color: AppTheme.warning.withValues(alpha: 0.4)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.pause_circle_outline_rounded,
-              size: 18, color: paletteColor(context, AppTheme.warning)),
+          const Icon(Icons.pause_circle_outline_rounded,
+              size: 18, color: AppTheme.warning),
           const SizedBox(width: AppTheme.spaceSm),
           Expanded(
             child: Text(
               'auth_welcome.registrations_paused'.tr(),
-              style: TextStyle(
-                  color: paletteColor(context, AppTheme.textPrimary), fontSize: 12, height: 1.4),
+              style: const TextStyle(
+                  color: AppTheme.textPrimary, fontSize: 12, height: 1.4),
             ),
           ),
         ],
@@ -108,7 +108,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('auth_welcome.sign_in_failed'.tr()),
-          backgroundColor: paletteColor(context, AppTheme.danger),
+          backgroundColor: AppTheme.danger,
         ),
       );
     } finally {
@@ -138,7 +138,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text('auth_welcome.sign_in_failed'.tr()),
-      backgroundColor: paletteColor(context, AppTheme.danger),
+      backgroundColor: AppTheme.danger,
     ));
   }
 
@@ -147,7 +147,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     return Scaffold(
-      backgroundColor: paletteColor(context, AppTheme.bg),
+      backgroundColor: AppTheme.bg,
       body: EntryBackground(
         child: SafeArea(
           child: Center(
@@ -170,7 +170,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Text(
                       AppIdentity.name(context.locale.languageCode),
                       style: TextStyle(
-                        color: paletteColor(context, AppTheme.textPrimary),
+                        color: AppTheme.textPrimary,
                         fontSize: 24,
                         fontWeight: FontWeight.w900,
                         letterSpacing:
@@ -184,7 +184,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Text(
                       'auth_welcome.subtitle'.tr(),
                       style: TextStyle(
-                        color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.9),
+                        color: AppTheme.primary.withValues(alpha: 0.9),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         height: 1.4,
@@ -197,19 +197,19 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                     Container(
                       padding: const EdgeInsets.all(AppTheme.spaceLg),
                       decoration: BoxDecoration(
-                        color: paletteColor(context, AppTheme.surface),
+                        color: AppTheme.surface,
                         borderRadius: BorderRadius.circular(AppTheme.radiusLg),
                         border:
-                            Border.all(color: paletteColor(context, AppTheme.surfaceAlt), width: 1.2),
-                        boxShadow: paletteShadows(context, AppTheme.entrySurfaceShadow),
+                            Border.all(color: AppTheme.surfaceAlt, width: 1.2),
+                        boxShadow: AppTheme.entrySurfaceShadow,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
                           Text(
                             'auth_welcome.card_title'.tr(),
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textPrimary),
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -223,8 +223,8 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     ? 'auth_welcome.card_subtitle_ios'
                                     : 'auth_welcome.card_subtitle')
                                 .tr(),
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textPrimary),
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
                               fontWeight: FontWeight.w500,
                               fontSize: 12,
                               height: 1.4,
@@ -240,27 +240,27 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           ElevatedButton(
                             key: const Key('welcome-signup'),
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: paletteColor(context, AppTheme.onMedia),
-                              foregroundColor: paletteColor(context, AppTheme.textPrimary),
+                              backgroundColor: AppTheme.onMedia,
+                              foregroundColor: AppTheme.textPrimary,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusMd),
                               ),
                               elevation: 2,
-                              shadowColor: paletteColor(context, AppTheme.shadowSoft),
+                              shadowColor: AppTheme.shadowSoft,
                               surfaceTintColor: Colors.transparent,
                             ),
                             onPressed: _isLoading || !_flags.registrationsOpen
                                 ? null
                                 : () => _handleGoogleAuth(),
                             child: _isLoading
-                                ? SizedBox(
+                                ? const SizedBox(
                                     height: 20,
                                     width: 20,
                                     child: HadayahLoadingIndicator(
                                       strokeWidth: 2,
-                                      color: paletteColor(context, AppTheme.textPrimary),
+                                      color: AppTheme.textPrimary,
                                     ),
                                   )
                                 : Row(
@@ -268,14 +268,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                                     children: [
                                       Container(
                                         padding: const EdgeInsets.all(2),
-                                        decoration: BoxDecoration(
+                                        decoration: const BoxDecoration(
                                           shape: BoxShape.circle,
-                                          color: paletteColor(context, AppTheme.onMedia),
+                                          color: AppTheme.onMedia,
                                         ),
-                                        child: Text(
+                                        child: const Text(
                                           'G',
                                           style: TextStyle(
-                                            color: paletteColor(context, AppTheme.primary),
+                                            color: AppTheme.primary,
                                             fontWeight: FontWeight.w900,
                                             fontSize: 16,
                                           ),
@@ -316,9 +316,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           //  2. Log In Secondary Action
                           OutlinedButton(
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: paletteColor(context, AppTheme.textPrimary),
-                              side: BorderSide(
-                                color: paletteColor(context, AppTheme.border),
+                              foregroundColor: AppTheme.textPrimary,
+                              side: const BorderSide(
+                                color: AppTheme.border,
                                 width: 1.2,
                               ),
                               padding: const EdgeInsets.symmetric(vertical: 13),
@@ -356,23 +356,23 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           // Divider with OR
                           Row(
                             children: [
-                              Expanded(
-                                child: Divider(color: paletteColor(context, AppTheme.border)),
+                              const Expanded(
+                                child: Divider(color: AppTheme.border),
                               ),
                               Padding(
                                 padding:
                                     const EdgeInsets.symmetric(horizontal: 12),
                                 child: Text(
                                   'auth_welcome.divider_or'.tr(),
-                                  style: TextStyle(
-                                    color: paletteColor(context, AppTheme.textMuted),
+                                  style: const TextStyle(
+                                    color: AppTheme.textMuted,
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                               ),
-                              Expanded(
-                                child: Divider(color: paletteColor(context, AppTheme.border)),
+                              const Expanded(
+                                child: Divider(color: AppTheme.border),
                               ),
                             ],
                           ),
@@ -381,7 +381,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                           //  3. Continue as Guest Viewer Action
                           TextButton(
                             style: TextButton.styleFrom(
-                              foregroundColor: paletteColor(context, AppTheme.primary),
+                              foregroundColor: AppTheme.primary,
                               padding: const EdgeInsets.symmetric(vertical: 10),
                             ),
                             onPressed: () async {
@@ -426,20 +426,20 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 16, vertical: 8),
                       decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          colors: [paletteColor(context, AppTheme.surface), paletteColor(context, AppTheme.surfaceAlt)],
+                        gradient: const LinearGradient(
+                          colors: [AppTheme.surface, AppTheme.surfaceAlt],
                         ),
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                        border: Border.all(color: paletteColor(context, AppTheme.surfaceAlt)),
-                        boxShadow: paletteShadows(context, AppTheme.entrySurfaceShadow),
+                        border: Border.all(color: AppTheme.surfaceAlt),
+                        boxShadow: AppTheme.entrySurfaceShadow,
                       ),
-                      child: Row(
+                      child: const Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(Icons.language_rounded,
-                              size: 16, color: paletteColor(context, AppTheme.textMuted)),
-                          const SizedBox(width: 8),
-                          const LanguageSwitcher(),
+                              size: 16, color: AppTheme.textMuted),
+                          SizedBox(width: 8),
+                          LanguageSwitcher(),
                         ],
                       ),
                     ),

@@ -268,8 +268,7 @@ void main() {
           body: StreamerSetupGuideModal(mode: StudioMode.obs),
         ),
   };
-  for (final hidayah in [false, true]) {
-    final paletteName = hidayah ? 'Hidayah' : 'normal';
+  for (final paletteName in ['Hidayah']) {
     for (final entry in screens.entries) {
       for (final lang in ['en', 'ar']) {
         testWidgets(
@@ -312,7 +311,7 @@ void main() {
                   locale: context.locale,
                   supportedLocales: context.supportedLocales,
                   localizationsDelegates: context.localizationDelegates,
-                  theme: AppTheme.forLocale(Locale(lang), hidayah: hidayah),
+                  theme: AppTheme.forLocale(Locale(lang)),
                   home: entry.value(),
                 ),
               ),

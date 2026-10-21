@@ -12,22 +12,22 @@ abstract final class AppTheme {
   static const disabledText = Canopy.slate;
   static const bg = Color(0xFFFFFFFF);
   static const surface = Color(0xFFFFFFFF);
-  static const surfaceAlt = Color(0xFFECF6EF);
-  static const border = Color(0xFFD9DDDE);
-  static const borderStrong = Color(0xFF737B7D);
-  static const textPrimary = Color(0xFF202B2B);
-  static const textSecondary = Color(0xFF485554);
-  static const textMuted = Color(0xFF586563);
-  static const primary = Color(0xFF17643F);
+  static const surfaceAlt = HidayahGold.g100;
+  static const border = HidayahGold.hairline;
+  static const borderStrong = HidayahGold.s500;
+  static const textPrimary = HidayahGold.s900;
+  static const textSecondary = HidayahGold.s700;
+  static const textMuted = HidayahGold.s600;
+  static const primary = HidayahGold.g700;
   static const onPrimary = Color(0xFFFFFFFF);
-  static const accent = Color(0xFF17643F);
-  static const success = Color(0xFF22613D);
-  static const warning = Color(0xFF7C5012);
-  static const danger = Color(0xFF9D3044);
-  static const live = Color(0xFF17643F);
+  static const accent = HidayahGold.g700;
+  static const success = HidayahGold.success;
+  static const warning = HidayahGold.warning;
+  static const danger = HidayahGold.live;
+  static const live = HidayahGold.g700;
   static const onMedia = Color(0xFFFFFFFF);
-  static const media = Color(0xFF243536);
-  static const disabled = Color(0xFFE5E8E7);
+  static const media = HidayahGold.s900;
+  static const disabled = Color(0xFFEDE8DE);
 
   /// Elevation shadows.
   ///
@@ -35,9 +35,9 @@ abstract final class AppTheme {
   /// the scheme sits on the same neutral. They replace the ad-hoc
   /// ad-hoc black shades the screens had accumulated, which varied by author
   /// rather than by elevation.
-  static const shadowSoft = Color(0x1F243536);
-  static const shadow = Color(0x33243536);
-  static const shadowStrong = Color(0x4D243536);
+  static const shadowSoft = Color(0x1F151D24);
+  static const shadow = Color(0x33151D24);
+  static const shadowStrong = Color(0x4D151D24);
 
   static const entrySurfaceShadow = [
     BoxShadow(color: shadowSoft, blurRadius: 24, offset: Offset(0, 6)),
@@ -72,14 +72,14 @@ abstract final class AppTheme {
     BoxShadow(color: shadowSoft, blurRadius: 10, offset: Offset(0, 3)),
   ];
 
-  static TextTheme buildTextTheme(String languageCode, {AppPalette palette = const AppPalette()}) {
+  static TextTheme buildTextTheme(String languageCode) {
     final ar = languageCode == 'ar';
     TextStyle style(double size, double arabicHeight, {bool bold = false, Color color = textPrimary}) => TextStyle(
-      fontFamily: ar || palette.hidayah ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
+      fontFamily: HidayahType.text,
       fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
       fontSize: size, height: ar ? arabicHeight : 1.4,
       fontWeight: bold ? FontWeight.w700 : FontWeight.w400,
-      letterSpacing: 0, color: palette.color(color),
+      letterSpacing: 0, color: color,
     );
     return TextTheme(
       displayLarge: style(30, 1.5, bold: true),
@@ -104,63 +104,61 @@ abstract final class AppTheme {
 
   /// One ThemeData per language: MaterialApp rebuilds used to build a fresh one
   /// (and its text theme) every time (audit ST-01).
-  static ThemeData forLocale(Locale locale, {bool hidayah = false}) =>
-      _themeByLanguage.putIfAbsent('${locale.languageCode}:$hidayah',
-          () => _buildTheme(locale, AppPalette(hidayah: hidayah)));
+  static ThemeData forLocale(Locale locale) =>
+      _themeByLanguage.putIfAbsent(locale.languageCode, () => _buildTheme(locale));
 
-  static ThemeData _buildTheme(Locale locale, AppPalette palette) => ThemeData(
-    extensions: [palette],
+  static ThemeData _buildTheme(Locale locale) => ThemeData(
     useMaterial3: true,
     brightness: Brightness.light,
-    fontFamily: locale.languageCode == 'ar' || palette.hidayah ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
+    fontFamily: HidayahType.text,
     fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
-    textTheme: buildTextTheme(locale.languageCode, palette: palette),
-    scaffoldBackgroundColor: palette.hidayah ? AppPalette.ivory : bg, canvasColor: palette.color(bg), cardColor: palette.color(surface),
-    primaryColor: palette.color(primary), dividerColor: palette.color(border), disabledColor: palette.color(textMuted),
-    colorScheme: ColorScheme.light(
-      primary: palette.color(primary), onPrimary: palette.color(onPrimary), secondary: palette.color(accent),
-      onSecondary: palette.color(onPrimary), tertiary: palette.color(success), onTertiary: palette.color(onPrimary),
-      surface: palette.color(surface), onSurface: palette.color(textPrimary), error: palette.color(danger), onError: palette.color(onPrimary),
-      outline: palette.color(borderStrong), outlineVariant: palette.color(border), surfaceContainerHighest: palette.color(surfaceAlt),
-      onSurfaceVariant: palette.color(textSecondary),
+    textTheme: buildTextTheme(locale.languageCode),
+    scaffoldBackgroundColor: AppPalette.ivory, canvasColor: bg, cardColor: surface,
+    primaryColor: primary, dividerColor: border, disabledColor: textMuted,
+    colorScheme: const ColorScheme.light(
+      primary: primary, onPrimary: onPrimary, secondary: accent,
+      onSecondary: onPrimary, tertiary: success, onTertiary: onPrimary,
+      surface: surface, onSurface: textPrimary, error: danger, onError: onPrimary,
+      outline: borderStrong, outlineVariant: border, surfaceContainerHighest: surfaceAlt,
+      onSurfaceVariant: textSecondary,
     ),
-    appBarTheme: AppBarTheme(
-      backgroundColor: palette.color(bg), foregroundColor: palette.color(textPrimary),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: bg, foregroundColor: textPrimary,
       elevation: 0, scrolledUnderElevation: 0,
       systemOverlayStyle: SystemUiOverlayStyle.dark,
-      iconTheme: IconThemeData(color: palette.color(textPrimary), size: 22),
+      iconTheme: IconThemeData(color: textPrimary, size: 22),
     ),
-    cardTheme: CardThemeData(color: palette.color(surface), elevation: 0,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd), side: BorderSide(color: palette.color(border)))),
-    dialogTheme: DialogThemeData(backgroundColor: palette.color(surface), surfaceTintColor: Colors.transparent,
+    cardTheme: CardThemeData(color: surface, elevation: 0,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd), side: const BorderSide(color: border))),
+    dialogTheme: DialogThemeData(backgroundColor: surface, surfaceTintColor: Colors.transparent,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd))),
-    bottomSheetTheme: BottomSheetThemeData(backgroundColor: palette.color(surface), surfaceTintColor: Colors.transparent),
-    navigationBarTheme: NavigationBarThemeData(backgroundColor: palette.color(surface), indicatorColor: palette.color(surfaceAlt)),
-    navigationRailTheme: NavigationRailThemeData(backgroundColor: palette.color(surface), indicatorColor: palette.color(surfaceAlt)),
-    bottomNavigationBarTheme: BottomNavigationBarThemeData(backgroundColor: palette.color(surface), selectedItemColor: palette.color(primary),
-      unselectedItemColor: palette.color(textMuted), type: BottomNavigationBarType.fixed, elevation: 0),
+    bottomSheetTheme: const BottomSheetThemeData(backgroundColor: surface, surfaceTintColor: Colors.transparent),
+    navigationBarTheme: const NavigationBarThemeData(backgroundColor: surface, indicatorColor: surfaceAlt),
+    navigationRailTheme: const NavigationRailThemeData(backgroundColor: surface, indicatorColor: surfaceAlt),
+    bottomNavigationBarTheme: const BottomNavigationBarThemeData(backgroundColor: surface, selectedItemColor: primary,
+      unselectedItemColor: textMuted, type: BottomNavigationBarType.fixed, elevation: 0),
     // The snackbar draws its text with this style alone (not the text theme), so
     // it names the family: without one, web fell back to a downloaded font and
     // Arabic showed as boxes until it arrived (audit 2026-10-21, section 6).
-    snackBarTheme: SnackBarThemeData(backgroundColor: palette.color(media), contentTextStyle: TextStyle(
-      fontFamily: locale.languageCode == 'ar' || palette.hidayah ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
-      fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
-      color: palette.color(onMedia))),
+    snackBarTheme: const SnackBarThemeData(backgroundColor: media, contentTextStyle: TextStyle(
+      fontFamily: HidayahType.text,
+      fontFamilyFallback: ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
+      color: onMedia)),
     elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(
-      foregroundColor: palette.color(onPrimary), backgroundColor: palette.color(primary), disabledBackgroundColor: palette.color(disabled),
-      disabledForegroundColor: palette.color(textMuted), elevation: 0,
+      foregroundColor: onPrimary, backgroundColor: primary, disabledBackgroundColor: disabled,
+      disabledForegroundColor: textMuted, elevation: 0,
       padding: const EdgeInsets.symmetric(horizontal: spaceLg, vertical: spaceMd),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
     outlinedButtonTheme: OutlinedButtonThemeData(style: OutlinedButton.styleFrom(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
     filledButtonTheme: FilledButtonThemeData(style: FilledButton.styleFrom(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(radiusMd)))),
-    inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: palette.color(surface),
-      hintStyle: TextStyle(color: palette.color(textMuted)),
+    inputDecorationTheme: InputDecorationTheme(filled: true, fillColor: surface,
+      hintStyle: const TextStyle(color: textMuted),
       contentPadding: const EdgeInsets.symmetric(horizontal: spaceLg, vertical: spaceMd),
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: BorderSide(color: palette.color(borderStrong))),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: BorderSide(color: palette.color(borderStrong))),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: BorderSide(color: palette.color(primary), width: 2))),
+      border: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: const BorderSide(color: borderStrong)),
+      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: const BorderSide(color: borderStrong)),
+      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(radiusMd), borderSide: const BorderSide(color: primary, width: 2))),
   );
 }
 
@@ -171,8 +169,8 @@ abstract final class AppGradients {
   static const pill = CanopyGradients.pill;
   static const liveSignal = CanopyGradients.liveSignal;
   static const canopy = CanopyGradients.canopy;
-  static const brand = LinearGradient(begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd, colors: [Color(0xFF17643F), Color(0xFF327044)]);
-  static const soft = LinearGradient(begin: AlignmentDirectional.topStart, end: AlignmentDirectional.bottomEnd, colors: [Color(0xFFD7EDDC), Color(0xFFB8DBB9)]);
+  static const brand = HidayahGradients.minted;
+  static const soft = LinearGradient(colors: [HidayahGold.g100, HidayahGold.g200]);
 
   /// Bottom scrim for thumbnails and viewports that carry [AppTheme.onMedia]
   /// text over an arbitrary video frame.
@@ -189,6 +187,6 @@ abstract final class AppGradients {
   static const mediaScrim = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
-    colors: [Color(0x00243536), Color(0xCC243536)],
+    colors: [Color(0x00151D24), Color(0xCC151D24)],
   );
 }

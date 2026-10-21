@@ -116,15 +116,15 @@ Future<void> _handleEdit(
     builder: (dialogContext) => _placeChatDialog(
       dialogContext,
       CaAlertDialog(
-        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text(
           'live.edit_message_title'.tr(),
-          style: TextStyle(
-              color: paletteColor(dialogContext, Canopy.ink), fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              color: Canopy.ink, fontWeight: FontWeight.bold),
         ),
         scrollable: true,
         content: isCompactLandscapeChat(dialogContext)
@@ -134,10 +134,10 @@ Future<void> _handleEdit(
                 autofocus: true,
                 maxLength: 500,
                 maxLines: 3,
-                style: TextStyle(color: paletteColor(dialogContext, Canopy.ink)),
+                style: const TextStyle(color: Canopy.ink),
                 decoration: InputDecoration(
                   hintText: 'live.edit_message_hint'.tr(),
-                  hintStyle: TextStyle(color: paletteColor(dialogContext, Canopy.haze)),
+                  hintStyle: const TextStyle(color: Canopy.haze),
                 ),
               ),
         actions: [
@@ -187,7 +187,7 @@ Future<void> _runModerationAction(
           content: Text(e is ModeratorRevokeDenied
               ? 'live.moderator_revoke_denied'.tr()
               : '$e'),
-          backgroundColor: paletteColor(context, Canopy.liveCrimson)),
+          backgroundColor: Canopy.liveCrimson),
     );
   }
 }
@@ -198,15 +198,15 @@ Future<bool?> _confirmDelete(BuildContext context, {required String title}) {
     builder: (context) => _placeChatDialog(
       context,
       CaAlertDialog(
-        backgroundColor: paletteColor(context, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          side: BorderSide(color: paletteColor(context, Canopy.hairline)),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text(
           title,
-          style: TextStyle(
-              color: paletteColor(context, Canopy.ink), fontWeight: FontWeight.bold),
+          style: const TextStyle(
+              color: Canopy.ink, fontWeight: FontWeight.bold),
         ),
         actions: [
           CaButton(
@@ -242,7 +242,7 @@ Future<void> _handleBlock(
   ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       content: Text((errorKey ?? 'live.user_blocked_toast').tr()),
-      backgroundColor: errorKey == null ? null : paletteColor(context, Canopy.liveCrimson),
+      backgroundColor: errorKey == null ? null : Canopy.liveCrimson,
     ),
   );
 }
@@ -281,7 +281,7 @@ Future<void> _handleReport(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(key.tr()),
-        backgroundColor: isDuplicate ? null : paletteColor(context, Canopy.liveCrimson),
+        backgroundColor: isDuplicate ? null : Canopy.liveCrimson,
       ),
     );
   }
@@ -316,90 +316,90 @@ class _ChatMessageActionsMenu extends StatelessWidget {
         body: Column(mainAxisSize: MainAxisSize.min, children: [
           if (message.isCurrentUser) ...[
             ListTile(
-              leading: Icon(Icons.edit_outlined, color: paletteColor(context, AppTheme.primary)),
+              leading: const Icon(Icons.edit_outlined, color: AppTheme.primary),
               title: Text(
                 'live.edit_message'.tr(),
-                style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.edit),
             ),
-            Divider(color: paletteColor(context, Canopy.mist)),
+            const Divider(color: Canopy.mist),
             ListTile(
-              leading: Icon(Icons.delete_outline_rounded,
-                  color: paletteColor(context, Canopy.liveCrimson)),
+              leading: const Icon(Icons.delete_outline_rounded,
+                  color: Canopy.liveCrimson),
               title: Text(
                 'live.delete_message'.tr(),
-                style: TextStyle(color: paletteColor(context, Canopy.liveCrimson)),
+                style: const TextStyle(color: Canopy.liveCrimson),
               ),
               onTap: () =>
                   Navigator.of(context).pop(_ChatMessageAction.deleteOwn),
             ),
           ] else ...[
             ListTile(
-              leading: Icon(Icons.flag_outlined, color: paletteColor(context, AppTheme.warning)),
+              leading: const Icon(Icons.flag_outlined, color: AppTheme.warning),
               title: Text(
                 'live.report_message'.tr(),
-                style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.report),
             ),
             ListTile(
-              leading: Icon(Icons.visibility_off_outlined,
-                  color: paletteColor(context, Canopy.slate)),
+              leading: const Icon(Icons.visibility_off_outlined,
+                  color: Canopy.slate),
               title: Text(
                 'live.hide_message'.tr(),
-                style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.hide),
             ),
-            Divider(color: paletteColor(context, Canopy.mist)),
+            const Divider(color: Canopy.mist),
             ListTile(
-              leading: Icon(Icons.block_rounded, color: paletteColor(context, Canopy.liveCrimson)),
+              leading: const Icon(Icons.block_rounded, color: Canopy.liveCrimson),
               title: Text(
                 'live.block_user'.tr(),
-                style: TextStyle(color: paletteColor(context, Canopy.liveCrimson)),
+                style: const TextStyle(color: Canopy.liveCrimson),
               ),
               onTap: () => Navigator.of(context).pop(_ChatMessageAction.block),
             ),
             if (canModerate) ...[
-              Divider(color: paletteColor(context, Canopy.hairline), height: 1),
+              const Divider(color: Canopy.hairline, height: 1),
               ListTile(
                 leading:
-                    Icon(Icons.mic_off_rounded, color: paletteColor(context, AppTheme.warning)),
+                    const Icon(Icons.mic_off_rounded, color: AppTheme.warning),
                 title: Text(
                   'live.mute_user'.tr(),
-                  style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                  style: const TextStyle(color: Canopy.ink),
                 ),
                 onTap: () => Navigator.of(context).pop(_ChatMessageAction.mute),
               ),
               ListTile(
-                leading: Icon(Icons.delete_outline_rounded,
-                    color: paletteColor(context, Canopy.liveCrimson)),
+                leading: const Icon(Icons.delete_outline_rounded,
+                    color: Canopy.liveCrimson),
                 title: Text(
                   'live.delete_message'.tr(),
-                  style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                  style: const TextStyle(color: Canopy.ink),
                 ),
                 onTap: () =>
                     Navigator.of(context).pop(_ChatMessageAction.delete),
               ),
               if (message.isStreamModerator)
                 ListTile(
-                  leading: Icon(Icons.remove_moderator_outlined,
-                      color: paletteColor(context, Canopy.liveCrimson)),
+                  leading: const Icon(Icons.remove_moderator_outlined,
+                      color: Canopy.liveCrimson),
                   title: Text(
                     'live.revoke_moderator'.tr(),
-                    style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                    style: const TextStyle(color: Canopy.ink),
                   ),
                   onTap: () => Navigator.of(context)
                       .pop(_ChatMessageAction.revokeModerator),
                 )
               else
                 ListTile(
-                  leading: Icon(Icons.add_moderator_outlined,
-                      color: paletteColor(context, Canopy.leaf)),
+                  leading: const Icon(Icons.add_moderator_outlined,
+                      color: Canopy.leaf),
                   title: Text(
                     'live.appoint_moderator'.tr(),
-                    style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                    style: const TextStyle(color: Canopy.ink),
                   ),
                   onTap: () => Navigator.of(context)
                       .pop(_ChatMessageAction.appointModerator),
@@ -434,7 +434,7 @@ class _ReportReasonMenu extends StatelessWidget {
             ListTile(
               title: Text(
                 'live.$key'.tr(),
-                style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                style: const TextStyle(color: Canopy.ink),
               ),
               onTap: () => Navigator.of(context).pop(code),
             ),

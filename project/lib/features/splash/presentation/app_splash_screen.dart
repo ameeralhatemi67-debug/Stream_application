@@ -90,7 +90,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: paletteColor(context, AppTheme.bg),
+      backgroundColor: AppTheme.bg,
       body: EntryBackground(
         child: SafeArea(
           child: Center(
@@ -118,8 +118,8 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                 // Brand Title
                 Text(
                   AppIdentity.name(context.locale.languageCode),
-                  style: TextStyle(
-                    color: paletteColor(context, AppTheme.textPrimary),
+                  style: const TextStyle(
+                    color: AppTheme.textPrimary,
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
@@ -128,8 +128,8 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                 const SizedBox(height: 6),
                 Text(
                   'design_copy.academic_broadcasts_spatial_discovery'.tr(),
-                  style: TextStyle(
-                    color: paletteColor(context, AppTheme.textSecondary),
+                  style: const TextStyle(
+                    color: AppTheme.textSecondary,
                     fontSize: 13,
                   ),
                 ),
@@ -143,15 +143,15 @@ class _AppSplashScreenState extends State<AppSplashScreen>
                   child: HadayahLoadingIndicator(
                     strokeWidth: 2.5,
                     valueColor: AlwaysStoppedAnimation<Color>(
-                      paletteColor(context, AppTheme.primary).withValues(alpha: 0.85),
+                      AppTheme.primary.withValues(alpha: 0.85),
                     ),
                   ),
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
                 Text(
                   'design_copy.initializing_platform_map_assets'.tr(),
-                  style: TextStyle(
-                    color: paletteColor(context, AppTheme.textMuted),
+                  style: const TextStyle(
+                    color: AppTheme.textMuted,
                     fontSize: 11.5,
                   ),
                 ),

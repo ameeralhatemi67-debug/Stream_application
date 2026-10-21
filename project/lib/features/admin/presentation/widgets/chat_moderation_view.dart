@@ -57,7 +57,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, Canopy.leaf),
+        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
       ),
     );
   }
@@ -89,29 +89,29 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     showCaDialog(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
-        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text(title,
-            style: TextStyle(
-                color: paletteColor(dialogContext, Canopy.ink),
+            style: const TextStyle(
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 16)),
         content: Text(body,
             style:
-                TextStyle(color: paletteColor(dialogContext, Canopy.slate), fontSize: 12)),
+                const TextStyle(color: Canopy.slate, fontSize: 12)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze))),
+                style: const TextStyle(color: Canopy.haze)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
                 backgroundColor: confirmColor,
-                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia)),
+                foregroundColor: AppTheme.onMedia),
             onPressed: () {
               Navigator.pop(dialogContext);
               onConfirm();
@@ -142,8 +142,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                           alignment: AlignmentDirectional.centerStart,
                           child: Text(
                             'design_ui.mute_duration'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(sheetContext, Canopy.ink),
+                            style: const TextStyle(
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13),
                           ),
@@ -152,19 +152,19 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                       ListTile(
                         title: Text('moderation.ten_minutes'.tr(),
                             style:
-                                TextStyle(color: paletteColor(sheetContext, Canopy.ink))),
+                                const TextStyle(color: Canopy.ink)),
                         onTap: () => Navigator.pop(sheetContext, 10 / 60),
                       ),
                       ListTile(
                         title: Text('moderation.one_hour'.tr(),
                             style:
-                                TextStyle(color: paletteColor(sheetContext, Canopy.ink))),
+                                const TextStyle(color: Canopy.ink)),
                         onTap: () => Navigator.pop(sheetContext, 1.0),
                       ),
                       ListTile(
                         title: Text('design_ui.permanent'.tr(),
                             style:
-                                TextStyle(color: paletteColor(sheetContext, Canopy.ink))),
+                                const TextStyle(color: Canopy.ink)),
                         // 0.0 is a sentinel for "permanent" (translated to a null
                         // muteDurationHours below) -- kept distinct from the sheet's
                         // own null, which means "dismissed without choosing".
@@ -181,7 +181,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
       body: 'moderation.mute_body'
           .tr(namedArgs: {'name': report.reportedDisplayName}),
       confirmLabel: 'moderation.mute'.tr(),
-      confirmColor: paletteColor(context, AppTheme.warning),
+      confirmColor: AppTheme.warning,
       onConfirm: () => _runAction(
         report,
         () => provider.muteChatSenderAndResolveReport(report,
@@ -201,14 +201,14 @@ class _ChatModerationViewState extends State<ChatModerationView> {
     final reason = await showCaDialog<String>(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
-        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text('design_ui.ban_account_platform_wide'.tr(),
-            style: TextStyle(
-                color: paletteColor(dialogContext, Canopy.ink), fontWeight: FontWeight.bold)),
+            style: const TextStyle(
+                color: Canopy.ink, fontWeight: FontWeight.bold)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,20 +217,20 @@ class _ChatModerationViewState extends State<ChatModerationView> {
               'moderation.ban_body'
                   .tr(namedArgs: {'name': report.reportedDisplayName}),
               style:
-                  TextStyle(color: paletteColor(dialogContext, Canopy.slate), fontSize: 12),
+                  const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
             const SizedBox(height: AppTheme.spaceMd),
             PhoneInputGuard(builder: (context, blocked) => TextField(
                       readOnly: blocked,
                       controller: reasonController,
                       maxLines: 2,
-                      style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                      style: const TextStyle(color: Canopy.ink),
                       decoration: InputDecoration(
                         labelText: 'admin.ban_reason_label'.tr(),
                         labelStyle:
-                            TextStyle(color: paletteColor(context, Canopy.slate)),
+                            const TextStyle(color: Canopy.slate),
                         filled: true,
-                        fillColor: paletteColor(context, Canopy.mint),
+                        fillColor: Canopy.mint,
                         border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd)),
@@ -242,12 +242,12 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('settings.cancel'.tr(),
-                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze))),
+                style: const TextStyle(color: Canopy.haze)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
-                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia)),
+                backgroundColor: Canopy.liveCrimson,
+                foregroundColor: AppTheme.onMedia),
             onPressed: () =>
                 Navigator.pop(dialogContext, reasonController.text.trim()),
             child: Text('design_ui.ban_platform_wide'.tr()),
@@ -294,13 +294,13 @@ class _ChatModerationViewState extends State<ChatModerationView> {
               runSpacing: AppTheme.spaceSm,
               crossAxisAlignment: WrapCrossAlignment.center,
               children: [
-                Icon(Icons.report_gmailerrorred_rounded,
-                    color: paletteColor(context, Canopy.liveCrimson), size: 20),
+                const Icon(Icons.report_gmailerrorred_rounded,
+                    color: Canopy.liveCrimson, size: 20),
                 const SizedBox(width: 8),
                 Text(
                   'design_ui.chat_moderation'.tr(),
-                  style: TextStyle(
-                    color: paletteColor(context, Canopy.ink),
+                  style: const TextStyle(
+                    color: Canopy.ink,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -310,13 +310,13 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, Canopy.mint),
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text(
                     '${reports.length}',
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.slate),
+                    style: const TextStyle(
+                      color: Canopy.slate,
                       fontSize: 12,
                       fontWeight: FontWeight.bold,
                     ),
@@ -331,29 +331,29 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                       : 'organization_v1.scoped_reports')
                   .tr(),
               style:
-                  TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12),
+                  const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
             const SizedBox(height: AppTheme.spaceLg),
             PhoneInputGuard(builder: (context, blocked) => TextField(
                       readOnly: blocked,
                       controller: _searchController,
                       onChanged: (_) => setState(() {}),
-                      style: TextStyle(
-                          color: paletteColor(context, Canopy.ink), fontSize: 13),
+                      style: const TextStyle(
+                          color: Canopy.ink, fontSize: 13),
                       decoration: InputDecoration(
                         hintText: 'moderation.search'.tr(),
-                        hintStyle: TextStyle(
-                            color: paletteColor(context, Canopy.slate), fontSize: 12),
-                        prefixIcon: Icon(Icons.search_rounded,
-                            color: paletteColor(context, Canopy.slate), size: 18),
+                        hintStyle: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
+                        prefixIcon: const Icon(Icons.search_rounded,
+                            color: Canopy.slate, size: 18),
                         filled: true,
-                        fillColor: paletteColor(context, AppTheme.surface),
+                        fillColor: AppTheme.surface,
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 10),
                         border: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
-                          borderSide: BorderSide(color: paletteColor(context, Canopy.hairline)),
+                          borderSide: const BorderSide(color: Canopy.hairline),
                         ),
                       ),
                     )),
@@ -370,14 +370,14 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.mark_chat_read_rounded,
-                        size: 48, color: paletteColor(context, Canopy.slate)),
+                    const Icon(Icons.mark_chat_read_rounded,
+                        size: 48, color: Canopy.slate),
                     const SizedBox(height: 12),
                     Text(
                       reports.isEmpty
                           ? 'No open chat reports.'
                           : 'No reports match your search.',
-                      style: TextStyle(color: paletteColor(context, Canopy.slate)),
+                      style: const TextStyle(color: Canopy.slate),
                     ),
                   ],
                 ),
@@ -408,8 +408,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
           data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
           child: ExpansionTile(
             initiallyExpanded: false,
-            leading: Icon(Icons.volume_off_rounded,
-                color: paletteColor(context, AppTheme.warning), size: 20),
+            leading: const Icon(Icons.volume_off_rounded,
+                color: AppTheme.warning, size: 20),
             title: Wrap(
               spacing: AppTheme.spaceSm,
               runSpacing: AppTheme.spaceSm,
@@ -417,8 +417,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
               children: [
                 Text(
                   'design_ui.muted_chatters_audit_log'.tr(),
-                  style: TextStyle(
-                    color: paletteColor(context, Canopy.ink),
+                  style: const TextStyle(
+                    color: Canopy.ink,
                     fontSize: 13.5,
                     fontWeight: FontWeight.bold,
                   ),
@@ -428,12 +428,12 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 7, vertical: 1.5),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, Canopy.mint),
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text('${entries.length}',
-                      style: TextStyle(
-                          color: paletteColor(context, Canopy.slate),
+                      style: const TextStyle(
+                          color: Canopy.slate,
                           fontSize: 12,
                           fontWeight: FontWeight.bold)),
                 ),
@@ -448,8 +448,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                       const EdgeInsets.symmetric(vertical: AppTheme.spaceMd),
                   child: Text(
                     'design_ui.no_chatters_have_been_muted_yet'.tr(),
-                    style: TextStyle(
-                        color: paletteColor(context, Canopy.slate), fontSize: 12),
+                    style: const TextStyle(
+                        color: Canopy.slate, fontSize: 12),
                   ),
                 )
               else
@@ -457,7 +457,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                       margin: const EdgeInsets.only(bottom: AppTheme.spaceSm),
                       padding: const EdgeInsets.all(AppTheme.spaceMd),
                       decoration: BoxDecoration(
-                        color: paletteColor(context, Canopy.mint),
+                        color: Canopy.mint,
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                       ),
                       child: Column(
@@ -470,8 +470,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                                   e.email != null
                                       ? '${e.displayName} (${e.email})'
                                       : e.displayName,
-                                  style: TextStyle(
-                                    color: paletteColor(context, Canopy.ink),
+                                  style: const TextStyle(
+                                    color: Canopy.ink,
                                     fontSize: 12.5,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -484,15 +484,15 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                                     horizontal: 6, vertical: 2),
                                 decoration: BoxDecoration(
                                   color:
-                                      paletteColor(context, AppTheme.warning).withValues(alpha: 0.15),
+                                      AppTheme.warning.withValues(alpha: 0.15),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   'moderation.stream_count'.plural(
                                       e.streamsMutedCount,
                                       name: 'count'),
-                                  style: TextStyle(
-                                      color: paletteColor(context, AppTheme.warning),
+                                  style: const TextStyle(
+                                      color: AppTheme.warning,
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold),
                                 ),
@@ -502,8 +502,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                           const SizedBox(height: 4),
                           Text(
                             e.lastReason,
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
                           ),
                           if (e.lastMessages.isNotEmpty) ...[
                             const SizedBox(height: 6),
@@ -511,8 +511,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                                   padding: const EdgeInsets.only(bottom: 2),
                                   child: Text(
                                     '"$m"',
-                                    style: TextStyle(
-                                      color: paletteColor(context, Canopy.haze),
+                                    style: const TextStyle(
+                                      color: Canopy.haze,
                                       fontSize: 12,
                                       fontStyle: FontStyle.italic,
                                     ),
@@ -546,16 +546,16 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                     children: [
                       Row(
                         children: [
-                          Icon(Icons.person_rounded,
-                              size: 14, color: paletteColor(context, Canopy.liveCrimson)),
+                          const Icon(Icons.person_rounded,
+                              size: 14, color: Canopy.liveCrimson),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
                               'moderation.reported'.tr(namedArgs: {
                                 'name': report.reportedDisplayName
                               }),
-                              style: TextStyle(
-                                color: paletteColor(context, Canopy.ink),
+                              style: const TextStyle(
+                                color: Canopy.ink,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 13,
                               ),
@@ -567,22 +567,22 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                         Padding(
                           padding: const EdgeInsetsDirectional.only(start: 18),
                           child: Text(report.reportedEmail!,
-                              style: TextStyle(
-                                  color: paletteColor(context, Canopy.haze), fontSize: 12)),
+                              style: const TextStyle(
+                                  color: Canopy.haze, fontSize: 12)),
                         ),
                       const SizedBox(height: 6),
                       Container(
                         width: double.infinity,
                         padding: const EdgeInsets.all(AppTheme.spaceSm),
                         decoration: BoxDecoration(
-                          color: paletteColor(context, Canopy.mint),
+                          color: Canopy.mint,
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
                         ),
                         child: Text(
                           '"${report.messageBody}"',
-                          style: TextStyle(
-                              color: paletteColor(context, Canopy.slate),
+                          style: const TextStyle(
+                              color: Canopy.slate,
                               fontSize: 12.5,
                               fontStyle: FontStyle.italic),
                         ),
@@ -591,8 +591,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                       Text(
                         'moderation.reason'.tr(
                             namedArgs: {'reason': _reasonLabel(report.reason)}),
-                        style: TextStyle(
-                            color: paletteColor(context, AppTheme.warning), fontSize: 12),
+                        style: const TextStyle(
+                            color: AppTheme.warning, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -603,8 +603,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                                   context.locale.languageCode)
                               .format(report.createdAt.toLocal())
                         }),
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.haze), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.haze, fontSize: 12),
                       ),
                     ],
                   ),
@@ -613,13 +613,13 @@ class _ChatModerationViewState extends State<ChatModerationView> {
             ),
             const SizedBox(height: AppTheme.spaceMd),
             if (isActing)
-              Align(
+              const Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: SizedBox(
                   width: 16,
                   height: 16,
                   child: HadayahLoadingIndicator(
-                      strokeWidth: 2, color: paletteColor(context, AppTheme.primary)),
+                      strokeWidth: 2, color: AppTheme.primary),
                 ),
               )
             else ...[
@@ -630,8 +630,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                 children: [
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: paletteColor(context, Canopy.slate),
-                      side: BorderSide(color: paletteColor(context, Canopy.hairline)),
+                      foregroundColor: Canopy.slate,
+                      side: const BorderSide(color: Canopy.hairline),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                     ),
@@ -645,8 +645,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   ),
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: paletteColor(context, AppTheme.warning),
-                      side: BorderSide(color: paletteColor(context, AppTheme.warning)),
+                      foregroundColor: AppTheme.warning,
+                      side: const BorderSide(color: AppTheme.warning),
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                     ),
@@ -657,7 +657,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                 ],
               ),
               const SizedBox(height: AppTheme.spaceLg),
-              Divider(color: paletteColor(context, Canopy.hairline)),
+              const Divider(color: Canopy.hairline),
               Wrap(
                 alignment: WrapAlignment.end,
                 spacing: AppTheme.spaceSm,
@@ -666,8 +666,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                   if (provider.isAdminUser)
                     OutlinedButton.icon(
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: paletteColor(context, Canopy.liveCrimson),
-                        side: BorderSide(color: paletteColor(context, Canopy.liveCrimson)),
+                        foregroundColor: Canopy.liveCrimson,
+                        side: const BorderSide(color: Canopy.liveCrimson),
                         padding: const EdgeInsets.symmetric(
                             horizontal: 12, vertical: 8),
                       ),
@@ -677,8 +677,8 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                     ),
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: paletteColor(context, Canopy.liveCrimson),
-                      foregroundColor: paletteColor(context, AppTheme.onMedia),
+                      backgroundColor: Canopy.liveCrimson,
+                      foregroundColor: AppTheme.onMedia,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 12, vertical: 8),
                     ),
@@ -689,7 +689,7 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                       title: 'moderation.delete_title'.tr(),
                       body: 'moderation.delete_body'.tr(),
                       confirmLabel: 'moderation.delete'.tr(),
-                      confirmColor: paletteColor(context, Canopy.liveCrimson),
+                      confirmColor: Canopy.liveCrimson,
                       onConfirm: () => _runAction(
                         report,
                         () =>

@@ -144,7 +144,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
         duration: const Duration(milliseconds: 260),
         child: Container(
           key: ValueKey('placeholder_${streamState.name}'),
-          color: paletteColor(context, AppTheme.media).withValues(alpha: 0.92),
+          color: AppTheme.media.withValues(alpha: 0.92),
           child: Stack(
             fit: StackFit.expand,
             children: [
@@ -160,7 +160,7 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                   errorBuilder: (_, __, ___) => const SizedBox.shrink(),
                 ),
               if (custom != null && custom.isNotEmpty)
-                Container(color: paletteColor(context, AppTheme.media).withValues(alpha: 0.55)),
+                Container(color: AppTheme.media.withValues(alpha: 0.55)),
               _buildContent(context, spec),
             ],
           ),
@@ -183,8 +183,8 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
             Text(
               spec.titleKey.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: paletteColor(context, AppTheme.onMedia),
+              style: const TextStyle(
+                color: AppTheme.onMedia,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
               ),
@@ -193,8 +193,8 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
             Text(
               spec.subtitleKey.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: paletteColor(context, AppTheme.onMedia),
+              style: const TextStyle(
+                color: AppTheme.onMedia,
                 fontSize: 12,
                 height: 1.4,
               ),
@@ -206,8 +206,8 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: paletteColor(context, AppTheme.onMedia),
+                style: const TextStyle(
+                  color: AppTheme.onMedia,
                   fontSize: 10.5,
                 ),
               ),
@@ -225,8 +225,8 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                       icon: const Icon(Icons.refresh_rounded, size: 16),
                       label: Text('live.retry_feed'.tr()),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: paletteColor(context, spec.accent),
-                        foregroundColor: paletteColor(context, AppTheme.onMedia),
+                        backgroundColor: spec.accent,
+                        foregroundColor: AppTheme.onMedia,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 18, vertical: 10),
                       ),
@@ -237,8 +237,8 @@ class StreamStatePlaceholderOverlay extends StatelessWidget {
                       icon: const Icon(Icons.open_in_new_rounded, size: 16),
                       label: Text('live.open_in_youtube'.tr()),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: paletteColor(context, Canopy.liveCrimson),
-                        foregroundColor: paletteColor(context, AppTheme.onMedia),
+                        backgroundColor: Canopy.liveCrimson,
+                        foregroundColor: AppTheme.onMedia,
                         padding: const EdgeInsets.symmetric(
                             horizontal: 18, vertical: 10),
                       ),
@@ -323,11 +323,11 @@ class _PlaceholderGlyphState extends State<_PlaceholderGlyph>
       height: 76,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: paletteColor(context, spec.accent).withValues(alpha: 0.12),
+        color: spec.accent.withValues(alpha: 0.12),
         border:
-            Border.all(color: paletteColor(context, spec.accent).withValues(alpha: 0.55), width: 1.5),
+            Border.all(color: spec.accent.withValues(alpha: 0.55), width: 1.5),
       ),
-      child: Icon(spec.icon, color: paletteColor(context, spec.accent), size: 34),
+      child: Icon(spec.icon, color: spec.accent, size: 34),
     );
 
     if (spec.showSpinner) {
@@ -339,7 +339,7 @@ class _PlaceholderGlyphState extends State<_PlaceholderGlyph>
             height: 92,
             child: HadayahLoadingIndicator(
               strokeWidth: 2,
-              valueColor: AlwaysStoppedAnimation<Color>(paletteColor(context, spec.accent)),
+              valueColor: AlwaysStoppedAnimation<Color>(spec.accent),
             ),
           ),
           glyph,

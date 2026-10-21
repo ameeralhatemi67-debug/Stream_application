@@ -411,7 +411,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
     return AspectRatio(
       aspectRatio: widget.aspectRatio,
       child: Container(
-        color: paletteColor(context, AppTheme.media),
+        color: AppTheme.media,
         child: Stack(
           alignment: Alignment.center,
           children: [
@@ -445,7 +445,7 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, AppTheme.media).withValues(alpha: 0.7),
+                  color: AppTheme.media.withValues(alpha: 0.7),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Row(
@@ -454,16 +454,16 @@ class _YouTubePlayerAdapterState extends State<YouTubePlayerAdapter>
                     Container(
                       width: 8,
                       height: 8,
-                      decoration: BoxDecoration(
-                        color: paletteColor(context, Canopy.liveCrimson),
+                      decoration: const BoxDecoration(
+                        color: Canopy.liveCrimson,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       'design_ui.youtube_player'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(context, AppTheme.onMedia),
+                      style: const TextStyle(
+                        color: AppTheme.onMedia,
                         fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.bold,
                       ),

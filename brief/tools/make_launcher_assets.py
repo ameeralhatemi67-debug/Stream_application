@@ -1,126 +1,120 @@
 #!/usr/bin/env python3
-"""Builds the launcher-icon source layers from the owner's supplied logo files.
+"""Builds the launcher-icon layers, splash mark and favicon in Hidayah Gold.
 
 Run from the repository root:  python brief/tools/make_launcher_assets.py
+then, from project/:            dart run flutter_launcher_icons
 
-Reads only `project/assets/logo/` and never writes to it: every file in there is
-owner-supplied and is preserved as delivered. The generated layers go to
-`project/assets/launcher/`, which `flutter_launcher_icons` consumes.
+The icon is the owner's gold mark (`clearlogo2.png`) on the Hidayah Gold
+"night" tile: slate s800 -> s900 -> s950 with a warm gold glow in the top
+corner (design review 2026-10-19). Hidayah Gold is the only design since
+2026-10-21; the green tile this script used to build is gone.
 
-Why the layers are built rather than taken straight from the supplied files:
+Reads only `project/assets/logo/` and never writes to it, except the 192 px
+browser tile the app bundles. Every other file in there is owner-supplied and
+is preserved as delivered. The layers go to `project/assets/launcher/`, which
+`flutter_launcher_icons` consumes.
 
-* An adaptive icon is 108x108dp and the launcher may mask it to a circle, a
-  squircle or a rounded square. Only the inner 72x72dp is guaranteed visible,
-  so a full-bleed mark gets its edges cut. `square.png` and `cercal.png` are
-  finished tiles with the mark already near the edge, so they are correct as a
-  legacy icon but wrong as an adaptive foreground.
-* The foreground therefore places the bare mark (`colored.png`) at
-  MARK_FRACTION of the canvas, inside the safe zone, on transparency, with the
-  tile's own background colour supplied separately as a flat layer.
-* Android 13+ themed icons need a single-colour silhouette with an alpha
-  channel; `black.png` is exactly that, so the monochrome layer is the same
-  geometry in black.
+Why layers rather than a finished tile: an adaptive icon is 108x108dp and the
+launcher may mask it to a circle or squircle; only the inner 72dp is sure to
+show. flutter_launcher_icons insets the foreground by 16% (to 68% of the
+canvas), so the mark is placed at MARK_FRACTION of that inset canvas.
+Android 13+ themed icons need a one-colour silhouette; `black.png` is one.
+
+The Play listing icon (store/assets/icon_512.png) is not written here; it is
+maintained by hand.
 """
 
 from __future__ import annotations
 
 import pathlib
-import sys
 
-from PIL import Image
+from PIL import Image, ImageDraw, ImageFilter
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 LOGO = ROOT / "project" / "assets" / "logo"
 OUT = ROOT / "project" / "assets" / "launcher"
-STORE = ROOT / "store" / "assets"
+RES = ROOT / "project" / "android" / "app" / "src" / "main" / "res"
 
 CANVAS = 1024
-# Fraction of the canvas width the mark occupies.
-#
-# The safe zone is NOT applied here: flutter_launcher_icons wraps the
-# foreground in `<inset android:inset="16%">`, which scales the drawable to 68%
-# of the 108dp canvas, or 73dp -- effectively the 72dp guaranteed-visible area
-# already.
-#
-# Leave a little more space around the owner's mark in Android's adaptive
-# icon mask. The SVG and original artwork stay untouched.
-MARK_FRACTION = 0.68
-# Sampled from the owner's square.png tile, so the generated background matches
-# the supplied artwork rather than approximating it.
-TILE_BACKGROUND = (238, 255, 243, 255)
-# Nominal width of the launch-screen mark, in density-independent pixels.
+S800, S900, S950 = (0x24, 0x2E, 0x37), (0x15, 0x1D, 0x24), (0x0B, 0x11, 0x17)
+GOLD = (0xC1, 0x92, 0x3B)
+# 0.45 of the full 108dp canvas, as the owner approved on a Samsung squircle
+# (2026-10-19), expressed against the 68% inset canvas.
+MARK_FRACTION = 0.45 / 0.68
+# Mark width on finished (legacy, iOS, web) tiles.
+MARK_TILE = 0.54
 SPLASH_MARK_DP = 160
 
 
-def centred(mark_path: pathlib.Path, *, black: bool) -> Image.Image:
-    """The mark, scaled into the safe zone and centred on a transparent canvas."""
-    mark = Image.open(mark_path).convert("RGBA")
-    target_w = int(CANVAS * MARK_FRACTION)
-    scale = target_w / mark.width
-    size = (target_w, max(1, int(round(mark.height * scale))))
-    mark = mark.resize(size, Image.LANCZOS)
-    if black:
-        # Keep the alpha, force the colour: a themed icon is tinted by the OS.
-        solid = Image.new("RGBA", mark.size, (0, 0, 0, 255))
-        solid.putalpha(mark.getchannel("A"))
-        mark = solid
-    canvas = Image.new("RGBA", (CANVAS, CANVAS), (0, 0, 0, 0))
-    canvas.alpha_composite(
-        mark, ((CANVAS - mark.width) // 2, (CANVAS - mark.height) // 2)
-    )
+def night(side: int) -> Image.Image:
+    """The night gradient (top-left to bottom-right) with the gold glow."""
+    tile = Image.new("RGB", (side, side))
+    px = tile.load()
+    for y in range(side):
+        for x in range(side):
+            t = (x + y) / (2 * (side - 1))
+            a, b, u = (S800, S900, t / .55) if t < .55 else (S900, S950, (t - .55) / .45)
+            px[x, y] = tuple(round(a[i] + (b[i] - a[i]) * u) for i in range(3))
+    glow = Image.new("L", (side, side))
+    ImageDraw.Draw(glow).ellipse(
+        (side * .45, -side * .55, side * 1.45, side * .45), fill=round(255 * .24))
+    glow = glow.filter(ImageFilter.GaussianBlur(side * .18))
+    tile.paste(Image.new("RGB", (side, side), GOLD), (0, 0), glow)
+    return tile.convert("RGBA")
+
+
+def place(canvas: Image.Image, mark: Image.Image, width_ratio: float) -> Image.Image:
+    side = canvas.width
+    width = round(side * width_ratio)
+    art = mark.resize((width, round(width * mark.height / mark.width)),
+                      Image.Resampling.LANCZOS)
+    canvas.alpha_composite(art, ((side - art.width) // 2, (side - art.height) // 2))
     return canvas
 
 
+def rounded_tile(mark: Image.Image, side: int) -> Image.Image:
+    big = side * 4
+    tile = place(night(big), mark, MARK_TILE)
+    mask = Image.new("L", (big, big))
+    ImageDraw.Draw(mask).rounded_rectangle((0, 0, big - 1, big - 1),
+                                           radius=round(big * .24), fill=255)
+    tile.putalpha(mask)
+    return tile.resize((side, side), Image.Resampling.LANCZOS)
+
+
 def main() -> int:
-    if not LOGO.is_dir():
-        print(f"missing {LOGO}", file=sys.stderr)
-        return 2
     OUT.mkdir(parents=True, exist_ok=True)
-    STORE.mkdir(parents=True, exist_ok=True)
+    mark = Image.open(LOGO / "clearlogo2.png").convert("RGBA")
+    mark = mark.crop(mark.getbbox())
 
-    centred(LOGO / "colored.png", black=False).save(OUT / "adaptive_foreground.png")
-    centred(LOGO / "black.png", black=True).save(OUT / "adaptive_monochrome.png")
-    Image.new("RGBA", (CANVAS, CANVAS), TILE_BACKGROUND).save(
-        OUT / "adaptive_background.png"
-    )
+    night(CANVAS).save(OUT / "adaptive_background.png")
+    place(Image.new("RGBA", (CANVAS, CANVAS)), mark, MARK_FRACTION).save(
+        OUT / "adaptive_foreground.png")
+    black = Image.open(LOGO / "black.png").convert("RGBA")
+    black = black.crop(black.getbbox())
+    solid = Image.new("RGBA", black.size, (0, 0, 0, 255))
+    solid.putalpha(black.getchannel("A"))
+    place(Image.new("RGBA", (CANVAS, CANVAS)), solid, MARK_FRACTION).save(
+        OUT / "adaptive_monochrome.png")
+    # The square tile for legacy mipmaps, iOS (no alpha, the OS rounds it) and
+    # the web manifest icons.
+    place(night(CANVAS), mark, MARK_TILE).convert("RGB").save(OUT / "icon_1024.png")
 
-    # The finished square tile, for the legacy mipmaps, the web icons and the
-    # store listing. Downscaled from the supplied 1232px original.
-    tile = Image.open(LOGO / "square.png").convert("RGBA")
-    tile.resize((CANVAS, CANVAS), Image.LANCZOS).save(OUT / "icon_1024.png")
-    # Play's listing icon is 512x512 and must not carry an alpha channel.
-    tile.resize((512, 512), Image.LANCZOS).convert("RGB").save(
-        STORE / "icon_512.png"
-    )
-
-    # Splash mark: the bare coloured mark on transparency, at a nominal 160dp
-    # across, rendered per density so the launch window can centre a bitmap
-    # without scaling it. The splash background is white in both light and dark
-    # mode, because the app itself is light-only (ThemeMode.light, scheme A).
-    mark = Image.open(LOGO / "colored.png").convert("RGBA")
-    res = ROOT / "project" / "android" / "app" / "src" / "main" / "res"
-    for bucket, dp_scale in (
-        ("mdpi", 1.0),
-        ("hdpi", 1.5),
-        ("xhdpi", 2.0),
-        ("xxhdpi", 3.0),
-        ("xxxhdpi", 4.0),
-    ):
+    # Splash mark: the gold mark at a nominal 160dp, per density, on the
+    # night launch window (see drawable/launch_background.xml).
+    for bucket, dp_scale in (("mdpi", 1.0), ("hdpi", 1.5), ("xhdpi", 2.0),
+                             ("xxhdpi", 3.0), ("xxxhdpi", 4.0)):
         width = int(SPLASH_MARK_DP * dp_scale)
-        height = max(1, int(round(mark.height * width / mark.width)))
-        target = res / f"drawable-{bucket}"
+        height = max(1, round(mark.height * width / mark.width))
+        target = RES / f"drawable-{bucket}"
         target.mkdir(parents=True, exist_ok=True)
-        mark.resize((width, height), Image.LANCZOS).save(target / "splash_logo.png")
-        print(f"{(target / 'splash_logo.png').relative_to(ROOT)}: {width}x{height}")
+        mark.resize((width, height), Image.Resampling.LANCZOS).save(target / "splash_logo.png")
 
-    # Web favicon. flutter_launcher_icons writes web/icons/ but leaves
-    # web/favicon.png as Flutter's default, which is the one a browser tab
-    # actually shows.
-    favicon = ROOT / "project" / "web" / "favicon.png"
-    tile.resize((64, 64), Image.LANCZOS).save(favicon)
-    print(f"{favicon.relative_to(ROOT)}: 64x64")
+    # Browser tab icon and the bundled 192 px tile.
+    rounded_tile(mark, 64).save(ROOT / "project" / "web" / "favicon.png")
+    rounded_tile(mark, 192).save(LOGO / "hidayah_icon_192.png")
 
-    for p in sorted(OUT.iterdir()) + [STORE / "icon_512.png"]:
+    for p in sorted(OUT.iterdir()):
         with Image.open(p) as im:
             print(f"{p.relative_to(ROOT)}: {im.size[0]}x{im.size[1]} {im.mode}")
     return 0

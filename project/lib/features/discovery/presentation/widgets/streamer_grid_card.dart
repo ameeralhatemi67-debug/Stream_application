@@ -88,7 +88,7 @@ class StreamerGridCard extends StatelessWidget {
                   if (isOwnCard)
                     DecoratedBox(
                         decoration: BoxDecoration(
-                            color: paletteColor(context, Canopy.paper),
+                            color: Canopy.paper,
                             borderRadius:
                                 BorderRadius.circular(CanopyRadius.pill)),
                         child: Padding(
@@ -99,7 +99,7 @@ class StreamerGridCard extends StatelessWidget {
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
-                                    ?.copyWith(color: paletteColor(context, Canopy.brandGreen))))),
+                                    ?.copyWith(color: Canopy.brandGreen)))),
                 ]),
             onTap: openChannel,
             footer: tags.isEmpty
@@ -111,7 +111,7 @@ class StreamerGridCard extends StatelessWidget {
                         for (final tag in tags)
                           DecoratedBox(
                               decoration: BoxDecoration(
-                                  color: paletteColor(context, Canopy.mint),
+                                  color: Canopy.mint,
                                   borderRadius:
                                       BorderRadius.circular(CanopyRadius.pill)),
                               child: Padding(

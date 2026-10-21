@@ -96,9 +96,9 @@ class FloatingReactionsOverlayState extends State<FloatingReactionsOverlay> {
                             child: Container(
                                 padding: const EdgeInsets.all(AppTheme.spaceSm),
                                 decoration: BoxDecoration(
-                                    color: paletteColor(context, Canopy.canopy900),
+                                    color: Canopy.canopy900,
                                     shape: BoxShape.circle,
-                                    border: Border.all(color: paletteColor(context, Canopy.mist))),
+                                    border: Border.all(color: Canopy.mist)),
                                 child: Text(particle.glyph,
                                     style: const TextStyle(
                                         fontSize: CanopySize.reactionIcon))))),

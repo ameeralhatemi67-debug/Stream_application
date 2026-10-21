@@ -22,12 +22,12 @@ class _PhoneCameraPreviewState extends State<PhoneCameraPreview> {
       RtmpPublishEngine.iosNativePublisherAvailable();
 
   Widget _unavailable(String key) => ColoredBox(
-        color: paletteColor(context, AppTheme.media),
+        color: AppTheme.media,
         child: Center(
             child: Text(key.tr(),
                 textAlign: TextAlign.center,
                 style:
-                    TextStyle(color: paletteColor(context, AppTheme.onMedia).withValues(alpha: 0.7)))),
+                    TextStyle(color: AppTheme.onMedia.withValues(alpha: 0.7)))),
       );
 
   @override

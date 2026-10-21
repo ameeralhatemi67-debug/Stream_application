@@ -153,10 +153,10 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
               _texture,
               _pointer,
               Directionality.of(context),
-              // On the gold palette's night panels the star reads as gilt.
-              paletteOf(context).hidayah && widget.textureColor == Canopy.paper
+              // On night panels the star reads as gilt.
+              widget.textureColor == Canopy.paper
                   ? HidayahGold.g300
-                  : paletteColor(context, widget.textureColor),
+                  : widget.textureColor,
               widget.textureOpacity)));
   @override
   Widget build(BuildContext context) => MouseRegion(
@@ -166,7 +166,7 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
       child: RepaintBoundary(
           child: CustomPaint(
               painter: widget.gradient
-                  ? _PanelGradient(_gradient, Directionality.of(context), paletteOf(context))
+                  ? _PanelGradient(_gradient, Directionality.of(context))
                   : null,
               child: RepaintBoundary(
                   child: Stack(fit: StackFit.passthrough, children: [
@@ -186,8 +186,7 @@ class _CanopyLatticeBackgroundState extends State<CanopyLatticeBackground>
 }
 
 class _PanelGradient extends CustomPainter {
-  _PanelGradient(this.motion, this.direction, this.palette) : super(repaint: motion);
-  final AppPalette palette;
+  _PanelGradient(this.motion, this.direction) : super(repaint: motion);
   final Animation<double> motion;
   final TextDirection direction;
   @override
@@ -196,13 +195,13 @@ class _PanelGradient extends CustomPainter {
     canvas.drawRect(
         rect,
         Paint()
-          ..shader = palette.gradient(CanopyGradients.panelAt(motion.value))
+          ..shader = CanopyGradients.panelAt(motion.value)
               .createShader(rect, textDirection: direction));
   }
 
   @override
   bool shouldRepaint(_PanelGradient old) =>
-      old.motion != motion || old.direction != direction || old.palette.hidayah != palette.hidayah;
+      old.motion != motion || old.direction != direction;
 }
 
 class _Lattice extends CustomPainter {

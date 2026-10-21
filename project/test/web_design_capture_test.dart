@@ -48,7 +48,6 @@ AppProvider _provider() {
 
 Future<void> _shot(WidgetTester tester, String name, Widget screen,
     {required Size size,
-    bool gold = true,
     String lang = 'en',
     AppProvider? provider}) async {
   tester.view.physicalSize = size;
@@ -63,7 +62,7 @@ Future<void> _shot(WidgetTester tester, String name, Widget screen,
       child: Builder(
           builder: (context) => MaterialApp(
               debugShowCheckedModeBanner: false,
-              theme: AppTheme.forLocale(context.locale, hidayah: gold),
+              theme: AppTheme.forLocale(context.locale),
               locale: context.locale,
               supportedLocales: context.supportedLocales,
               localizationsDelegates: context.localizationDelegates,
@@ -220,11 +219,6 @@ void main() {
     await _shot(tester, 'web-studio-en',
         const LiveBroadcasterStudioSheet(initialMode: StudioMode.obs),
         size: const Size(1440, 900));
-  });
-  testWidgets('capture green discovery for comparison', skip: skip,
-      (tester) async {
-    await _shot(tester, 'green-discovery-en', const DiscoveryFeedScreen(),
-        size: const Size(1440, 900), gold: false);
   });
   for (final lang in ['en', 'ar']) {
     testWidgets('capture phone gold $lang', skip: skip, (tester) async {

@@ -175,7 +175,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
           UpcomingScheduleTab(streamer: streamer),
         ]);
     Widget panel(Widget child) => DecoratedBox(
-        decoration: BoxDecoration(gradient: paletteGradient(context, AppGradients.panel)),
+        decoration: const BoxDecoration(gradient: AppGradients.panel),
         child: child);
     if (context.usesHidayahWeb) {
       return _buildWebProfile(context, streamer, isFollowing, hasReminder,
@@ -204,7 +204,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
             ],
         body: panel(body()));
     return Scaffold(
-        backgroundColor: paletteColor(context, Canopy.dawn),
+        backgroundColor: Canopy.dawn,
         bottomNavigationBar: _dockPrimary
             ? SafeArea(
                 top: false,
@@ -281,9 +281,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                 child: CanopyLatticeBackground(
                     child: SizedBox.expand(
                         child: ColoredBox(
-                            color: paletteOf(context).hidayah
-                                ? Canopy.transparent
-                                : paletteColor(context, CanopyGradients.entryTextScrim),
+                            color: Canopy.transparent,
                             child: Padding(
                                 padding: const EdgeInsetsDirectional.fromSTEB(
                                     AppTheme.spaceSm,
@@ -298,14 +296,10 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                     child: SizedBox(
                                         height: CanopySize.target,
                                         child: ColorFiltered(
-                                          // Both palettes put a dark panel
-                                          // behind these icons (green, or
-                                          // gold's night slate).
-                                          colorFilter: ColorFilter.mode(
-                                              paletteOf(context).hidayah
-                                                  ? HidayahGold.g50
-                                                  : Canopy.paper,
-                                              BlendMode.srcIn),
+                                          // The night panel sits behind
+                                          // these icons.
+                                          colorFilter: const ColorFilter.mode(
+                                              HidayahGold.g50, BlendMode.srcIn),
                                           child: Row(children: [
                                           CaIconButton(
                                               bare: true,
@@ -423,7 +417,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                       style: Theme.of(context)
                                           .textTheme
                                           .bodyMedium
-                                          ?.copyWith(color: paletteColor(context, Canopy.brandGreen))),
+                                          ?.copyWith(color: Canopy.brandGreen)),
                                   LayoutBuilder(
                                       builder: (context, constraints) {
                                     final bioStyle =
@@ -463,7 +457,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                                         ? 'profile.show_less'
                                                         : 'profile.show_more')
                                                     .tr(),
-                                                color: paletteColor(context, Canopy.brandGreen),
+                                                color: Canopy.brandGreen,
                                                 icon: Icon(_detailsExpanded
                                                     ? Icons
                                                         .keyboard_arrow_up_rounded
@@ -779,13 +773,13 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                     style: Theme.of(context)
                                         .textTheme
                                         .labelLarge
-                                        ?.copyWith(color: paletteColor(context, Canopy.ink))),
+                                        ?.copyWith(color: Canopy.ink)),
                                 Text(
                                     '@${speaker.youtubeHandle ?? streamer.youtubeHandle}',
                                     style: Theme.of(context)
                                         .textTheme
                                         .bodySmall
-                                        ?.copyWith(color: paletteColor(context, Canopy.ink))),
+                                        ?.copyWith(color: Canopy.ink)),
                                 Text(speaker.getLocalizedRole(lang),
                                     style:
                                         Theme.of(context).textTheme.bodySmall),
@@ -870,11 +864,11 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
 
     return Builder(builder: (context) {
       final titleStyle =
-          Theme.of(context).textTheme.labelLarge?.copyWith(color: paletteColor(context, Canopy.ink));
+          Theme.of(context).textTheme.labelLarge?.copyWith(color: Canopy.ink);
       final countStyle = Theme.of(context)
           .textTheme
           .bodySmall
-          ?.copyWith(color: paletteColor(context, Canopy.brandGreen), fontWeight: FontWeight.w600);
+          ?.copyWith(color: Canopy.brandGreen, fontWeight: FontWeight.w600);
       // One shared row height (a 2-line title and the count line), so every
       // playlist is the same size whatever its title.
       final rowHeight = [
@@ -929,7 +923,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                   ),
                   // The chevron glyph mirrors itself in right-to-left, so it always
                   // points forward.
-                  Icon(Icons.chevron_right_rounded, color: paletteColor(context, Canopy.slate)),
+                  const Icon(Icons.chevron_right_rounded, color: Canopy.slate),
                 ],
               ),
             ),
@@ -969,7 +963,7 @@ class _SliverTabBarDelegate extends SliverPersistentHeaderDelegate {
   Widget build(
       BuildContext context, double shrinkOffset, bool overlapsContent) {
     return Container(
-      color: paletteColor(context, Canopy.dawn),
+      color: Canopy.dawn,
       child: _tabBar,
     );
   }
@@ -989,7 +983,7 @@ class _AvatarStroke extends StatelessWidget {
   @override
   Widget build(BuildContext context) => DecoratedBox(
       decoration: BoxDecoration(
-          color: paletteColor(context, Canopy.paper),
+          color: Canopy.paper,
           shape: org ? BoxShape.rectangle : BoxShape.circle,
           borderRadius: org
               ? BorderRadius.circular(CanopyRadius.orgAvatar +

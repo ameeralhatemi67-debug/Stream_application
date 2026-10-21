@@ -148,18 +148,18 @@ class _HiddenFrame extends StatelessWidget {
                   child: LayoutBuilder(builder: (context, constraints) {
             final roomy = constraints.maxHeight >= 110;
             return ColoredBox(
-                color: paletteColor(context, Canopy.forestDeep)
+                color: Canopy.forestDeep
                     .withValues(alpha: .5),
                 child: Center(
                     child: Column(mainAxisSize: MainAxisSize.min, children: [
-                  CaIcon(CaGlyph.eyeoff,
-                      size: 28, color: paletteColor(context, Canopy.paper)),
+                  const CaIcon(CaGlyph.eyeoff,
+                      size: 28, color: Canopy.paper),
                   if (roomy) ...[
                     const SizedBox(height: AppTheme.spaceXs),
                     Text('content_actions.hidden_badge'.tr(),
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            color: paletteColor(context, Canopy.paper))),
+                            color: Canopy.paper)),
                   ],
                 ])));
           }))),

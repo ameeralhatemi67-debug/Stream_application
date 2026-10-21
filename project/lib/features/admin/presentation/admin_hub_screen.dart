@@ -172,11 +172,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: paletteColor(context, Canopy.leaf),
+            color: Canopy.leaf,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33123E26),
+                color: Color(0x334B320E),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -184,14 +184,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
           child: Row(
             children: [
-              Icon(Icons.check_circle_outline_rounded,
-                  color: paletteColor(context, AppTheme.onMedia)),
+              const Icon(Icons.check_circle_outline_rounded,
+                  color: AppTheme.onMedia),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
-                  style: TextStyle(
-                    color: paletteColor(context, AppTheme.onMedia),
+                  style: const TextStyle(
+                    color: AppTheme.onMedia,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -213,11 +213,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: paletteColor(context, Canopy.liveCrimson),
+            color: Canopy.liveCrimson,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33123E26),
+                color: Color(0x334B320E),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -225,13 +225,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           ),
           child: Row(
             children: [
-              Icon(Icons.error_outline_rounded, color: paletteColor(context, AppTheme.onMedia)),
+              const Icon(Icons.error_outline_rounded, color: AppTheme.onMedia),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
-                  style: TextStyle(
-                    color: paletteColor(context, AppTheme.onMedia),
+                  style: const TextStyle(
+                    color: AppTheme.onMedia,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -307,13 +307,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     // Access Guard
     if (!provider.isAdminUser) {
       return Scaffold(
-        backgroundColor: paletteColor(context, Canopy.dawn),
+        backgroundColor: Canopy.dawn,
         appBar: CaAppBar(
-          backgroundColor: paletteColor(context, AppTheme.surface),
+          backgroundColor: AppTheme.surface,
           languageBare: true,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_rounded,
-                color: paletteColor(context, Canopy.ink)),
+            icon: const Icon(Icons.arrow_back_rounded,
+                color: Canopy.ink),
             onPressed: () => context.go('/feed'),
           ),
           title: Text('design_ui.access_denied'.tr()),
@@ -325,20 +325,20 @@ class _AdminHubScreenState extends State<AdminHubScreen>
             padding: const EdgeInsets.all(AppTheme.spaceXl),
             margin: const EdgeInsets.all(AppTheme.spaceLg),
             decoration: BoxDecoration(
-              color: paletteColor(context, AppTheme.surface),
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.5)),
+              border: Border.all(color: Canopy.liveCrimson.withValues(alpha: 0.5)),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.gpp_bad_rounded,
-                    color: paletteColor(context, Canopy.liveCrimson), size: 54),
+                const Icon(Icons.gpp_bad_rounded,
+                    color: Canopy.liveCrimson, size: 54),
                 const SizedBox(height: AppTheme.spaceMd),
                 Text(
                   'design_ui.admin_access_required'.tr(),
-                  style: TextStyle(
-                    color: paletteColor(context, Canopy.ink),
+                  style: const TextStyle(
+                    color: Canopy.ink,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -348,8 +348,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   'design_ui.your_account_does_not_have_admin_or_master_admin_access_ask_a_mas'
                       .tr(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: paletteColor(context, Canopy.slate),
+                  style: const TextStyle(
+                    color: Canopy.slate,
                     fontSize: 12,
                   ),
                 ),
@@ -357,8 +357,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 ElevatedButton(
                   onPressed: () => context.go('/settings'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: paletteColor(context, AppTheme.primary),
-                    foregroundColor: paletteColor(context, AppTheme.onMedia),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.onMedia,
                   ),
                   child: Text('design_ui.go_to_account_settings'.tr()),
                 ),
@@ -391,7 +391,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       ],
     );
     return Scaffold(
-      backgroundColor: paletteColor(context, Canopy.dawn),
+      backgroundColor: Canopy.dawn,
       appBar: CaAppBar(
         languageBare: true,
         leading: isDesktop
@@ -476,7 +476,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         children: [
           if (closeDrawer)
             ListTile(
-                leading: CaIcon(CaGlyph.back, color: paletteColor(context, Canopy.slate)),
+                leading: const CaIcon(CaGlyph.back, color: Canopy.slate),
                 title: Text('common.back'.tr()),
                 onTap: () => context.go('/feed')),
           for (final group in _adminGroups) ...[
@@ -485,7 +485,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     AppTheme.spaceLg, AppTheme.spaceLg, AppTheme.spaceSm),
                 child: Text(group.title.tr(),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: paletteColor(context, Canopy.haze), fontWeight: FontWeight.w600))),
+                        color: Canopy.haze, fontWeight: FontWeight.w600))),
             for (final i in [
               for (var i = 0; i < entries.length; i++)
                 if (group.labels.contains(entries[i].label)) i
@@ -495,8 +495,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 child: ListTile(
                   key: ValueKey(entries[i].label),
                   selected: _tabController.index == i,
-                  selectedColor: paletteColor(context, AppTheme.primary),
-                  selectedTileColor: paletteColor(context, Canopy.mint),
+                  selectedColor: AppTheme.primary,
+                  selectedTileColor: Canopy.mint,
                   minVerticalPadding: AppTheme.spaceMd,
                   titleTextStyle: Theme.of(context)
                       .textTheme
@@ -506,8 +506,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                   leading: CaIcon(entries[i].icon,
                       color: _tabController.index == i
-                          ? paletteColor(context, Canopy.brandGreen)
-                          : paletteColor(context, Canopy.slate)),
+                          ? Canopy.brandGreen
+                          : Canopy.slate),
                   title: Text(entries[i].label.tr()),
                   trailing: entries[i].count > 0
                       ? AdminCount(
@@ -542,13 +542,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
         children: [
           Row(
             children: [
-              Icon(Icons.science_rounded,
-                  color: paletteColor(context, Canopy.liveCrimson), size: 20),
+              const Icon(Icons.science_rounded,
+                  color: Canopy.liveCrimson, size: 20),
               const SizedBox(width: 8),
               Text(
                 'admin.tab_testing'.tr(),
-                style: TextStyle(
-                  color: paletteColor(context, Canopy.ink),
+                style: const TextStyle(
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -559,10 +559,10 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           Container(
             padding: const EdgeInsets.all(AppTheme.spaceLg),
             decoration: BoxDecoration(
-              color: paletteColor(context, AppTheme.surface),
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               border: Border.all(
-                color: isPitchActive ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, Canopy.hairline),
+                color: isPitchActive ? Canopy.liveCrimson : Canopy.hairline,
                 width: isPitchActive ? 1.5 : 1.0,
               ),
             ),
@@ -574,15 +574,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   children: [
                     Text(
                       'settings.pitch_mode'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(context, Canopy.ink),
+                      style: const TextStyle(
+                        color: Canopy.ink,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
                     ),
                     Switch(
                       value: isPitchActive,
-                      activeThumbColor: paletteColor(context, Canopy.liveCrimson),
+                      activeThumbColor: Canopy.liveCrimson,
                       onChanged: (val) => provider.setPitchDirectorMode(val),
                     ),
                   ],
@@ -590,8 +590,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 const SizedBox(height: 6),
                 Text(
                   'settings.pitch_mode_desc'.tr(),
-                  style: TextStyle(
-                      color: paletteColor(context, Canopy.slate), fontSize: 12),
+                  style: const TextStyle(
+                      color: Canopy.slate, fontSize: 12),
                 ),
                 const SizedBox(height: AppTheme.spaceMd),
                 SizedBox(
@@ -601,8 +601,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         size: 18),
                     label: Text('settings.trigger_notification'.tr()),
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: paletteColor(context, Canopy.liveCrimson),
-                      side: BorderSide(color: paletteColor(context, Canopy.liveCrimson)),
+                      foregroundColor: Canopy.liveCrimson,
+                      side: const BorderSide(color: Canopy.liveCrimson),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                           borderRadius:
@@ -645,8 +645,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               const SizedBox(width: 8),
               Expanded(
                 child: Text('admin.tab_overview'.tr(),
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.ink),
+                    style: const TextStyle(
+                      color: Canopy.ink,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     )),
@@ -674,37 +674,37 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   title: 'admin.loaded_broadcasters'.tr(),
                   value: '$totalBroadcasters',
                   icon: Icons.cell_tower_rounded,
-                  color: paletteColor(context, Canopy.liveCrimson),
+                  color: Canopy.liveCrimson,
                 ),
                 _buildKpiCard(
                   title: 'admin.kpi_verified_scholars'.tr(),
                   value: '$verifiedScholars',
                   icon: Icons.school_rounded,
-                  color: paletteColor(context, AppTheme.primary),
+                  color: AppTheme.primary,
                 ),
                 _buildKpiCard(
                   title: 'admin.loaded_organizations'.tr(),
                   value: '$orgVenues',
                   icon: Icons.apartment_rounded,
-                  color: paletteColor(context, AppTheme.accent),
+                  color: AppTheme.accent,
                 ),
                 _buildKpiCard(
                   title: 'admin.kpi_pending_apps'.tr(),
                   value: '$pendingApps',
                   icon: Icons.pending_actions_rounded,
-                  color: paletteColor(context, AppTheme.warning),
+                  color: AppTheme.warning,
                 ),
                 _buildKpiCard(
                   title: 'admin.kpi_active_viewers'.tr(),
                   value: null,
                   icon: Icons.group_rounded,
-                  color: paletteColor(context, Canopy.leaf),
+                  color: Canopy.leaf,
                 ),
                 _buildKpiCard(
                   title: 'admin.kpi_auditorium_seats'.tr(),
                   value: null,
                   icon: Icons.event_seat_rounded,
-                  color: paletteColor(context, AppTheme.primary),
+                  color: AppTheme.primary,
                 ),
               ].map((tile) => SizedBox(width: width, child: tile)).toList(),
             );
@@ -714,8 +714,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           // Quick Action Shortcuts
           Text(
             'design_ui.quick_actions_governance_shortcuts'.tr(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.ink),
+            style: const TextStyle(
+              color: Canopy.ink,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -780,16 +780,16 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       child: Container(
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         decoration: BoxDecoration(
-          color: paletteColor(context, AppTheme.surface),
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          border: Border.all(color: paletteColor(context, Canopy.hairline)),
+          border: Border.all(color: Canopy.hairline),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceSm),
               decoration: BoxDecoration(
-                color: paletteColor(context, Canopy.mint),
+                color: Canopy.mint,
                 borderRadius: BorderRadius.circular(AppTheme.radiusSm),
               ),
               child: CaIcon(icon),
@@ -801,8 +801,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.ink),
+                    style: const TextStyle(
+                      color: Canopy.ink,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -810,8 +810,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.slate),
+                    style: const TextStyle(
+                      color: Canopy.slate,
                       fontSize: 12,
                     ),
                   ),
@@ -819,9 +819,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ),
             ),
             const SizedBox(width: AppTheme.spaceSm),
-            RotatedBox(
+            const RotatedBox(
                 quarterTurns: 2,
-                child: CaIcon(CaGlyph.back, color: paletteColor(context, Canopy.slate))),
+                child: CaIcon(CaGlyph.back, color: Canopy.slate)),
           ],
         ),
       ),
@@ -880,7 +880,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               IconButton(
                 tooltip: 'admin.refresh_reviews'.tr(),
                 icon:
-                    Icon(Icons.refresh_rounded, color: paletteColor(context, AppTheme.primary)),
+                    const Icon(Icons.refresh_rounded, color: AppTheme.primary),
                 onPressed: () => provider.refreshAdminData(),
               ),
             ],
@@ -901,7 +901,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         : 'Select all pending',
                     child: Checkbox(
                       value: allVisiblePendingSelected,
-                      activeColor: paletteColor(context, AppTheme.primary),
+                      activeColor: AppTheme.primary,
                       onChanged: (_) => setState(() {
                         if (allVisiblePendingSelected) {
                           _selectedApplicationIds
@@ -918,23 +918,23 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             readOnly: blocked,
                             controller: _appSearchController,
                             onChanged: (_) => setState(() {}),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.ink), fontSize: 13),
+                            style: const TextStyle(
+                                color: Canopy.ink, fontSize: 13),
                             decoration: InputDecoration(
                               hintText: 'admin.search_applications'.tr(),
-                              hintStyle: TextStyle(
-                                  color: paletteColor(context, Canopy.slate), fontSize: 12),
-                              prefixIcon: Icon(Icons.search_rounded,
-                                  color: paletteColor(context, Canopy.slate), size: 18),
+                              hintStyle: const TextStyle(
+                                  color: Canopy.slate, fontSize: 12),
+                              prefixIcon: const Icon(Icons.search_rounded,
+                                  color: Canopy.slate, size: 18),
                               filled: true,
-                              fillColor: paletteColor(context, AppTheme.surface),
+                              fillColor: AppTheme.surface,
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 10),
                               border: OutlineInputBorder(
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusMd),
                                 borderSide:
-                                    BorderSide(color: paletteColor(context, Canopy.hairline)),
+                                    const BorderSide(color: Canopy.hairline),
                               ),
                             ),
                           )),
@@ -968,14 +968,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.inbox_rounded,
-                              size: 48, color: paletteColor(context, Canopy.slate)),
+                          const Icon(Icons.inbox_rounded,
+                              size: 48, color: Canopy.slate),
                           const SizedBox(height: 12),
                           Text(
                             'design_ui.no_applications_match_the_selected_filter'
                                 .tr(),
                             style:
-                                TextStyle(color: paletteColor(context, Canopy.slate)),
+                                const TextStyle(color: Canopy.slate),
                           ),
                         ],
                       ),
@@ -1044,12 +1044,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       Text('admin.log_$action'.tr()),
                     ]),
                 Text('${event['actor_name'] ?? 'Admin'} • $when',
-                    style: TextStyle(color: paletteColor(context, Canopy.slate))),
+                    style: const TextStyle(color: Canopy.slate)),
                 if ((event['reason'] as String? ?? '').isNotEmpty)
                   Text(event['reason'] as String),
                 if (localOnly)
                   Text('admin.local_log_notice'.tr(),
-                      style: TextStyle(color: paletteColor(context, Canopy.slate))),
+                      style: const TextStyle(color: Canopy.slate)),
                 Wrap(spacing: AppTheme.spaceSm, children: [
                   TextButton.icon(
                     onPressed: () =>
@@ -1204,20 +1204,20 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
       decoration: BoxDecoration(
-        color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.1),
+        color: AppTheme.primary.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.4)),
+        border: Border.all(color: AppTheme.primary.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          Icon(Icons.check_box_rounded,
-              size: 16, color: paletteColor(context, AppTheme.primary)),
+          const Icon(Icons.check_box_rounded,
+              size: 16, color: AppTheme.primary),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               'admin.selected_count'.tr(namedArgs: {'count': '$count'}),
-              style: TextStyle(
-                color: paletteColor(context, Canopy.ink),
+              style: const TextStyle(
+                color: Canopy.ink,
                 fontSize: 12.5,
                 fontWeight: FontWeight.bold,
               ),
@@ -1226,14 +1226,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           TextButton(
             onPressed: () => setState(() => _selectedApplicationIds.clear()),
             child: Text('design_ui.clear'.tr(),
-                style: TextStyle(color: paletteColor(context, Canopy.slate))
+                style: const TextStyle(color: Canopy.slate)
                     .copyWith(fontSize: 12)),
           ),
           const SizedBox(width: 4),
           OutlinedButton.icon(
             style: OutlinedButton.styleFrom(
-              foregroundColor: paletteColor(context, Canopy.liveCrimson),
-              side: BorderSide(color: paletteColor(context, Canopy.liveCrimson)),
+              foregroundColor: Canopy.liveCrimson,
+              side: const BorderSide(color: Canopy.liveCrimson),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             icon: const Icon(Icons.cancel_outlined, size: 15),
@@ -1243,8 +1243,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           const SizedBox(width: 8),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: paletteColor(context, Canopy.leaf),
-              foregroundColor: paletteColor(context, AppTheme.onMedia),
+              backgroundColor: Canopy.leaf,
+              foregroundColor: AppTheme.onMedia,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             ),
             icon: const Icon(Icons.done_all_rounded, size: 15),
@@ -1262,34 +1262,34 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       context: context,
       builder: (dialogContext) {
         return CaAlertDialog(
-          backgroundColor: paletteColor(dialogContext, AppTheme.surface),
+          backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text(
             'design_ui.approve_selected_applications'.tr(),
-            style: TextStyle(
-                color: paletteColor(dialogContext, Canopy.ink),
+            style: const TextStyle(
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 16),
           ),
           content: Text(
             'This will approve ${ids.length} pending application${ids.length == 1 ? '' : 's'}, creating a live broadcaster profile for each.',
-            style: TextStyle(color: paletteColor(dialogContext, Canopy.slate), fontSize: 12),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze)),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: paletteColor(dialogContext, Canopy.leaf),
-                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia),
+                backgroundColor: Canopy.leaf,
+                foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
                 Navigator.pop(dialogContext);
@@ -1319,16 +1319,16 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       context: context,
       builder: (dialogContext) {
         return CaAlertDialog(
-          backgroundColor: paletteColor(dialogContext, AppTheme.surface),
+          backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text(
             'admin.batch_reject_title'
                 .tr(namedArgs: {'count': '${ids.length}'}),
-            style: TextStyle(
-                color: paletteColor(dialogContext, Canopy.ink),
+            style: const TextStyle(
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 16),
           ),
@@ -1339,27 +1339,27 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               Text(
                 'design_ui.this_feedback_note_is_sent_to_every_selected_applicant'
                     .tr(),
-                style: TextStyle(
-                    color: paletteColor(dialogContext, Canopy.slate), fontSize: 12),
+                style: const TextStyle(
+                    color: Canopy.slate, fontSize: 12),
               ),
               const SizedBox(height: AppTheme.spaceMd),
               PhoneInputGuard(builder: (context, blocked) => TextField(
                         readOnly: blocked,
                         controller: reasonController,
                         maxLines: 3,
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.ink), fontSize: 13),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13),
                         decoration: InputDecoration(
                           hintText: 'admin.reject_dialog_hint'.tr(),
-                          hintStyle: TextStyle(
-                              color: paletteColor(context, Canopy.haze), fontSize: 12),
+                          hintStyle: const TextStyle(
+                              color: Canopy.haze, fontSize: 12),
                           filled: true,
-                          fillColor: paletteColor(context, Canopy.mint),
+                          fillColor: Canopy.mint,
                           border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd),
                             borderSide:
-                                BorderSide(color: paletteColor(context, Canopy.hairline)),
+                                const BorderSide(color: Canopy.hairline),
                           ),
                         ),
                       )),
@@ -1370,13 +1370,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze)),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
-                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia),
+                backgroundColor: Canopy.liveCrimson,
+                foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
                 final reason = reasonController.text.trim();
@@ -1410,15 +1410,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      selectedColor: paletteColor(context, AppTheme.primary).withValues(alpha: 0.2),
-      backgroundColor: paletteColor(context, AppTheme.surface),
+      selectedColor: AppTheme.primary.withValues(alpha: 0.2),
+      backgroundColor: AppTheme.surface,
       labelStyle: TextStyle(
-        color: isSelected ? paletteColor(context, AppTheme.primary) : paletteColor(context, Canopy.slate),
+        color: isSelected ? AppTheme.primary : Canopy.slate,
         fontSize: 12,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? paletteColor(context, AppTheme.primary) : paletteColor(context, Canopy.hairline),
+        color: isSelected ? AppTheme.primary : Canopy.hairline,
       ),
       onSelected: (_) => setState(() => _applicationFilter = status),
     );
@@ -1431,19 +1431,19 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
     switch (app.status) {
       case ApplicationStatus.approved:
-        statusColor = paletteColor(context, Canopy.leaf);
+        statusColor = Canopy.leaf;
         statusText = 'admin.filter_approved'.tr();
         break;
       case ApplicationStatus.rejected:
-        statusColor = paletteColor(context, Canopy.liveCrimson);
+        statusColor = Canopy.liveCrimson;
         statusText = 'admin.filter_rejected'.tr();
         break;
       case ApplicationStatus.suspended:
-        statusColor = paletteColor(context, Canopy.liveCrimson);
+        statusColor = Canopy.liveCrimson;
         statusText = 'admin.suspended'.tr();
         break;
       case ApplicationStatus.pending:
-        statusColor = paletteColor(context, AppTheme.warning);
+        statusColor = AppTheme.warning;
         statusText = 'admin.filter_pending'.tr();
         break;
     }
@@ -1462,7 +1462,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     padding: const EdgeInsetsDirectional.only(end: 4, top: 4),
                     child: Checkbox(
                       value: _selectedApplicationIds.contains(app.id),
-                      activeColor: paletteColor(context, AppTheme.primary),
+                      activeColor: AppTheme.primary,
                       onChanged: (checked) => setState(() {
                         if (checked == true) {
                           _selectedApplicationIds.add(app.id);
@@ -1493,8 +1493,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         children: [
                           Text(
                             isAr ? app.applicantNameAr : app.applicantNameEn,
-                            style: TextStyle(
-                              color: paletteColor(context, Canopy.ink),
+                            style: const TextStyle(
+                              color: Canopy.ink,
                               fontWeight: FontWeight.bold,
                               fontSize: 14,
                             ),
@@ -1505,13 +1505,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                 horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
                               color: app.isOrganization
-                                  ? paletteColor(context, AppTheme.accent).withValues(alpha: 0.15)
-                                  : paletteColor(context, AppTheme.primary).withValues(alpha: 0.15),
+                                  ? AppTheme.accent.withValues(alpha: 0.15)
+                                  : AppTheme.primary.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(4),
                               border: Border.all(
                                 color: app.isOrganization
-                                    ? paletteColor(context, AppTheme.accent).withValues(alpha: 0.6)
-                                    : paletteColor(context, AppTheme.primary).withValues(alpha: 0.6),
+                                    ? AppTheme.accent.withValues(alpha: 0.6)
+                                    : AppTheme.primary.withValues(alpha: 0.6),
                               ),
                             ),
                             child: Text(
@@ -1520,8 +1520,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                   : 'admin.application_scholar'.tr(),
                               style: TextStyle(
                                 color: app.isOrganization
-                                    ? paletteColor(context, AppTheme.accent)
-                                    : paletteColor(context, AppTheme.primary),
+                                    ? AppTheme.accent
+                                    : AppTheme.primary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1553,8 +1553,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       const SizedBox(height: 4),
                       Text(
                         '${app.email} • ${app.phone}',
-                        style: TextStyle(
-                          color: paletteColor(context, Canopy.haze),
+                        style: const TextStyle(
+                          color: Canopy.haze,
                           fontSize: 12,
                         ),
                       ),
@@ -1563,8 +1563,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         app.isOrganization
                             ? '${'admin.venue'.tr()}: ${isAr ? app.venueNameAr : app.venueNameEn} • ${'admin.field_capacity'.tr()}: ${app.seatingCapacity} ${'admin.field_seats'.tr()} • ${'admin.location'.tr()}: (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})'
                             : '${'admin.field_title'.tr()}: ${isAr ? (app.academicTitleAr ?? '') : (app.academicTitleEn ?? '')} • ${'admin.field_institution'.tr()}: ${isAr ? (app.institutionAr ?? '') : (app.institutionEn ?? '')}',
-                        style: TextStyle(
-                          color: paletteColor(context, Canopy.slate),
+                        style: const TextStyle(
+                          color: Canopy.slate,
                           fontSize: 12,
                         ),
                       ),
@@ -1586,8 +1586,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       ),
                       ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: paletteColor(context, Canopy.leaf),
-                          foregroundColor: paletteColor(context, AppTheme.onMedia),
+                          backgroundColor: Canopy.leaf,
+                          foregroundColor: AppTheme.onMedia,
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                         ),
@@ -1601,8 +1601,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       const SizedBox(width: 8),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: paletteColor(context, Canopy.liveCrimson),
-                          side: BorderSide(color: paletteColor(context, Canopy.liveCrimson)),
+                          foregroundColor: Canopy.liveCrimson,
+                          side: const BorderSide(color: Canopy.liveCrimson),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 12, vertical: 8),
                         ),
@@ -1616,8 +1616,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     ] else ...[
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
-                          foregroundColor: paletteColor(context, AppTheme.primary),
-                          side: BorderSide(color: paletteColor(context, Canopy.hairline)),
+                          foregroundColor: AppTheme.primary,
+                          side: const BorderSide(color: Canopy.hairline),
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 6),
                         ),
@@ -1628,8 +1628,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       ),
                       const SizedBox(width: 6),
                       IconButton(
-                        icon: Icon(Icons.delete_outline_rounded,
-                            size: 18, color: paletteColor(context, Canopy.liveCrimson)),
+                        icon: const Icon(Icons.delete_outline_rounded,
+                            size: 18, color: Canopy.liveCrimson),
                         tooltip: 'admin.btn_delete'.tr(),
                         onPressed: () =>
                             _removeApplicationFromQueue(context, provider, app),
@@ -1646,21 +1646,21 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 width: double.infinity,
                 padding: const EdgeInsets.all(AppTheme.spaceSm),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, Canopy.mint),
+                  color: Canopy.mint,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   border:
-                      Border.all(color: paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.3)),
+                      Border.all(color: Canopy.liveCrimson.withValues(alpha: 0.3)),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.rate_review_outlined,
-                        size: 14, color: paletteColor(context, Canopy.liveCrimson)),
+                    const Icon(Icons.rate_review_outlined,
+                        size: 14, color: Canopy.liveCrimson),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(
                         '${'admin.review_notes'.tr()}: ${app.adminReviewNotes}',
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.slate), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       ),
                     ),
                   ],
@@ -1685,20 +1685,20 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           dialogSetState = setDialogState;
           final double progress = currentStage / 5.0;
           return CaAlertDialog(
-            backgroundColor: paletteColor(ctx, AppTheme.surface),
+            backgroundColor: AppTheme.surface,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              side: BorderSide(color: paletteColor(ctx, Canopy.hairline)),
+              side: const BorderSide(color: Canopy.hairline),
             ),
             title: Row(
               children: [
-                Icon(Icons.verified_user_rounded,
-                    color: paletteColor(ctx, Canopy.leaf), size: 22),
+                const Icon(Icons.verified_user_rounded,
+                    color: Canopy.leaf, size: 22),
                 const SizedBox(width: 8),
                 Text(
                   'design_ui.approving_broadcaster'.tr(),
-                  style: TextStyle(
-                    color: paletteColor(ctx, Canopy.ink),
+                  style: const TextStyle(
+                    color: Canopy.ink,
                     fontWeight: FontWeight.bold,
                     fontSize: 16,
                   ),
@@ -1711,8 +1711,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               children: [
                 Text(
                   'Stage $currentStage of 5: $stageDescription',
-                  style: TextStyle(
-                    color: paletteColor(ctx, Canopy.slate),
+                  style: const TextStyle(
+                    color: Canopy.slate,
                     fontSize: 12.5,
                     height: 1.4,
                   ),
@@ -1722,9 +1722,9 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: progress,
-                    backgroundColor: paletteColor(ctx, Canopy.mint),
+                    backgroundColor: Canopy.mint,
                     valueColor:
-                        AlwaysStoppedAnimation<Color>(paletteColor(ctx, Canopy.leaf)),
+                        const AlwaysStoppedAnimation<Color>(Canopy.leaf),
                     minHeight: 8,
                   ),
                 ),
@@ -1771,15 +1771,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
       context: context,
       builder: (dialogContext) {
         return CaAlertDialog(
-          backgroundColor: paletteColor(dialogContext, AppTheme.surface),
+          backgroundColor: AppTheme.surface,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
+            side: const BorderSide(color: Canopy.hairline),
           ),
           title: Text(
             'admin.reject_dialog_title'.tr(),
-            style: TextStyle(
-                color: paletteColor(dialogContext, Canopy.ink),
+            style: const TextStyle(
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 16),
           ),
@@ -1795,27 +1795,27 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   'name': app
                       .getLocalizedApplicantName(context.locale.languageCode),
                 }),
-                style: TextStyle(
-                    color: paletteColor(dialogContext, Canopy.slate), fontSize: 12),
+                style: const TextStyle(
+                    color: Canopy.slate, fontSize: 12),
               ),
               const SizedBox(height: AppTheme.spaceMd),
               PhoneInputGuard(builder: (context, blocked) => TextField(
                         readOnly: blocked,
                         controller: reasonController,
                         maxLines: 3,
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.ink), fontSize: 13),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 13),
                         decoration: InputDecoration(
                           hintText: 'admin.reject_dialog_hint'.tr(),
-                          hintStyle: TextStyle(
-                              color: paletteColor(context, Canopy.haze), fontSize: 12),
+                          hintStyle: const TextStyle(
+                              color: Canopy.haze, fontSize: 12),
                           filled: true,
-                          fillColor: paletteColor(context, Canopy.mint),
+                          fillColor: Canopy.mint,
                           border: OutlineInputBorder(
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusMd),
                             borderSide:
-                                BorderSide(color: paletteColor(context, Canopy.hairline)),
+                                const BorderSide(color: Canopy.hairline),
                           ),
                         ),
                       )),
@@ -1826,13 +1826,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               onPressed: () => Navigator.pop(dialogContext),
               child: Text(
                 'settings.cancel'.tr(),
-                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze)),
+                style: const TextStyle(color: Canopy.haze),
               ),
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
-                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia),
+                backgroundColor: Canopy.liveCrimson,
+                foregroundColor: AppTheme.onMedia,
               ),
               onPressed: () async {
                 final reason = reasonController.text.trim();
@@ -1914,18 +1914,18 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                       ),
                       Container(
                         height: 120,
-                        decoration: BoxDecoration(
-                          borderRadius: const BorderRadius.vertical(
+                        decoration: const BoxDecoration(
+                          borderRadius: BorderRadius.vertical(
                               top: Radius.circular(AppTheme.radiusLg)),
-                          color: paletteColor(dialogContext, AppTheme.media),
+                          color: AppTheme.media,
                         ),
                       ),
                       PositionedDirectional(
                         top: 10,
                         end: 10,
                         child: IconButton(
-                          icon: Icon(Icons.close_rounded,
-                              color: paletteColor(dialogContext, AppTheme.onMedia), size: 22),
+                          icon: const Icon(Icons.close_rounded,
+                              color: AppTheme.onMedia, size: 22),
                           onPressed: () => Navigator.pop(dialogContext),
                         ),
                       ),
@@ -1936,7 +1936,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             border:
-                                Border.all(color: paletteColor(dialogContext, AppTheme.surface), width: 3),
+                                Border.all(color: AppTheme.surface, width: 3),
                           ),
                           child: CaAvatar(
                             name: app.applicantNameEn,
@@ -1967,8 +1967,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                     isAr
                                         ? app.applicantNameAr
                                         : app.applicantNameEn,
-                                    style: TextStyle(
-                                      color: paletteColor(dialogContext, Canopy.ink),
+                                    style: const TextStyle(
+                                      color: Canopy.ink,
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -1978,7 +1978,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                       app.isApproved
                                           ? Icons.verified_rounded
                                           : Icons.pending_outlined,
-                                      color: paletteColor(dialogContext, AppTheme.primary),
+                                      color: AppTheme.primary,
                                       size: 18),
                                 ],
                               ),
@@ -1991,8 +1991,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                         ? (app.academicTitleAr ?? 'محاضر وباحث')
                                         : (app.academicTitleEn ??
                                             'Academic Scholar')),
-                                style: TextStyle(
-                                  color: paletteColor(dialogContext, AppTheme.accent),
+                                style: const TextStyle(
+                                  color: AppTheme.accent,
                                   fontSize: 12.5,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -2004,15 +2004,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           padding: const EdgeInsets.symmetric(
                               horizontal: 10, vertical: 4),
                           decoration: BoxDecoration(
-                            color: paletteColor(dialogContext, Canopy.mint),
+                            color: Canopy.mint,
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusSm),
-                            border: Border.all(color: paletteColor(dialogContext, Canopy.hairline)),
+                            border: Border.all(color: Canopy.hairline),
                           ),
                           child: Text(
                             app.isOrganization ? 'ORGANIZATION' : 'INDIVIDUAL',
-                            style: TextStyle(
-                              color: paletteColor(dialogContext, Canopy.haze),
+                            style: const TextStyle(
+                              color: Canopy.haze,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -2061,12 +2061,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                             '${isAr ? app.venueNameAr : app.venueNameEn} (${app.latitude.toStringAsFixed(4)}, ${app.longitude.toStringAsFixed(4)})',
                           ),
                           const SizedBox(height: AppTheme.spaceSm),
-                          Divider(color: paletteColor(dialogContext, Canopy.hairline)),
+                          const Divider(color: Canopy.hairline),
                           const SizedBox(height: AppTheme.spaceSm),
                           Text(
                             'design_ui.research_biography_english'.tr(),
-                            style: TextStyle(
-                              color: paletteColor(dialogContext, Canopy.haze),
+                            style: const TextStyle(
+                              color: Canopy.haze,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -2074,14 +2074,14 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           const SizedBox(height: 4),
                           Text(
                             app.bioEn.isNotEmpty ? app.bioEn : 'N/A',
-                            style: TextStyle(
-                                color: paletteColor(dialogContext, Canopy.slate), fontSize: 12),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
                           ),
                           const SizedBox(height: AppTheme.spaceMd),
-                          Text(
+                          const Text(
                             'نبذة السيرة الذاتية (عربي)',
                             style: TextStyle(
-                              color: paletteColor(dialogContext, Canopy.haze),
+                              color: Canopy.haze,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -2089,8 +2089,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           const SizedBox(height: 4),
                           Text(
                             app.bioAr.isNotEmpty ? app.bioAr : 'لا يوجد',
-                            style: TextStyle(
-                                color: paletteColor(dialogContext, Canopy.slate), fontSize: 12),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
                           ),
                         ],
                       ),
@@ -2100,11 +2100,11 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                   // Bottom Action Footer
                   Container(
                     padding: const EdgeInsets.all(AppTheme.spaceMd),
-                    decoration: BoxDecoration(
-                      color: paletteColor(dialogContext, Canopy.mint),
-                      borderRadius: const BorderRadius.vertical(
+                    decoration: const BoxDecoration(
+                      color: Canopy.mint,
+                      borderRadius: BorderRadius.vertical(
                           bottom: Radius.circular(AppTheme.radiusLg)),
-                      border: Border(top: BorderSide(color: paletteColor(dialogContext, Canopy.hairline))),
+                      border: Border(top: BorderSide(color: Canopy.hairline)),
                     ),
                     child: Wrap(
                       alignment: WrapAlignment.end,
@@ -2114,8 +2114,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         if (app.status == ApplicationStatus.pending) ...[
                           ElevatedButton.icon(
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: paletteColor(dialogContext, Canopy.leaf),
-                              foregroundColor: paletteColor(dialogContext, AppTheme.onMedia),
+                              backgroundColor: Canopy.leaf,
+                              foregroundColor: AppTheme.onMedia,
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 16, vertical: 10),
                             ),
@@ -2132,8 +2132,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           const SizedBox(width: 8),
                           OutlinedButton.icon(
                             style: OutlinedButton.styleFrom(
-                              foregroundColor: paletteColor(dialogContext, Canopy.liveCrimson),
-                              side: BorderSide(color: paletteColor(dialogContext, Canopy.liveCrimson)),
+                              foregroundColor: Canopy.liveCrimson,
+                              side: const BorderSide(color: Canopy.liveCrimson),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 14, vertical: 10),
                             ),
@@ -2148,8 +2148,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           ),
                         ],
                         IconButton(
-                          icon: Icon(Icons.delete_outline_rounded,
-                              color: paletteColor(dialogContext, Canopy.liveCrimson), size: 20),
+                          icon: const Icon(Icons.delete_outline_rounded,
+                              color: Canopy.liveCrimson, size: 20),
                           tooltip: 'Delete Application',
                           onPressed: () async {
                             Navigator.pop(dialogContext);
@@ -2162,7 +2162,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           onPressed: () => Navigator.pop(dialogContext),
                           child: Text('design_ui.close'.tr(),
                               style:
-                                  TextStyle(color: paletteColor(dialogContext, Canopy.ink))),
+                                  const TextStyle(color: Canopy.ink)),
                         ),
                       ],
                     ),
@@ -2176,12 +2176,12 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
   Widget _buildDetailRow(String label, String value) {
     final title = Text(label,
-        style: TextStyle(
-            color: paletteColor(context, Canopy.haze),
+        style: const TextStyle(
+            color: Canopy.haze,
             fontSize: 12,
             fontWeight: FontWeight.w600));
     final detail = Text(value,
-        style: TextStyle(color: paletteColor(context, Canopy.ink), fontSize: 12));
+        style: const TextStyle(color: Canopy.ink, fontSize: 12));
     return LayoutBuilder(
         builder: (context, constraints) => Padding(
               padding: const EdgeInsets.symmetric(vertical: 4),
@@ -2265,23 +2265,23 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           readOnly: blocked,
                           controller: _streamerSearchController,
                           onChanged: (_) => setState(() {}),
-                          style: TextStyle(
-                              color: paletteColor(context, Canopy.ink), fontSize: 13),
+                          style: const TextStyle(
+                              color: Canopy.ink, fontSize: 13),
                           decoration: InputDecoration(
                             hintText: 'admin.search_streamers'.tr(),
-                            hintStyle: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12),
-                            prefixIcon: Icon(Icons.search_rounded,
-                                color: paletteColor(context, Canopy.slate), size: 18),
+                            hintStyle: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
+                            prefixIcon: const Icon(Icons.search_rounded,
+                                color: Canopy.slate, size: 18),
                             filled: true,
-                            fillColor: paletteColor(context, AppTheme.surface),
+                            fillColor: AppTheme.surface,
                             contentPadding: const EdgeInsets.symmetric(
                                 horizontal: 12, vertical: 10),
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(AppTheme.radiusMd),
                               borderSide:
-                                  BorderSide(color: paletteColor(context, Canopy.hairline)),
+                                  const BorderSide(color: Canopy.hairline),
                             ),
                           ),
                         )),
@@ -2334,25 +2334,25 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                 children: [
                                   Text(
                                     isAr ? s.fullNameAr : s.fullNameEn,
-                                    style: TextStyle(
-                                      color: paletteColor(context, Canopy.ink),
+                                    style: const TextStyle(
+                                      color: Canopy.ink,
                                       fontWeight: FontWeight.bold,
                                       fontSize: 13,
                                     ),
                                   ),
                                   const SizedBox(width: 6),
                                   if (s.isVerified)
-                                    Icon(Icons.verified_rounded,
-                                        size: 14, color: paletteColor(context, AppTheme.primary)),
+                                    const Icon(Icons.verified_rounded,
+                                        size: 14, color: AppTheme.primary),
                                   const SizedBox(width: 6),
                                   Container(
                                     padding: const EdgeInsets.symmetric(
                                         horizontal: 5, vertical: 1.5),
                                     decoration: BoxDecoration(
                                       color: s.isOrganization
-                                          ? paletteColor(context, AppTheme.accent)
+                                          ? AppTheme.accent
                                               .withValues(alpha: 0.15)
-                                          : paletteColor(context, AppTheme.primary)
+                                          : AppTheme.primary
                                               .withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(4),
                                     ),
@@ -2362,8 +2362,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                                           : 'SCHOLAR',
                                       style: TextStyle(
                                         color: s.isOrganization
-                                            ? paletteColor(context, AppTheme.accent)
-                                            : paletteColor(context, AppTheme.primary),
+                                            ? AppTheme.accent
+                                            : AppTheme.primary,
                                         fontSize: 12,
                                         fontWeight: FontWeight.bold,
                                       ),
@@ -2374,8 +2374,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                               const SizedBox(height: 2),
                               Text(
                                 '${isAr ? s.titleAr : s.titleEn} • ${isAr ? s.organizationAr : s.organizationEn}',
-                                style: TextStyle(
-                                  color: paletteColor(context, Canopy.slate),
+                                style: const TextStyle(
+                                  color: Canopy.slate,
                                   fontSize: 12,
                                 ),
                               ),
@@ -2389,22 +2389,22 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                               horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
                             color: s.isCurrentlyLive
-                                ? paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.15)
-                                : paletteColor(context, Canopy.mint),
+                                ? Canopy.liveCrimson.withValues(alpha: 0.15)
+                                : Canopy.mint,
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusSm),
                             border: Border.all(
                               color: s.isCurrentlyLive
-                                  ? paletteColor(context, Canopy.liveCrimson)
-                                  : paletteColor(context, Canopy.hairline),
+                                  ? Canopy.liveCrimson
+                                  : Canopy.hairline,
                             ),
                           ),
                           child: Text(
                             s.isCurrentlyLive ? 'LIVE' : 'OFFLINE',
                             style: TextStyle(
                               color: s.isCurrentlyLive
-                                  ? paletteColor(context, Canopy.liveCrimson)
-                                  : paletteColor(context, Canopy.haze),
+                                  ? Canopy.liveCrimson
+                                  : Canopy.haze,
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -2415,8 +2415,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         // Manage Org Button (If Organization)
                         if (s.isOrganization)
                           IconButton(
-                            icon: Icon(Icons.apartment_rounded,
-                                size: 16, color: paletteColor(context, AppTheme.warning)),
+                            icon: const Icon(Icons.apartment_rounded,
+                                size: 16, color: AppTheme.warning),
                             tooltip: 'admin.tab_organizations'.tr(),
                             onPressed: () {
                               _tabController.animateTo(3);
@@ -2430,7 +2430,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                           message: 'admin.hide_from_map_toggle'.tr(),
                           child: Switch(
                             value: s.isTemporarilyHiddenFromMap,
-                            activeThumbColor: paletteColor(context, AppTheme.warning),
+                            activeThumbColor: AppTheme.warning,
                             onChanged: (hidden) async {
                               // The server records who changed map visibility
                               // and why; it refuses a blank reason.
@@ -2465,8 +2465,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
 
                         // Edit Button
                         IconButton(
-                          icon: Icon(Icons.edit_rounded,
-                              size: 16, color: paletteColor(context, AppTheme.primary)),
+                          icon: const Icon(Icons.edit_rounded,
+                              size: 16, color: AppTheme.primary),
                           tooltip: 'Edit Broadcaster',
                           onPressed: () =>
                               StreamerEditorSheet.show(context, streamer: s),
@@ -2478,8 +2478,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                         // account deletion lives in User Directory (P6-R09).
                         if (!isProtected)
                           IconButton(
-                            icon: Icon(Icons.person_off_rounded,
-                                size: 16, color: paletteColor(context, Canopy.liveCrimson)),
+                            icon: const Icon(Icons.person_off_rounded,
+                                size: 16, color: Canopy.liveCrimson),
                             tooltip: 'admin.revoke_broadcaster_tooltip'.tr(),
                             onPressed: () async {
                               final reason = await askSafetyReason(
@@ -2515,15 +2515,15 @@ class _AdminHubScreenState extends State<AdminHubScreen>
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      selectedColor: paletteColor(context, AppTheme.accent).withValues(alpha: 0.2),
-      backgroundColor: paletteColor(context, AppTheme.surface),
+      selectedColor: AppTheme.accent.withValues(alpha: 0.2),
+      backgroundColor: AppTheme.surface,
       labelStyle: TextStyle(
-        color: isSelected ? paletteColor(context, AppTheme.accent) : paletteColor(context, Canopy.slate),
+        color: isSelected ? AppTheme.accent : Canopy.slate,
         fontSize: 12,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       side: BorderSide(
-        color: isSelected ? paletteColor(context, AppTheme.accent) : paletteColor(context, Canopy.hairline),
+        color: isSelected ? AppTheme.accent : Canopy.hairline,
       ),
       onSelected: (_) => setState(() => _streamerTypeFilter = value),
     );
@@ -2565,13 +2565,13 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 spacing: AppTheme.spaceSm,
                 crossAxisAlignment: WrapCrossAlignment.center,
                 children: [
-                  Icon(Icons.gavel_rounded,
-                      color: paletteColor(context, AppTheme.primary), size: 20),
+                  const Icon(Icons.gavel_rounded,
+                      color: AppTheme.primary, size: 20),
                   const SizedBox(width: 8),
                   Text(
                     'admin.tab_terms'.tr(),
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.ink),
+                    style: const TextStyle(
+                      color: Canopy.ink,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -2580,8 +2580,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: paletteColor(context, AppTheme.primary),
-                  foregroundColor: paletteColor(context, AppTheme.onMedia),
+                  backgroundColor: AppTheme.primary,
+                  foregroundColor: AppTheme.onMedia,
                   padding:
                       const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 ),
@@ -2645,8 +2645,8 @@ class _AdminHubScreenState extends State<AdminHubScreen>
           children: [
             Text(
               title,
-              style: TextStyle(
-                color: paletteColor(context, Canopy.ink),
+              style: const TextStyle(
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
               ),
@@ -2665,24 +2665,24 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     children: [
                       Text(
                         'admin.english_content'.tr(),
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.slate), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       PhoneInputGuard(builder: (context, blocked) => TextField(
                                 readOnly: blocked,
                                 controller: controllerEn,
                                 maxLines: 5,
-                                style: TextStyle(
-                                    color: paletteColor(context, Canopy.ink), fontSize: 12),
+                                style: const TextStyle(
+                                    color: Canopy.ink, fontSize: 12),
                                 decoration: InputDecoration(
                                   filled: true,
-                                  fillColor: paletteColor(context, Canopy.mint),
+                                  fillColor: Canopy.mint,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(
                                         AppTheme.radiusSm),
-                                    borderSide: BorderSide(
-                                        color: paletteColor(context, Canopy.hairline)),
+                                    borderSide: const BorderSide(
+                                        color: Canopy.hairline),
                                   ),
                                 ),
                               )),
@@ -2699,24 +2699,24 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                     children: [
                       Text(
                         'admin.arabic_content'.tr(),
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.slate), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       ),
                       const SizedBox(height: 4),
                       PhoneInputGuard(builder: (context, blocked) => TextField(
                                 readOnly: blocked,
                                 controller: controllerAr,
                                 maxLines: 5,
-                                style: TextStyle(
-                                    color: paletteColor(context, Canopy.ink), fontSize: 12),
+                                style: const TextStyle(
+                                    color: Canopy.ink, fontSize: 12),
                                 decoration: InputDecoration(
                                   filled: true,
-                                  fillColor: paletteColor(context, Canopy.mint),
+                                  fillColor: Canopy.mint,
                                   border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(
                                         AppTheme.radiusSm),
-                                    borderSide: BorderSide(
-                                        color: paletteColor(context, Canopy.hairline)),
+                                    borderSide: const BorderSide(
+                                        color: Canopy.hairline),
                                   ),
                                 ),
                               )),

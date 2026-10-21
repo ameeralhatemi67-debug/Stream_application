@@ -792,9 +792,6 @@
     "delete_messages_by_stream_success_toast": "تم حذف رسائلك في ذلك البث.",
     "build_version": "الإصدار 1.0.0 (1)",
     "release_pending": "الإصدار قيد الاختبار. مراجعة النشر لم تكتمل بعد.",
-    "palette_toggle": "انقر على الشعار مرتين لتبديل ألوان التطبيق",
-    "palette_save_error": "تعذّر حفظ ألوان التطبيق. حاول مرة أخرى.",
-    "palette_icon_error": "تم حفظ الألوان، لكن تعذّر تغيير أيقونة الشاشة الرئيسية. أعد فتح التطبيق للمحاولة مجددًا.",
     "view_guidelines_subtitle": "النزاهة الأكاديمية ومعايير البث",
     "view_privacy_subtitle": "كيف نستخدم بياناتك",
     "consent_record_title": "سجل الموافقة",
@@ -823,7 +820,13 @@
     "choose_avatar": "أو اختر صورة رمزية",
     "profile_media": "الصورة الشخصية والغلاف",
     "upload_failed": "تعذّر رفع الصورة. تحقّق من الاتصال ثم حاول مرة أخرى.",
-    "image_pick_failed": "تعذّر فتح هذه الصورة. جرّب صورة أخرى."
+    "image_pick_failed": "تعذّر فتح هذه الصورة. جرّب صورة أخرى.",
+    "experience_label": "تبديل التطبيق",
+    "experience_hint_hadayah": "اضغط على الشعار لفتح تيسير، برنامج دروس المساجد.",
+    "experience_hint_taysir": "اضغط على الشعار للعودة إلى منصة هداية.",
+    "experience_now_hadayah": "منصة هداية",
+    "experience_now_taysir": "تيسير في منصة هداية",
+    "experience_save_error": "تعذّر تبديل التطبيق. حاول مرة أخرى."
   },
   "onboarding": {
     "subtitle": "منصة المعرفة والبث الأكاديمي بالمنطقة الشرقية",

@@ -22,7 +22,6 @@ abstract final class HidayahWeb {
 
 extension HidayahWebX on BuildContext {
   bool get usesHidayahWeb =>
-      paletteOf(this).hidayah &&
       MediaQuery.sizeOf(this).width >= HidayahWeb.minWidth;
 }
 

@@ -39,7 +39,7 @@ abstract final class HidayahGold {
   static const card = Color(0xFFFFFFFF),
       hairline = Color(0xFFEADFCB),
       live = Color(0xFFAF2934),
-      success = Color(0xFF2F7A4A),
+      success = Color(0xFF2D7647), // 4.7:1 on g100 (2F7A4A missed AA there)
       warning = Color(0xFF9A5B0E),
       info = Color(0xFF2D6F86);
 }

@@ -73,15 +73,15 @@ class MapDiagnosticMessengerBar extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: paletteColor(context, AppTheme.media).withValues(alpha: 0.85),
+          color: AppTheme.media.withValues(alpha: 0.85),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: areMarkersVisible ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.primary),
+            color: areMarkersVisible ? AppTheme.danger : AppTheme.primary,
             width: 1.5,
           ),
-          boxShadow: [
+          boxShadow: const [
             BoxShadow(
-                color: paletteColor(context, AppTheme.shadow), blurRadius: 8, offset: const Offset(0, 4)),
+                color: AppTheme.shadow, blurRadius: 8, offset: Offset(0, 4)),
           ],
         ),
         child: Row(
@@ -91,15 +91,15 @@ class MapDiagnosticMessengerBar extends StatelessWidget {
                   ? Icons.bug_report_rounded
                   : Icons.info_outline_rounded,
               color:
-                  areMarkersVisible ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.primary),
+                  areMarkersVisible ? AppTheme.danger : AppTheme.primary,
               size: 18,
             ),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 "DIAGNOSTIC | Zoom: ${currentZoom.toStringAsFixed(2)} | Markers: ${areMarkersVisible ? 'ACTIVE (ZOOMED IN)' : 'HIDDEN'} | Check Terminal Logs",
-                style: TextStyle(
-                  color: paletteColor(context, AppTheme.onMedia),
+                style: const TextStyle(
+                  color: AppTheme.onMedia,
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'monospace',

@@ -24,8 +24,8 @@ class ApplyStep1Identity extends StatelessWidget {
         children: [
           Text(
             'wizard_steps.step1_title'.tr().split(':').last.trim(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.ink),
+            style: const TextStyle(
+              color: Canopy.ink,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -33,8 +33,8 @@ class ApplyStep1Identity extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'wizard_steps.step1_desc'.tr(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.slate),
+            style: const TextStyle(
+              color: Canopy.slate,
               fontSize: 12,
               height: 1.4,
             ),

@@ -68,8 +68,8 @@ class ApplyStep5Review extends StatelessWidget {
                     Text(
                       'wizard_steps.step5_charter_title'
                           .tr(args: [terms.version]),
-                      style: TextStyle(
-                        color: paletteColor(ctx, Canopy.ink),
+                      style: const TextStyle(
+                        color: Canopy.ink,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -77,8 +77,8 @@ class ApplyStep5Review extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       terms.getLocalizedTerms(ctx.locale.languageCode),
-                      style: TextStyle(
-                        color: paletteColor(ctx, Canopy.slate),
+                      style: const TextStyle(
+                        color: Canopy.slate,
                         fontSize: 12,
                         height: 1.5,
                       ),
@@ -86,8 +86,8 @@ class ApplyStep5Review extends StatelessWidget {
                     const SizedBox(height: AppTheme.spaceLg),
                     Text(
                       'design_ui.broadcasting_audio_visual_standards'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(ctx, Canopy.ink),
+                      style: const TextStyle(
+                        color: Canopy.ink,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -95,8 +95,8 @@ class ApplyStep5Review extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       terms.getLocalizedGuidelines(ctx.locale.languageCode),
-                      style: TextStyle(
-                        color: paletteColor(ctx, Canopy.slate),
+                      style: const TextStyle(
+                        color: Canopy.slate,
                         fontSize: 12,
                         height: 1.5,
                       ),
@@ -104,8 +104,8 @@ class ApplyStep5Review extends StatelessWidget {
                     const SizedBox(height: AppTheme.spaceLg),
                     Text(
                       'design_ui.privacy_regional_telemetry_guidelines'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(ctx, Canopy.ink),
+                      style: const TextStyle(
+                        color: Canopy.ink,
                         fontWeight: FontWeight.bold,
                         fontSize: 14,
                       ),
@@ -113,8 +113,8 @@ class ApplyStep5Review extends StatelessWidget {
                     const SizedBox(height: 8),
                     Text(
                       terms.getLocalizedPrivacy(ctx.locale.languageCode),
-                      style: TextStyle(
-                        color: paletteColor(ctx, Canopy.slate),
+                      style: const TextStyle(
+                        color: Canopy.slate,
                         fontSize: 12,
                         height: 1.5,
                       ),
@@ -146,8 +146,8 @@ class ApplyStep5Review extends StatelessWidget {
         children: [
           Text(
             'wizard_steps.step5_title'.tr().split(':').last.trim(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.ink),
+            style: const TextStyle(
+              color: Canopy.ink,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -155,8 +155,8 @@ class ApplyStep5Review extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             'wizard_steps.step5_desc'.tr(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.slate),
+            style: const TextStyle(
+              color: Canopy.slate,
               fontSize: 12,
               height: 1.4,
             ),
@@ -166,12 +166,12 @@ class ApplyStep5Review extends StatelessWidget {
           //  Live Broadcaster Preview Card
           Container(
             decoration: BoxDecoration(
-              color: paletteColor(context, AppTheme.surface),
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-              border: Border.all(color: paletteColor(context, Canopy.hairline), width: 1.2),
+              border: Border.all(color: Canopy.hairline, width: 1.2),
               boxShadow: [
                 BoxShadow(
-                  color: paletteColor(context, AppTheme.media).withValues(alpha: 0.35),
+                  color: AppTheme.media.withValues(alpha: 0.35),
                   blurRadius: 16,
                   offset: const Offset(0, 4),
                 ),
@@ -185,7 +185,7 @@ class ApplyStep5Review extends StatelessWidget {
                 Container(
                   height: 110,
                   decoration: BoxDecoration(
-                    color: paletteColor(context, Canopy.mint),
+                    color: Canopy.mint,
                     image: DecorationImage(
                       image: bannerProvider,
                       fit: BoxFit.cover,
@@ -203,7 +203,7 @@ class ApplyStep5Review extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 28,
-                            backgroundColor: paletteColor(context, Canopy.mint),
+                            backgroundColor: Canopy.mint,
                             backgroundImage: avatarProvider,
                           ),
                           const SizedBox(width: 12),
@@ -216,8 +216,8 @@ class ApplyStep5Review extends StatelessWidget {
                                     Flexible(
                                       child: Text(
                                         displayName,
-                                        style: TextStyle(
-                                          color: paletteColor(context, Canopy.ink),
+                                        style: const TextStyle(
+                                          color: Canopy.ink,
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold,
                                         ),
@@ -225,15 +225,15 @@ class ApplyStep5Review extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(width: 6),
-                                    Icon(Icons.verified_rounded,
-                                        color: paletteColor(context, AppTheme.primary), size: 16),
+                                    const Icon(Icons.verified_rounded,
+                                        color: AppTheme.primary, size: 16),
                                   ],
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   handle.startsWith('@') ? handle : '@$handle',
-                                  style: TextStyle(
-                                    color: paletteColor(context, AppTheme.primary),
+                                  style: const TextStyle(
+                                    color: AppTheme.primary,
                                     fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                   ),
@@ -242,8 +242,8 @@ class ApplyStep5Review extends StatelessWidget {
                                   const SizedBox(height: 2),
                                   Text(
                                     institution,
-                                    style: TextStyle(
-                                      color: paletteColor(context, Canopy.slate),
+                                    style: const TextStyle(
+                                      color: Canopy.slate,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -257,15 +257,15 @@ class ApplyStep5Review extends StatelessWidget {
                         const SizedBox(height: AppTheme.spaceMd),
                         Text(
                           bio,
-                          style: TextStyle(
-                            color: paletteColor(context, Canopy.slate),
+                          style: const TextStyle(
+                            color: Canopy.slate,
                             fontSize: 12,
                             height: 1.4,
                           ),
                         ),
                       ],
                       const SizedBox(height: AppTheme.spaceMd),
-                      Divider(height: 1, color: paletteColor(context, Canopy.hairline)),
+                      const Divider(height: 1, color: Canopy.hairline),
                       const SizedBox(height: AppTheme.spaceSm),
 
                       // Structured Metadata Breakdown
@@ -314,13 +314,13 @@ class ApplyStep5Review extends StatelessWidget {
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: paletteColor(context, Canopy.mint),
+                                color: Canopy.mint,
                                 borderRadius: BorderRadius.circular(4),
                               ),
                               child: Text(
                                 t,
-                                style: TextStyle(
-                                  color: paletteColor(context, Canopy.slate),
+                                style: const TextStyle(
+                                  color: Canopy.slate,
                                   fontSize: 12,
                                 ),
                               ),
@@ -342,12 +342,12 @@ class ApplyStep5Review extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               decoration: BoxDecoration(
-                color: paletteColor(context, AppTheme.surface),
+                color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                 border: Border.all(
                   color: agreedToTerms
-                      ? paletteColor(context, AppTheme.primary).withValues(alpha: 0.5)
-                      : paletteColor(context, Canopy.hairline),
+                      ? AppTheme.primary.withValues(alpha: 0.5)
+                      : Canopy.hairline,
                 ),
               ),
               child: Row(
@@ -356,8 +356,8 @@ class ApplyStep5Review extends StatelessWidget {
                   Checkbox(
                     value: agreedToTerms,
                     onChanged: (val) => onTermsToggled(val ?? false),
-                    activeColor: paletteColor(context, AppTheme.primary),
-                    checkColor: paletteColor(context, AppTheme.onMedia),
+                    activeColor: AppTheme.primary,
+                    checkColor: AppTheme.onMedia,
                   ),
                   Expanded(
                     child: Padding(
@@ -367,8 +367,8 @@ class ApplyStep5Review extends StatelessWidget {
                         children: [
                           Text(
                             'wizard_steps.step5_agree_checkbox'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
                           ),
                           GestureDetector(
                             onTap: () => _showTermsModalSheet(context),
@@ -376,8 +376,8 @@ class ApplyStep5Review extends StatelessWidget {
                               isOrganization
                                   ? 'wizard_steps.step5_terms_modal_org'.tr()
                                   : 'wizard_steps.step5_agree_terms_link'.tr(),
-                              style: TextStyle(
-                                color: paletteColor(context, AppTheme.primary),
+                              style: const TextStyle(
+                                color: AppTheme.primary,
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 decoration: TextDecoration.underline,
@@ -386,8 +386,8 @@ class ApplyStep5Review extends StatelessWidget {
                           ),
                           Text(
                             'wizard_steps.step5_agree_standards'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12),
                           ),
                         ],
                       ),
@@ -413,12 +413,12 @@ class ApplyStep5Review extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: paletteColor(context, AppTheme.primary)),
+          Icon(icon, size: 14, color: AppTheme.primary),
           const SizedBox(width: 6),
           Text(
             '$label: ',
-            style: TextStyle(
-              color: paletteColor(context, Canopy.haze),
+            style: const TextStyle(
+              color: Canopy.haze,
               fontSize: 12,
               fontWeight: FontWeight.w600,
             ),
@@ -426,8 +426,8 @@ class ApplyStep5Review extends StatelessWidget {
           Expanded(
             child: Text(
               value,
-              style: TextStyle(
-                color: paletteColor(context, Canopy.ink),
+              style: const TextStyle(
+                color: Canopy.ink,
                 fontSize: 12,
               ),
             ),

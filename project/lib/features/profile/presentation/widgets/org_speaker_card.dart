@@ -28,9 +28,9 @@ class OrgSpeakerCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: paletteColor(context, AppTheme.surface),
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-          border: Border.all(color: paletteColor(context, Canopy.hairline)),
+          border: Border.all(color: Canopy.hairline),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -44,7 +44,7 @@ class OrgSpeakerCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.8),
+                      color: AppTheme.primary.withValues(alpha: 0.8),
                       width: 2,
                     ),
                     image: DecorationImage(
@@ -62,8 +62,8 @@ class OrgSpeakerCard extends StatelessWidget {
                     children: [
                       Text(
                         speaker.getLocalizedName(lang),
-                        style: TextStyle(
-                          color: paletteColor(context, AppTheme.onMedia),
+                        style: const TextStyle(
+                          color: AppTheme.onMedia,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -73,8 +73,8 @@ class OrgSpeakerCard extends StatelessWidget {
                       const SizedBox(height: 3),
                       Text(
                         speaker.getLocalizedRole(lang),
-                        style: TextStyle(
-                          color: paletteColor(context, AppTheme.primary),
+                        style: const TextStyle(
+                          color: AppTheme.primary,
                           fontSize: AppTheme.captionFont,
                           fontWeight: FontWeight.w600,
                         ),
@@ -87,8 +87,8 @@ class OrgSpeakerCard extends StatelessWidget {
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
                           color: speaker.isPermanentStaff
-                              ? paletteColor(context, AppTheme.primary).withValues(alpha: 0.12)
-                              : paletteColor(context, Canopy.mint),
+                              ? AppTheme.primary.withValues(alpha: 0.12)
+                              : Canopy.mint,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: Text(
@@ -97,8 +97,8 @@ class OrgSpeakerCard extends StatelessWidget {
                               : 'profile.guest_speaker'.tr(),
                           style: TextStyle(
                             color: speaker.isPermanentStaff
-                                ? paletteColor(context, AppTheme.primary)
-                                : paletteColor(context, Canopy.slate),
+                                ? AppTheme.primary
+                                : Canopy.slate,
                             fontSize: AppTheme.captionFont,
                             fontWeight: FontWeight.bold,
                           ),
@@ -113,8 +113,8 @@ class OrgSpeakerCard extends StatelessWidget {
             if (speaker.getLocalizedBio(lang).isNotEmpty)
               Text(
                 speaker.getLocalizedBio(lang),
-                style: TextStyle(
-                  color: paletteColor(context, Canopy.slate),
+                style: const TextStyle(
+                  color: Canopy.slate,
                   fontSize: AppTheme.captionFont,
                   height: 1.35,
                 ),
@@ -128,16 +128,16 @@ class OrgSpeakerCard extends StatelessWidget {
               children: [
                 Text(
                   'profile.lectures_count'.plural(speakerVods.length),
-                  style: TextStyle(
-                    color: paletteColor(context, Canopy.slate),
+                  style: const TextStyle(
+                    color: Canopy.slate,
                     fontSize: AppTheme.captionFont,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                Icon(
+                const Icon(
                   Icons.arrow_forward_ios_rounded,
                   size: 12,
-                  color: paletteColor(context, AppTheme.primary),
+                  color: AppTheme.primary,
                 ),
               ],
             ),

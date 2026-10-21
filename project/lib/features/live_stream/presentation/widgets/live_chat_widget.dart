@@ -107,7 +107,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
   Widget build(BuildContext context) {
     if (widget.cinema) return _buildCinema(context);
     return Container(
-      color: paletteColor(context, Canopy.dawn),
+      color: Canopy.dawn,
       child: Column(
         children: [
           // Live Chat Header Bar
@@ -116,18 +116,18 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
               horizontal: AppTheme.spaceLg,
               vertical: AppTheme.spaceSm,
             ),
-            decoration: BoxDecoration(
-              color: paletteColor(context, AppTheme.surface),
+            decoration: const BoxDecoration(
+              color: AppTheme.surface,
               border: Border(
-                bottom: BorderSide(color: paletteColor(context, Canopy.hairline), width: 1),
+                bottom: BorderSide(color: Canopy.hairline, width: 1),
               ),
             ),
             child: Row(
               children: [
-                Icon(
+                const Icon(
                   Icons.chat_bubble_outline_rounded,
                   size: 16,
-                  color: paletteColor(context, AppTheme.primary),
+                  color: AppTheme.primary,
                 ),
                 const SizedBox(width: AppTheme.spaceSm),
                 Expanded(
@@ -138,7 +138,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
-                        color: paletteColor(context, Canopy.ink),
+                        color: Canopy.ink,
                       ),
                 )),
                 const SizedBox(width: AppTheme.spaceSm),
@@ -150,13 +150,13 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, Canopy.mint),
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusXs),
                   ),
                   child: Text(
                     '${widget.messages.length}',
-                    style: TextStyle(
-                      color: paletteColor(context, Canopy.slate),
+                    style: const TextStyle(
+                      color: Canopy.slate,
                       fontSize: AppTheme.captionFont,
                       fontWeight: FontWeight.bold,
                     ),
@@ -204,17 +204,17 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                   style: Theme.of(context)
                       .textTheme
                       .bodySmall
-                      ?.copyWith(color: paletteColor(context, Canopy.slate)),
+                      ?.copyWith(color: Canopy.slate),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis),
             )
           else
             Container(
               padding: const EdgeInsets.all(AppTheme.spaceMd),
-              decoration: BoxDecoration(
-                color: paletteColor(context, AppTheme.surface),
+              decoration: const BoxDecoration(
+                color: AppTheme.surface,
                 border: Border(
-                  top: BorderSide(color: paletteColor(context, Canopy.hairline), width: 1),
+                  top: BorderSide(color: Canopy.hairline, width: 1),
                 ),
               ),
               child: Row(
@@ -223,16 +223,16 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     child: TextField(
                       controller: _textController,
                       focusNode: _focusNode,
-                      style: TextStyle(
-                        color: paletteColor(context, Canopy.ink),
+                      style: const TextStyle(
+                        color: Canopy.ink,
                         fontSize: 13,
                       ),
                       textInputAction: TextInputAction.send,
                       onSubmitted: (_) => _handleSendText(),
                       decoration: InputDecoration(
                         hintText: 'live.chat_placeholder'.tr(),
-                        hintStyle: TextStyle(
-                          color: paletteColor(context, Canopy.haze),
+                        hintStyle: const TextStyle(
+                          color: Canopy.haze,
                           fontSize: 13,
                         ),
                         contentPadding: const EdgeInsets.symmetric(
@@ -240,7 +240,7 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                           vertical: 10,
                         ),
                         filled: true,
-                        fillColor: paletteColor(context, Canopy.mint),
+                        fillColor: Canopy.mint,
                         border: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
@@ -249,8 +249,8 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                         focusedBorder: OutlineInputBorder(
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
-                          borderSide: BorderSide(
-                            color: paletteColor(context, AppTheme.primary),
+                          borderSide: const BorderSide(
+                            color: AppTheme.primary,
                             width: 1,
                           ),
                         ),
@@ -262,8 +262,8 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
                     onPressed: _handleSendText,
                     icon: const Icon(Icons.send_rounded, size: 18),
                     style: IconButton.styleFrom(
-                      backgroundColor: paletteColor(context, AppTheme.primary),
-                      foregroundColor: paletteColor(context, Canopy.dawn),
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: Canopy.dawn,
                       padding: const EdgeInsets.all(12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -282,9 +282,9 @@ class _LiveChatWidgetState extends State<LiveChatWidget> {
 extension on _LiveChatWidgetState {
   Widget _buildCinema(BuildContext context) {
     final theme = Theme.of(context).textTheme;
-    final divider = paletteColor(context, Canopy.paper).withValues(alpha: .12);
+    final divider = Canopy.paper.withValues(alpha: .12);
     return ColoredBox(
-      color: paletteColor(context, Canopy.forestDeep),
+      color: Canopy.forestDeep,
       child: Column(
         children: [
           if (widget.onClose != null)
@@ -294,7 +294,7 @@ extension on _LiveChatWidgetState {
                 width: CanopySize.handleWidth,
                 height: CanopySize.handleHeight,
                 decoration: BoxDecoration(
-                  color: paletteColor(context, Canopy.paper).withValues(alpha: .35),
+                  color: Canopy.paper.withValues(alpha: .35),
                   borderRadius: BorderRadius.circular(CanopyRadius.pill),
                 ),
               ),
@@ -317,7 +317,7 @@ extension on _LiveChatWidgetState {
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: theme.titleMedium?.copyWith(
-                            color: paletteColor(context, Canopy.paper), fontWeight: FontWeight.w700),
+                            color: Canopy.paper, fontWeight: FontWeight.w700),
                       ),
                       const SizedBox(height: 2),
                       Row(children: [
@@ -325,12 +325,12 @@ extension on _LiveChatWidgetState {
                             child: _ConnectionStatusChip(
                                 state: widget.connectionState)),
                         const SizedBox(width: AppTheme.spaceSm),
-                        Icon(Icons.chat_bubble_outline_rounded,
-                            size: 12, color: paletteColor(context, Canopy.mist)),
+                        const Icon(Icons.chat_bubble_outline_rounded,
+                            size: 12, color: Canopy.mist),
                         const SizedBox(width: 4),
                         Text('${widget.messages.length}',
                             style: theme.labelSmall?.copyWith(
-                                color: paletteColor(context, Canopy.mist),
+                                color: Canopy.mist,
                                 fontWeight: FontWeight.w700)),
                       ]),
                     ],
@@ -341,7 +341,7 @@ extension on _LiveChatWidgetState {
                     onPressed: widget.onClose,
                     tooltip:
                         MaterialLocalizations.of(context).closeButtonTooltip,
-                    icon: Icon(Icons.close_rounded, color: paletteColor(context, Canopy.paper)),
+                    icon: const Icon(Icons.close_rounded, color: Canopy.paper),
                   ),
               ],
             ),
@@ -359,23 +359,23 @@ extension on _LiveChatWidgetState {
                             width: 56,
                             height: 56,
                             decoration: BoxDecoration(
-                              color: paletteColor(context, Canopy.paper).withValues(alpha: .08),
+                              color: Canopy.paper.withValues(alpha: .08),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(Icons.forum_outlined,
-                                color: paletteColor(context, Canopy.mist), size: 26),
+                            child: const Icon(Icons.forum_outlined,
+                                color: Canopy.mist, size: 26),
                           ),
                           const SizedBox(height: AppTheme.spaceMd),
                           Text('live.chat_empty_title'.tr(),
                               textAlign: TextAlign.center,
                               style: theme.titleSmall?.copyWith(
-                                  color: paletteColor(context, Canopy.paper),
+                                  color: Canopy.paper,
                                   fontWeight: FontWeight.w700)),
                           const SizedBox(height: AppTheme.spaceXs),
                           Text('live.chat_empty_subtitle'.tr(),
                               textAlign: TextAlign.center,
                               style: theme.bodySmall
-                                  ?.copyWith(color: paletteColor(context, Canopy.mist))),
+                                  ?.copyWith(color: Canopy.mist)),
                         ],
                       ),
                     ),
@@ -411,7 +411,7 @@ extension on _LiveChatWidgetState {
             Padding(
               padding: const EdgeInsets.all(AppTheme.spaceSm),
               child: Text('live.landscape_chat_read_only'.tr(),
-                  style: theme.bodySmall?.copyWith(color: paletteColor(context, Canopy.mist)),
+                  style: theme.bodySmall?.copyWith(color: Canopy.mist),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis),
             )
@@ -437,21 +437,21 @@ extension on _LiveChatWidgetState {
                           minLines: 1,
                           maxLines: 4,
                           style:
-                              theme.bodyMedium?.copyWith(color: paletteColor(context, Canopy.paper)),
-                          cursorColor: paletteColor(context, Canopy.mist),
+                              theme.bodyMedium?.copyWith(color: Canopy.paper),
+                          cursorColor: Canopy.mist,
                           textInputAction: TextInputAction.send,
                           onSubmitted: (_) => _handleSendText(),
                           decoration: InputDecoration(
                             hintText: 'live.chat_placeholder'.tr(),
                             hintStyle: theme.bodyMedium?.copyWith(
-                                color: paletteColor(context, Canopy.paper).withValues(alpha: .55)),
+                                color: Canopy.paper.withValues(alpha: .55)),
                             isDense: true,
                             contentPadding: const EdgeInsets.symmetric(
                               horizontal: AppTheme.spaceLg,
                               vertical: AppTheme.spaceMd,
                             ),
                             filled: true,
-                            fillColor: paletteColor(context, Canopy.paper).withValues(alpha: .08),
+                            fillColor: Canopy.paper.withValues(alpha: .08),
                             border: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
@@ -460,7 +460,7 @@ extension on _LiveChatWidgetState {
                             focusedBorder: OutlineInputBorder(
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill),
-                              borderSide: BorderSide(color: paletteColor(context, Canopy.mist)),
+                              borderSide: const BorderSide(color: Canopy.mist),
                             ),
                           ),
                         ),
@@ -471,12 +471,12 @@ extension on _LiveChatWidgetState {
                         tooltip: 'live.chat_placeholder'.tr(),
                         icon: const Icon(Icons.send_rounded, size: 20),
                         style: IconButton.styleFrom(
-                          backgroundColor: paletteColor(context, Canopy.leaf),
-                          foregroundColor: paletteColor(context, Canopy.paper),
+                          backgroundColor: Canopy.leaf,
+                          foregroundColor: Canopy.paper,
                           disabledBackgroundColor:
-                              paletteColor(context, Canopy.paper).withValues(alpha: .12),
+                              Canopy.paper.withValues(alpha: .12),
                           disabledForegroundColor:
-                              paletteColor(context, Canopy.paper).withValues(alpha: .4),
+                              Canopy.paper.withValues(alpha: .4),
                           minimumSize: const Size.square(CanopySize.target),
                           shape: const CircleBorder(),
                         ),
@@ -543,13 +543,13 @@ class _ConnectionStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (color, label) = switch (state) {
-      ChatConnectionState.live => (paletteColor(context, Canopy.leaf), 'live.chat_status_live'.tr()),
+      ChatConnectionState.live => (Canopy.leaf, 'live.chat_status_live'.tr()),
       ChatConnectionState.connecting => (
-          paletteColor(context, AppTheme.warning),
+          AppTheme.warning,
           'live.chat_status_connecting'.tr()
         ),
       ChatConnectionState.reconnecting => (
-          paletteColor(context, Canopy.liveCrimson),
+          Canopy.liveCrimson,
           'live.chat_status_reconnecting'.tr()
         ),
     };

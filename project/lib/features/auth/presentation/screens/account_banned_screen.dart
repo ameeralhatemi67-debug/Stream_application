@@ -36,15 +36,15 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
         if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            backgroundColor: paletteColor(context, AppTheme.danger),
+            backgroundColor: AppTheme.danger,
             behavior: SnackBarBehavior.floating,
             duration: const Duration(seconds: 6),
             content: Text(
               reason != null && reason.trim().isNotEmpty
                   ? '${'account_banned.title'.tr()}: $reason'
                   : 'account_banned.title'.tr(),
-              style: TextStyle(
-                  color: paletteColor(context, AppTheme.onMedia), fontWeight: FontWeight.bold),
+              style: const TextStyle(
+                  color: AppTheme.onMedia, fontWeight: FontWeight.bold),
             ),
           ),
         );
@@ -52,7 +52,7 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
     }
 
     return Scaffold(
-      backgroundColor: paletteColor(context, AppTheme.bg),
+      backgroundColor: AppTheme.bg,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -70,19 +70,19 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                     width: 76,
                     height: 76,
                     decoration: BoxDecoration(
-                      color: paletteColor(context, AppTheme.danger).withValues(alpha: 0.15),
+                      color: AppTheme.danger.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(AppTheme.radiusLg),
-                      border: Border.all(color: paletteColor(context, AppTheme.danger), width: 2),
+                      border: Border.all(color: AppTheme.danger, width: 2),
                     ),
-                    child: Icon(Icons.block_rounded,
-                        color: paletteColor(context, AppTheme.danger), size: 40),
+                    child: const Icon(Icons.block_rounded,
+                        color: AppTheme.danger, size: 40),
                   ),
                   const SizedBox(height: AppTheme.spaceXl),
                   Text(
                     'account_banned.title'.tr(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.textPrimary),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -91,8 +91,8 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                   Text(
                     'account_banned.body'.tr(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.textSecondary),
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
                       fontSize: 14,
                       height: 1.5,
                     ),
@@ -103,18 +103,18 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppTheme.spaceMd),
                       decoration: BoxDecoration(
-                        color: paletteColor(context, AppTheme.surface),
+                        color: AppTheme.surface,
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                         border: Border.all(
-                            color: paletteColor(context, AppTheme.danger).withValues(alpha: 0.3)),
+                            color: AppTheme.danger.withValues(alpha: 0.3)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'account_banned.reason_label'.tr(),
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textMuted),
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                             ),
@@ -122,8 +122,8 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                           const SizedBox(height: 4),
                           Text(
                             reason,
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textPrimary),
+                            style: const TextStyle(
+                              color: AppTheme.textPrimary,
                               fontSize: 13,
                             ),
                           ),
@@ -137,8 +137,8 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                       namedArgs: {'email': 'support@streamer.app'},
                     ),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.textMuted),
+                    style: const TextStyle(
+                      color: AppTheme.textMuted,
                       fontSize: 12,
                     ),
                   ),
@@ -147,8 +147,8 @@ class _AccountBannedScreenState extends State<AccountBannedScreen> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: paletteColor(context, AppTheme.surfaceAlt),
-                        foregroundColor: paletteColor(context, AppTheme.textPrimary),
+                        backgroundColor: AppTheme.surfaceAlt,
+                        foregroundColor: AppTheme.textPrimary,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
                       ),

@@ -30,7 +30,7 @@ class MarkerSummaryCard extends StatelessWidget {
         button: true,
         label: 'venue.open_maps'.tr(),
         child: Material(
-          color: paletteColor(context, AppTheme.surfaceAlt),
+          color: AppTheme.surfaceAlt,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           child: InkWell(
             key: const ValueKey('map-card-venue'),
@@ -42,8 +42,8 @@ class MarkerSummaryCard extends StatelessWidget {
               padding: const EdgeInsets.all(AppTheme.spaceMd),
               child: Row(
                 children: [
-                  Icon(Icons.location_on_outlined,
-                      color: paletteColor(context, AppTheme.primary), size: 20),
+                  const Icon(Icons.location_on_outlined,
+                      color: AppTheme.primary, size: 20),
                   const SizedBox(width: AppTheme.spaceSm),
                   Expanded(
                       child: Column(
@@ -52,21 +52,21 @@ class MarkerSummaryCard extends StatelessWidget {
                       Text(streamer.getLocalizedVenue(lang),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
+                          style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: paletteColor(context, AppTheme.textPrimary))),
+                              color: AppTheme.textPrimary)),
                       if (streamer.getLocalizedCity(lang).trim().isNotEmpty)
                         Text(streamer.getLocalizedCity(lang),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                                fontSize: 12, color: paletteColor(context, AppTheme.textSecondary))),
+                            style: const TextStyle(
+                                fontSize: 12, color: AppTheme.textSecondary)),
                     ],
                   )),
                   const SizedBox(width: AppTheme.spaceSm),
-                  Icon(Icons.directions_rounded,
-                      color: paletteColor(context, AppTheme.primary), size: 20),
+                  const Icon(Icons.directions_rounded,
+                      color: AppTheme.primary, size: 20),
                 ],
               ),
             ),

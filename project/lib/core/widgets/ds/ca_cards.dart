@@ -25,13 +25,13 @@ class CaCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final card = Container(
       decoration: BoxDecoration(
-          color: paletteColor(context, Canopy.paper),
+          color: Canopy.paper,
           borderRadius: BorderRadius.circular(CanopyRadius.card),
           boxShadow: variant == CaCardVariant.flat
               ? null
               : [
-                  if (variant == CaCardVariant.feature) ...paletteShadows(context, CanopyShadow.bezel),
-                  ...paletteShadows(context, CanopyShadow.card),
+                  if (variant == CaCardVariant.feature) ...CanopyShadow.bezel,
+                  ...CanopyShadow.card,
                 ]),
       child: ClipRRect(
           borderRadius: BorderRadius.circular(CanopyRadius.card),
@@ -56,17 +56,17 @@ class CaStatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foreground = switch (kind) {
-      CaStatusKind.live || CaStatusKind.audio => paletteColor(context, Canopy.paper),
-      CaStatusKind.pending => paletteColor(context, Canopy.warning),
-      CaStatusKind.verified => paletteColor(context, Canopy.brandGreen),
-      CaStatusKind.offline => paletteColor(context, Canopy.slate),
+      CaStatusKind.live || CaStatusKind.audio => Canopy.paper,
+      CaStatusKind.pending => Canopy.warning,
+      CaStatusKind.verified => Canopy.brandGreen,
+      CaStatusKind.offline => Canopy.slate,
     };
     final background = switch (kind) {
       CaStatusKind.live => null,
-      CaStatusKind.audio => paletteColor(context, Canopy.infoTeal),
-      CaStatusKind.offline => paletteColor(context, Canopy.mist),
-      CaStatusKind.pending => paletteColor(context, Canopy.warningTint),
-      CaStatusKind.verified => paletteColor(context, Canopy.mint),
+      CaStatusKind.audio => Canopy.infoTeal,
+      CaStatusKind.offline => Canopy.mist,
+      CaStatusKind.pending => Canopy.warningTint,
+      CaStatusKind.verified => Canopy.mint,
     };
     final icon = switch (kind) {
       CaStatusKind.audio => CaGlyph.mic,
@@ -82,10 +82,10 @@ class CaStatusChip extends StatelessWidget {
           decoration: BoxDecoration(
               color: background,
               gradient:
-                  kind == CaStatusKind.live ? paletteGradient(context, AppGradients.liveSignal) : null,
+                  kind == CaStatusKind.live ? AppGradients.liveSignal : null,
               borderRadius: BorderRadius.circular(CanopyRadius.pill),
               border: kind == CaStatusKind.verified
-                  ? Border.all(color: paletteColor(context, Canopy.majlisGold))
+                  ? Border.all(color: Canopy.majlisGold)
                   : null),
           child: Row(mainAxisSize: MainAxisSize.min, children: [
             if (icon != null) ...[
@@ -159,11 +159,11 @@ class _CaAvatarState extends State<CaAvatar>
   }
 
   SweepGradient? get _gradient => widget.live
-      ? paletteGradient(context, CanopyGradients.liveRing)
+      ? CanopyGradients.liveRing
       : switch (widget.ring) {
           CaAvatarRing.none => null,
-          CaAvatarRing.brand || CaAvatarRing.admin => paletteGradient(context, CanopyGradients.ring),
-          CaAvatarRing.moderator => paletteGradient(context, CanopyGradients.moderatorRing),
+          CaAvatarRing.brand || CaAvatarRing.admin => CanopyGradients.ring,
+          CaAvatarRing.moderator => CanopyGradients.moderatorRing,
         };
 
   @override
@@ -182,11 +182,11 @@ class _CaAvatarState extends State<CaAvatar>
     final imageRadius = (footprint - inset * 2) / 2;
     final fallback = DecoratedBox(
         decoration:
-            BoxDecoration(gradient: paletteGradient(context, CanopyGradients.avatarFallback)),
+            const BoxDecoration(gradient: CanopyGradients.avatarFallback),
         child: Center(
             child: Text(initial,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    color: paletteColor(context, Canopy.brandGreen), fontSize: imageRadius))));
+                    color: Canopy.brandGreen, fontSize: imageRadius))));
     final content = StreamerAvatar(
         avatarUrl: widget.url,
         radius: imageRadius,
@@ -212,7 +212,7 @@ class _CaAvatarState extends State<CaAvatar>
                 padding: const EdgeInsets.all(band),
                 child: DecoratedBox(
                     decoration: BoxDecoration(
-                        color: paletteColor(context, Canopy.paper),
+                        color: Canopy.paper,
                         shape: widget.org ? BoxShape.rectangle : BoxShape.circle,
                         borderRadius: widget.org
                             ? BorderRadius.circular(outerCorner - band)
@@ -474,19 +474,19 @@ class CaLectureTile extends StatelessWidget {
     final image = Stack(fit: StackFit.expand, children: [
       _CardImage(url: imageUrl),
       if (duration != null) ...[
-        DecoratedBox(
-            decoration: BoxDecoration(gradient: paletteGradient(context, AppGradients.mediaScrim))),
+        const DecoratedBox(
+            decoration: BoxDecoration(gradient: AppGradients.mediaScrim)),
         PositionedDirectional(
             bottom: AppTheme.spaceXs,
             end: AppTheme.spaceXs,
             child: Container(
                 padding: const EdgeInsets.all(AppTheme.spaceXs),
                 decoration: BoxDecoration(
-                    color: paletteColor(context, Canopy.forestDeep),
+                    color: Canopy.forestDeep,
                     borderRadius: BorderRadius.circular(AppTheme.radiusXs)),
                 child: Text(duration!,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: paletteColor(context, Canopy.paper),
+                        color: Canopy.paper,
                         fontFeatures: const [FontFeature.tabularFigures()])))),
       ],
     ]);
@@ -510,7 +510,7 @@ class CaLectureTile extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .labelLarge
-                  ?.copyWith(color: paletteColor(context, Canopy.ink))),
+                  ?.copyWith(color: Canopy.ink)),
           const SizedBox(height: AppTheme.spaceXs),
           Text(meta, style: Theme.of(context).textTheme.bodySmall),
         ]);
@@ -540,8 +540,8 @@ class _CardImage extends StatelessWidget {
   final Widget? loadingPlaceholder;
   @override
   Widget build(BuildContext context) {
-    final fallback =
-        DecoratedBox(decoration: BoxDecoration(gradient: paletteGradient(context, AppGradients.canopy)));
+    const fallback =
+        DecoratedBox(decoration: BoxDecoration(gradient: AppGradients.canopy));
     final image = resolveImageProviderOrNull(url);
     if (image == null) return fallback;
     return LayoutBuilder(

@@ -75,8 +75,9 @@ void main() {
     await EasyLocalization.ensureInitialized();
   });
 
+  // App layouts end below the website breakpoint (HidayahWeb.minWidth, 1024).
   for (final language in ['en', 'ar']) {
-    for (final width in [320.0, 1280.0]) {
+    for (final width in [320.0, 1000.0]) {
       for (final scale in [1.0, 2.0]) {
         testWidgets('Discovery row height $language ${width}px ${scale}x',
             (tester) async {
@@ -99,7 +100,7 @@ void main() {
           expect(cards, findsNWidgets(2));
           expect(tester.getSize(cards.first).height,
               tester.getSize(cards.last).height);
-          if (width == 1280) {
+          if (width == 1000) {
             tester.view.physicalSize = const Size(800, 900);
             await tester.pumpAndSettle();
             expect(tester.getSize(cards.first).height,
@@ -114,7 +115,7 @@ void main() {
   }
 
   for (final lang in ['en', 'ar']) {
-    for (final width in [320.0, 1280.0]) {
+    for (final width in [320.0, 1000.0]) {
       for (final scale in [1.0, 2.0]) {
         for (final location in ['map', 'discovery', 'profile', 'settings']) {
           testWidgets('$location card $lang ${width}px ${scale}x text',
@@ -179,7 +180,11 @@ void main() {
               expect(
                   cardWidth,
                   closeTo(
-                      CanopySize.profilePaneLarge - 2 * AppTheme.spaceLg, 1));
+                      (width >= CanopyWindow.large
+                              ? CanopySize.profilePaneLarge
+                              : CanopySize.profilePane) -
+                          2 * AppTheme.spaceLg,
+                      1));
             } else if (width >= 900 && location == 'settings') {
               expect(cardWidth, greaterThan(420));
             } else {
@@ -240,7 +245,7 @@ void main() {
               if (width >= 900) {
                 final rect = tester.getRect(surface);
                 expect(lang == 'en' ? rect.left : width - rect.right,
-                    closeTo(CanopyWindow.insetLarge, 1));
+                    closeTo(width >= CanopyWindow.large ? CanopyWindow.insetLarge : CanopyWindow.insetExpanded, 1));
               }
               expect(find.text('profile.view_channel'.tr()), findsNothing);
               expect(find.text('#Physics'), findsOneWidget);
@@ -268,7 +273,7 @@ void main() {
   for (final lang in ['en', 'ar']) {
     testWidgets('desktop profile controls mirror within identity pane in $lang',
         (tester) async {
-      tester.view.physicalSize = const Size(1280, 900);
+      tester.view.physicalSize = const Size(1000, 900);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -285,7 +290,7 @@ void main() {
           (w) => w is CaIconButton && w.icon == CaGlyph.share);
       final chip = find.byType(CaLanguageChip);
       final status = find.byType(CaStatusChip).first;
-      final paneEdge = lang == 'en' ? 0.0 : 1280.0;
+      final paneEdge = lang == 'en' ? 0.0 : 1000.0;
       expect((tester.getCenter(back).dx - paneEdge).abs(), lessThan(100));
       expect((tester.getCenter(share).dx - paneEdge).abs(),
           lessThan(CanopySize.profilePaneLarge));
@@ -302,7 +307,7 @@ void main() {
       provider.dispose();
     });
 
-    for (final layout in [(420.0, 1), (800.0, 2), (1000.0, 3), (1280.0, 4)]) {
+    for (final layout in [(420.0, 1), (800.0, 2), (1000.0, 3)]) {
       testWidgets(
           'discovery uses ${layout.$2} columns at ${layout.$1}px in $lang',
           (tester) async {

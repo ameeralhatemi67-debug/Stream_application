@@ -149,19 +149,19 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
         Container(
           height: AppTheme.searchBarHeight,
           decoration: BoxDecoration(
-            color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.80),
+            color: AppTheme.surface.withValues(alpha: 0.80),
             borderRadius: BorderRadius.circular(AppTheme.searchBarRadius),
             // UI-01: same focus treatment as the feed search bar -- neither
             // had one before, which is its own contrast/affordance gap.
             border: Border.all(
-              color: _isFocused ? paletteColor(context, AppTheme.primary) : paletteColor(context, AppTheme.border),
+              color: _isFocused ? AppTheme.primary : AppTheme.border,
               width: _isFocused ? 1.6 : AppTheme.searchBarBorderWidth,
             ),
-            boxShadow: [
+            boxShadow: const [
               BoxShadow(
-                color: paletteColor(context, AppTheme.shadowSoft),
+                color: AppTheme.shadowSoft,
                 blurRadius: 10,
-                offset: const Offset(0, 3),
+                offset: Offset(0, 3),
               ),
             ],
           ),
@@ -169,27 +169,27 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
             controller: _searchController,
             focusNode: _focusNode,
             onChanged: _onQueryChanged,
-            style: TextStyle(
-              color: paletteColor(context, AppTheme.textPrimary),
+            style: const TextStyle(
+              color: AppTheme.textPrimary,
               fontSize: 13,
             ),
             decoration: InputDecoration(
               hintText: context.tr('map.search_placeholder'),
-              hintStyle: TextStyle(
-                color: paletteColor(context, AppTheme.textMuted),
+              hintStyle: const TextStyle(
+                color: AppTheme.textMuted,
                 fontSize: 12,
               ),
-              prefixIcon: Icon(
+              prefixIcon: const Icon(
                 Icons.search_rounded,
-                color: paletteColor(context, AppTheme.primary),
+                color: AppTheme.primary,
                 size: 20,
               ),
               suffixIcon: _searchController.text.isNotEmpty
                   ? IconButton(
-                      icon: Icon(
+                      icon: const Icon(
                         Icons.cancel_rounded,
                         size: 18,
-                        color: paletteColor(context, AppTheme.textMuted),
+                        color: AppTheme.textMuted,
                       ),
                       onPressed: () {
                         _searchController.clear();
@@ -211,30 +211,30 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
             margin: const EdgeInsets.only(top: 8),
             constraints: const BoxConstraints(maxHeight: 240),
             decoration: BoxDecoration(
-              color: paletteColor(context, AppTheme.surface).withValues(alpha: 0.95),
+              color: AppTheme.surface.withValues(alpha: 0.95),
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-              border: Border.all(color: paletteColor(context, AppTheme.border)),
-              boxShadow: [
+              border: Border.all(color: AppTheme.border),
+              boxShadow: const [
                 BoxShadow(
-                  color: paletteColor(context, AppTheme.shadow),
+                  color: AppTheme.shadow,
                   blurRadius: 20,
-                  offset: const Offset(0, 6),
+                  offset: Offset(0, 6),
                 ),
               ],
             ),
             child: ListView.separated(
               shrinkWrap: true,
               itemCount: results.isEmpty ? 1 : results.length,
-              separatorBuilder: (context, index) => Divider(
+              separatorBuilder: (context, index) => const Divider(
                 height: 1,
-                color: paletteColor(context, AppTheme.border),
+                color: AppTheme.border,
               ),
               itemBuilder: (context, index) {
                 if (results.isEmpty) {
                   return ListTile(
                     title: Text('map.no_search_results'.tr()),
-                    leading: Icon(Icons.search_off_rounded,
-                        color: paletteColor(context, AppTheme.textMuted)),
+                    leading: const Icon(Icons.search_off_rounded,
+                        color: AppTheme.textMuted),
                   );
                 }
                 final result = results[index];
@@ -244,28 +244,28 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
                       color: result.isLive
-                          ? paletteColor(context, AppTheme.danger).withValues(alpha: 0.2)
-                          : paletteColor(context, AppTheme.primary).withValues(alpha: 0.15),
+                          ? AppTheme.danger.withValues(alpha: 0.2)
+                          : AppTheme.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
                       result.icon,
                       size: 16,
-                      color: result.isLive ? paletteColor(context, AppTheme.danger) : paletteColor(context, AppTheme.primary),
+                      color: result.isLive ? AppTheme.danger : AppTheme.primary,
                     ),
                   ),
                   title: Text(
                     result.title,
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.textPrimary),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
                   subtitle: Text(
                     result.subtitle,
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.textSecondary),
+                    style: const TextStyle(
+                      color: AppTheme.textSecondary,
                       fontSize: 11,
                     ),
                   ),
@@ -276,13 +276,13 @@ class _TopSpatialSearchBarState extends State<TopSpatialSearchBar> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: paletteColor(context, AppTheme.danger),
+                            color: AppTheme.danger,
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
                             'design_ui.live'.tr(),
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.onMedia),
+                            style: const TextStyle(
+                              color: AppTheme.onMedia,
                               fontSize: 9,
                               fontWeight: FontWeight.bold,
                             ),

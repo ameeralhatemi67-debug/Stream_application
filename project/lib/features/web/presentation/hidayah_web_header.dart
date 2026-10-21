@@ -146,8 +146,12 @@ class HidayahWebHeader extends StatelessWidget {
                       child: Row(mainAxisSize: MainAxisSize.min, children: [
                         const AppLogo(size: 40),
                         const SizedBox(width: 10),
+                        // The wordmark is a lockup in a 72 px bar: it grows
+                        // with large text up to 1.4x, then holds.
                         Flexible(
-                            child: Column(
+                            child: MediaQuery.withClampedTextScaling(
+                                maxScaleFactor: 1.4,
+                                child: Column(
                                 mainAxisSize: MainAxisSize.min,
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -163,7 +167,7 @@ class HidayahWebHeader extends StatelessWidget {
                                           ? HidayahGold.s300
                                           : HidayahGold.s600,
                                       height: 1.3)),
-                            ])),
+                            ]))),
                       ]))),
               const SizedBox(width: 28),
               // Links scroll rather than overflow on narrow or enlarged text.
@@ -322,8 +326,10 @@ class HidayahWebPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
       backgroundColor: dark ? HidayahGold.s950 : HidayahGold.g50,
-      body: Column(children: [
+      // On a browser there are no system bars; a landscape tablet has them.
+      body: SafeArea(
+          child: Column(children: [
         HidayahWebHeader(active: active, dark: dark),
         Expanded(child: body),
-      ]));
+      ])));
 }

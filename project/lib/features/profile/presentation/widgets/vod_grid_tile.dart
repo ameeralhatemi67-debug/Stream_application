@@ -49,12 +49,12 @@ class VodGridTile extends StatelessWidget {
                                 : 'https://img.youtube.com/vi/${vod.youtubeVideoId}/hqdefault.jpg'),
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) =>
-                            ColoredBox(color: paletteColor(context, Canopy.mint))),
-                    DecoratedBox(
+                            const ColoredBox(color: Canopy.mint)),
+                    const DecoratedBox(
                         decoration:
-                            BoxDecoration(gradient: paletteGradient(context, AppGradients.mediaScrim))),
-                    Center(
-                        child: CaIcon(CaGlyph.play, color: paletteColor(context, Canopy.paper))),
+                            BoxDecoration(gradient: AppGradients.mediaScrim)),
+                    const Center(
+                        child: CaIcon(CaGlyph.play, color: Canopy.paper)),
                     if (saved)
                       PositionedDirectional(
                         top: AppTheme.spaceSm,
@@ -66,7 +66,7 @@ class VodGridTile extends StatelessWidget {
                                   horizontal: AppTheme.spaceSm,
                                   vertical: AppTheme.spaceXs),
                               decoration: BoxDecoration(
-                                  color: paletteColor(context, Canopy.mint),
+                                  color: Canopy.mint,
                                   borderRadius:
                                       BorderRadius.circular(CanopyRadius.pill)),
                               child: Row(
@@ -80,7 +80,7 @@ class VodGridTile extends StatelessWidget {
                                             .textTheme
                                             .labelSmall
                                             ?.copyWith(
-                                                color: paletteColor(context, Canopy.brandGreen))),
+                                                color: Canopy.brandGreen)),
                                   ]),
                             )),
                       ),
@@ -91,14 +91,14 @@ class VodGridTile extends StatelessWidget {
                           child: Container(
                               padding: const EdgeInsets.all(AppTheme.spaceXs),
                               decoration: BoxDecoration(
-                                  color: paletteColor(context, Canopy.forestDeep),
+                                  color: Canopy.forestDeep,
                                   borderRadius:
                                       BorderRadius.circular(CanopyRadius.pill)),
                               child: Text(vod.formattedDuration,
                                   style: Theme.of(context)
                                       .textTheme
                                       .labelSmall
-                                      ?.copyWith(color: paletteColor(context, Canopy.paper))))),
+                                      ?.copyWith(color: Canopy.paper)))),
                   ])),
               Padding(
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
@@ -113,7 +113,7 @@ class VodGridTile extends StatelessWidget {
                             style: Theme.of(context)
                                 .textTheme
                                 .labelLarge
-                                ?.copyWith(color: paletteColor(context, Canopy.ink))),
+                                ?.copyWith(color: Canopy.ink)),
                         const SizedBox(height: AppTheme.spaceXs),
                         CaFixedLines(
                             '${vod.recordedDate} • ${vod.viewCount} ${'profile.views'.tr()}',

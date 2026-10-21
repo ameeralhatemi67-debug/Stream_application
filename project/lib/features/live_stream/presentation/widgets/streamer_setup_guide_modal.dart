@@ -46,7 +46,7 @@ class StreamerSetupGuideModal extends StatefulWidget {
                 mode: mode,
                 externalSender: externalSender,
                 initialPage: initialPage)),
-        barrierColor: paletteColor(context, AppTheme.media).withValues(alpha: 0.6));
+        barrierColor: AppTheme.media.withValues(alpha: 0.6));
   }
 
   @override
@@ -100,7 +100,7 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(_icon, color: paletteColor(context, AppTheme.primary), size: 22),
+            Icon(_icon, color: AppTheme.primary, size: 22),
             if (mode == StudioMode.phone) ...[
               Row(
                 children: [
@@ -157,11 +157,11 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                   children: [
                     CircleAvatar(
                       radius: 11,
-                      backgroundColor: paletteColor(context, Canopy.mint),
+                      backgroundColor: Canopy.mint,
                       child: Text(
                         '${i + 1}',
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.ink),
+                        style: const TextStyle(
+                            color: Canopy.ink,
                             fontSize: 12,
                             fontWeight: FontWeight.bold),
                       ),
@@ -170,8 +170,8 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                     Expanded(
                       child: Text(
                         key.tr(),
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.slate),
+                        style: const TextStyle(
+                            color: Canopy.slate,
                             fontSize: 13,
                             height: 1.45),
                       ),
@@ -185,25 +185,25 @@ class _StreamerSetupGuideModalState extends State<StreamerSetupGuideModal> {
                 key: const Key('studio-guide-link-vs-key'),
                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, Canopy.mint),
+                  color: Canopy.mint,
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
-                  border: Border.all(color: paletteColor(context, Canopy.hairline)),
+                  border: Border.all(color: Canopy.hairline),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'live_guide.link_vs_key_title'.tr(),
-                      style: TextStyle(
-                          color: paletteColor(context, Canopy.ink),
+                      style: const TextStyle(
+                          color: Canopy.ink,
                           fontSize: 13,
                           fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: AppTheme.spaceXs),
                     Text(
                       'live_guide.link_vs_key_body'.tr(),
-                      style: TextStyle(
-                          color: paletteColor(context, Canopy.slate),
+                      style: const TextStyle(
+                          color: Canopy.slate,
                           fontSize: 12.5,
                           height: 1.45),
                     ),

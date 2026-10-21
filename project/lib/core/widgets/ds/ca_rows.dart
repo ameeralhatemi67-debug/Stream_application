@@ -29,8 +29,8 @@ class CaStepper extends StatelessWidget {
                       child: Container(
                           height: CanopySize.stepBar,
                           decoration: BoxDecoration(
-                              color: i <= index ? null : paletteColor(context, Canopy.mist),
-                              gradient: i <= index ? paletteGradient(context, AppGradients.pill) : null,
+                              color: i <= index ? null : Canopy.mist,
+                              gradient: i <= index ? AppGradients.pill : null,
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill)))),
                 ]
@@ -58,7 +58,7 @@ class CaKpiTile extends StatelessWidget {
                     ? Theme.of(context)
                         .textTheme
                         .bodyMedium
-                        ?.copyWith(color: paletteColor(context, Canopy.haze))
+                        ?.copyWith(color: Canopy.haze)
                     : Theme.of(context).textTheme.headlineMedium?.copyWith(
                         fontFeatures: const [FontFeature.tabularFigures()])),
             if (value == null)
@@ -70,7 +70,7 @@ class CaKpiTile extends StatelessWidget {
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
-                    ?.copyWith(color: paletteColor(context, Canopy.slate))),
+                    ?.copyWith(color: Canopy.slate)),
           ]));
 }
 
@@ -98,7 +98,7 @@ class CaSettingsRow extends StatelessWidget {
   Widget build(BuildContext context) =>
       Column(mainAxisSize: MainAxisSize.min, children: [
         if (divider)
-          Divider(height: CanopySize.stroke, color: paletteColor(context, Canopy.hairline)),
+          const Divider(height: CanopySize.stroke, color: Canopy.hairline),
         CaFocusRing(
             radius: CanopyRadius.input,
             child: Material(
@@ -172,15 +172,15 @@ class CaQualityPresets<T> extends StatelessWidget {
                       radius: CanopyRadius.input,
                       child: Material(
                           color: options[i].value == value
-                              ? paletteColor(context, Canopy.mint)
-                              : paletteColor(context, Canopy.paper),
+                              ? Canopy.mint
+                              : Canopy.paper,
                           shape: RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.input),
                               side: BorderSide(
                                   color: options[i].value == value
-                                      ? paletteColor(context, Canopy.brandGreen)
-                                      : paletteColor(context, Canopy.hairline))),
+                                      ? Canopy.brandGreen
+                                      : Canopy.hairline)),
                           clipBehavior: Clip.antiAlias,
                           child: InkWell(
                               onTap: onChanged == null
@@ -205,7 +205,7 @@ class CaQualityPresets<T> extends StatelessWidget {
                                                     .labelLarge
                                                     ?.copyWith(
                                                         color:
-                                                            paletteColor(context, Canopy.brandGreen))),
+                                                            Canopy.brandGreen)),
                                             Text(options[i].detail,
                                                 textAlign: TextAlign.center,
                                                 style: Theme.of(context)
@@ -213,7 +213,7 @@ class CaQualityPresets<T> extends StatelessWidget {
                                                     .labelSmall
                                                     ?.copyWith(
                                                         color: cinema
-                                                            ? paletteColor(context, Canopy.slate)
+                                                            ? Canopy.slate
                                                             : null)),
                                           ])))))))),
         ]
@@ -236,15 +236,15 @@ class CaBanner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final foreground = switch (kind) {
-      CaBannerKind.warning => paletteColor(context, Canopy.warning),
-      CaBannerKind.error => paletteColor(context, Canopy.liveCrimson),
-      CaBannerKind.success => paletteColor(context, Canopy.brandGreen),
-      CaBannerKind.info => paletteColor(context, Canopy.slate)
+      CaBannerKind.warning => Canopy.warning,
+      CaBannerKind.error => Canopy.liveCrimson,
+      CaBannerKind.success => Canopy.brandGreen,
+      CaBannerKind.info => Canopy.slate
     };
     final background = switch (kind) {
-      CaBannerKind.warning => paletteColor(context, Canopy.warningTint),
-      CaBannerKind.error => paletteColor(context, Canopy.errorTint),
-      _ => paletteColor(context, Canopy.mint)
+      CaBannerKind.warning => Canopy.warningTint,
+      CaBannerKind.error => Canopy.errorTint,
+      _ => Canopy.mint
     };
     final icon = switch (kind) {
       CaBannerKind.warning || CaBannerKind.error => CaGlyph.alert,

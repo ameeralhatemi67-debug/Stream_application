@@ -208,11 +208,11 @@ class _BroadcasterApplicationSheetState
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: paletteColor(context, Canopy.liveCrimson),
+            color: Canopy.liveCrimson,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x33123E26),
+                color: Color(0x334B320E),
                 blurRadius: 10,
                 offset: Offset(0, 4),
               ),
@@ -220,13 +220,13 @@ class _BroadcasterApplicationSheetState
           ),
           child: Row(
             children: [
-              Icon(Icons.error_outline_rounded, color: paletteColor(context, AppTheme.onMedia)),
+              const Icon(Icons.error_outline_rounded, color: AppTheme.onMedia),
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
                   message,
-                  style: TextStyle(
-                    color: paletteColor(context, AppTheme.onMedia),
+                  style: const TextStyle(
+                    color: AppTheme.onMedia,
                     fontWeight: FontWeight.bold,
                     fontSize: 13,
                   ),
@@ -505,11 +505,11 @@ class _BroadcasterApplicationSheetState
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: paletteColor(context, Canopy.leaf),
+              color: Canopy.leaf,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x33123E26),
+                  color: Color(0x334B320E),
                   blurRadius: 10,
                   offset: Offset(0, 4),
                 ),
@@ -517,8 +517,8 @@ class _BroadcasterApplicationSheetState
             ),
             child: Row(
               children: [
-                Icon(Icons.check_circle_outline_rounded,
-                    color: paletteColor(context, AppTheme.onMedia)),
+                const Icon(Icons.check_circle_outline_rounded,
+                    color: AppTheme.onMedia),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -526,8 +526,8 @@ class _BroadcasterApplicationSheetState
                             ? 'application.submitted_toast'
                             : 'profile.edit_saved')
                         .tr(),
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.onMedia),
+                    style: const TextStyle(
+                      color: AppTheme.onMedia,
                       fontWeight: FontWeight.bold,
                       fontSize: 13,
                     ),
@@ -574,7 +574,7 @@ class _BroadcasterApplicationSheetState
                       width: 40,
                       height: 4,
                       decoration: BoxDecoration(
-                        color: paletteColor(context, Canopy.hairline),
+                        color: Canopy.hairline,
                         borderRadius: BorderRadius.circular(2),
                       ),
                     ),
@@ -587,12 +587,12 @@ class _BroadcasterApplicationSheetState
                       Container(
                         padding: const EdgeInsets.all(AppTheme.spaceSm),
                         decoration: BoxDecoration(
-                          color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.15),
+                          color: AppTheme.primary.withValues(alpha: 0.15),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusMd),
                         ),
-                        child: Icon(Icons.verified_rounded,
-                            color: paletteColor(context, AppTheme.primary), size: 22),
+                        child: const Icon(Icons.verified_rounded,
+                            color: AppTheme.primary, size: 22),
                       ),
                       const SizedBox(width: AppTheme.spaceSm),
                       Expanded(
@@ -604,8 +604,8 @@ class _BroadcasterApplicationSheetState
                                       ? 'settings.edit_profile'
                                       : 'application.title')
                                   .tr(),
-                              style: TextStyle(
-                                color: paletteColor(context, Canopy.ink),
+                              style: const TextStyle(
+                                color: Canopy.ink,
                                 fontSize: 17,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -615,8 +615,8 @@ class _BroadcasterApplicationSheetState
                                       ? 'profile.edit_review_help'
                                       : 'application.subtitle')
                                   .tr(),
-                              style: TextStyle(
-                                color: paletteColor(context, Canopy.slate),
+                              style: const TextStyle(
+                                color: Canopy.slate,
                                 fontSize: 12,
                               ),
                             ),
@@ -624,13 +624,13 @@ class _BroadcasterApplicationSheetState
                         ),
                       ),
                       IconButton(
-                        icon: Icon(Icons.close_rounded,
-                            color: paletteColor(context, Canopy.slate)),
+                        icon: const Icon(Icons.close_rounded,
+                            color: Canopy.slate),
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                     ],
                   ),
-                  Divider(color: paletteColor(context, Canopy.hairline), height: 24),
+                  const Divider(color: Canopy.hairline, height: 24),
 
                   if (widget.editingProfile) ...[
                     _buildSectionHeader('settings.profile_media'.tr(),
@@ -756,9 +756,9 @@ class _BroadcasterApplicationSheetState
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: paletteColor(context, Canopy.mint),
+        color: Canopy.mint,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: paletteColor(context, Canopy.hairline)),
+        border: Border.all(color: Canopy.hairline),
       ),
       child: Row(
         children: [
@@ -810,10 +810,10 @@ class _BroadcasterApplicationSheetState
             : CanopyMotion.buttonState,
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? paletteColor(context, AppTheme.surface) : Colors.transparent,
+          color: isSelected ? AppTheme.surface : Colors.transparent,
           borderRadius: BorderRadius.circular(AppTheme.radiusSm),
           border: isSelected
-              ? Border.all(color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.8))
+              ? Border.all(color: AppTheme.primary.withValues(alpha: 0.8))
               : null,
         ),
         child: Row(
@@ -822,8 +822,8 @@ class _BroadcasterApplicationSheetState
               icon,
               size: 20,
               color: unavailable
-                  ? paletteColor(context, Canopy.haze)
-                  : (isSelected ? paletteColor(context, AppTheme.primary) : paletteColor(context, Canopy.slate)),
+                  ? Canopy.haze
+                  : (isSelected ? AppTheme.primary : Canopy.slate),
             ),
             const SizedBox(width: 8),
             Expanded(
@@ -834,10 +834,10 @@ class _BroadcasterApplicationSheetState
                     title,
                     style: TextStyle(
                       color: unavailable
-                          ? paletteColor(context, Canopy.haze)
+                          ? Canopy.haze
                           : isSelected
-                              ? paletteColor(context, Canopy.ink)
-                              : paletteColor(context, Canopy.slate),
+                              ? Canopy.ink
+                              : Canopy.slate,
                       fontWeight:
                           isSelected ? FontWeight.bold : FontWeight.w500,
                       fontSize: 12,
@@ -1035,8 +1035,8 @@ class _BroadcasterApplicationSheetState
           ),
           const SizedBox(height: AppTheme.spaceSm),
           Text('profile.current_location'.tr(),
-              style: TextStyle(
-                  color: paletteColor(context, Canopy.ink), fontWeight: FontWeight.w600)),
+              style: const TextStyle(
+                  color: Canopy.ink, fontWeight: FontWeight.w600)),
           const SizedBox(height: AppTheme.spaceXs),
           OutlinedButton.icon(
             onPressed: _openLocationPicker,
@@ -1052,7 +1052,7 @@ class _BroadcasterApplicationSheetState
                     'coords':
                         '${_latController.text.trim()}, ${_lngController.text.trim()}',
                   }),
-            style: TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
         ],
       ),
@@ -1139,18 +1139,18 @@ class _BroadcasterApplicationSheetState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: paletteColor(context, Canopy.mint),
+        color: Canopy.mint,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-        border: Border.all(color: paletteColor(context, Canopy.hairline)),
+        border: Border.all(color: Canopy.hairline),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: _selectedCategory,
           isExpanded: true,
-          dropdownColor: paletteColor(context, Canopy.mint),
-          style: TextStyle(color: paletteColor(context, Canopy.ink), fontSize: 13),
-          icon: Icon(Icons.arrow_drop_down_rounded,
-              color: paletteColor(context, Canopy.slate)),
+          dropdownColor: Canopy.mint,
+          style: const TextStyle(color: Canopy.ink, fontSize: 13),
+          icon: const Icon(Icons.arrow_drop_down_rounded,
+              color: Canopy.slate),
           items: categories.entries
               .map((category) => DropdownMenuItem(
                     value: category.key,
@@ -1172,13 +1172,13 @@ class _BroadcasterApplicationSheetState
   Widget _buildSectionHeader(String title, IconData icon) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: paletteColor(context, AppTheme.primary)),
+        Icon(icon, size: 16, color: AppTheme.primary),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             title,
-            style: TextStyle(
-              color: paletteColor(context, Canopy.ink),
+            style: const TextStyle(
+              color: Canopy.ink,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),

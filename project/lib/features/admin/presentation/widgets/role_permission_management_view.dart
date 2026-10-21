@@ -43,7 +43,7 @@ class _RolePermissionManagementViewState
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, Canopy.leaf),
+        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
       ),
     );
   }
@@ -126,11 +126,11 @@ class _RolePermissionManagementViewState
   Color _roleColor(String role) {
     switch (role) {
       case 'master_admin':
-        return paletteColor(context, Canopy.liveCrimson);
+        return Canopy.liveCrimson;
       case 'admin':
-        return paletteColor(context, AppTheme.primary);
+        return AppTheme.primary;
       default:
-        return paletteColor(context, AppTheme.accent);
+        return AppTheme.accent;
     }
   }
 
@@ -157,13 +157,13 @@ class _RolePermissionManagementViewState
             runSpacing: AppTheme.spaceSm,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              Icon(Icons.admin_panel_settings_rounded,
-                  color: paletteColor(context, AppTheme.primary), size: 20),
+              const Icon(Icons.admin_panel_settings_rounded,
+                  color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'design_ui.roles_permissions'.tr(),
-                style: TextStyle(
-                  color: paletteColor(context, Canopy.ink),
+                style: const TextStyle(
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -174,7 +174,7 @@ class _RolePermissionManagementViewState
           Text(
             'design_ui.master_admin_can_grant_revoke_admin_or_master_admin_and_toggle_ex'
                 .tr(),
-            style: TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12),
+            style: const TextStyle(color: Canopy.slate, fontSize: 12),
           ),
           const SizedBox(height: AppTheme.spaceLg),
           _buildGrantRoleCard(provider),
@@ -223,7 +223,7 @@ class _RolePermissionManagementViewState
         const SizedBox(height: AppTheme.spaceSm),
         Text(
           'admin.moderator_delegation_desc'.tr(),
-          style: TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12),
+          style: const TextStyle(color: Canopy.slate, fontSize: 12),
         ),
         const SizedBox(height: AppTheme.spaceMd),
         if (moderators.isEmpty)
@@ -234,54 +234,54 @@ class _RolePermissionManagementViewState
               child: SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: DataTable(
-                  headingRowColor: WidgetStateProperty.all(paletteColor(context, Canopy.mint)),
+                  headingRowColor: WidgetStateProperty.all(Canopy.mint),
                   columns: [
                     DataColumn(
                         label: Text('admin.moderator_col_user'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12))),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
                     DataColumn(
                         label: Text('admin.moderator_col_assigned_by'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12))),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
                     DataColumn(
                         label: Text('admin.moderator_col_scope'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12))),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
                     DataColumn(
                         label: Text('admin.moderator_col_date'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12))),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
                     DataColumn(
                         label: Text('admin.moderator_col_revoke'.tr(),
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.slate), fontSize: 12))),
+                            style: const TextStyle(
+                                color: Canopy.slate, fontSize: 12))),
                   ],
                   rows: moderators.map((m) {
                     return DataRow(cells: [
                       DataCell(Text(
                         m.moderatorEmail ?? m.moderatorDisplayName,
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.ink), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.ink, fontSize: 12),
                       )),
                       DataCell(Text(
                         m.assignedByDisplayName,
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.slate), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       )),
                       DataCell(Text(
                         'roles.${m.scope.name}'.tr(),
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.slate), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       )),
                       DataCell(Text(
                         DateFormat('yyyy-MM-dd').format(m.grantedAt),
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.haze), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.haze, fontSize: 12),
                       )),
                       DataCell(IconButton(
-                        icon: Icon(Icons.remove_circle_outline_rounded,
-                            size: 18, color: paletteColor(context, Canopy.liveCrimson)),
+                        icon: const Icon(Icons.remove_circle_outline_rounded,
+                            size: 18, color: Canopy.liveCrimson),
                         tooltip: 'admin.moderator_col_revoke'.tr(),
                         onPressed: () async {
                           try {
@@ -307,8 +307,8 @@ class _RolePermissionManagementViewState
       children: [
         Text(
           title,
-          style: TextStyle(
-            color: paletteColor(context, Canopy.ink),
+          style: const TextStyle(
+            color: Canopy.ink,
             fontSize: 14,
             fontWeight: FontWeight.bold,
           ),
@@ -317,13 +317,13 @@ class _RolePermissionManagementViewState
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           decoration: BoxDecoration(
-            color: paletteColor(context, Canopy.mint),
+            color: Canopy.mint,
             borderRadius: BorderRadius.circular(10),
           ),
           child: Text(
             '$count',
-            style: TextStyle(
-              color: paletteColor(context, Canopy.slate),
+            style: const TextStyle(
+              color: Canopy.slate,
               fontSize: 12,
               fontWeight: FontWeight.bold,
             ),
@@ -338,7 +338,7 @@ class _RolePermissionManagementViewState
         padding: const EdgeInsets.all(AppTheme.spaceMd),
         child: Text(message,
             style:
-                TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12)));
+                const TextStyle(color: Canopy.slate, fontSize: 12)));
   }
 
   Widget _buildGrantRoleCard(AppProvider provider) {
@@ -349,8 +349,8 @@ class _RolePermissionManagementViewState
           children: [
             Text(
               'design_ui.grant_a_platform_role'.tr(),
-              style: TextStyle(
-                color: paletteColor(context, Canopy.ink),
+              style: const TextStyle(
+                color: Canopy.ink,
                 fontWeight: FontWeight.bold,
                 fontSize: 13,
               ),
@@ -363,23 +363,23 @@ class _RolePermissionManagementViewState
                   child: PhoneInputGuard(builder: (context, blocked) => TextField(
                             readOnly: blocked,
                             controller: _grantEmailController,
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.ink), fontSize: 13),
+                            style: const TextStyle(
+                                color: Canopy.ink, fontSize: 13),
                             decoration: InputDecoration(
                               hintText: 'roles.email'.tr(),
-                              hintStyle: TextStyle(
-                                  color: paletteColor(context, Canopy.slate), fontSize: 12),
-                              prefixIcon: Icon(Icons.email_outlined,
-                                  color: paletteColor(context, Canopy.slate), size: 18),
+                              hintStyle: const TextStyle(
+                                  color: Canopy.slate, fontSize: 12),
+                              prefixIcon: const Icon(Icons.email_outlined,
+                                  color: Canopy.slate, size: 18),
                               filled: true,
-                              fillColor: paletteColor(context, Canopy.mint),
+                              fillColor: Canopy.mint,
                               contentPadding: const EdgeInsets.symmetric(
                                   horizontal: 12, vertical: 10),
                               border: OutlineInputBorder(
                                 borderRadius:
                                     BorderRadius.circular(AppTheme.radiusMd),
                                 borderSide:
-                                    BorderSide(color: paletteColor(context, Canopy.hairline)),
+                                    const BorderSide(color: Canopy.hairline),
                               ),
                             ),
                           )),
@@ -388,9 +388,9 @@ class _RolePermissionManagementViewState
                 DropdownButton<String>(
                   isExpanded: true,
                   value: _grantRole,
-                  dropdownColor: paletteColor(context, Canopy.mint),
-                  style: TextStyle(
-                      color: paletteColor(context, Canopy.ink), fontSize: 13),
+                  dropdownColor: Canopy.mint,
+                  style: const TextStyle(
+                      color: Canopy.ink, fontSize: 13),
                   items: [
                     DropdownMenuItem(
                         value: 'admin', child: Text('design_ui.admin'.tr())),
@@ -405,17 +405,17 @@ class _RolePermissionManagementViewState
                 const SizedBox(height: AppTheme.spaceMd),
                 ElevatedButton.icon(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: paletteColor(context, AppTheme.primary),
-                    foregroundColor: paletteColor(context, AppTheme.onMedia),
+                    backgroundColor: AppTheme.primary,
+                    foregroundColor: AppTheme.onMedia,
                     padding: const EdgeInsets.symmetric(
                         horizontal: 16, vertical: 12),
                   ),
                   icon: _isGranting
-                      ? SizedBox(
+                      ? const SizedBox(
                           width: 14,
                           height: 14,
                           child: HadayahLoadingIndicator(
-                              strokeWidth: 2, color: paletteColor(context, AppTheme.onMedia)),
+                              strokeWidth: 2, color: AppTheme.onMedia),
                         )
                       : const Icon(Icons.person_add_alt_1_rounded, size: 16),
                   label: Text('design_ui.grant'.tr()),
@@ -465,8 +465,8 @@ class _RolePermissionManagementViewState
                     children: [
                       Text(
                         assignment.displayName,
-                        style: TextStyle(
-                          color: paletteColor(context, Canopy.ink),
+                        style: const TextStyle(
+                          color: Canopy.ink,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),
@@ -474,8 +474,8 @@ class _RolePermissionManagementViewState
                       if (assignment.email != null)
                         Text(
                           assignment.email!,
-                          style: TextStyle(
-                              color: paletteColor(context, Canopy.haze), fontSize: 12),
+                          style: const TextStyle(
+                              color: Canopy.haze, fontSize: 12),
                         ),
                     ],
                   ),
@@ -499,8 +499,8 @@ class _RolePermissionManagementViewState
                 ),
                 const SizedBox(width: 8),
                 IconButton(
-                  icon: Icon(Icons.remove_circle_outline_rounded,
-                      size: 18, color: paletteColor(context, Canopy.liveCrimson)),
+                  icon: const Icon(Icons.remove_circle_outline_rounded,
+                      size: 18, color: Canopy.liveCrimson),
                   tooltip: 'roles.revoke'.tr(),
                   onPressed: () => _handleRevokeRole(provider, assignment),
                 ),
@@ -508,7 +508,7 @@ class _RolePermissionManagementViewState
             ),
             if (canTogglePermissions) ...[
               const SizedBox(height: AppTheme.spaceSm),
-              Divider(color: paletteColor(context, Canopy.hairline), height: 1),
+              const Divider(color: Canopy.hairline, height: 1),
               const SizedBox(height: AppTheme.spaceSm),
               Wrap(
                 spacing: AppTheme.spaceMd,
@@ -523,7 +523,7 @@ class _RolePermissionManagementViewState
                       children: [
                         Checkbox(
                           value: granted,
-                          activeColor: paletteColor(context, Canopy.leaf),
+                          activeColor: Canopy.leaf,
                           onChanged: (checked) => _handleTogglePermission(
                               provider,
                               assignment,
@@ -533,8 +533,8 @@ class _RolePermissionManagementViewState
                         Flexible(
                             child: Text(
                           'roles.$capability'.tr(),
-                          style: TextStyle(
-                              color: paletteColor(context, Canopy.slate), fontSize: 12),
+                          style: const TextStyle(
+                              color: Canopy.slate, fontSize: 12),
                         )),
                       ],
                     ),

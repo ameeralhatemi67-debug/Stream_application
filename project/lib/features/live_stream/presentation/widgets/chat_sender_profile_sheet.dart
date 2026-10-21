@@ -245,12 +245,12 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
       if (_muteKnown && _muted) ...[
         DecoratedBox(
             decoration: BoxDecoration(
-                color: paletteColor(context, Canopy.warningTint),
+                color: Canopy.warningTint,
                 borderRadius: BorderRadius.circular(CanopyRadius.input)),
             child: Padding(
                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                 child: Row(children: [
-                  CaIcon(CaGlyph.micoff, color: paletteColor(context, Canopy.warning)),
+                  const CaIcon(CaGlyph.micoff, color: Canopy.warning),
                   const SizedBox(width: AppTheme.spaceSm),
                   Expanded(
                       child: Text(
@@ -261,7 +261,7 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
                                       chatMuteRemaining(ends.difference(DateTime.now()))
                                 }),
                           style: textTheme.bodyMedium
-                              ?.copyWith(color: paletteColor(context, Canopy.warning)))),
+                              ?.copyWith(color: Canopy.warning))),
                 ]))),
         const SizedBox(height: AppTheme.spaceSm),
         CaButton(
@@ -308,7 +308,7 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
       if (_error != null) ...[
         const SizedBox(height: AppTheme.spaceSm),
         Text(_error!,
-            style: textTheme.bodySmall?.copyWith(color: paletteColor(context, Canopy.liveCrimson))),
+            style: textTheme.bodySmall?.copyWith(color: Canopy.liveCrimson)),
       ],
     ]);
   }
@@ -344,7 +344,7 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
   ({String label, Color color}) get _tag => switch (_role) {
         CaChatRole.admin => (
             label: 'live.sender_tag_admin'.tr(),
-            color: paletteColor(context, Canopy.brandGreen)
+            color: Canopy.brandGreen
           ),
         CaChatRole.moderator => (
             label: 'live.sender_tag_moderator'.tr(),
@@ -355,11 +355,11 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
                     ? 'live.sender_tag_organization'
                     : 'live.sender_tag_broadcaster')
                 .tr(),
-            color: paletteColor(context, Canopy.liveCrimson)
+            color: Canopy.liveCrimson
           ),
         CaChatRole.viewer => (
             label: 'live.sender_tag_viewer'.tr(),
-            color: paletteColor(context, Canopy.slate)
+            color: Canopy.slate
           ),
       };
 
@@ -409,7 +409,7 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
                             vertical: AppTheme.spaceXs),
                         child: Text(tag.label,
                             style: textTheme.labelMedium?.copyWith(
-                                color: paletteColor(context, Canopy.paper),
+                                color: Canopy.paper,
                                 fontWeight: FontWeight.w700)))),
               ])),
         ]),
@@ -439,7 +439,7 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
                 padding: const EdgeInsets.only(bottom: AppTheme.spaceSm),
                 child: DecoratedBox(
                     decoration: BoxDecoration(
-                        color: paletteColor(context, Canopy.mint),
+                        color: Canopy.mint,
                         borderRadius:
                             BorderRadius.circular(CanopyRadius.input)),
                     child: Padding(
@@ -459,7 +459,7 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
                                           item.createdAt.toLocal())
                                       .format(context),
                                   style: textTheme.labelSmall
-                                      ?.copyWith(color: paletteColor(context, Canopy.haze))),
+                                      ?.copyWith(color: Canopy.haze)),
                             ])))),
       ]),
     );

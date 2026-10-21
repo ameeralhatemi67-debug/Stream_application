@@ -70,7 +70,7 @@ class CaNavBar extends StatelessWidget {
                       sigmaX: CanopySize.navBlur, sigmaY: CanopySize.navBlur),
                   child: Container(
                       padding: const EdgeInsets.all(AppTheme.spaceSm),
-                      color: paletteColor(context, Canopy.paper)
+                      color: Canopy.paper
                           .withValues(alpha: CanopySize.navPaperAlpha),
                       child: LayoutBuilder(builder: (context, bounds) {
                         // The active item takes whatever the other folds away:
@@ -116,7 +116,7 @@ class _PillDestination extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
     final color =
-        Color.lerp(paletteColor(context, Canopy.brandGreen), paletteOnSelected(context, Canopy.paper), selectedness.clamp(0, 1))!;
+        Color.lerp(Canopy.brandGreen, HidayahGold.g200, selectedness.clamp(0, 1))!;
     return Semantics(
         button: true,
         selected: selectedness > .5,
@@ -139,11 +139,11 @@ class _PillDestination extends StatelessWidget {
                                   Positioned.fill(
                                       child: Opacity(
                                           opacity: selectedness.clamp(0, 1),
-                                          child: DecoratedBox(
+                                          child: const DecoratedBox(
                                               decoration: BoxDecoration(
-                                                  gradient: paletteSelectedFill(context, AppGradients.pill),
+                                                  gradient: HidayahGradients.selected,
                                                   borderRadius:
-                                                      const BorderRadius.all(
+                                                      BorderRadius.all(
                                                           Radius.circular(
                                                               CanopyRadius
                                                                   .pill)))))),
@@ -197,7 +197,7 @@ class _Destination extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final label = (index == 0 ? 'nav.feed' : 'nav.map').tr();
-    final color = selected ? paletteOnSelected(context, Canopy.paper) : paletteColor(context, Canopy.brandGreen);
+    final color = selected ? HidayahGold.g200 : Canopy.brandGreen;
     final icon = CaIcon(index == 0 ? CaGlyph.list : CaGlyph.map, color: color);
     final text = Text(label,
         textAlign: stacked ? TextAlign.center : TextAlign.start,
@@ -235,7 +235,7 @@ class _Destination extends StatelessWidget {
                                       : 0,
                               vertical: AppTheme.spaceSm),
                           decoration: BoxDecoration(
-                              gradient: selected ? paletteSelectedFill(context, AppGradients.pill) : null,
+                              gradient: selected ? HidayahGradients.selected : null,
                               borderRadius:
                                   BorderRadius.circular(CanopyRadius.pill)),
                           child: stacked
@@ -274,7 +274,7 @@ class CaRail extends StatelessWidget {
   Widget build(BuildContext context) => SizedBox(
       width: expanded ? CanopySize.railExpanded : CanopySize.railMedium,
       child: ColoredBox(
-          color: paletteColor(context, Canopy.paper),
+          color: Canopy.paper,
           child: SafeArea(
               child: LayoutBuilder(
                   builder: (context, constraints) => SingleChildScrollView(
@@ -311,10 +311,10 @@ class CaRail extends StatelessWidget {
                                                 vertical: AppTheme.spaceSm),
                                         decoration: BoxDecoration(
                                             gradient: expanded
-                                                ? paletteGradient(context, AppGradients.pill)
+                                                ? AppGradients.pill
                                                 : null,
                                             color:
-                                                expanded ? null : paletteColor(context, Canopy.mint),
+                                                expanded ? null : Canopy.mint,
                                             borderRadius: BorderRadius.circular(
                                                 CanopyRadius.input)),
                                         width: expanded && !context.isPhone
@@ -332,7 +332,7 @@ class CaRail extends StatelessWidget {
                                                                 .tr()
                                                         ? CaGlyph.video
                                                         : CaGlyph.user,
-                                                    color: paletteOnAccent(context, Canopy.paper)),
+                                                    color: AppPalette.ink),
                                                 const SizedBox(
                                                     width: AppTheme.spaceSm),
                                               ],
@@ -351,9 +351,9 @@ class CaRail extends StatelessWidget {
                                                                       .w600
                                                                   : null,
                                                               color: expanded
-                                                                  ? paletteOnAccent(context, Canopy.paper)
-                                                                  : paletteColor(context, Canopy
-                                                                      .brandGreen))))
+                                                                  ? AppPalette.ink
+                                                                  : Canopy
+                                                                      .brandGreen)))
                                             ])),
                                   ])))))))));
 }
@@ -370,7 +370,7 @@ class _RailAccountLinks extends StatelessWidget {
             style: TextButton.styleFrom(
                 minimumSize: const Size.fromHeight(CanopySize.target),
                 alignment: AlignmentDirectional.centerStart,
-                foregroundColor: paletteColor(context, Canopy.brandGreen)),
+                foregroundColor: Canopy.brandGreen),
             onPressed: onTap,
             child: Row(children: [
               CaIcon(icon),

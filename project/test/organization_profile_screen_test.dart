@@ -91,7 +91,7 @@ void main() {
     testWidgets(
         'TC-ORG-UI-01: Organization Profile renders Org badge & branches button',
         (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.physicalSize = const Size(1000, 900); // below the website breakpoint
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -118,7 +118,7 @@ void main() {
     testWidgets(
         'TC-ORG-UI-02: Header card renders top-right action buttons and featured channels',
         (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.physicalSize = const Size(1000, 900); // below the website breakpoint
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);
@@ -174,7 +174,7 @@ void main() {
     testWidgets(
         'TC-ORG-UI-03: Tapping a Featured Channel card filters VODs and Playlists',
         (tester) async {
-      tester.view.physicalSize = const Size(1200, 900);
+      tester.view.physicalSize = const Size(1000, 900); // below the website breakpoint
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.resetPhysicalSize);
       addTearDown(tester.view.resetDevicePixelRatio);

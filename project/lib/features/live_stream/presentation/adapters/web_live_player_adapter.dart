@@ -42,7 +42,7 @@ class _WebLivePlayerAdapterState extends State<WebLivePlayerAdapter> {
     } catch (_) {}
 
     try {
-      controller.setBackgroundColor(paletteColor(context, AppTheme.media));
+      controller.setBackgroundColor(AppTheme.media);
     } catch (_) {}
 
     if (!kIsWeb) {
@@ -107,7 +107,7 @@ class _WebLivePlayerAdapterState extends State<WebLivePlayerAdapter> {
     return AspectRatio(
       aspectRatio: widget.aspectRatio,
       child: Container(
-        color: paletteColor(context, AppTheme.media),
+        color: AppTheme.media,
         child: Stack(
           alignment: Alignment.center,
           children: [

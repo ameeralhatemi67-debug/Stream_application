@@ -103,7 +103,7 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, AppTheme.primary),
+        backgroundColor: isError ? Canopy.liveCrimson : AppTheme.primary,
       ),
     );
   }
@@ -117,8 +117,8 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
         if (widget.showHeader) ...[
           Text(
             'settings.custom_cards_section'.tr(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.ink),
+            style: const TextStyle(
+              color: Canopy.ink,
               fontSize: 15,
               fontWeight: FontWeight.bold,
             ),
@@ -127,8 +127,8 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
         ],
         Text(
           'settings.custom_cards_desc'.tr(),
-          style: TextStyle(
-              color: paletteColor(context, Canopy.slate), fontSize: 11.5, height: 1.4),
+          style: const TextStyle(
+              color: Canopy.slate, fontSize: 11.5, height: 1.4),
         ),
         const SizedBox(height: 10),
         ...StreamPlaceholderType.values.map(_buildCustomCardSlot),
@@ -145,16 +145,16 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
     final Color statusColor;
     switch (existing?.status) {
       case StreamPlaceholderStatus.approved:
-        statusColor = paletteColor(context, Canopy.leaf);
+        statusColor = Canopy.leaf;
         break;
       case StreamPlaceholderStatus.rejected:
-        statusColor = paletteColor(context, Canopy.liveCrimson);
+        statusColor = Canopy.liveCrimson;
         break;
       case StreamPlaceholderStatus.pending:
-        statusColor = paletteColor(context, AppTheme.warning);
+        statusColor = AppTheme.warning;
         break;
       case null:
-        statusColor = paletteColor(context, Canopy.haze);
+        statusColor = Canopy.haze;
         break;
     }
 
@@ -173,15 +173,15 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
                               ? Image.network(existing.imageUrl,
                                   fit: BoxFit.cover,
                                   errorBuilder: (_, __, ___) =>
-                                      ColoredBox(
-                                          color: paletteColor(context, Canopy.mist),
+                                      const ColoredBox(
+                                          color: Canopy.mist,
                                           child: Icon(
                                               Icons.broken_image_outlined,
-                                              color: paletteColor(context, Canopy.slate))))
-                              : ColoredBox(
-                                  color: paletteColor(context, Canopy.mist),
+                                              color: Canopy.slate)))
+                              : const ColoredBox(
+                                  color: Canopy.mist,
                                   child: Icon(Icons.image_outlined,
-                                      color: paletteColor(context, Canopy.slate))))),
+                                      color: Canopy.slate)))),
                   const SizedBox(height: AppTheme.spaceMd),
                   Text(type.editorLabelKey.tr(),
                       style: Theme.of(context).textTheme.titleSmall),
@@ -199,9 +199,9 @@ class _CustomStreamCardsSectionState extends State<CustomStreamCardsSection> {
                         style: Theme.of(context).textTheme.bodySmall),
                   const SizedBox(height: AppTheme.spaceSm),
                   isUploading
-                      ? Center(
+                      ? const Center(
                           child: HadayahLoadingIndicator(
-                              strokeWidth: 2, color: paletteColor(context, AppTheme.primary)))
+                              strokeWidth: 2, color: AppTheme.primary))
                       : OutlinedButton.icon(
                           onPressed: () => _pickAndUploadCard(type),
                           icon: const Icon(Icons.upload_rounded),

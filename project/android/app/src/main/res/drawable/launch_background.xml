@@ -1,11 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Launch window. Scheme A is a light-only app (ThemeMode.light), so this is
-  white in both light and dark mode: a dark-mode device used to get a black
-  launch window and then flash to the white UI.
+  Launch window: the gold mark on night slate (s900), the same in light and
+  dark mode, matching the launcher tile.
 -->
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:drawable="@android:color/white" />
+    <item android:drawable="@color/launch_night" />
     <item>
         <bitmap
             android:gravity="center"

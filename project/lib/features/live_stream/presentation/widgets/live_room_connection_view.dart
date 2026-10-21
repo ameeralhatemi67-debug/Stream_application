@@ -43,8 +43,8 @@ class _LiveRoomConnectionViewState extends State<LiveRoomConnectionView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.wifi_off_rounded,
-                  color: paletteColor(context, AppTheme.warning), size: 42),
+              const Icon(Icons.wifi_off_rounded,
+                  color: AppTheme.warning, size: 42),
               const SizedBox(height: AppTheme.spaceMd),
               Text(
                   (widget.awaitingFreshCatalog
@@ -53,8 +53,8 @@ class _LiveRoomConnectionViewState extends State<LiveRoomConnectionView> {
                               : 'offline_experience.room_rechecking'
                           : 'offline_experience.room_title')
                       .tr(),
-                  style: TextStyle(
-                      color: paletteColor(context, Canopy.ink),
+                  style: const TextStyle(
+                      color: Canopy.ink,
                       fontSize: 20,
                       fontWeight: FontWeight.bold)),
               const SizedBox(height: AppTheme.spaceSm),
@@ -68,7 +68,7 @@ class _LiveRoomConnectionViewState extends State<LiveRoomConnectionView> {
                               : 'offline_experience.room_body')
                       .tr(),
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: paletteColor(context, Canopy.slate))),
+                  style: const TextStyle(color: Canopy.slate)),
               const SizedBox(height: AppTheme.spaceLg),
               Wrap(
                 alignment: WrapAlignment.center,

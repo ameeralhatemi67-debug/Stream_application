@@ -141,7 +141,9 @@ void main() {
   testWidgets(
       'desktop map opens the existing list from the top right without dimming',
       (tester) async {
-    tester.view.physicalSize = const Size(1280, 900);
+    // Below the website breakpoint (HidayahWeb.minWidth): the app's desktop
+    // layout. From 1024 px the website panel holds the list instead.
+    tester.view.physicalSize = const Size(1000, 900);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
@@ -153,9 +155,9 @@ void main() {
     await tester.pumpAndSettle();
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
     expect(scaffold.drawerScrimColor, Colors.transparent);
-    expect(tester.getSize(find.byType(FlutterMap)).width, 1280);
+    expect(tester.getSize(find.byType(FlutterMap)).width, 1000);
     final openList = find.byTooltip('Broadcasters list');
-    expect(tester.getTopRight(openList).dx, greaterThan(1200));
+    expect(tester.getTopRight(openList).dx, greaterThan(920));
     expect(tester.getTopLeft(openList).dy, lessThan(100));
     expect(
         tester
@@ -280,7 +282,7 @@ void main() {
   });
 
   for (final lang in ['en', 'ar']) {
-    for (final width in [280.0, 320.0, 360.0, 384.0, 412.0, 600.0, 1280.0]) {
+    for (final width in [280.0, 320.0, 360.0, 384.0, 412.0, 600.0, 1000.0]) {
       for (final scale in [1.0, 1.6, 2.0]) {
         for (final type in BroadcastType.values) {
           testWidgets('selected card $lang width=$width text=$scale $type',

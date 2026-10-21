@@ -61,7 +61,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
           .clamp(64.0, double.infinity);
       final position = _clampToScreen(_position, size, width, height);
       final accentColor =
-          provider.isMiniPlayerAudioOnly ? paletteColor(context, AppTheme.accent) : paletteColor(context, AppTheme.danger);
+          provider.isMiniPlayerAudioOnly ? AppTheme.accent : AppTheme.danger;
 
       return Stack(children: [
         PositionedDirectional(
@@ -80,7 +80,7 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
             child: Material(
               key: const ValueKey('mini_player_return_chip'),
               elevation: 12,
-              color: paletteColor(context, AppTheme.surface),
+              color: AppTheme.surface,
               borderRadius: BorderRadius.circular(AppTheme.radiusMd),
               child: InkWell(
                 borderRadius: BorderRadius.circular(AppTheme.radiusMd),
@@ -109,8 +109,8 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                               'live.return_to_broadcast'.tr(),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: paletteColor(context, AppTheme.textPrimary),
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -122,16 +122,16 @@ class _FloatingStreamMiniPlayerState extends State<FloatingStreamMiniPlayer> {
                                       '${'live.return_chip_paused'.tr()}',
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                  color: paletteColor(context, AppTheme.textSecondary), fontSize: 11),
+                              style: const TextStyle(
+                                  color: AppTheme.textSecondary, fontSize: 11),
                             ),
                           ],
                         ),
                       ),
                       IconButton(
                         key: const ValueKey('mini_player_close_button'),
-                        icon: Icon(Icons.close_rounded,
-                            size: 18, color: paletteColor(context, AppTheme.textSecondary)),
+                        icon: const Icon(Icons.close_rounded,
+                            size: 18, color: AppTheme.textSecondary),
                         tooltip: 'live.return_chip_dismiss'.tr(),
                         onPressed: provider.closeMiniPlayer,
                       ),

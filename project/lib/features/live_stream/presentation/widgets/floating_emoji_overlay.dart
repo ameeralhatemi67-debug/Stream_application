@@ -105,11 +105,11 @@ class FloatingEmojiOverlayState extends State<FloatingEmojiOverlay>
                               scale: scale,
                               child: Text(
                                 p.emoji,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   fontSize: 28,
                                   shadows: [
                                     Shadow(
-                                      color: paletteColor(context, Canopy.haze),
+                                      color: Canopy.haze,
                                       blurRadius: 6,
                                     ),
                                   ],

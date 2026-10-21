@@ -34,7 +34,7 @@ class _TagModerationViewState extends State<TagModerationView> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: isError ? paletteColor(context, Canopy.liveCrimson) : paletteColor(context, Canopy.leaf),
+        backgroundColor: isError ? Canopy.liveCrimson : Canopy.leaf,
       ),
     );
   }
@@ -57,24 +57,24 @@ class _TagModerationViewState extends State<TagModerationView> {
     showCaDialog(
       context: context,
       builder: (dialogContext) => CaAlertDialog(
-        backgroundColor: paletteColor(dialogContext, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-          side: BorderSide(color: paletteColor(dialogContext, Canopy.hairline)),
+          side: const BorderSide(color: Canopy.hairline),
         ),
         title: Text('admin.tag_merge_dialog_title'.tr(),
-            style: TextStyle(
-                color: paletteColor(dialogContext, Canopy.ink), fontWeight: FontWeight.bold)),
+            style: const TextStyle(
+                color: Canopy.ink, fontWeight: FontWeight.bold)),
         content: PhoneInputGuard(builder: (context, blocked) => TextField(
                   readOnly: blocked,
                   controller: controller,
                   autofocus: (true) && !blocked,
-                  style: TextStyle(color: paletteColor(context, Canopy.ink)),
+                  style: const TextStyle(color: Canopy.ink),
                   decoration: InputDecoration(
                     hintText: 'admin.tag_merge_dialog_hint'.tr(),
-                    hintStyle: TextStyle(color: paletteColor(context, Canopy.haze)),
+                    hintStyle: const TextStyle(color: Canopy.haze),
                     filled: true,
-                    fillColor: paletteColor(context, Canopy.mint),
+                    fillColor: Canopy.mint,
                     border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
                   ),
@@ -83,12 +83,12 @@ class _TagModerationViewState extends State<TagModerationView> {
           TextButton(
             onPressed: () => Navigator.pop(dialogContext),
             child: Text('common.cancel'.tr(),
-                style: TextStyle(color: paletteColor(dialogContext, Canopy.haze))),
+                style: const TextStyle(color: Canopy.haze)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
-                backgroundColor: paletteColor(dialogContext, AppTheme.primary),
-                foregroundColor: paletteColor(dialogContext, AppTheme.onMedia)),
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.onMedia),
             onPressed: () {
               final newName = controller.text.trim();
               if (newName.isEmpty) return;
@@ -127,12 +127,12 @@ class _TagModerationViewState extends State<TagModerationView> {
         children: [
           AdminFlow(
             children: [
-              Icon(Icons.sell_rounded, color: paletteColor(context, AppTheme.primary), size: 20),
+              const Icon(Icons.sell_rounded, color: AppTheme.primary, size: 20),
               const SizedBox(width: 8),
               Text(
                 'admin.tag_moderation_title'.tr(),
-                style: TextStyle(
-                  color: paletteColor(context, Canopy.ink),
+                style: const TextStyle(
+                  color: Canopy.ink,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -143,12 +143,12 @@ class _TagModerationViewState extends State<TagModerationView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, Canopy.warningTint),
+                    color: Canopy.warningTint,
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Text('${pending.length}',
-                      style: TextStyle(
-                          color: paletteColor(context, Canopy.warning),
+                      style: const TextStyle(
+                          color: Canopy.warning,
                           fontSize: 12,
                           fontWeight: FontWeight.bold)),
                 ),
@@ -157,7 +157,7 @@ class _TagModerationViewState extends State<TagModerationView> {
           const SizedBox(height: AppTheme.spaceSm),
           Text('admin.tag_moderation_desc'.tr(),
               style:
-                  TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12)),
+                  const TextStyle(color: Canopy.slate, fontSize: 12)),
           const SizedBox(height: AppTheme.spaceLg),
           _buildSection(
             provider,
@@ -194,14 +194,14 @@ class _TagModerationViewState extends State<TagModerationView> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(title,
-            style: TextStyle(
-                color: paletteColor(context, Canopy.ink),
+            style: const TextStyle(
+                color: Canopy.ink,
                 fontSize: 13,
                 fontWeight: FontWeight.bold)),
         const SizedBox(height: AppTheme.spaceSm),
         if (tags.isEmpty && emptyLabel != null)
           Text(emptyLabel,
-              style: TextStyle(color: paletteColor(context, Canopy.haze), fontSize: 12))
+              style: const TextStyle(color: Canopy.haze, fontSize: 12))
         else
           Wrap(
             spacing: 8,
@@ -234,14 +234,14 @@ class _TagModerationViewState extends State<TagModerationView> {
                     padding: const EdgeInsets.all(AppTheme.spaceLg),
                     child: Row(
                       children: [
-                        Icon(Icons.groups_rounded,
-                            color: paletteColor(context, AppTheme.primary), size: 20),
+                        const Icon(Icons.groups_rounded,
+                            color: AppTheme.primary, size: 20),
                         const SizedBox(width: AppTheme.spaceSm),
                         Expanded(
                           child: Text(
                             '#$tag',
-                            style: TextStyle(
-                              color: paletteColor(context, Canopy.ink),
+                            style: const TextStyle(
+                              color: Canopy.ink,
                               fontSize: 15,
                               fontWeight: FontWeight.bold,
                             ),
@@ -251,19 +251,19 @@ class _TagModerationViewState extends State<TagModerationView> {
                     ),
                   ),
                   if (snapshot.connectionState == ConnectionState.waiting)
-                    Padding(
-                      padding: const EdgeInsets.all(AppTheme.spaceXl),
+                    const Padding(
+                      padding: EdgeInsets.all(AppTheme.spaceXl),
                       child: Center(
                           child:
-                              HadayahLoadingIndicator(color: paletteColor(context, AppTheme.primary))),
+                              HadayahLoadingIndicator(color: AppTheme.primary)),
                     )
                   else if (items.isEmpty)
                     Padding(
                       padding: const EdgeInsets.all(AppTheme.spaceLg),
                       child: Text(
                         'admin.tag_no_broadcasters'.tr(),
-                        style: TextStyle(
-                            color: paletteColor(context, Canopy.slate), fontSize: 12),
+                        style: const TextStyle(
+                            color: Canopy.slate, fontSize: 12),
                       ),
                     )
                   else
@@ -274,7 +274,7 @@ class _TagModerationViewState extends State<TagModerationView> {
                             horizontal: AppTheme.spaceLg),
                         itemCount: items.length,
                         separatorBuilder: (_, __) =>
-                            Divider(color: paletteColor(context, Canopy.hairline), height: 1),
+                            const Divider(color: Canopy.hairline, height: 1),
                         itemBuilder: (context, index) {
                           final b = items[index];
                           return ListTile(
@@ -285,13 +285,13 @@ class _TagModerationViewState extends State<TagModerationView> {
                               ring: CaAvatarRing.brand,
                             ),
                             title: Text(b.nameEn,
-                                style: TextStyle(
-                                    color: paletteColor(context, Canopy.ink), fontSize: 13)),
+                                style: const TextStyle(
+                                    color: Canopy.ink, fontSize: 13)),
                             trailing: b.isOrganization
-                                ? Icon(Icons.apartment_rounded,
-                                    color: paletteColor(context, AppTheme.warning), size: 16)
-                                : Icon(Icons.person_rounded,
-                                    color: paletteColor(context, AppTheme.primary), size: 16),
+                                ? const Icon(Icons.apartment_rounded,
+                                    color: AppTheme.warning, size: 16)
+                                : const Icon(Icons.person_rounded,
+                                    color: AppTheme.primary, size: 16),
                           );
                         },
                       ),
@@ -315,7 +315,7 @@ class _TagModerationViewState extends State<TagModerationView> {
           children: [
             Text(tag.name,
                 style:
-                    TextStyle(color: paletteColor(context, Canopy.ink), fontSize: 12)),
+                    const TextStyle(color: Canopy.ink, fontSize: 12)),
             if (tag.status == TagStatus.approved) ...[
               const SizedBox(width: 5),
               InkWell(
@@ -325,14 +325,14 @@ class _TagModerationViewState extends State<TagModerationView> {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 6, vertical: 1.5),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.15),
+                    color: AppTheme.primary.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   ),
                   child: Text(
                     'admin.tag_broadcaster_count'
                         .plural(tag.usageCount, name: 'count'),
-                    style: TextStyle(
-                        color: paletteColor(context, AppTheme.primary),
+                    style: const TextStyle(
+                        color: AppTheme.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.bold),
                   ),
@@ -341,11 +341,11 @@ class _TagModerationViewState extends State<TagModerationView> {
             ],
             const SizedBox(width: 6),
             if (isActing)
-              SizedBox(
+              const SizedBox(
                 width: 12,
                 height: 12,
                 child: HadayahLoadingIndicator(
-                    strokeWidth: 2, color: paletteColor(context, AppTheme.primary)),
+                    strokeWidth: 2, color: AppTheme.primary),
               )
             else ...[
               if (tag.status != TagStatus.approved)
@@ -357,10 +357,10 @@ class _TagModerationViewState extends State<TagModerationView> {
                       () => provider.approveTag(tag.name),
                       'admin.tag_approved_toast'.tr(),
                     ),
-                    child: SizedBox.square(
+                    child: const SizedBox.square(
                       dimension: CanopySize.target,
                       child: Icon(Icons.check_circle_outline_rounded,
-                          size: 15, color: paletteColor(context, Canopy.leaf)),
+                          size: 15, color: Canopy.leaf),
                     ),
                   ),
                 ),
@@ -368,10 +368,10 @@ class _TagModerationViewState extends State<TagModerationView> {
                 message: 'admin.tag_merge_rename'.tr(),
                 child: InkWell(
                   onTap: () => _showMergeDialog(provider, tag.name),
-                  child: SizedBox.square(
+                  child: const SizedBox.square(
                     dimension: CanopySize.target,
                     child: Icon(Icons.drive_file_rename_outline_rounded,
-                        size: 15, color: paletteColor(context, AppTheme.primary)),
+                        size: 15, color: AppTheme.primary),
                   ),
                 ),
               ),
@@ -384,10 +384,10 @@ class _TagModerationViewState extends State<TagModerationView> {
                       () => provider.blacklistTag(tag.name),
                       'admin.tag_blacklisted_toast'.tr(),
                     ),
-                    child: SizedBox.square(
+                    child: const SizedBox.square(
                       dimension: CanopySize.target,
                       child: Icon(Icons.block_rounded,
-                          size: 15, color: paletteColor(context, Canopy.liveCrimson)),
+                          size: 15, color: Canopy.liveCrimson),
                     ),
                   ),
                 ),

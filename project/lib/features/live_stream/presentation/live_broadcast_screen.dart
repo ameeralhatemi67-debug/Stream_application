@@ -569,7 +569,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: paletteColor(context, Canopy.liveCrimson)),
+        SnackBar(content: Text('$e'), backgroundColor: Canopy.liveCrimson),
       );
     });
   }
@@ -598,7 +598,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       if (!mounted) return;
       setState(() => _isHandRaised = !raising);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$error'), backgroundColor: paletteColor(context, Canopy.liveCrimson)),
+        SnackBar(content: Text('$error'), backgroundColor: Canopy.liveCrimson),
       );
     }
   }
@@ -912,7 +912,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     }
     if (!_roomActive) {
       return Scaffold(
-        backgroundColor: paletteColor(context, Canopy.dawn),
+        backgroundColor: Canopy.dawn,
         body: SafeArea(
             child: LiveRoomConnectionView(
           status: networkStatus,
@@ -992,13 +992,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   : null));
     }
     return Scaffold(
-      backgroundColor: paletteColor(context, Canopy.forestDeep),
+      backgroundColor: Canopy.forestDeep,
       resizeToAvoidBottomInset: true,
       appBar: _isFullscreen
           ? null
           : CaAppBar(
               compactLanguage: true,
-              backgroundColor: paletteColor(context, AppTheme.media),
+              backgroundColor: AppTheme.media,
               toolbarHeight: MediaQuery.textScalerOf(context).scale(1) >= 1.3
                   ? CanopySize.appBarScaled
                   : null,
@@ -1006,7 +1006,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   style: Theme.of(context)
                       .textTheme
                       .labelLarge
-                      ?.copyWith(color: paletteColor(context, Canopy.paper)),
+                      ?.copyWith(color: Canopy.paper),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis),
               actions: [
@@ -1075,7 +1075,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           }
         },
         child: ColoredBox(
-          color: paletteColor(context, AppTheme.media),
+          color: AppTheme.media,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -1200,21 +1200,21 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       container: true,
                       child: ColoredBox(
                         key: const Key('live-room-reconnecting'),
-                        color: paletteColor(context, AppTheme.media).withValues(alpha: 0.88),
+                        color: AppTheme.media.withValues(alpha: 0.88),
                         child: Center(
                           child: SingleChildScrollView(
                             padding: const EdgeInsets.all(AppTheme.spaceLg),
                             child: Column(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(Icons.wifi_tethering_error_rounded,
-                                    size: 40, color: paletteColor(context, AppTheme.warning)),
+                                const Icon(Icons.wifi_tethering_error_rounded,
+                                    size: 40, color: AppTheme.warning),
                                 const SizedBox(height: AppTheme.spaceSm),
                                 Text(
                                   'live.be_right_back_title'.tr(),
                                   textAlign: TextAlign.center,
-                                  style: TextStyle(
-                                      color: paletteColor(context, AppTheme.onMedia),
+                                  style: const TextStyle(
+                                      color: AppTheme.onMedia,
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold),
                                 ),
@@ -1226,7 +1226,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                                     'live.be_right_back_body'.tr(),
                                     textAlign: TextAlign.center,
                                     style: TextStyle(
-                                        color: paletteColor(context, AppTheme.onMedia)
+                                        color: AppTheme.onMedia
                                             .withValues(alpha: 0.85),
                                         fontSize: 13,
                                         height: 1.4),
@@ -1250,12 +1250,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     decoration: BoxDecoration(
-                      color: paletteColor(context, AppTheme.warning).withValues(alpha: 0.9),
+                      color: AppTheme.warning.withValues(alpha: 0.9),
                       borderRadius: BorderRadius.circular(AppTheme.radiusFull),
-                      border: Border.all(color: paletteColor(context, AppTheme.warning), width: 1.5),
+                      border: Border.all(color: AppTheme.warning, width: 1.5),
                       boxShadow: const [
                         BoxShadow(
-                            color: Color(0x33123E26),
+                            color: Color(0x334B320E),
                             blurRadius: 10,
                             offset: Offset(0, 2)),
                       ],
@@ -1267,8 +1267,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         const SizedBox(width: 5),
                         Text(
                           'live.hand_raised_badge'.tr(),
-                          style: TextStyle(
-                            color: paletteColor(context, AppTheme.onMedia),
+                          style: const TextStyle(
+                            color: AppTheme.onMedia,
                             fontSize: AppTheme.captionFont,
                             fontWeight: FontWeight.bold,
                           ),
@@ -1331,7 +1331,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                         child: Text('live.player_state_unconfirmed'.tr(),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(color: paletteColor(context, AppTheme.onMedia)))),
+                            style: const TextStyle(color: AppTheme.onMedia))),
                     TextButton(
                         onPressed: _retryStream,
                         child: Text('live.retry_feed'.tr())),
@@ -1353,7 +1353,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                                     'current': '$_recoveryAttempts',
                                     'total': '10'
                                   }),
-                        style: TextStyle(color: paletteColor(context, AppTheme.onMedia))),
+                        style: const TextStyle(color: AppTheme.onMedia)),
                   )),
                 ),
 
@@ -1402,12 +1402,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 style: Theme.of(context)
                     .textTheme
                     .labelLarge
-                    ?.copyWith(color: paletteColor(context, Canopy.paper))),
+                    ?.copyWith(color: Canopy.paper)),
             Text(streamer.getLocalizedOrganization(langCode),
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
-                    ?.copyWith(color: paletteColor(context, Canopy.mist))),
+                    ?.copyWith(color: Canopy.mist)),
           ])),
     ]);
     final follow = CaButton(
@@ -1440,7 +1440,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     final compactChat = MediaQuery.viewInsetsOf(context).bottom > 0 &&
         _tabController.index == 0;
     return ColoredBox(
-        color: paletteColor(context, Canopy.forestDeep),
+        color: Canopy.forestDeep,
         child: LayoutBuilder(
             builder: (context, constraints) => Column(children: [
                   ConstrainedBox(
@@ -1485,13 +1485,13 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
   Widget _buildChatConnectionIndicator() {
     final state = _chatController.connectionState;
     final (color, label) = switch (state) {
-      ChatConnectionState.live => (paletteColor(context, Canopy.leaf), 'live.chat_status_live'.tr()),
+      ChatConnectionState.live => (Canopy.leaf, 'live.chat_status_live'.tr()),
       ChatConnectionState.connecting => (
-          paletteColor(context, AppTheme.warning),
+          AppTheme.warning,
           'live.chat_status_connecting'.tr()
         ),
       ChatConnectionState.reconnecting => (
-          paletteColor(context, Canopy.liveCrimson),
+          Canopy.liveCrimson,
           'live.chat_status_reconnecting'.tr()
         ),
     };
@@ -1500,7 +1500,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 4),
-      color: paletteColor(context, Canopy.forestDeep),
+      color: Canopy.forestDeep,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1512,8 +1512,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           const SizedBox(width: 5),
           Text(
             label,
-            style: TextStyle(
-                color: paletteColor(context, Canopy.mist), fontSize: 12, fontWeight: FontWeight.bold),
+            style: const TextStyle(
+                color: Canopy.mist, fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ],
       ),
@@ -1634,14 +1634,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, AppTheme.surface),
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   border: Border.all(
-                      color: paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.8),
+                      color: Canopy.liveCrimson.withValues(alpha: 0.8),
                       width: 1.2),
                   boxShadow: const [
                     BoxShadow(
-                        color: Color(0x4D123E26),
+                        color: Color(0x4D4B320E),
                         blurRadius: 16,
                         offset: Offset(0, 4)),
                   ],
@@ -1677,16 +1677,16 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 6),
-      color: paletteColor(context, Canopy.warningTint),
+      color: Canopy.warningTint,
       child: Row(
         children: [
-          Icon(Icons.wifi_off_rounded, size: 14, color: paletteColor(context, AppTheme.warning)),
+          const Icon(Icons.wifi_off_rounded, size: 14, color: AppTheme.warning),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               'live.chat_unavailable_banner'.tr(),
-              style: TextStyle(
-                color: paletteColor(context, AppTheme.warning),
+              style: const TextStyle(
+                color: AppTheme.warning,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -1706,11 +1706,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 8),
-      color: paletteColor(context, Canopy.liveCrimson).withValues(alpha: 0.18),
+      color: Canopy.liveCrimson.withValues(alpha: 0.18),
       child: Row(
         children: [
-          Icon(Icons.warning_amber_rounded,
-              size: 16, color: paletteColor(context, Canopy.liveCrimson)),
+          const Icon(Icons.warning_amber_rounded,
+              size: 16, color: Canopy.liveCrimson),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
@@ -1718,8 +1718,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 'name': alert.senderName,
                 'count': '${alert.count}',
               }),
-              style: TextStyle(
-                color: paletteColor(context, Canopy.liveCrimson),
+              style: const TextStyle(
+                color: Canopy.liveCrimson,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -1728,8 +1728,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           TextButton(
             onPressed: () => _chatController.quickMuteFromAlert(alert.senderId),
             style: TextButton.styleFrom(
-              foregroundColor: paletteColor(context, AppTheme.onMedia),
-              backgroundColor: paletteColor(context, Canopy.liveCrimson),
+              foregroundColor: AppTheme.onMedia,
+              backgroundColor: Canopy.liveCrimson,
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -1740,8 +1740,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           ),
           const SizedBox(width: 6),
           IconButton(
-            icon: Icon(Icons.close_rounded,
-                size: 16, color: paletteColor(context, Canopy.liveCrimson)),
+            icon: const Icon(Icons.close_rounded,
+                size: 16, color: Canopy.liveCrimson),
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(minWidth: 24, minHeight: 24),
             onPressed: () =>
@@ -1818,12 +1818,12 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.forum_outlined, size: 34, color: paletteColor(context, Canopy.mist)),
+          const Icon(Icons.forum_outlined, size: 34, color: Canopy.mist),
           const SizedBox(height: AppTheme.spaceSm),
           Text(
             'live.chat_empty_title'.tr(),
-            style: TextStyle(
-              color: paletteColor(context, Canopy.paper),
+            style: const TextStyle(
+              color: Canopy.paper,
               fontSize: 13,
               fontWeight: FontWeight.bold,
             ),
@@ -1834,7 +1834,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 ? 'live.chat_empty_subtitle_guest'.tr()
                 : 'live.chat_empty_subtitle'.tr(),
             textAlign: TextAlign.center,
-            style: TextStyle(color: paletteColor(context, Canopy.mist), fontSize: 12),
+            style: const TextStyle(color: Canopy.mist, fontSize: 12),
           ),
         ],
       ),
@@ -1849,18 +1849,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding:
           const EdgeInsets.symmetric(horizontal: AppTheme.spaceMd, vertical: 4),
-      color: paletteColor(context, Canopy.warningTint),
+      color: Canopy.warningTint,
       child: Row(
         children: [
-          Icon(Icons.hourglass_bottom_rounded,
-              size: 12, color: paletteColor(context, AppTheme.warning)),
+          const Icon(Icons.hourglass_bottom_rounded,
+              size: 12, color: AppTheme.warning),
           const SizedBox(width: 5),
           Expanded(
             child: Text(
               'live.chat_slow_mode_active'
                   .plural(_chatController.slowModeSeconds),
-              style: TextStyle(
-                  color: paletteColor(context, AppTheme.warning),
+              style: const TextStyle(
+                  color: AppTheme.warning,
                   fontSize: 12,
                   fontWeight: FontWeight.bold),
             ),
@@ -1883,9 +1883,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       width: double.infinity,
       padding: const EdgeInsets.symmetric(
           horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm),
-      decoration: BoxDecoration(
-        color: paletteColor(context, AppTheme.surface),
-        border: Border(top: BorderSide(color: paletteColor(context, Canopy.hairline))),
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        border: Border(top: BorderSide(color: Canopy.hairline)),
       ),
       child: Row(
         children: [
@@ -1894,7 +1894,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           Expanded(
             child: Text(
               message,
-              style: TextStyle(color: paletteColor(context, Canopy.slate), fontSize: 12),
+              style: const TextStyle(color: Canopy.slate, fontSize: 12),
             ),
           ),
           if (action != null) ...[
@@ -1910,21 +1910,21 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     if (isCompactLandscapeChat(context)) {
       return _buildChatComposerNotice(
         icon: Icons.screen_rotation_rounded,
-        color: paletteColor(context, Canopy.slate),
+        color: Canopy.slate,
         message: 'live.landscape_chat_read_only'.tr(),
       );
     }
     if (_roomProvider?.roomSession(widget.streamId)?.live == false) {
       return _buildChatComposerNotice(
           icon: Icons.history,
-          color: paletteColor(context, Canopy.haze),
+          color: Canopy.haze,
           message: 'organization_v1.replay_chat_read_only'.tr());
     }
     switch (_chatController.composerState) {
       case ChatComposerState.guest:
         return _buildChatComposerNotice(
           icon: Icons.login_rounded,
-          color: paletteColor(context, AppTheme.primary),
+          color: AppTheme.primary,
           message: 'live.chat_composer_guest'.tr(),
           action: TextButton(
             // Keeps this live page under the sign-in screen and comes back
@@ -1933,8 +1933,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 openSignIn(context, returnTo: '/live/${widget.streamId}'),
             child: Text(
               'live.chat_composer_guest_action'.tr(),
-              style: TextStyle(
-                  color: paletteColor(context, AppTheme.primary),
+              style: const TextStyle(
+                  color: AppTheme.primary,
                   fontSize: 12,
                   fontWeight: FontWeight.bold),
             ),
@@ -1943,25 +1943,25 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       case ChatComposerState.banned:
         return _buildChatComposerNotice(
           icon: Icons.block_rounded,
-          color: paletteColor(context, Canopy.liveCrimson),
+          color: Canopy.liveCrimson,
           message: 'live.chat_composer_banned'.tr(),
         );
       case ChatComposerState.platformPaused:
         return _buildChatComposerNotice(
           icon: Icons.pause_circle_outline_rounded,
-          color: paletteColor(context, AppTheme.warning),
+          color: AppTheme.warning,
           message: 'live.chat_composer_platform_paused'.tr(),
         );
       case ChatComposerState.muted:
         return _buildChatComposerNotice(
           icon: Icons.volume_off_rounded,
-          color: paletteColor(context, Canopy.liveCrimson),
+          color: Canopy.liveCrimson,
           message: 'live.chat_composer_muted'.tr(),
         );
       case ChatComposerState.chatDisabled:
         return _buildChatComposerNotice(
           icon: Icons.speaker_notes_off_rounded,
-          color: paletteColor(context, Canopy.haze),
+          color: Canopy.haze,
           message: 'live.chat_composer_chat_off'.tr(),
         );
       case ChatComposerState.offline:
@@ -1995,7 +1995,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             child: Row(children: [
           IconButton(
               icon: Icon(Icons.back_hand_rounded,
-                  color: _isHandRaised ? paletteColor(context, Canopy.majlisGold) : paletteColor(context, Canopy.mist)),
+                  color: _isHandRaised ? Canopy.majlisGold : Canopy.mist),
               tooltip: 'live.raise_hand_toggle'.tr(),
               onPressed: canSend ? _toggleRaiseHand : null),
           Expanded(
@@ -2009,15 +2009,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   style: Theme.of(context)
                       .textTheme
                       .bodyMedium
-                      ?.copyWith(color: paletteColor(context, Canopy.ink)),
+                      ?.copyWith(color: Canopy.ink),
                   decoration: InputDecoration(
                       hintText: hint,
                       hintStyle: Theme.of(context)
                           .textTheme
                           .bodySmall
-                          ?.copyWith(color: paletteColor(context, Canopy.slate)),
+                          ?.copyWith(color: Canopy.slate),
                       filled: true,
-                      fillColor: paletteColor(context, Canopy.mint),
+                      fillColor: Canopy.mint,
                       contentPadding: const EdgeInsetsDirectional.symmetric(
                           horizontal: AppTheme.spaceMd,
                           vertical: AppTheme.spaceMd),
@@ -2097,18 +2097,18 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       children: [
         Opacity(opacity: 0.6, child: tile),
         Container(
-          color: paletteColor(context, Canopy.errorTint),
+          color: Canopy.errorTint,
           padding: const EdgeInsetsDirectional.only(start: 32, bottom: 6),
           child: Row(
             children: [
-              Icon(Icons.error_outline_rounded,
-                  size: 12, color: paletteColor(context, Canopy.liveCrimson)),
+              const Icon(Icons.error_outline_rounded,
+                  size: 12, color: Canopy.liveCrimson),
               const SizedBox(width: 4),
               Expanded(
                 child: Text(
                   message.failureReason ?? '',
                   style:
-                      TextStyle(color: paletteColor(context, Canopy.liveCrimson), fontSize: 12),
+                      const TextStyle(color: Canopy.liveCrimson, fontSize: 12),
                 ),
               ),
               if (_chatController.isRetryable(message.id))
@@ -2120,8 +2120,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   ),
                   child: Text(
                     'live.chat_send_failed_retry'.tr(),
-                    style: TextStyle(
-                        color: paletteColor(context, AppTheme.primary),
+                    style: const TextStyle(
+                        color: AppTheme.primary,
                         fontSize: 12,
                         fontWeight: FontWeight.bold),
                   ),
@@ -2135,7 +2135,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 ),
                 child: Text(
                   'live.chat_send_failed_discard'.tr(),
-                  style: TextStyle(color: paletteColor(context, Canopy.haze), fontSize: 12),
+                  style: const TextStyle(color: Canopy.haze, fontSize: 12),
                 ),
               ),
             ],
@@ -2149,7 +2149,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
     _chatController.retryFailedMessage(messageId).catchError((Object e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('$e'), backgroundColor: paletteColor(context, Canopy.liveCrimson)),
+        SnackBar(content: Text('$e'), backgroundColor: Canopy.liveCrimson),
       );
     });
   }
@@ -2161,9 +2161,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       child: Container(
         padding: const EdgeInsets.all(5),
         decoration: BoxDecoration(
-          color: paletteColor(context, Canopy.mint),
+          color: Canopy.mint,
           shape: BoxShape.circle,
-          border: Border.all(color: paletteColor(context, Canopy.hairline)),
+          border: Border.all(color: Canopy.hairline),
         ),
         child: Text(emoji, style: const TextStyle(fontSize: 16)),
       ),
@@ -2188,14 +2188,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             style: Theme.of(context)
                 .textTheme
                 .bodyMedium
-                ?.copyWith(color: paletteColor(context, Canopy.paper))),
+                ?.copyWith(color: Canopy.paper)),
       ));
     }
     return ListView(
       padding: const EdgeInsets.all(AppTheme.spaceMd),
       children: [
         ListTile(
-          leading: Icon(Icons.menu_book_rounded, color: paletteColor(context, AppTheme.primary)),
+          leading: const Icon(Icons.menu_book_rounded, color: AppTheme.primary),
           title: Text('live.slides_pdf_title'.tr()),
           subtitle: Text(slidesUrl),
           trailing: const Icon(Icons.open_in_new_rounded),
@@ -2222,17 +2222,17 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
         Container(
           padding: const EdgeInsets.all(AppTheme.spaceMd),
           decoration: BoxDecoration(
-            color: paletteColor(context, AppTheme.surface),
+            color: AppTheme.surface,
             borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-            border: Border.all(color: paletteColor(context, Canopy.hairline)),
+            border: Border.all(color: Canopy.hairline),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
                 children: [
-                  Icon(Icons.location_on_rounded,
-                      color: paletteColor(context, Canopy.liveCrimson), size: 22),
+                  const Icon(Icons.location_on_rounded,
+                      color: Canopy.liveCrimson, size: 22),
                   const SizedBox(width: AppTheme.spaceSm),
                   Expanded(
                     child: Column(
@@ -2240,15 +2240,15 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                       children: [
                         Text(
                           streamer.getLocalizedVenue(langCode),
-                          style: TextStyle(
-                              color: paletteColor(context, Canopy.ink),
+                          style: const TextStyle(
+                              color: Canopy.ink,
                               fontWeight: FontWeight.bold,
                               fontSize: 13),
                         ),
                         Text(
                           '${streamer.getLocalizedCity(langCode)}, Eastern Province, KSA',
-                          style: TextStyle(
-                              color: paletteColor(context, Canopy.haze),
+                          style: const TextStyle(
+                              color: Canopy.haze,
                               fontSize: AppTheme.captionFont),
                         ),
                       ],
@@ -2261,7 +2261,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceSm),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, Canopy.mint),
+                    color: Canopy.mint,
                     borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                   ),
                   child: Row(
@@ -2273,8 +2273,8 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                             : 'live.hall_fully_booked'.tr(),
                         style: TextStyle(
                           color: availableSeats > 0
-                              ? paletteColor(context, AppTheme.primary)
-                              : paletteColor(context, Canopy.haze),
+                              ? AppTheme.primary
+                              : Canopy.haze,
                           fontWeight: FontWeight.bold,
                           fontSize: AppTheme.captionFont,
                         ),
@@ -2284,7 +2284,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                             ? Icons.event_seat_rounded
                             : Icons.block_rounded,
                         color:
-                            availableSeats > 0 ? paletteColor(context, AppTheme.primary) : paletteColor(context, Canopy.haze),
+                            availableSeats > 0 ? AppTheme.primary : Canopy.haze,
                         size: 15,
                       ),
                     ],
@@ -2297,9 +2297,9 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
                   child: ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                       backgroundColor:
-                          isAttending ? paletteColor(context, AppTheme.surface) : paletteColor(context, Canopy.liveCrimson),
+                          isAttending ? AppTheme.surface : Canopy.liveCrimson,
                       foregroundColor:
-                          isAttending ? paletteColor(context, AppTheme.primary) : paletteColor(context, AppTheme.onMedia),
+                          isAttending ? AppTheme.primary : AppTheme.onMedia,
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       shape: RoundedRectangleBorder(
                           borderRadius:
@@ -2331,14 +2331,14 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
             width: double.infinity,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: paletteColor(context, Canopy.ink),
-                side: BorderSide(color: paletteColor(context, Canopy.hairline)),
+                foregroundColor: Canopy.ink,
+                side: const BorderSide(color: Canopy.hairline),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd)),
               ),
-              icon: Icon(Icons.directions_car_rounded,
-                  color: paletteColor(context, AppTheme.primary), size: 16),
+              icon: const Icon(Icons.directions_car_rounded,
+                  color: AppTheme.primary, size: 16),
               label: Text('live.get_directions'.tr(),
                   style: const TextStyle(fontSize: 12)),
               onPressed: () {
@@ -2376,8 +2376,8 @@ class _RoomStatusScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final provider = context.read<AppProvider>();
     return Scaffold(
-      backgroundColor: paletteColor(context, Canopy.dawn),
-      appBar: CaAppBar(backgroundColor: paletteColor(context, Canopy.dawn)),
+      backgroundColor: Canopy.dawn,
+      appBar: CaAppBar(backgroundColor: Canopy.dawn),
       body: SafeArea(
         child: Center(
           child: Padding(
@@ -2385,18 +2385,18 @@ class _RoomStatusScaffold extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, color: paletteColor(context, Canopy.haze), size: 42),
+                Icon(icon, color: Canopy.haze, size: 42),
                 const SizedBox(height: AppTheme.spaceMd),
                 Text(titleKey.tr(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: paletteColor(context, Canopy.ink),
+                    style: const TextStyle(
+                        color: Canopy.ink,
                         fontSize: 20,
                         fontWeight: FontWeight.bold)),
                 const SizedBox(height: AppTheme.spaceSm),
                 Text(bodyKey.tr(),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: paletteColor(context, Canopy.slate))),
+                    style: const TextStyle(color: Canopy.slate)),
                 const SizedBox(height: AppTheme.spaceLg),
                 Wrap(
                   alignment: WrapAlignment.center,

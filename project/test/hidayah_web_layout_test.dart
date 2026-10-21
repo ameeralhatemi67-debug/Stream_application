@@ -37,7 +37,7 @@ AppProvider _provider() {
 }
 
 Future<void> _pump(WidgetTester tester, Widget screen,
-    {required bool gold, required Size size, String lang = 'en'}) async {
+    {required Size size, String lang = 'en'}) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
   addTearDown(tester.view.resetPhysicalSize);
@@ -51,7 +51,7 @@ Future<void> _pump(WidgetTester tester, Widget screen,
       assetLoader: const DirectJsonAssetLoader(),
       child: Builder(
           builder: (context) => MaterialApp(
-              theme: AppTheme.forLocale(context.locale, hidayah: gold),
+              theme: AppTheme.forLocale(context.locale),
               locale: context.locale,
               supportedLocales: context.supportedLocales,
               localizationsDelegates: context.localizationDelegates,
@@ -79,7 +79,7 @@ void main() {
       testWidgets('gold discovery is a website at $width ($lang)',
           (tester) async {
         await _pump(tester, const DiscoveryFeedScreen(),
-            gold: true, size: Size(width, 900), lang: lang);
+            size: Size(width, 900), lang: lang);
         expect(find.byType(DiscoveryWebView), findsOneWidget);
         expect(find.byType(StreamerGridCard), findsNothing);
         expect(tester.takeException(), isNull);
@@ -99,7 +99,6 @@ void main() {
             tester,
             BroadcasterProfileScreen(
                 streamerId: mockStreamers.first.streamerId),
-            gold: true,
             size: Size(width, 900),
             lang: lang);
         expect(find.byType(HidayahWebHeader), findsOneWidget);
@@ -120,31 +119,17 @@ void main() {
       testWidgets('gold map has the website panel at $width ($lang)',
           (tester) async {
         await _pump(tester, const SpatialMapScreen(),
-            gold: true, size: Size(width, 900), lang: lang);
+            size: Size(width, 900), lang: lang);
         expect(find.byType(MapWebPanel), findsOneWidget);
         expect(tester.takeException(), isNull);
       });
     }
   }
 
-  testWidgets('green palette keeps the app layout on a laptop',
-      (tester) async {
-    await _pump(tester, const DiscoveryFeedScreen(),
-        gold: false, size: const Size(1440, 900));
-    expect(find.byType(DiscoveryWebView), findsNothing);
-    expect(find.byType(StreamerGridCard), findsWidgets);
-  });
-
   testWidgets('gold palette keeps the app layout on a phone', (tester) async {
     await _pump(tester, const DiscoveryFeedScreen(),
-        gold: true, size: const Size(390, 844));
+        size: const Size(390, 844));
     expect(find.byType(DiscoveryWebView), findsNothing);
     expect(find.byType(CaChipRow), findsOneWidget);
-  });
-
-  testWidgets('green map keeps floating controls on a laptop', (tester) async {
-    await _pump(tester, const SpatialMapScreen(),
-        gold: false, size: const Size(1440, 900));
-    expect(find.byType(MapWebPanel), findsNothing);
   });
 }

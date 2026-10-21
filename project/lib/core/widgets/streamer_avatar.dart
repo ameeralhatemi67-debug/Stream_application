@@ -99,15 +99,15 @@ class _Placeholder extends StatelessWidget {
     final initial =
         trimmed.isEmpty ? null : String.fromCharCodes(trimmed.runes.take(1));
     return ColoredBox(
-      color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.12),
+      color: AppTheme.primary.withValues(alpha: 0.12),
       child: Center(
         child: initial == null
             ? Icon(Icons.person_outline_rounded,
-                size: radius, color: paletteColor(context, AppTheme.primary))
+                size: radius, color: AppTheme.primary)
             : Text(
                 initial.toUpperCase(),
                 style: TextStyle(
-                  color: paletteColor(context, AppTheme.primary),
+                  color: AppTheme.primary,
                   fontWeight: FontWeight.bold,
                   fontSize: radius * 0.9,
                 ),

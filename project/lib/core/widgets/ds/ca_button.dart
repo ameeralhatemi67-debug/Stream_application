@@ -124,12 +124,12 @@ class _CaButtonState extends State<CaButton>
     final destructive = widget.variant == CaButtonVariant.destructive;
     final text = widget.variant == CaButtonVariant.text;
     final foreground = !active
-        ? paletteColor(context, Canopy.slate)
+        ? Canopy.slate
         : primary
-            ? paletteOnAccent(context, Canopy.paper)
+            ? AppPalette.ink
             : destructive
-                ? paletteColor(context, Canopy.paper)
-                : paletteColor(context, Canopy.brandGreen);
+                ? Canopy.paper
+                : Canopy.brandGreen;
     final label = Row(mainAxisSize: MainAxisSize.min, children: [
       if (widget.icon != null) ...[
         if (widget.confirm)
@@ -156,7 +156,7 @@ class _CaButtonState extends State<CaButton>
                 : BoxDecoration(
                     shape: BoxShape.circle,
                     color:
-                        paletteColor(context, Canopy.paper).withValues(alpha: CanopySize.glassAlpha)),
+                        Canopy.paper.withValues(alpha: CanopySize.glassAlpha)),
             child: CaIcon(widget.trailingIcon!,
                 color: foreground, size: CanopySize.inlineIcon)),
       ],
@@ -167,21 +167,19 @@ class _CaButtonState extends State<CaButton>
               constraints: const BoxConstraints(minHeight: CanopySize.target),
               decoration: BoxDecoration(
                 color: !active
-                    ? paletteColor(context, Canopy.mint)
+                    ? Canopy.mint
                     : destructive
-                        ? paletteColor(context, Canopy.liveCrimson)
+                        ? Canopy.liveCrimson
                         : primary || text
                             ? null
-                            : paletteColor(context, Canopy.mint),
-                gradient: active && primary ? paletteGradient(context, AppGradients.pill) : null,
+                            : Canopy.mint,
+                gradient: active && primary ? AppGradients.pill : null,
                 borderRadius: BorderRadius.circular(CanopyRadius.pill),
                 border: !primary && !destructive && !text
-                    ? Border.all(color: paletteColor(context, Canopy.mist))
+                    ? Border.all(color: Canopy.mist)
                     : null,
                 boxShadow: active && primary
-                    ? (paletteOf(context).hidayah
-                        ? HidayahShadow.minted
-                        : paletteShadows(context, CanopyShadow.pill))
+                    ? HidayahShadow.minted
                     : null,
               ),
               child: ClipRRect(
@@ -195,10 +193,7 @@ class _CaButtonState extends State<CaButton>
                           height: CanopySize.stroke,
                           // The minted coin's top edge catches the light.
                           child: ColoredBox(
-                              color: paletteOf(context).hidayah
-                                  ? HidayahGold.shine.withValues(alpha: .9)
-                                  : paletteColor(context, Canopy.paper).withValues(
-                                      alpha: CanopySize.highlightAlpha))),
+                              color: HidayahGold.shine.withValues(alpha: .9))),
                     if (widget.holdToConfirm)
                       Positioned.fill(
                           child: Align(
@@ -207,7 +202,7 @@ class _CaButtonState extends State<CaButton>
                             widthFactor: _hold.value,
                             heightFactor: 1,
                             child: ColoredBox(
-                                color: paletteColor(context, Canopy.paper)
+                                color: Canopy.paper
                                     .withValues(alpha: CanopySize.glassAlpha))),
                       )),
                     Padding(
@@ -258,10 +253,10 @@ class _CaButtonState extends State<CaButton>
             border: _focused
                 ? Border.all(
                     color: active && primary
-                        ? paletteOnAccent(context, Canopy.paper)
+                        ? AppPalette.ink
                         : active && destructive
-                            ? paletteColor(context, Canopy.paper)
-                            : paletteColor(context, Canopy.brandGreen),
+                            ? Canopy.paper
+                            : Canopy.brandGreen,
                     width: CanopySize.focusWidth)
                 : null),
         child: content);

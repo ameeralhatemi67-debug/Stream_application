@@ -42,11 +42,11 @@ class ApplicationSettingsSection extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.15),
+                  color: AppTheme.primary.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
                 ),
-                child: Icon(Icons.school_rounded,
-                    color: paletteColor(context, AppTheme.primary), size: 24),
+                child: const Icon(Icons.school_rounded,
+                    color: AppTheme.primary, size: 24),
               ),
               const SizedBox(width: AppTheme.spaceMd),
               Expanded(
@@ -55,8 +55,8 @@ class ApplicationSettingsSection extends StatelessWidget {
                   children: [
                     Text(
                       'application.apply_card_title'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(context, Canopy.ink),
+                      style: const TextStyle(
+                        color: Canopy.ink,
                         fontWeight: FontWeight.bold,
                         fontSize: 13.5,
                       ),
@@ -64,8 +64,8 @@ class ApplicationSettingsSection extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       'application.apply_card_desc'.tr(),
-                      style: TextStyle(
-                        color: paletteColor(context, Canopy.slate),
+                      style: const TextStyle(
+                        color: Canopy.slate,
                         fontSize: AppTheme.captionFont,
                       ),
                     ),
@@ -79,8 +79,8 @@ class ApplicationSettingsSection extends StatelessWidget {
             width: double.infinity,
             child: ElevatedButton.icon(
               style: ElevatedButton.styleFrom(
-                backgroundColor: paletteColor(context, AppTheme.primary),
-                foregroundColor: paletteColor(context, AppTheme.onPrimary),
+                backgroundColor: AppTheme.primary,
+                foregroundColor: AppTheme.onPrimary,
                 padding: const EdgeInsets.symmetric(vertical: 11),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -113,13 +113,13 @@ class ApplicationSettingsSection extends StatelessWidget {
 
     switch (app.status) {
       case ApplicationStatus.approved:
-        statusColor = paletteColor(context, Canopy.leaf);
+        statusColor = Canopy.leaf;
         statusIcon = Icons.verified_rounded;
         statusTitle = 'application.status_approved'.tr();
         statusSubtitle = 'application.status_approved_desc'.tr();
         break;
       case ApplicationStatus.rejected:
-        statusColor = paletteColor(context, Canopy.liveCrimson);
+        statusColor = Canopy.liveCrimson;
         statusIcon = Icons.error_outline_rounded;
         statusTitle = 'application.status_rejected'.tr();
         statusSubtitle =
@@ -127,7 +127,7 @@ class ApplicationSettingsSection extends StatelessWidget {
         break;
       case ApplicationStatus.pending:
       default:
-        statusColor = paletteColor(context, AppTheme.warning);
+        statusColor = AppTheme.warning;
         statusIcon = Icons.hourglass_top_rounded;
         statusTitle = 'application.status_pending'.tr();
         statusSubtitle = 'application.status_pending_desc'.tr();
@@ -137,7 +137,7 @@ class ApplicationSettingsSection extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(AppTheme.spaceLg),
       decoration: BoxDecoration(
-        color: paletteColor(context, AppTheme.surface),
+        color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppTheme.radiusMd),
         border: Border.all(color: statusColor.withValues(alpha: 0.4)),
       ),
@@ -176,15 +176,15 @@ class ApplicationSettingsSection extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 6, vertical: 1.5),
                           decoration: BoxDecoration(
-                            color: paletteColor(context, Canopy.mint),
+                            color: Canopy.mint,
                             borderRadius: BorderRadius.circular(4),
                             border:
-                                Border.all(color: paletteColor(context, Canopy.hairline), width: 0.6),
+                                Border.all(color: Canopy.hairline, width: 0.6),
                           ),
                           child: Text(
                             app.isOrganization ? 'ORGANIZATION' : 'SCHOLAR',
-                            style: TextStyle(
-                                color: paletteColor(context, Canopy.haze), fontSize: 8.5),
+                            style: const TextStyle(
+                                color: Canopy.haze, fontSize: 8.5),
                           ),
                         ),
                       ],
@@ -192,8 +192,8 @@ class ApplicationSettingsSection extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       '${isAr ? app.applicantNameAr : app.applicantNameEn} • ${app.email}',
-                      style: TextStyle(
-                        color: paletteColor(context, Canopy.ink),
+                      style: const TextStyle(
+                        color: Canopy.ink,
                         fontSize: AppTheme.captionFont,
                         fontWeight: FontWeight.w600,
                       ),
@@ -208,7 +208,7 @@ class ApplicationSettingsSection extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.all(AppTheme.spaceSm),
             decoration: BoxDecoration(
-              color: paletteColor(context, Canopy.mint),
+              color: Canopy.mint,
               borderRadius: BorderRadius.circular(AppTheme.radiusSm),
             ),
             child: Column(
@@ -218,13 +218,13 @@ class ApplicationSettingsSection extends StatelessWidget {
                     app.reviewNotes != null) ...[
                   Row(
                     children: [
-                      Icon(Icons.info_outline_rounded,
-                          size: 13, color: paletteColor(context, Canopy.liveCrimson)),
+                      const Icon(Icons.info_outline_rounded,
+                          size: 13, color: Canopy.liveCrimson),
                       const SizedBox(width: 4),
                       Text(
                         'application.admin_feedback'.tr(),
-                        style: TextStyle(
-                          color: paletteColor(context, Canopy.liveCrimson),
+                        style: const TextStyle(
+                          color: Canopy.liveCrimson,
                           fontSize: AppTheme.captionFont,
                           fontWeight: FontWeight.bold,
                         ),
@@ -234,15 +234,15 @@ class ApplicationSettingsSection extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     app.reviewNotes!,
-                    style: TextStyle(
-                        color: paletteColor(context, Canopy.slate),
+                    style: const TextStyle(
+                        color: Canopy.slate,
                         fontSize: AppTheme.captionFont),
                   ),
                 ] else ...[
                   Text(
                     statusSubtitle,
-                    style: TextStyle(
-                        color: paletteColor(context, Canopy.slate),
+                    style: const TextStyle(
+                        color: Canopy.slate,
                         fontSize: AppTheme.captionFont),
                   ),
                 ],
@@ -259,8 +259,8 @@ class ApplicationSettingsSection extends StatelessWidget {
             width: double.infinity,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
-                foregroundColor: paletteColor(context, AppTheme.primary),
-                side: BorderSide(color: paletteColor(context, Canopy.hairline)),
+                foregroundColor: AppTheme.primary,
+                side: const BorderSide(color: Canopy.hairline),
                 padding: const EdgeInsets.symmetric(vertical: 9),
               ),
               icon: const Icon(Icons.edit_note_rounded, size: 16),

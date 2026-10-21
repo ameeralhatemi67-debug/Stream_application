@@ -168,15 +168,15 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                   padding:
                       const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, AppTheme.surface),
+                    color: AppTheme.surface,
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(
-                      color: paletteColor(context, widget.accentColor).withValues(alpha: 0.6),
+                      color: widget.accentColor.withValues(alpha: 0.6),
                       width: 1.2,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: paletteColor(context, AppTheme.media).withValues(alpha: 0.4),
+                        color: AppTheme.media.withValues(alpha: 0.4),
                         blurRadius: 16,
                         offset: const Offset(0, 6),
                       ),
@@ -190,13 +190,13 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                         width: 36,
                         height: 36,
                         decoration: BoxDecoration(
-                          color: paletteColor(context, widget.accentColor).withValues(alpha: 0.15),
+                          color: widget.accentColor.withValues(alpha: 0.15),
                           borderRadius:
                               BorderRadius.circular(AppTheme.radiusSm),
                         ),
                         child: Icon(
                           widget.icon,
-                          color: paletteColor(context, widget.accentColor),
+                          color: widget.accentColor,
                           size: 20,
                         ),
                       ),
@@ -210,8 +210,8 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                           children: [
                             Text(
                               widget.title,
-                              style: TextStyle(
-                                color: paletteColor(context, AppTheme.textPrimary),
+                              style: const TextStyle(
+                                color: AppTheme.textPrimary,
                                 fontSize: 13,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -221,8 +221,8 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                             const SizedBox(height: 2),
                             Text(
                               widget.message,
-                              style: TextStyle(
-                                color: paletteColor(context, AppTheme.textSecondary),
+                              style: const TextStyle(
+                                color: AppTheme.textSecondary,
                                 fontSize: 11.5,
                                 height: 1.25,
                               ),
@@ -240,8 +240,8 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
                           onPressed: widget.onActionPressed ?? widget.onTap,
                           style: TextButton.styleFrom(
                             backgroundColor:
-                                paletteColor(context, widget.accentColor).withValues(alpha: 0.18),
-                            foregroundColor: paletteColor(context, widget.accentColor),
+                                widget.accentColor.withValues(alpha: 0.18),
+                            foregroundColor: widget.accentColor,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 10, vertical: 6),
                             minimumSize: Size.zero,
@@ -262,8 +262,8 @@ class _InteractiveToastWidgetState extends State<_InteractiveToastWidget>
 
                       const SizedBox(width: 4),
                       IconButton(
-                        icon: Icon(Icons.close_rounded,
-                            size: 16, color: paletteColor(context, AppTheme.textMuted)),
+                        icon: const Icon(Icons.close_rounded,
+                            size: 16, color: AppTheme.textMuted),
                         padding: EdgeInsets.zero,
                         constraints: const BoxConstraints(),
                         onPressed: widget.onDismissed,

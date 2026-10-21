@@ -33,7 +33,8 @@ class LiveWebLayout extends StatelessWidget {
   Widget build(BuildContext context) {
     final audio = streamer.isAudioLive;
     final stage = audio
-        ? _AudioRoom(streamer: streamer, viewport: viewport, viewerCount: viewerCount)
+        ? _AudioRoom(
+            streamer: streamer, viewport: viewport, viewerCount: viewerCount)
         : ClipRRect(
             borderRadius: BorderRadius.circular(16),
             child: DecoratedBox(
@@ -45,7 +46,8 @@ class LiveWebLayout extends StatelessWidget {
         color: HidayahGold.s950,
         child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+            child:
+                Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
               Expanded(
                   child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -81,7 +83,9 @@ String _audience(StreamerModel s, int? count) =>
 /// framed like a radio dial rather than stretched like a video.
 class _AudioRoom extends StatelessWidget {
   const _AudioRoom(
-      {required this.streamer, required this.viewport, required this.viewerCount});
+      {required this.streamer,
+      required this.viewport,
+      required this.viewerCount});
   final StreamerModel streamer;
   final Widget viewport;
   final int? viewerCount;
@@ -169,67 +173,98 @@ class _Details extends StatelessWidget {
             ]),
             const SizedBox(height: 14),
           ],
-          Row(children: [
-            InkWell(
-                onTap: () => context.push('/profile/${s.channelProfileId}'),
-                borderRadius: BorderRadius.circular(12),
-                child: Row(mainAxisSize: MainAxisSize.min, children: [
-                  CaAvatar(
-                      name: s.getLocalizedName(lang),
-                      url: s.avatarUrl,
-                      live: true,
-                      ring: CaAvatarRing.brand,
-                      org: s.isOrganization,
-                      radius: 22),
-                  const SizedBox(width: 12),
-                  Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Row(mainAxisSize: MainAxisSize.min, children: [
-                          Text(s.getLocalizedName(lang),
-                              style: HidayahText.body(15.5,
-                                  color: HidayahGold.g50,
-                                  weight: FontWeight.w700,
-                                  height: 1.3)),
-                          if (s.isVerified) ...[
-                            const SizedBox(width: 5),
-                            const CaIcon(CaGlyph.verified, size: 16),
-                          ],
-                        ]),
-                        Text(
-                            [
-                              s.getLocalizedOrganization(lang),
-                              s.getLocalizedVenue(lang)
-                            ].where((t) => t.isNotEmpty).join(' · '),
-                            style: HidayahText.body(13,
-                                color: HidayahGold.s300, height: 1.3)),
-                      ]),
-                ])),
-            const Spacer(),
-            HidayahButton(
-                label: (following ? 'profile.following_btn' : 'web.follow')
-                    .tr(),
-                icon: following ? CaGlyph.check : CaGlyph.plus,
-                kind: following
-                    ? HidayahButtonKind.onDark
-                    : HidayahButtonKind.gold,
-                onPressed: onFollow),
-            const SizedBox(width: 10),
-            HidayahButton(
-                label: 'web.minimize'.tr(),
-                icon: CaGlyph.arrow,
-                kind: HidayahButtonKind.onDark,
-                onPressed: onMinimize),
-            if (onStudio != null) ...[
+          // Large text stacks the actions under the identity; otherwise the
+          // identity takes what the buttons leave and ellipsizes (a long
+          // organization line used to push the buttons off a 1280 px tablet).
+          Builder(builder: (context) {
+            final identity = Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: InkWell(
+                    onTap: () => context.push('/profile/${s.channelProfileId}'),
+                    borderRadius: BorderRadius.circular(12),
+                    child: Row(mainAxisSize: MainAxisSize.min, children: [
+                      CaAvatar(
+                          name: s.getLocalizedName(lang),
+                          url: s.avatarUrl,
+                          live: true,
+                          ring: CaAvatarRing.brand,
+                          org: s.isOrganization,
+                          radius: 22),
+                      const SizedBox(width: 12),
+                      Flexible(
+                          child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                            Row(mainAxisSize: MainAxisSize.min, children: [
+                              Flexible(
+                                  child: Text(s.getLocalizedName(lang),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: HidayahText.body(15.5,
+                                          color: HidayahGold.g50,
+                                          weight: FontWeight.w700,
+                                          height: 1.3))),
+                              if (s.isVerified) ...[
+                                const SizedBox(width: 5),
+                                const CaIcon(CaGlyph.verified, size: 16),
+                              ],
+                            ]),
+                            Text(
+                                [
+                                  s.getLocalizedOrganization(lang),
+                                  s.getLocalizedVenue(lang)
+                                ].where((t) => t.isNotEmpty).join(' · '),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: HidayahText.body(13,
+                                    color: HidayahGold.s300, height: 1.3)),
+                          ])),
+                    ])));
+            final actions = <Widget>[
+              HidayahButton(
+                  label:
+                      (following ? 'profile.following_btn' : 'web.follow').tr(),
+                  icon: following ? CaGlyph.check : CaGlyph.plus,
+                  kind: following
+                      ? HidayahButtonKind.onDark
+                      : HidayahButtonKind.gold,
+                  onPressed: onFollow),
               const SizedBox(width: 10),
               HidayahButton(
-                  label: 'organization_v1.studio'.tr(),
-                  icon: CaGlyph.video,
+                  label: 'web.minimize'.tr(),
+                  icon: CaGlyph.arrow,
                   kind: HidayahButtonKind.onDark,
-                  onPressed: onStudio),
-            ],
-          ]),
+                  onPressed: onMinimize),
+              if (onStudio != null) ...[
+                const SizedBox(width: 10),
+                HidayahButton(
+                    label: 'organization_v1.studio'.tr(),
+                    icon: CaGlyph.video,
+                    kind: HidayahButtonKind.onDark,
+                    onPressed: onStudio),
+              ],
+            ];
+            if (MediaQuery.textScalerOf(context).scale(10) > 13) {
+              return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    identity,
+                    const SizedBox(height: 12),
+                    Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children:
+                            actions.where((w) => w is! SizedBox).toList()),
+                  ]);
+            }
+            return Row(children: [
+              Expanded(child: identity),
+              const SizedBox(width: 16),
+              ...actions,
+            ]);
+          }),
         ]);
   }
 }

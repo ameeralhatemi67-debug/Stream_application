@@ -71,17 +71,17 @@ class VenueNavigationSheet extends StatelessWidget {
         AppTheme.spaceLg,
         AppTheme.spaceXl,
       ),
-      decoration: BoxDecoration(
-        color: paletteColor(context, AppTheme.surface),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+      decoration: const BoxDecoration(
+        color: AppTheme.surface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
         border: Border(
-          top: BorderSide(color: paletteColor(context, AppTheme.borderStrong), width: 1.5),
+          top: BorderSide(color: AppTheme.borderStrong, width: 1.5),
         ),
         boxShadow: [
           BoxShadow(
-            color: paletteColor(context, AppTheme.shadow),
+            color: AppTheme.shadow,
             blurRadius: 32,
-            offset: const Offset(0, -8),
+            offset: Offset(0, -8),
           ),
         ],
       ),
@@ -100,7 +100,7 @@ class VenueNavigationSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: paletteColor(context, AppTheme.borderStrong),
+                    color: AppTheme.borderStrong,
                     borderRadius: BorderRadius.circular(AppTheme.radiusFull),
                   ),
                 ),
@@ -113,12 +113,12 @@ class VenueNavigationSheet extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.15),
+                      color: AppTheme.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       Icons.navigation_rounded,
-                      color: paletteColor(context, AppTheme.primary),
+                      color: AppTheme.primary,
                       size: 22,
                     ),
                   ),
@@ -139,15 +139,15 @@ class VenueNavigationSheet extends StatelessWidget {
                           streamer.getLocalizedCity(langCode),
                           style:
                               Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: paletteColor(context, AppTheme.primary),
+                                    color: AppTheme.primary,
                                   ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: Icon(Icons.close_rounded,
-                        color: paletteColor(context, AppTheme.textMuted)),
+                    icon: const Icon(Icons.close_rounded,
+                        color: AppTheme.textMuted),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ],
@@ -158,9 +158,9 @@ class VenueNavigationSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, AppTheme.surface),
+                  color: AppTheme.surface,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: paletteColor(context, AppTheme.border)),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Row(
                   children: [
@@ -180,8 +180,8 @@ class VenueNavigationSheet extends StatelessWidget {
                               Expanded(
                                 child: Text(
                                   streamer.getLocalizedName(langCode),
-                                  style: TextStyle(
-                                    color: paletteColor(context, AppTheme.textPrimary),
+                                  style: const TextStyle(
+                                    color: AppTheme.textPrimary,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -190,17 +190,17 @@ class VenueNavigationSheet extends StatelessWidget {
                                 ),
                               ),
                               if (streamer.isVerified)
-                                Icon(
+                                const Icon(
                                   Icons.verified_rounded,
                                   size: 14,
-                                  color: paletteColor(context, AppTheme.accent),
+                                  color: AppTheme.accent,
                                 ),
                             ],
                           ),
                           Text(
                             streamer.getLocalizedOrganization(langCode),
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textMuted),
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
                               fontSize: 12,
                             ),
                             maxLines: 1,
@@ -218,25 +218,25 @@ class VenueNavigationSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, AppTheme.surfaceAlt),
+                  color: AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: paletteColor(context, AppTheme.border)),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.location_on_rounded,
-                            size: 16, color: paletteColor(context, AppTheme.danger)),
+                        const Icon(Icons.location_on_rounded,
+                            size: 16, color: AppTheme.danger),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'venue.address_label'.tr(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textMuted),
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -248,8 +248,8 @@ class VenueNavigationSheet extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       streamer.getLocalizedVenue(langCode),
-                      style: TextStyle(
-                        color: paletteColor(context, AppTheme.textPrimary),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
                       ),
@@ -257,8 +257,8 @@ class VenueNavigationSheet extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       auditoriumInfo.getLocalizedAddress(langCode),
-                      style: TextStyle(
-                        color: paletteColor(context, AppTheme.textSecondary),
+                      style: const TextStyle(
+                        color: AppTheme.textSecondary,
                         fontSize: 12,
                         height: 1.3,
                       ),
@@ -272,25 +272,25 @@ class VenueNavigationSheet extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(AppTheme.spaceMd),
                 decoration: BoxDecoration(
-                  color: paletteColor(context, AppTheme.surfaceAlt),
+                  color: AppTheme.surfaceAlt,
                   borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                  border: Border.all(color: paletteColor(context, AppTheme.border)),
+                  border: Border.all(color: AppTheme.border),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(Icons.account_balance_rounded,
-                            size: 16, color: paletteColor(context, AppTheme.accent)),
+                        const Icon(Icons.account_balance_rounded,
+                            size: 16, color: AppTheme.accent),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             'venue.auditorium_label'.tr(),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textMuted),
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -301,18 +301,16 @@ class VenueNavigationSheet extends StatelessWidget {
                           padding: const EdgeInsets.symmetric(
                               horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
-                            color: paletteColor(context, AppTheme.accent).withValues(alpha: 0.2),
+                            color: AppTheme.accent.withValues(alpha: 0.2),
                             borderRadius:
                                 BorderRadius.circular(AppTheme.radiusXs),
                           ),
                           child: Text(
                             '${auditoriumInfo.seatingCapacity} Seats',
-                            style: TextStyle(
+                            style: const TextStyle(
                               // Bronze on its own tint is too faint; gold
                               // tags use the darker bronze.
-                              color: paletteOf(context).hidayah
-                                  ? HidayahGold.g800
-                                  : AppTheme.accent,
+                              color: HidayahGold.g800,
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
                             ),
@@ -323,8 +321,8 @@ class VenueNavigationSheet extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       auditoriumInfo.getLocalizedAuditorium(langCode),
-                      style: TextStyle(
-                        color: paletteColor(context, AppTheme.textPrimary),
+                      style: const TextStyle(
+                        color: AppTheme.textPrimary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                       ),
@@ -332,14 +330,14 @@ class VenueNavigationSheet extends StatelessWidget {
                     const SizedBox(height: 4),
                     Row(
                       children: [
-                        Icon(Icons.meeting_room_outlined,
-                            size: 14, color: paletteColor(context, AppTheme.textMuted)),
+                        const Icon(Icons.meeting_room_outlined,
+                            size: 14, color: AppTheme.textMuted),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
                             auditoriumInfo.getLocalizedGate(langCode),
-                            style: TextStyle(
-                              color: paletteColor(context, AppTheme.textMuted),
+                            style: const TextStyle(
+                              color: AppTheme.textMuted,
                               fontSize: 11,
                             ),
                           ),
@@ -355,20 +353,20 @@ class VenueNavigationSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, AppTheme.surfaceAlt),
+                    color: AppTheme.surfaceAlt,
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
-                    border: Border.all(color: paletteColor(context, AppTheme.border)),
+                    border: Border.all(color: AppTheme.border),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.location_off_rounded,
-                          color: paletteColor(context, AppTheme.textMuted), size: 20),
+                      const Icon(Icons.location_off_rounded,
+                          color: AppTheme.textMuted, size: 20),
                       const SizedBox(width: AppTheme.spaceMd),
                       Expanded(
                         child: Text(
                           'map.no_venue_location'.tr(),
-                          style: TextStyle(
-                            color: paletteColor(context, AppTheme.textPrimary),
+                          style: const TextStyle(
+                            color: AppTheme.textPrimary,
                             fontSize: 13,
                           ),
                         ),
@@ -381,22 +379,22 @@ class VenueNavigationSheet extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(AppTheme.spaceMd),
                   decoration: BoxDecoration(
-                    color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.1),
+                    color: AppTheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(AppTheme.radiusMd),
                     border: Border.all(
-                        color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.4)),
+                        color: AppTheme.primary.withValues(alpha: 0.4)),
                   ),
                   child: Row(
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: paletteColor(context, AppTheme.primary).withValues(alpha: 0.2),
+                          color: AppTheme.primary.withValues(alpha: 0.2),
                           shape: BoxShape.circle,
                         ),
-                        child: Icon(
+                        child: const Icon(
                           Icons.directions_car_rounded,
-                          color: paletteColor(context, AppTheme.primary),
+                          color: AppTheme.primary,
                           size: 20,
                         ),
                       ),
@@ -407,8 +405,8 @@ class VenueNavigationSheet extends StatelessWidget {
                           children: [
                             Text(
                               'venue.distance_label'.tr(),
-                              style: TextStyle(
-                                color: paletteColor(context, AppTheme.primary),
+                              style: const TextStyle(
+                                color: AppTheme.primary,
                                 fontSize: 11,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -423,16 +421,16 @@ class VenueNavigationSheet extends StatelessWidget {
                               children: [
                                 Text(
                                   formattedDistance,
-                                  style: TextStyle(
-                                    color: paletteColor(context, AppTheme.textPrimary),
+                                  style: const TextStyle(
+                                    color: AppTheme.textPrimary,
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
                                 Text(
                                   '($travelTimeStr)',
-                                  style: TextStyle(
-                                    color: paletteColor(context, AppTheme.textSecondary),
+                                  style: const TextStyle(
+                                    color: AppTheme.textSecondary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -455,8 +453,8 @@ class VenueNavigationSheet extends StatelessWidget {
                     onPressed: () =>
                         _openInGoogleMaps(context, streamer, mapUrl),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: paletteColor(context, AppTheme.primary),
-                      foregroundColor: paletteColor(context, AppTheme.bg),
+                      backgroundColor: AppTheme.primary,
+                      foregroundColor: AppTheme.bg,
                       elevation: 0,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(AppTheme.radiusSm),
@@ -510,12 +508,12 @@ class VenueNavigationSheet extends StatelessWidget {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: paletteColor(context, AppTheme.surface),
+        backgroundColor: AppTheme.surface,
         behavior: SnackBarBehavior.floating,
         duration: const Duration(seconds: 4),
         content: Row(
           children: [
-            Icon(Icons.open_in_new_rounded, color: paletteColor(context, AppTheme.primary)),
+            const Icon(Icons.open_in_new_rounded, color: AppTheme.primary),
             const SizedBox(width: AppTheme.spaceMd),
             Expanded(
               child: Column(
@@ -524,15 +522,15 @@ class VenueNavigationSheet extends StatelessWidget {
                 children: [
                   Text(
                     'venue.navigating_toast'.tr(),
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.textPrimary),
+                    style: const TextStyle(
+                      color: AppTheme.textPrimary,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   Text(
                     fallbackMapUrl,
-                    style: TextStyle(
-                      color: paletteColor(context, AppTheme.primary),
+                    style: const TextStyle(
+                      color: AppTheme.primary,
                       fontSize: 11,
                     ),
                     maxLines: 1,

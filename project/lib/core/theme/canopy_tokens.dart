@@ -1,41 +1,41 @@
-// Emerald Canopy tokens. DESIGN.md and owner decisions outrank the proposal.
+// Design-system tokens. The names come from the original Canopy layout
+// system; every value is Hidayah Gold (the only design since 2026-10-21).
 import 'package:flutter/material.dart';
-import 'dart:math' as math;
+import 'hidayah_gold.dart';
 
-/// Colours. Map onto the existing AppTheme constants (see `replaces` in the JSON).
 export 'app_palette.dart';
 
 abstract final class Canopy {
   static const transparent = Color(0x00000000);
-  static const broadcastGlass = Color(0xD90A2C1B);
+  static const broadcastGlass = Color(0xD90B1117);
   static const cinemaBubble = Color(0x14FFFFFF);
-  static const forestDeep = Color(0xFF0A2C1B);
-  static const canopy900 = Color(0xFF0E3A24);
-  static const canopy800 = Color(0xFF145030);
-  static const brandGreen = Color(0xFF17643F); // AppTheme.primary / accent
-  static const leaf = Color(0xFF22804D); // last label-safe gradient stop
-  static const fresh = Color(0xFF2F9A55); // decorative only
-  static const sketchBright = Color(0xFF31A05A); // decorative only
-  static const mist = Color(0xFFBFE6CD);
-  static const mint = Color(0xFFE3F6EA); // AppTheme.surfaceAlt
-  static const dawn = Color(0xFFF4FFF7); // AppTheme.bg
+  static const forestDeep = HidayahGold.s950;
+  static const canopy900 = HidayahGold.s800;
+  static const canopy800 = HidayahGold.g800;
+  static const brandGreen = HidayahGold.g700; // AppTheme.primary / accent
+  static const leaf = HidayahGold.g700; // last label-safe gradient stop
+  static const fresh = HidayahGold.g400; // decorative only
+  static const sketchBright = HidayahGold.g300; // decorative only
+  static const mist = HidayahGold.g200;
+  static const mint = HidayahGold.g100; // AppTheme.surfaceAlt
+  static const dawn = HidayahGold.g50; // AppTheme.bg
   static const paper = Color(0xFFFFFFFF); // AppTheme.surface
-  static const ink = Color(0xFF12251C); // AppTheme.textPrimary
-  static const slate = Color(0xFF3C5247); // AppTheme.textSecondary
-  static const haze = Color(0xFF5D7266); // AppTheme.textMuted (12px and up)
-  static const hairline = Color(0xFFD3E5DA); // AppTheme.border
-  static const hairlineStrong = Color(0xFF7A9585); // AppTheme.borderStrong
+  static const ink = HidayahGold.s900; // AppTheme.textPrimary
+  static const slate = HidayahGold.s700; // AppTheme.textSecondary
+  static const haze = HidayahGold.s600; // AppTheme.textMuted (12px and up)
+  static const hairline = HidayahGold.hairline; // AppTheme.border
+  static const hairlineStrong = HidayahGold.s500; // AppTheme.borderStrong
   static const liveCrimson =
-      Color(0xFFB3263E); // live signal and destructive only
-  static const majlisGold = Color(0xFFC9A24B); // ornament only
-  static const warning = Color(0xFF7C5012);
-  static const infoTeal = Color(0xFF1B7A6E);
+      HidayahGold.live; // live signal and destructive only
+  static const majlisGold = HidayahGold.g500; // ornament only
+  static const warning = HidayahGold.warning;
+  static const infoTeal = HidayahGold.info;
   static final warningTint =
       Color.alphaBlend(warning.withValues(alpha: .1), paper);
   static final errorTint =
       Color.alphaBlend(liveCrimson.withValues(alpha: .1), paper);
   static final modalBarrier = forestDeep.withValues(alpha: .4);
-  static const shadowTint = Color(0xFF123E26);
+  static const shadowTint = HidayahGold.g900;
 }
 
 /// Gradients. Extend the existing AppGradients (keep `brand`, `soft`, `mediaScrim`).
@@ -51,101 +51,57 @@ abstract final class CanopyGradients {
     .96,
     1
   ]);
-  static LinearGradient panelAt(double progress) {
-    final angle = (65 +
-            CanopyMotion.gradientDriftDegrees *
-                math.sin(progress * 2 * math.pi)) *
-        math.pi /
-        180;
-    return LinearGradient(
-        begin: AlignmentDirectional(-math.sin(angle), math.cos(angle)),
-        end: AlignmentDirectional(math.sin(angle), -math.cos(angle)),
-        stops: panel.stops,
-        colors: panel.colors);
-  }
+  /// The hero panel. It used to drift with [progress]; the night band is
+  /// lit from the top and holds still.
+  static LinearGradient panelAt(double progress) => panel;
 
   static const latticeFade = RadialGradient(
       colors: [Canopy.paper, Canopy.transparent],
       stops: [0, CanopyTexture.fadeStop]);
   static final heroTextScrim = Canopy.forestDeep.withValues(alpha: .68);
   static final entryTextScrim = Canopy.forestDeep.withValues(alpha: .32);
-  static const pill = LinearGradient(
-    begin: AlignmentDirectional.centerStart,
-    end: AlignmentDirectional.centerEnd,
-    colors: [Canopy.canopy800, Canopy.leaf],
-  ); // label-safe: white text passes 4.5:1 end to end
+  static const pill = HidayahGradients.minted; // ink text on gold
 
-  static const pillWide = LinearGradient(
-    begin: AlignmentDirectional.centerStart,
-    end: AlignmentDirectional.centerEnd,
-    colors: [Color(0xFF256B3F), Canopy.sketchBright],
-  ); // meters and decorative bars only
+  static const pillWide = HidayahGradients.meter; // meters and decorative bars only
 
-  /// Owner pick (2026-10-02): sketch preset, 65 degrees, depth 75.
-  /// CSS angle 65 => begin (-0.906, 0.423), end (0.906, -0.423).
-  static const panel = LinearGradient(
-    begin: AlignmentDirectional(-0.906, 0.423),
-    end: AlignmentDirectional(0.906, -0.423),
-    stops: [0, .55, 1],
-    colors: [Color(0xFF123E24), Color(0xFF23773F), Canopy.sketchBright],
-  ); // text goes on white cards above it, never on the panel
+  static const panel = HidayahGradients.night; // text goes on white cards above it
 
-  static const canopy = LinearGradient(
-    begin: AlignmentDirectional.topStart,
-    end: AlignmentDirectional.bottomEnd,
-    stops: [0, .55, 1],
-    colors: [Canopy.canopy900, Canopy.brandGreen, Canopy.fresh],
-  ); // pair with scrim for text
+  static const canopy = HidayahGradients.night; // pair with scrim for text
 
-  static const dawn = LinearGradient(
-    begin: Alignment.topCenter,
-    end: Alignment.bottomCenter,
-    colors: [Canopy.dawn, Canopy.mint],
-  );
+  static const dawn = HidayahGradients.ivory;
 
   static const avatarFallback = LinearGradient(
     begin: AlignmentDirectional.topStart,
     end: AlignmentDirectional.bottomEnd,
-    colors: [Canopy.mist, Canopy.mint],
+    colors: [HidayahGold.g200, HidayahGold.g100],
   );
   static const skeleton = LinearGradient(
     colors: [Canopy.mint, Canopy.dawn, Canopy.mint],
   );
-  static const liveSignal = LinearGradient(
-    begin: AlignmentDirectional.centerStart,
-    end: AlignmentDirectional.centerEnd,
-    colors: [Color(0xFFA3203A), Color(0xFFC8344C)],
-  ); // LIVE badge only; label-safe
+  static const liveSignal = HidayahGradients.live; // LIVE badge only; label-safe
 
   /// Text may sit only where this is at least 0.75 opaque (bottom ~40%).
   static const scrim = LinearGradient(
     begin: Alignment.topCenter,
     end: Alignment.bottomCenter,
     stops: [0, .45, 1],
-    colors: [Color(0x000A2C1B), Color(0x730A2C1B), Color(0xD10A2C1B)],
+    colors: [Color(0x000B1117), Color(0x730B1117), Color(0xD10B1117)],
   );
 
-  static const ring = SweepGradient(
-    colors: [
-      Canopy.canopy800,
-      Canopy.sketchBright,
-      Canopy.mist,
-      Canopy.canopy800
-    ],
-  );
+  static const ring = HidayahGradients.ring;
 
   /// The same sweep as [ring], in the live crimson family: the ring that
   /// spins around an account while it is broadcasting.
   static const liveRing = SweepGradient(
     colors: [
       Color(0xFF8A1F33),
-      Color(0xFFC8344C),
+      Color(0xFFC2343F),
       Color(0xFFF2B5C0),
       Color(0xFF8A1F33)
     ],
   );
 
-  /// Chat moderators: a violet sweep, clearly apart from the green ring that
+  /// Chat moderators: a violet sweep, clearly apart from the gold ring that
   /// admins and broadcasters wear.
   static const moderatorRing = SweepGradient(
     colors: [
