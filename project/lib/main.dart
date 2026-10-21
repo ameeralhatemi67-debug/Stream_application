@@ -14,6 +14,9 @@ import 'core/providers/app_experience.dart';
 import 'core/providers/app_provider.dart';
 import 'core/routing/app_router.dart';
 import 'core/widgets/device_session_presenter.dart';
+import 'features/taysir/data/demo_taysir_repository.dart';
+import 'features/taysir/data/supabase_taysir_repository.dart';
+import 'features/taysir/state/taysir_controller.dart';
 
 Future<void> main() async {
   // ~180 debugPrint calls (some on per-rebuild or per-failure paths) stay
@@ -133,6 +136,15 @@ class _StreamerAppState extends State<StreamerApp> with WidgetsBindingObserver {
       providers: [
         ChangeNotifierProvider<AppProvider>.value(value: _appProvider),
         ChangeNotifierProvider<AppExperience>.value(value: _experience),
+        // Taysir: created on first use; follows sign-in and sign-out. Without
+        // a configured backend it shows sample data, marked as such.
+        ChangeNotifierProxyProvider<AppProvider, TaysirController>(
+          create: (_) => TaysirController(SupabaseConfig.isConfigured
+              ? SupabaseTaysirRepository()
+              : DemoTaysirRepository()),
+          update: (_, app, taysir) => taysir!
+            ..onAccountChanged(app.isLoggedInStreamer ? app.currentUserId : null),
+        ),
       ],
       child: Builder(
         builder: (context) {

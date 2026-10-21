@@ -39,6 +39,16 @@ import '../../features/auth/presentation/screens/account_banned_screen.dart';
 import '../../features/web/presentation/hidayah_web_header.dart';
 import '../../features/web/presentation/hidayah_web_kit.dart';
 import '../widgets/hadayah_loading_indicator.dart';
+import '../../features/taysir/domain/taysir_rules.dart';
+import '../../features/taysir/presentation/screens/account_screens.dart';
+import '../../features/taysir/presentation/screens/console_screen.dart';
+import '../../features/taysir/presentation/screens/detail_screens.dart';
+import '../../features/taysir/presentation/screens/discover_screen.dart';
+import '../../features/taysir/presentation/screens/lessons_screen.dart';
+import '../../features/taysir/presentation/screens/map_screen.dart';
+import '../../features/taysir/presentation/screens/preacher_screens.dart';
+import '../../features/taysir/presentation/taysir_shell.dart';
+import '../../features/taysir/state/taysir_controller.dart';
 
 class AppRouter {
   /// Opens a page from the card that was tapped (its rectangle arrives as
@@ -70,6 +80,10 @@ class AppRouter {
       GlobalKey<NavigatorState>(debugLabel: 'feedBranch');
   static final GlobalKey<NavigatorState> _mapNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'mapBranch');
+  static final _taysirKeys = [
+    for (final b in ['discover', 'lessons', 'map', 'me'])
+      GlobalKey<NavigatorState>(debugLabel: 'taysir-$b')
+  ];
 
   static GlobalKey<NavigatorState> get rootNavigatorKey => _rootNavigatorKey;
 
@@ -300,6 +314,107 @@ class AppRouter {
               ),
             ],
           ),
+          // Taysir in Hadayah Live: the mosque lessons programme. Public
+          // pages need no sign-in; screens that act check roles themselves
+          // and the server enforces every write.
+          StatefulShellRoute.indexedStack(
+            builder: (context, state, shell) => TaysirShell(shell: shell),
+            branches: [
+              StatefulShellBranch(navigatorKey: _taysirKeys[0], routes: [
+                GoRoute(path: '/taysir', builder: (context, state) => const TaysirDiscoverScreen()),
+              ]),
+              StatefulShellBranch(navigatorKey: _taysirKeys[1], routes: [
+                GoRoute(
+                    path: '/taysir/lessons',
+                    builder: (context, state) {
+                      final q = state.uri.queryParameters;
+                      return TaysirLessonsScreen(
+                          key: ValueKey(state.uri.query),
+                          initial: TaysirFilter(
+                              language: q['lang'],
+                              topic: q['topic'],
+                              mosqueId: q['mosque'],
+                              preacherId: q['preacher'],
+                              city: q['city']));
+                    }),
+              ]),
+              StatefulShellBranch(navigatorKey: _taysirKeys[2], routes: [
+                GoRoute(
+                    path: '/taysir/map',
+                    builder: (context, state) => TaysirMapScreen(initialMosque: state.uri.queryParameters['mosque'])),
+              ]),
+              StatefulShellBranch(navigatorKey: _taysirKeys[3], routes: [
+                GoRoute(path: '/taysir/me', builder: (context, state) => const TaysirMeScreen()),
+              ]),
+            ],
+          ),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/lessons/:id',
+              builder: (context, state) => TaysirLessonScreen(id: state.pathParameters['id']!)),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/requests/:id',
+              redirect: (context, state) {
+                final c = context.read<TaysirController>();
+                final id = state.pathParameters['id'];
+                final hit = c.catalog.lessons.values.where((l) => l.requestId == id).toList()..sort(compareLessons);
+                return hit.isEmpty ? '/taysir/lessons' : '/taysir/lessons/${hit.first.id}';
+              }),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/series/:id',
+              builder: (context, state) => TaysirSeriesScreen(id: state.pathParameters['id']!)),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/preachers/:id',
+              builder: (context, state) => TaysirPreacherScreen(id: state.pathParameters['id']!)),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/mosques/:id',
+              builder: (context, state) => TaysirMosqueScreen(id: state.pathParameters['id']!)),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/me/notifications',
+              builder: (context, state) => const TaysirNotificationsScreen()),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/me/saved',
+              builder: (context, state) => TaysirSavedScreen(tab: state.uri.queryParameters['tab'])),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/me/lessons',
+              builder: (context, state) => TaysirMyLessonsScreen(tab: state.uri.queryParameters['tab'])),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/submit',
+              builder: (context, state) => TaysirSubmitScreen(
+                  key: ValueKey(state.uri.query),
+                  fromLessonId: state.uri.queryParameters['from'],
+                  replaces: state.uri.queryParameters['replaces'])),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/report/:id',
+              builder: (context, state) => TaysirReportScreen(lessonId: state.pathParameters['id']!)),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/claim/:token',
+              builder: (context, state) => TaysirClaimScreen(token: state.pathParameters['token']!)),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/permissions',
+              builder: (context, state) => const TaysirPermissionsScreen()),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/console',
+              builder: (context, state) => TaysirConsoleScreen(filter: state.uri.queryParameters['filter'])),
+          GoRoute(
+              parentNavigatorKey: _rootNavigatorKey,
+              path: '/taysir/console/:tab',
+              builder: (context, state) => TaysirConsoleScreen(
+                  key: ValueKey(state.uri.toString()),
+                  tab: state.pathParameters['tab']!,
+                  filter: state.uri.queryParameters['filter'])),
           GoRoute(
             parentNavigatorKey: _rootNavigatorKey,
             path: '/profile/:id',

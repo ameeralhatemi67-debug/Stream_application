@@ -41,7 +41,11 @@ insert into expected_anon_select values
   ('streamer_custom_placeholders'),  -- approved custom cards
   ('streamer_public_profiles'),      -- non-PII view
   ('organization_public_profiles'),  -- non-PII view
-  ('broadcast_sessions');            -- public sessions only, via broadcast_is_public (20261001111022)
+  ('broadcast_sessions'),            -- public sessions only, via broadcast_is_public (20261001111022)
+  -- Taysir (20261021120000): reference data, verified mosques, listed
+  -- preachers (no phone) and approved/cancelled sessions of enabled orgs.
+  ('taysir_districts'), ('taysir_organizations'), ('taysir_mosques'),
+  ('taysir_preachers'), ('taysir_series'), ('taysir_lessons');
 
 create temporary table expected_anon_execute(proname text) on commit drop;
 insert into expected_anon_execute values
@@ -54,7 +58,9 @@ insert into expected_anon_execute values
   ('broadcast_room'),          -- guests open a public live room (20261001114055)
   ('broadcast_chat_read'),     -- guests read a public session's chat (20261001114055)
   ('list_upcoming_schedules'), -- guests see sanitized announcements (20260930010000)
-  ('can_publish_upcoming');    -- announcement visibility check (20260930010000)
+  ('can_publish_upcoming'),    -- announcement visibility check (20260930010000)
+  ('taysir_public_organizations'), -- organizer names on lesson cards (20261021120000)
+  ('taysir_invite_info');      -- a preacher opens an invitation link before sign-in (20261021120000)
 
 create temporary table expected_realtime(relname text) on commit drop;
 insert into expected_realtime values
