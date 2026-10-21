@@ -728,7 +728,7 @@ class _AdminHubScreenState extends State<AdminHubScreen>
                 padding: const EdgeInsets.only(bottom: AppTheme.spaceMd),
                 child: _buildActionShortcutCard(
                   title: 'admin.review_queue'.tr(),
-                  subtitle: 'admin.pending_review'.tr(args: ['$pendingApps']),
+                  subtitle: 'admin.pending_review'.plural(pendingApps),
                   icon: CaGlyph.shield,
                   onTap: () => _tabController.animateTo(1),
                 ),

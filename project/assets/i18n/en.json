@@ -329,7 +329,14 @@
     "sender_remove_moderator": "Remove as moderator",
     "sender_delete_all": "Delete all messages ({count})",
     "sender_delete_all_title": "Delete all messages from {name}?",
-    "sender_delete_all_body": "This removes {count} message(s) from this stream for everyone. It cannot be undone.",
+    "sender_delete_all_body": {
+      "zero": "This removes {count} messages from this stream for everyone. It cannot be undone.",
+      "one": "This removes {count} message from this stream for everyone. It cannot be undone.",
+      "two": "This removes {count} messages from this stream for everyone. It cannot be undone.",
+      "few": "This removes {count} messages from this stream for everyone. It cannot be undone.",
+      "many": "This removes {count} messages from this stream for everyone. It cannot be undone.",
+      "other": "This removes {count} messages from this stream for everyone. It cannot be undone."
+    },
     "sender_action_failed": "That did not go through. Check your connection and your permissions, then try again.",
     "moderator_revoke_denied": "You cannot remove this moderator. They were appointed by someone else, or for more than this stream.",
     "sender_profile_title": "Chat profile",
@@ -1060,7 +1067,14 @@
     "tag_approved_toast": "Tag approved ✓",
     "tag_blacklisted_toast": "Tag blacklisted ✓",
     "tag_merged_toast": "Tag renamed ✓",
-    "tag_broadcaster_count": "{count} broadcasters",
+    "tag_broadcaster_count": {
+      "zero": "{count} broadcasters",
+      "one": "{count} broadcaster",
+      "two": "{count} broadcasters",
+      "few": "{count} broadcasters",
+      "many": "{count} broadcasters",
+      "other": "{count} broadcasters"
+    },
     "tag_no_broadcasters": "No broadcasters currently use this tag.",
     "tag_merge_dialog_title": "Merge / Rename Tag",
     "tag_merge_dialog_hint": "New tag name",
@@ -1100,7 +1114,14 @@
     "overview_data_note": "Counts reflect the currently loaded records. Platform viewer and attendance metrics are unavailable. See Safety for current live broadcasts and viewer counts.",
     "analytics_unavailable": "Platform analytics are not available yet. Guest sessions, registered users, attendance, bookmarks and regional percentages are not currently measured reliably.",
     "review_queue": "Review verification queue",
-    "pending_review": "{} applications awaiting review",
+    "pending_review": {
+      "zero": "{} applications awaiting review",
+      "one": "{} application awaiting review",
+      "two": "{} applications awaiting review",
+      "few": "{} applications awaiting review",
+      "many": "{} applications awaiting review",
+      "other": "{} applications awaiting review"
+    },
     "inspect_map": "Open venue map",
     "inspect_map_hint": "Browse venues on the map",
     "edit_terms": "Edit platform terms",
@@ -1611,12 +1632,26 @@
     "error_invalid": "The server rejected this input. Check it and try again.",
     "error_duplicate": "That entry already exists.",
     "error_network": "Couldn't reach the server. Nothing was changed.",
-    "live_summary": "{streams} live · {viewers} watching",
+    "live_summary": {
+      "zero": "{streams} live · {viewers}",
+      "one": "{streams} live · {viewers}",
+      "two": "{streams} live · {viewers}",
+      "few": "{streams} live · {viewers}",
+      "many": "{streams} live · {viewers}",
+      "other": "{streams} live · {viewers}"
+    },
     "live_counts_partial": "Some viewer counts could not be read and are not included.",
     "live_empty": "Nobody is live right now.",
     "live_video": "Video",
     "live_audio": "Audio only",
-    "live_viewers": "{count} watching",
+    "live_viewers": {
+      "zero": "{count} watching",
+      "one": "{count} watching",
+      "two": "{count} watching",
+      "few": "{count} watching",
+      "many": "{count} watching",
+      "other": "{count} watching"
+    },
     "live_viewers_unknown": "Viewer count unavailable",
     "live_force_end": "End broadcast",
     "live_force_end_body": "End {name}'s live broadcast in the app. They keep their approval and broadcasting device and can start again. This does not stop their stream on YouTube.",
@@ -1729,7 +1764,14 @@
     "muted": "Sender muted in this stream.",
     "ban_body": "{name} will be blocked from protected account actions. Connected sessions show the suspension screen when their status refreshes.",
     "banned": "Account banned from protected actions.",
-    "stream_count": "{count} streams",
+    "stream_count": {
+      "zero": "{count} streams",
+      "one": "{count} stream",
+      "two": "{count} streams",
+      "few": "{count} streams",
+      "many": "{count} streams",
+      "other": "{count} streams"
+    },
     "reported": "Reported: {name}",
     "reason": "Reason: {reason}",
     "metadata": "Reported by {name} • Stream: {stream} • {date}"

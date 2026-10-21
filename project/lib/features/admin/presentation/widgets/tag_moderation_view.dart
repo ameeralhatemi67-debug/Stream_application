@@ -330,7 +330,7 @@ class _TagModerationViewState extends State<TagModerationView> {
                   ),
                   child: Text(
                     'admin.tag_broadcaster_count'
-                        .tr(namedArgs: {'count': '${tag.usageCount}'}),
+                        .plural(tag.usageCount, name: 'count'),
                     style: TextStyle(
                         color: paletteColor(context, AppTheme.primary),
                         fontSize: 12,

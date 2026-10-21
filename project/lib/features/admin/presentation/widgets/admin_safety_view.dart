@@ -284,10 +284,12 @@ class _LiveSectionState extends State<_LiveSection> {
         padding: const EdgeInsets.all(AppTheme.spaceLg),
         children: [
           Text(
-            'safety.live_summary'.tr(namedArgs: {
-              'streams': '${rows.length}',
-              'viewers': '$totalViewers',
-            }),
+            'safety.live_summary'.plural(rows.length,
+                name: 'streams',
+                namedArgs: {
+                  'viewers': 'safety.live_viewers'
+                      .plural(totalViewers, name: 'count'),
+                }),
             key: const Key('safety-live-summary'),
             style: TextStyle(
                 color: paletteColor(context, Canopy.ink), fontWeight: FontWeight.bold),
@@ -340,7 +342,7 @@ class _LiveSectionState extends State<_LiveSection> {
                           r.viewerCount == null
                               ? 'safety.live_viewers_unknown'.tr()
                               : 'safety.live_viewers'
-                                  .tr(namedArgs: {'count': '${r.viewerCount}'}),
+                                  .plural(r.viewerCount!, name: 'count'),
                         ].join(' · '),
                         style: TextStyle(
                             color: paletteColor(context, Canopy.slate), fontSize: 12),

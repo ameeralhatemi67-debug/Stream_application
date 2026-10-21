@@ -211,7 +211,7 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
         job: CaSheetJob.confirmation,
         bareChrome: true,
         body: Text(
-            'live.sender_delete_all_body'.tr(namedArgs: {'count': '$count'})),
+            'live.sender_delete_all_body'.plural(count, name: 'count')),
         actions: [
           Builder(
               builder: (ctx) => CaButton(

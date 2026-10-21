@@ -488,9 +488,9 @@ class _ChatModerationViewState extends State<ChatModerationView> {
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
-                                  'moderation.stream_count'.tr(namedArgs: {
-                                    'count': '${e.streamsMutedCount}'
-                                  }),
+                                  'moderation.stream_count'.plural(
+                                      e.streamsMutedCount,
+                                      name: 'count'),
                                   style: TextStyle(
                                       color: paletteColor(context, AppTheme.warning),
                                       fontSize: 12,

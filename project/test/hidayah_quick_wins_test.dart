@@ -510,6 +510,24 @@ void main() {
     Map<String, dynamic> catalog(String lang) =>
         jsonDecode(File('assets/i18n/$lang.json').readAsStringSync());
 
+    /// Runs [read] inside the app's localization, first in Arabic, then in
+    /// English, and returns both results.
+    Future<(Map<String, String>, Map<String, String>)> readBoth(
+        WidgetTester tester, Map<String, String> Function() read) async {
+      final out = <String, Map<String, String>>{};
+      for (final lang in ['ar', 'en']) {
+        await tester.pumpWidget(_localized(
+            Builder(builder: (context) {
+              out[lang] = read();
+              return const SizedBox();
+            }),
+            lang: lang));
+        await tester.pumpAndSettle();
+        await tester.pumpWidget(const SizedBox());
+      }
+      return (out['ar']!, out['en']!);
+    }
+
     test('every plural entry has all six forms in both languages', () {
       const forms = {'zero', 'one', 'two', 'few', 'many', 'other'};
       var found = 0;
@@ -527,7 +545,7 @@ void main() {
       }
 
       walk(catalog('en'), catalog('ar'), '');
-      expect(found, greaterThanOrEqualTo(14));
+      expect(found, greaterThanOrEqualTo(20));
     });
 
     test('the app turns on CLDR plural rules', () {
@@ -539,8 +557,7 @@ void main() {
 
     testWidgets('counts agree with their noun in Arabic and English',
         (tester) async {
-      late Map<String, String> ar, en;
-      Map<String, String> read() => {
+      final (ar, en) = await readBoth(tester, () => {
             'map0': 'web.map_count'.plural(0),
             'map1': 'web.map_count'.plural(1),
             'map2': 'web.map_count'.plural(2),
@@ -555,21 +572,7 @@ void main() {
                 .plural(12, name: 'total', namedArgs: {'done': '3'}),
             'wait5': 'live.chat_composer_slow_mode'.plural(5),
             'lectures7': 'profile.lectures_count'.plural(7),
-          };
-      for (final lang in ['ar', 'en']) {
-        await tester.pumpWidget(_localized(
-            Builder(builder: (context) {
-              if (lang == 'ar') {
-                ar = read();
-              } else {
-                en = read();
-              }
-              return const SizedBox();
-            }),
-            lang: lang));
-        await tester.pumpAndSettle();
-        await tester.pumpWidget(const SizedBox());
-      }
+          });
       expect(ar['map0'], 'لا قنوات على الخريطة');
       expect(ar['map1'], 'قناة واحدة على الخريطة');
       expect(ar['map2'], 'قناتان على الخريطة');
@@ -588,6 +591,68 @@ void main() {
       expect(en['rec3'], 'recordings');
       expect(en['files'], 'Saving… 3 of 12 files');
       expect(en['wait5'], 'Slow mode: wait 5s');
+    });
+
+    testWidgets('admin and moderation counts agree with their noun',
+        (tester) async {
+      String summary(int streams, int viewers) =>
+          'safety.live_summary'.plural(streams, name: 'streams', namedArgs: {
+            'viewers': 'safety.live_viewers'.plural(viewers, name: 'count'),
+          });
+      final (ar, en) = await readBoth(tester, () => {
+            'tag0': 'admin.tag_broadcaster_count'.plural(0, name: 'count'),
+            'tag1': 'admin.tag_broadcaster_count'.plural(1, name: 'count'),
+            'tag2': 'admin.tag_broadcaster_count'.plural(2, name: 'count'),
+            'tag5': 'admin.tag_broadcaster_count'.plural(5, name: 'count'),
+            'tag11': 'admin.tag_broadcaster_count'.plural(11, name: 'count'),
+            'tag100': 'admin.tag_broadcaster_count'.plural(100, name: 'count'),
+            'pending1': 'admin.pending_review'.plural(1),
+            'pending4': 'admin.pending_review'.plural(4),
+            'pending12': 'admin.pending_review'.plural(12),
+            'viewers15': 'safety.live_viewers'.plural(15, name: 'count'),
+            // CLDR reads the last two digits: 103 is "few", 250 is "many".
+            'viewers103': 'safety.live_viewers'.plural(103, name: 'count'),
+            'viewers250': 'safety.live_viewers'.plural(250, name: 'count'),
+            'summary1_0': summary(1, 0),
+            'summary2_7': summary(2, 7),
+            'summary12_200': summary(12, 200),
+            'streams1': 'moderation.stream_count'.plural(1, name: 'count'),
+            'streams3': 'moderation.stream_count'.plural(3, name: 'count'),
+            'delete1': 'live.sender_delete_all_body'.plural(1, name: 'count'),
+            'delete6': 'live.sender_delete_all_body'.plural(6, name: 'count'),
+          });
+      expect(ar['tag0'], 'لا مذيعين');
+      expect(ar['tag1'], 'مذيع واحد');
+      expect(ar['tag2'], 'مذيعان');
+      expect(ar['tag5'], '5 مذيعين');
+      expect(ar['tag11'], '11 مذيعًا');
+      expect(ar['tag100'], '100 مذيع');
+      expect(ar['pending1'], 'طلب واحد بانتظار المراجعة');
+      expect(ar['pending4'], '4 طلبات بانتظار المراجعة');
+      expect(ar['pending12'], '12 طلبًا بانتظار المراجعة');
+      expect(ar['viewers15'], '15 مشاهدًا');
+      expect(ar['viewers103'], '103 مشاهدين');
+      expect(ar['viewers250'], '250 مشاهدًا');
+      expect(ar['summary1_0'], 'بث مباشر واحد · لا مشاهدين');
+      expect(ar['summary2_7'], 'بثّان مباشران · 7 مشاهدين');
+      expect(ar['summary12_200'], '12 بثًا مباشرًا · 200 مشاهد');
+      expect(ar['streams1'], 'بث واحد');
+      expect(ar['streams3'], '3 بثوث');
+      expect(ar['delete1'],
+          'ستُحذف رسالة واحدة من هذا البث عند الجميع. لا يمكن التراجع عن ذلك.');
+      expect(ar['delete6'],
+          'ستُحذف 6 رسائل من هذا البث عند الجميع. لا يمكن التراجع عن ذلك.');
+      expect(en['tag1'], '1 broadcaster');
+      expect(en['tag5'], '5 broadcasters');
+      expect(en['pending1'], '1 application awaiting review');
+      expect(en['pending4'], '4 applications awaiting review');
+      expect(en['summary2_7'], '2 live · 7 watching');
+      expect(en['streams1'], '1 stream');
+      expect(en['streams3'], '3 streams');
+      expect(en['delete1'],
+          'This removes 1 message from this stream for everyone. It cannot be undone.');
+      expect(en['delete6'],
+          'This removes 6 messages from this stream for everyone. It cannot be undone.');
     });
   });
 

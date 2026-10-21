@@ -8,6 +8,12 @@ health: release_blocked
 
 # Project status: Streamer App
 
+## Arabic plurals for admin and moderation counts, 2026-10-21
+
+Follow-up to the quick wins below (audit section 5.3). `admin.tag_broadcaster_count`, `admin.pending_review`, `safety.live_viewers`, `safety.live_summary`, `moderation.stream_count` and `live.sender_delete_all_body` now have all six plural forms in both catalogs and are called with `.plural()` (admin hub, tag moderation, safety live list, chat moderation, chat sender sheet). `safety.live_summary` counts the streams; its `{viewers}` slot takes the `safety.live_viewers` phrase, so both numbers agree with their nouns ("بثّان مباشران · 7 مشاهدين"). English is unchanged apart from singular forms ("1 broadcaster", "1 application", "1 stream", "1 message" instead of "message(s)").
+
+Verification: analyzer 0 issues; full suite 1,603 passed, 11 skipped (was 1,602 + 11); `test/hidayah_quick_wins_test.dart` gains an Arabic/English case for these keys (forms 0/1/2/3–10/11–99/100+, 103 and 250 to show CLDR reads the last two digits). Not checked on a device.
+
 ## Hidayah Gold audit: engineering quick wins, 2026-10-21
 
 From `brief/audit/2026-10-21_USER_FLOW_AND_ATTENTION_AUDIT_HIDAYAH_GOLD.md` (sections 3, 4, 5.3, 6, 9). Product decisions in that report (removing the gate, hiding test channels, categories, brand spelling, lecturer terminology, language default) are untouched.
