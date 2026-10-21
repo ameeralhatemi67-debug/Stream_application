@@ -6,8 +6,8 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      flutter: 3.41.2
-      xcode: latest
+      flutter: 3.41.9
+      xcode: 26.6 # pinned; see brief/ios/CI_OWNER_STEPS.md
       cocoapods: default
     scripts:
       - name: Viewer checks and unsigned compile
@@ -23,8 +23,8 @@ workflows:
     instance_type: mac_mini_m2
     max_build_duration: 60
     environment:
-      flutter: 3.41.2
-      xcode: latest
+      flutter: 3.41.9
+      xcode: 26.6 # pinned; see brief/ios/CI_OWNER_STEPS.md
       cocoapods: default
     scripts:
       - name: Enable publisher, compile and restore viewer

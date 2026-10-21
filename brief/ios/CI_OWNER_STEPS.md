@@ -1,8 +1,9 @@
 # Manual Codemagic compile gates
 
-2026-10-18, W22. Configuration and fake-tool tests only. Neither workflow has
-run on macOS; no E2 claim exists. No paid Apple enrollment is required for an
-unsigned compile. Once the Mac arrives, prefer MAC_SETUP.md for device work.
+2026-10-18, W22; toolchain pins updated 2026-10-21. Configuration and fake-tool
+tests only. Neither workflow has run on macOS; no E2 claim exists. No paid Apple
+enrollment is required for an unsigned compile. Once the Mac arrives, prefer
+MAC_SETUP.md for device work.
 
 ## Click-by-click, viewer first
 
@@ -17,9 +18,10 @@ unsigned compile. Once the Mac arrives, prefer MAC_SETUP.md for device work.
    Labels can vary slightly with Codemagic's UI version. There are no automatic
    triggers, so a push alone starts neither workflow.
 4. Expand **Viewer checks and unsigned compile**. The working directory is
-   `project`, Flutter is pinned to **3.41.2**, CocoaPods uses the image default,
-   and Xcode uses Codemagic's latest stable image. The script prints versions and
-   rejects any Xcode or iOS SDK major below 26 before resolving dependencies.
+   `project`, Flutter is pinned to **3.41.9**, Xcode is pinned to **26.6** (see
+   "Toolchain pins" below) and CocoaPods uses the image default. The script
+   prints versions and rejects any Xcode or iOS SDK major below 26 before
+   resolving dependencies.
 5. This run resolves Flutter packages, runs `pod install`, analyzer and all
    tests, then `flutter build ios --release --no-codesign
    --dart-define-from-file=dart_define.example.json`. The publisher stays off.
@@ -61,6 +63,40 @@ The markerless cleanup fixtures are host simulations, not a CocoaPods/Xcode pass
 An unsuccessful build keeps its own exit code; cleanup failure changes success
 to failure.
 
+## Toolchain pins
+
+Both workflows pin `flutter: 3.41.9` and `xcode: 26.6`; change them together.
+
+- **Flutter 3.41.9** is the newest hotfix on the project's 3.41 line (checked
+  against Flutter's CHANGELOG on 2026-10-21). Over 3.41.2 it adds iOS fixes for
+  Xcode 26 simulator builds when a CocoaPod lacks arm support (3.41.4),
+  physical-iPhone debug crashes with Xcode 26.4+ (3.41.7), a git
+  multi-pack-index build failure (3.41.7) and profile-mode VM connection on
+  devices (3.41.8). The same SDK builds Android/Play and web; 3.41.6 also
+  fixes an Android 16 ANR.
+- **Xcode 26.6** is Codemagic's default image (macOS 26.5.1, iOS 26.5 SDK) on
+  the Mac mini M2. It meets Apple's upload rule: Xcode 26+ with an iOS 26+ SDK
+  since April 28, 2026. Codemagic resolves `26.6` to that version's newest
+  patch.
+- **Why not `latest`:** Codemagic's `latest` follows the newest release Xcode
+  and switches to a new major (Xcode 27 is already offered) on a date Codemagic
+  announces. Xcode 27 is newer than Flutter 3.41. Flutter fixed an Xcode 27
+  build failure (lipo verification) in 3.44.8, and no 3.41 hotfix carries that
+  fix. A first compile on `latest` could fail for toolchain reasons instead of
+  on the app's own native errors, which W13 needs to see.
+- **Keep the guard.** ci_compile.sh still rejects any Xcode or iOS SDK major
+  below 26, so a later edit cannot quietly drop under Apple's floor.
+
+Move to Xcode 27 only together with a reviewed Flutter upgrade to a release
+whose CHANGELOG covers Xcode 27: 3.44.8 or later; 3.47.4/3.47.5 add Xcode 27
+and iOS 27 debug fixes. Plan that upgrade as soon as Apple announces an Xcode
+27/iOS 27 SDK upload requirement: Codemagic schedules an Xcode version for
+removal once App Store Connect stops accepting it, and announces the timeline
+first. When the pins move, update both workflows, MAC_SETUP.md and
+IOS_STATUS.md in one change. Flutter
+3.44 changes the default iOS dependency manager to SwiftPM; the project's
+pubspec already opts out, but that upgrade still needs its own review.
+
 ## When either run fails, paste this back to Claude
 
 Both workflows invoke `ios/Publisher/ci_compile.sh`. A failing command prints up
@@ -87,8 +123,14 @@ the first actual native error class, following the plan's iteration limits.
 
 Sources checked through Context7: [software versions](https://docs.codemagic.io/codemagic-yaml-cheatsheet.html),
 [working directory](https://docs.codemagic.io/yaml/yaml-getting-started),
-[manual builds and triggers](https://docs.codemagic.io/yaml-running-builds/starting-builds-automatically).
+[manual builds and triggers](https://docs.codemagic.io/yaml-running-builds/starting-builds-automatically),
+[Xcode update/deprecation policy](https://docs.codemagic.io/specs/xcode-update-policy).
+Machine list checked 2026-10-21 (page dated 2026-09-06):
+[Xcode 26.6 image](https://docs.codemagic.io/specs-macos/xcode-26-6/).
 Apple has required Xcode 26+ with an iOS 26+ SDK for uploads since April 28, 2026:
-[SDK minimum](https://developer.apple.com/news/upcoming-requirements/?id=04282026a).
-The dynamic `latest` image plus the explicit version check meets that minimum
-at run time without claiming a particular unobserved image version.
+[SDK minimum](https://developer.apple.com/news/upcoming-requirements/?id=04282026a);
+Xcode 26.6 needs macOS Tahoe 26.2+ and ships the iOS 26.5 SDK:
+[Xcode support table](https://developer.apple.com/support/xcode/).
+Flutter hotfixes: [CHANGELOG](https://github.com/flutter/flutter/blob/stable/CHANGELOG.md).
+The pin plus the explicit version check keeps that minimum; the logs still
+record the actual image versions, which no run has observed yet.

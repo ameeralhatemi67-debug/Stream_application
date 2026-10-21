@@ -261,7 +261,7 @@ No paid account operation, upload, metadata publication or screenshot capture wa
 
 ## W16 — Mac and free-team setup
 
-When the Mac arrives, follow [MAC_SETUP.md](MAC_SETUP.md), including the current Xcode/macOS requirement check, pinned Flutter 3.41.2, CocoaPods, repository transfer and exact M1–M5 commands. The owner must ensure manager-authored plans/pending ledger decisions are included in the pushed checkout; untracked files do not arrive through a clone automatically.
+When the Mac arrives, follow [MAC_SETUP.md](MAC_SETUP.md), including the current Xcode/macOS requirement check, pinned Flutter 3.41.9 and Xcode 26.6, CocoaPods, repository transfer and exact M1–M5 commands. The owner must ensure manager-authored plans/pending ledger decisions are included in the pushed checkout; untracked files do not arrive through a clone automatically.
 
 Owner-only hands: install/sign in to Xcode locally (Settings > Accounts), handle system/license/keychain prompts, copy the ignored local define file by hand without printing it, and later connect/unlock/trust the iPhone and enable Developer Mode. Use the free personal team only for Debug; do not attach Apple sign-in, Associated Domains or APNs entitlements to it. Simulator/unsigned M1 compilation needs no paid enrollment. Never commit account/team/provisioning material. Paid activation/distribution remains deferred until the owner decides after M1–M3.
 

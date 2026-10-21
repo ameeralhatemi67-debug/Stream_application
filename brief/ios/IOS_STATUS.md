@@ -1,6 +1,7 @@
 # iOS build status
 
-Updated 2026-10-18 after W23. Contract: IOS_PLAN_V2.md sections 2, 3 and 12.
+Updated 2026-10-18 after W23; toolchain and fresh checks refreshed 2026-10-21.
+Contract: IOS_PLAN_V2.md sections 2, 3 and 12.
 History and red-first evidence: IOS_PROGRESS.md. Manager verdicts: IOS_LEDGER.md.
 
 ## Snapshot
@@ -10,8 +11,9 @@ History and red-first evidence: IOS_PROGRESS.md. Manager verdicts: IOS_LEDGER.md
 | Work order | W23-1 to W23-4 complete locally, awaiting manager audit. Stop after the W23 commit. |
 | Source | W22 base d35a29d; W23 local commit subject: fix(ios): address W22 audit findings |
 | Track/evidence | Windows source/host E1; Swift/native E0. No Mac, CI, Simulator or iPhone run. No E2/E2S/E3/E4. |
-| Fresh checks | flutter analyze --no-pub: 0 issues (30.5s); full flutter test --no-pub --reporter expanded: 1499 passed, 0 failed, 0 skipped (05:37). |
-| Host checks | configure 6/6; CI fixtures 6/6 using real temporary Git; doctor 6/6; Git Bash syntax 3/3. EN/AR 1,898 keys each, symmetric. Viewer isolation and 65/65 Android/web byte hashes pass. |
+| Toolchain | Flutter 3.41.9 / Dart 3.11.5, stable hotfix (was 3.41.2). Same pin locally (Windows SDK, also used for Android/Play), in both Codemagic workflows, the Vercel web build and MAC_SETUP.md. Codemagic Xcode pinned to 26.6 (default mac_mini_m2 image, iOS 26.5 SDK) instead of `latest`; ci_compile.sh still rejects Xcode/SDK majors below 26. Move to Xcode 27 only with a Flutter 3.44.8+ upgrade (CI_OWNER_STEPS.md "Toolchain pins"). No CI run has observed these versions yet. |
+| Fresh checks | 2026-10-21 on Flutter 3.41.9: flutter analyze 0 issues (57.0s); full flutter test 1577 passed, 0 failed, 11 skipped (opt-in web design captures) (05:45), exit 0. pub get changed only the SDK-pinned matcher 0.12.18 → 0.12.19 and test_api 0.7.9 → 0.7.10 in pubspec.lock. W23 on 3.41.2: 1499 passed (05:37). |
+| Host checks | 2026-10-21: configure 6/6; CI fixtures 6/6 using real temporary Git; ci_compile.sh Bash syntax passes. W23: doctor 6/6; Git Bash syntax 3/3; EN/AR 1,898 keys each, symmetric; viewer isolation and 65/65 Android/web byte hashes pass. |
 | Publisher | Default off, unchanged. No generated xcconfig or opt-in package references in the viewer project; no camera/microphone/background purposes in viewer plist/strings. |
 | Accounts | D4 paid enrollment deferred. No account, hosted backend, secret or signing access. Owner pushes. |
 
@@ -66,9 +68,11 @@ Unchanged Android/web native folders do not mean shared Dart behavior is unchang
 
 1. Manager audits W23; owner selects and pushes intended commits. Untracked
    manager plan/prompts, unrelated icon/observation log/drafts remain out.
-2. Run the viewer CI/Mac sequence in CI_OWNER_STEPS.md/MAC_SETUP.md. After the
-   first successful viewer pod install, review and commit the actual integrated
-   pbxproj and workspace by explicit path. No Mac output was fabricated here.
+2. Push, then start the Codemagic viewer workflow ios-compile-check by hand
+   (Flutter 3.41.9, Xcode 26.6) per CI_OWNER_STEPS.md, or the Mac sequence in
+   MAC_SETUP.md. After the first successful viewer pod install, review and
+   commit the actual integrated pbxproj and workspace by explicit path. No Mac
+   output was fabricated here.
 3. Run the Simulator/iPhone matrices and the real Android phone chat typing/
    sending Play regression in OWNER_STEPS_IOS.md. Keep publishing off until
    its device/privacy gates pass.

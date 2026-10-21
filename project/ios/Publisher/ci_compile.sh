@@ -77,7 +77,7 @@ trap finish EXIT
 run flutter-version flutter --version
 run xcode-version xcodebuild -version
 run ios-sdk xcrun --sdk iphoneos --show-sdk-version
-# latest is resolved by Codemagic; enforce Apple's current upload SDK floor.
+# codemagic.yaml pins Xcode 26.6; keep Apple's upload SDK floor if the pin moves.
 xcode_major=$(awk '/^Xcode / {split($2,v,"."); print v[1]}' build/ci-logs/xcode-version.log)
 sdk_major=$(cut -d. -f1 build/ci-logs/ios-sdk.log | head -n1)
 [[ "$xcode_major" -ge 26 && "$sdk_major" -ge 26 ]] || {

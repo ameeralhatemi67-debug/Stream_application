@@ -6,7 +6,7 @@ viewer release until native compilation and the E3 matrix pass.
 
 ## Dependency and build isolation
 
-Flutter stays pinned to 3.41.2 with CocoaPods for Flutter plugins. HaishinKit 2.x
+Flutter stays pinned to 3.41.9 with CocoaPods for Flutter plugins. HaishinKit 2.x
 discontinued CocoaPods support; use its SwiftPM products directly in Runner only
 after explicit activation. This does not migrate Flutter plugins to SwiftPM or
 apply the newer Flutter 3.44 template to the 3.41 shell. The project's

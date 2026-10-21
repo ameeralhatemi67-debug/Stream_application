@@ -6,7 +6,7 @@ These are orientation timeboxes, not a promise that downloads/builds finish in
 30 minutes. Start with the default viewer; keep the publisher disabled.
 
 - **0–10 minutes, tools:** install full Xcode compatible with the Mac, the iOS
-  Simulator runtime, Git, pinned Flutter 3.41.2, CocoaPods and Python 3.9+.
+  Simulator runtime, Git, pinned Flutter 3.41.9, CocoaPods and Python 3.9+.
   Follow section 1 for command-line-tool selection, licenses and first launch.
   The owner handles all account/password/trust prompts locally. Simulator and
   unsigned compilation need no paid Apple enrollment.
@@ -60,7 +60,7 @@ sw_vers
 
 Apple's current upload requirement is Xcode 26+ with an iOS 26+ SDK (in force since April 28, 2026). The app's deployment target stays iOS 15.0; SDK and deployment target are different settings.
 
-As of this source check, Apple's table lists stable Xcode 27.1 requiring macOS Tahoe 26.6+, with iOS 27.1 SDK and iOS 17+ device/simulator support. Install the current stable Xcode supported by the Mac that meets the upload requirement. If the Mac cannot run that version, Xcode 26.3 is listed for macOS 15.6+ with iOS 26.2 SDK and meets today's requirement. Recheck both Apple pages when the laptop arrives; do not assume a beta is required. The pinned Flutter 3.41.2/new-Xcode combination is not yet compiled.
+As of the 2026-10-21 source check, Apple's table lists Xcode 26.6 requiring macOS Tahoe 26.2+ with the iOS 26.5 SDK, and stable Xcode 27.1 requiring macOS Tahoe 26.6+ with the iOS 27.1 SDK. Install **Xcode 26.6**, the version pinned for Codemagic in CI_OWNER_STEPS.md ("Toolchain pins"): Flutter 3.41 predates Xcode 27, and Flutter's fix for an Xcode 27 build failure shipped only in 3.44.8. Xcode 26.6 comes from Apple's developer downloads, not the App Store, which offers only the newest Xcode. If the Mac cannot run 26.6, Xcode 26.3 is listed for macOS 15.6+ with iOS 26.2 SDK and meets today's requirement. Recheck both Apple pages when the laptop arrives; do not assume a beta is required. The pinned Flutter 3.41.9/Xcode 26.6 combination is not yet compiled.
 
 Owner installs Xcode from Apple's official distribution, opens it once and completes component/license prompts. For an older compatible Xcode, use Apple's developer downloads with the owner's account. No account identifiers, signing keys or passwords go into the repository or chat.
 
@@ -93,16 +93,16 @@ brew install cocoapods
 pod --version
 ```
 
-This repo deliberately uses CocoaPods with Flutter 3.41.2. Newer Flutter documentation may describe SwiftPM as default; do not upgrade Flutter or globally switch its package manager to make a build pass. Intel Homebrew support differs from Apple Silicon; use the installer/support page for the actual machine and record any genuine blocker.
+This repo deliberately uses CocoaPods with Flutter 3.41.9. Newer Flutter documentation may describe SwiftPM as default; do not upgrade Flutter or globally switch its package manager to make a build pass. Intel Homebrew support differs from Apple Silicon; use the installer/support page for the actual machine and record any genuine blocker.
 
-## 2. Owner: Flutter 3.41.2 and repository
+## 2. Owner: Flutter 3.41.9 and repository
 
-Download **stable Flutter 3.41.2** for the Mac's actual architecture from the official SDK archive. Extract its flutter folder into a new SDK directory, for example `$HOME/development/flutter-3.41.2` (that directory must contain bin/flutter). Do not copy Windows SDK binaries or caches and do not overwrite an existing SDK.
+Download **stable Flutter 3.41.9** for the Mac's actual architecture from the official SDK archive. Extract its flutter folder into a new SDK directory, for example `$HOME/development/flutter-3.41.9` (that directory must contain bin/flutter). Do not copy Windows SDK binaries or caches and do not overwrite an existing SDK.
 
 Set the path in this Terminal; add the same line to the owner's normal shell profile for future terminals:
 
 ```sh
-export PATH="$HOME/development/flutter-3.41.2/bin:$PATH"
+export PATH="$HOME/development/flutter-3.41.9/bin:$PATH"
 ```
 
 Before cloning, the owner pushes the intended local master commits. Also review/commit the manager-authored plan/prompt and pending manager ledger changes: some were untracked/unstaged in the Windows workspace and are not included automatically in builder commits. The Mac must receive IOS_PLAN_V2.md and the current decisions, not only app source. Do not include secrets or unrelated launch work in that push.
@@ -186,7 +186,7 @@ run_gate() {
   fi
 }
 flutter --version --machine |
-  python3 -c 'import json,sys; assert json.load(sys.stdin)["frameworkVersion"] == "3.41.2", "Use pinned Flutter 3.41.2"'
+  python3 -c 'import json,sys; assert json.load(sys.stdin)["frameworkVersion"] == "3.41.9", "Use pinned Flutter 3.41.9"'
 xcodebuild -version > "$taskEvidence/xcode.txt"
 xcrun --sdk iphoneos --show-sdk-version > "$taskEvidence/ios-sdk.txt"
 pod --version > "$taskEvidence/cocoapods.txt"
@@ -338,7 +338,7 @@ flutter analyze
 flutter test
 ```
 
-Confirm Flutter is exactly 3.41.2. iOS-related doctor checks must be clean. An unused Android/desktop toolchain is not a prerequisite; do not disable checks or suppress warnings. Record actual versions/results. Native package failures follow W13, not a silent SDK upgrade/plugin removal.
+Confirm Flutter is exactly 3.41.9. iOS-related doctor checks must be clean. An unused Android/desktop toolchain is not a prerequisite; do not disable checks or suppress warnings. Record actual versions/results. Native package failures follow W13, not a silent SDK upgrade/plugin removal.
 
 Inspect only the non-secret settings relevant to the contract; do not dump all build settings or defines:
 

@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-flutter_version="3.41.2"
+flutter_version="3.41.9"
 # The web reads public YouTube data through api/youtube.mjs. The key belongs
 # to that server function, never to Flutter's downloadable JavaScript.
 if [[ "${VERCEL_ENV:-}" == "production" && -z "${YOUTUBE_API_KEY:-}" ]]; then
