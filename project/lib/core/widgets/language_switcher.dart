@@ -28,13 +28,30 @@ class LanguageSwitcher extends StatelessWidget {
 
   /// Switches between English and Arabic and keeps push reminders in the new
   /// language. Shared by every language control.
-  static Future<void> toggle(BuildContext context) async {
-    final language = context.locale.languageCode == 'ar' ? 'en' : 'ar';
+  static Future<void> toggle(BuildContext context) =>
+      set(context, context.locale.languageCode == 'ar' ? 'en' : 'ar');
+
+  /// Sets [language] (see [toggle]).
+  static Future<void> set(BuildContext context, String language) async {
     await context.setLocale(Locale(language));
+    _rebuildAll();
     if (context.mounted) {
       unawaited(context.read<AppProvider>().syncReminderPush(
           requestPermission: false, language: language));
     }
+  }
+
+  /// Labels read with tr() without a context do not depend on the locale, so
+  /// const widgets and pages that never read it kept the old language (the
+  /// Taysir tabs and header did). Rebuild every element once, as a hot
+  /// reload does.
+  static void _rebuildAll() {
+    void mark(Element element) {
+      element.markNeedsBuild();
+      element.visitChildren(mark);
+    }
+
+    WidgetsBinding.instance.rootElement?.visitChildren(mark);
   }
 
   @override

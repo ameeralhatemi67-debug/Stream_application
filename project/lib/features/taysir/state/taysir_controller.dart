@@ -45,7 +45,9 @@ class TaysirController extends ChangeNotifier {
 
   Future<void> _load() async {
     loading = true;
-    _notify();
+    // Loads start while widgets build (a page's first build, the provider's
+    // account update), so listeners hear about it after that frame.
+    scheduleMicrotask(_notify);
     try {
       final r = await Future.wait<Object>([repository.loadCatalog(), repository.loadRoles(), repository.loadMine()]);
       catalog = r[0] as TaysirCatalog;
@@ -54,6 +56,9 @@ class TaysirController extends ChangeNotifier {
       _userId = repository.currentUserId;
       failure = null;
       loaded = true;
+      // Coordinators get their organization's staff data (open reports,
+      // roster) without opening the console first; the Me tab counts it.
+      if (roles.isCoordinator) staffOrganizationId ??= consoleOrganizations.firstOrNull;
       if (staffOrganizationId != null && roles.coordinates(staffOrganizationId!)) {
         staff = await repository.loadStaff(staffOrganizationId!);
       }

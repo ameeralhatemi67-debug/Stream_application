@@ -146,7 +146,11 @@ class TButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(999),
             child: ConstrainedBox(
               constraints: BoxConstraints(minHeight: h, minWidth: h),
-              child: Padding(padding: EdgeInsets.symmetric(horizontal: small ? 12 : large ? 22 : 16, vertical: 6), child: Center(widthFactor: 1, child: content)),
+              // Both factors: without heightFactor the button grew to the
+              // full height of a bounded row (the 72 px website header).
+              child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: small ? 12 : large ? 22 : 16, vertical: 6),
+                  child: Center(widthFactor: 1, heightFactor: 1, child: content)),
             ),
           ),
         ),
@@ -319,7 +323,7 @@ class TSeg<T> extends StatelessWidget {
       return full ? Expanded(child: child) : child;
     }
 
-    return Container(
+    final bar = Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
           color: dark ? const Color(0x14FFFFFF) : TC.tint,
@@ -327,6 +331,9 @@ class TSeg<T> extends StatelessWidget {
           border: Border.all(color: dark ? TC.nightLine : TC.hair)),
       child: Row(mainAxisSize: full ? MainAxisSize.max : MainAxisSize.min, children: [for (final o in options) item(o)]),
     );
+    // Full-width bars shorten their labels; the others scroll sideways when
+    // large text makes them wider than the screen.
+    return full ? bar : SingleChildScrollView(scrollDirection: Axis.horizontal, child: bar);
   }
 }
 
@@ -744,7 +751,10 @@ class TSearchBox extends StatelessWidget {
               onTap: onTap,
               readOnly: readOnly,
               style: tBody(14, color: TC.ink, height: 1.3),
-              decoration: InputDecoration.collapsed(hintText: hint, hintStyle: tBody(14, color: TC.muted, height: 1.3)),
+              // collapsed() clears only `border`; the app theme's enabled and
+              // focused outlines would otherwise draw inside the pill.
+              decoration: InputDecoration.collapsed(hintText: hint, hintStyle: tBody(14, color: TC.muted, height: 1.3))
+                  .copyWith(enabledBorder: InputBorder.none, focusedBorder: InputBorder.none),
             ),
           ),
           if (trailing != null) trailing!,

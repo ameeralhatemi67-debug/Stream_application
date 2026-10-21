@@ -274,20 +274,28 @@ class _WeeklyChart extends StatelessWidget {
     final maxV = math.max(4, data.map((d) => d.values.fold<int>(0, (a, b) => a + b)).fold<int>(0, math.max));
     return LayoutBuilder(builder: (context, box) {
       final bw = (box.maxWidth / weeks.length) * .55;
-      return Row(crossAxisAlignment: CrossAxisAlignment.end, children: [
+      return Row(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         for (var i = 0; i < weeks.length; i++)
           Expanded(
             child: Opacity(
               opacity: weeks[i].isAfter(c.today) ? .55 : 1,
-              child: Column(mainAxisAlignment: MainAxisAlignment.end, children: [
-                Text('${data[i].values.fold<int>(0, (a, b) => a + b)}', style: tBody(12, color: TC.ink2, weight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                for (final t in TaysirVocab.types.reversed)
-                  Container(
-                    width: bw,
-                    height: (box.maxHeight - 60) * data[i][t]! / maxV,
-                    decoration: BoxDecoration(color: _typeColor(t), borderRadius: BorderRadius.circular(2)),
+              child: Column(children: [
+                // The bars take what the labels leave, at any text size.
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, area) => Column(mainAxisAlignment: MainAxisAlignment.end, children: [
+                      Text('${data[i].values.fold<int>(0, (a, b) => a + b)}',
+                          maxLines: 1, style: tBody(12, color: TC.ink2, weight: FontWeight.w700, height: 1.3)),
+                      const SizedBox(height: 4),
+                      for (final t in TaysirVocab.types.reversed)
+                        Container(
+                          width: bw,
+                          height: math.max(0.0, area.maxHeight - MediaQuery.textScalerOf(context).scale(16) - 4) * data[i][t]! / maxV,
+                          decoration: BoxDecoration(color: _typeColor(t), borderRadius: BorderRadius.circular(2)),
+                        ),
+                    ]),
                   ),
+                ),
                 const SizedBox(height: 6),
                 Text(gregorianLabel(weeks[i], lang, short: true), maxLines: 1, style: tBody(11, color: TC.muted, height: 1.2)),
                 Text(sameDay(weeks[i], thisWeek) ? 'taysir.overview.this_week'.tr() : '', maxLines: 1, style: tBody(10.5, color: TC.bronze, weight: FontWeight.w700, height: 1.2)),
@@ -956,9 +964,9 @@ class _Team extends StatelessWidget {
                     Text(
                         '${'taysir.team.member'.tr(args: ['taysir.role.${m.role}'.tr()])}${m.coordinator && (m.grantedByAr ?? m.grantedByEn) != null ? 'taysir.team.granted_by'.tr(args: [lang == 'ar' ? (m.grantedByAr ?? '') : (m.grantedByEn ?? '')]) : ''}',
                         style: tBody(12.5, color: TC.muted)),
+                    if (m.coordinator) const Padding(padding: EdgeInsets.only(top: 4), child: TTag('activities.coordinate', icon: TGlyph.key)),
                   ]),
                 ),
-                if (m.coordinator) const TTag('activities.coordinate', icon: TGlyph.key),
                 if (m.role != 'owner')
                   Switch.adaptive(
                     value: m.coordinator,

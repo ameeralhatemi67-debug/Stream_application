@@ -1,12 +1,71 @@
 ---
 type: decisions
 project: Streamer_app
-updated: 2026-08-09
+updated: 2026-10-21
 ---
 
 # 🏛️ Architecture Decision Records (ADRs): Streamer App
 
 > Key architectural, UX, and technical decisions governing the Educational Streamer App.
+
+## ADR-014: Taysir, the mosque lessons programme, inside Hadayah Live (2026-10-21)
+
+Owner request: build the reviewed "Taysir in Hadayah Live" prototype into the
+app on our Supabase, taking Taysir's features but not its code or security
+model (review: `brief/research/taysir/2026-10-21_TAYSIR_DNA_HEALTH_AND_INTEGRATION.md`).
+
+- **Authority is two organization-scoped permission keys**, not new role tiers:
+  `activities.coordinate` and `activities.submit` in `user_permissions`, read
+  through `has_permission()`. Org owners and co-owners coordinate their own
+  organization implicitly and grant `activities.coordinate` to members; a
+  master admin switches Taysir on per organization (`taysir_organizations`).
+  Coordinators must be organization members (ADR-007's `org_co_owner` rules
+  are unchanged).
+- **Invitation links instead of passwords.** A coordinator adds a preacher to
+  the roster and sends a single-use link that expires after 14 days; only its
+  hash is stored.
+  The preacher signs in with the app's normal Google/Apple sign-in and claims
+  the card, which grants `activities.submit`. No shared default password, no
+  account created on anyone's behalf.
+- **Every write is a security definer function** that checks the caller.
+  Clients hold no INSERT/UPDATE/DELETE on programme tables except their own
+  reminders, follows, attendance log and preferences. Phone numbers sit in a
+  private table: coordinators see a mask, and each reveal is written to the
+  action log. The public reads approved and cancelled sessions of enabled
+  organizations, verified mosques and listed preachers, nothing else.
+- **Client:** `lib/features/taysir/` with its own `TaysirController` (a
+  standalone `ChangeNotifier`, provided next to `AppProvider` in `main.dart`,
+  not part of it). The repository interface has a Supabase implementation
+  and a sample-data `DemoTaysirRepository` used when Supabase is not
+  configured and by widget tests; the sample build shows a banner and a
+  persona switcher on the Me tab. Taysir has its own `StatefulShellRoute`
+  (`/taysir`, lessons, map, me) and root routes for detail, submit, report,
+  claim and console pages; public pages need no sign-in.
+- **Switching:** Settings → About's logo switches between Hadayah Live and
+  Taysir (ADR-013). Shared `/taysir/...` links open for everyone.
+
+Consequences: migration `20261021120000_taysir_lessons_programme.sql` must be
+deployed before configured builds can show Taysir (they show the branded
+"unavailable" state until then). Push reminders for Taysir are stored but not
+sent yet (`dispatch-upcoming-reminders` does not read `taysir_reminders`).
+Taysir's real data (43 preachers with phone numbers) is not imported;
+coordinators import a CSV in the console.
+
+## ADR-013: Hidayah Gold is the only design; the logo switches applications (2026-10-21)
+
+The green design and its runtime palette remap are removed. Gold is the
+source token set (`canopy_tokens.dart`, `app_theme.dart`); `AppPalette` holds
+plain gold constants. The Settings → About logo no longer toggles a palette:
+it switches the application between Hadayah Live (`/feed`) and Taysir
+(`/taysir`) through `AppExperience` (`lib/core/providers/app_experience.dart`),
+a per-device preference saved before it applies. When Taysir is chosen the
+router sends `/feed` to `/taysir`. The retired `hidayah_palette_enabled` key
+is deleted on first start. Website layouts are always on at 1024 px and wider.
+Both Android launcher aliases are kept so component state survives updates;
+the launcher icon is gold on Android, iOS and web.
+
+Consequences: guests cannot reach Settings, so the switch needs a signed-in
+account; anyone can open Taysir from a shared link.
 
 ## ADR-012: Private saved recordings and upcoming announcements
 

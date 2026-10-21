@@ -71,7 +71,26 @@ store/assets/icon_512.png, untracked brief/ and doc/ files).
 - Verified so far: `flutter analyze` 0 issues; `test/taysir_domain_test.dart`
   (12) and `test/app_experience_test.dart` (5) pass.
 
-## Next (in order)
+## Update, later on 2026-10-21: steps 1-5 done
+
+- Step 1: committed as `cb37376`.
+- Step 2: `project/test/taysir_screens_test.dart`, 48 widget tests on the real
+  `AppRouter` with `DemoTaysirRepository` personas (see STATUS for the list),
+  including a 37-route layout sweep at 360/1280 px, ar/en, text 1x/2x.
+- Fixes the tests and the browser found: controller notify during build;
+  2x-text overflows (TSeg, wizard nav, prayer strip, weekly chart, team row);
+  search-box inner outline; coordinator Me card's report count; language
+  switch leaving tabs/app bar/banner stale (now `LanguageSwitcher.set`, which
+  rebuilds the tree once and syncs push-reminder language).
+- Steps 3-5: full suite, browser check (sample data) and docs (ADR-013,
+  ADR-014, STATUS, LEDGER, CLAUDE.md). Results in the LEDGER RESUME block.
+- Step 6 (hosted deploy) waits for the owner's yes in chat.
+
+Browser previews: `.claude/launch.json` has `app-web-sample-data` (port 8790)
+and `app-web-hosted` (port 8792, `dart_define.local.json`), both
+`flutter run -d web-server` in debug. Open `http://127.0.0.1:<port>/#/taysir`.
+
+## Next (in order), as first written
 1. If `git log -1` is not the Taysir commit, commit Phases 2-4 (stage only:
    the migration + 2 SQL test files, `project/lib`, `project/test`,
    `project/assets/i18n`, this handoff). Conventional message

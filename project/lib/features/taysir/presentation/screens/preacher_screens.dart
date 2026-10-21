@@ -302,18 +302,15 @@ class _TaysirSubmitScreenState extends State<TaysirSubmitScreen> {
         .toList();
     final s1 = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
       label('taysir.submit.city'.tr()),
-      SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: TSeg<String>(
-          value: city,
-          onChanged: (v) => setState(() {
-            city = v;
-            district = null;
-            mosqueId = null;
-            newMosque = null;
-          }),
-          options: [for (final x in TaysirVocab.cities.where((x) => x != 'other')) TSegOption(x, cityLabel(x))],
-        ),
+      TSeg<String>(
+        value: city,
+        onChanged: (v) => setState(() {
+          city = v;
+          district = null;
+          mosqueId = null;
+          newMosque = null;
+        }),
+        options: [for (final x in TaysirVocab.cities.where((x) => x != 'other')) TSegOption(x, cityLabel(x))],
       ),
       gap(),
       label('taysir.submit.district'.tr()),
@@ -590,15 +587,20 @@ class _TaysirSubmitScreenState extends State<TaysirSubmitScreen> {
       child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
         [s0, s1, s2, s3][step],
         const SizedBox(height: 18),
-        Row(children: [
-          if (step > 0) TButton('taysir.back'.tr(), icon: TGlyph.arrow, onPressed: () => setState(() => step--)),
-          const Spacer(),
-          if (step < 3)
-            TButton('taysir.next'.tr(), kind: TBtn.minted, iconEnd: TGlyph.arrowEnd, onPressed: valid[step] ? () => setState(() => step++) : null)
-          else
-            TButton(coord && direct ? 'taysir.submit.publish'.tr() : 'taysir.submit.send'.tr(),
-                kind: TBtn.minted, icon: coord && direct ? TGlyph.check : TGlyph.send, onPressed: busy || !valid.every((v) => v) ? null : send),
-        ]),
+        // Side by side when they fit; stacked at the end with large text.
+        OverflowBar(
+          alignment: step > 0 ? MainAxisAlignment.spaceBetween : MainAxisAlignment.end,
+          overflowAlignment: OverflowBarAlignment.end,
+          overflowSpacing: 8,
+          children: [
+            if (step > 0) TButton('taysir.back'.tr(), icon: TGlyph.arrow, onPressed: () => setState(() => step--)),
+            if (step < 3)
+              TButton('taysir.next'.tr(), kind: TBtn.minted, iconEnd: TGlyph.arrowEnd, onPressed: valid[step] ? () => setState(() => step++) : null)
+            else
+              TButton(coord && direct ? 'taysir.submit.publish'.tr() : 'taysir.submit.send'.tr(),
+                  kind: TBtn.minted, icon: coord && direct ? TGlyph.check : TGlyph.send, onPressed: busy || !valid.every((v) => v) ? null : send),
+          ],
+        ),
       ]),
     );
     final preview = TaysirLesson(

@@ -9,6 +9,7 @@ import '../../../core/config/app_identity.dart';
 import '../../../core/providers/app_provider.dart';
 import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/widgets/app_logo.dart';
+import '../../../core/widgets/language_switcher.dart';
 import '../../profile/models/streamer_models.dart';
 import '../data/taysir_repository.dart';
 import '../domain/taysir_models.dart';
@@ -173,7 +174,7 @@ class _Tools extends StatelessWidget {
     final c = context.watch<TaysirController>();
     final ar = context.ar;
     return Row(mainAxisSize: MainAxisSize.min, children: [
-      TIconButton(TGlyph.languages, tooltip: ar ? 'English' : 'العربية', onPressed: () => context.setLocale(Locale(ar ? 'en' : 'ar'))),
+      TIconButton(TGlyph.languages, tooltip: ar ? 'English' : 'العربية', onPressed: () => LanguageSwitcher.toggle(context)),
       TIconButton(TGlyph.bookmark, tooltip: 'taysir.nav.saved'.tr(), onPressed: () => context.push('/taysir/me/saved')),
       TIconButton(TGlyph.bell, tooltip: 'taysir.nav.notifications'.tr(), badge: c.mine.unread, onPressed: () => context.push('/taysir/me/notifications')),
     ]);

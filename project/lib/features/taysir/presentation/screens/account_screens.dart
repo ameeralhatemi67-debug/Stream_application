@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 
 import '../../../../core/routing/sign_in_prompt.dart';
 import '../../../../core/widgets/app_logo.dart';
+import '../../../../core/widgets/language_switcher.dart';
 import '../../data/demo_taysir_repository.dart';
 import '../../domain/taysir_models.dart';
 import '../../domain/taysir_rules.dart';
@@ -183,7 +184,7 @@ class _PrefsCard extends StatelessWidget {
         ),
         Row(children: [
           Expanded(child: Text('taysir.lessons.language'.tr(), style: tBody(14, color: TC.ink))),
-          TSeg<String>(small: true, value: ar ? 'ar' : 'en', onChanged: (v) => context.setLocale(Locale(v)), options: const [
+          TSeg<String>(small: true, value: ar ? 'ar' : 'en', onChanged: (v) => LanguageSwitcher.set(context, v), options: const [
             TSegOption('ar', 'العربية'),
             TSegOption('en', 'English'),
           ]),

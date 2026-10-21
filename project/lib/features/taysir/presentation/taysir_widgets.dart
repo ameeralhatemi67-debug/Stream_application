@@ -446,7 +446,11 @@ class _PrayerStripState extends State<PrayerStrip> {
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
             child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              for (var i = 0; i < 5; i++) ...[if (i > 0) const SizedBox(width: 8), SizedBox(width: 156, child: columns[i])]
+              for (var i = 0; i < 5; i++) ...[
+                if (i > 0) const SizedBox(width: 8),
+                // Columns grow with the text size so the adhan time fits.
+                SizedBox(width: MediaQuery.textScalerOf(context).clamp(maxScaleFactor: 1.8).scale(156), child: columns[i]),
+              ]
             ]),
           ),
       ]),
