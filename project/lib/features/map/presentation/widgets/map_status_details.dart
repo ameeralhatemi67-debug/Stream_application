@@ -529,8 +529,10 @@ class _MapDetailsBody extends StatelessWidget {
     return switch (status.state) {
       WebOfflineState.notPrepared =>
         'map.web_offline_not_prepared'.tr(namedArgs: {'size': size}),
-      WebOfflineState.preparing => 'map.web_offline_preparing'.tr(
-          namedArgs: {'done': '${status.done}', 'total': '${status.total}'}),
+      WebOfflineState.preparing => 'map.web_offline_preparing'.plural(
+          status.total,
+          name: 'total',
+          namedArgs: {'done': '${status.done}'}),
       WebOfflineState.ready => 'map.web_offline_ready'
           .tr(namedArgs: {'date': _date(status.preparedAt)}),
       WebOfflineState.evicted => 'map.web_offline_evicted'.tr(),

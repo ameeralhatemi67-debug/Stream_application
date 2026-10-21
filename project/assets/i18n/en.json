@@ -90,7 +90,14 @@
     "choose_place": "Choose a city view",
     "place_preset": "City view",
     "no_search_results": "No current map results",
-    "cluster_label": "{count} venues. Tap to zoom or choose one.",
+    "cluster_label": {
+      "zero": "{count} venues. Tap to zoom or choose one.",
+      "one": "{count} venue. Tap to zoom or choose it.",
+      "two": "{count} venues. Tap to zoom or choose one.",
+      "few": "{count} venues. Tap to zoom or choose one.",
+      "many": "{count} venues. Tap to zoom or choose one.",
+      "other": "{count} venues. Tap to zoom or choose one."
+    },
     "marker_accessibility": "{name}, {venue}. Tap for details.",
     "my_channel": "Your channel",
     "broadcasters_list": "Broadcasters list",
@@ -101,7 +108,14 @@
     "overview_button": "Show all three cities",
     "outside_area": "This venue is outside the map area (Al Khobar, Dhahran, Dammam and nearby). Its exact location still opens in directions.",
     "directions_failed": "Couldn't open a maps app or browser on this device.",
-    "cluster_list_title": "{count} venues here",
+    "cluster_list_title": {
+      "zero": "{count} venues here",
+      "one": "{count} venue here",
+      "two": "{count} venues here",
+      "few": "{count} venues here",
+      "many": "{count} venues here",
+      "other": "{count} venues here"
+    },
     "credit_link_label": "{credit}, map data licence. Opens in browser.",
     "details_open": "Map details and credits",
     "details_title": "Map",
@@ -126,7 +140,14 @@
     "web_offline_title": "Use the map without internet (this browser)",
     "web_offline_not_prepared": "Save the app and complete map in this browser (map: {size} MB, plus app files). After that, this site can open without internet.",
     "web_offline_prepare": "Prepare offline map",
-    "web_offline_preparing": "Saving… {done} of {total} files",
+    "web_offline_preparing": {
+      "zero": "Saving… {done} of {total} files",
+      "one": "Saving… {done} of {total} file",
+      "two": "Saving… {done} of {total} files",
+      "few": "Saving… {done} of {total} files",
+      "many": "Saving… {done} of {total} files",
+      "other": "Saving… {done} of {total} files"
+    },
     "web_offline_ready": "Ready to open without internet (saved {date}). The browser may remove it if storage runs low; you'll see it here.",
     "web_offline_evicted": "The browser removed the saved map. Prepare it again while connected.",
     "web_offline_failed_quota": "Not enough browser storage. Free some space and try again.",
@@ -234,6 +255,14 @@
     "archived_lectures": "Archived Lectures",
     "upcoming_lectures": "Upcoming Live Lectures",
     "playlists": "Playlists",
+    "playlists_count": {
+      "zero": "{} Playlists",
+      "one": "{} Playlist",
+      "two": "{} Playlists",
+      "few": "{} Playlists",
+      "many": "{} Playlists",
+      "other": "{} Playlists"
+    },
     "live_youtube_sync": "Live YouTube Sync",
     "youtube_archive": "YouTube Archive",
     "tap_to_join_live": "Tap to Join Live Broadcast",
@@ -244,7 +273,14 @@
     "remind_me": "Remind Me",
     "views": "views",
     "total_hours": "Broadcast Hours",
-    "lectures_count": "Lectures",
+    "lectures_count": {
+      "zero": "{} Lectures",
+      "one": "{} Lecture",
+      "two": "{} Lectures",
+      "few": "{} Lectures",
+      "many": "{} Lectures",
+      "other": "{} Lectures"
+    },
     "verified_organization": "Verified Educational Organization",
     "org_badge": "Organization",
     "organization_hq": "Main Headquarters",
@@ -445,8 +481,22 @@
     "chat_composer_muted": "A moderator has muted you in this stream.",
     "chat_composer_chat_off": "The broadcaster has turned chat off.",
     "chat_composer_offline": "Reconnecting. You can read the chat but not send yet.",
-    "chat_composer_slow_mode": "Slow mode: wait {}s",
-    "chat_slow_mode_active": "Slow mode is on: one message every {}s.",
+    "chat_composer_slow_mode": {
+      "zero": "Slow mode: wait {}s",
+      "one": "Slow mode: wait {}s",
+      "two": "Slow mode: wait {}s",
+      "few": "Slow mode: wait {}s",
+      "many": "Slow mode: wait {}s",
+      "other": "Slow mode: wait {}s"
+    },
+    "chat_slow_mode_active": {
+      "zero": "Slow mode is on: one message every {}s.",
+      "one": "Slow mode is on: one message every {}s.",
+      "two": "Slow mode is on: one message every {}s.",
+      "few": "Slow mode is on: one message every {}s.",
+      "many": "Slow mode is on: one message every {}s.",
+      "other": "Slow mode is on: one message every {}s."
+    },
     "chat_empty_title": "No messages yet",
     "chat_empty_subtitle": "Be the first to say something.",
     "chat_empty_subtitle_guest": "Sign in to be the first to say something.",
@@ -1998,7 +2048,14 @@
     "nav_map": "Map",
     "nav_orgs": "Organizations",
     "nav_channel": "My channel",
-    "live_count": "{n} live",
+    "live_count": {
+      "zero": "{} live",
+      "one": "{} live",
+      "two": "{} live",
+      "few": "{} live",
+      "many": "{} live",
+      "other": "{} live"
+    },
     "sign_in": "Sign in",
     "hero_eyebrow": "Live from the Eastern Province",
     "hero_title": "Lectures and lessons, live from Al Khobar, Dhahran and Dammam",
@@ -2007,11 +2064,46 @@
     "hero_map": "Open the map",
     "hero_none_title": "Nothing is live right now",
     "hero_none_body": "Follow a channel and turn on reminders to hear when its next lecture starts.",
-    "stat_live": "live now",
-    "stat_channels": "scholars and channels",
-    "stat_topics": "subjects",
-    "stat_recordings": "recordings",
-    "stat_playlists": "playlists",
+    "stat_live": {
+      "zero": "live now",
+      "one": "live now",
+      "two": "live now",
+      "few": "live now",
+      "many": "live now",
+      "other": "live now"
+    },
+    "stat_channels": {
+      "zero": "scholars and channels",
+      "one": "scholar or channel",
+      "two": "scholars and channels",
+      "few": "scholars and channels",
+      "many": "scholars and channels",
+      "other": "scholars and channels"
+    },
+    "stat_topics": {
+      "zero": "subjects",
+      "one": "subject",
+      "two": "subjects",
+      "few": "subjects",
+      "many": "subjects",
+      "other": "subjects"
+    },
+    "stat_recordings": {
+      "zero": "recordings",
+      "one": "recording",
+      "two": "recordings",
+      "few": "recordings",
+      "many": "recordings",
+      "other": "recordings"
+    },
+    "stat_playlists": {
+      "zero": "playlists",
+      "one": "playlist",
+      "two": "playlists",
+      "few": "playlists",
+      "many": "playlists",
+      "other": "playlists"
+    },
     "sec_live": "Live now",
     "sec_channels": "Scholars and channels",
     "badge_live": "LIVE",
@@ -2028,7 +2120,14 @@
     "map_title": "Find a lecture near you",
     "map_body": "Mosques, halls and centres that host lectures across the Eastern Province.",
     "map_page_title": "Lecture map",
-    "map_count": "{n} channels on the map",
+    "map_count": {
+      "zero": "{} channels on the map",
+      "one": "{} channel on the map",
+      "two": "{} channels on the map",
+      "few": "{} channels on the map",
+      "many": "{} channels on the map",
+      "other": "{} channels on the map"
+    },
     "city_dammam": "Dammam",
     "city_khobar": "Al Khobar",
     "city_dhahran": "Dhahran",

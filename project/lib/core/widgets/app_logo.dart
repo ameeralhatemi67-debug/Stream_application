@@ -9,11 +9,16 @@ class AppLogo extends StatelessWidget {
   final double size;
   final bool monochrome;
 
+  /// The gold mark at display size: 2x of the largest place it is drawn (the
+  /// 104 px splash), with a 3.0x variant for phones. The 2.9 MB master
+  /// (clearlogo2.png) is not bundled.
+  static const hidayahAsset = 'assets/logo/hidayah_mark.png';
+
   @override
   Widget build(BuildContext context) => !monochrome &&
           paletteOf(context).hidayah
       ? Image.asset(
-          'assets/logo/clearlogo2.png',
+          hidayahAsset,
           width: size,
           height: size,
           fit: BoxFit.contain,

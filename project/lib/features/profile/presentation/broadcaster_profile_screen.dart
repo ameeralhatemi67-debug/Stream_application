@@ -7,6 +7,7 @@ import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/layout/window_class.dart';
 import '../../../core/widgets/ds/ca_layout.dart';
 import '../../../core/widgets/ds/ca_cards.dart';
@@ -136,6 +137,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
         (p) => p.getVodsForStreamer(streamer.streamerId));
     final activePlaylists = context.select<AppProvider, List<PlaylistModel>>(
         (p) => p.getPlaylistsForStreamer(streamer.streamerId));
+    final archiveKnown = context.select<AppProvider, bool>(
+        (p) => p.isChannelArchiveKnown(streamer.streamerId));
 
     // Apply speaker filtering if an individual instructor is selected
     final displayedVods =
@@ -177,7 +180,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
     if (context.usesHidayahWeb) {
       return _buildWebProfile(context, streamer, isFollowing, hasReminder,
           watchLive, appProvider, lang, allVods, activePlaylists,
-          displayedVods, displayedPlaylists, body);
+          displayedVods, displayedPlaylists, body,
+          archiveKnown: archiveKnown);
     }
     final single = NestedScrollView(
         headerSliverBuilder: (context, scrolled) => [
@@ -586,7 +590,8 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
       List<PlaylistModel> allPlaylists,
       List<VodModel> vods,
       List<PlaylistModel> playlists,
-      Widget Function() body) {
+      Widget Function() body,
+      {required bool archiveKnown}) {
     final uncertain = !provider.isOnline || provider.isUsingCachedCatalog;
     final own = provider.isLoggedInStreamer &&
         provider.isApprovedStreamer &&
@@ -607,8 +612,10 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                           following: following,
                           reminder: reminder,
                           remindersAvailable: provider.remindersAvailable,
-                          recordings: allVods.length,
-                          playlists: allPlaylists.length,
+                          // Unknown until the archive has loaded: a dash,
+                          // never "0 recordings" (audit P1-13).
+                          recordings: archiveKnown ? allVods.length : null,
+                          playlists: archiveKnown ? allPlaylists.length : null,
                           onFollow: () =>
                               provider.toggleFollow(streamer.streamerId),
                           onWatch: () => context
@@ -639,8 +646,10 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                   index: 2 - _tabController!.index,
                                   onChanged: (visual) =>
                                       _tabController!.animateTo(2 - visual),
-                                  playlists: playlists.length,
-                                  recordings: vods.length)),
+                                  playlists:
+                                      archiveKnown ? playlists.length : null,
+                                  recordings:
+                                      archiveKnown ? vods.length : null)),
                           ProfileWebTabs.height)),
                 ],
             body: HidayahWebWidth(
@@ -698,7 +707,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                     onPressed: () => Navigator.pop(ctx, true))),
           ]);
       if (signIn == true && context.mounted) {
-        context.push('/welcome');
+        await openSignIn(context, returnTo: '/profile/$id');
       }
       return;
     }
@@ -786,7 +795,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis),
                                 Text(
-                                    '${allVods.where((v) => v.speakerIds.contains(speaker.speakerId)).length} ${'profile.lectures_count'.tr()} • ${allPlaylists.where((p) => p.speakerIds.contains(speaker.speakerId)).length} ${'profile.playlists'.tr()}',
+                                    '${'profile.lectures_count'.plural(allVods.where((v) => v.speakerIds.contains(speaker.speakerId)).length)} • ${'profile.playlists_count'.plural(allPlaylists.where((p) => p.speakerIds.contains(speaker.speakerId)).length)}',
                                     style:
                                         Theme.of(context).textTheme.bodySmall),
                                 Text(
@@ -912,7 +921,7 @@ class _BroadcasterProfileScreenState extends State<BroadcasterProfileScreen>
                             lines: 2, style: titleStyle),
                         const SizedBox(height: AppTheme.spaceXs),
                         CaFixedLines(
-                            '${playlist.videoCount} ${'profile.lectures_count'.tr()}',
+                            'profile.lectures_count'.plural(playlist.videoCount),
                             lines: 1,
                             style: countStyle),
                       ],

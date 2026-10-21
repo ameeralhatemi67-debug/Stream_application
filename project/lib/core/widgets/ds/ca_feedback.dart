@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
 import '../../theme/app_theme.dart';
+import '../../utils/text_direction.dart';
 import '../interactive_toast_overlay.dart';
 import 'ca_cards.dart';
 import 'ca_button.dart';
@@ -93,10 +94,17 @@ class _CaChatBubbleState extends State<CaChatBubble>
     final foreground = dark ? paletteColor(context, Canopy.paper) : paletteColor(context, Canopy.ink);
     final bodyStyle = textTheme.bodyMedium?.copyWith(color: foreground);
     final showName = widget.role == CaChatRole.viewer && !widget.isOwn;
+    // Each message reads in its own direction (its first strong letter), so
+    // an English question in the Arabic app keeps its "?" at the end; the
+    // name is isolated so it cannot reorder the text (audit P1-26).
+    final ambient = Directionality.of(context);
+    final direction = firstStrongTextDirection(widget.message) ?? ambient;
+    final isolateName = dark || direction != ambient;
     final span = TextSpan(children: [
       if (showName)
         TextSpan(
-            text: '${dark ? '\u2068${widget.name}\u2069' : widget.name}  ',
+            text:
+                '${isolateName ? isolateDirection(widget.name) : widget.name}  ',
             style: textTheme.labelLarge?.copyWith(
                 color: dark ? paletteColor(context, Canopy.mist) : paletteColor(context, Canopy.brandGreen),
                 fontWeight: FontWeight.w700)),
@@ -123,7 +131,7 @@ class _CaChatBubbleState extends State<CaChatBubble>
           horizontal: AppTheme.spaceMd, vertical: AppTheme.spaceSm);
       final painter = TextPainter(
           text: span,
-          textDirection: Directionality.of(context),
+          textDirection: direction,
           textScaler: MediaQuery.textScalerOf(context),
           maxLines: _lines)
         ..layout(
@@ -159,6 +167,7 @@ class _CaChatBubbleState extends State<CaChatBubble>
                                     size: 16, color: paletteColor(context, AppTheme.warning))),
                           Expanded(
                               child: Text.rich(span,
+                                  textDirection: direction,
                                   maxLines: _open ? null : _lines,
                                   overflow:
                                       _open ? null : TextOverflow.ellipsis)),

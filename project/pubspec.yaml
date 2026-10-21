@@ -86,7 +86,10 @@ flutter:
     # Bundle only runtime artwork; the SVG/PNG source masters stay on disk.
     - assets/logo/colored.svg
     - assets/logo/black.svg
-    - assets/logo/clearlogo2.png
+    # Hidayah Gold mark at display size (plus a 3.0x variant for phones). The
+    # 2.9 MB master clearlogo2.png stays on disk for the launcher-icon script;
+    # brief/tools/make_hidayah_display_logo.py rebuilds these from it.
+    - assets/logo/hidayah_mark.png
     # Browser tab icon while the Hidayah Gold palette is on (web only).
     - assets/logo/hidayah_icon_192.png
     - assets/Language.svg
@@ -107,11 +110,12 @@ flutter:
     - assets/images/hadayah_charity_parent.png
 
   fonts:
+    # Variable fonts are listed once: the engine downloads and registers every
+    # entry and ignores the weight field, so a second entry for the same file
+    # was a second download of it on the web (audit 2026-10-21, P0-5).
     - family: IBM Plex Sans
       fonts:
         - asset: assets/fonts/IBMPlexSans-Variable.ttf
-        - asset: assets/fonts/IBMPlexSans-Variable.ttf
-          weight: 700
     - family: IBM Plex Sans Arabic
       fonts:
         - asset: assets/fonts/IBMPlexSansArabic-400.ttf
@@ -121,8 +125,6 @@ flutter:
     - family: Reem Kufi
       fonts:
         - asset: assets/fonts/ReemKufi-Variable.ttf
-        - asset: assets/fonts/ReemKufi-Variable.ttf
-          weight: 600
 
 
 # Launcher, adaptive and web icons, built by `dart run flutter_launcher_icons`

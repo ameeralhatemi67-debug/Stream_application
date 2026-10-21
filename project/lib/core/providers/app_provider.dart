@@ -463,6 +463,7 @@ class AppProvider extends ChangeNotifier {
     // all, before main.dart gets a chance to call anything.
     _loadMapMarkerCacheFromDisk();
     restorePublicCatalogFromDisk();
+    _restoreLocalViewerState();
   }
 
   /// Picks up any session Supabase already restored on cold start, then
@@ -789,6 +790,162 @@ class AppProvider extends ChangeNotifier {
       notifyListeners();
     } catch (e) {
       debugPrint('Failed to flush pending consent: $e');
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Returning guests (audit 2026-10-21, P0-2). A guest's consent, name,
+  // avatar and follows live on this device only; reading them back at start
+  // lets a return visit open on Discovery instead of walking welcome ->
+  // consent -> name again. A session always wins over the guest record.
+  // ---------------------------------------------------------------------
+  static const String _kGuestViewerPrefKey = 'guest_viewer_v1';
+  static const String _kGuestFollowsPrefKey = 'guest_follows_v1';
+  bool _localStateRestored = false;
+
+  /// Whether the on-device consent, guest and sign-in-return records have
+  /// been read. The splash waits for it before choosing where to go.
+  bool get localStateRestored => _localStateRestored;
+
+  /// A guest who already accepted the current notice and set up a viewer
+  /// name on this device, so the welcome gate has nothing left to ask.
+  bool get isReturningGuest => _isGuestViewer && hasAcceptedCurrentConsent;
+
+  Future<void> _restoreLocalViewerState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // recordConsent stashes a guest's consent here; it used to be read back
+      // only once a session existed, so a guest was asked on every visit.
+      final version = prefs.getString(_kPendingConsentVersionPrefKey);
+      final acceptedAt = DateTime.tryParse(
+          prefs.getString(_kPendingConsentAcceptedAtPrefKey) ?? '');
+      if (_consentVersion == null && version != null && acceptedAt != null) {
+        _consentVersion = version;
+        _consentAcceptedAt = acceptedAt;
+      }
+      _restoreSignInReturn(prefs);
+      if (_authService.currentSession == null && !_isLoggedInStreamer) {
+        final raw = prefs.getString(_kGuestViewerPrefKey);
+        final data = raw == null ? null : jsonDecode(raw);
+        final name =
+            data is Map ? (data['name'] as String? ?? '').trim() : '';
+        if (name.isNotEmpty && !_isGuestViewer) {
+          _applyGuestViewer(name, data['avatar'] as String?);
+        }
+        _followedStreamerIds
+            .addAll(prefs.getStringList(_kGuestFollowsPrefKey) ?? const []);
+      }
+    } catch (e) {
+      debugPrint('Local viewer state not restored: $e');
+    } finally {
+      _localStateRestored = true;
+      if (!_disposed) notifyListeners();
+    }
+  }
+
+  /// Saves the guest's name and avatar on this device.
+  Future<void> _saveGuestViewer() async {
+    if (!_isGuestViewer || _guestViewerName == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_kGuestViewerPrefKey,
+          jsonEncode({'name': _guestViewerName, 'avatar': _guestViewerAvatar}));
+    } catch (e) {
+      debugPrint('Guest viewer not saved: $e');
+    }
+  }
+
+  /// Saves follows made without an account on this device (05 D-07 keeps
+  /// them local-only; they used to vanish on reload).
+  Future<void> _saveGuestFollows() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+          _kGuestFollowsPrefKey, _followedStreamerIds.toList());
+    } catch (e) {
+      debugPrint('Guest follows not saved: $e');
+    }
+  }
+
+  Future<void> _forgetGuestViewer() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kGuestViewerPrefKey);
+      await prefs.remove(_kGuestFollowsPrefKey);
+    } catch (_) {}
+  }
+
+  // ---------------------------------------------------------------------
+  // Sign-in returns to where it was asked for (audit 2026-10-21, P0-4):
+  // chat on a live page, reminders on a channel page. Stored, because on web
+  // the Google redirect reloads the page and native sign-in comes back
+  // through the login-callback deep link, which replaces the page stack.
+  // ---------------------------------------------------------------------
+  static const _signInReturnKey = 'sign_in_return';
+  static const _signInReturnWindow = Duration(minutes: 30);
+  static const _signInEntryPaths = {
+    '/welcome',
+    '/onboarding',
+    '/splash',
+    '/login-callback',
+    '/viewer-setup',
+    '/role-select',
+  };
+  String? _signInReturn;
+  DateTime? _signInReturnAt;
+
+  /// Only an in-app location that is not part of the sign-in flow itself.
+  static bool isSignInReturnAllowed(String location) {
+    if (!location.startsWith('/') || location.startsWith('//')) return false;
+    final uri = Uri.tryParse(location);
+    return uri != null &&
+        !uri.hasScheme &&
+        !uri.hasAuthority &&
+        !_signInEntryPaths.contains(uri.path);
+  }
+
+  /// Remembers [location] as the page a sign-in started from.
+  Future<void> rememberSignInReturn(String location) async {
+    if (!isSignInReturnAllowed(location)) return;
+    final at = DateTime.now().toUtc();
+    _signInReturn = location;
+    _signInReturnAt = at;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_signInReturnKey,
+          jsonEncode({'at': at.toIso8601String(), 'to': location}));
+    } catch (_) {}
+  }
+
+  /// The page a finished sign-in should open, at most once; null means the
+  /// usual destination (Discovery).
+  String? takeSignInReturn() {
+    final to = _signInReturn;
+    final at = _signInReturnAt;
+    _signInReturn = null;
+    _signInReturnAt = null;
+    unawaited(SharedPreferences.getInstance()
+        .then((prefs) => prefs.remove(_signInReturnKey))
+        .catchError((Object _) => false));
+    if (to == null ||
+        at == null ||
+        DateTime.now().toUtc().difference(at) > _signInReturnWindow) {
+      return null;
+    }
+    return to;
+  }
+
+  void _restoreSignInReturn(SharedPreferences prefs) {
+    if (_signInReturn != null) return;
+    final stored = prefs.getString(_signInReturnKey);
+    if (stored == null) return;
+    final data = jsonDecode(stored);
+    if (data is! Map) return;
+    final to = data['to'];
+    final at = DateTime.tryParse(data['at'] as String? ?? '');
+    if (to is String && at != null && isSignInReturnAllowed(to)) {
+      _signInReturn = to;
+      _signInReturnAt = at;
     }
   }
 
@@ -1250,6 +1407,15 @@ class AppProvider extends ChangeNotifier {
   DeviceSessionModel? get remoteBroadcasterSession => _remoteBroadcasterSession;
   bool _hasCompletedRoleSelection = false;
   bool get hasCompletedRoleSelection => _hasCompletedRoleSelection;
+
+  /// A signed-in account the router sends to the role picker first: no role
+  /// chosen yet, not approved to broadcast, not an admin, no application.
+  bool get needsRoleSelection =>
+      isLoggedInStreamer &&
+      !_hasCompletedRoleSelection &&
+      !isApprovedStreamer &&
+      !isAdminUser &&
+      _myApplication == null;
   String? _sessionUserId;
   int _authGeneration = 0;
   String? _hydratingUserId;
@@ -1823,6 +1989,7 @@ class AppProvider extends ChangeNotifier {
   }) {
     if (vods != null) _streamerVods[streamerId] = vods;
     if (playlists != null) _streamerPlaylists[streamerId] = playlists;
+    _channelArchiveKnown.add(streamerId);
     notifyListeners();
   }
 
@@ -3490,6 +3657,13 @@ class AppProvider extends ChangeNotifier {
     notifyListeners();
   }
 
+  /// Channels whose recordings and playlists have been read, so their counts
+  /// are real. Until then (and after a failed read) a count is unknown, which
+  /// the channel page shows as a dash, never as 0 (audit 2026-10-21, P1-13).
+  final Set<String> _channelArchiveKnown = {};
+  bool isChannelArchiveKnown(String streamerId) =>
+      _channelArchiveKnown.contains(streamerId);
+
   Future<void> loadYouTubeChannelData({
     required String streamerId,
     required String handle,
@@ -3497,13 +3671,17 @@ class AppProvider extends ChangeNotifier {
     _streamerVods.remove(streamerId);
     _streamerPlaylists.remove(streamerId);
     _syncedYouTubeStreamers.remove(streamerId);
+    _channelArchiveKnown.remove(streamerId);
     if (handle.trim().isEmpty) {
+      _channelArchiveKnown.add(streamerId);
       notifyListeners();
       return;
     }
     try {
       final details = await _youTubeService.fetchChannelDetails(handle);
       final channelId = details['channelId'];
+      // An empty answer is also what a failed request returns, so the count
+      // stays unknown rather than claiming 0.
       if (channelId == null || channelId.isEmpty) {
         notifyListeners();
         return;
@@ -3523,6 +3701,7 @@ class AppProvider extends ChangeNotifier {
         debugPrint('Hidden content could not be loaded: $e');
       }
       _syncedYouTubeStreamers.add(streamerId);
+      _channelArchiveKnown.add(streamerId);
       notifyListeners();
     } catch (_) {
       notifyListeners();
@@ -3585,16 +3764,24 @@ class AppProvider extends ChangeNotifier {
     await _adminDbService?.saveAnalytics(_viewerAnalytics);
   }
 
-  /// Configures a guest viewer with friendly display name & avatar
+  /// Configures a guest viewer with friendly display name & avatar, and
+  /// remembers them on this device for the next visit.
   Future<void> setupGuestViewer({
     required String name,
     String? avatarUrl,
   }) async {
+    _applyGuestViewer(name.trim(), avatarUrl);
+    await _saveGuestViewer();
+    await recordGuestSession();
+    notifyListeners();
+  }
+
+  void _applyGuestViewer(String name, String? avatarUrl) {
     _hasCompletedOnboarding = true;
     _isGuestViewer = true;
     _isLoggedInStreamer = false;
     _isStreamerModeEnabled = false;
-    _guestViewerName = name.trim();
+    _guestViewerName = name;
     _guestViewerAvatar = avatarUrl;
 
     _userProfile = _userProfile.copyWith(
@@ -3602,9 +3789,6 @@ class AppProvider extends ChangeNotifier {
       nameAr: _guestViewerName,
       avatarUrl: avatarUrl ?? 'assets/images/avatars/neutral_1.png',
     );
-
-    await recordGuestSession();
-    notifyListeners();
   }
 
   /// Updates a viewer's own display name/avatar -- distinct from
@@ -3628,6 +3812,7 @@ class AppProvider extends ChangeNotifier {
     if (_isGuestViewer) {
       if (nameEn != null) _guestViewerName = nameEn;
       if (avatarUrl != null) _guestViewerAvatar = avatarUrl;
+      unawaited(_saveGuestViewer());
     }
     notifyListeners();
 
@@ -3964,6 +4149,8 @@ class AppProvider extends ChangeNotifier {
     _googleUserAvatar = null;
     _guestViewerName = null;
     _guestViewerAvatar = null;
+    // Signing out starts this device over at the welcome screen.
+    await _forgetGuestViewer();
     notifyListeners();
   }
 
@@ -4812,7 +4999,7 @@ class AppProvider extends ChangeNotifier {
   bool isFollowing(String streamerId) =>
       _followedStreamerIds.contains(streamerId);
 
-  /// Persisted per account for signed-in viewers, local-only for guests
+  /// Persisted per account for signed-in viewers, on this device for guests
   /// (05 D-07). Optimistic locally, then written through.
   Future<void> toggleFollow(String streamerId) async {
     if (streamerId.isEmpty) return;
@@ -4823,7 +5010,10 @@ class AppProvider extends ChangeNotifier {
       _followedStreamerIds.add(streamerId);
     }
     notifyListeners();
-    if (_authService.currentSession == null) return;
+    if (_authService.currentSession == null) {
+      if (!_isLoggedInStreamer) await _saveGuestFollows();
+      return;
+    }
     _adminDbService ??= await AdminDatabaseService.create();
     if (wasFollowing) {
       await _adminDbService!.removeFollow(streamerId);

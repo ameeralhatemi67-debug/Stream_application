@@ -4,11 +4,11 @@ import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart' hide TextDirection;
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../../../core/providers/app_provider.dart';
+import '../../../../core/routing/sign_in_prompt.dart';
 import '../../../../core/services/reminder_push_service.dart';
 import '../../../../core/theme/app_theme.dart';
 import '../../models/streamer_models.dart';
@@ -134,7 +134,10 @@ class _UpcomingScheduleTabState extends State<UpcomingScheduleTab> {
           ],
         ),
       );
-      if (signIn == true && mounted) context.push('/welcome');
+      if (signIn == true && mounted) {
+        await openSignIn(context,
+            returnTo: '/profile/${widget.streamer.streamerId}?tab=upcoming');
+      }
       return;
     }
     try {

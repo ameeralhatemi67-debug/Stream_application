@@ -60,14 +60,13 @@ class MapWebPanel extends StatelessWidget {
                         runSpacing: 6,
                         crossAxisAlignment: WrapCrossAlignment.center,
                         children: [
-                      Text('web.map_count'.tr(namedArgs: {'n': '${streamers.length}'}),
+                      Text('web.map_count'.plural(streamers.length),
                           style: HidayahText.body(13,
                               color: HidayahGold.s900,
                               weight: FontWeight.w700)),
                       if (live > 0) ...[
                         HidayahLiveBadge(
-                            label: 'web.live_count'
-                                .tr(namedArgs: {'n': '$live'})),
+                            label: 'web.live_count'.plural(live)),
                       ],
                     ]),
                     const SizedBox(height: 10),

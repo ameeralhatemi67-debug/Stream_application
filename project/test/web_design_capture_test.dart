@@ -10,6 +10,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:streamer_app/core/providers/app_provider.dart';
 import 'package:streamer_app/core/theme/app_theme.dart';
+import 'package:streamer_app/core/widgets/app_logo.dart';
 import 'package:streamer_app/features/discovery/presentation/discovery_feed_screen.dart';
 import 'package:streamer_app/features/live_stream/presentation/abstract_video_player.dart';
 import 'package:streamer_app/features/live_stream/presentation/web/live_web_parts.dart';
@@ -84,7 +85,7 @@ Future<void> _shot(WidgetTester tester, String name, Widget screen,
         }
       }
     }
-    await precacheImage(const AssetImage('assets/logo/clearlogo2.png'), context);
+    await precacheImage(const AssetImage(AppLogo.hidayahAsset), context);
   });
   for (var i = 0; i < 6; i++) {
     await tester.pump(const Duration(milliseconds: 300));

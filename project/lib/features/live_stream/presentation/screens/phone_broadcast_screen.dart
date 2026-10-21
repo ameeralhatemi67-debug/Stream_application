@@ -1,4 +1,5 @@
 import '../../../../core/widgets/phone_input_guard.dart';
+import '../../../../core/utils/text_direction.dart';
 import '../../../../core/widgets/ds/ca_navigation.dart';
 import '../../../../core/widgets/ds/ca_button.dart';
 import '../../../../core/widgets/language_switcher.dart';
@@ -1744,6 +1745,9 @@ class _PhoneBroadcastScreenState extends State<PhoneBroadcastScreen>
                                       fontWeight: FontWeight.bold)),
                               TextSpan(text: message.body),
                             ]),
+                            // Each message in its own direction (P1-26).
+                            textDirection:
+                                firstStrongTextDirection(message.body),
                             style: Theme.of(context)
                                 .textTheme
                                 .bodySmall

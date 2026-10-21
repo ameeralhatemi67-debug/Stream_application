@@ -387,6 +387,16 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                             onPressed: () async {
                               final consented = await _ensureConsent();
                               if (!consented || !context.mounted) return;
+                              // A guest already set up on this device goes
+                              // back to browsing, not to the name form.
+                              if (context
+                                  .read<AppProvider>()
+                                  .isReturningGuest) {
+                                context.canPop()
+                                    ? context.pop()
+                                    : context.go('/feed');
+                                return;
+                              }
                               context.go('/viewer-setup');
                             },
                             child: Row(

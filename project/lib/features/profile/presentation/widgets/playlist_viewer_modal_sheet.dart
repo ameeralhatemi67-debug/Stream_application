@@ -200,7 +200,7 @@ class _PlaylistViewerModalSheetState extends State<PlaylistViewerModalSheet> {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '$broadcasterName • ${videos.isNotEmpty ? videos.length : widget.playlist.videoCount} ${'profile.lectures_count'.tr()}',
+                          '$broadcasterName • ${'profile.lectures_count'.plural(videos.isNotEmpty ? videos.length : widget.playlist.videoCount)}',
                           style: TextStyle(
                             color: paletteColor(context, AppTheme.primary),
                             fontSize: 12,

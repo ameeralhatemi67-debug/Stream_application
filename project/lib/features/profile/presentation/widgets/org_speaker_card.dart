@@ -127,7 +127,7 @@ class OrgSpeakerCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '${speakerVods.length} ${'profile.lectures_count'.tr()}',
+                  'profile.lectures_count'.plural(speakerVods.length),
                   style: TextStyle(
                     color: paletteColor(context, Canopy.slate),
                     fontSize: AppTheme.captionFont,

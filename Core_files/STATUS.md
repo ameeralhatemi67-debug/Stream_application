@@ -1,12 +1,27 @@
 ---
 type: status
 project: Streamer_app
-updated: 2026-10-20
+updated: 2026-10-21
 phase: release_hardening
 health: release_blocked
 ---
 
 # Project status: Streamer App
+
+## Hidayah Gold audit: engineering quick wins, 2026-10-21
+
+From `brief/audit/2026-10-21_USER_FLOW_AND_ATTENTION_AUDIT_HIDAYAH_GOLD.md` (sections 3, 4, 5.3, 6, 9). Product decisions in that report (removing the gate, hiding test channels, categories, brand spelling, lecturer terminology, language default) are untouched.
+
+- **Lighter first load.** The app bundles `assets/logo/hidayah_mark.png` (208 px, 33 KB) and a `3.0x/` variant (312 px, 56 KB) instead of the 2.9 MB `clearlogo2.png`, which stays on disk as the master for the launcher-icon script; `brief/tools/make_hidayah_display_logo.py` rebuilds both. `pubspec.yaml` lists each variable font once: the engine downloads every entry and ignores `weight`, so IBM Plex Sans and Reem Kufi were each downloaded twice on the web.
+- **Returning guests.** Consent stashed by `recordConsent`, the guest name and avatar, and follows made without an account are read back at start (`AppProvider._restoreLocalViewerState`). The splash opens Discovery for a guest who already agreed and chose a name; the welcome screen's guest button does the same for them. Signing out forgets the guest. A session always wins over the guest record. Guest follows are not merged into the account on sign-in (follow-up).
+- **Sign-in comes back.** Live chat's Sign in, the channel reminder sheet, the Upcoming tab's reminder and the gold header's Sign in push the welcome screen (`openSignIn`, `lib/core/routing/sign_in_prompt.dart`) and remember the page; after Google sign-in the router, splash and role picker open that page instead of Discovery. Stored for 30 minutes, in-app paths only, used once.
+- **Channel page counts.** The gold channel page shows a dash, not "0 recordings / 0 playlists", until the archive has loaded (`AppProvider.isChannelArchiveKnown`); an empty YouTube answer counts as unknown because a failed request returns the same.
+- **Arabic plurals.** `web.live_count`, `web.map_count`, `web.stat_*` (5), `map.cluster_label`, `map.cluster_list_title`, `map.web_offline_preparing`, `profile.lectures_count`, new `profile.playlists_count`, and the two slow-mode strings use easy_localization plural forms (all six forms in both catalogs). `main.dart` sets `ignorePluralRules: false`; the package default never selects Arabic's few/many forms. Admin and moderation counts (`admin.*`, `safety.*`, `moderation.stream_count`, `live.sender_delete_all_body`) still use fixed strings.
+- **Snackbar font.** `snackBarTheme.contentTextStyle` names IBM Plex Sans Arabic / IBM Plex Sans with fallbacks, so Arabic snackbars no longer wait for a downloaded fallback font.
+- **Web.** `web/index.html`: one Arabic + English description, `og:` title, description, image (absolute, on `AppIdentity.websiteUrl`; a test keeps them in step), locale `ar_SA` with `en_US` alternate; the boot splash spinner is neutral grey instead of green. `GoRouter.optionURLReflectsImperativeAPIs` is on (set in `AppRouter.build`), so pushed channel, live and sign-in pages show their own `#/...` address and can be shared or reloaded. The live page's back and minimize go to `/feed` when nothing is under them (they went to `/`, which has no route). Hash URLs are kept; path URLs and a `/watch/:videoId` route are the audit's next step.
+- **Chat direction.** Each chat message takes its direction from its first strong letter (`firstStrongTextDirection`, `lib/core/utils/text_direction.dart`; emoji and digits are skipped), in the chat bubble, the broadcaster's last-messages overlay and the sender sheet. The sender name is isolated when the directions differ.
+
+Verification: analyzer 0 issues; full suite 1,602 passed, 11 skipped (was 1,577 + 11); new `test/hidayah_quick_wins_test.dart` (25 tests: asset sizes and font list, guest restore and splash/welcome routing, sign-in return through the welcome redirect, the native login-callback and the role picker, live chat Sign in pushing over a live page opened from its link, dash-then-count on the gold channel page in both languages, Arabic and English plural output, snackbar font, `index.html` tags, message direction); en/ar catalogs key-symmetric. A release web build compiles; its `FontManifest.json` lists each font once and its assets hold the two mark sizes and no `clearlogo2.png`. Not checked: a real Google sign-in round trip on web or Android (the return path is covered by router and provider tests, not by OAuth itself), link previews as WhatsApp renders them, the site in a browser, and a physical phone.
 
 ## Replay checks no longer drain the YouTube quota, 2026-10-19
 

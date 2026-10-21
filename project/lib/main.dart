@@ -54,6 +54,10 @@ Future<void> main() async {
       path: 'assets/i18n',
       fallbackLocale: const Locale('ar'),
       startLocale: const Locale('ar'),
+      // Use each language's CLDR plural rules. The package default maps every
+      // count above 2 to "other", which never selects Arabic's few/many forms
+      // (audit 2026-10-21, section 5.3).
+      ignorePluralRules: false,
       child: StreamerApp(appearance: appearance),
     ),
   );

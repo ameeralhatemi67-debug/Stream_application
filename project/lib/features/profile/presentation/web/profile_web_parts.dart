@@ -28,7 +28,9 @@ class ProfileWebHero extends StatelessWidget {
       this.onJoin});
   final StreamerModel streamer;
   final bool live, uncertain, following, reminder, remindersAvailable;
-  final int recordings, playlists;
+
+  /// Null until the channel's archive has loaded.
+  final int? recordings, playlists;
   final VoidCallback onFollow, onWatch, onReminder;
   final VoidCallback? onShare, onStudio, onBranches, onJoin;
 
@@ -39,14 +41,17 @@ class ProfileWebHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final lang = context.locale.languageCode;
     final s = streamer;
-    Widget stat(int value, String label) => Row(
+    // A count that has not loaded yet is a dash, never 0 (audit P1-13). The
+    // label agrees with the number in Arabic (plural forms, audit 5.3).
+    Widget stat(int? value, String key) => Row(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text('$value', style: HidayahText.display(20)),
+              Text(value == null ? '\u2014' : '$value',
+                  style: HidayahText.display(20)),
               const SizedBox(width: 6),
-              Text(label,
+              Text(key.plural(value ?? 0),
                   style: HidayahText.body(13, color: HidayahGold.s600)),
             ]);
     final follow = HidayahButton(
@@ -152,8 +157,8 @@ class ProfileWebHero extends StatelessWidget {
                       ],
                       const SizedBox(height: 10),
                       Wrap(spacing: 26, runSpacing: 6, children: [
-                        stat(recordings, 'web.stat_recordings'.tr()),
-                        stat(playlists, 'web.stat_playlists'.tr()),
+                        stat(recordings, 'web.stat_recordings'),
+                        stat(playlists, 'web.stat_playlists'),
                       ]),
                     ])),
                 const SizedBox(width: 20),
@@ -235,7 +240,10 @@ class ProfileWebTabs extends StatelessWidget {
       required this.onChanged,
       required this.playlists,
       required this.recordings});
-  final int index, playlists, recordings;
+  final int index;
+
+  /// Null until the channel's archive has loaded; the tab then has no count.
+  final int? playlists, recordings;
   final ValueChanged<int> onChanged;
   static const height = 77.0;
   @override

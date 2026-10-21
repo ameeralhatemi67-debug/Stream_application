@@ -1,4 +1,5 @@
 import '../../../core/layout/window_class.dart';
+import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/widgets/ds/ca_layout.dart';
 import '../../../core/widgets/ds/ca_button.dart';
 import '../../../core/widgets/ds/ca_cards.dart';
@@ -522,10 +523,11 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
       streamId: widget.streamId,
       isAudioOnly: streamer.isAudioLive,
     );
+    // A live page opened straight from its link has nothing under it.
     if (context.canPop()) {
       context.pop();
     } else {
-      context.go('/');
+      context.go('/feed');
     }
   }
 
@@ -1856,7 +1858,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           Expanded(
             child: Text(
               'live.chat_slow_mode_active'
-                  .tr(args: ['${_chatController.slowModeSeconds}']),
+                  .plural(_chatController.slowModeSeconds),
               style: TextStyle(
                   color: paletteColor(context, AppTheme.warning),
                   fontSize: 12,
@@ -1925,7 +1927,10 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
           color: paletteColor(context, AppTheme.primary),
           message: 'live.chat_composer_guest'.tr(),
           action: TextButton(
-            onPressed: () => context.go('/welcome'),
+            // Keeps this live page under the sign-in screen and comes back
+            // to it once signed in (audit 2026-10-21, P0-4).
+            onPressed: () =>
+                openSignIn(context, returnTo: '/live/${widget.streamId}'),
             child: Text(
               'live.chat_composer_guest_action'.tr(),
               style: TextStyle(
@@ -1978,7 +1983,7 @@ class _LiveBroadcastScreenState extends State<LiveBroadcastScreen>
 
     final hint = switch (state) {
       ChatComposerState.slowMode =>
-        'live.chat_composer_slow_mode'.tr(args: ['$secondsLeft']),
+        'live.chat_composer_slow_mode'.plural(secondsLeft),
       ChatComposerState.offline => 'live.chat_composer_offline'.tr(),
       _ => 'live.chat_placeholder'.tr(),
     };
@@ -2400,7 +2405,7 @@ class _RoomStatusScaffold extends StatelessWidget {
                   children: [
                     FilledButton(
                       onPressed: () =>
-                          context.canPop() ? context.pop() : context.go('/'),
+                          context.canPop() ? context.pop() : context.go('/feed'),
                       child: Text('live.room_back_to_feed'.tr()),
                     ),
                     if (showRetry)

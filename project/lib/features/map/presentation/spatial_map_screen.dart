@@ -377,7 +377,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
     return Semantics(
       button: true,
       label: 'map.cluster_label'
-          .tr(namedArgs: {'count': '${group.memberIds.length}'}),
+          .plural(group.memberIds.length, name: 'count'),
       child: InkWell(
         onTap: onTap,
         customBorder: const CircleBorder(),
@@ -426,7 +426,7 @@ class _SpatialMapScreenState extends State<SpatialMapScreen>
                 header: true,
                 child: Text(
                   'map.cluster_list_title'
-                      .tr(namedArgs: {'count': '${group.memberIds.length}'}),
+                      .plural(group.memberIds.length, name: 'count'),
                   style: TextStyle(
                       color: paletteColor(sheetContext, AppTheme.textPrimary), fontWeight: FontWeight.bold),
                 ),

@@ -90,7 +90,12 @@ class AppRouter {
   /// Must be created once (e.g. in a State.initState), not per-build --
   /// GoRouter expects a stable instance so its internal navigation state
   /// survives widget rebuilds.
-  static GoRouter build(AppProvider provider) => GoRouter(
+  static GoRouter build(AppProvider provider) {
+    // Pages opened with push (channel, live, sign-in) show their own address
+    // on the web, so a channel or live link can be copied, shared and
+    // reloaded; it used to stay on #/feed (audit 2026-10-21, P0-5).
+    GoRouter.optionURLReflectsImperativeAPIs = true;
+    return GoRouter(
         navigatorKey: _rootNavigatorKey,
         initialLocation: '/splash',
         // Re-evaluates `redirect` whenever auth state changes (sign-in
@@ -113,11 +118,7 @@ class AppRouter {
               !provider.isCurrentUserBanned) {
             return provider.pendingOrganizationInvitation;
           }
-          if (isLoggedIn &&
-              !provider.hasCompletedRoleSelection &&
-              !provider.isApprovedStreamer &&
-              !provider.isAdminUser &&
-              provider.myApplication == null &&
+          if (provider.needsRoleSelection &&
               path != '/role-select' &&
               !path.startsWith('/org-invite/') &&
               path != '/account-banned' &&
@@ -155,13 +156,14 @@ class AppRouter {
           }
 
           // Once a session exists, route users who haven't selected a role or applied
-          // to the Role Select screen; otherwise route to Discovery feed.
+          // to the Role Select screen; otherwise back to the page that asked
+          // for sign-in (chat, reminders), or the Discovery feed.
           if (path == '/welcome' && isLoggedIn) {
             if (!provider.hasCompletedRoleSelection &&
                 !provider.isApprovedStreamer) {
               return '/role-select';
             }
-            return '/feed';
+            return provider.takeSignInReturn() ?? '/feed';
           }
 
           // Handle OAuth callback deep link redirects (e.g. sa.hadayah.streamerapp://login-callback)
@@ -179,7 +181,7 @@ class AppRouter {
                 !provider.isApprovedStreamer) {
               return '/role-select';
             }
-            return '/feed';
+            return provider.takeSignInReturn() ?? '/feed';
           }
 
           return null;
@@ -376,6 +378,7 @@ class AppRouter {
           ),
         ],
       );
+  }
 }
 
 /// Responsive Scaffold supporting the persistent laptop side navigation and the

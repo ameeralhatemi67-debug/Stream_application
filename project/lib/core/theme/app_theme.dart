@@ -139,7 +139,13 @@ abstract final class AppTheme {
     navigationRailTheme: NavigationRailThemeData(backgroundColor: palette.color(surface), indicatorColor: palette.color(surfaceAlt)),
     bottomNavigationBarTheme: BottomNavigationBarThemeData(backgroundColor: palette.color(surface), selectedItemColor: palette.color(primary),
       unselectedItemColor: palette.color(textMuted), type: BottomNavigationBarType.fixed, elevation: 0),
-    snackBarTheme: SnackBarThemeData(backgroundColor: palette.color(media), contentTextStyle: TextStyle(color: palette.color(onMedia))),
+    // The snackbar draws its text with this style alone (not the text theme), so
+    // it names the family: without one, web fell back to a downloaded font and
+    // Arabic showed as boxes until it arrived (audit 2026-10-21, section 6).
+    snackBarTheme: SnackBarThemeData(backgroundColor: palette.color(media), contentTextStyle: TextStyle(
+      fontFamily: locale.languageCode == 'ar' || palette.hidayah ? 'IBM Plex Sans Arabic' : 'IBM Plex Sans',
+      fontFamilyFallback: const ['IBM Plex Sans Arabic', 'IBM Plex Sans'],
+      color: palette.color(onMedia))),
     elevatedButtonTheme: ElevatedButtonThemeData(style: ElevatedButton.styleFrom(
       foregroundColor: palette.color(onPrimary), backgroundColor: palette.color(primary), disabledBackgroundColor: palette.color(disabled),
       disabledForegroundColor: palette.color(textMuted), elevation: 0,

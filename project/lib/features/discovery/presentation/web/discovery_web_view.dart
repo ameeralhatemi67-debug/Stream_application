@@ -169,13 +169,14 @@ class _Hero extends StatelessWidget {
   final int total, topics;
   @override
   Widget build(BuildContext context) {
-    Widget stat(int value, String label) => Column(
+    // The label agrees with the number in Arabic (plural forms, audit 5.3).
+    Widget stat(int value, String key) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text('$value',
                   style: HidayahText.display(30, color: HidayahGold.g300)),
               const SizedBox(height: 4),
-              Text(label,
+              Text(key.plural(value),
                   style: HidayahText.body(13, color: HidayahGold.s300)),
             ]);
     return HidayahNightBand(
@@ -240,9 +241,9 @@ class _Hero extends StatelessWidget {
                                                 color: HidayahGold.g300
                                                     .withValues(alpha: .18)))),
                                     child: Wrap(spacing: 34, children: [
-                                      stat(live.length, 'web.stat_live'.tr()),
-                                      stat(total, 'web.stat_channels'.tr()),
-                                      stat(topics, 'web.stat_topics'.tr()),
+                                      stat(live.length, 'web.stat_live'),
+                                      stat(total, 'web.stat_channels'),
+                                      stat(topics, 'web.stat_topics'),
                                     ])),
                               ])),
                       const SizedBox(width: 56),

@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../core/config/app_identity.dart';
 import '../../../core/providers/app_provider.dart';
+import '../../../core/routing/sign_in_prompt.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/widgets/app_logo.dart';
 import '../../../core/widgets/ds/ca_icon.dart';
@@ -180,7 +181,7 @@ class HidayahWebHeader extends StatelessWidget {
                               gradient: HidayahGradients.live,
                               borderRadius: BorderRadius.circular(999)),
                           child: Text(
-                              'web.live_count'.tr(namedArgs: {'n': '$liveCount'}),
+                              'web.live_count'.plural(liveCount),
                               style: HidayahText.body(11,
                                   color: HidayahGold.card,
                                   weight: FontWeight.w700,
@@ -210,7 +211,7 @@ class HidayahWebHeader extends StatelessWidget {
                 HidayahButton(
                     label: 'web.sign_in'.tr(),
                     compact: true,
-                    onPressed: () => context.push('/welcome')),
+                    onPressed: () => openSignIn(context)),
               ],
             ]))))));
   }

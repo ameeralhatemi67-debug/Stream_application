@@ -56,7 +56,7 @@ class _AppSplashScreenState extends State<AppSplashScreen>
     _navigationTimer = Timer(const Duration(milliseconds: 1350), () {
       if (!mounted) return;
       final provider = context.read<AppProvider>();
-      if (provider.authHydrating) {
+      if (provider.authHydrating || !provider.localStateRestored) {
         _scheduleNavigation();
         return;
       }
@@ -65,6 +65,14 @@ class _AppSplashScreenState extends State<AppSplashScreen>
 
       if (provider.googleUserEmail != null &&
           provider.googleUserEmail!.isNotEmpty) {
+        // After the web sign-in redirect, back to the page that asked. A new
+        // account meets the role picker first, which then takes the page.
+        context.go(provider.needsRoleSelection
+            ? '/feed'
+            : provider.takeSignInReturn() ?? '/feed');
+      } else if (provider.isReturningGuest) {
+        // A guest who already agreed and chose a name on this device is not
+        // walked through the welcome gate again (audit 2026-10-21, P0-2).
         context.go('/feed');
       } else {
         context.go('/welcome');

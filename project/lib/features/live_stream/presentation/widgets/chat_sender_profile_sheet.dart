@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/providers/app_provider.dart';
 import '../../../../core/theme/app_theme.dart';
+import '../../../../core/utils/text_direction.dart';
 import '../../../../core/widgets/ds/ca_button.dart';
 import '../../../../core/widgets/ds/ca_cards.dart';
 import '../../../../core/widgets/ds/ca_feedback.dart';
@@ -447,6 +448,8 @@ class _ChatSenderProfileSheetState extends State<ChatSenderProfileSheet> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(item.body,
+                                  textDirection:
+                                      firstStrongTextDirection(item.body),
                                   maxLines: 3,
                                   overflow: TextOverflow.ellipsis,
                                   style: textTheme.bodyMedium),

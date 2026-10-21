@@ -18,7 +18,22 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="Hadayah Live: educational live broadcasting for the Eastern Province.">
+  <!-- One description, Arabic first (the app's default language). -->
+  <meta name="description" content="منصة هدايه: دروس ومحاضرات مباشرة ومسجّلة من الخبر والظهران والدمام. Hadayah Live: educational live broadcasting for the Eastern Province.">
+  <!-- Link previews (WhatsApp, X, Telegram): Arabic first, English after it.
+       og:image must be an absolute URL; it follows AppIdentity.websiteUrl
+       (test/web_entry_page_test.dart keeps the two in step). -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="منصة هدايه | Hadayah Live">
+  <meta property="og:title" content="منصة هدايه | Hadayah Live">
+  <meta property="og:description" content="دروس ومحاضرات مباشرة ومسجّلة من الخبر والظهران والدمام. Live and recorded lectures from Al Khobar, Dhahran and Dammam.">
+  <meta property="og:locale" content="ar_SA">
+  <meta property="og:locale:alternate" content="en_US">
+  <meta property="og:image" content="https://stream-application-ten.vercel.app/icons/Icon-512.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="شعار منصة هدايه | Hadayah Live logo">
+  <meta name="twitter:card" content="summary">
   <meta name="google-signin-client_id" content="990812869923-esv0uio3vdrd1l12nr0lt5cfqvd7ftkl.apps.googleusercontent.com">
 
   <!-- iOS meta tags & icons -->
@@ -58,11 +73,13 @@
   <link rel="manifest" href="manifest.json">
   <style>
     /* First-paint placeholder: shown before Flutter draws its first frame, so a
-       slow phone sees the brand colour and a spinner instead of a white page. */
+       slow phone sees a spinner instead of a blank page. Neutral on purpose:
+       it is drawn before the saved palette is known, so a brand colour here
+       flashed green before the gold design (audit 2026-10-21, P0-5). */
     #boot-splash { position: fixed; inset: 0; display: flex; align-items: center;
       justify-content: center; background: #FFFFFF; z-index: 1; }
     #boot-splash i { width: 28px; height: 28px; border-radius: 50%;
-      border: 3px solid #D9DDDE; border-top-color: #17643F;
+      border: 3px solid #E4E4E4; border-top-color: #8A8A8A;
       animation: boot-spin .9s linear infinite; }
     @keyframes boot-spin { to { transform: rotate(360deg); } }
     @media (prefers-reduced-motion: reduce) { #boot-splash i { animation: none; } }

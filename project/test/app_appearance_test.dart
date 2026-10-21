@@ -299,7 +299,7 @@ void main() {
     await tester.pumpAndSettle();
     final input = find.byKey(const ValueKey('preserved-input'));
     await tester.runAsync(() => precacheImage(
-        const AssetImage('assets/logo/clearlogo2.png'), tester.element(input)));
+        const AssetImage(AppLogo.hidayahAsset), tester.element(input)));
     await tester.pumpAndSettle();
     await tester.enterText(input, 'تبقى هذه الكتابة');
     tester.testTextInput.hide();
@@ -315,7 +315,7 @@ void main() {
     final logoImage = tester.widget<Image>(find.descendant(
         of: find.byType(AppLogo), matching: find.byType(Image)));
     expect((logoImage.image as AssetImage).assetName,
-        'assets/logo/clearlogo2.png');
+        'assets/logo/hidayah_mark.png');
     expect(
         tester
             .widget<RawImage>(find.descendant(

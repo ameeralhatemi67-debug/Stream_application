@@ -12,6 +12,12 @@ import '../../../core/widgets/ds/ca_icon.dart';
 
 class RoleSelectScreen extends StatelessWidget {
   const RoleSelectScreen({super.key});
+
+  /// A new viewer goes back to the page that asked for sign-in, if any.
+  static void _asViewer(BuildContext context) {
+    final provider = context.read<AppProvider>()..selectViewerRole();
+    context.go(provider.takeSignInReturn() ?? '/feed');
+  }
   @override
   Widget build(BuildContext context) {
     final name =
@@ -22,12 +28,12 @@ class RoleSelectScreen extends StatelessWidget {
     final expanded = MediaQuery.sizeOf(context).width >= CanopyWindow.expanded;
     final dock = !expanded &&
         (MediaQuery.textScalerOf(context).scale(1) >= 1.3 || context.isShort);
-    final viewer = _option(context, viewer: true, dock: dock, onTap: () {
-      context.read<AppProvider>().selectViewerRole();
-      context.go('/feed');
-    });
+    final viewer =
+        _option(context, viewer: true, dock: dock, onTap: () => _asViewer(context));
     final broadcaster = _option(context, viewer: false, onTap: () {
-      context.read<AppProvider>().selectBroadcasterRole();
+      final provider = context.read<AppProvider>()..selectBroadcasterRole();
+      // The application comes first; a page that asked for sign-in waits.
+      provider.takeSignInReturn();
       context.go('/streamer-apply');
     });
     return Scaffold(
@@ -42,10 +48,7 @@ class RoleSelectScreen extends StatelessWidget {
                         label: 'role_select.viewer_btn'.tr(),
                         trailingIcon: CaGlyph.arrow,
                         bareTrailing: true,
-                        onPressed: () {
-                          context.read<AppProvider>().selectViewerRole();
-                          context.go('/feed');
-                        })))
+                        onPressed: () => _asViewer(context))))
             : null,
         body: SafeArea(
             child: Center(
