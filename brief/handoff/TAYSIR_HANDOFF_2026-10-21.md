@@ -33,7 +33,7 @@ store/assets/icon_512.png, untracked brief/ and doc/ files).
 - Verified: analyzer 0; full Flutter suite 1,556 passed, 10 skipped, 0 failed.
 
 ### Phase 2-4, NOT YET COMMITTED when this file was written (see "Next" step 1)
-- **Migration** `supabase/migrations/20261021120000_taysir_lessons_programme.sql`
+- **Migration** `supabase/migrations/20261021142359_taysir_lessons_programme.sql`
   (not deployed anywhere hosted). 14 public tables + 2 private
   (`taysir_preacher_contacts`, `taysir_invites`), ~40 functions. Authority =
   `user_permissions` keys `activities.coordinate` / `activities.submit` via
@@ -85,6 +85,20 @@ store/assets/icon_512.png, untracked brief/ and doc/ files).
 - Steps 3-5: full suite, browser check (sample data) and docs (ADR-013,
   ADR-014, STATUS, LEDGER, CLAUDE.md). Results in the LEDGER RESUME block.
 - Step 6 (hosted deploy) waits for the owner's yes in chat.
+
+## Update, evening 2026-10-21: deployed; admins manage coordinators
+
+- Owner said yes. Migration applied through the MCP connector and stamped
+  `20261021142359` (local file renamed); hosted fingerprint-matches the tested
+  clone. Owner chose not to grant a first coordinator: admins add, edit and
+  remove coordinators themselves (`taysir_admin_coordinators`,
+  `taysir_set_coordinator_orgs`, the "Coordinators" card in the console's
+  Team tab; account search uses `admin_user_directory`).
+- Hosted has **no organizations** yet. Next: the owner creates the Hidayah
+  organization (the organization flow in `brief/launch/02_TESTING_PLAN.md` §A), then
+  a master admin opens Taysir → Me → console → Team, switches Taysir on for
+  it, and adds coordinators. The app changes reach users with the next build
+  (web goes live when the owner pushes `master`).
 
 Browser previews: `.claude/launch.json` has `app-web-sample-data` (port 8790)
 and `app-web-hosted` (port 8792, `dart_define.local.json`), both

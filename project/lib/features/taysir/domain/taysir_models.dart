@@ -577,6 +577,38 @@ class TaysirTeamMember {
       grantedByEn: j['granted_by_name_en'] as String?);
 }
 
+/// Someone who holds activities.coordinate, and where (the admins' view).
+class TaysirCoordinator {
+  const TaysirCoordinator(
+      {required this.profileId, required this.nameAr, required this.nameEn, this.email = '', this.organizationIds = const []});
+  final String profileId, nameAr, nameEn, email;
+  final List<String> organizationIds;
+  String name(String lang) {
+    final n = pick(lang, nameAr, nameEn);
+    return n.isEmpty ? email : n;
+  }
+
+  factory TaysirCoordinator.fromJson(Map<String, dynamic> j) => TaysirCoordinator(
+      profileId: _s(j['profile_id']),
+      nameAr: _s(j['name_ar']),
+      nameEn: _s(j['name_en']),
+      email: _s(j['email']),
+      organizationIds: _list(j['organizations']));
+}
+
+/// An account found by an admin's search (the admin user directory).
+class TaysirAccount {
+  const TaysirAccount({required this.id, required this.nameAr, required this.nameEn, this.email = ''});
+  final String id, nameAr, nameEn, email;
+  String name(String lang) {
+    final n = pick(lang, nameAr, nameEn);
+    return n.isEmpty ? email : n;
+  }
+
+  factory TaysirAccount.fromJson(Map<String, dynamic> j) => TaysirAccount(
+      id: _s(j['id']), nameAr: _s(j['display_name_ar']), nameEn: _s(j['display_name_en']), email: _s(j['email']));
+}
+
 class TaysirInviteInfo {
   const TaysirInviteInfo({
     required this.preacherId,

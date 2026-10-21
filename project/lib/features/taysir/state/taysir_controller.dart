@@ -23,7 +23,10 @@ class TaysirController extends ChangeNotifier {
   TaysirMine mine = const TaysirMine();
   TaysirRoles roles = TaysirRoles.guest;
   TaysirStaffData staff = const TaysirStaffData();
+
+  /// Admins: every organization (Taysir on or off) and every coordinator.
   List<TaysirOrganization> adminOrganizations = const [];
+  List<TaysirCoordinator> coordinators = const [];
   String? staffOrganizationId;
 
   bool loading = false;
@@ -56,13 +59,20 @@ class TaysirController extends ChangeNotifier {
       _userId = repository.currentUserId;
       failure = null;
       loaded = true;
+      if (roles.admin) {
+        final r = await Future.wait<Object>([repository.loadAdminOrganizations(), repository.loadCoordinators()]);
+        adminOrganizations = r[0] as List<TaysirOrganization>;
+        coordinators = r[1] as List<TaysirCoordinator>;
+      } else {
+        adminOrganizations = const [];
+        coordinators = const [];
+      }
       // Coordinators get their organization's staff data (open reports,
       // roster) without opening the console first; the Me tab counts it.
       if (roles.isCoordinator) staffOrganizationId ??= consoleOrganizations.firstOrNull;
       if (staffOrganizationId != null && roles.coordinates(staffOrganizationId!)) {
         staff = await repository.loadStaff(staffOrganizationId!);
       }
-      if (roles.master) adminOrganizations = await repository.loadAdminOrganizations();
     } on TaysirException catch (e) {
       failure = e.failure;
     } finally {
@@ -87,7 +97,6 @@ class TaysirController extends ChangeNotifier {
     staffOrganizationId = org;
     try {
       staff = await repository.loadStaff(org);
-      if (roles.master) adminOrganizations = await repository.loadAdminOrganizations();
     } on TaysirException catch (e) {
       failure = e.failure;
     }
@@ -167,12 +176,19 @@ class TaysirController extends ChangeNotifier {
   }
 
   // Roles
+  /// Organizations the console can open. Admins see all of them, including
+  /// ones without Taysir yet (that is where a master admin switches it on).
   List<String> get consoleOrganizations {
     if (roles.admin) {
-      return catalog.organizations.keys.toList();
+      return adminOrganizations.isNotEmpty
+          ? [for (final o in adminOrganizations) o.id]
+          : catalog.organizations.keys.toList();
     }
     return roles.coordinate.toList();
   }
+
+  TaysirOrganization? organization(String id) =>
+      catalog.organizations[id] ?? adminOrganizations.where((o) => o.id == id).firstOrNull;
 
   String? get ownPreacherId => roles.ownPreacherId;
   bool get canSubmitOwn => roles.isPreacher;
@@ -252,6 +268,9 @@ class TaysirController extends ChangeNotifier {
       _write(() => repository.setCoordinator(org, profileId, on));
   Future<void> setOrganizationEnabled(String org, bool on) =>
       _write(() => repository.setOrganizationEnabled(org, on));
+  Future<List<TaysirAccount>> searchAccounts(String query) => repository.searchAccounts(query);
+  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) =>
+      _write(() => repository.setCoordinatorOrganizations(profileId, organizationIds));
   Future<String> upsertMosque(Map<String, dynamic> m) => _write(() => repository.upsertMosque(m));
   Future<void> verifyMosque(String id) => _write(() => repository.verifyMosque(id));
   Future<void> rejectMosque(String id, {String? mergeInto}) =>

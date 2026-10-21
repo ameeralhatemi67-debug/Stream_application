@@ -18,6 +18,7 @@ import '../taysir_modals.dart';
 import '../taysir_shell.dart';
 import '../taysir_widgets.dart';
 import 'account_screens.dart' show PermissionMatrix;
+import 'coordinators_admin.dart';
 
 const consoleTabs = ['overview', 'review', 'preachers', 'mosques', 'reports', 'audit', 'team'];
 
@@ -82,7 +83,8 @@ class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
       'mosques': c.catalog.mosques.values.where((m) => !m.verified).length,
     };
     final content = org == null
-        ? const SizedBox.shrink()
+        // No organization to open yet: admins still manage coordinators.
+        ? (c.roles.admin ? const AdminCoordinatorsCard() : const SizedBox.shrink())
         : switch (tab) {
             'review' => _Review(initial: widget.filter),
             'preachers' => _Roster(org: org),
@@ -145,7 +147,7 @@ class _TaysirConsoleScreenState extends State<TaysirConsoleScreen> {
               decoration: tInput(),
               items: [
                 for (final o in orgs)
-                  DropdownMenuItem(value: o, child: Text(c.catalog.organizations[o]?.name(lang) ?? o, overflow: TextOverflow.ellipsis))
+                  DropdownMenuItem(value: o, child: Text(c.organization(o)?.name(lang) ?? o, overflow: TextOverflow.ellipsis))
               ],
               onChanged: (v) => v == null ? null : c.openConsole(v),
             ),
@@ -942,8 +944,9 @@ class _Team extends StatelessWidget {
     final c = context.watch<TaysirController>();
     final lang = context.lang;
     final mayGrant = c.roles.admin || c.roles.lead.contains(org);
-    final orgName = c.catalog.organizations[org]?.name(lang) ?? '';
+    final orgName = c.organization(org)?.name(lang) ?? '';
     return Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
+      if (c.roles.admin) ...[const AdminCoordinatorsCard(), const SizedBox(height: 14)],
       TCard(
         child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
           Wrap(spacing: 10, runSpacing: 6, alignment: WrapAlignment.spaceBetween, children: [

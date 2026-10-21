@@ -729,10 +729,11 @@ InputDecoration tInput({String? hint, Widget? prefix, Widget? suffix}) => InputD
 
 /// A rounded search box.
 class TSearchBox extends StatelessWidget {
-  const TSearchBox({super.key, required this.hint, this.controller, this.onChanged, this.onTap, this.readOnly = false, this.trailing});
+  const TSearchBox(
+      {super.key, required this.hint, this.controller, this.onChanged, this.onSubmitted, this.onTap, this.readOnly = false, this.trailing});
   final String hint;
   final TextEditingController? controller;
-  final ValueChanged<String>? onChanged;
+  final ValueChanged<String>? onChanged, onSubmitted;
   final VoidCallback? onTap;
   final bool readOnly;
   final Widget? trailing;
@@ -748,6 +749,8 @@ class TSearchBox extends StatelessWidget {
             child: TextField(
               controller: controller,
               onChanged: onChanged,
+              onSubmitted: onSubmitted,
+              textInputAction: onSubmitted == null ? null : TextInputAction.search,
               onTap: onTap,
               readOnly: readOnly,
               style: tBody(14, color: TC.ink, height: 1.3),

@@ -60,6 +60,7 @@ Future<_App> _open(
   Size size = _phone,
   String lang = 'en',
   double scale = 1,
+  void Function(DemoTaysirRepository repo)? setup,
 }) async {
   tester.view.physicalSize = size;
   tester.view.devicePixelRatio = 1;
@@ -68,6 +69,7 @@ Future<_App> _open(
   final provider = AppProvider();
   final experience = AppExperience();
   final repo = DemoTaysirRepository(persona: persona);
+  setup?.call(repo);
   final taysir = TaysirController(repo);
   final router = AppRouter.build(provider, experience: experience);
   router.go(location);
@@ -598,6 +600,102 @@ void main() {
       expect(app.repo.invites.length, before + 1);
       await _tap(tester, _inModal(find.text('taysir.roster.copy_msg'.tr())));
       expect(clipboard, contains('/taysir/claim/'));
+      await app.close();
+    });
+  });
+
+  group('admins manage coordinators', () {
+    for (final (lang, size, scale) in [
+      ('en', _phone, 1.0),
+      ('ar', _smallPhone, 2.0),
+      ('en', _web, 1.0),
+      ('ar', _web, 1.0),
+    ]) {
+      testWidgets('add, edit and remove a coordinator ($lang ${size.width} x$scale)',
+          (tester) async {
+        final app = await _open(tester, '/taysir/console/team',
+            persona: TaysirDemoPersona.admin,
+            lang: lang,
+            size: size,
+            scale: scale);
+        const org = DemoTaysirRepository.org, org2 = DemoTaysirRepository.org2;
+        final repo = app.repo;
+        final reem = DemoTaysirRepository.accounts
+            .firstWhere((a) => a.id == 'demo-account-reem');
+        expect(find.text('taysir.coord.title'.tr()), findsOneWidget);
+        expect(app.taysir.coordinators, hasLength(1));
+
+        // Add: search an account, choose an organization, save.
+        await _tap(tester, find.text('taysir.coord.add'.tr()));
+        await tester.enterText(_inModal(find.byType(TextField)), lang == 'ar' ? 'ريم' : 'Reem');
+        await _tap(tester, _inModal(find.text('taysir.coord.search'.tr())));
+        await _tap(tester, _inModal(find.text(reem.name(lang))));
+        await _tap(tester, _inModal(find.text(repo.organizations[org]!.name(lang))));
+        await _tap(tester, _inModal(find.text('taysir.save'.tr())));
+        expect(repo.coordinatorGrants[reem.id], {org});
+        expect(find.text('taysir.coord.saved'.tr()), findsOneWidget);
+        expect(app.taysir.coordinators, hasLength(2));
+
+        // Edit: move them to the other organization.
+        await _tap(tester, find.text('taysir.coord.edit'.tr()).at(1));
+        expect(find.text('taysir.coord.edit_title'.tr()), findsOneWidget);
+        await _tap(tester, _inModal(find.text(repo.organizations[org2]!.name(lang))));
+        await _tap(tester, _inModal(find.text(repo.organizations[org]!.name(lang))));
+        await _tap(tester, _inModal(find.text('taysir.save'.tr())));
+        expect(repo.coordinatorGrants[reem.id], {org2});
+
+        // Remove, after confirming.
+        await _tap(tester, find.text('taysir.coord.remove'.tr()).at(1));
+        expect(
+            find.text('taysir.coord.remove_title'.tr(args: [reem.name(lang)])),
+            findsOneWidget);
+        await _tap(tester, _inModal(find.text('taysir.coord.remove'.tr())));
+        expect(repo.coordinatorGrants.containsKey(reem.id), isFalse);
+        expect(find.text('taysir.coord.removed'.tr()), findsOneWidget);
+        expect(app.taysir.coordinators, hasLength(1));
+        // Every change is in the action log.
+        expect(
+            repo.audit.where((a) => a.targetEn == '${reem.nameEn} → coordinator'),
+            hasLength(4));
+        await app.close();
+      });
+    }
+
+    testWidgets('saving needs at least one organization', (tester) async {
+      final app = await _open(tester, '/taysir/console/team',
+          persona: TaysirDemoPersona.admin);
+      await _tap(tester, find.text('taysir.coord.add'.tr()));
+      await tester.enterText(_inModal(find.byType(TextField)), 'Badr');
+      await _tap(tester, _inModal(find.text('taysir.coord.search'.tr())));
+      await _tap(tester, _inModal(find.text('Badr Al-Shammari')));
+      await _tap(tester, _inModal(find.text('taysir.save'.tr())));
+      expect(find.text('taysir.coord.pick_org'.tr()), findsOneWidget);
+      expect(app.repo.coordinatorGrants.containsKey('demo-member-u3'), isFalse);
+      await app.close();
+    });
+
+    testWidgets('a coordinator does not get the admins\' coordinator tools',
+        (tester) async {
+      final app = await _open(tester, '/taysir/console/team',
+          persona: TaysirDemoPersona.coordinator);
+      expect(find.text('taysir.coord.title'.tr()), findsNothing);
+      expect(find.text('taysir.team.view_only'.tr()), findsOneWidget);
+      await app.close();
+    });
+
+    testWidgets('with no organizations yet, admins are told to create one first',
+        (tester) async {
+      final app = await _open(tester, '/taysir/console',
+          persona: TaysirDemoPersona.admin,
+          setup: (repo) => repo.organizations.clear());
+      expect(find.text('taysir.coord.no_orgs'.tr()), findsOneWidget);
+      expect(
+          tester
+              .widget<TButton>(find.ancestor(
+                  of: find.text('taysir.coord.add'.tr()),
+                  matching: find.byType(TButton)))
+              .onPressed,
+          isNull);
       await app.close();
     });
   });

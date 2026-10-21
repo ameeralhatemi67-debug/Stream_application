@@ -12,7 +12,7 @@ class TaysirException implements Exception {
 }
 
 /// Every Taysir read and write. Writes go through server functions that check
-/// the caller (see the migration 20261021120000); the client never decides
+/// the caller (see the migration 20261021142359); the client never decides
 /// authority on its own.
 abstract class TaysirRepository {
   /// True for the in-memory sample data used when no backend is configured.
@@ -57,6 +57,15 @@ abstract class TaysirRepository {
   Future<String> claimInvite(String token, List<String> languages);
   Future<void> setCoordinator(String organizationId, String profileId, bool enabled);
   Future<void> setOrganizationEnabled(String organizationId, bool enabled);
+
+  // Admins: coordinators across organizations
+  Future<List<TaysirCoordinator>> loadCoordinators();
+  Future<List<TaysirAccount>> searchAccounts(String query);
+
+  /// Sets exactly which organizations [profileId] coordinates: adding,
+  /// changing and removing (an empty list) a coordinator. Returns the number
+  /// of grants and revocations made.
+  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds);
 
   // Mosque directory
   Future<String> upsertMosque(Map<String, dynamic> mosque);

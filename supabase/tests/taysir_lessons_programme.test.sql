@@ -1,8 +1,8 @@
--- Taysir lessons programme (20261021120000): authority, privacy and the
+-- Taysir lessons programme (20261021142359): authority, privacy and the
 -- request -> review -> public journey.
 begin;
 set local search_path = public, extensions;
-select plan(62);
+select plan(72);
 
 -- ---------------------------------------------------------------------------
 -- Fixture: one organization (owner, a manager who becomes coordinator, a
@@ -16,7 +16,8 @@ insert into auth.users(id, email) values
   ('20000000-0000-4000-8000-0000000000a4', 'taysir-preacher@example.invalid'),
   ('20000000-0000-4000-8000-0000000000a5', 'taysir-viewer@example.invalid'),
   ('20000000-0000-4000-8000-0000000000a6', 'taysir-outsider@example.invalid'),
-  ('20000000-0000-4000-8000-0000000000a7', 'taysir-moderator@example.invalid');
+  ('20000000-0000-4000-8000-0000000000a7', 'taysir-moderator@example.invalid'),
+  ('20000000-0000-4000-8000-0000000000a8', 'taysir-plain-admin@example.invalid');
 insert into public.profiles(id, email, display_name_en, display_name_ar) values
   ('20000000-0000-4000-8000-0000000000a1', 'taysir-admin@example.invalid', 'Admin', 'المشرف'),
   ('20000000-0000-4000-8000-0000000000a2', 'taysir-owner@example.invalid', 'Owner', 'المالك'),
@@ -24,10 +25,13 @@ insert into public.profiles(id, email, display_name_en, display_name_ar) values
   ('20000000-0000-4000-8000-0000000000a4', 'taysir-preacher@example.invalid', 'Fahd', 'فهد'),
   ('20000000-0000-4000-8000-0000000000a5', 'taysir-viewer@example.invalid', 'Viewer', 'مستمع'),
   ('20000000-0000-4000-8000-0000000000a6', 'taysir-outsider@example.invalid', 'Out', 'خارجي'),
-  ('20000000-0000-4000-8000-0000000000a7', 'taysir-moderator@example.invalid', 'Mod', 'مشرف');
-insert into public.user_roles(profile_id, role) values ('20000000-0000-4000-8000-0000000000a1', 'master_admin');
+  ('20000000-0000-4000-8000-0000000000a7', 'taysir-moderator@example.invalid', 'Mod', 'مشرف'),
+  ('20000000-0000-4000-8000-0000000000a8', 'taysir-plain-admin@example.invalid', 'Plain admin', 'مشرف عادي');
+insert into public.user_roles(profile_id, role) values ('20000000-0000-4000-8000-0000000000a1', 'master_admin'),
+  ('20000000-0000-4000-8000-0000000000a8', 'admin');
 insert into public.organizations(id, owner_profile_id, name_en, name_ar) values
-  ('20000000-0000-4000-8000-00000000000f', '20000000-0000-4000-8000-0000000000a2', 'Hidayah Society', 'جمعية هداية');
+  ('20000000-0000-4000-8000-00000000000f', '20000000-0000-4000-8000-0000000000a2', 'Hidayah Society', 'جمعية هداية'),
+  ('20000000-0000-4000-8000-00000000000e', '20000000-0000-4000-8000-0000000000a2', 'Dammam Centre', 'مركز الدمام');
 insert into public.org_memberships(organization_id, profile_id, role) values
   ('20000000-0000-4000-8000-00000000000f', '20000000-0000-4000-8000-0000000000a3', 'manager'),
   ('20000000-0000-4000-8000-00000000000f', '20000000-0000-4000-8000-0000000000a7', 'moderator');
@@ -285,6 +289,45 @@ select throws_ok($$select public.taysir_submit(jsonb_build_object('preacher_id',
 select pg_temp.as_user('20000000-0000-4000-8000-0000000000a5');
 select ok(jsonb_array_length(public.export_my_data()->'taysir'->'reminders') = 1,
   'T62 the account export includes Taysir reminders');
+
+-- ---------------------------------------------------------------------------
+-- Admins add, change and remove coordinators across organizations
+-- ---------------------------------------------------------------------------
+select pg_temp.as_user('20000000-0000-4000-8000-0000000000a2');
+select throws_ok($$select public.taysir_set_coordinator_orgs('20000000-0000-4000-8000-0000000000a6',
+  array['20000000-0000-4000-8000-00000000000f']::uuid[])$$, '42501', null,
+  'T63 an organization owner cannot use the admins'' coordinator tools');
+select is((select count(*)::int from public.taysir_admin_coordinators()), 0,
+  'T64 non-admins do not see the cross-organization coordinator list');
+
+select pg_temp.as_user('20000000-0000-4000-8000-0000000000a8');
+select is(public.taysir_set_coordinator_orgs('20000000-0000-4000-8000-0000000000a6',
+  array['20000000-0000-4000-8000-00000000000f']::uuid[]), 1,
+  'T65 a (non-master) admin adds a coordinator who is not a member');
+select is((select r->'organizations' from public.taysir_admin_coordinators() r
+    where r->>'profile_id' = '20000000-0000-4000-8000-0000000000a6'),
+  '["20000000-0000-4000-8000-00000000000f"]'::jsonb, 'T66 the admin list shows where each person coordinates');
+select pg_temp.as_user('20000000-0000-4000-8000-0000000000a6');
+select is(public.taysir_is_coordinator('20000000-0000-4000-8000-00000000000f'), true,
+  'T67 the added person coordinates that organization');
+
+select pg_temp.as_user('20000000-0000-4000-8000-0000000000a8');
+select is(public.taysir_set_coordinator_orgs('20000000-0000-4000-8000-0000000000a6',
+  array['20000000-0000-4000-8000-00000000000e', '20000000-0000-4000-8000-00000000000e']::uuid[]), 2,
+  'T68 editing moves the coordinator to another organization (one revoke, one grant)');
+select pg_temp.as_user('20000000-0000-4000-8000-0000000000a6');
+select is(public.taysir_is_coordinator('20000000-0000-4000-8000-00000000000f'), false,
+  'T69 and the old organization is no longer theirs');
+
+select pg_temp.as_user('20000000-0000-4000-8000-0000000000a8');
+select throws_ok($$select public.taysir_set_coordinator_orgs('20000000-0000-4000-8000-0000000000a6',
+  array['20000000-0000-4000-8000-0000000000ff']::uuid[])$$, '22023', null,
+  'T70 an unknown organization is refused');
+select is(public.taysir_set_coordinator_orgs('20000000-0000-4000-8000-0000000000a6', '{}'), 1,
+  'T71 removing a coordinator revokes every organization');
+reset role;
+select is((select count(*)::int from public.taysir_audit where target_en = 'خارجي → coordinator'), 4,
+  'T72 every grant and revoke is written to the action log');
 
 select * from finish();
 rollback;

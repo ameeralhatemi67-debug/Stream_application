@@ -4,7 +4,7 @@ import '../domain/taysir_dates.dart';
 import '../domain/taysir_models.dart';
 import 'taysir_repository.dart';
 
-/// Taysir on our Supabase project (migration 20261021120000).
+/// Taysir on our Supabase project (migration 20261021142359).
 class SupabaseTaysirRepository implements TaysirRepository {
   SupabaseTaysirRepository([SupabaseClient? client]) : _injected = client;
   final SupabaseClient? _injected;
@@ -236,6 +236,21 @@ class SupabaseTaysirRepository implements TaysirRepository {
   @override
   Future<void> setOrganizationEnabled(String organizationId, bool enabled) =>
       _rpc('taysir_set_org_enabled', {'p_org': organizationId, 'p_enabled': enabled});
+
+  @override
+  Future<List<TaysirCoordinator>> loadCoordinators() async =>
+      [for (final r in _rows(await _rpc('taysir_admin_coordinators'))) TaysirCoordinator.fromJson(r)];
+
+  /// The admin user directory (admin tier only on the server).
+  @override
+  Future<List<TaysirAccount>> searchAccounts(String query) async => [
+        for (final r in _rows(await _rpc('admin_user_directory', {'p_query': query.trim(), 'p_offset': 0})))
+          if (r['is_banned'] != true) TaysirAccount.fromJson(r)
+      ];
+
+  @override
+  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) async =>
+      (await _rpc('taysir_set_coordinator_orgs', {'p_profile': profileId, 'p_orgs': organizationIds})) as int;
 
   @override
   Future<String> upsertMosque(Map<String, dynamic> mosque) async =>

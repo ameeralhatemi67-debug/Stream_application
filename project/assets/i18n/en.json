@@ -3104,13 +3104,36 @@
       "member": "Organization member, {}",
       "granted_by": " · granted by {}",
       "scoped": "An organization-scoped permission. It grants nothing platform-wide.",
-      "orgs": "Organizations with Taysir enabled",
+      "orgs": "Switch Taysir on for each organization",
       "enabled": "Taysir enabled for this organization",
       "disabled": "Taysir disabled for this organization",
       "granted": "Coordinator permission granted",
       "revoked": "Coordinator permission revoked",
       "matrix": "Permission matrix",
       "empty": "No organization members yet. Members join through the organization's existing invitations."
+    },
+    "coord": {
+      "title": "Coordinators",
+      "sub": "Admins add coordinators, change the organizations they coordinate, or remove them. A coordinator reviews lesson requests and manages preachers and mosques for those organizations.",
+      "add": "Add coordinator",
+      "add_title": "Add a coordinator",
+      "edit_title": "Edit coordinator",
+      "edit": "Edit",
+      "remove": "Remove",
+      "remove_title": "Remove {} as coordinator?",
+      "remove_body": "They will no longer review lessons or manage preachers in any organization. You can add them again later.",
+      "saved": "Coordinator saved",
+      "removed": "Coordinator removed",
+      "none": "No coordinators yet. Add the first one.",
+      "no_orgs": "There are no organizations yet. Create the organization first, then add its coordinators here.",
+      "search_hint": "Name or email",
+      "search": "Search",
+      "no_results": "No account matches. The person needs to sign in to the app once first.",
+      "account": "Account",
+      "change": "Change",
+      "orgs": "Organizations they coordinate",
+      "pick_org": "Choose at least one organization.",
+      "taysir_off": "Taysir is off for this organization"
     }
   }
 }

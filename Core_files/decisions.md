@@ -19,8 +19,12 @@ model (review: `brief/research/taysir/2026-10-21_TAYSIR_DNA_HEALTH_AND_INTEGRATI
   through `has_permission()`. Org owners and co-owners coordinate their own
   organization implicitly and grant `activities.coordinate` to members; a
   master admin switches Taysir on per organization (`taysir_organizations`).
-  Coordinators must be organization members (ADR-007's `org_co_owner` rules
-  are unchanged).
+  Owners can make only their members coordinators (ADR-007's `org_co_owner`
+  rules are unchanged). **Admins (admin tier) add, change and remove
+  coordinators for any organization**, members or not, from the console's
+  Team tab (owner decision 2026-10-21: no first coordinator was granted at
+  deploy; admins manage them). `taysir_set_coordinator_orgs` sets a person's
+  organizations in one step and logs each grant and revocation.
 - **Invitation links instead of passwords.** A coordinator adds a preacher to
   the roster and sends a single-use link that expires after 14 days; only its
   hash is stored.
@@ -44,9 +48,10 @@ model (review: `brief/research/taysir/2026-10-21_TAYSIR_DNA_HEALTH_AND_INTEGRATI
 - **Switching:** Settings → About's logo switches between Hadayah Live and
   Taysir (ADR-013). Shared `/taysir/...` links open for everyone.
 
-Consequences: migration `20261021120000_taysir_lessons_programme.sql` must be
-deployed before configured builds can show Taysir (they show the branded
-"unavailable" state until then). Push reminders for Taysir are stored but not
+Consequences: migration `20261021142359_taysir_lessons_programme.sql` is
+deployed to hosted (2026-10-21). Hosted has no organizations yet, so Taysir
+stays empty until the Hidayah organization exists and a master admin switches
+Taysir on for it. Push reminders for Taysir are stored but not
 sent yet (`dispatch-upcoming-reminders` does not read `taysir_reminders`).
 Taysir's real data (43 preachers with phone numbers) is not imported;
 coordinators import a CSV in the console.

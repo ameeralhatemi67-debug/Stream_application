@@ -1255,6 +1255,61 @@ language sql stable security definer set search_path = '' as $$
    order by coalesce(t.enabled, false) desc, o.name_en;
 $$;
 
+-- Admins manage coordinators across organizations: everyone who holds
+-- activities.coordinate, and one person's organizations set in one step
+-- (adding, changing and removing a coordinator are the same call).
+create function public.taysir_admin_coordinators() returns setof jsonb
+language sql stable security definer set search_path = '' as $$
+  select jsonb_build_object('profile_id', p.id,
+      'name_ar', coalesce(nullif(p.display_name_ar, ''), p.display_name_en, ''),
+      'name_en', coalesce(nullif(p.display_name_en, ''), p.display_name_ar, ''),
+      'email', p.email,
+      'organizations', jsonb_agg(u.organization_id order by u.granted_at))
+    from public.user_permissions u
+    join public.profiles p on p.id = u.profile_id
+   where u.permission_key = 'activities.coordinate' and u.organization_id is not null
+     and public.is_admin_tier() and not public.is_banned(auth.uid())
+   group by p.id
+   order by min(u.granted_at);
+$$;
+
+create function public.taysir_set_coordinator_orgs(p_profile uuid, p_orgs uuid[]) returns integer
+language plpgsql security definer set search_path = '' as $$
+declare actor uuid := private.taysir_actor(); who text; r record; n integer := 0;
+begin
+  if not public.is_admin_tier() then
+    raise exception 'Only an admin manages coordinators across organizations' using errcode = '42501';
+  end if;
+  p_orgs := coalesce(p_orgs, '{}');
+  if cardinality(p_orgs) > 100 then
+    raise exception 'Too many organizations' using errcode = '22023';
+  end if;
+  select coalesce(nullif(display_name_ar, ''), nullif(display_name_en, ''), email, '') into who
+    from public.profiles where id = p_profile;
+  if not found then raise exception 'Account not found' using errcode = '22023'; end if;
+  if cardinality(p_orgs) > 0 and public.is_banned(p_profile) then
+    raise exception 'A banned account cannot coordinate' using errcode = '22023';
+  end if;
+  if exists (select 1 from unnest(p_orgs) x where not exists (select 1 from public.organizations o where o.id = x)) then
+    raise exception 'Organization not found' using errcode = '22023';
+  end if;
+  for r in delete from public.user_permissions
+      where profile_id = p_profile and permission_key = 'activities.coordinate'
+        and organization_id is not null and not (organization_id = any(p_orgs))
+      returning organization_id loop
+    perform private.taysir_audit(r.organization_id, 'revoke', who || ' ← منسق', who || ' → coordinator');
+    n := n + 1;
+  end loop;
+  for r in insert into public.user_permissions(profile_id, permission_key, organization_id, granted_by)
+      select distinct p_profile, 'activities.coordinate', x, actor from unnest(p_orgs) x
+      on conflict (profile_id, permission_key, organization_id) do nothing
+      returning organization_id loop
+    perform private.taysir_audit(r.organization_id, 'grant', who || ' ← منسق', who || ' → coordinator');
+    n := n + 1;
+  end loop;
+  return n;
+end; $$;
+
 -- Public organization names for lesson cards ("Organized by").
 create function public.taysir_public_organizations() returns setof jsonb
 language sql stable security definer set search_path = '' as $$

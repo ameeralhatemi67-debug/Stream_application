@@ -33,11 +33,11 @@ class DemoTaysirRepository implements TaysirRepository {
   String? get currentUserId =>
       persona == TaysirDemoPersona.guest ? null : 'demo-${persona.name}';
 
-  bool get _coord => const {
-        TaysirDemoPersona.coordinator,
-        TaysirDemoPersona.owner,
-        TaysirDemoPersona.admin
-      }.contains(persona);
+  bool get _coord => switch (persona) {
+        TaysirDemoPersona.owner || TaysirDemoPersona.admin => true,
+        TaysirDemoPersona.coordinator => (coordinatorGrants['demo-coordinator'] ?? const {}).isNotEmpty,
+        _ => false,
+      };
   bool get _leader => persona == TaysirDemoPersona.owner || persona == TaysirDemoPersona.admin;
 
   void _need(bool ok) {
@@ -59,8 +59,21 @@ class DemoTaysirRepository implements TaysirRepository {
   final phones = <String, String>{};
   final invites = <String, String>{}; // token -> preacher
   final submitPermission = <String>{}; // preacher ids whose linked account may submit
-  final coordinators = <String>{'demo-coordinator'};
+  /// activities.coordinate grants: who coordinates which organizations.
+  final coordinatorGrants = <String, Set<String>>{
+    'demo-coordinator': {org}
+  };
   final team = <TaysirTeamMember>[];
+
+  /// Accounts an admin can find (invented people, example.invalid emails).
+  static const accounts = [
+    TaysirAccount(id: 'demo-owner', nameAr: 'م. سعد القحطاني', nameEn: 'Eng. Saad Al-Qahtani', email: 'saad@example.invalid'),
+    TaysirAccount(id: 'demo-coordinator', nameAr: 'خالد الدوسري', nameEn: 'Khalid Al-Dosari', email: 'khalid@example.invalid'),
+    TaysirAccount(id: 'demo-member-u3', nameAr: 'بدر الشمري', nameEn: 'Badr Al-Shammari', email: 'badr@example.invalid'),
+    TaysirAccount(id: 'demo-member-u4', nameAr: 'ماجد الغامدي', nameEn: 'Majed Al-Ghamdi', email: 'majed@example.invalid'),
+    TaysirAccount(id: 'demo-viewer', nameAr: 'عبدالله السالم', nameEn: 'Abdullah Al-Salem', email: 'abdullah@example.invalid'),
+    TaysirAccount(id: 'demo-account-reem', nameAr: 'ريم العنزي', nameEn: 'Reem Al-Anazi', email: 'reem@example.invalid'),
+  ];
   final _mine = <String, TaysirMine>{};
 
   TaysirMine _me() => _mine[currentUserId] ?? const TaysirMine();
@@ -374,7 +387,10 @@ class DemoTaysirRepository implements TaysirRepository {
         TaysirDemoPersona.preacher => TaysirRoles(signedIn: true, preacherCards: [
             (preacherId: ownPreacher, organizationId: org, canSubmit: submitPermission.contains(ownPreacher))
           ]),
-        TaysirDemoPersona.coordinator => const TaysirRoles(signedIn: true, coordinate: {org}),
+        TaysirDemoPersona.coordinator => TaysirRoles(signedIn: true, coordinate: {
+            for (final o in coordinatorGrants['demo-coordinator'] ?? const <String>{})
+              if (organizations[o]?.enabled ?? false) o
+          }),
         TaysirDemoPersona.owner => const TaysirRoles(signedIn: true, coordinate: {org}, lead: {org}),
         TaysirDemoPersona.admin => const TaysirRoles(signedIn: true, admin: true, master: true, coordinate: {org}),
       };
@@ -749,14 +765,75 @@ class DemoTaysirRepository implements TaysirRepository {
   @override
   Future<void> setCoordinator(String organizationId, String profileId, bool enabled) async {
     _need(_leader);
+    _grant(organizationId, profileId, enabled);
+  }
+
+  /// One activities.coordinate grant or revocation, with the organization's
+  /// team list kept in step (the sample team belongs to the main society).
+  void _grant(String organizationId, String profileId, bool enabled) {
+    final orgs = coordinatorGrants.putIfAbsent(profileId, () => <String>{});
+    enabled ? orgs.add(organizationId) : orgs.remove(organizationId);
+    if (orgs.isEmpty) coordinatorGrants.remove(profileId);
+    final account = accounts.where((a) => a.id == profileId).firstOrNull;
     final i = team.indexWhere((t) => t.profileId == profileId);
-    final t = team[i];
-    team[i] = TaysirTeamMember(
-        profileId: t.profileId, role: t.role, nameAr: t.nameAr, nameEn: t.nameEn, coordinator: enabled,
-        grantedAt: enabled ? DateTime.now() : null, grantedByAr: enabled ? _personaName(persona) : null,
-        grantedByEn: enabled ? _personaName(persona) : null);
-    enabled ? coordinators.add(profileId) : coordinators.remove(profileId);
-    _log(enabled ? 'grant' : 'revoke', '${t.nameAr} ← منسق', '${t.nameEn} → coordinator');
+    final ar = account?.nameAr ?? (i >= 0 ? team[i].nameAr : profileId);
+    final en = account?.nameEn ?? (i >= 0 ? team[i].nameEn : profileId);
+    if (organizationId == org) {
+      final t = i >= 0
+          ? team[i]
+          : TaysirTeamMember(profileId: profileId, role: 'coordinator', nameAr: account?.nameAr ?? '', nameEn: account?.nameEn ?? '');
+      final updated = TaysirTeamMember(
+          profileId: t.profileId, role: t.role, nameAr: t.nameAr, nameEn: t.nameEn, coordinator: enabled,
+          grantedAt: enabled ? DateTime.now() : null, grantedByAr: enabled ? _personaName(persona) : null,
+          grantedByEn: enabled ? _personaName(persona) : null);
+      if (i < 0) {
+        if (enabled) team.add(updated);
+      } else if (!enabled && t.role == 'coordinator') {
+        team.removeAt(i);
+      } else {
+        team[i] = updated;
+      }
+    }
+    _log(enabled ? 'grant' : 'revoke', '$ar ← منسق', '$en → coordinator', organizationId: organizationId);
+  }
+
+  @override
+  Future<List<TaysirCoordinator>> loadCoordinators() async {
+    _need(persona == TaysirDemoPersona.admin);
+    return [
+      for (final e in coordinatorGrants.entries)
+        if (e.value.isNotEmpty)
+          () {
+            final a = accounts.where((a) => a.id == e.key).firstOrNull;
+            return TaysirCoordinator(
+                profileId: e.key, nameAr: a?.nameAr ?? '', nameEn: a?.nameEn ?? '', email: a?.email ?? '',
+                organizationIds: e.value.toList());
+          }()
+    ];
+  }
+
+  @override
+  Future<List<TaysirAccount>> searchAccounts(String query) async {
+    _need(persona == TaysirDemoPersona.admin);
+    final q = query.trim().toLowerCase();
+    return [
+      for (final a in accounts)
+        if (q.isEmpty || a.nameAr.contains(q) || a.nameEn.toLowerCase().contains(q) || a.email.contains(q)) a
+    ];
+  }
+
+  @override
+  Future<int> setCoordinatorOrganizations(String profileId, List<String> organizationIds) async {
+    _need(persona == TaysirDemoPersona.admin);
+    if (organizationIds.any((o) => !organizations.containsKey(o))) throw const TaysirException(TaysirFailure.invalid);
+    final want = organizationIds.toSet(), had = {...?coordinatorGrants[profileId]};
+    for (final o in had.difference(want)) {
+      _grant(o, profileId, false);
+    }
+    for (final o in want.difference(had)) {
+      _grant(o, profileId, true);
+    }
+    return had.difference(want).length + want.difference(had).length;
   }
 
   @override
